@@ -32,6 +32,8 @@ class GraphMore6FragmentsTests {
             "more6_refuel_station",
             "more6_place_station",
             "more6_pickup_items",
+            "more6_fetch_water",
+            "more6_fetch_lava",
             "more6_deposit_materials",
             "more6_maintain_stock",
             "more6_assign_idle");

@@ -50,6 +50,42 @@ class DigGraphPlannerTests {
     }
 
     @Test
+    void stuckSpirit_NotTrapped_GetsRescueAndRestore() {
+        GraphPlan plan =
+                GraphWorld.settled().facts(facts(stuck(false, true, null))).plan();
+
+        assertTrue(ids(plan).contains("rescue_spirit"), "Застрявший дух получает узел жизни rescue_spirit");
+        assertTrue(ids(plan).contains("restore_trace"), "После выхода след возвращают: restore_trace");
+        assertFalse(ids(plan).contains("dig_out"), "Свободному (не замурованному) духу копание не навязывают");
+        GraphPlan.Task rescue = plan.tasks().stream()
+                .filter(task -> "rescue_spirit".equals(task.id()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(rescue.feasible(), "Задание спасения выполнимо без материалов: " + rescue);
+        assertTrue(rescue.priority() >= 90, "Жизнь выше обычной работы: приоритет " + rescue.priority());
+    }
+
+    @Test
+    void stuckAndTrappedSpirit_RescueWork_OutranksDig() {
+        GraphPlan plan =
+                GraphWorld.settled().facts(facts(stuck(true, true, "sealed"))).plan();
+
+        assertTrue(ids(plan).contains("rescue_spirit"), "Замурованный и застрявший дух получает rescue_spirit");
+        assertTrue(ids(plan).contains("dig_out"), "Замуровка по-прежнему даёт dig_out");
+        int rescue = priority(plan, "rescue_spirit");
+        int dig = priority(plan, "dig_out");
+        assertTrue(rescue > dig, "Выход жизни важнее обычного копания: rescue " + rescue + " > dig " + dig);
+    }
+
+    private static int priority(GraphPlan plan, String id) {
+        return plan.tasks().stream()
+                .filter(task -> id.equals(task.id()))
+                .mapToInt(GraphPlan.Task::priority)
+                .findFirst()
+                .orElseThrow();
+    }
+
+    @Test
     void digFacts_CauseMapping_ChoosesNode() {
         assertEquals(
                 DigFacts.PILLAR_ITEM,
@@ -84,7 +120,11 @@ class DigGraphPlannerTests {
     }
 
     private static GraphFacts.Spirit spirit(boolean trapped, String trap) {
+        return stuck(trapped, false, trap);
+    }
+
+    private static GraphFacts.Spirit stuck(boolean trapped, boolean stuck, String trap) {
         return new GraphFacts.Spirit(
-                "spirit-1", AT, 20, 20, 300, false, trapped, false, null, Map.of(), List.of(), List.of(), trap);
+                "spirit-1", AT, 20, 20, 300, false, trapped, stuck, null, Map.of(), List.of(), List.of(), trap);
     }
 }

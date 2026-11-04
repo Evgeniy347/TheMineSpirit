@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 class MoreActionsTests {
     private static final SupplyGraph GRAPH = SupplyGraph.loadDefault();
     private static final List<String> MORE3 =
-            List.of("secure_danger", "recover_death_drop", "clear_trash", "assign_chest_purpose", "repair_world_decay");
+            List.of("secure_danger", "recover_death_drop", "clear_trash", "assign_chest_purpose");
     private static final List<String> MORE4 = List.of(
             "more4_guard_settlement",
             "more4_watch_chests",

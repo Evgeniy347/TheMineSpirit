@@ -28,6 +28,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import org.slf4j.Logger;
 
@@ -96,6 +97,13 @@ public final class DoorWatchService {
         }
     }
 
+    @SubscribeEvent
+    public void onLevelUnload(LevelEvent.Unload event) {
+        if (event.getLevel() instanceof ServerLevel level) {
+            forget(level);
+        }
+    }
+
     public static void onClosed(Level level, BlockPos pos) {
         if (!(level instanceof ServerLevel serverLevel)) {
             return;
@@ -115,6 +123,11 @@ public final class DoorWatchService {
             recheck(level, state, now);
         }
         decide(level, state, now, watch.isEvening(dayFraction(now)));
+    }
+
+    public static void forget(ServerLevel level) {
+        instance().tracked.remove(level);
+        instance().spirits.values().removeIf(spirit -> level.equals(spirit.level()));
     }
 
     private void checkPending(ServerLevel level, Tracked state, long now) {

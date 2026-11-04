@@ -28,6 +28,7 @@ public final class BoardLifecycle {
             try {
                 BoardService service = BoardRegistry.get(level);
                 service.tick(level, tick);
+                StuckLog.log(service.board());
             } finally {
                 TickWatch.done("BoardService", watch);
             }

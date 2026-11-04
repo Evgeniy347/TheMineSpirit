@@ -23,7 +23,7 @@ src/main/java/com/theminespirit/gametest/GameTestFixtures.java	354
 src/main/java/com/theminespirit/gametest/HouseMovementGameTests.java	365
 src/main/java/com/theminespirit/gametest/RestFixture.java	310
 src/main/java/com/theminespirit/neoforge/BlockBreaker.java	395
-src/main/java/com/theminespirit/neoforge/BuildSchematicScript.java	1220
+src/main/java/com/theminespirit/neoforge/BuildSchematicScript.java	1201
 src/main/java/com/theminespirit/neoforge/ChopTreeScript.java	343
 src/main/java/com/theminespirit/neoforge/ClearAreaSession.java	541
 src/main/java/com/theminespirit/neoforge/DescentSession.java	359
@@ -73,7 +73,7 @@ src/test/java/com/theminespirit/core/planner/ResourceResolverTests.java	566
 src/test/java/com/theminespirit/core/policy/BlockProtectionTests.java	314
 src/test/java/com/theminespirit/core/rest/BoardRoutesTests.java	364
 src/test/java/com/theminespirit/core/rest/TaskRoutesTests.java	884
-src/test/java/com/theminespirit/core/script/ScriptCatalogTests.java	1101
+src/test/java/com/theminespirit/core/script/ScriptCatalogTests.java	1108
 src/test/java/com/theminespirit/core/tactics/FactorTests.java	422
 src/test/java/com/theminespirit/core/tactics/TacticsConfigTests.java	370
 src/test/java/com/theminespirit/core/task/TaskReconcilerTests.java	368

@@ -33,19 +33,19 @@ class GraphChoiceTests {
         GraphWorld calm = dusk();
         GraphPlan neutral = GraphPlanner.plan(GRAPH, calm.state());
 
-        SupplyGraph bad = tuned("{\"farTrip\": 3}");
+        SupplyGraph bad = tuned("{\"farTrip\": 5}");
         GraphWorld storm = dusk();
         storm.world.add(MoreRules.BAD_TRIP_CONDITIONS);
         GraphPlan harsh = GraphPlanner.plan(bad, storm.state());
 
         assertEquals(
                 600, neutral.task("more_return_before_night").orElseThrow().ticks(), "Дорога 40 блоков: 2·40·5 + 200");
-        assertEquals(1400, harsh.task("more_return_before_night").orElseThrow().ticks(), "Непогода утраивает дорогу");
+        assertEquals(
+                2200, harsh.task("more_return_before_night").orElseThrow().ticks(), "Непогода впятеро удлиняет дорогу");
+        GraphPlan far = GraphPlanner.plan(tuned("{\"farTrip\": 10}"), storm.state());
         assertTrue(
-                harsh.priority("more_return_before_night") <= neutral.priority("more_return_before_night"),
-                "Дальняя вылазка в непогоду не выше по весу: приоритет целый, после новых весов он может совпасть "
-                        + "(усилие видно по срокам 600→1400). Получено "
-                        + harsh.priority("more_return_before_night") + " против "
+                far.priority("more_return_before_night") < neutral.priority("more_return_before_night"),
+                "Дальняя вылазка в непогоду ниже по весу: " + far.priority("more_return_before_night") + " против "
                         + neutral.priority("more_return_before_night"));
     }
 

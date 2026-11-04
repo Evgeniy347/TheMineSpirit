@@ -33,6 +33,8 @@ public final class BoardTuning {
 
     public static final long LOG_SUMMARY_TICKS = 6000;
 
+    public static final long STUCK_TTL_TICKS = 6000;
+
     public static final int CASE_FAIL_LIMIT = 3;
 
     public static final int TICKET_FAIL_LIMIT = 5;

@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.StillWatch;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.movement.PitEscape;
@@ -30,6 +31,14 @@ final class DigOutAction {
         BlockCoord settlement = SettlementHome.of(spirits);
         for (SpiritEntity spirit : spirits) {
             if (spirit.isRemoved()) {
+                continue;
+            }
+            if (service.board()
+                    .statusOf("rescue:" + spirit.getUUID())
+                    .filter(status -> status == BoardStatus.PENDING
+                            || status == BoardStatus.ASSIGNED
+                            || status == BoardStatus.WAITING_RESOURCES)
+                    .isPresent()) {
                 continue;
             }
             BlockPos feet = spirit.blockPosition();

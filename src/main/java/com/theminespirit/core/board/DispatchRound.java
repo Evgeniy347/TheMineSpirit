@@ -114,7 +114,10 @@ public final class DispatchRound {
         if (ticket.boardCase() != BoardCase.RESCUE_SPIRIT) {
             Optional<StuckSpirits.Stuck> stuck = board.stuck().of(spirit.id(), now);
             if (stuck.isPresent()) {
-                return Optional.of("не двигается с тика " + stuck.orElseThrow().since() + ": ждёт освобождения");
+                StuckSpirits.Stuck mark = stuck.orElseThrow();
+                return Optional.of("не двигается с тика " + mark.since()
+                        + (mark.at() == null ? "" : " в " + mark.at())
+                        + ": ждёт выход из ловушки (граф ставит rescue)");
             }
         }
         if (spirit.busyWith() != null) {
