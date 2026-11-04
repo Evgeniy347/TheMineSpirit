@@ -1,7 +1,6 @@
 package com.theminespirit.core.board.graph;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -21,12 +20,12 @@ class GraphStoreFarmFragmentsTests {
 
         SupplyGraph.Building storage = GRAPH.buildings().get("storage_space");
         assertTrue(storage != null && storage.optional(), "Новая пара сундуков — необязательная постройка");
-        assertFalse(GRAPH.implemented("storage_space"), "Действия «новая пара сундуков» пока нет — заглушка");
+        assertTrue(GRAPH.implemented("storage_space"), "Новая пара сундуков исполняется узлом STOCK_CHESTS");
 
         assertTrue(GRAPH.way("transfer_item").isPresent(), "Путь переноса объявлен");
         assertTrue(GRAPH.way("sort_chest").isPresent(), "Путь сортировки объявлен");
-        assertFalse(GRAPH.implemented("transfer_item"), "Перенос пока заглушён");
-        assertFalse(GRAPH.implemented("sort_chest"), "Сортировка пока заглушена");
+        assertTrue(GRAPH.implemented("transfer_item"), "Перенос исполняется действием склада");
+        assertTrue(GRAPH.implemented("sort_chest"), "Сортировка исполняется действием склада");
         assertEquals(
                 "food_reserve",
                 GRAPH.way("restock_food").orElseThrow().makes(),
@@ -64,7 +63,7 @@ class GraphStoreFarmFragmentsTests {
         assertTrue(
                 field != null && field.stage() == 1 && field.optional(),
                 "Грядка пшеницы этапа 1 — необязательная постройка, чтобы не требовать её каждый цикл");
-        assertFalse(GRAPH.implemented("wheat_field"), "Схема грядки пока заглушена");
+        assertTrue(GRAPH.implemented("wheat_field"), "Грядка строится действием build_farm");
 
         assertEquals(
                 "wheat_field", GRAPH.way("plant_crop").orElseThrow().building(), "Посев привязан к грядке пшеницы");

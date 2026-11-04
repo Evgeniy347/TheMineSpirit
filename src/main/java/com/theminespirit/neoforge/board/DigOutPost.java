@@ -10,6 +10,8 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.level.Level;
 
 final class DigOutPost {
     private static final String DIG_OUT = "dig_out";
@@ -18,7 +20,11 @@ final class DigOutPost {
     private DigOutPost() {}
 
     static boolean digOut(GraphPost post, BoardService service, GraphPlan.Task task) {
-        if (!DigFacts.DIG_OUT_ITEM.equals(task.makes())) {
+        String makes = task.makes();
+        boolean dig = DigFacts.DIG_OUT_ITEM.equals(makes);
+        boolean bridge = DigFacts.BRIDGE_ITEM.equals(makes);
+        boolean pillar = DigFacts.PILLAR_ITEM.equals(makes);
+        if (!dig && !bridge && !pillar) {
             return false;
         }
         BlockCoord settlement = SettlementHome.of(post.spirits);
@@ -27,7 +33,10 @@ final class DigOutPost {
                 continue;
             }
             BlockPos feet = spirit.blockPosition();
-            if (!DigOutScript.sealed(post.level, feet)) {
+            boolean matches = (dig && DigOutScript.sealed(post.level, feet))
+                    || (bridge && water(post.level, feet) && !DigOutScript.sealed(post.level, feet))
+                    || (pillar && PitRescue.trapped(spirit).isPresent());
+            if (!matches) {
                 continue;
             }
             BlockCoord goal = SurfacePoint.of(post.level, settlement);
@@ -38,5 +47,10 @@ final class DigOutPost {
             return true;
         }
         return false;
+    }
+
+    private static boolean water(Level level, BlockPos feet) {
+        return level.getFluidState(feet).is(FluidTags.WATER)
+                || level.getFluidState(feet.above()).is(FluidTags.WATER);
     }
 }

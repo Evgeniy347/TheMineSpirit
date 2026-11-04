@@ -28,9 +28,10 @@ final class FarmHerd {
 
     static boolean capture(GraphPost post, GraphTickets.Ticket ticket) {
         Species species = FarmWays.species(ticket.node());
-        if (species == null) {
-            return false;
-        }
+        return species != null && capture(post, ticket, species);
+    }
+
+    static boolean capture(GraphPost post, GraphTickets.Ticket ticket, Species species) {
         BlockCoord home = post.scan.home();
         int housed = count(post.level, home, species);
         if (!HerdCap.canCapture(species, housed, 0)) {
@@ -49,9 +50,10 @@ final class FarmHerd {
 
     static boolean breed(GraphPost post, GraphTickets.Ticket ticket) {
         Species species = FarmWays.species(ticket.node());
-        if (species == null) {
-            return false;
-        }
+        return species != null && breed(post, ticket, species);
+    }
+
+    static boolean breed(GraphPost post, GraphTickets.Ticket ticket, Species species) {
         BlockCoord home = post.scan.home();
         int housed = count(post.level, home, species);
         if (BreedingRules.action(species, housed, true) != BreedingRules.Action.BREED) {
@@ -174,6 +176,15 @@ final class FarmHerd {
             }
         }
         return count;
+    }
+
+    static @Nullable Species wildSpecies(ServerLevel level, BlockCoord home) {
+        for (Species species : Species.all()) {
+            if (wild(level, home, species) != null) {
+                return species;
+            }
+        }
+        return null;
     }
 
     private static @Nullable Animal wild(ServerLevel level, BlockCoord home, Species species) {

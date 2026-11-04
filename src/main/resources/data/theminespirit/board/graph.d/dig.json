@@ -4,25 +4,25 @@
       "xmin": 0,
       "base": 32,
       "stage": 1,
-      "implemented": false
+      "implemented": true
     },
     "bridge_open": {
       "xmin": 0,
       "base": 30,
       "stage": 1,
-      "implemented": false
+      "implemented": true
     },
     "pillar_open": {
       "xmin": 0,
       "base": 30,
       "stage": 1,
-      "implemented": false
+      "implemented": true
     },
     "trail_clean": {
       "xmin": 0,
       "base": 24,
       "stage": 1,
-      "implemented": false
+      "implemented": true
     }
   },
   "ways": [
@@ -49,7 +49,7 @@
         "trail_clean": 1
       },
       "ticks": 600,
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "pillar",
@@ -64,7 +64,7 @@
         "trail_clean": 1
       },
       "ticks": 400,
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "restore_trace",
@@ -76,7 +76,7 @@
         "#stone_crafting": 1
       },
       "ticks": 200,
-      "implemented": false
+      "implemented": true
     }
   ]
 }
