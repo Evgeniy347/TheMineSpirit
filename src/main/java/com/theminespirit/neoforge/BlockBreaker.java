@@ -165,7 +165,7 @@ public final class BlockBreaker {
         BlockProtection.Decision decision = switch (intent) {
             case HARVEST -> spirit.protectionGate().checkHarvest(target, targetState);
             case DEMOLISH -> spirit.protectionGate().checkDemolish(target, targetState);
-            case BREAK -> spirit.protectionGate().checkBreak(target, targetState);
+            case BREAK -> spirit.protectionGate().checkBreakOrEscape(target, targetState, escaping);
         };
         if (decision instanceof BlockProtection.Refused refused) {
             return new Protected(refused.policy(), refused.reason());
