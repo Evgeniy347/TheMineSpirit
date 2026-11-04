@@ -24,11 +24,37 @@ class MoreGraphTests {
     }
 
     @Test
-    void moreFragment_Paths_AreStubsWithTodo() {
-        for (String way : SIGNALS.values()) {
+    void moreFragment_ImplementedPaths_HaveExecution() {
+        for (String way : List.of(
+                "more_help_player",
+                "more_keep_clear",
+                "more_light_dark_spot",
+                "more_return_before_night",
+                "more_pickup_drops",
+                "more_replant",
+                "more_sustain_mine",
+                "more_secure_fence",
+                "more_secure_door",
+                "more_secure_hopper",
+                "more_share_reserve")) {
             SupplyGraph.Way path = GRAPH.way(way).orElseThrow();
             assertTrue(path.weight() > 0, "Стартовый вес пути положителен: " + way);
-            assertFalse(GRAPH.implemented(way), "Действия пока нет — путь заглушён с TODO: " + way);
+            assertTrue(GRAPH.implemented(way), "Действие связано с исполнением: " + way);
+        }
+    }
+
+    @Test
+    void moreFragment_ControlSignals_StayStubs() {
+        for (String way : List.of(
+                "more_avoid_far_trip",
+                "more_failure_backoff",
+                "more_station_queue",
+                "more_avoid_duplicate",
+                "more_strategic_goal")) {
+            assertFalse(
+                    GRAPH.implemented(way),
+                    "Путь " + way + " — сигнал управления (не идти, подождать, не дублировать), "
+                            + "а не действие: отдельного исполнения у него нет");
         }
     }
 

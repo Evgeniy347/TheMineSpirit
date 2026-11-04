@@ -77,7 +77,8 @@ final class GraphPost {
         GraphPlan.Task task = ticket.task();
         return switch (ticket.kind()) {
             case BUILDING ->
-                FarmPost.building(this, ticket)
+                MorePost.building(this, ticket)
+                        || FarmPost.building(this, ticket)
                         || GraphNodeBuilds.post(this, ticket, task)
                         || PortalPost.building(this, ticket)
                         || (ExtraOrchardPost.handles(ticket.node())
@@ -127,7 +128,7 @@ final class GraphPost {
         if (WorldPost.handles(ticket.node())) {
             return WorldPost.post(this, ticket);
         }
-        return COLLECT.contains(ticket.node()) && collect(ticket);
+        return MorePost.event(this, ticket) || (COLLECT.contains(ticket.node()) && collect(ticket));
     }
 
     private boolean hungry(GraphTickets.Ticket ticket) {
@@ -180,7 +181,7 @@ final class GraphPost {
             case SMELT_CHARCOAL -> new GraphCrafting(this).charcoal(ticket, task);
             case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART -> GraphBrew.post(this, ticket, task);
             case ACTIVITY_MOVE -> DigOutPost.digOut(this, service, task);
-            default -> FarmPost.way(this, ticket, task);
+            default -> MorePost.way(this, ticket, task) || FarmPost.way(this, ticket, task);
         };
     }
 
