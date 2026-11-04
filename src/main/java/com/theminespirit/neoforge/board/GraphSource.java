@@ -33,13 +33,13 @@ public final class GraphSource {
     private static final long GRAPH_INTERVAL_TICKS = 600;
     private static final long DEEP_INTERVAL_TICKS = 1200;
 
+    final GraphDecisionNote decisionLog = new GraphDecisionNote();
     private final GraphNotes notes = new GraphNotes();
     private final PetWork pets = new PetWork();
     private String lastBuildings = "";
     private long lastCycle = -1;
     private long lastDeep = -1;
     private Set<String> lastLive = Set.of();
-    final GraphDecisionNote decisionLog = new GraphDecisionNote();
 
     private record Half(
             ServerLevel level,
