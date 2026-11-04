@@ -18,17 +18,37 @@ class BoardPostGuardTests {
     private static final Path REST = Path.of("src/main/java/com/theminespirit/neoforge/rest");
 
     private static final List<String> OFFENCES = List.of(
-            "service.submit(", "board.submit(", "new BoardTicket(", "StageRepair.submit(", "DemolitionTickets.submit(");
+            "service.submit(",
+            "board.submit(",
+            "new BoardTicket(",
+            "StageRepair.submit(",
+            "DemolitionTickets.submit(",
+            "service.launch(");
 
-    private static final Set<String> INFRASTRUCTURE =
-            Set.of("GraphPost.java", "BoardService.java", "BoardStateStore.java");
+    private static final String GRAPH_POST = "GraphPost.java";
 
-    private static final Set<String> EXECUTORS = Set.of("ExtraOrchardPost.java", "PlanDemolition.java");
+    private static final Map<String, Set<String>> INFRASTRUCTURE = Map.of(
+            GRAPH_POST,
+            Set.copyOf(OFFENCES),
+            "BoardStateStore.java",
+            Set.of("new BoardTicket("),
+            "BoardService.java",
+            Set.of("board.submit("));
 
-    private static final Map<String, String> TEMPORARY = temporary();
+    private static final Map<String, String> EXECUTORS = Map.of(
+            "ActivityLaunch.java",
+            "запуск занятия по узлу графа через доску: карточку и держателя ведёт BoardService.launch",
+            "ExtraOrchardPost.java",
+            "исполнитель билета графа: сад по узлу harvest_orchard",
+            "PlanDemolition.java",
+            "исполнитель билета графа: снос по узлу demolish_stray/clear_floating",
+            "TransferWatch.java",
+            "доставка материалов по билету графа: причина под-задачи — id задания графа, work выбирает граф",
+            "SpiritBoardGateway.java",
+            "REST POST /v1/board/tasks — внешний вход стратега; задача приходит от игрока, а не от сторожа");
 
     @Test
-    void board_PostsOnlyThroughGraphPost_ExceptExplicitTemporaryList() {
+    void board_PostsOnlyThroughGraphPost_ExceptDocumentedExecutors() {
         Map<Path, String> sources = new LinkedHashMap<>(SourceFiles.javaUnder(BOARD));
         sources.putAll(SourceFiles.javaUnder(REST));
 
@@ -38,8 +58,8 @@ class BoardPostGuardTests {
                 "Задание ставится на доску мимо графа: работа выбирается сторожем/порогом, а не узлом графа, "
                         + "поэтому вес и приоритет не участвуют. Цена: дух получает работу, которую граф не "
                         + "выбирал, и следующий пересчёт спорит с ней. Как надо: источник отдаёт факт во вход "
-                        + "графа, а билет ставит GraphPost; временное исключение — только с TODO в списке "
-                        + "TEMPORARY. Нарушители");
+                        + "графа, а билет ставит GraphPost; исполнитель билета получает GraphPost и зовёт его "
+                        + "submit. Нарушители");
     }
 
     @Test
@@ -66,6 +86,15 @@ class BoardPostGuardTests {
         assertFalse(names.contains("RescueWatch.java"), "Спасение выбирает граф, а не RescueWatch");
         assertFalse(names.contains("DigOutWatch.java"), "Замуровка входит в граф фактом trapped, а не сторожем");
         assertFalse(names.contains("IdleWatch.java"), "Простой входит в граф как more6_spirit_idle");
+        assertFalse(names.contains("EvergreenWatch.java"), "Еда входит в граф событием hungry, а не сторожем");
+        assertFalse(names.contains("FishingWatch.java"), "Рыбалка — путь графа, а не порог сторожа");
+        assertFalse(names.contains("HerdWatch.java"), "Стадо входит в граф фактами, а не сторожем");
+        assertFalse(names.contains("HiveWatch.java"), "Пасека — узел графа, а не порог сторожа");
+        assertFalse(names.contains("HouseLevels.java"), "Уровень дома выбирает узел building:house");
+        assertFalse(names.contains("OldChests.java"), "Перенос старых сундуков выбирает узел store:transfer");
+        assertFalse(names.contains("PenBuild.java"), "Загон строит узел building:pen");
+        assertFalse(names.contains("WoolWatch.java"), "Шерсть и кровати — узлы графа, а не пороги сторожа");
+        assertFalse(names.contains("SupplyTickets.java"), "Снабжение выбирает граф, а не отдельный сторож");
     }
 
     @Test
@@ -76,6 +105,28 @@ class BoardPostGuardTests {
                 List.of("RescueWatch.java: постановка мимо GraphPost"),
                 violations(Map.of(BOARD.resolve("RescueWatch.java"), old)),
                 "Сторож ослеп: прямой service.submit в стороже обязан ловиться");
+    }
+
+    @Test
+    void patternSource_NewTicketOutsideGraphPost_IsReported() {
+        String old =
+                "final class DropWatch { BoardTicket t() { return new BoardTicket(id, c, a, p, n, 1, x, l, m); } }";
+
+        assertEquals(
+                List.of("DropWatch.java: постановка мимо GraphPost"),
+                violations(Map.of(BOARD.resolve("DropWatch.java"), old)),
+                "Сторож ослеп: билет, собранный вручную мимо GraphPost, обязан ловиться");
+    }
+
+    @Test
+    void patternSource_BoardServiceManualTicket_IsReported() {
+        String old =
+                "final class BoardService { void post() { submit(new BoardTicket(id, c, a, p, n, 1, x, l, m)); } }";
+
+        assertEquals(
+                List.of("BoardService.java: постановка мимо GraphPost"),
+                violations(Map.of(BOARD.resolve("BoardService.java"), old)),
+                "Доска не выбирает работу: ручной билет внутри BoardService — тот же обход графа");
     }
 
     @Test
@@ -92,55 +143,16 @@ class BoardPostGuardTests {
         List<String> found = new ArrayList<>();
         for (Map.Entry<Path, String> source : sources.entrySet()) {
             String name = source.getKey().getFileName().toString();
-            if (INFRASTRUCTURE.contains(name) || EXECUTORS.contains(name) || TEMPORARY.containsKey(name)) {
+            Set<String> allowed = INFRASTRUCTURE.getOrDefault(name, Set.of());
+            if (EXECUTORS.containsKey(name)) {
                 continue;
             }
             String text = SourceFiles.withoutTextBlocks(source.getValue());
-            boolean posts = OFFENCES.stream().anyMatch(text::contains);
+            boolean posts = OFFENCES.stream().anyMatch(pattern -> !allowed.contains(pattern) && text.contains(pattern));
             if (posts) {
                 found.add(name + ": постановка мимо GraphPost");
             }
         }
         return found;
-    }
-
-    private static Map<String, String> temporary() {
-        Map<String, String> temporary = new LinkedHashMap<>();
-        for (String watch : List.of(
-                "ChestSpaceWatch.java",
-                "CraterWatch.java",
-                "EnchantRoomWatch.java",
-                "EvergreenWatch.java",
-                "FenceWatch.java",
-                "FishingWatch.java",
-                "HerdWatch.java",
-                "HiveWatch.java",
-                "HouseLevels.java",
-                "LeftOreWatch.java",
-                "MineLevels.java",
-                "OldChests.java",
-                "OrchardHarvest.java",
-                "PenBuild.java",
-                "SupplyTickets.java",
-                "TransferWatch.java",
-                "WarehouseWatch.java",
-                "WoolWatch.java")) {
-            temporary.put(watch, "TODO B5: сторож ставит заявку по своему порогу — заменить событием графа");
-        }
-        for (String stage : List.of(
-                "FirstStepsRunner.java",
-                "PlotAudit.java",
-                "RepairAuditWatch.java",
-                "RepairWatch.java",
-                "StageRepair.java",
-                "YardFloorWatch.java")) {
-            temporary.put(stage, "TODO B6: этап и ремонт ставят работу мимо узла");
-        }
-        temporary.put("GraphCollect.java", "TODO B8: исполнитель графа обязан ставить билет через GraphPost");
-        temporary.put("GraphFood.java", "TODO B8: исполнитель графа обязан ставить билет через GraphPost");
-        temporary.put(
-                "SpiritBoardGateway.java",
-                "TODO B8: REST POST /v1/board/tasks — заказ обязан стать входом графа (GoalFact/orders)");
-        return Map.copyOf(temporary);
     }
 }

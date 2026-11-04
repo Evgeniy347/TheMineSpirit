@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
+import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.MoreActivityPlans;
 import com.theminespirit.core.board.TicketPlanPick;
@@ -11,6 +12,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -42,9 +44,9 @@ final class JobLaunch {
         String activity = board.occupation(spirit.getUUID()).map(Enum::name).orElse(null);
         String prior = activity != null ? activity : spirit.currentActivity().orElse(null);
         boolean background = spirit.runsBackgroundTask();
+        cards.forget(spirit.getUUID());
         if (activity != null) {
-            board.vacate(spirit.getUUID());
-            cards.forget(spirit.getUUID());
+            board.vacate(spirit.getUUID(), "задание " + ticketId + " вытеснило занятие " + activity);
         }
         spirit.startTask(plan);
         if (activity != null || background) {
@@ -56,5 +58,14 @@ final class JobLaunch {
                     script == null ? "?" : script,
                     prior == null ? BoardActivities.idOf(spirit.getUUID()) : prior);
         }
+    }
+
+    static void dropUnclaimed(
+            Board board, ActivityCards cards, SpiritEntity spirit, String ticketId, BoardOutcome outcome) {
+        spirit.cancelTask();
+        cards.forget(spirit.getUUID());
+        WorkReserveHub.releaseAll(spirit);
+        LOGGER.error(
+                "Задание {} не выдано духу {}: {}; задача отменена у духа", ticketId, spirit.displayName(), outcome);
     }
 }

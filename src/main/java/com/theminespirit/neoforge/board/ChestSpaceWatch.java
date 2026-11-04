@@ -42,7 +42,11 @@ final class ChestSpaceWatch {
 
     private ChestSpaceWatch() {}
 
-    static boolean post(ServerLevel level, BoardService service, StageSite site, long now) {
+    static boolean post(GraphPost post) {
+        ServerLevel level = post.level;
+        BoardService service = post.service;
+        StageSite site = post.scan.stage();
+        long now = post.now;
         if (open(service)) {
             return true;
         }
@@ -53,7 +57,7 @@ final class ChestSpaceWatch {
         }
         int slot = next.orElseThrow();
         String id = PREFIX + slot;
-        if (submit(level, service, site, slot, now) != BoardOutcome.ACCEPTED) {
+        if (submit(post, level, site, slot) != BoardOutcome.ACCEPTED) {
             return true;
         }
         Space space = space(level);
@@ -76,18 +80,15 @@ final class ChestSpaceWatch {
         return true;
     }
 
-    private static BoardOutcome submit(ServerLevel level, BoardService service, StageSite site, int slot, long now) {
+    private static BoardOutcome submit(GraphPost post, ServerLevel level, StageSite site, int slot) {
         String id = PREFIX + slot;
-        return service.submit(
-                new BoardTicket(
+        return post.submit(
+                post.ticket(
                         id,
                         BoardCase.STOCK_CHESTS,
                         Optional.empty(),
                         BoardRules.priorityOf(BoardCase.STOCK_CHESTS),
-                        now,
-                        1,
                         BoardTicket.ALWAYS_CAUSE,
-                        List.of(),
                         Map.of()),
                 TicketTarget.at(site.workYard())
                         .withWork(StageBuilds.of(level, BoardCase.STOCK_CHESTS, site, slot))

@@ -27,7 +27,7 @@ src/main/java/com/theminespirit/neoforge/BuildSchematicScript.java	1220
 src/main/java/com/theminespirit/neoforge/ChopTreeScript.java	343
 src/main/java/com/theminespirit/neoforge/ClearAreaSession.java	541
 src/main/java/com/theminespirit/neoforge/DescentSession.java	359
-src/main/java/com/theminespirit/neoforge/DropCollector.java	476
+src/main/java/com/theminespirit/neoforge/DropCollector.java	471
 src/main/java/com/theminespirit/neoforge/FarmSession.java	688
 src/main/java/com/theminespirit/neoforge/FillSession.java	616
 src/main/java/com/theminespirit/neoforge/HarvestSession.java	736
@@ -37,7 +37,7 @@ src/main/java/com/theminespirit/neoforge/SchematicSite.java	363
 src/main/java/com/theminespirit/neoforge/SpiritEntity.java	758
 src/main/java/com/theminespirit/neoforge/SpiritScripts.java	384
 src/main/java/com/theminespirit/neoforge/WorldScanner.java	306
-src/main/java/com/theminespirit/neoforge/board/BoardService.java	1073
+src/main/java/com/theminespirit/neoforge/board/BoardService.java	989
 src/main/java/com/theminespirit/neoforge/board/FirstStepsRunner.java	725
 src/main/java/com/theminespirit/neoforge/board/TransferWatch.java	569
 src/main/java/com/theminespirit/neoforge/coordinator/SpiritCoordinator.java	372

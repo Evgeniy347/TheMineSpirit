@@ -158,7 +158,7 @@ final class FarmPost {
             return true;
         }
         if ("storage_space".equals(node)) {
-            return ChestSpaceWatch.post(post.level, post.service, post.scan.stage(), post.now);
+            return ChestSpaceWatch.post(post);
         }
         if ("wheat_field".equals(node)) {
             if (FarmField.exists(post.level, home)) {

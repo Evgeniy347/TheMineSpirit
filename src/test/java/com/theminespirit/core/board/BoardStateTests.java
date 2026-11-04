@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -123,5 +124,26 @@ class BoardStateTests {
                 board.ledger().has(BoardCase.CRAFTING_STATION, 1),
                 "Снимок заменяет отметки ledger, а не дописывает: приёмка «джунгли» начинала с отметок журнала "
                         + "прошлого прогона (верстак «построен», а его нет — «нужен верстак: рядом нет»)");
+    }
+
+    @Test
+    void withoutLegacy_LegacyTickets_RemovedAndGraphKept() {
+        Board board = boardAt(10);
+        board.submit(ticket("graph:chop_oak_log", BoardCase.GATHER_MATERIALS, "graph:chop_oak_log"));
+        board.submit(ticket("first:build_house", BoardCase.BUILD_HOUSE, BoardTicket.ALWAYS_CAUSE));
+        board.submit(ticket("supply_gather:oak_planks", BoardCase.GATHER_MATERIALS, BoardTicket.ALWAYS_CAUSE));
+        board.submit(ticket(
+                "transfer:graph:craft_stone_axe@s:stick:warehouse",
+                BoardCase.TRANSFER_ITEM,
+                "transfer:graph:craft_stone_axe@s"));
+
+        BoardState filtered = board.snapshot().withoutLegacy(Set.of("graph:"));
+
+        assertEquals(
+                List.of("graph:chop_oak_log"),
+                filtered.entries().stream().map(entry -> entry.ticket().id()).toList(),
+                "При загрузке снимаются задания мимо графа: иначе после перезапуска духи снова берут старую "
+                        + "работу, которую граф не выбирал, и пересчёт спорит с доской");
+        assertEquals(1, filtered.entries().size(), "Снятие не трогает задание графа и убирает все чужие записи");
     }
 }

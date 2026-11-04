@@ -110,20 +110,25 @@ final class GraphPost {
             return tool(ticket, task);
         }
         if (task.spirit().isPresent()) {
-            return false;
+            return new GraphCrafting(this).spiritCraft(ticket, task);
         }
         if (StorePost.way(this, ticket)) {
             return true;
         }
         return switch (boardCase) {
-            case REPAIR_TOOL -> RepairWatch.post(level, service, spirits, task.priority(), now);
+            case REPAIR_TOOL -> RepairWatch.post(this, task.priority());
+            case RESTOCK_FOOD -> {
+                GraphFood.post(this, ticket.id(), task.priority());
+                yield true;
+            }
+            case CRAFTING_STATION -> new GraphCrafting(this).station(ticket, task);
             case GATHER_MATERIALS ->
                 FarmPost.pet(this, ticket) || PortalPost.way(this, ticket, task) || gather(ticket, task);
-            case COLLECT_DROPS -> GraphCollect.post(service, around, ticket, now);
+            case COLLECT_DROPS -> GraphCollect.post(this, around, ticket);
             case HARVEST_ORCHARD -> new GraphHarvestPost(this).orchard(ticket, task);
             case MINE_LEFT_ORE -> new GraphHarvestPost(this).leftOre(ticket, task);
             case CRAFT_TORCHES -> new GraphCrafting(this).torches(ticket, task);
-            case STOCK_CHESTS -> ChestSpaceWatch.post(level, service, scan.stage(), now);
+            case STOCK_CHESTS -> ChestSpaceWatch.post(this);
             case SMELT_CHARCOAL -> new GraphCrafting(this).charcoal(ticket, task);
             case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART -> GraphBrew.post(this, ticket, task);
             case ACTIVITY_MOVE -> DigOutPost.digOut(this, service, task);
@@ -138,13 +143,8 @@ final class GraphPost {
         if (StageOpen.full(service.board(), spirits.size())) {
             return true;
         }
-        Map<String, Integer> missing = FirstStepsRunner.open(
-                level,
-                service,
-                stock,
-                scan,
-                new FirstStepsRunner.StepOrder(boardCase, task.priority(), ticket.id()),
-                now);
+        Map<String, Integer> missing =
+                FirstStepsRunner.open(this, new FirstStepsRunner.StepOrder(boardCase, task.priority(), ticket.id()));
         missing.forEach((item, count) -> {
             if (GraphItemIds.known(item) && !CraftedItems.isCrafted(item)) {
                 gather(MAKE + item, ticket.id(), task.priority(), item, count, craftPoint());
@@ -155,6 +155,9 @@ final class GraphPost {
 
     private boolean gather(GraphTickets.Ticket ticket, GraphPlan.Task task) {
         String item = GraphNames.item(graph, task.makes(), scan.wood());
+        if ("fuel_planks".equals(task.makes())) {
+            item = scan.wood() + "_planks";
+        }
         if (!graph.items().containsKey(task.makes()) || !GraphItemIds.known(item)) {
             return false;
         }
@@ -215,6 +218,32 @@ final class GraphPost {
             String cause,
             Map<String, Integer> required) {
         return new BoardTicket(id, boardCase, assignee, priority, now, 1, cause, List.of(), required);
+    }
+
+    BoardTicket leveled(BoardTicket base, int level, List<String> dependsOn) {
+        return new BoardTicket(
+                base.id(),
+                base.boardCase(),
+                base.assignee(),
+                base.priority(),
+                base.createdAt(),
+                level,
+                base.cause(),
+                dependsOn,
+                base.requiredItems());
+    }
+
+    BoardTicket dated(BoardTicket base, long createdAt) {
+        return new BoardTicket(
+                base.id(),
+                base.boardCase(),
+                base.assignee(),
+                base.priority(),
+                createdAt,
+                base.level(),
+                base.cause(),
+                base.dependsOn(),
+                base.requiredItems());
     }
 
     BoardOutcome submit(BoardTicket ticket, TicketTarget target) {

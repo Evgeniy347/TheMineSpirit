@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphPlan;
@@ -55,6 +56,37 @@ final class GraphCrafting {
                 TicketTarget.at(post.craftPoint())
                         .withSupply(log, CHARCOAL_LOGS)
                         .withCount(CHARCOAL_BATCH));
+        return true;
+    }
+
+    boolean spiritCraft(GraphTickets.Ticket ticket, GraphPlan.Task task) {
+        String item = GraphNames.item(post.graph, task.makes(), post.scan.wood());
+        if (!GraphItemIds.known(item)) {
+            return false;
+        }
+        UUID spirit = UUID.fromString(task.spirit().orElseThrow());
+        post.submit(
+                post.ticket(
+                        ticket.id(),
+                        task.boardCase(),
+                        Optional.of(spirit),
+                        task.priority(),
+                        ticket.id(),
+                        post.items(task)),
+                TicketTarget.at(post.craftPoint()).withCraft(item, 1));
+        return true;
+    }
+
+    boolean station(GraphTickets.Ticket ticket, GraphPlan.Task task) {
+        post.submit(
+                post.ticket(
+                        ticket.id(),
+                        BoardCase.CRAFTING_STATION,
+                        Optional.empty(),
+                        task.priority(),
+                        ticket.id(),
+                        post.items(task)),
+                TicketTarget.at(post.craftPoint()).withSupply("crafting_table", 1));
         return true;
     }
 }

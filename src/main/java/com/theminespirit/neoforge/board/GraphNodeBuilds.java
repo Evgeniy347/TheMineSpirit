@@ -21,12 +21,8 @@ final class GraphNodeBuilds {
         Map<String, Integer> need = WorldPost.need(post.graph, task.consumes(), post.scan.wood());
         return switch (boardCase) {
             case BUILD_MINE ->
-                ticket.node().startsWith("mine_level_")
-                        && MineLevels.post(
-                                post.level, post.service, post.spirits, ticket.node(), task.priority(), need, post.now);
-            case ENCHANT_ROOM ->
-                EnchantRoomWatch.post(
-                        post.level, post.service, post.spirits, ticket.node(), task.priority(), need, post.now);
+                ticket.node().startsWith("mine_level_") && MineLevels.post(post, ticket.node(), task.priority(), need);
+            case ENCHANT_ROOM -> EnchantRoomWatch.post(post, ticket.node(), task.priority(), need);
             default -> false;
         };
     }

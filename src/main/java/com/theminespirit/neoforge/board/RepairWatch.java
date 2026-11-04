@@ -36,7 +36,10 @@ final class RepairWatch {
 
     private RepairWatch() {}
 
-    static boolean post(ServerLevel level, BoardService service, List<SpiritEntity> spirits, int priority, long now) {
+    static boolean post(GraphPost post, int priority) {
+        ServerLevel level = post.level;
+        BoardService service = post.service;
+        List<SpiritEntity> spirits = post.spirits;
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty()) {
             return false;
         }
@@ -48,16 +51,13 @@ final class RepairWatch {
                     ? Optional.empty()
                     : repairableTool(spirit, () -> anvils.computeIfAbsent(home.get(), at -> anvilNear(level, at)));
             if (item.isPresent()) {
-                service.submit(
-                        new BoardTicket(
+                post.submit(
+                        post.ticket(
                                 id,
                                 BoardCase.REPAIR_TOOL,
                                 Optional.of(spirit.getUUID()),
                                 priority,
-                                now,
-                                1,
                                 BoardTicket.ALWAYS_CAUSE,
-                                List.of(),
                                 Map.of()),
                         TicketTarget.at(home.orElseThrow()).withCraft(item.orElseThrow(), 0));
                 LOGGER.info(

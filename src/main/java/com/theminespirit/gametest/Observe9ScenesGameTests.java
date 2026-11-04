@@ -73,7 +73,7 @@ public final class Observe9ScenesGameTests {
                             + "; приказ " + spirit.tactics().activeDirective()
                             + "; ordered " + orderChanges
                             + "; скрипт " + spirit.currentTaskScript() + "/" + spirit.taskStatus());
-            board.board().vacate(spirit.getUUID());
+            board.board().vacate(spirit.getUUID(), null);
             TacticsScene.finish(helper, spirit);
         });
     }

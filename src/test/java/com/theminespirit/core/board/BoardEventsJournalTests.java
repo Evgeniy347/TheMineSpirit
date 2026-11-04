@@ -94,4 +94,28 @@ class BoardEventsJournalTests {
                 events,
                 "Провал задания обязан попадать в журнал: без него выкинутая вещь молча остаётся в мире");
     }
+
+    @Test
+    void vacate_WithReason_WritesReasonIntoCancelledRecord() {
+        List<BoardTicket> cancelled = new ArrayList<>();
+        Board board = new Board(() -> 42, (event, ticket, holder, tick) -> {
+            if (event == BoardLog.Event.CANCELLED) {
+                cancelled.add(ticket);
+            }
+        });
+        board.occupy(SPIRIT, BoardCase.ACTIVITY_UNLOAD, "unload", "1,64,1", 42);
+
+        board.vacate(SPIRIT, "задание graph:make:dirt вытеснило занятие ACTIVITY_UNLOAD");
+
+        assertEquals(
+                1,
+                cancelled.size(),
+                "Снятие занятия обязано попасть в журнал: иначе владелец не знает, " + "почему карточка исчезла");
+        assertTrue(
+                cancelled
+                        .get(0)
+                        .modifiers()
+                        .contains("reason=задание graph:make:dirt вытеснило занятие ACTIVITY_UNLOAD"),
+                "Причина отмены пишется в запись: CANCELLED без причины — это карусель карточек без разбора");
+    }
 }
