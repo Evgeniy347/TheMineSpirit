@@ -136,6 +136,7 @@ def absolute(graph, weights):
         "buildings": {},
         "ways": {},
         "events": {},
+        "choice": {},
     }
     for item_id, factor in (weights.get("items") or {}).items():
         item = graph.items.get(item_id)
@@ -163,6 +164,9 @@ def absolute(graph, weights):
                 value = int(math.floor(base * factor + 0.5))
             tasks[task.get("id", "")] = value
         out["events"][event_name] = tasks
+    for name, factor in (weights.get("choice") or {}).items():
+        if name in graph.costs.choice.values:
+            out["choice"][name] = round(graph.costs.choice.values[name] * factor, 6)
     return out
 
 

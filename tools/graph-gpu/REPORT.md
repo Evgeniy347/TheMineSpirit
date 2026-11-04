@@ -283,6 +283,66 @@ Python-модель уже читала аудит (`GraphBuildingMaterials`, `G
 Проверка: `graphExport` → **200/200** до и после; `sim_gpu` = `GraphSimulationTests`;
 `unit --fast-analyzers` 8189; `pmdMain pmdTest`; `gametest --full` 15/15 (новых GameTest нет).
 
+## 05.11-5 — пятый пересчёт: обратная связь мира и «грязный» участок
+
+**Новые входы в Python.** Добавлены и проверены: память неудач (`failureBackoff`), время суток и
+игрок из `GraphFeedback` (метки `more:player_near`, `more:dusk_soon`, `more:bad_trip_conditions`),
+`stuck → rescue_spirit` (одно спасение, без цикла), сканер участка (strays/terrain/damage →
+`demolish_stray`/`backfill`/`clear_floating`/`level_lot`/`repair_*`) и грядка `wheat_field` в плане.
+`GraphChoice` в Python повторяет все 15 правил выбора; в `search.py` добавлены категории `choice:*`.
+
+**Миры.** В базовые старты добавлены:
+- `dirty` — 236 лишних построек, 760 ям, 120 висящих, 50 перепадов, damage у 4 построек;
+- `blocked` — провалы путей `mine_cobble`/`chop_oak_log`/`mine_iron`, штраф за дальнюю дорогу,
+  игрок рядом, сумерки, застрявший дух;
+- `field` — `wheat_field` в плане, семена и земля, посадка.
+Грязный мир успевает выполнить 43 шага расчистки/ремонта до конца этапа; `blocked` делает ровно
+одно спасение и не зацикливается.
+
+**Пересчёт.** 102 категории (добавлены 15 `choice:*`). Ограниченный прогон
+`--fixed "decay,urgentBoost,way:dig,event:*,way:CRAFT_*,way:GATHER_MATERIALS"`:
+9 поколений × 8 × 2 сида, доля **0.9783**, сумма 1808 → 1785 до правок. `choice:*` в итоге
+оставлены нейтральными: `GraphChoiceTests` требует, чтобы граф по умолчанию не менял поведение.
+Исключения: `decay` 0.55, `urgentBoost` 0, `coal` 28, `cobblestone`/`stick` 36,
+`orchard_oak` 40, `event:*`/`way:dig` и `choice:*` 1.0.
+
+Метрики стартов (03.11-4 → 05.11-5):
+
+| Старт | До | После |
+|---|---|---|
+| `late3` | 223 | 224, этап 3 |
+| `late3-half` | 84 | 81, этап 3 |
+| `stage2-full` | 652 | 632, этап 3 |
+| `stage2-all` | 453 | 450, этап 3 |
+| `farm` | 135 | 135 |
+| `more` / `more2` / `more3` | 17 / 16 / 20 | 12 / 15 / 12 |
+| `more4` / `more5` / `more6` / `more7` | 18 / 21 / 13 / 11 | 14 / 19 / 11 / 6 |
+| `dirty` / `blocked` / `field` | — | 43 / 10 / 43 |
+
+Базовые миры Java: 84 / 606 / 802 / 632 / 7320 шагов; Python совпадает по шагам, тикам и порядку.
+
+Мёртвые узлы: путей — **0**, построек — 2 необязательные заглушки (`more2_field_chest`,
+`more2_trail`), событий — 8 push-only без заданий (`crop_dry`, `pen_full`, `gear_kit_*`,
+`more6_spirits_short`, `more7_field_full`); они подаются и меняют веса, но в журнал заданий не
+попадают.
+
+**Естественный рельеф и `level_lot`.** Да, похоже на ложные срабатывания: `WorldAreaInputs`
+считает `cut` по `found.mounds()` всего участка, а `GraphWorldEvents` поднимает `level_lot` при
+любом непустом `cut`. Живые ~3263 «насыпи» — это, скорее всего, естественные холмы. Пока вес
+`level_lot` не повышен: base 45, `event:*` заморожены. Предложение: считать `cut/fill` только
+внутри контура лота/плана и только относительно схемы (не природного рельефа); природный склон
+помечать `natural`/`unknown` и не давать ему событие. Это отдельная правка сканера и тестов
+`WorldAreaInputs`; без неё `level_lot` в поиске лучше не усиливать.
+
+**Техдолг.** Удалён мёртвый `neoforge/BuildStands.java` (на него не было production-ссылок).
+`choice:strategicBoost`/`bottleneckBoost`/`idleStationBoost`/`spaceFoundBoost` — бонусы с
+нулевым значением, множитель поиска на них не действует; нужен отдельный аддитивный параметр,
+если их真的要 подбирать. Грязный мир заканчивает этап раньше, чем исчерпывает 236/760 задач
+расчистки — для полного прогона нужен отдельный «стресс»-мир без финишной постройки.
+
+Проверка: `graphExport` → **200/200**; `sim_gpu` = `GraphSimulationTests`;
+`unit --fast-analyzers` 8361; `pmdMain pmdTest`; `gametest --full` 18/18.
+
 ## Найдено в данных Java (не правил)
 
 - В слиянии графа два разных пути имеют один `id = craft_bread`: ручной делает `food` (weight 0.7),

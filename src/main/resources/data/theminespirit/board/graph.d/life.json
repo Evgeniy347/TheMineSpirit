@@ -2,7 +2,7 @@
   "items": {
     "rescue": {
       "xmin": 0,
-      "base": 400,
+      "base": 423,
       "stage": 1,
       "implemented": true
     }
@@ -13,7 +13,7 @@
       "case": "RESCUE_SPIRIT",
       "makes": "rescue",
       "yield": 1,
-      "weight": 1.0,
+      "weight": 1.013453,
       "ticks": 300,
       "implemented": true
     }

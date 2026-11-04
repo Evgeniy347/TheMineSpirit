@@ -745,6 +745,24 @@ class State:
         for name in derived:
             if name not in self.events:
                 self.events.append(name)
+        self._derive_feedback_tags()
+
+    def _derive_feedback_tags(self):
+        """MoreInputs/MoreRules: время суток и игрок из обратной связи мира."""
+        player = self.player or {}
+        clock = self.clock or {}
+        if player.get("near", False):
+            if "more:player_near" not in self.world:
+                self.world.append("more:player_near")
+            if player.get("holdingBlock", False) or player.get("usingItem", False) or player.get("digging", False):
+                if "more:player_building" not in self.world:
+                    self.world.append("more:player_building")
+        if clock.get("duskSoon", False):
+            for tag in ("more:dusk_soon", "more:bad_trip_conditions"):
+                if tag not in self.world:
+                    self.world.append(tag)
+        if self.failures and "more:failures_repeat" not in self.world:
+            self.world.append("more:failures_repeat")
 
     def copy(self):
         return State({

@@ -1,7 +1,7 @@
 {
   "decay": 0.55,
   "urgentBoost": 0,
-  "buildReadyBoost": 15,
+  "buildReadyBoost": 10,
   "buildStartShare": 0.25,
   "maxPriority": 100,
   "choice": {
@@ -78,108 +78,108 @@
     "torch": {
       "xmin": 16,
       "k": 2,
-      "base": 13
+      "base": 14
     },
     "raw_iron": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 7,
       "stage": 2
     },
     "iron_ingot": {
       "xmin": 3,
       "k": 2,
-      "base": 10,
+      "base": 9,
       "stage": 2
     },
     "food": {
       "xmin": 8,
       "k": 1,
-      "base": 14
+      "base": 15
     },
     "wheat_seeds": {
       "xmin": 8,
       "k": 1,
-      "base": 8,
+      "base": 7,
       "stage": 2
     },
     "wheat": {
       "xmin": 16,
       "k": 1,
-      "base": 10,
+      "base": 9,
       "stage": 2
     },
     "bed": {
       "xmin": 1,
       "k": 1,
-      "base": 12,
+      "base": 11,
       "stage": 3,
       "perSpirit": true
     },
     "bricks": {
       "xmin": 0,
       "k": 1,
-      "base": 10,
+      "base": 12,
       "stage": 3
     },
     "clay_ball": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "carrot": {
       "xmin": 8,
       "k": 1,
-      "base": 8,
+      "base": 7,
       "stage": 2
     },
     "potato": {
       "xmin": 8,
       "k": 1,
-      "base": 8,
+      "base": 7,
       "stage": 2
     },
     "beetroot": {
       "xmin": 8,
       "k": 1,
-      "base": 8,
+      "base": 7,
       "stage": 2
     },
     "sugar_cane": {
       "xmin": 8,
       "k": 1,
-      "base": 8,
+      "base": 7,
       "stage": 2
     },
     "melon_slice": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "glistering_melon_slice": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 8,
       "stage": 3
     },
     "golden_carrot": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 8,
       "stage": 3
     },
     "pumpkin": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "cocoa_beans": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 8,
       "stage": 3
     },
     "sweet_berries": {
@@ -191,37 +191,37 @@
     "paper": {
       "xmin": 8,
       "k": 1,
-      "base": 10,
+      "base": 12,
       "stage": 3
     },
     "book": {
       "xmin": 4,
       "k": 1,
-      "base": 10,
+      "base": 12,
       "stage": 3
     },
     "sugar": {
       "xmin": 4,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "leather": {
       "xmin": 4,
       "k": 1,
-      "base": 8,
+      "base": 7,
       "stage": 2
     },
     "feather": {
       "xmin": 8,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "egg": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "bone": {
@@ -233,164 +233,164 @@
     "bone_meal": {
       "xmin": 8,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "string": {
       "xmin": 4,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "gravel": {
       "xmin": 8,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "flint": {
       "xmin": 4,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "arrow": {
       "xmin": 16,
       "k": 2,
-      "base": 10,
+      "base": 9,
       "stage": 2
     },
     "bow": {
       "xmin": 1,
       "k": 1,
-      "base": 14,
+      "base": 13,
       "stage": 2,
       "perSpirit": true
     },
     "shield": {
       "xmin": 1,
       "k": 1,
-      "base": 14,
+      "base": 13,
       "stage": 2,
       "perSpirit": true
     },
     "iron_armor": {
       "xmin": 1,
       "k": 1,
-      "base": 14,
+      "base": 13,
       "stage": 3,
       "perSpirit": true
     },
     "leather_armor": {
       "xmin": 1,
       "k": 1,
-      "base": 13,
+      "base": 12,
       "stage": 2,
       "perSpirit": true
     },
     "bucket": {
       "xmin": 1,
       "k": 1,
-      "base": 10,
+      "base": 9,
       "stage": 2
     },
     "water_bucket": {
       "xmin": 1,
       "k": 1,
-      "base": 14,
+      "base": 13,
       "stage": 2,
       "perSpirit": true
     },
     "sand": {
       "xmin": 16,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "glass": {
       "xmin": 8,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "lapis_lazuli": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "diamond": {
       "xmin": 0,
       "k": 1,
-      "base": 10,
+      "base": 12,
       "stage": 3
     },
     "gold_ingot": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "redstone": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 8,
       "stage": 3
     },
     "obsidian": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "glass_bottle": {
       "xmin": 3,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "nether_wart": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "blaze_rod": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3,
       "implemented": false
     },
     "potion_healing": {
       "xmin": 2,
       "k": 1.5,
-      "base": 13,
+      "base": 15,
       "stage": 3,
       "implemented": false
     },
     "potion_fire_resistance": {
       "xmin": 1,
       "k": 1.5,
-      "base": 12,
+      "base": 14,
       "stage": 3,
       "implemented": false
     },
     "flint_and_steel": {
       "xmin": 0,
       "k": 1,
-      "base": 10,
+      "base": 12,
       "stage": 3
     },
     "oak_log": {
       "xmin": 8,
       "k": 1,
-      "base": 11
+      "base": 12
     },
     "oak_planks": {
       "xmin": 8,
       "k": 1,
-      "base": 10
+      "base": 11
     },
     "oak_sapling": {
       "xmin": 2,
@@ -400,12 +400,12 @@
     "birch_log": {
       "xmin": 8,
       "k": 1,
-      "base": 11
+      "base": 12
     },
     "birch_planks": {
       "xmin": 8,
       "k": 1,
-      "base": 10
+      "base": 11
     },
     "birch_sapling": {
       "xmin": 2,
@@ -415,12 +415,12 @@
     "spruce_log": {
       "xmin": 8,
       "k": 1,
-      "base": 11
+      "base": 12
     },
     "spruce_planks": {
       "xmin": 8,
       "k": 1,
-      "base": 10
+      "base": 11
     },
     "spruce_sapling": {
       "xmin": 2,
@@ -430,12 +430,12 @@
     "jungle_log": {
       "xmin": 8,
       "k": 1,
-      "base": 11
+      "base": 12
     },
     "jungle_planks": {
       "xmin": 8,
       "k": 1,
-      "base": 10
+      "base": 11
     },
     "jungle_sapling": {
       "xmin": 2,
@@ -445,12 +445,12 @@
     "acacia_log": {
       "xmin": 8,
       "k": 1,
-      "base": 11
+      "base": 12
     },
     "acacia_planks": {
       "xmin": 8,
       "k": 1,
-      "base": 10
+      "base": 11
     },
     "acacia_sapling": {
       "xmin": 2,
@@ -460,12 +460,12 @@
     "dark_oak_log": {
       "xmin": 8,
       "k": 1,
-      "base": 11
+      "base": 12
     },
     "dark_oak_planks": {
       "xmin": 8,
       "k": 1,
-      "base": 10
+      "base": 11
     },
     "dark_oak_sapling": {
       "xmin": 2,
@@ -475,12 +475,12 @@
     "cherry_log": {
       "xmin": 8,
       "k": 1,
-      "base": 11
+      "base": 12
     },
     "cherry_planks": {
       "xmin": 8,
       "k": 1,
-      "base": 10
+      "base": 11
     },
     "cherry_sapling": {
       "xmin": 2,
@@ -490,12 +490,12 @@
     "mangrove_log": {
       "xmin": 8,
       "k": 1,
-      "base": 11
+      "base": 12
     },
     "mangrove_planks": {
       "xmin": 8,
       "k": 1,
-      "base": 10
+      "base": 11
     },
     "mangrove_sapling": {
       "xmin": 2,
@@ -505,254 +505,254 @@
     "cobbled_deepslate": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 7,
       "stage": 2
     },
     "blackstone": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3,
       "implemented": false
     },
     "charcoal": {
       "xmin": 0,
       "k": 1,
-      "base": 9,
+      "base": 10,
       "stage": 1
     },
     "red_sand": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 8,
       "stage": 3
     },
     "white_wool": {
       "xmin": 4,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "white_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "orange_wool": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "orange_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "magenta_wool": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "magenta_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "light_blue_wool": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "light_blue_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "yellow_wool": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "yellow_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "lime_wool": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "lime_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "pink_wool": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "pink_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "gray_wool": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "gray_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "light_gray_wool": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "light_gray_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "cyan_wool": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "cyan_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "purple_wool": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "purple_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "blue_wool": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "blue_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "brown_wool": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "brown_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "green_wool": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "green_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "red_wool": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "red_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "black_wool": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "black_dye": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "poppy": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "dandelion": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "cornflower": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "ink_sac": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "cactus": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "milk_bucket": {
       "xmin": 1,
       "k": 1,
-      "base": 12,
+      "base": 11,
       "stage": 2,
       "perSpirit": true
     },
@@ -1023,116 +1023,116 @@
     "lantern": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "herd_cow": {
       "xmin": 2,
       "k": 1,
-      "base": 10,
+      "base": 9,
       "stage": 2
     },
     "beef": {
       "xmin": 4,
       "k": 1,
-      "base": 10,
+      "base": 9,
       "stage": 2
     },
     "herd_sheep": {
       "xmin": 2,
       "k": 1,
-      "base": 10,
+      "base": 9,
       "stage": 2
     },
     "mutton": {
       "xmin": 4,
       "k": 1,
-      "base": 10,
+      "base": 9,
       "stage": 2
     },
     "herd_pig": {
       "xmin": 2,
       "k": 1,
-      "base": 10,
+      "base": 9,
       "stage": 2
     },
     "porkchop": {
       "xmin": 4,
       "k": 1,
-      "base": 10,
+      "base": 9,
       "stage": 2
     },
     "herd_chicken": {
       "xmin": 2,
       "k": 1,
-      "base": 10,
+      "base": 9,
       "stage": 2
     },
     "chicken": {
       "xmin": 4,
       "k": 1,
-      "base": 10,
+      "base": 9,
       "stage": 2
     },
     "fortune_pickaxe": {
       "xmin": 0,
       "k": 1,
-      "base": 13,
+      "base": 15,
       "stage": 3,
       "implemented": false
     },
     "allium": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "azure_bluet": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "oxeye_daisy": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "red_tulip": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "calcite": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "flowering_azalea": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "bell": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "honeycomb": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "andesite": {
       "xmin": 8,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "stone": {
@@ -1150,49 +1150,49 @@
     "iron_block": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 7,
       "stage": 2
     },
     "iron_nugget": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "stone_bricks": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "stone_brick_slab": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "chiseled_stone_bricks": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "polished_deepslate": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "deepslate_bricks": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "deepslate_tiles": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "crafting_table": {
@@ -1216,31 +1216,31 @@
     "beehive": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "bookshelf": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "brick_slab": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "brick_stairs": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "brown_carpet": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "campfire": {
@@ -1252,19 +1252,19 @@
     "candle": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "cartography_table": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "chain": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "cobblestone_slab": {
@@ -1300,91 +1300,91 @@
     "deepslate_brick_slab": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "deepslate_brick_stairs": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "deepslate_tile_slab": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "deepslate_tile_stairs": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "enchanting_table": {
       "xmin": 0,
       "k": 1,
-      "base": 12,
+      "base": 14,
       "stage": 3
     },
     "fletching_table": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "glass_pane": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "grindstone": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "hay_block": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "lectern": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "light_gray_carpet": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "loom": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "anvil": {
       "xmin": 0,
       "k": 1,
-      "base": 12,
+      "base": 14,
       "stage": 3
     },
     "smithing_table": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "smoker": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "oak_fence_gate": {
@@ -1408,19 +1408,19 @@
     "polished_andesite": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "purple_carpet": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "red_carpet": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "spruce_pressure_plate": {
@@ -1432,7 +1432,7 @@
     "stone_brick_stairs": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "stone_slab": {
@@ -1444,13 +1444,13 @@
     "white_carpet": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "yellow_carpet": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "experience": {
@@ -1462,324 +1462,324 @@
     "enchanted_book_efficiency": {
       "xmin": 1,
       "k": 1,
-      "base": 9,
+      "base": 8,
       "stage": 4
     },
     "enchanted_book_unbreaking": {
       "xmin": 1,
       "k": 1,
-      "base": 9,
+      "base": 8,
       "stage": 4
     },
     "enchanted_book_fortune": {
       "xmin": 1,
       "k": 1,
-      "base": 9,
+      "base": 8,
       "stage": 4
     },
     "enchanted_book_mending": {
       "xmin": 1,
       "k": 1,
-      "base": 9,
+      "base": 8,
       "stage": 4
     },
     "enchanted_book_protection": {
       "xmin": 1,
       "k": 1,
-      "base": 9,
+      "base": 8,
       "stage": 4
     },
     "enchanted_book_sharpness": {
       "xmin": 1,
       "k": 1,
-      "base": 9,
+      "base": 8,
       "stage": 4
     },
     "enchanted_book_silk_touch": {
       "xmin": 1,
       "k": 1,
-      "base": 9,
+      "base": 8,
       "stage": 4
     },
     "water_bottle": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "blaze_powder": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 8,
       "stage": 3
     },
     "ghast_tear": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 8,
       "stage": 3
     },
     "pufferfish": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 8,
       "stage": 3
     },
     "potion_regeneration": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "potion_strength": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "potion_swiftness": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "potion_night_vision": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "potion_water_breathing": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "splash_potion_healing": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "splash_potion_regeneration": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "splash_potion_fire_resistance": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "splash_potion_strength": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "splash_potion_swiftness": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "splash_potion_night_vision": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "splash_potion_water_breathing": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "nether_quartz": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "glowstone_dust": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "magma_cream": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "slime_ball": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 8,
       "stage": 3
     },
     "netherite_scrap": {
       "xmin": 1,
       "k": 1,
-      "base": 11,
+      "base": 10,
       "stage": 4
     },
     "netherite_ingot": {
       "xmin": 1,
       "k": 1,
-      "base": 13,
+      "base": 12,
       "stage": 4
     },
     "ender_pearl": {
       "xmin": 1,
       "k": 1,
-      "base": 9,
+      "base": 8,
       "stage": 4
     },
     "ender_eye": {
       "xmin": 1,
       "k": 1,
-      "base": 11,
+      "base": 10,
       "stage": 4
     },
     "repeater": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "lever": {
       "xmin": 1,
       "k": 1,
-      "base": 7,
+      "base": 8,
       "stage": 3
     },
     "stone_button": {
       "xmin": 1,
       "k": 1,
-      "base": 7,
+      "base": 8,
       "stage": 3
     },
     "stone_pressure_plate": {
       "xmin": 1,
       "k": 1,
-      "base": 7,
+      "base": 8,
       "stage": 3
     },
     "piston": {
       "xmin": 1,
       "k": 1,
-      "base": 10,
+      "base": 12,
       "stage": 3
     },
     "hopper": {
       "xmin": 1,
       "k": 1,
-      "base": 10,
+      "base": 12,
       "stage": 3
     },
     "rail": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "minecart": {
       "xmin": 1,
       "k": 1,
-      "base": 10,
+      "base": 12,
       "stage": 3
     },
     "emerald": {
       "xmin": 1,
       "k": 1,
-      "base": 10,
+      "base": 12,
       "stage": 3
     },
     "chainmail_armor": {
       "xmin": 1,
       "k": 1,
-      "base": 13,
+      "base": 12,
       "stage": 2,
       "perSpirit": true
     },
     "diamond_armor": {
       "xmin": 1,
       "k": 1,
-      "base": 17,
+      "base": 16,
       "stage": 3,
       "perSpirit": true
     },
     "netherite_armor": {
       "xmin": 1,
       "k": 1,
-      "base": 19,
+      "base": 18,
       "stage": 4,
       "perSpirit": true
     },
     "crossbow": {
       "xmin": 1,
       "k": 1,
-      "base": 14,
+      "base": 13,
       "stage": 3,
       "perSpirit": true
     },
     "trident": {
       "xmin": 1,
       "k": 1,
-      "base": 19,
+      "base": 18,
       "stage": 4,
       "perSpirit": true
     },
     "bread": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 7,
       "stage": 2
     },
     "cake": {
       "xmin": 1,
       "k": 1,
-      "base": 12,
+      "base": 14,
       "stage": 3
     },
     "pumpkin_pie": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 7,
       "stage": 2
     },
     "beetroot_soup": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 7,
       "stage": 2
     },
     "cookie": {
       "xmin": 1,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "cooked_potato": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 7,
       "stage": 2
     },
     "cooked_fish": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 7,
       "stage": 2
     },
     "honey_bottle": {
       "xmin": 1,
       "k": 1,
-      "base": 8,
+      "base": 9,
       "stage": 3
     },
     "bowl": {
@@ -1791,13 +1791,13 @@
     "cod": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "lava_bucket": {
       "xmin": 1,
       "k": 1,
-      "base": 10,
+      "base": 12,
       "stage": 3
     },
     "fuel_planks": {
@@ -1809,152 +1809,152 @@
     "wolf": {
       "xmin": 1,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "ocelot": {
       "xmin": 1,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "salmon": {
       "xmin": 0,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "oak_leaves": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "carved_pumpkin": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 4,
       "stage": 2
     },
     "moss_block": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "coal_ore": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "copper_ore": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "emerald_ore": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "deepslate_emerald_ore": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "deepslate_lapis_ore": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "deepslate_redstone_ore": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "nether_quartz_ore": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "raw_copper": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "amethyst_shard": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "pointed_dripstone": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "tuff": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "ice": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "snowball": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "mud": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "mangrove_roots": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "netherrack": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "basalt": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "crying_obsidian": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
@@ -1981,86 +1981,86 @@
     "bamboo": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "kelp": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "sea_pickle": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "vine": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "shears": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "brown_mushroom": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "red_mushroom": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "blue_orchid": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "lilac": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "peony": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "sunflower": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "lily_of_the_valley": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "orange_tulip": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "pink_petals": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "chorus_fruit": {
@@ -2073,21 +2073,21 @@
     "warped_stem": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "crimson_stem": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "warped_fungus": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
@@ -2142,111 +2142,111 @@
     "stripped_crimson_stem": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "stripped_warped_stem": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "stripped_bamboo_block": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "bamboo_block": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "exposed_copper": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "copper_block": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "weathered_copper": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "oxidized_copper": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "exposed_copper_door": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "copper_door": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "weathered_copper_door": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "oxidized_copper_door": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "exposed_copper_trapdoor": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "copper_trapdoor": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "weathered_copper_trapdoor": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "oxidized_copper_trapdoor": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "rabbit": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "rabbit_hide": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "spider_eye": {
@@ -2258,26 +2258,26 @@
     "glow_ink_sac": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "turtle_scute": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "armadillo_scute": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "brush": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "creeper_head": {
@@ -2304,28 +2304,28 @@
     "nautilus_shell": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "heart_of_the_sea": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "prismarine_shard": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "prismarine_crystals": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
@@ -2339,42 +2339,42 @@
     "sniffer_egg": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "sniffer": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "torchflower_seeds": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "pitcher_pod": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "torchflower": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "pitcher_plant": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
@@ -2493,77 +2493,77 @@
     "iron_horse_armor": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "golden_horse_armor": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "diamond_horse_armor": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "iron_golem": {
       "xmin": 0,
       "k": 1,
-      "base": 5,
+      "base": 6,
       "stage": 3,
       "implemented": false
     },
     "snow_golem": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "snow_block": {
       "xmin": 0,
       "k": 1,
-      "base": 4,
+      "base": 3,
       "stage": 2
     },
     "cat": {
       "xmin": 1,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "horse": {
       "xmin": 1,
       "k": 1,
-      "base": 10,
+      "base": 12,
       "stage": 3
     },
     "saddle": {
       "xmin": 1,
       "k": 1,
-      "base": 10,
+      "base": 12,
       "stage": 3
     },
     "bee_nest": {
       "xmin": 1,
       "k": 1,
-      "base": 7,
+      "base": 6,
       "stage": 2
     },
     "expedition_party": {
       "xmin": 1,
       "k": 1,
-      "base": 10,
+      "base": 12,
       "stage": 3
     },
     "expedition_sword": {
       "xmin": 1,
       "k": 1,
-      "base": 12,
+      "base": 11,
       "stage": 3,
       "perSpirit": true
     }
@@ -2572,7 +2572,7 @@
     "crafting_table": {
       "case": "CRAFTING_STATION",
       "stage": 1,
-      "base": 147,
+      "base": 108,
       "materials": {
         "#planks": 4
       }
@@ -2580,7 +2580,7 @@
     "furnace": {
       "case": "CRAFT_FURNACE",
       "stage": 1,
-      "base": 117,
+      "base": 86,
       "materials": {
         "#stone_crafting": 8
       },
@@ -2591,7 +2591,7 @@
     "clearing": {
       "case": "CLEAR_GROUNDS",
       "stage": 1,
-      "base": 107,
+      "base": 78,
       "materials": {
         "#planks": 8
       },
@@ -2606,7 +2606,7 @@
     "chests": {
       "case": "STOCK_CHESTS",
       "stage": 1,
-      "base": 107,
+      "base": 78,
       "materials": {
         "#planks": 16
       },
@@ -2617,7 +2617,7 @@
     "mine": {
       "case": "BUILD_MINE",
       "stage": 1,
-      "base": 107,
+      "base": 78,
       "materials": {
         "torch": 6
       },
@@ -2629,7 +2629,7 @@
     "lighting": {
       "case": "LIGHTING",
       "stage": 1,
-      "base": 107,
+      "base": 78,
       "materials": {
         "torch": 8
       },
@@ -2640,7 +2640,7 @@
     "fence": {
       "case": "BUILD_FENCE",
       "stage": 1,
-      "base": 107,
+      "base": 78,
       "materials": {
         "oak_log": 40
       },
@@ -2651,7 +2651,7 @@
     "hut": {
       "case": "BUILD_HOUSE",
       "stage": 1,
-      "base": 107,
+      "base": 78,
       "materials": {
         "oak_log": 12,
         "oak_planks": 30,
@@ -2664,7 +2664,7 @@
     "streets": {
       "case": "BUILD_STREETS",
       "stage": 1,
-      "base": 84,
+      "base": 62,
       "materials": {
         "dirt": 40
       },
@@ -2675,7 +2675,7 @@
     "warehouse": {
       "case": "BUILD_WAREHOUSE",
       "stage": 2,
-      "base": 104,
+      "base": 92,
       "materials": {
         "oak_planks": 40,
         "cobblestone": 32
@@ -2684,7 +2684,7 @@
     "smithing_table": {
       "case": "CRAFT_SMITHING_TABLE",
       "stage": 2,
-      "base": 84,
+      "base": 74,
       "materials": {
         "iron_ingot": 2,
         "#planks": 4
@@ -2693,7 +2693,7 @@
     "anvil": {
       "case": "CRAFT_ANVIL",
       "stage": 2,
-      "base": 84,
+      "base": 74,
       "materials": {
         "iron_ingot": 31
       }
@@ -2701,7 +2701,7 @@
     "plaza": {
       "case": "BUILD_PLACED",
       "stage": 2,
-      "base": 73,
+      "base": 64,
       "materials": {
         "cobblestone": 40,
         "torch": 4
@@ -2710,7 +2710,7 @@
     "family_house_a": {
       "case": "BUILD_PLACED",
       "stage": 2,
-      "base": 93,
+      "base": 82,
       "materials": {
         "oak_log": 16,
         "oak_planks": 40,
@@ -2720,7 +2720,7 @@
     "family_house_b": {
       "case": "BUILD_PLACED",
       "stage": 2,
-      "base": 93,
+      "base": 82,
       "materials": {
         "oak_log": 16,
         "oak_planks": 40,
@@ -2730,7 +2730,7 @@
     "family_house_c": {
       "case": "BUILD_PLACED",
       "stage": 2,
-      "base": 93,
+      "base": 82,
       "materials": {
         "oak_log": 16,
         "oak_planks": 40,
@@ -2740,7 +2740,7 @@
     "barn": {
       "case": "BUILD_PLACED",
       "stage": 2,
-      "base": 84,
+      "base": 74,
       "materials": {
         "oak_log": 24,
         "oak_planks": 48,
@@ -2750,7 +2750,7 @@
     "field": {
       "case": "BUILD_PLACED",
       "stage": 2,
-      "base": 93,
+      "base": 82,
       "materials": {
         "wheat_seeds": 16,
         "dirt": 16
@@ -2759,7 +2759,7 @@
     "well": {
       "case": "BUILD_PLACED",
       "stage": 2,
-      "base": 73,
+      "base": 64,
       "materials": {
         "cobblestone": 24
       }
@@ -2767,7 +2767,7 @@
     "lumber_yard": {
       "case": "BUILD_PLACED",
       "stage": 2,
-      "base": 84,
+      "base": 74,
       "materials": {
         "oak_log": 16,
         "oak_planks": 32,
@@ -2777,7 +2777,7 @@
     "workshop": {
       "case": "BUILD_PLACED",
       "stage": 2,
-      "base": 84,
+      "base": 74,
       "materials": {
         "oak_log": 12,
         "oak_planks": 32,
@@ -2787,7 +2787,7 @@
     "player_house": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 618,
+      "base": 721,
       "materials": {
         "oak_log": 24,
         "oak_planks": 64,
@@ -2797,7 +2797,7 @@
     "forge": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 426,
+      "base": 497,
       "materials": {
         "cobblestone": 48,
         "bricks": 32,
@@ -2807,7 +2807,7 @@
     "bakery": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 426,
+      "base": 497,
       "materials": {
         "oak_log": 12,
         "oak_planks": 24,
@@ -2817,7 +2817,7 @@
     "apiary": {
       "case": "PLACE_BEEHIVE",
       "stage": 3,
-      "base": 334,
+      "base": 390,
       "materials": {
         "#planks": 16
       }
@@ -2825,7 +2825,7 @@
     "kennel": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 283,
+      "base": 330,
       "materials": {
         "oak_log": 8,
         "oak_planks": 24,
@@ -2835,7 +2835,7 @@
     "stable": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 283,
+      "base": 330,
       "materials": {
         "oak_log": 16,
         "oak_planks": 32,
@@ -2845,7 +2845,7 @@
     "barracks": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 375,
+      "base": 438,
       "materials": {
         "oak_log": 16,
         "oak_planks": 48,
@@ -2856,7 +2856,7 @@
     "weaver": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 334,
+      "base": 390,
       "materials": {
         "oak_log": 12,
         "oak_planks": 32,
@@ -2866,7 +2866,7 @@
     "field_carrot": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 84,
+      "base": 74,
       "materials": {
         "carrot": 8,
         "dirt": 16
@@ -2875,7 +2875,7 @@
     "field_potato": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 84,
+      "base": 74,
       "materials": {
         "potato": 8,
         "dirt": 16
@@ -2884,7 +2884,7 @@
     "field_beetroot": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 84,
+      "base": 74,
       "materials": {
         "beetroot": 8,
         "dirt": 16
@@ -2893,7 +2893,7 @@
     "sugar_cane_bed": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 84,
+      "base": 74,
       "materials": {
         "sugar_cane": 8,
         "dirt": 8
@@ -2902,7 +2902,7 @@
     "melon_patch": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 283,
+      "base": 330,
       "materials": {
         "melon_slice": 1,
         "dirt": 16
@@ -2911,7 +2911,7 @@
     "pumpkin_patch": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 283,
+      "base": 330,
       "materials": {
         "pumpkin": 1,
         "dirt": 16
@@ -2920,7 +2920,7 @@
     "cocoa_grove": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 237,
+      "base": 277,
       "materials": {
         "cocoa_beans": 4,
         "oak_log": 8
@@ -2929,7 +2929,7 @@
     "berry_patch": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 62,
+      "base": 55,
       "materials": {
         "sweet_berries": 4,
         "dirt": 8
@@ -2938,7 +2938,7 @@
     "chicken_coop": {
       "case": "BUILD_PEN",
       "stage": 2,
-      "base": 73,
+      "base": 64,
       "materials": {
         "oak_log": 16,
         "oak_planks": 8
@@ -2947,7 +2947,7 @@
     "brewing_stand": {
       "case": "CRAFT_BREWING_STAND",
       "stage": 3,
-      "base": 334,
+      "base": 390,
       "materials": {
         "blaze_rod": 1,
         "cobblestone": 3
@@ -2956,7 +2956,7 @@
     "enchanting_table": {
       "case": "ENCHANT_ROOM",
       "stage": 3,
-      "base": 334,
+      "base": 390,
       "materials": {
         "diamond": 2,
         "obsidian": 4,
@@ -2966,7 +2966,7 @@
     "portal_hall": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 334,
+      "base": 390,
       "materials": {
         "cobblestone": 160,
         "obsidian": 10,
@@ -2980,7 +2980,7 @@
     "portal_lit": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 334,
+      "base": 390,
       "materials": {
         "flint_and_steel": 1
       },
@@ -2991,7 +2991,7 @@
     "orchard_oak": {
       "case": "BUILD_ORCHARD",
       "stage": 1,
-      "base": 50,
+      "base": 40,
       "materials": {
         "oak_sapling": 4,
         "torch": 4,
@@ -3004,7 +3004,7 @@
     "orchard_birch": {
       "case": "BUILD_ORCHARD",
       "stage": 1,
-      "base": 95,
+      "base": 70,
       "materials": {
         "birch_sapling": 4,
         "torch": 4,
@@ -3015,7 +3015,7 @@
     "orchard_spruce": {
       "case": "BUILD_ORCHARD",
       "stage": 1,
-      "base": 95,
+      "base": 70,
       "materials": {
         "spruce_sapling": 4,
         "torch": 4,
@@ -3026,7 +3026,7 @@
     "orchard_jungle": {
       "case": "BUILD_ORCHARD",
       "stage": 1,
-      "base": 95,
+      "base": 70,
       "materials": {
         "jungle_sapling": 4,
         "torch": 4,
@@ -3037,7 +3037,7 @@
     "orchard_acacia": {
       "case": "BUILD_ORCHARD",
       "stage": 1,
-      "base": 95,
+      "base": 70,
       "materials": {
         "acacia_sapling": 4,
         "torch": 4,
@@ -3048,7 +3048,7 @@
     "orchard_dark_oak": {
       "case": "BUILD_ORCHARD",
       "stage": 1,
-      "base": 95,
+      "base": 70,
       "materials": {
         "dark_oak_sapling": 4,
         "torch": 4,
@@ -3059,7 +3059,7 @@
     "orchard_cherry": {
       "case": "BUILD_ORCHARD",
       "stage": 1,
-      "base": 95,
+      "base": 70,
       "materials": {
         "cherry_sapling": 4,
         "torch": 4,
@@ -3070,7 +3070,7 @@
     "orchard_mangrove": {
       "case": "BUILD_ORCHARD",
       "stage": 1,
-      "base": 95,
+      "base": 70,
       "materials": {
         "mangrove_sapling": 4,
         "torch": 4,
@@ -3081,7 +3081,7 @@
     "mine_level_2": {
       "case": "BUILD_MINE",
       "stage": 2,
-      "base": 93,
+      "base": 82,
       "materials": {
         "torch": 8
       },
@@ -3093,7 +3093,7 @@
     "mine_level_3": {
       "case": "BUILD_MINE",
       "stage": 2,
-      "base": 93,
+      "base": 82,
       "materials": {
         "torch": 8
       },
@@ -3105,7 +3105,7 @@
     "mine_level_4": {
       "case": "BUILD_MINE",
       "stage": 3,
-      "base": 426,
+      "base": 497,
       "materials": {
         "torch": 8
       },
@@ -3117,7 +3117,7 @@
     "pen_cow": {
       "case": "BUILD_PEN",
       "stage": 2,
-      "base": 93,
+      "base": 82,
       "materials": {
         "oak_log": 24
       }
@@ -3125,7 +3125,7 @@
     "pen_sheep": {
       "case": "BUILD_PEN",
       "stage": 2,
-      "base": 93,
+      "base": 82,
       "materials": {
         "oak_log": 24
       }
@@ -3133,7 +3133,7 @@
     "pen_pig": {
       "case": "BUILD_PEN",
       "stage": 2,
-      "base": 93,
+      "base": 82,
       "materials": {
         "oak_log": 24
       }
@@ -3141,7 +3141,7 @@
     "smoker": {
       "case": "CRAFT_SMOKER",
       "stage": 2,
-      "base": 84,
+      "base": 74,
       "materials": {
         "#logs": 4,
         "#stone_crafting": 8
@@ -3150,7 +3150,7 @@
     "campfire": {
       "case": "BUILD_HOUSE",
       "stage": 1,
-      "base": 74,
+      "base": 54,
       "materials": {
         "#logs": 3,
         "stick": 3,
@@ -3161,7 +3161,7 @@
     "family_house_1": {
       "case": "BUILD_HOUSE",
       "stage": 1,
-      "base": 107,
+      "base": 78,
       "materials": {
         "oak_log": 16,
         "oak_planks": 48,
@@ -3173,7 +3173,7 @@
     "family_house_2": {
       "case": "BUILD_HOUSE",
       "stage": 1,
-      "base": 107,
+      "base": 78,
       "materials": {
         "oak_log": 20,
         "oak_planks": 56,
@@ -3189,7 +3189,7 @@
     "family_house_3": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 97,
+      "base": 86,
       "materials": {
         "oak_log": 24,
         "oak_planks": 64,
@@ -3206,7 +3206,7 @@
     "family_house_4": {
       "case": "BUILD_HOUSE",
       "stage": 4,
-      "base": 54,
+      "base": 57,
       "materials": {
         "oak_log": 32,
         "oak_planks": 96,
@@ -3225,7 +3225,7 @@
     "player_house_1": {
       "case": "BUILD_HOUSE",
       "stage": 1,
-      "base": 137,
+      "base": 100,
       "materials": {
         "oak_log": 24,
         "oak_planks": 72,
@@ -3238,7 +3238,7 @@
     "player_house_2": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 135,
+      "base": 119,
       "materials": {
         "oak_log": 28,
         "oak_planks": 80,
@@ -3256,7 +3256,7 @@
     "player_house_3": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 618,
+      "base": 721,
       "materials": {
         "oak_log": 32,
         "oak_planks": 96,
@@ -3275,7 +3275,7 @@
     "player_house_4": {
       "case": "BUILD_HOUSE",
       "stage": 4,
-      "base": 72,
+      "base": 75,
       "materials": {
         "oak_log": 48,
         "oak_planks": 128,
@@ -3295,7 +3295,7 @@
     "warehouse_2": {
       "case": "BUILD_WAREHOUSE",
       "stage": 2,
-      "base": 116,
+      "base": 102,
       "materials": {
         "oak_planks": 64,
         "cobblestone": 128,
@@ -3309,7 +3309,7 @@
     "warehouse_3": {
       "case": "BUILD_WAREHOUSE",
       "stage": 3,
-      "base": 521,
+      "base": 608,
       "materials": {
         "stone_bricks": 128,
         "chest": 32,
@@ -3324,7 +3324,7 @@
     "warehouse_4": {
       "case": "BUILD_WAREHOUSE",
       "stage": 4,
-      "base": 60,
+      "base": 63,
       "materials": {
         "stone_bricks": 256,
         "chest": 64,
@@ -3339,7 +3339,7 @@
     "barn_2": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 85,
+      "base": 75,
       "materials": {
         "oak_log": 32,
         "oak_planks": 64,
@@ -3354,7 +3354,7 @@
     "barn_3": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 397,
+      "base": 463,
       "materials": {
         "oak_log": 40,
         "oak_planks": 80,
@@ -3370,7 +3370,7 @@
     "field_2": {
       "case": "BUILD_HOUSE",
       "stage": 1,
-      "base": 95,
+      "base": 70,
       "materials": {
         "wheat_seeds": 32,
         "dirt": 32,
@@ -3385,7 +3385,7 @@
     "field_3": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 93,
+      "base": 82,
       "materials": {
         "wheat_seeds": 48,
         "dirt": 48,
@@ -3401,7 +3401,7 @@
     "pen_2": {
       "case": "BUILD_PEN",
       "stage": 2,
-      "base": 93,
+      "base": 82,
       "materials": {
         "oak_fence": 32,
         "oak_fence_gate": 2,
@@ -3416,7 +3416,7 @@
     "pen_3": {
       "case": "BUILD_PEN",
       "stage": 3,
-      "base": 426,
+      "base": 497,
       "materials": {
         "oak_fence": 48,
         "oak_fence_gate": 2,
@@ -3431,7 +3431,7 @@
     "pen_4": {
       "case": "BUILD_PEN",
       "stage": 3,
-      "base": 426,
+      "base": 497,
       "materials": {
         "oak_fence": 64,
         "oak_fence_gate": 3,
@@ -3446,7 +3446,7 @@
     "plaza_2": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 77,
+      "base": 68,
       "materials": {
         "cobblestone": 128,
         "stone_bricks": 32,
@@ -3461,7 +3461,7 @@
     "plaza_3": {
       "case": "BUILD_HOUSE",
       "stage": 4,
-      "base": 42,
+      "base": 44,
       "materials": {
         "stone_bricks": 192,
         "polished_andesite": 64,
@@ -3477,7 +3477,7 @@
     "workshop_2": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 85,
+      "base": 75,
       "materials": {
         "oak_planks": 64,
         "cobblestone": 48,
@@ -3493,7 +3493,7 @@
     "workshop_3": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 397,
+      "base": 463,
       "materials": {
         "oak_planks": 80,
         "stone_bricks": 48,
@@ -3510,7 +3510,7 @@
     "forge_2": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 93,
+      "base": 82,
       "materials": {
         "cobblestone": 96,
         "bricks": 32,
@@ -3526,7 +3526,7 @@
     "forge_3": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 426,
+      "base": 497,
       "materials": {
         "cobblestone": 128,
         "bricks": 64,
@@ -3543,7 +3543,7 @@
     "apiary_2": {
       "case": "PLACE_BEEHIVE",
       "stage": 3,
-      "base": 359,
+      "base": 419,
       "materials": {
         "oak_planks": 24,
         "beehive": 4,
@@ -3557,7 +3557,7 @@
     "kennel_2": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 307,
+      "base": 358,
       "materials": {
         "oak_planks": 32,
         "hay_block": 4,
@@ -3571,7 +3571,7 @@
     "stable_2": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 307,
+      "base": 358,
       "materials": {
         "oak_planks": 64,
         "oak_fence": 24,
@@ -3585,7 +3585,7 @@
     "stable_3": {
       "case": "BUILD_HOUSE",
       "stage": 4,
-      "base": 35,
+      "base": 37,
       "materials": {
         "oak_planks": 96,
         "oak_fence": 32,
@@ -3600,7 +3600,7 @@
     "well_2": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 73,
+      "base": 64,
       "materials": {
         "cobblestone": 32,
         "stone_bricks": 24,
@@ -3615,7 +3615,7 @@
     "lumber_yard_2": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 85,
+      "base": 75,
       "materials": {
         "oak_log": 32,
         "oak_planks": 48,
@@ -3630,7 +3630,7 @@
     "bakery_2": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 93,
+      "base": 82,
       "materials": {
         "bricks": 64,
         "stone_bricks": 48,
@@ -3646,7 +3646,7 @@
     "bakery_3": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 426,
+      "base": 497,
       "materials": {
         "bricks": 96,
         "stone_bricks": 64,
@@ -3662,7 +3662,7 @@
     "weaver_2": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 359,
+      "base": 419,
       "materials": {
         "bricks": 64,
         "oak_planks": 48,
@@ -3677,7 +3677,7 @@
     "barracks_2": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 85,
+      "base": 75,
       "materials": {
         "oak_planks": 96,
         "cobblestone": 48,
@@ -3692,7 +3692,7 @@
     "barracks_3": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 397,
+      "base": 463,
       "materials": {
         "oak_planks": 128,
         "stone_bricks": 48,
@@ -3708,7 +3708,7 @@
     "outpost_1": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 334,
+      "base": 390,
       "materials": {
         "oak_log": 24,
         "oak_planks": 32,
@@ -3721,7 +3721,7 @@
     "outpost_2": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 334,
+      "base": 390,
       "materials": {
         "oak_log": 32,
         "oak_planks": 48,
@@ -3737,7 +3737,7 @@
     "outpost_3": {
       "case": "BUILD_HOUSE",
       "stage": 4,
-      "base": 37,
+      "base": 39,
       "materials": {
         "oak_log": 48,
         "oak_planks": 64,
@@ -3754,7 +3754,7 @@
     "wall_2": {
       "case": "BUILD_FENCE",
       "stage": 1,
-      "base": 107,
+      "base": 78,
       "materials": {
         "oak_log": 64,
         "oak_planks": 16
@@ -3768,7 +3768,7 @@
     "wall_3": {
       "case": "BUILD_FENCE",
       "stage": 2,
-      "base": 104,
+      "base": 92,
       "materials": {
         "cobblestone": 128,
         "stone_bricks": 32
@@ -3782,7 +3782,7 @@
     "wall_4": {
       "case": "BUILD_FENCE",
       "stage": 3,
-      "base": 472,
+      "base": 551,
       "materials": {
         "stone_bricks": 192,
         "lantern": 8
@@ -3796,7 +3796,7 @@
     "gate_1": {
       "case": "BUILD_FENCE",
       "stage": 1,
-      "base": 107,
+      "base": 78,
       "materials": {
         "oak_fence_gate": 3,
         "oak_fence": 8,
@@ -3808,7 +3808,7 @@
     "gate_2": {
       "case": "BUILD_FENCE",
       "stage": 2,
-      "base": 104,
+      "base": 92,
       "materials": {
         "oak_log": 24,
         "oak_fence_gate": 3,
@@ -3823,7 +3823,7 @@
     "gate_3": {
       "case": "BUILD_FENCE",
       "stage": 3,
-      "base": 472,
+      "base": 551,
       "materials": {
         "stone_bricks": 64,
         "oak_fence_gate": 3,
@@ -3838,7 +3838,7 @@
     "gate_4": {
       "case": "BUILD_FENCE",
       "stage": 4,
-      "base": 55,
+      "base": 58,
       "materials": {
         "stone_bricks": 128,
         "oak_fence_gate": 4,
@@ -3853,7 +3853,7 @@
     "archer_tower_1": {
       "case": "BUILD_HOUSE",
       "stage": 1,
-      "base": 74,
+      "base": 54,
       "materials": {
         "oak_log": 24,
         "oak_planks": 32
@@ -3864,7 +3864,7 @@
     "archer_tower_2": {
       "case": "BUILD_HOUSE",
       "stage": 2,
-      "base": 73,
+      "base": 64,
       "materials": {
         "cobblestone": 64,
         "oak_planks": 32
@@ -3878,7 +3878,7 @@
     "archer_tower_3": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 334,
+      "base": 390,
       "materials": {
         "stone_bricks": 96,
         "oak_planks": 32,
@@ -3893,7 +3893,7 @@
     "bridge_1": {
       "case": "BUILD_HOUSE",
       "stage": 1,
-      "base": 74,
+      "base": 54,
       "materials": {
         "oak_log": 32,
         "oak_planks": 48
@@ -3904,7 +3904,7 @@
     "bridge_2": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 334,
+      "base": 390,
       "materials": {
         "stone_bricks": 96,
         "lantern": 4
@@ -3918,7 +3918,7 @@
     "lighthouse_1": {
       "case": "BUILD_HOUSE",
       "stage": 4,
-      "base": 37,
+      "base": 39,
       "materials": {
         "cobblestone": 96,
         "torch": 8
@@ -3929,7 +3929,7 @@
     "lighthouse_2": {
       "case": "BUILD_HOUSE",
       "stage": 4,
-      "base": 37,
+      "base": 39,
       "materials": {
         "stone_bricks": 128,
         "lantern": 8,
@@ -3944,7 +3944,7 @@
     "pier_1": {
       "case": "BUILD_HOUSE",
       "stage": 4,
-      "base": 37,
+      "base": 39,
       "materials": {
         "oak_log": 24,
         "oak_planks": 32
@@ -3955,7 +3955,7 @@
     "pier_2": {
       "case": "BUILD_HOUSE",
       "stage": 4,
-      "base": 37,
+      "base": 39,
       "materials": {
         "oak_log": 32,
         "oak_planks": 64,
@@ -3970,7 +3970,7 @@
     "composter": {
       "case": "CRAFTING_STATION",
       "stage": 2,
-      "base": 84,
+      "base": 74,
       "materials": {
         "#planks": 7
       }
@@ -3978,7 +3978,7 @@
     "town_hall": {
       "case": "BUILD_HOUSE",
       "stage": 4,
-      "base": 49,
+      "base": 51,
       "materials": {
         "stone_bricks": 128,
         "oak_planks": 96,
@@ -3992,7 +3992,7 @@
     "tavern": {
       "case": "BUILD_HOUSE",
       "stage": 4,
-      "base": 46,
+      "base": 48,
       "materials": {
         "oak_log": 32,
         "oak_planks": 96,
@@ -4006,7 +4006,7 @@
     "infirmary": {
       "case": "BUILD_HOUSE",
       "stage": 4,
-      "base": 46,
+      "base": 48,
       "materials": {
         "stone_bricks": 64,
         "oak_planks": 64,
@@ -4020,7 +4020,7 @@
     "training_yard": {
       "case": "BUILD_HOUSE",
       "stage": 4,
-      "base": 44,
+      "base": 46,
       "materials": {
         "oak_fence": 48,
         "hay_block": 8,
@@ -4032,7 +4032,7 @@
     "enchant_room": {
       "case": "ENCHANT_ROOM",
       "stage": 4,
-      "base": 49,
+      "base": 51,
       "materials": {
         "oak_planks": 64,
         "oak_log": 12,
@@ -4045,7 +4045,7 @@
     "enchant_room_2": {
       "case": "ENCHANT_ROOM",
       "stage": 4,
-      "base": 49,
+      "base": 51,
       "materials": {
         "stone_bricks": 128,
         "oak_planks": 72,
@@ -4062,7 +4062,7 @@
     "enchant_room_3": {
       "case": "ENCHANT_ROOM",
       "stage": 4,
-      "base": 49,
+      "base": 51,
       "materials": {
         "stone_bricks": 192,
         "oak_planks": 96,
@@ -4079,7 +4079,7 @@
     "alchemy": {
       "case": "BUILD_HOUSE",
       "stage": 4,
-      "base": 46,
+      "base": 48,
       "materials": {
         "bricks": 48,
         "oak_planks": 32,
@@ -4094,7 +4094,7 @@
     "library": {
       "case": "BUILD_HOUSE",
       "stage": 4,
-      "base": 46,
+      "base": 48,
       "materials": {
         "oak_planks": 96,
         "bookshelf": 24,
@@ -4107,7 +4107,7 @@
     "path_desert": {
       "case": "BUILD_STREETS",
       "stage": 1,
-      "base": 64,
+      "base": 47,
       "materials": {
         "sand": 16,
         "cobblestone": 8
@@ -4118,7 +4118,7 @@
     "path_plains": {
       "case": "BUILD_STREETS",
       "stage": 1,
-      "base": 64,
+      "base": 47,
       "materials": {
         "dirt": 16,
         "cobblestone": 8
@@ -4129,7 +4129,7 @@
     "path_forest": {
       "case": "BUILD_STREETS",
       "stage": 1,
-      "base": 64,
+      "base": 47,
       "materials": {
         "dirt": 16,
         "cobblestone": 8
@@ -4140,7 +4140,7 @@
     "path_snowy": {
       "case": "BUILD_STREETS",
       "stage": 1,
-      "base": 64,
+      "base": 47,
       "materials": {
         "dirt": 16,
         "cobblestone": 8
@@ -4151,7 +4151,7 @@
     "route_desert": {
       "case": "BUILD_STREETS",
       "stage": 1,
-      "base": 64,
+      "base": 47,
       "materials": {
         "sand": 16,
         "cobblestone": 8
@@ -4163,7 +4163,7 @@
     "route_snow": {
       "case": "BUILD_STREETS",
       "stage": 1,
-      "base": 64,
+      "base": 47,
       "materials": {
         "dirt": 16,
         "cobblestone": 8
@@ -4175,7 +4175,7 @@
     "route_dirt": {
       "case": "BUILD_STREETS",
       "stage": 1,
-      "base": 64,
+      "base": 47,
       "materials": {
         "dirt": 16,
         "cobblestone": 8
@@ -4187,7 +4187,7 @@
     "route_nether_fortress": {
       "case": "BUILD_STREETS",
       "stage": 4,
-      "base": 44,
+      "base": 46,
       "materials": {
         "cobblestone": 32,
         "stone_bricks": 16
@@ -4203,7 +4203,7 @@
     "route_blaze_spawner": {
       "case": "BUILD_STREETS",
       "stage": 4,
-      "base": 44,
+      "base": 46,
       "materials": {
         "cobblestone": 32,
         "stone_bricks": 16
@@ -4219,7 +4219,7 @@
     "route_bastion": {
       "case": "BUILD_STREETS",
       "stage": 4,
-      "base": 44,
+      "base": 46,
       "materials": {
         "cobblestone": 32,
         "stone_bricks": 16
@@ -4235,7 +4235,7 @@
     "route_end_fortress": {
       "case": "BUILD_STREETS",
       "stage": 4,
-      "base": 44,
+      "base": 46,
       "materials": {
         "cobblestone": 32,
         "ender_eye": 1
@@ -4299,7 +4299,7 @@
       "case": "SMELT_CHARCOAL",
       "makes": "charcoal",
       "yield": 1,
-      "weight": 0.968577028,
+      "weight": 1.214664362,
       "consumes": {
         "#logs_that_burn": 1
       },
@@ -4344,7 +4344,7 @@
       "case": "FISH",
       "makes": "food",
       "yield": 2,
-      "weight": 0.497996303
+      "weight": 0.380034425
     },
     {
       "id": "craft_wooden_pickaxe",
@@ -4515,7 +4515,7 @@
       "case": "HARVEST_HIVE",
       "makes": "food",
       "yield": 2,
-      "weight": 0.061475705,
+      "weight": 0.040846733,
       "building": "apiary"
     },
     {
@@ -4774,7 +4774,7 @@
       "case": "COLLECT_DROPS",
       "makes": "bone",
       "yield": 2,
-      "weight": 0.289656598
+      "weight": 0.370752045
     },
     {
       "id": "grind_bone_meal",
@@ -4791,7 +4791,7 @@
       "case": "COLLECT_DROPS",
       "makes": "string",
       "yield": 2,
-      "weight": 0.289656598
+      "weight": 0.370752045
     },
     {
       "id": "dig_gravel",
@@ -5003,7 +5003,7 @@
       "case": "MINE_LEFT_ORE",
       "makes": "lapis_lazuli",
       "yield": 4,
-      "weight": 1.020297086,
+      "weight": 0.980661605,
       "tool": "pickaxe",
       "tier": "stone",
       "building": "mine_level_2"
@@ -5013,7 +5013,7 @@
       "case": "MINE_LEFT_ORE",
       "makes": "diamond",
       "yield": 1,
-      "weight": 1.020297086,
+      "weight": 0.980661605,
       "tool": "pickaxe",
       "tier": "iron",
       "building": "mine_level_4"
@@ -5023,7 +5023,7 @@
       "case": "MINE_LEFT_ORE",
       "makes": "gold_ingot",
       "yield": 1,
-      "weight": 1.020297086,
+      "weight": 0.980661605,
       "tool": "pickaxe",
       "tier": "iron",
       "building": "mine_level_3"
@@ -5033,7 +5033,7 @@
       "case": "MINE_LEFT_ORE",
       "makes": "redstone",
       "yield": 4,
-      "weight": 1.020297086,
+      "weight": 0.980661605,
       "tool": "pickaxe",
       "tier": "iron",
       "building": "mine_level_3"
@@ -5067,7 +5067,7 @@
       "case": "HARVEST_NETHER_WART",
       "makes": "nether_wart",
       "yield": 3,
-      "weight": 4.615736466,
+      "weight": 3.848799542,
       "consumes": {
         "soul_sand": 1,
         "nether_wart": 1
@@ -5078,7 +5078,7 @@
       "case": "COLLECT_DROPS",
       "makes": "blaze_rod",
       "yield": 1,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "building": "portal_lit",
       "implemented": false
     },
@@ -5087,7 +5087,7 @@
       "case": "BREW_POTION",
       "makes": "potion_healing",
       "yield": 3,
-      "weight": 0.739422945,
+      "weight": 0.789351001,
       "consumes": {
         "glass_bottle": 3,
         "nether_wart": 1,
@@ -5101,7 +5101,7 @@
       "case": "BREW_POTION",
       "makes": "potion_fire_resistance",
       "yield": 3,
-      "weight": 0.739422945,
+      "weight": 0.789351001,
       "consumes": {
         "glass_bottle": 3,
         "nether_wart": 1,
@@ -5199,7 +5199,7 @@
       "case": "HARVEST_ORCHARD",
       "makes": "oak_log",
       "yield": 16,
-      "weight": 0.178524691,
+      "weight": 0.178050172,
       "building": "orchard_oak"
     },
     {
@@ -5233,7 +5233,7 @@
       "case": "HARVEST_ORCHARD",
       "makes": "birch_log",
       "yield": 16,
-      "weight": 0.178524691,
+      "weight": 0.178050172,
       "building": "orchard_birch"
     },
     {
@@ -5267,7 +5267,7 @@
       "case": "HARVEST_ORCHARD",
       "makes": "spruce_log",
       "yield": 16,
-      "weight": 0.178524691,
+      "weight": 0.178050172,
       "building": "orchard_spruce"
     },
     {
@@ -5301,7 +5301,7 @@
       "case": "HARVEST_ORCHARD",
       "makes": "jungle_log",
       "yield": 16,
-      "weight": 0.178524691,
+      "weight": 0.178050172,
       "building": "orchard_jungle"
     },
     {
@@ -5335,7 +5335,7 @@
       "case": "HARVEST_ORCHARD",
       "makes": "acacia_log",
       "yield": 16,
-      "weight": 0.178524691,
+      "weight": 0.178050172,
       "building": "orchard_acacia"
     },
     {
@@ -5369,7 +5369,7 @@
       "case": "HARVEST_ORCHARD",
       "makes": "dark_oak_log",
       "yield": 16,
-      "weight": 0.178524691,
+      "weight": 0.178050172,
       "building": "orchard_dark_oak"
     },
     {
@@ -5403,7 +5403,7 @@
       "case": "HARVEST_ORCHARD",
       "makes": "cherry_log",
       "yield": 16,
-      "weight": 0.178524691,
+      "weight": 0.178050172,
       "building": "orchard_cherry"
     },
     {
@@ -5437,7 +5437,7 @@
       "case": "HARVEST_ORCHARD",
       "makes": "mangrove_log",
       "yield": 16,
-      "weight": 0.178524691,
+      "weight": 0.178050172,
       "building": "orchard_mangrove"
     },
     {
@@ -6088,14 +6088,14 @@
       "case": "COLLECT_DROPS",
       "makes": "rotten_flesh",
       "yield": 1,
-      "weight": 0.289656598
+      "weight": 0.370752045
     },
     {
       "id": "loot_gunpowder",
       "case": "COLLECT_DROPS",
       "makes": "gunpowder",
       "yield": 1,
-      "weight": 0.289656598
+      "weight": 0.370752045
     },
     {
       "id": "craft_oak_door",
@@ -6584,7 +6584,7 @@
       "case": "CAPTURE_ANIMAL",
       "makes": "herd_cow",
       "yield": 1,
-      "weight": 0.871565141,
+      "weight": 0.856037336,
       "world": "animals",
       "building": "pen_cow"
     },
@@ -6593,7 +6593,7 @@
       "case": "BREED_ANIMALS",
       "makes": "herd_cow",
       "yield": 1,
-      "weight": 0.410547997,
+      "weight": 0.403872897,
       "consumes": {
         "wheat": 2
       },
@@ -6607,7 +6607,7 @@
       "case": "HERD_CULL",
       "makes": "beef",
       "yield": 2,
-      "weight": 0.991495566,
+      "weight": 0.735779936,
       "consumes": {
         "herd_cow": 1
       },
@@ -6656,7 +6656,7 @@
       "case": "CAPTURE_ANIMAL",
       "makes": "herd_sheep",
       "yield": 1,
-      "weight": 0.871565141,
+      "weight": 0.856037336,
       "world": "animals",
       "building": "pen_sheep"
     },
@@ -6665,7 +6665,7 @@
       "case": "BREED_ANIMALS",
       "makes": "herd_sheep",
       "yield": 1,
-      "weight": 0.410547997,
+      "weight": 0.403872897,
       "consumes": {
         "wheat": 2
       },
@@ -6679,7 +6679,7 @@
       "case": "HERD_CULL",
       "makes": "mutton",
       "yield": 2,
-      "weight": 0.991495566,
+      "weight": 0.735779936,
       "consumes": {
         "herd_sheep": 1
       },
@@ -6728,7 +6728,7 @@
       "case": "CAPTURE_ANIMAL",
       "makes": "herd_pig",
       "yield": 1,
-      "weight": 0.871565141,
+      "weight": 0.856037336,
       "world": "animals",
       "building": "pen_pig"
     },
@@ -6737,7 +6737,7 @@
       "case": "BREED_ANIMALS",
       "makes": "herd_pig",
       "yield": 1,
-      "weight": 0.410547997,
+      "weight": 0.403872897,
       "consumes": {
         "carrot": 2
       },
@@ -6751,7 +6751,7 @@
       "case": "HERD_CULL",
       "makes": "porkchop",
       "yield": 2,
-      "weight": 0.991495566,
+      "weight": 0.735779936,
       "consumes": {
         "herd_pig": 1
       },
@@ -6800,7 +6800,7 @@
       "case": "CAPTURE_ANIMAL",
       "makes": "herd_chicken",
       "yield": 1,
-      "weight": 0.871565141,
+      "weight": 0.856037336,
       "world": "animals",
       "building": "chicken_coop"
     },
@@ -6809,7 +6809,7 @@
       "case": "BREED_ANIMALS",
       "makes": "herd_chicken",
       "yield": 1,
-      "weight": 0.410547997,
+      "weight": 0.403872897,
       "consumes": {
         "wheat_seeds": 2
       },
@@ -6823,7 +6823,7 @@
       "case": "HERD_CULL",
       "makes": "chicken",
       "yield": 2,
-      "weight": 0.991495566,
+      "weight": 0.735779936,
       "consumes": {
         "herd_chicken": 1
       },
@@ -6872,7 +6872,7 @@
       "case": "HERD_CULL",
       "makes": "leather",
       "yield": 1,
-      "weight": 0.991495566,
+      "weight": 0.735779936,
       "consumes": {
         "herd_cow": 1
       },
@@ -6900,7 +6900,7 @@
       "case": "SHEAR_SHEEP",
       "makes": "white_wool",
       "yield": 2,
-      "weight": 2.242521432,
+      "weight": 2.429572387,
       "building": "pen_sheep",
       "needs": {
         "herd_sheep": 1
@@ -6911,7 +6911,7 @@
       "case": "SHEAR_SHEEP",
       "makes": "black_wool",
       "yield": 1,
-      "weight": 0.672756432,
+      "weight": 0.728871719,
       "building": "pen_sheep",
       "world": "sheep:black",
       "needs": {
@@ -6923,7 +6923,7 @@
       "case": "SHEAR_SHEEP",
       "makes": "gray_wool",
       "yield": 1,
-      "weight": 0.672756432,
+      "weight": 0.728871719,
       "building": "pen_sheep",
       "world": "sheep:gray",
       "needs": {
@@ -6935,7 +6935,7 @@
       "case": "SHEAR_SHEEP",
       "makes": "light_gray_wool",
       "yield": 1,
-      "weight": 0.672756432,
+      "weight": 0.728871719,
       "building": "pen_sheep",
       "world": "sheep:light_gray",
       "needs": {
@@ -6947,7 +6947,7 @@
       "case": "SHEAR_SHEEP",
       "makes": "brown_wool",
       "yield": 1,
-      "weight": 0.672756432,
+      "weight": 0.728871719,
       "building": "pen_sheep",
       "world": "sheep:brown",
       "needs": {
@@ -6959,7 +6959,7 @@
       "case": "HUNT_WILD_SHEEP",
       "makes": "mutton",
       "yield": 1,
-      "weight": 1.482799381,
+      "weight": 1.495504006,
       "world": "animals"
     },
     {
@@ -6983,7 +6983,7 @@
       "case": "MINE_LEFT_ORE",
       "makes": "diamond",
       "yield": 1,
-      "weight": 1.020297086,
+      "weight": 0.980661605,
       "tool": "pickaxe",
       "tier": "iron",
       "world": "ore:diamond_found"
@@ -6993,7 +6993,7 @@
       "case": "MINE_LEFT_ORE",
       "makes": "diamond",
       "yield": 3,
-      "weight": 1.32638621,
+      "weight": 1.274860085,
       "world": "ore:diamond_found",
       "needs": {
         "fortune_pickaxe": 1
@@ -7800,7 +7800,7 @@
       "case": "BREW_POTION",
       "makes": "potion_regeneration",
       "yield": 1,
-      "weight": 0.739422945,
+      "weight": 0.789351001,
       "consumes": {
         "glass_bottle": 1,
         "nether_wart": 1,
@@ -7814,7 +7814,7 @@
       "case": "BREW_POTION",
       "makes": "potion_strength",
       "yield": 1,
-      "weight": 0.739422945,
+      "weight": 0.789351001,
       "consumes": {
         "glass_bottle": 1,
         "nether_wart": 1,
@@ -7827,7 +7827,7 @@
       "case": "BREW_POTION",
       "makes": "potion_swiftness",
       "yield": 1,
-      "weight": 0.739422945,
+      "weight": 0.789351001,
       "consumes": {
         "glass_bottle": 1,
         "nether_wart": 1,
@@ -7841,7 +7841,7 @@
       "case": "BREW_POTION",
       "makes": "potion_night_vision",
       "yield": 1,
-      "weight": 0.739422945,
+      "weight": 0.789351001,
       "consumes": {
         "glass_bottle": 1,
         "nether_wart": 1,
@@ -7855,7 +7855,7 @@
       "case": "BREW_POTION",
       "makes": "potion_water_breathing",
       "yield": 1,
-      "weight": 0.739422945,
+      "weight": 0.789351001,
       "consumes": {
         "glass_bottle": 1,
         "nether_wart": 1,
@@ -7869,7 +7869,7 @@
       "case": "BREW_POTION",
       "makes": "splash_potion_healing",
       "yield": 1,
-      "weight": 0.739422945,
+      "weight": 0.789351001,
       "consumes": {
         "glass_bottle": 1,
         "nether_wart": 1,
@@ -7884,7 +7884,7 @@
       "case": "BREW_POTION",
       "makes": "splash_potion_regeneration",
       "yield": 1,
-      "weight": 0.739422945,
+      "weight": 0.789351001,
       "consumes": {
         "glass_bottle": 1,
         "nether_wart": 1,
@@ -7899,7 +7899,7 @@
       "case": "BREW_POTION",
       "makes": "splash_potion_fire_resistance",
       "yield": 1,
-      "weight": 0.739422945,
+      "weight": 0.789351001,
       "consumes": {
         "glass_bottle": 1,
         "nether_wart": 1,
@@ -7914,7 +7914,7 @@
       "case": "BREW_POTION",
       "makes": "splash_potion_strength",
       "yield": 1,
-      "weight": 0.739422945,
+      "weight": 0.789351001,
       "consumes": {
         "glass_bottle": 1,
         "nether_wart": 1,
@@ -7928,7 +7928,7 @@
       "case": "BREW_POTION",
       "makes": "splash_potion_swiftness",
       "yield": 1,
-      "weight": 0.739422945,
+      "weight": 0.789351001,
       "consumes": {
         "glass_bottle": 1,
         "nether_wart": 1,
@@ -7943,7 +7943,7 @@
       "case": "BREW_POTION",
       "makes": "splash_potion_night_vision",
       "yield": 1,
-      "weight": 0.739422945,
+      "weight": 0.789351001,
       "consumes": {
         "glass_bottle": 1,
         "nether_wart": 1,
@@ -7958,7 +7958,7 @@
       "case": "BREW_POTION",
       "makes": "splash_potion_water_breathing",
       "yield": 1,
-      "weight": 0.739422945,
+      "weight": 0.789351001,
       "consumes": {
         "glass_bottle": 1,
         "nether_wart": 1,
@@ -7973,7 +7973,7 @@
       "case": "GRIND_BLAZE_POWDER",
       "makes": "blaze_powder",
       "yield": 2,
-      "weight": 0.449134077,
+      "weight": 0.484764782,
       "consumes": {
         "blaze_rod": 1
       }
@@ -8445,7 +8445,7 @@
       "case": "BREED_ANIMALS",
       "makes": "wolf",
       "yield": 1,
-      "weight": 0.410547997,
+      "weight": 0.403872897,
       "consumes": {
         "beef": 2
       },
@@ -8460,7 +8460,7 @@
       "case": "BREED_ANIMALS",
       "makes": "wolf",
       "yield": 1,
-      "weight": 0.410547997,
+      "weight": 0.403872897,
       "consumes": {
         "porkchop": 2
       },
@@ -8475,7 +8475,7 @@
       "case": "BREED_ANIMALS",
       "makes": "cat",
       "yield": 1,
-      "weight": 0.410547997,
+      "weight": 0.403872897,
       "consumes": {
         "cod": 2
       },
@@ -8490,7 +8490,7 @@
       "case": "BREED_ANIMALS",
       "makes": "ocelot",
       "yield": 1,
-      "weight": 0.410547997,
+      "weight": 0.403872897,
       "consumes": {
         "cod": 2
       },
@@ -8745,7 +8745,7 @@
       "case": "COLLECT_DROPS",
       "makes": "apple",
       "yield": 1,
-      "weight": 0.289656598,
+      "weight": 0.370752045,
       "world": "tree:oak"
     },
     {
@@ -9117,7 +9117,7 @@
       "case": "COLLECT_DROPS",
       "makes": "rabbit",
       "yield": 1,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "rabbits"
     },
     {
@@ -9125,7 +9125,7 @@
       "case": "COLLECT_DROPS",
       "makes": "rabbit_hide",
       "yield": 1,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "rabbits"
     },
     {
@@ -9133,7 +9133,7 @@
       "case": "COLLECT_DROPS",
       "makes": "spider_eye",
       "yield": 1,
-      "weight": 0.289656598,
+      "weight": 0.370752045,
       "world": "mobs"
     },
     {
@@ -9141,7 +9141,7 @@
       "case": "COLLECT_DROPS",
       "makes": "glow_ink_sac",
       "yield": 1,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "glow_squid"
     },
     {
@@ -9149,7 +9149,7 @@
       "case": "COLLECT_DROPS",
       "makes": "turtle_scute",
       "yield": 1,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "turtles",
       "implemented": false
     },
@@ -9169,7 +9169,7 @@
       "case": "COLLECT_DROPS",
       "makes": "creeper_head",
       "yield": 1,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "charged_creeper",
       "implemented": false
     },
@@ -9178,7 +9178,7 @@
       "case": "COLLECT_DROPS",
       "makes": "wither_skeleton_skull",
       "yield": 1,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "nether_fortress",
       "building": "portal_lit",
       "implemented": false
@@ -9188,7 +9188,7 @@
       "case": "COLLECT_DROPS",
       "makes": "wither_rose",
       "yield": 1,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "wither",
       "implemented": false
     },
@@ -9197,7 +9197,7 @@
       "case": "COLLECT_DROPS",
       "makes": "nautilus_shell",
       "yield": 1,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "drowned",
       "implemented": false
     },
@@ -9217,7 +9217,7 @@
       "case": "COLLECT_DROPS",
       "makes": "prismarine_shard",
       "yield": 2,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "ocean_monument",
       "implemented": false
     },
@@ -9226,7 +9226,7 @@
       "case": "COLLECT_DROPS",
       "makes": "prismarine_crystals",
       "yield": 2,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "ocean_monument",
       "implemented": false
     },
@@ -9235,7 +9235,7 @@
       "case": "COLLECT_DROPS",
       "makes": "wet_sponge",
       "yield": 1,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "ocean_monument",
       "needs": {
         "expedition_party": 1
@@ -9364,7 +9364,7 @@
       "case": "COLLECT_DROPS",
       "makes": "shulker_shell",
       "yield": 2,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "end_city",
       "needs": {
         "expedition_party": 1
@@ -9403,7 +9403,7 @@
       "case": "ACTIVITY_COMBAT",
       "makes": "nether_star",
       "yield": 1,
-      "weight": 1.208878271,
+      "weight": 1.411631335,
       "consumes": {
         "wither_skeleton_skull": 3,
         "soul_sand": 4
@@ -9419,7 +9419,7 @@
       "case": "ACTIVITY_COMBAT",
       "makes": "dragon_egg",
       "yield": 1,
-      "weight": 1.208878271,
+      "weight": 1.411631335,
       "world": "end",
       "needs": {
         "expedition_party": 1,
@@ -9433,7 +9433,7 @@
       "case": "COLLECT_DROPS",
       "makes": "trial_key",
       "yield": 1,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "trial_chambers",
       "implemented": false
     },
@@ -9442,7 +9442,7 @@
       "case": "COLLECT_DROPS",
       "makes": "ominous_trial_key",
       "yield": 1,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "trial_chambers",
       "needs": {
         "ominous_bottle": 1
@@ -9454,7 +9454,7 @@
       "case": "COLLECT_DROPS",
       "makes": "breeze_rod",
       "yield": 2,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "trial_chambers",
       "implemented": false
     },
@@ -9475,7 +9475,7 @@
       "case": "COLLECT_DROPS",
       "makes": "ominous_bottle",
       "yield": 1,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "raid",
       "implemented": false
     },
@@ -9484,7 +9484,7 @@
       "case": "COLLECT_DROPS",
       "makes": "totem_of_undying",
       "yield": 1,
-      "weight": 0.579313193,
+      "weight": 0.741504087,
       "world": "raid",
       "implemented": false
     },
@@ -9624,7 +9624,7 @@
       "case": "ACTIVITY_EXPEDITION",
       "makes": "expedition_party",
       "yield": 1,
-      "weight": 0.416426869,
+      "weight": 0.360107217,
       "implemented": false
     },
     {
@@ -9645,7 +9645,7 @@
       "case": "ACTIVITY_EXPEDITION",
       "makes": "blaze_rod",
       "yield": 2,
-      "weight": 0.416426869,
+      "weight": 0.360107217,
       "consumes": {},
       "needs": {
         "expedition_party": 3,
@@ -9664,7 +9664,7 @@
       "case": "ACTIVITY_EXPEDITION",
       "makes": "nether_wart",
       "yield": 3,
-      "weight": 0.416426869,
+      "weight": 0.360107217,
       "consumes": {},
       "needs": {
         "expedition_party": 3,
@@ -9683,7 +9683,7 @@
       "case": "ACTIVITY_EXPEDITION",
       "makes": "nether_quartz",
       "yield": 4,
-      "weight": 0.416426869,
+      "weight": 0.360107217,
       "consumes": {},
       "needs": {
         "expedition_party": 3,
