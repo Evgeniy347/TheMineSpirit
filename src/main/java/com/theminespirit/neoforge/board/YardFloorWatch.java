@@ -35,7 +35,10 @@ final class YardFloorWatch {
         return (RepairPlan.PREFIX + BoardCase.STOCK_CHESTS.name().toLowerCase(Locale.ROOT)).equals(node);
     }
 
-    static boolean post(ServerLevel level, BoardService service, StageSite site, long now) {
+    static boolean post(GraphPost post) {
+        ServerLevel level = post.level;
+        BoardService service = post.service;
+        StageSite site = post.scan.stage();
         if (active(service)) {
             return true;
         }
@@ -54,14 +57,13 @@ final class YardFloorWatch {
         Map<String, Integer> need =
                 StageAudit.shortage(BuildGap.need(plan, gap, FirstStepsRunner.materialSource(level)));
         StageRepair.post(
-                service,
+                post,
                 BoardCase.STOCK_CHESTS,
                 target,
                 new StageRepair.Gap(
                         found.stations().size() - found.supported(),
                         found.stations().size(),
-                        need),
-                now);
+                        need));
         LOGGER.info(
                 "[layout] РґРІРѕСЂ: РїРѕРґ СЃС‚Р°РЅРєР°РјРё {} РґС‹СЂ ({} РёР· {} СЃС‚РѕСЏС‚ РЅР° РѕРїРѕСЂРµ), Р·Р°РґРµР»РєР° {} вЂ” СѓР·РµР» repair:stock_chests",
                 holes.size(),

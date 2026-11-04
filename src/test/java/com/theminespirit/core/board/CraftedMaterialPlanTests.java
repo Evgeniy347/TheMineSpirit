@@ -148,4 +148,35 @@ class CraftedMaterialPlanTests {
             fallback.steps().forEach(step -> collect(step, calls));
         }
     }
+
+    @Test
+    void gatherMaterials_CraftTarget_MakesTheItemInsteadOfDirt() {
+        TaskNode plan = TicketPlans.plan(
+                BoardCase.GATHER_MATERIALS, TicketTarget.at(SITE).withCraft("wooden_hoe", 1));
+
+        List<String> crafted = calls(plan).stream()
+                .filter(call -> "craft".equals(call.script()))
+                .map(call -> String.valueOf(call.params().get("item")))
+                .toList();
+
+        assertTrue(
+                crafted.contains("wooden_hoe"),
+                "Задание графа craft_wooden_hoe@дух обязано крафтить hoe, а не добывать dirt: " + crafted);
+        assertTrue(
+                calls(plan).stream()
+                        .noneMatch(call -> "dirt".equals(call.params().get("item"))),
+                "Цель крафта не подменяется предметом снабжения по умолчанию: иначе дух весь прогон таскает землю");
+    }
+
+    @Test
+    void gatherMaterials_SupplyTarget_StillGathersItem() {
+        TaskNode plan = TicketPlans.plan(
+                BoardCase.GATHER_MATERIALS, TicketTarget.at(SITE).withSupply("oak_log", 4));
+
+        assertTrue(
+                calls(plan).stream()
+                        .anyMatch(call -> "oak_log".equals(call.params().get("item"))
+                                || "tree".equals(call.params().get("target"))),
+                "Обычное снабжение не сломано: цель без craftItem по-прежнему добывает свой предмет");
+    }
 }

@@ -30,7 +30,9 @@ final class StageRepair {
 
     record Gap(int missing, int total, Map<String, Integer> need) {}
 
-    static BoardOutcome post(BoardService service, BoardCase step, TicketTarget target, Gap gap, long now) {
+    static BoardOutcome post(GraphPost post, BoardCase step, TicketTarget target, Gap gap) {
+        BoardService service = post.service;
+        long now = post.now;
         int missing = gap.missing();
         int total = gap.total();
         StageWork work = target.work();
@@ -55,7 +57,7 @@ final class StageRepair {
             }
             service.reopen(id);
         }
-        BoardOutcome outcome = service.submit(ticket, target.withWork(work.repairing(step.name())));
+        BoardOutcome outcome = post.submit(ticket, target.withWork(work.repairing(step.name())));
         if (outcome == BoardOutcome.ACCEPTED) {
             String name = label(step);
             LOGGER.info(

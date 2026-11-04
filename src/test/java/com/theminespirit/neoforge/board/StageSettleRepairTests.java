@@ -13,6 +13,7 @@ import com.theminespirit.core.town.StageWork;
 import com.theminespirit.core.town.TownFixtures;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class StageSettleRepairTests {
@@ -37,6 +38,8 @@ class StageSettleRepairTests {
                 Map.of("oak_fence", 1),
                 Map.of(MISSING, "minecraft:oak_fence"),
                 List.of(MISSING + " ожидается oak_fence, стоит air"),
+                Set.of(STANDING, MISSING),
+                Set.of(),
                 0);
 
         TicketTarget repair = StageSettle.repairTarget(BoardCase.BUILD_FENCE, target, gap);

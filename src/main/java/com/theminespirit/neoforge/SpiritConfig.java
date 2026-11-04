@@ -14,6 +14,8 @@ public final class SpiritConfig {
     private static final ModConfigSpec.BooleanValue COORDINATOR_ENABLED;
     private static final ModConfigSpec.BooleanValue BOARD_ENABLED;
     private static final ModConfigSpec.IntValue CRATER_HOME_RADIUS;
+    private static final ModConfigSpec.IntValue NAV_CHUNK_BUDGET;
+    private static final ModConfigSpec.IntValue NAV_CHUNK_PER_SECOND;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -43,6 +45,14 @@ public final class SpiritConfig {
                         "Радиус вокруг дома духа, в котором взрыв крипера запоминается как воронка поселения.",
                         "Вне радиуса взрывы не запоминаются: дух заделывает только воронки своего поселения.")
                 .defineInRange("craterHomeRadius", 64, 1, 512);
+        NAV_CHUNK_BUDGET = builder.comment(
+                        "Сколько чанков навигация может подгрузить на один поход духа.",
+                        "Загрузка только для расчёта пути: чанки читаются, мир не меняется; тикеты снимаются после похода.")
+                .defineInRange("navChunkBudget", 128, 1, 512);
+        NAV_CHUNK_PER_SECOND = builder.comment(
+                        "Сколько чанков в секунду на сервер навигация может подгружать для расчётов пути.",
+                        "Пока чанк грузится, расчёт ждёт; «неизвестно» не считается воздухом.")
+                .defineInRange("navChunkPerSecond", 16, 1, 256);
         builder.pop();
         SPEC = builder.build();
     }
@@ -67,6 +77,14 @@ public final class SpiritConfig {
 
     public static int craterHomeRadius() {
         return CRATER_HOME_RADIUS.get();
+    }
+
+    public static int navChunkBudget() {
+        return NAV_CHUNK_BUDGET.get();
+    }
+
+    public static int navChunkPerSecond() {
+        return NAV_CHUNK_PER_SECOND.get();
     }
 
     public static int radiusFor(ServerLevel level) {
