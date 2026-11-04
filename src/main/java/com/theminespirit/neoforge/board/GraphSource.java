@@ -7,6 +7,7 @@ import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphPlanner;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphTickets;
+import com.theminespirit.core.board.graph.GraphWhy;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.reload.DataTables;
@@ -123,7 +124,8 @@ public final class GraphSource {
             String buildings = new TreeMap<>(half.state().buildings()) + " "
                     + half.plan().tasks().stream()
                             .filter(task -> task.id().startsWith("building:"))
-                            .map(task -> readiness(half.level(), half.service(), half.graph(), half.scan(), task))
+                            .map(task -> readiness(
+                                    half.level(), half.service(), half.graph(), half.state(), half.scan(), task))
                             .toList()
                     + " сундуков двора " + half.scan().facts().chests() + " у "
                     + half.scan().stage().workYard()
@@ -198,17 +200,22 @@ public final class GraphSource {
             ServerLevel level,
             BoardService service,
             SupplyGraph graph,
+            GraphState state,
             FirstStepsRunner.StageScan scan,
             GraphPlan.Task task) {
         SupplyGraph.Building building = graph.buildings().get(task.makes());
         if (building == null || !StageBuilt.ids().contains(task.makes())) {
-            return task.makes() + "=" + task.priority() + (task.feasible() ? "" : "?");
+            return task.makes() + "=" + task.priority() + why(graph, state, task);
         }
         TownSnapshot.Progress progress =
                 FirstStepsRunner.progress(level, service, building.boardCase(), scan.stage(), scan.wood());
         int percent = progress.total() == 0 ? 0 : progress.done() * 100 / progress.total();
         return task.makes() + "=" + percent + "%(" + progress.done() + "/" + progress.total() + ")"
-                + (task.feasible() ? "" : "?");
+                + why(graph, state, task);
+    }
+
+    private static String why(SupplyGraph graph, GraphState state, GraphPlan.Task task) {
+        return task.feasible() ? "" : "?(" + GraphWhy.building(graph, state, task.makes()) + ")";
     }
 
     private void tellStrategist(ServerLevel level, SupplyGraph graph, GraphState state, GraphPlan plan, long now) {
