@@ -75,7 +75,8 @@ final class GraphPost {
         GraphPlan.Task task = ticket.task();
         return switch (ticket.kind()) {
             case BUILDING ->
-                FarmPost.building(this, ticket)
+                MorePost.building(this, ticket)
+                        || FarmPost.building(this, ticket)
                         || GraphNodeBuilds.post(this, ticket, task)
                         || PortalPost.building(this, ticket)
                         || (ExtraOrchardPost.handles(ticket.node())
@@ -95,6 +96,7 @@ final class GraphPost {
     }
 
     private boolean way(GraphTickets.Ticket ticket, GraphPlan.Task task) {
+        if (GraphMorePost.handles(ticket)) return GraphMorePost.post(this, ticket, task);
         BoardCase boardCase = task.boardCase();
         if (ToolSet.isTool(boardCase) && task.spirit().isPresent()) {
             return tool(ticket, task);
@@ -118,7 +120,7 @@ final class GraphPost {
             case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART -> GraphBrew.post(this, ticket, task);
             case ACTIVITY_MOVE -> DigOutPost.digOut(this, service, task);
             case FILL_CRATER -> new GraphHarvestPost(this).craters(ticket);
-            default -> FarmPost.way(this, ticket, task);
+            default -> MorePost.way(this, ticket, task) || FarmPost.way(this, ticket, task);
         };
     }
 

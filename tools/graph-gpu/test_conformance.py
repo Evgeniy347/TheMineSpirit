@@ -274,6 +274,13 @@ MORE = {
 }
 
 
+MORE_READY = {
+    "more_help_player", "more_keep_clear", "more_light_dark_spot", "more_return_before_night",
+    "more_pickup_drops", "more_replant", "more_sustain_mine", "more_secure_fence",
+    "more_secure_door", "more_secure_hopper", "more_share_reserve",
+}
+
+
 def test_more_nodes():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     for signal, way in MORE.items():
@@ -281,9 +288,12 @@ def test_more_nodes():
         assert path is not None, "Python-модель не видит путь области more: " + way
         assert path.makes in graph.items, "Python-модель не видит узел области more: " + path.makes
         assert graph.items[path.makes].base > 0, "Стартовый вес узла more положителен: " + path.makes
-        assert way in graph.unimplemented, "Действие области more пока заглушено: " + way
+        if way in MORE_READY:
+            assert graph.implemented(way), "Действие области more связано с исполнением: " + way
+        else:
+            assert way in graph.unimplemented, "Сигнал управления more остаётся без отдельного действия: " + way
         assert path.world == signal, "Вход области more — метка мира " + signal
-    print("OK: узлы и заглушки области more читаются из фрагментов")
+    print("OK: узлы области more и их исполнение читаются из фрагментов")
 
 
 def more_state(events):
@@ -314,6 +324,13 @@ def test_more_inputs():
     print("OK: входы области more учитываются в выборе")
 
 
+MORE2_READY = {
+    "more2_sow_food", "more2_breed_food", "more2_unload_carry", "more2_put_out_fire",
+    "more2_remove_lava", "more2_block_flow", "more2_pen_animal", "more2_lure_wild",
+    "more2_guard_villager", "more2_prepare_stage", "more2_make_bed", "more2_build_trail",
+}
+
+
 def test_more2_nodes():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     for way in ("more2_sow_food", "more2_breed_food", "more2_unload_carry", "more2_load_carry",
@@ -321,13 +338,17 @@ def test_more2_nodes():
                 "more2_pen_animal", "more2_lure_wild", "more2_guard_villager", "more2_trade_villager",
                 "more2_prepare_stage", "more2_make_bed", "more2_build_trail"):
         assert graph.way(way) is not None, "Python-модель не видит новый путь области graphmore2: " + way
-        assert not graph.implemented(way), "Действие области graphmore2 пока заглушено: " + way
+        if way in MORE2_READY:
+            assert graph.implemented(way), "Действие области graphmore2 связано с исполнением: " + way
+        else:
+            assert not graph.implemented(way), "Сигнал логистики/торговли остаётся без отдельного действия: " + way
     for item in ("more2:food_plan", "more2:carry_room", "more2:carry_batch", "more2:safe",
                  "more2:flow_blocked", "more2:animal_penned", "more2:village_safe",
                  "more2:stage_ready", "more2:bed_ready", "more2:trail"):
         assert item in graph.items, "Python-модель не видит новый узел области graphmore2: " + item
     for building in ("more2_field_chest", "more2_trail"):
         assert building in graph.buildings, "Python-модель не видит новую постройку области: " + building
+        assert graph.implemented(building), "Постройка области graphmore2 связана с исполнением: " + building
     for event in ("more2_food_low", "more2_inventory_full", "more2_inventory_space", "more2_long_carry",
                   "more2_fire_near_building", "more2_lava_near_building", "more2_hazard_flow",
                   "more2_animal_outside", "more2_wild_herd", "more2_villager_near",
@@ -347,7 +368,7 @@ def test_more2_inputs():
     fire = tasks.get("event:more2_fire_near_building:more2_put_out_fire")
     flow = tasks.get("event:more2_hazard_flow:more2_block_flow")
     assert fire is not None and flow is not None, "Вход области graphmore2 обязан дать задания в выборе"
-    assert not fire["implemented"] and not flow["implemented"], "Заглушки области не выдаются как готовые действия"
+    assert fire["implemented"] and flow["implemented"], "Тушение огня и заливка потока связаны с исполнением"
     print("OK: входы области graphmore2 учитываются в выборе")
 
 
@@ -387,6 +408,10 @@ MORE6_WAYS = (
     "more6_place_station", "more6_pickup_items", "more6_fetch_water",
     "more6_fetch_lava", "more6_maintain_stock", "more6_assign_idle",
 )
+MORE6_IMPLEMENTED = {
+    "more6_deposit_materials", "more6_refuel_station", "more6_place_station",
+    "more6_pickup_items", "more6_maintain_stock", "more6_assign_idle",
+}
 
 
 def test_more6_nodes():
@@ -399,8 +424,8 @@ def test_more6_nodes():
         assert path is not None, "Python-модель не видит путь области more6: " + way
         assert path.makes in graph.items, "Python-модель не видит узел области more6: " + path.makes
         assert graph.items[path.makes].base > 0, "Стартовый вес узла more6 положителен: " + path.makes
-        assert way in graph.unimplemented, "Действие области more6 пока заглушено: " + way
-    print("OK: узлы и заглушки области more6 читаются из фрагментов")
+        assert graph.implemented(way) == (way in MORE6_IMPLEMENTED),             "Путь области more6 либо связан с действием, либо честно помечен заглушкой: " + way
+    print("OK: узлы области more6 читаются из фрагментов, заглушки отмечены")
 
 
 def test_more6_inputs():
@@ -428,6 +453,14 @@ MORE5_WAYS = ("more5_defend_player", "more5_feed_player", "more5_heal_player",
               "more5_restore_block", "more5_bridge_route", "more5_detour_route",
               "more5_place_site_chest", "more5_carry_to_site", "more5_light_mine",
               "more5_craft_mine_torch", "more5_pickup_wood_drop", "more5_plant_sapling")
+MORE5_IMPLEMENTED = {
+    "more5_defend_player", "more5_feed_player", "more5_light_crops",
+    "more5_light_saplings", "more5_fertilize_growth", "more5_gather_fuel",
+    "more5_make_charcoal", "more5_gather_build_material",
+    "more5_craft_build_material", "more5_restore_block", "more5_bridge_route",
+    "more5_place_site_chest", "more5_carry_to_site", "more5_light_mine",
+    "more5_craft_mine_torch", "more5_pickup_wood_drop", "more5_plant_sapling",
+}
 
 
 def test_more5_nodes():
@@ -436,14 +469,14 @@ def test_more5_nodes():
         assert event in graph.events, "Python-модель не видит событие области graphmore5: " + event
     for way in MORE5_WAYS:
         assert graph.way(way) is not None, "Python-модель не видит путь области graphmore5: " + way
-        assert not graph.implemented(way), "Действие области graphmore5 пока заглушено: " + way
+        assert graph.implemented(way) == (way in MORE5_IMPLEMENTED),             "Путь области graphmore5 либо связан с действием, либо честно помечен заглушкой: " + way
     for item in ("more5:player_guard", "more5:growth_lit", "more5:fuel_ready",
                  "more5:build_supply", "more5:block_restored", "more5:route_opened",
                  "more5:site_chest", "more5:mine_lit", "more5:wood_drop"):
         assert item in graph.items and graph.items[item].base > 0, \
             "Python-модель не видит узел области graphmore5: " + item
     assert "#more5_fuel" in graph.groups, "Python-модель не видит группу топлива области more5"
-    print("OK: узлы и заглушки области graphmore5 читаются из фрагмента")
+    print("OK: узлы области graphmore5 читаются из фрагмента, заглушки отмечены")
 
 
 def test_more5_inputs():
@@ -463,7 +496,9 @@ def test_more5_inputs():
                     "event:more5_crops_dark:more5_light_crops",
                     "event:more5_wood_drops:more5_pickup_wood_drop"):
         assert task_id in tasks, "Python: нет ожидаемого задания области graphmore5: " + task_id
-        assert not tasks[task_id]["implemented"], "Заглушка области не выдаётся готовой: " + task_id
+        assert tasks[task_id]["implemented"], "Связанное действие области выдаётся готовым: " + task_id
+    stub = "event:more5_crops_dry:more5_water_crops"
+    assert stub in tasks and not tasks[stub]["implemented"],         "Бессмысленная заглушка области не выдаётся готовой: " + stub
     assert tasks["event:more5_player_weak:more5_defend_player"]["priority"] > 100, \
         "Python: защита игрока в бою выше обычного потолка"
     print("OK: входы области graphmore5 учитываются в выборе")
@@ -535,9 +570,11 @@ def test_more7_nodes():
             "more7_order_to_chest")
     for event in events:
         assert event in graph.events, "Python-модель не видит событие области graphmore7: " + event
+    implemented = {"more7_harvest_early", "more7_expand_pen", "more7_return_home",
+                   "more7_order_to_chest"}
     for way in ways:
         assert graph.way(way) is not None, "Python-модель не видит путь области graphmore7: " + way
-        assert not graph.implemented(way), "Действие области graphmore7 пока заглушено: " + way
+        assert graph.implemented(way) == (way in implemented),             "Путь области graphmore7 либо связан с действием, либо честно помечен заглушкой: " + way
     for item, way in MORE7.items():
         assert item in graph.items, "Python-модель не видит узел области graphmore7: " + item
         assert graph.items[item].base > 0, "Стартовый вес узла more7 положителен: " + item

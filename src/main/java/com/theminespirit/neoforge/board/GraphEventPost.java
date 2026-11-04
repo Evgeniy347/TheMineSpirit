@@ -20,6 +20,9 @@ final class GraphEventPost {
     private GraphEventPost() {}
 
     static boolean post(GraphPost post, GraphTickets.Ticket ticket) {
+        if (GraphMorePost.handles(ticket)) {
+            return GraphMorePost.post(post, ticket, ticket.task());
+        }
         if (life(ticket)) {
             return true;
         }
@@ -61,7 +64,7 @@ final class GraphEventPost {
         if (WorldPost.handles(ticket.node())) {
             return WorldPost.post(post, ticket);
         }
-        return COLLECT.contains(ticket.node()) && collect(post, ticket);
+        return MorePost.event(post, ticket) || (COLLECT.contains(ticket.node()) && collect(post, ticket));
     }
 
     private static boolean life(GraphTickets.Ticket ticket) {
