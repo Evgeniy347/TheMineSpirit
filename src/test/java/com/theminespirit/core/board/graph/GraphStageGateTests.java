@@ -62,13 +62,15 @@ class GraphStageGateTests {
     }
 
     @Test
-    void strays_PayerBuilt_DoNotBlock() {
+    void strays_UnknownBuilder_Block() {
         GraphFacts facts = facts(
                 building(Map.of()),
                 GraphFacts.Terrain.empty(),
                 List.of(new GraphFacts.Stray("s", "oak_fence", new GraphFacts.Position(1, 64, 1), null)));
 
-        assertTrue(GraphStageGate.straysReady(facts), "постройку игрока не сносим и этап ею не держим");
+        assertFalse(
+                GraphStageGate.straysReady(facts),
+                "старый мусор без записи журнала держит этап: блоки игрока в лишние не попадают");
     }
 
     @Test
@@ -86,7 +88,7 @@ class GraphStageGateTests {
     }
 
     private static GraphFacts.Terrain terrain(Map<String, Integer> cut, Map<String, Integer> fill) {
-        return new GraphFacts.Terrain(0, 0, 0, 0, 0, cut, fill, Map.of());
+        return new GraphFacts.Terrain(0, 0, 0, 0, 0, cut, fill, Map.of(), false);
     }
 
     private static GraphFacts facts(

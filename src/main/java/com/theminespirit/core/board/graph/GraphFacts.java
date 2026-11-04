@@ -240,7 +240,8 @@ public record GraphFacts(
             int traces,
             Map<String, Integer> cut,
             Map<String, Integer> fill,
-            Map<String, Integer> floating) {
+            Map<String, Integer> floating,
+            boolean unknown) {
         public Terrain {
             if (pits < 0 || hanging < 0 || heightDrop < 0 || deepestPit < 0 || traces < 0) {
                 throw new IllegalArgumentException(
@@ -252,15 +253,11 @@ public record GraphFacts(
         }
 
         public Terrain(int pits, int hanging, int heightDrop, int deepestPit, int traces) {
-            this(pits, hanging, heightDrop, deepestPit, traces, Map.of(), Map.of(), Map.of());
+            this(pits, hanging, heightDrop, deepestPit, traces, Map.of(), Map.of(), Map.of(), false);
         }
 
         public static Terrain empty() {
-            return new Terrain(0, 0, 0, 0, 0);
-        }
-
-        public boolean flat() {
-            return pits == 0 && hanging == 0 && heightDrop == 0 && traces == 0;
+            return new Terrain(0, 0, 0, 0, 0, Map.of(), Map.of(), Map.of(), false);
         }
     }
 

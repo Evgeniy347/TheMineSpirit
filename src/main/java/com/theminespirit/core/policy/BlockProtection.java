@@ -11,19 +11,33 @@ public final class BlockProtection {
 
     private final IdFilter deny;
     private final IdFilter natural;
+    private final IdFilter strays;
     private final int buildingThreshold;
     private final int maxUnprotectVolume;
+    private final boolean demolishStrays;
+    private final boolean straysInsideFenceOnly;
 
-    public BlockProtection(IdFilter deny, IdFilter natural, int buildingThreshold, int maxUnprotectVolume) {
+    public BlockProtection(
+            IdFilter deny,
+            IdFilter natural,
+            IdFilter strays,
+            int buildingThreshold,
+            int maxUnprotectVolume,
+            boolean demolishStrays,
+            boolean straysInsideFenceOnly) {
         this.deny =
                 Objects.requireNonNull(deny, "Чёрный список не может быть null: без него защита блоков не работает");
         this.natural = Objects.requireNonNull(
                 natural, "Список природных блоков не может быть null: по нему отличают постройки");
-        if (deny.matchesAll() || natural.matchesAll()) {
+        this.strays =
+                Objects.requireNonNull(strays, "Список рукотворных блоков не может быть null: по нему находят лишнее");
+        if (deny.matchesAll() || natural.matchesAll() || strays.matchesAll()) {
             throw new IllegalArgumentException(
-                    "Список deny или natural совпадает со всеми блоками: пустой или '*' список запретил бы всё "
-                            + "либо признал бы всё природным, перечислите шаблоны блоков явно");
+                    "Список deny, natural или strays совпадает со всеми блоками: пустой или '*' список запретил бы "
+                            + "всё либо признал бы всё природным или лишним, перечислите шаблоны блоков явно");
         }
+        this.demolishStrays = demolishStrays;
+        this.straysInsideFenceOnly = straysInsideFenceOnly;
         if (buildingThreshold < 1 || buildingThreshold > MAX_THRESHOLD) {
             throw new IllegalArgumentException(
                     "buildingThreshold " + buildingThreshold + " вне диапазона 1.." + MAX_THRESHOLD + ": среди "
@@ -86,6 +100,18 @@ public final class BlockProtection {
 
     public boolean natural(String blockId) {
         return natural.matches(blockId);
+    }
+
+    public boolean stray(String blockId) {
+        return strays.matches(blockId);
+    }
+
+    public boolean demolishStrays() {
+        return demolishStrays;
+    }
+
+    public boolean straysInsideFenceOnly() {
+        return straysInsideFenceOnly;
     }
 
     public List<String> denyPatterns() {

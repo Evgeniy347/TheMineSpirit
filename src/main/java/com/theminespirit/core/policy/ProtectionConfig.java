@@ -12,7 +12,15 @@ public final class ProtectionConfig {
 
     private static final String DENY = "deny";
     private static final String NATURAL = "natural";
-    private static final Set<String> FIELDS = Set.of(DENY, NATURAL, "buildingThreshold", "maxUnprotectVolume");
+    private static final String STRAYS = "strays";
+    private static final Set<String> FIELDS = Set.of(
+            DENY,
+            NATURAL,
+            STRAYS,
+            "buildingThreshold",
+            "maxUnprotectVolume",
+            "demolishStrays",
+            "straysInsideFenceOnly");
 
     private ProtectionConfig() {}
 
@@ -29,18 +37,41 @@ public final class ProtectionConfig {
         JsonResource.checkFields(root, FIELDS, origin, "protection.json");
         List<String> deny = JsonResource.strings(root.get(DENY), origin, DENY);
         List<String> natural = JsonResource.strings(root.get(NATURAL), origin, NATURAL);
+        List<String> strays = JsonResource.strings(root.get(STRAYS), origin, STRAYS);
         int threshold = JsonResource.integer(root.get("buildingThreshold"), origin, "buildingThreshold");
         int maxUnprotectVolume = JsonResource.integer(root.get("maxUnprotectVolume"), origin, "maxUnprotectVolume");
+        boolean demolishStrays = flag(root, "demolishStrays", true);
+        boolean insideFenceOnly = flag(root, "straysInsideFenceOnly", true);
         IdFilter denyFilter = filter(deny, origin, DENY);
         IdFilter naturalFilter = filter(natural, origin, NATURAL);
+        IdFilter strayFilter = filter(strays, origin, STRAYS);
         BlockProtection protection;
         try {
-            protection = new BlockProtection(denyFilter, naturalFilter, threshold, maxUnprotectVolume);
+            protection = new BlockProtection(
+                    denyFilter,
+                    naturalFilter,
+                    strayFilter,
+                    threshold,
+                    maxUnprotectVolume,
+                    demolishStrays,
+                    insideFenceOnly);
         } catch (IllegalArgumentException error) {
             throw new IllegalStateException("Файл '" + origin + "': " + error.getMessage(), error);
         }
         rejectOverlap(denyFilter, naturalFilter, origin);
         return protection;
+    }
+
+    private static boolean flag(JsonNode root, String name, boolean fallback) {
+        JsonNode value = root.get(name);
+        if (value == null || value.isNull()) {
+            return fallback;
+        }
+        if (!value.isBoolean()) {
+            throw new IllegalStateException("protection.json: у " + name
+                    + " ожидается true или false: строка или число сделали бы политику сноса неоднозначной");
+        }
+        return value.asBoolean();
     }
 
     private static IdFilter filter(List<String> patterns, String origin, String what) {

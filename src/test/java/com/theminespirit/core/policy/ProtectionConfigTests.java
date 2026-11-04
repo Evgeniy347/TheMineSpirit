@@ -14,8 +14,8 @@ class ProtectionConfigTests {
     private static final String ORIGIN = "test-protection.json";
 
     private static String json(String deny, String natural, String threshold) {
-        return "{\"deny\": " + deny + ", \"natural\": " + natural + ", \"buildingThreshold\": " + threshold
-                + ", \"maxUnprotectVolume\": 4096}";
+        return "{\"deny\": " + deny + ", \"natural\": " + natural + ", \"strays\": [\"*_fence\"], "
+                + "\"buildingThreshold\": " + threshold + ", \"maxUnprotectVolume\": 4096}";
     }
 
     static Stream<Arguments> brokenFiles() {
@@ -38,14 +38,16 @@ class ProtectionConfigTests {
                         "'minecraft:*_log' попал и в deny, и в natural"),
                 Arguments.of(
                         "неизвестное поле",
-                        "{\"deny\": [\"a\"], \"natural\": [\"b\"], \"buildingThreshold\": 6, \"maxUnprotectVolume\": 4096, \"extra\": 1}",
+                        "{\"deny\": [\"a\"], \"natural\": [\"b\"], \"strays\": [\"c\"], \"buildingThreshold\": 6, "
+                                + "\"maxUnprotectVolume\": 4096, \"extra\": 1}",
                         "неизвестное поле 'extra'"),
                 Arguments.of("порог 0", json("[\"a\"]", "[\"b\"]", "0"), "buildingThreshold 0 вне диапазона 1..26"),
                 Arguments.of("порог 27", json("[\"a\"]", "[\"b\"]", "27"), "buildingThreshold 27 вне диапазона 1..26"),
                 Arguments.of("порог дробный", json("[\"a\"]", "[\"b\"]", "6.5"), "ожидается целое число"),
                 Arguments.of(
                         "предел объёма 0",
-                        "{\"deny\": [\"a\"], \"natural\": [\"b\"], \"buildingThreshold\": 6, \"maxUnprotectVolume\": 0}",
+                        "{\"deny\": [\"a\"], \"natural\": [\"b\"], \"strays\": [\"c\"], \"buildingThreshold\": 6, "
+                                + "\"maxUnprotectVolume\": 0}",
                         "maxUnprotectVolume 0 меньше 1"),
                 Arguments.of("пустой deny", json("[]", "[\"b\"]", "6"), "у deny ожидается непустой список"),
                 Arguments.of("шаблон с заглавной буквой", json("[\"Stone\"]", "[\"b\"]", "6"), "неверный шаблон"),
@@ -82,6 +84,27 @@ class ProtectionConfigTests {
         assertTrue(
                 protection.checkOwn("minecraft:stone", false) instanceof BlockProtection.Allowed,
                 "Блок вне шаблона deny обязан оставаться разрешённым");
+    }
+
+    @Test
+    void parse_StrayPolicy_DefaultsToDemolishInsideFence() {
+        BlockProtection protection = ProtectionConfig.parse(json("[\"*_door\"]", "[\"stone\"]", "3"), ORIGIN);
+
+        assertTrue(protection.demolishStrays(), "по умолчанию лишнее внутри ограды сносят");
+        assertTrue(protection.straysInsideFenceOnly(), "по умолчанию вне ограды не сносят");
+        assertTrue(protection.stray("minecraft:oak_fence"), "забор из списка strays — рукотворное лишнее");
+    }
+
+    @Test
+    void parse_StrayPolicy_ReadsExplicitSwitch() {
+        String text = "{\"deny\": [\"a\"], \"natural\": [\"b\"], \"strays\": [\"c\"], "
+                + "\"buildingThreshold\": 6, \"maxUnprotectVolume\": 4096, "
+                + "\"demolishStrays\": false, \"straysInsideFenceOnly\": false}";
+
+        BlockProtection protection = ProtectionConfig.parse(text, ORIGIN);
+
+        assertTrue(!protection.demolishStrays(), "политика сноса — параметр, а не жёстко зашитое поведение");
+        assertTrue(!protection.straysInsideFenceOnly(), "область сноса — параметр конфига");
     }
 
     @Test
