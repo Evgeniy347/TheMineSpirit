@@ -438,8 +438,8 @@ final class BuildSchematicScript implements ScriptInstance {
             trapped.add(entry.pos());
         }
         ReachPlanner.World safeWorld = retreatWorld(world, trapping);
-        if (BuildStandPath.firstReachable(
-                        spirit, trapped, safeWorld, excludedStands, new HashSet<>(site.schemeCells()), lastStep, false)
+        if (BuildStandPath.choose(
+                        trapped, safeWorld, excludedStands, new HashSet<>(site.schemeCells()), lastStep, feet())
                 .isEmpty()) {
             LOGGER.warn(
                     "Стройка '{}': блок {} запирает духа, а стоянки с путём наружу нет — ставлю с места",
@@ -546,20 +546,17 @@ final class BuildSchematicScript implements ScriptInstance {
     private ScriptStatus moveTowards(List<BlockCoord> cells, ReachPlanner.World base, boolean outsideOnly) {
         Set<BlockCoord> occupied = new HashSet<>(site.schemeCells());
         Optional<Set<BlockCoord>> reachable = site.walkable(feet(), WALK_MARGIN);
-        boolean walkKnown = BuildStandPath.known(reachable);
+        boolean walkKnown = site.networkBox(WALK_MARGIN).contains(feet()) && reachable.isPresent();
         ReachPlanner.World world = walkKnown ? BuildStandPath.walkableOnly(base, reachable.orElseThrow()) : base;
-        Optional<BlockCoord> stand =
-                BuildStandPath.firstReachable(spirit, cells, world, excludedStands, occupied, outsideOnly, walkKnown);
+        Optional<BlockCoord> stand = BuildStandPath.choose(cells, world, excludedStands, occupied, outsideOnly, feet());
         if (stand.isEmpty()) {
             occupied = new HashSet<>(site.standBlockers());
-            stand = BuildStandPath.firstReachable(
-                    spirit, cells, world, excludedStands, occupied, outsideOnly, walkKnown);
+            stand = BuildStandPath.choose(cells, world, excludedStands, occupied, outsideOnly, feet());
         }
         if (stand.isEmpty() && !standsRetried && !excludedStands.isEmpty()) {
             standsRetried = true;
             excludedStands.clear();
-            stand = BuildStandPath.firstReachable(
-                    spirit, cells, world, excludedStands, occupied, outsideOnly, walkKnown);
+            stand = BuildStandPath.choose(cells, world, excludedStands, occupied, outsideOnly, feet());
         }
         if (stand.isEmpty()) {
             for (BlockCoord cell : cells) {
@@ -932,7 +929,7 @@ final class BuildSchematicScript implements ScriptInstance {
             planStandVisited = true;
             planPlacedMark = placed;
             if (!feet().equals(at.stand())) {
-                if (BuildStandPath.plannedReachable(spirit, site, at.stand(), WALK_MARGIN, feet())) {
+                if (BuildStandPath.plannedReachable(site, at.stand(), WALK_MARGIN, feet())) {
                     return beginApproach(at.stand());
                 }
                 lastRefusal = "стоянка плана " + at.stand() + " недостижима пешком от " + feet();

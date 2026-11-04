@@ -6,11 +6,13 @@ import com.theminespirit.core.building.ReachStands;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.movement.PathNetworkService;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
@@ -145,11 +147,16 @@ public final class ReachApproach {
     }
 
     private boolean standReachable(BlockCoord feet) {
-        Path path = spirit.getNavigation().createPath(new BlockPos(feet.x(), feet.y(), feet.z()), 1);
-        boolean reachable = path != null && path.canReach();
+        boolean reachable = routes
+                && spirit.level() instanceof ServerLevel level
+                && PathNetworkService.route(level, feet(), feet).isPresent();
+        if (!reachable) {
+            Path path = spirit.getNavigation().createPath(new BlockPos(feet.x(), feet.y(), feet.z()), 1);
+            reachable = path != null && path.canReach();
+        }
         if (!reachable) {
             rejected++;
-            rejection = path == null ? "путь до стоянки не построен" : "путь до стоянки не доводит";
+            rejection = "до стоянки нет пути пешком от " + feet();
         }
         return reachable;
     }
