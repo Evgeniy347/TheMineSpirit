@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.graph.GraphEvent;
 import com.theminespirit.core.board.graph.More4Rules;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
@@ -50,6 +51,49 @@ class MoreActionsTests {
         }
         for (String way : MORE4) {
             assertEquals(GRAPH.implemented(way), More4Post.handles(way), "Исполнитель more4 для " + way);
+        }
+    }
+
+    @Test
+    void eventTasks_Implemented_AreHandled() {
+        for (String event : List.of(
+                "danger_spot",
+                "spirit_death_drop",
+                "work_yield_low",
+                "trash_found",
+                "chest_purpose_missing",
+                "work_conflict",
+                "station_idle",
+                "player_sleep",
+                "sand_collapse",
+                "gravel_collapse",
+                "farmland_trampled",
+                "world_decay",
+                "stage_slow")) {
+            for (GraphEvent.Task task : GRAPH.events().get(event).tasks()) {
+                if (task.implemented()) {
+                    assertTrue(More3Post.handles(task.id()), "Задача события more3 исполняется: " + task.id());
+                }
+            }
+        }
+        for (String event : List.of(
+                "more4_player_near",
+                "more4_player_hungry",
+                "more4_player_tool_broken",
+                "more4_wrong_tool_hand",
+                "more4_portal_found",
+                "more4_portal_unsafe",
+                "more4_space_found",
+                "more4_space_tight",
+                "more4_tamed_pet",
+                "more4_rare_found",
+                "more4_rare_mixed",
+                "more4_caution")) {
+            for (GraphEvent.Task task : GRAPH.events().get(event).tasks()) {
+                if (task.implemented()) {
+                    assertTrue(More4Post.handles(task.id()), "Задача события more4 исполняется: " + task.id());
+                }
+            }
         }
     }
 

@@ -15,8 +15,14 @@ import net.minecraft.core.BlockPos;
 final class More3Post {
     private static final int DANGER_RADIUS = 8;
     private static final int CONTAINER_RADIUS = 8;
-    private static final Set<String> NODES =
-            Set.of("secure_danger", "recover_death_drop", "clear_trash", "assign_chest_purpose");
+    private static final Set<String> NODES = Set.of(
+            "secure_danger",
+            "fence_danger",
+            "recover_death_drop",
+            "clear_trash",
+            "assign_chest_purpose",
+            "move_work",
+            "stay_near_home");
 
     private More3Post() {}
 
@@ -27,14 +33,38 @@ final class More3Post {
     static boolean post(GraphPost post, GraphTickets.Ticket ticket) {
         return switch (ticket.node()) {
             case "secure_danger" -> avoidDanger(post);
+            case "fence_danger" -> fenceDanger(post, ticket);
             case "recover_death_drop" -> recoverDrops(post, ticket);
             case "clear_trash" ->
                 ActivityLaunch.launch(post, BoardCase.ACTIVITY_UNLOAD, "unload", new ScriptCall("unload", unload()));
             case "assign_chest_purpose" ->
                 ActivityLaunch.launch(
                         post, BoardCase.ACTIVITY_UNLOAD, "sort_chest", new ScriptCall("sort_chest", sort()));
+            case "move_work", "stay_near_home" ->
+                ActivityLaunch.launch(post, BoardCase.ACTIVITY_MOVE, "goto", gotoPoint(post.scan.home()));
             default -> false;
         };
+    }
+
+    private static boolean fenceDanger(GraphPost post, GraphTickets.Ticket ticket) {
+        for (More3Store.Danger danger : More3Store.get(post.level).recentDangers(post.now)) {
+            BlockCoord at = danger.position();
+            String id = "more3_fence:" + at.x() + "," + at.y() + "," + at.z();
+            if (post.done(id) || post.open(id)) {
+                return true;
+            }
+            post.submit(
+                    post.ticket(
+                            id,
+                            BoardCase.BUILD_FENCE,
+                            Optional.empty(),
+                            ticket.task().priority(),
+                            ticket.id(),
+                            post.items(ticket.task())),
+                    TicketTarget.at(at));
+            return true;
+        }
+        return false;
     }
 
     private static boolean avoidDanger(GraphPost post) {
