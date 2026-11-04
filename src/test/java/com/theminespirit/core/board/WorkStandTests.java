@@ -34,6 +34,27 @@ class WorkStandTests {
     }
 
     @Test
+    void near_NearestStandUnreachable_NextReachableChosen() {
+        WorkStand.Ground yard = ground(0, Set.of());
+        Optional<BlockCoord> stand =
+                WorkStand.near(new BlockCoord(10, 0, 20), yard, feet -> !feet.equals(new BlockCoord(10, 0, 20)));
+
+        assertEquals(
+                Optional.of(new BlockCoord(9, 0, 20)),
+                stand,
+                "Стоянка в точке работы за преградой не годится: берётся ближайшая, до которой дух дойдёт пешком");
+    }
+
+    @Test
+    void near_NoReachableCellWithinRadius_Empty() {
+        WorkStand.Ground yard = ground(0, Set.of());
+        assertEquals(
+                Optional.empty(),
+                WorkStand.near(new BlockCoord(10, 0, 20), yard, feet -> false),
+                "Ни одной достижимой стоянки рядом — пусто: «путь есть» не выдумывается");
+    }
+
+    @Test
     void near_NoFreeCellWithinRadius_Empty() {
         WorkStand.Ground walled = new WorkStand.Ground() {
             @Override

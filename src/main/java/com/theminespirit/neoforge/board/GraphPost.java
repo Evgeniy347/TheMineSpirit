@@ -28,14 +28,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;
 
 final class GraphPost {
     static final String MAKE = GraphTickets.PREFIX + "make:";
     static final String PART = ":2";
-    private static final String RESCUE = "rescue:";
     private static final Set<String> MINED = Set.of("cobblestone", "coal");
     private static final Set<BoardStatus> OPEN_STATUSES =
             Set.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED);
@@ -134,7 +132,7 @@ final class GraphPost {
             case SMELT_CHARCOAL -> new GraphCrafting(this).charcoal(ticket, task);
             case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART -> GraphBrew.post(this, ticket, task);
             case ACTIVITY_MOVE -> DigOutPost.digOut(this, service, task);
-            case RESCUE_SPIRIT -> rescue(ticket, task);
+            case RESCUE_SPIRIT -> GraphRescuePost.rescue(this, ticket, task);
             case FILL_CRATER -> new GraphHarvestPost(this).craters(ticket);
             default -> MorePost.way(this, ticket, task) || FarmPost.way(this, ticket, task);
         };
@@ -196,47 +194,6 @@ final class GraphPost {
                     ticket(partId, BoardCase.GATHER_MATERIALS, Optional.empty(), priority, cause, Map.of()),
                     TicketTarget.at(at).withSupply(item, portions.get(part)));
         }
-    }
-
-    private boolean rescue(GraphTickets.Ticket ticket, GraphPlan.Task task) {
-        BlockCoord home = SettlementHome.of(spirits);
-        boolean posted = false;
-        for (GraphFacts.Spirit fact : facts.spirits().values()) {
-            if (!fact.stuck()) {
-                continue;
-            }
-            SpiritEntity spirit = entity(fact.id());
-            if (spirit == null || spirit.isRemoved()) {
-                continue;
-            }
-            String id = RESCUE + fact.id();
-            if (open(id)) {
-                posted = true;
-                continue;
-            }
-            BlockPos feet = spirit.blockPosition();
-            BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-            submit(
-                    ticket(
-                            id,
-                            BoardCase.RESCUE_SPIRIT,
-                            Optional.of(spirit.getUUID()),
-                            task.priority(),
-                            ticket.id(),
-                            Map.of()),
-                    TicketTarget.at(at).withPlan(RescueTicket.plan(level, spirit, home)));
-            posted = true;
-        }
-        return posted;
-    }
-
-    private @Nullable SpiritEntity entity(String id) {
-        for (SpiritEntity spirit : spirits) {
-            if (spirit.getUUID().toString().equals(id)) {
-                return spirit;
-            }
-        }
-        return null;
     }
 
     private boolean tool(GraphTickets.Ticket ticket, GraphPlan.Task task) {
