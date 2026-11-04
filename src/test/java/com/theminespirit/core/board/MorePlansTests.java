@@ -125,6 +125,20 @@ class MorePlansTests {
         assertEquals(4, withdraw.params().get("count"), "Количество задаётся числом");
     }
 
+    @Test
+    void hazardCenters_AllAreasGiven_CoversEachOnce() {
+        BlockCoord home = new BlockCoord(1, 2, 3);
+        BlockCoord house = new BlockCoord(4, 5, 6);
+
+        List<BlockCoord> centers = MorePlans.hazardCenters(home, house, home);
+
+        assertEquals(
+                List.of(home, house),
+                centers,
+                "Очаг ищется у дома и у каждой площадки этапа ровно один раз: пропуск площадки оставит пожар "
+                        + "у постройки без действия");
+    }
+
     private static SequenceNode sequence(TaskNode node) {
         return (SequenceNode) node;
     }

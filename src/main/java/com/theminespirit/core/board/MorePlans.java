@@ -127,6 +127,19 @@ public final class MorePlans {
         return new ScriptCall("scan", Map.of());
     }
 
+    public static List<BlockCoord> hazardCenters(BlockCoord... centers) {
+        Objects.requireNonNull(centers, "Центры проверки опасностей не могут быть null: пусто — пустой список");
+        List<BlockCoord> distinct = new ArrayList<>();
+        for (BlockCoord center : centers) {
+            BlockCoord known = Objects.requireNonNull(
+                    center, "Центр проверки опасности не может быть null: без него нечего осматривать");
+            if (!distinct.contains(known)) {
+                distinct.add(known);
+            }
+        }
+        return List.copyOf(distinct);
+    }
+
     private static TaskNode retried(ScriptCall call) {
         return new FallbackNode(List.of(call, new ScriptCall(WAIT, Map.of("ticks", WAIT_TICKS))));
     }

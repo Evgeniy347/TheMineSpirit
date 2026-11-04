@@ -63,14 +63,14 @@ final class MoreHazards {
     }
 
     private static List<BlockCoord> centers(GraphPost post) {
-        List<BlockCoord> centers = new ArrayList<>();
-        BlockCoord home = post.scan.home();
-        centers.add(home);
-        BlockCoord anchor = post.scan.stage().anchor();
-        if (!anchor.equals(home)) {
-            centers.add(anchor);
-        }
-        return centers;
+        var stage = post.scan.stage();
+        return MorePlans.hazardCenters(
+                post.scan.home(),
+                stage.anchor(),
+                stage.houseOrigin(),
+                stage.workYard(),
+                stage.mineEntrance(),
+                stage.orchardOrigin());
     }
 
     private static Predicate<BlockState> match(Kind kind) {
