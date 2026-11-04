@@ -2,6 +2,8 @@ package com.theminespirit.core.board;
 
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -11,16 +13,22 @@ public final class FarmWaterCell {
     private FarmWaterCell() {}
 
     public static Optional<BlockCoord> planned(Schematic scheme, BlockCoord origin) {
+        List<BlockCoord> all = plannedAll(scheme, origin);
+        return all.isEmpty() ? Optional.empty() : Optional.of(all.get(0));
+    }
+
+    public static List<BlockCoord> plannedAll(Schematic scheme, BlockCoord origin) {
         if (scheme == null || origin == null) {
             throw new IllegalArgumentException(
                     "Схема поля и её начало не могут быть null: " + "без них неизвестно, где по плану стоит вода");
         }
+        List<BlockCoord> cells = new ArrayList<>();
         for (Schematic.PlacedEntry entry : scheme.entries(origin)) {
             if (isWater(entry.block())) {
-                return Optional.of(entry.pos());
+                cells.add(entry.pos());
             }
         }
-        return Optional.empty();
+        return List.copyOf(cells);
     }
 
     public static boolean isWater(String block) {

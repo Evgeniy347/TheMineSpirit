@@ -76,6 +76,27 @@ final class BuildingPlacer {
         return chosen;
     }
 
+    Optional<Placement> placeAt(TownEntry entry, String id, int stage, int x, int z, Placement.Facing facing) {
+        Objects.requireNonNull(entry, "Постройка не может быть null");
+        int w = entry.width();
+        int d = entry.depth();
+        for (int px = x; px < x + w; px++) {
+            for (int pz = z; pz < z + d; pz++) {
+                if (!region.contains(px, pz) || grid.water(px, pz) || streets.contains(px, pz)) {
+                    return Optional.empty();
+                }
+            }
+        }
+        Placement candidate = new Placement(id, entry.name(), stage, x, z, w, d, facing);
+        if (placed.stream()
+                .anyMatch(other -> other.overlaps(candidate, rules.spacing().gap()))) {
+            return Optional.empty();
+        }
+        placed.add(candidate);
+        seeds.putIfAbsent(stage, candidate);
+        return Optional.of(candidate);
+    }
+
     private Optional<Placement> centered(TownEntry entry, String id, int stage) {
         int x = centerX - entry.width() / 2;
         int z = centerZ - entry.depth() / 2;

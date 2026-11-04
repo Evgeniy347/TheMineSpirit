@@ -73,6 +73,7 @@ class DemoBuildingsTests {
                         "barn",
                         "field",
                         "field_wheat",
+                        "wheat_field",
                         "field_carrot",
                         "field_potato",
                         "field_beetroot",

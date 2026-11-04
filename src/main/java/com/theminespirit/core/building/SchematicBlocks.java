@@ -7,7 +7,6 @@ import java.util.Set;
 
 public final class SchematicBlocks {
     public static final String FLOOR = "@floor";
-
     private static final String FLOOR_BLOCK = "minecraft:cobblestone";
     private static final String TORCH = "torch";
     private static final String LANTERN = "lantern";
@@ -232,6 +231,7 @@ public final class SchematicBlocks {
         int colon = blockId.indexOf(':');
         String namespace = colon < 0 ? "minecraft:" : blockId.substring(0, colon + 1);
         String path = path(placementBlock(blockId));
+        if (SchematicActions.itemOverride(path) != null) return namespace + SchematicActions.itemOverride(path);
         for (String[] wall : WALL_VARIANTS) {
             if (path.endsWith(wall[0])) {
                 return namespace + path.substring(0, path.length() - wall[0].length()) + wall[1];
