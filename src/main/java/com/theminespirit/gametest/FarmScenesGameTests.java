@@ -14,11 +14,6 @@ public final class FarmScenesGameTests {
 
     @GameTest(template = "arena", batch = "scene_farm_arena", timeoutTicks = 2953)
     public static void farmScene_ArenaSteps_AllPass(GameTestHelper helper) {
-        SceneSteps.run(
-                helper,
-                List.of("arena"),
-                FarmSafetyGameTests.class,
-                HusbandryCullGameTests.class,
-                IntellectForageGameTests.class);
+        SceneSteps.run(helper, List.of("arena"), FarmSafetyGameTests.class, HusbandryCullGameTests.class);
     }
 }

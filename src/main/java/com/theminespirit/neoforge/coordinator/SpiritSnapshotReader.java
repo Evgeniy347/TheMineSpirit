@@ -8,13 +8,11 @@ import com.theminespirit.core.coordinator.WorkTargets;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.board.BoardRegistry;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Enemy;
@@ -76,15 +74,6 @@ public final class SpiritSnapshotReader {
 
     private static SpiritRole roleOf(SpiritEntity spirit) {
         return SpiritRoles.classify(
-                spirit.currentTaskScript(), spirit.currentPlan().isPresent(), hasActivity(spirit));
-    }
-
-    private static boolean hasActivity(SpiritEntity spirit) {
-        if (!(spirit.level() instanceof ServerLevel level)) {
-            return false;
-        }
-        return BoardRegistry.peek(level)
-                .flatMap(service -> service.board().occupation(spirit.getUUID()))
-                .isPresent();
+                spirit.currentTaskScript(), spirit.currentPlan().isPresent(), false);
     }
 }

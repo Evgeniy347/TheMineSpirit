@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 class BoardPostGuardTests {
     private static final Path BOARD = Path.of("src/main/java/com/theminespirit/neoforge/board");
     private static final Path REST = Path.of("src/main/java/com/theminespirit/neoforge/rest");
+    private static final Path INTELLECT = Path.of("src/main/java/com/theminespirit/neoforge/intellect");
 
     private static final List<String> OFFENCES = List.of(
             "service.submit(",
@@ -62,6 +63,24 @@ class BoardPostGuardTests {
                         + "выбирал, и следующий пересчёт спорит с ней. Как надо: источник отдаёт факт во вход "
                         + "графа, а билет ставит GraphPost; исполнитель билета получает GraphPost и зовёт его "
                         + "submit. Нарушители");
+    }
+
+    @Test
+    void intellect_OffersNoWork_OnlyFactsOfTheWorld() {
+        String source = SourceFiles.javaUnder(INTELLECT).get(INTELLECT.resolve("SettlementIntellect.java"));
+        List<String> found = new ArrayList<>();
+        for (String pattern : List.of("offerActivities(", "board.launch(", "service.launch(", "ActivityOffer")) {
+            if (source.contains(pattern)) {
+                found.add(pattern);
+            }
+        }
+
+        assertEquals(
+                List.of(),
+                found,
+                "Интеллект снова выбирает работу мимо графа: занятие идёт на доску без веса и узла, "
+                        + "а следующий пересчёт спорит с ним. Как надо: интеллект отдаёт факты (idle/hungry/"
+                        + "угрозы/отдых) во вход графа, работу выбирает GraphPlanner. Нарушители");
     }
 
     @Test

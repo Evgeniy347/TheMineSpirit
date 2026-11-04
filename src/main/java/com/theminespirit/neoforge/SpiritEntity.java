@@ -363,10 +363,6 @@ public final class SpiritEntity extends PathfinderMob {
         return defenceAssigned;
     }
 
-    public void setDefenceAssigned(boolean assigned) {
-        this.defenceAssigned = assigned;
-    }
-
     public Optional<Camp> camp() {
         return Optional.ofNullable(camp);
     }
