@@ -51,14 +51,13 @@ final class WorldPost {
         }
         target = StageSettle.repairTarget(step, target, gap);
         BoardOutcome outcome = StageRepair.post(
-                post.service,
+                post,
                 step,
                 target,
                 new StageRepair.Gap(
                         gap.shortage(),
                         gap.total(),
-                        need(post.graph, ticket.task().consumes(), post.scan.wood())),
-                post.now);
+                        need(post.graph, ticket.task().consumes(), post.scan.wood())));
         return StageAudit.keeps(outcome);
     }
 

@@ -52,6 +52,9 @@ final class TicketStoragePlans {
     }
 
     static TaskNode gatherMaterials(TicketTarget target) {
+        if (target.craftItem() != null && !target.craftItem().isBlank()) {
+            return ToolCraftPlan.ofItem(target.craftItem(), target);
+        }
         String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
         int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);

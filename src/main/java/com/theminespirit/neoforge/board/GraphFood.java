@@ -2,8 +2,6 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardOutcome;
-import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.StockView;
@@ -43,19 +41,15 @@ final class GraphFood {
         return spirits.stream().anyMatch(spirit -> needsRestock(spirit, norm));
     }
 
-    static void post(
-            ServerLevel level,
-            BoardService service,
-            List<SpiritEntity> spirits,
-            StockView stock,
-            String id,
-            int priority,
-            long now) {
+    static void post(GraphPost post, String id, int priority) {
+        ServerLevel level = post.level;
+        StockView stock = post.stock;
+        long now = post.now;
         double norm = norm();
         NutritionTable table = StockCatalog.defaultTable();
         Map<String, Integer> available = qualify(stock.available());
         Optional<Boolean> station = Optional.empty();
-        for (SpiritEntity spirit : spirits) {
+        for (SpiritEntity spirit : post.spirits) {
             if (!needsRestock(spirit, norm)) {
                 continue;
             }
@@ -97,21 +91,10 @@ final class GraphFood {
                         from);
             }
             String ticketId = id + "@" + spirit.getUUID();
-            BoardOutcome outcome = service.submit(
-                    new BoardTicket(
-                            ticketId,
-                            BoardCase.RESTOCK_FOOD,
-                            Optional.of(spirit.getUUID()),
-                            priority,
-                            now,
-                            1,
-                            id,
-                            List.of(),
-                            Map.of()),
+            post.submit(
+                    post.ticket(
+                            ticketId, BoardCase.RESTOCK_FOOD, Optional.of(spirit.getUUID()), priority, id, Map.of()),
                     TicketTarget.at(from).withSupply(item, count).withDeposit(from));
-            if (outcome == BoardOutcome.DUPLICATE) {
-                service.board().reprioritize(ticketId, priority);
-            }
         }
     }
 

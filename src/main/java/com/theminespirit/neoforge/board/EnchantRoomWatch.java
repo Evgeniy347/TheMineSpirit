@@ -10,21 +10,14 @@ import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import net.minecraft.server.level.ServerLevel;
 
 public final class EnchantRoomWatch {
     private static final String PREFIX = "enchant_room";
 
     private EnchantRoomWatch() {}
 
-    static boolean post(
-            ServerLevel level,
-            BoardService service,
-            List<SpiritEntity> spirits,
-            String node,
-            int priority,
-            Map<String, Integer> need,
-            long now) {
+    static boolean post(GraphPost post, String node, int priority, Map<String, Integer> need) {
+        List<SpiritEntity> spirits = post.spirits;
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty() || !node.startsWith(PREFIX)) {
             return false;
         }
@@ -33,24 +26,24 @@ public final class EnchantRoomWatch {
             return false;
         }
         String id = PREFIX + "_" + levelValue;
-        BoardStatus status = service.board().statusOf(id).orElse(null);
+        BoardStatus status = post.service.board().statusOf(id).orElse(null);
         if (status == BoardStatus.DONE
                 || status == BoardStatus.PENDING
                 || status == BoardStatus.WAITING_RESOURCES
                 || status == BoardStatus.ASSIGNED) {
             return true;
         }
-        service.submit(
-                new BoardTicket(
-                        id,
-                        BoardCase.ENCHANT_ROOM,
-                        Optional.empty(),
-                        priority,
-                        now,
+        post.submit(
+                post.leveled(
+                        post.ticket(
+                                id,
+                                BoardCase.ENCHANT_ROOM,
+                                Optional.empty(),
+                                priority,
+                                BoardTicket.ALWAYS_CAUSE,
+                                Map.copyOf(need)),
                         levelValue,
-                        BoardTicket.ALWAYS_CAUSE,
-                        List.of(),
-                        Map.copyOf(need)),
+                        List.of()),
                 TicketTarget.at(homeOf(spirits)));
         return true;
     }

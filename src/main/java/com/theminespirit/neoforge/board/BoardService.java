@@ -10,7 +10,7 @@ import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardReserve;
-import com.theminespirit.core.board.BoardRules;
+import com.theminespirit.core.board.BoardState;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
@@ -32,6 +32,7 @@ import com.theminespirit.core.board.ToolCraft;
 import com.theminespirit.core.board.ToolLossRelease;
 import com.theminespirit.core.board.TransferCarriers;
 import com.theminespirit.core.board.TransferTicket;
+import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
@@ -45,7 +46,6 @@ import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.task.SpiritReading;
 import com.theminespirit.core.town.StageWork;
 import com.theminespirit.neoforge.IncidentSnapshots;
-import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import com.theminespirit.neoforge.inventory.SpiritSupplies;
@@ -127,7 +127,16 @@ public final class BoardService {
                 Objects.requireNonNull(journal, "journal не может быть null: без него переходы не попадут в журнал");
         this.store = store;
         if (store != null) {
-            store.restoreInto(board);
+            BoardState restored = store.state();
+            BoardState owned = restored.withoutLegacy(Set.of(GraphTickets.PREFIX));
+            int dropped = restored.entries().size() - owned.entries().size();
+            if (dropped > 0) {
+                LOGGER.warn(
+                        "[board] при загрузке снято {} заданий мимо графа: их ставят заново источники графа", dropped);
+            }
+            if (!owned.isEmpty()) {
+                board.restore(owned);
+            }
             cancelRestoredRescues(board);
             String build = BuildFingerprint.current();
             if (!build.equals(store.build())) {
@@ -356,42 +365,6 @@ public final class BoardService {
 
     private record Capture(Species species, UUID animal, String cause, TicketTarget penTarget) {}
 
-    public boolean reportDropped(SpiritEntity source, ItemEntity drop) {
-        Objects.requireNonNull(source, "Дух, выкинувший вещь, не может быть null: по нему ищется поселение");
-        Objects.requireNonNull(drop, "Выкинутая вещь не может быть null: без неё нечего забирать");
-        if (!SpiritConfig.boardEnabled()
-                || source.home().isEmpty()
-                || drop.isRemoved()
-                || !(drop.level() instanceof ServerLevel level)) {
-            return false;
-        }
-        BlockPos pos = drop.blockPosition();
-        String item = StackMapper.itemId(drop.getItem());
-        String id = "drop:" + pos.getX() + "," + pos.getY() + "," + pos.getZ() + ":" + item;
-        if (board.statusOf(id).isPresent()) {
-            return false;
-        }
-        String cause = "drop:" + pos.getX() + ":" + pos.getY() + ":" + pos.getZ() + ":" + item;
-        BlockCoord at = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-        BoardOutcome outcome = submit(
-                new BoardTicket(
-                        id,
-                        BoardCase.COLLECT_DROPS,
-                        Optional.empty(),
-                        BoardRules.priorityOf(BoardCase.COLLECT_DROPS),
-                        level.getGameTime(),
-                        1,
-                        cause,
-                        List.of(),
-                        Map.of()),
-                TicketTarget.at(at).withDrops(List.of(item)));
-        if (outcome == BoardOutcome.ACCEPTED) {
-            LOGGER.info("Журнал доски: постановка {} — забрать выкинутое в {}: {}", id, at, item);
-        }
-        journal.flush(JournalService.FLUSH_BUDGET);
-        return outcome == BoardOutcome.ACCEPTED;
-    }
-
     public BoardOutcome submit(BoardTicket ticket, TicketTarget target) {
         BoardOutcome outcome = board.submit(ticket);
         if (outcome == BoardOutcome.ACCEPTED) {
@@ -458,7 +431,7 @@ public final class BoardService {
             issuedGenerations.remove(ticket.id());
             board.release(ticket.id());
         }
-        board.vacate(spirit.getUUID());
+        board.vacate(spirit.getUUID(), null);
         cards.forget(spirit.getUUID());
         WorkReserveHub.releaseAll(spirit);
     }
@@ -473,7 +446,8 @@ public final class BoardService {
             TaskNode task = offer.task();
             if (spirit.isRemoved()
                     || task == null
-                    || !board.assignedTo(spirit.getUUID()).isEmpty()) {
+                    || !board.assignedTo(spirit.getUUID()).isEmpty()
+                    || graphWorkFor(spirit.getUUID())) {
                 continue;
             }
             if (launcher.start(spirit, offer.script(), task, now)) {
@@ -486,6 +460,10 @@ public final class BoardService {
             }
         }
         reconcileActivities(offered, false);
+    }
+
+    private boolean graphWorkFor(UUID spirit) {
+        return board.pendingFor(spirit).stream().anyMatch(ticket -> !BoardActivities.isActivity(ticket.boardCase()));
     }
 
     public boolean launch(
@@ -513,7 +491,7 @@ public final class BoardService {
                 BoardOccupant.Occupation occ = occupation.get();
                 board.occupy(spirit.getUUID(), occ.boardCase(), occ.script(), occ.target(), board.now());
             } else {
-                board.vacate(spirit.getUUID());
+                board.vacate(spirit.getUUID(), "нет занятия: дух свободен или занят билетом доски");
             }
         }
         WaitRefresh.tick(board, spirits, targets, stock, crafters, board.now());
@@ -918,7 +896,7 @@ public final class BoardService {
                 WorkReserveHub.reserve(spirit, new WorkTarget(WorkKind.CELL, target.target()));
                 notices.assigned(board, ticket, target, pick.whyChosen(ticket, spirit, crafters));
             } else {
-                LOGGER.error("Задание {} не выдано духу {}: {}", ticket.id(), spirit.displayName(), outcome);
+                JobLaunch.dropUnclaimed(board, cards, spirit, ticket.id(), outcome);
             }
         }
     }

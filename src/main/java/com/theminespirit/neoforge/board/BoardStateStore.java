@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardState;
 import com.theminespirit.core.board.BoardStatus;
@@ -118,13 +117,6 @@ public final class BoardStateStore extends SavedData {
         if (!state.equals(next)) {
             state = next;
             setDirty();
-        }
-    }
-
-    public void restoreInto(Board board) {
-        Objects.requireNonNull(board, "Доска не может быть null: восстанавливать некуда");
-        if (!state.isEmpty()) {
-            board.restore(state);
         }
     }
 

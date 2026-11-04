@@ -118,7 +118,7 @@ public final class GraphSource {
                         .forEach(id -> half.service().board().reprioritize(id, task.priority()));
             }
         }
-        report(half.plan(), half.result(), unconnected, half.now());
+        report(half.plan(), half.result(), unconnected, freeSpirit(half), half.now());
         if (half.deep()) {
             String buildings = new TreeMap<>(half.state().buildings()) + " "
                     + half.plan().tasks().stream()
@@ -233,7 +233,15 @@ public final class GraphSource {
         return stage <= state.stage();
     }
 
-    private void report(GraphPlan plan, GraphTickets.Result result, List<String> unconnected, long now) {
+    private static boolean freeSpirit(Half half) {
+        return half.spirits().stream()
+                .anyMatch(spirit -> !spirit.isRemoved()
+                        && half.service().board().assignedTo(spirit.getUUID()).isEmpty()
+                        && half.service().board().occupation(spirit.getUUID()).isEmpty());
+    }
+
+    private void report(
+            GraphPlan plan, GraphTickets.Result result, List<String> unconnected, boolean freeSpirit, long now) {
         List<String> missing = result.unimplemented().stream()
                 .filter(task -> task.priority() > 0)
                 .map(GraphPlan.Task::id)
@@ -242,9 +250,12 @@ public final class GraphSource {
             LOGGER.info("[graph] нужны, но механик нет (implemented=false): {}", missing);
         }
         if (!unconnected.isEmpty() && notes.due("unconnected", now)) {
-            LOGGER.info(
-                    "[graph] задания графа без подключения к доске (их ставит свой сторож или нет цели): {}",
-                    unconnected);
+            if (freeSpirit) {
+                LOGGER.info(
+                        "[graph] задания графа без подключения к доске (нет исполнителя или цели): {}", unconnected);
+            } else {
+                LOGGER.info("[graph] задания графа ждут свободного духа: {}", unconnected);
+            }
         }
         for (GraphPlan.Advice advice : plan.advice()) {
             if (notes.due("advice:" + advice.event() + ":" + advice.rule(), now)) {
