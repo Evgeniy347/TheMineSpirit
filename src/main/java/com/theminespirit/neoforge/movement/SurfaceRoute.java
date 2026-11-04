@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.movement;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.movement.SearchMillis;
 import com.theminespirit.core.movement.SurfaceEscape;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.route.Route;
@@ -24,6 +25,7 @@ public final class SurfaceRoute {
         BlockPos feet = spirit.blockPosition();
         BlockCoord start = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
         Level level = spirit.level();
+        long started = System.nanoTime();
         Optional<List<BlockCoord>> found = SurfaceEscape.path(
                 start,
                 new RouteLevelView(spirit),
@@ -32,13 +34,14 @@ public final class SurfaceRoute {
             LOGGER.info("[dig_out] дух {}: пути к небу из {} нет — копаю ступенями", spirit.displayName(), start);
             return Optional.empty();
         }
-        return Optional.of(route(spirit, level, found.orElseThrow(), "к небу", 0));
+        return Optional.of(route(spirit, level, found.orElseThrow(), "к небу", started));
     }
 
     public static Optional<RouteWalk> planDescent(SpiritEntity spirit, BlockCoord target) {
         BlockPos feet = spirit.blockPosition();
         BlockCoord start = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
         Level level = spirit.level();
+        long started = System.nanoTime();
         Optional<List<BlockCoord>> found = SurfaceEscape.path(
                 start,
                 new RouteLevelView(spirit),
@@ -51,7 +54,7 @@ public final class SurfaceRoute {
             LOGGER.info("[dig_out] дух {}: пути вниз из {} к {} нет", spirit.displayName(), start, target);
             return Optional.empty();
         }
-        return Optional.of(route(spirit, level, found.orElseThrow(), "вниз", 0));
+        return Optional.of(route(spirit, level, found.orElseThrow(), "вниз", started));
     }
 
     private static RouteWalk route(
@@ -71,7 +74,7 @@ public final class SurfaceRoute {
                 what,
                 cells.size(),
                 end,
-                Math.max(0, (System.nanoTime() - started) / 1_000_000));
+                SearchMillis.since(started, System.nanoTime()));
         Route route = new Route(Route.Status.FOUND, steps, cells.size() * 10.0, end, cells.size(), 0, 0, List.of());
         return new RouteWalk(spirit, route, end);
     }

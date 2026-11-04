@@ -175,14 +175,12 @@ public final class DigOutScript implements ScriptInstance {
                     spirit, new BlockCoord(target.x(), target.y(), target.z()), descending, HOME_RADIUS);
         }
         DigOutRoute.State state = routeFollow.tick();
-        if (state == DigOutRoute.State.RUNNING) {
-            return true;
-        }
         if (state == DigOutRoute.State.DESCENT_FAILED) {
+            routeFollow = null;
             fail("пути вниз к " + target + " нет: ступени и прыжок не находятся");
+            return false;
         }
-        routeFollow = null;
-        return false;
+        return state == DigOutRoute.State.RUNNING;
     }
 
     private ScriptStatus walkTick(BlockPos feet) {

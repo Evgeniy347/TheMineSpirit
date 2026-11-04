@@ -50,7 +50,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -67,7 +66,6 @@ final class BuildSchematicScript implements ScriptInstance {
     private static final int HARD_APPROACH_PATH_BUILDS = 4;
 
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int MAKE_WAY_RADIUS = 6;
     private final SpiritEntity spirit;
     private final Level level;
     private final SchematicSite site;
@@ -466,6 +464,14 @@ final class BuildSchematicScript implements ScriptInstance {
 
     private Optional<ScriptStatus> placeOne(Schematic.PlacedEntry entry) {
         BlockCoord cell = entry.pos();
+        if (BuildMakeWay.selfIn(spirit, cell)) {
+            lastRefusal = "строитель стоит в клетке " + cell + " — сначала отойти";
+            return BuildMakeWay.outsideStand(site, feet()).map(this::beginApproach);
+        }
+        if (!BuildMakeWay.clear(spirit, level, site, buildKey, cell)) {
+            lastRefusal = "клетку " + cell + " занимает живое существо: сначала отойти";
+            return Optional.empty();
+        }
         reservations.reserve(cell, spirit.getUUID());
         BlockPlacer.Begin begin = placer.begin(SchematicSite.toPos(cell), site.wanted(entry), entry.block());
         reservations.release(cell, spirit.getUUID());
@@ -493,9 +499,6 @@ final class BuildSchematicScript implements ScriptInstance {
                 if (refused.reason() == BlockPlacer.RefuseReason.NO_MATERIAL) {
                     return Optional.of(noMaterial(entry.block()));
                 }
-                if (refused.reason() == BlockPlacer.RefuseReason.OCCUPIED) {
-                    makeWay(cell);
-                }
                 int attempts = refusals.merge(cell, 1, Integer::sum);
                 if (attempts >= BuildTuning.MAX_CONSECUTIVE_SKIPS) {
                     blocked.put(cell, lastRefusal);
@@ -503,44 +506,6 @@ final class BuildSchematicScript implements ScriptInstance {
                 return Optional.empty();
             }
         }
-    }
-
-    private void makeWay(BlockCoord cell) {
-        AABB box = new AABB(SchematicSite.toPos(cell));
-        for (SpiritEntity other : level.getEntitiesOfClass(SpiritEntity.class, box, e -> !e.equals(spirit))) {
-            if (other.taskStatus().orElse(null) == RunStatus.RUNNING) {
-                continue;
-            }
-            BlockPos feet = other.blockPosition();
-            outsideStand(new BlockCoord(feet.getX(), feet.getY(), feet.getZ())).ifPresent(stand -> {
-                LOGGER.info(
-                        "Стройка {}: дух {} стоит в клетке {} — отходит к {}",
-                        buildKey,
-                        other.displayName(),
-                        cell,
-                        stand);
-                other.startTask(new ScriptCall("goto", Map.of("x", stand.x(), "y", stand.y(), "z", stand.z())));
-            });
-        }
-    }
-
-    private Optional<BlockCoord> outsideStand(BlockCoord from) {
-        for (int ring = 1; ring <= MAKE_WAY_RADIUS; ring++) {
-            for (int dx = -ring; dx <= ring; dx++) {
-                for (int dz = -ring; dz <= ring; dz++) {
-                    if (Math.max(Math.abs(dx), Math.abs(dz)) != ring) {
-                        continue;
-                    }
-                    for (int dy = -1; dy <= 1; dy++) {
-                        BlockCoord feet = new BlockCoord(from.x() + dx, from.y() + dy, from.z() + dz);
-                        if (site.outsideFootprint(feet) && site.standable(feet)) {
-                            return Optional.of(feet);
-                        }
-                    }
-                }
-            }
-        }
-        return Optional.empty();
     }
 
     private ScriptStatus moveTowards(List<BlockCoord> cells, ReachPlanner.World base, boolean outsideOnly) {
