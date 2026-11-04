@@ -274,6 +274,13 @@ MORE = {
 }
 
 
+MORE_READY = {
+    "more_help_player", "more_keep_clear", "more_light_dark_spot", "more_return_before_night",
+    "more_pickup_drops", "more_replant", "more_sustain_mine", "more_secure_fence",
+    "more_secure_door", "more_secure_hopper", "more_share_reserve",
+}
+
+
 def test_more_nodes():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     for signal, way in MORE.items():
@@ -281,9 +288,12 @@ def test_more_nodes():
         assert path is not None, "Python-модель не видит путь области more: " + way
         assert path.makes in graph.items, "Python-модель не видит узел области more: " + path.makes
         assert graph.items[path.makes].base > 0, "Стартовый вес узла more положителен: " + path.makes
-        assert way in graph.unimplemented, "Действие области more пока заглушено: " + way
+        if way in MORE_READY:
+            assert graph.implemented(way), "Действие области more связано с исполнением: " + way
+        else:
+            assert way in graph.unimplemented, "Сигнал управления more остаётся без отдельного действия: " + way
         assert path.world == signal, "Вход области more — метка мира " + signal
-    print("OK: узлы и заглушки области more читаются из фрагментов")
+    print("OK: узлы области more и их исполнение читаются из фрагментов")
 
 
 def more_state(events):
@@ -314,6 +324,13 @@ def test_more_inputs():
     print("OK: входы области more учитываются в выборе")
 
 
+MORE2_READY = {
+    "more2_sow_food", "more2_breed_food", "more2_unload_carry", "more2_put_out_fire",
+    "more2_remove_lava", "more2_block_flow", "more2_pen_animal", "more2_lure_wild",
+    "more2_guard_villager", "more2_prepare_stage", "more2_make_bed", "more2_build_trail",
+}
+
+
 def test_more2_nodes():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     for way in ("more2_sow_food", "more2_breed_food", "more2_unload_carry", "more2_load_carry",
@@ -321,13 +338,17 @@ def test_more2_nodes():
                 "more2_pen_animal", "more2_lure_wild", "more2_guard_villager", "more2_trade_villager",
                 "more2_prepare_stage", "more2_make_bed", "more2_build_trail"):
         assert graph.way(way) is not None, "Python-модель не видит новый путь области graphmore2: " + way
-        assert not graph.implemented(way), "Действие области graphmore2 пока заглушено: " + way
+        if way in MORE2_READY:
+            assert graph.implemented(way), "Действие области graphmore2 связано с исполнением: " + way
+        else:
+            assert not graph.implemented(way), "Сигнал логистики/торговли остаётся без отдельного действия: " + way
     for item in ("more2:food_plan", "more2:carry_room", "more2:carry_batch", "more2:safe",
                  "more2:flow_blocked", "more2:animal_penned", "more2:village_safe",
                  "more2:stage_ready", "more2:bed_ready", "more2:trail"):
         assert item in graph.items, "Python-модель не видит новый узел области graphmore2: " + item
     for building in ("more2_field_chest", "more2_trail"):
         assert building in graph.buildings, "Python-модель не видит новую постройку области: " + building
+        assert graph.implemented(building), "Постройка области graphmore2 связана с исполнением: " + building
     for event in ("more2_food_low", "more2_inventory_full", "more2_inventory_space", "more2_long_carry",
                   "more2_fire_near_building", "more2_lava_near_building", "more2_hazard_flow",
                   "more2_animal_outside", "more2_wild_herd", "more2_villager_near",
@@ -347,7 +368,7 @@ def test_more2_inputs():
     fire = tasks.get("event:more2_fire_near_building:more2_put_out_fire")
     flow = tasks.get("event:more2_hazard_flow:more2_block_flow")
     assert fire is not None and flow is not None, "Вход области graphmore2 обязан дать задания в выборе"
-    assert not fire["implemented"] and not flow["implemented"], "Заглушки области не выдаются как готовые действия"
+    assert fire["implemented"] and flow["implemented"], "Тушение огня и заливка потока связаны с исполнением"
     print("OK: входы области graphmore2 учитываются в выборе")
 
 
