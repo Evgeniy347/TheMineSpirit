@@ -86,6 +86,8 @@ final class BoardScriptCards {
                 "capture",
                 "fish",
                 "bucket_fish",
+                "fill_bucket",
+                "pour_bucket",
                 "shear",
                 "milk",
                 "collect_eggs",

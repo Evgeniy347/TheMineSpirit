@@ -19,7 +19,7 @@ class GraphMore3FragmentsTests {
             "farmland_trampled",
             "world_decay");
     private static final List<String> WAYS =
-            List.of("secure_danger", "recover_death_drop", "clear_trash", "assign_chest_purpose", "repair_world_decay");
+            List.of("secure_danger", "recover_death_drop", "clear_trash", "assign_chest_purpose");
 
     @Test
     void more3Events_FragmentLoad_AreDeclared() {

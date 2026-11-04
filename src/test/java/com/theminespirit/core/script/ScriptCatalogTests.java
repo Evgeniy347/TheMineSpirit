@@ -351,6 +351,13 @@ class ScriptCatalogTests {
                 spec("brush", List.of(), Map.of("radius", new long[] {1, 16}, "count", new long[] {1, 64})),
                 spec("cast_obsidian", List.of(), Map.of("count", new long[] {1, 256}, "radius", new long[] {1, 32})),
                 spec("light_portal", List.of(), Map.of("radius", new long[] {1, 32})),
+                spec("fill_bucket", List.of("fluid"), Map.of("radius", new long[] {1, 32})),
+                spec(
+                        "pour_bucket",
+                        List.of("fluid", "x", "y", "z"),
+                        Map.of("x", new long[] {WORLD_MIN, WORLD_MAX}, "y", new long[] {-64, 319}, "z", new long[] {
+                            WORLD_MIN, WORLD_MAX
+                        })),
                 spec("cull", List.of("species"), Map.of("keep", new long[] {2, 64}, "radius", new long[] {1, 16})),
                 spec("herd_check", List.of(), Map.of("radius", new long[] {1, 16})),
                 spec("hunt", List.of("species"), Map.of("radius", new long[] {1, 48}, "count", new long[] {1, 64})),
