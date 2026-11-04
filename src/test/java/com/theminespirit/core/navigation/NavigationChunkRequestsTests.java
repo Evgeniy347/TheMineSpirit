@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.navigation.NavigationChunkRequests.Chunk;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
@@ -72,6 +73,20 @@ class NavigationChunkRequestsTests {
         assertTrue(
                 chosen.isEmpty(),
                 "Тикеты прошлых шагов похода входят в бюджет: повторная загрузка того же коридора запрещена");
+    }
+
+    @Test
+    void fresh_AlreadyHeldByTrip_Skipped() {
+        List<Chunk> missing = chunks(5);
+        Set<Long> held = Set.of(new Chunk(0, 0).key(), new Chunk(2, 0).key());
+
+        List<Chunk> fresh = NavigationChunkRequests.fresh(missing, held);
+
+        assertEquals(
+                List.of(new Chunk(1, 0), new Chunk(3, 0), new Chunk(4, 0)),
+                fresh,
+                "Чанки, на которые поход уже взял тикет, не запрашиваются снова: иначе бюджет тратится впустую "
+                        + "и коридор дальше не грузится (живая проверка observe22)");
     }
 
     private static List<Chunk> chunks(int count) {

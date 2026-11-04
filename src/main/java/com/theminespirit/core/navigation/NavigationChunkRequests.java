@@ -69,6 +69,19 @@ public final class NavigationChunkRequests {
         return List.copyOf(chosen);
     }
 
+    public static List<Chunk> fresh(List<Chunk> missing, Set<Long> held) {
+        Objects.requireNonNull(missing, "Список незагруженных чанков не может быть null: пусто — грузить нечего");
+        Objects.requireNonNull(held, "Тикеты похода не могут быть null: пустое множество — тикетов нет");
+        List<Chunk> out = new ArrayList<>();
+        Set<Long> seen = new LinkedHashSet<>();
+        for (Chunk chunk : missing) {
+            if (!held.contains(chunk.key()) && seen.add(chunk.key())) {
+                out.add(chunk);
+            }
+        }
+        return List.copyOf(out);
+    }
+
     public static List<Chunk> corridor(BlockCoord from, BlockCoord target, int radius) {
         Objects.requireNonNull(from, "Старт маршрута не может быть null: от него строится коридор");
         Objects.requireNonNull(target, "Цель маршрута не может быть null: до неё строится коридор");

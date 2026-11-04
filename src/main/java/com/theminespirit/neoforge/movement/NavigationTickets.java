@@ -52,8 +52,12 @@ public final class NavigationTickets {
             return false;
         }
         boolean canHoldMore = holding.held().size() < SpiritConfig.navChunkBudget();
-        List<Chunk> take =
-                budget().next(level.getGameTime(), missing, holding.held().size());
+        Set<Long> held = new HashSet<>();
+        holding.held().forEach(pos -> held.add(new Chunk(pos.x, pos.z).key()));
+        List<Chunk> take = budget().next(
+                        level.getGameTime(),
+                        NavigationChunkRequests.fresh(missing, held),
+                        holding.held().size());
         for (Chunk chunk : take) {
             ChunkPos pos = new ChunkPos(chunk.x(), chunk.z());
             holding.held().add(pos);
