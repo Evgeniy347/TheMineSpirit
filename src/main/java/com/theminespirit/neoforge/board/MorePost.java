@@ -53,7 +53,7 @@ final class MorePost {
             case "more_light_dark_spot" -> lightDarkSpot(post, ticket);
             case "more_return_before_night" ->
                 MoreActions.script(post, ticket, BoardCase.ACTIVITY_RETURN, home(post), MorePlans.returnHome());
-            case "more_pickup_drops" -> GraphCollect.post(post.service, post.around, ticket, post.now);
+            case "more_pickup_drops" -> GraphCollect.post(post, post.around, ticket);
             case "more_replant" -> new GraphHarvestPost(post).orchard(ticket, ticket.task());
             case "more_sustain_mine" -> sustainMine(post, ticket);
             case "more_secure_fence" -> new GraphHarvestPost(post).fences(ticket);

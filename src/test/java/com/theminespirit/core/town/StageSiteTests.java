@@ -201,4 +201,46 @@ class StageSiteTests {
         assertTrue(StageSites.complete(full), "свежий план содержит все места этапа 1");
         assertFalse(StageSites.complete(old), "план мира без сада (старая «роща») не годится и размечается заново");
     }
+
+    @Test
+    void gatherProtected_StreetCell_True() {
+        StageSite site = TownFixtures.flatSite();
+        TownPlan plan = TownFixtures.flatPlan();
+        ColumnMask.Cell street =
+                plan
+                        .streets()
+                        .main()
+                        .union(plan.streets().side())
+                        .union(plan.streets().ring())
+                        .cells()
+                        .stream()
+                        .filter(cell -> !site.planCell(cell.x(), site.anchor().y() - 1, cell.z()))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalStateException("В плане нет улицы вне площадок построек"));
+        int y = site.anchor().y() - 1;
+
+        assertFalse(
+                site.planCell(street.x(), y, street.z()),
+                "Улица — не площадка постройки: planCell её не покрывает, поэтому защита сбора отдельная");
+        assertTrue(
+                site.streetColumn(street.x(), street.z()),
+                "Любая клетка улицы плана (главной, боковой, кольца) обязана быть узнаваема: иначе дух снова "
+                        + "выкопает покрытие улицы под материал");
+        assertTrue(
+                site.gatherProtected(street.x(), y, street.z()),
+                "observe22: сбор земли у поселения выкопал блоки улиц снаружи ограды (forbiddenBySettlement "
+                        + "ловит только природные блоки внутри) — защита сбора обязана покрывать улицы");
+    }
+
+    @Test
+    void gatherProtected_FreeGroundOutsidePlan_False() {
+        StageSite site = TownFixtures.flatSite();
+
+        assertFalse(
+                site.gatherProtected(
+                        site.anchor().x() + 1000,
+                        site.anchor().y(),
+                        site.anchor().z() + 1000),
+                "За пределами плана добыча остаётся разрешённой: иначе духи не добудут землю вовсе");
+    }
 }

@@ -180,11 +180,15 @@ public final class RouteDetour {
         if (pending.plan.rescue()) {
             return;
         }
-        if (walk != null) {
+        if (walk != null || NavigationTickets.loading(pending.plan.spirit())) {
             FAILURES.forget(pending.plan.spirit().getUUID());
         } else {
             FAILURES.remember(pending.plan.key(), pending.plan.now());
         }
+    }
+
+    public static void forget(SpiritEntity spirit) {
+        FAILURES.forget(spirit.getUUID());
     }
 
     public static @Nullable RouteWalk step(SpiritEntity spirit, Pending pending) {

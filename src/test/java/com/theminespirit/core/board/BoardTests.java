@@ -1003,7 +1003,7 @@ class BoardTests {
 
         board.occupy(SPIRIT_ONE, BoardCase.ACTIVITY_COMBAT, 0);
         board.occupy(SPIRIT_ONE, BoardCase.ACTIVITY_COMBAT, 0);
-        board.vacate(SPIRIT_ONE);
+        board.vacate(SPIRIT_ONE, null);
 
         assertEquals(
                 List.of("ASSIGNED:ACTIVITY_COMBAT", "CANCELLED:ACTIVITY_COMBAT"),

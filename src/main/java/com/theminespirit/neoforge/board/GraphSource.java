@@ -7,6 +7,7 @@ import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphPlanner;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphTickets;
+import com.theminespirit.core.board.graph.GraphWhy;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.graph.WorldReport;
@@ -119,13 +120,14 @@ public final class GraphSource {
                         .forEach(id -> half.service().board().reprioritize(id, task.priority()));
             }
         }
-        report(half.plan(), half.result(), unconnected, half.now());
+        report(half.plan(), half.result(), unconnected, freeSpirit(half), half.now());
         reportWorld(half.state(), half.now());
         if (half.deep()) {
             String buildings = new TreeMap<>(half.state().buildings()) + " "
                     + half.plan().tasks().stream()
                             .filter(task -> task.id().startsWith("building:"))
-                            .map(task -> readiness(half.level(), half.service(), half.graph(), half.scan(), task))
+                            .map(task -> readiness(
+                                    half.level(), half.service(), half.graph(), half.state(), half.scan(), task))
                             .toList()
                     + " сундуков двора " + half.scan().facts().chests() + " у "
                     + half.scan().stage().workYard()
@@ -200,17 +202,22 @@ public final class GraphSource {
             ServerLevel level,
             BoardService service,
             SupplyGraph graph,
+            GraphState state,
             FirstStepsRunner.StageScan scan,
             GraphPlan.Task task) {
         SupplyGraph.Building building = graph.buildings().get(task.makes());
         if (building == null || !StageBuilt.ids().contains(task.makes())) {
-            return task.makes() + "=" + task.priority() + (task.feasible() ? "" : "?");
+            return task.makes() + "=" + task.priority() + why(graph, state, task);
         }
         TownSnapshot.Progress progress =
                 FirstStepsRunner.progress(level, service, building.boardCase(), scan.stage(), scan.wood());
         int percent = progress.total() == 0 ? 0 : progress.done() * 100 / progress.total();
         return task.makes() + "=" + percent + "%(" + progress.done() + "/" + progress.total() + ")"
-                + (task.feasible() ? "" : "?");
+                + why(graph, state, task);
+    }
+
+    private static String why(SupplyGraph graph, GraphState state, GraphPlan.Task task) {
+        return task.feasible() ? "" : "?(" + GraphWhy.building(graph, state, task.makes()) + ")";
     }
 
     private void reportWorld(GraphState state, long now) {
@@ -252,7 +259,15 @@ public final class GraphSource {
         return stage <= state.stage();
     }
 
-    private void report(GraphPlan plan, GraphTickets.Result result, List<String> unconnected, long now) {
+    private static boolean freeSpirit(Half half) {
+        return half.spirits().stream()
+                .anyMatch(spirit -> !spirit.isRemoved()
+                        && half.service().board().assignedTo(spirit.getUUID()).isEmpty()
+                        && half.service().board().occupation(spirit.getUUID()).isEmpty());
+    }
+
+    private void report(
+            GraphPlan plan, GraphTickets.Result result, List<String> unconnected, boolean freeSpirit, long now) {
         List<String> missing = result.unimplemented().stream()
                 .filter(task -> task.priority() > 0)
                 .map(GraphPlan.Task::id)
@@ -261,9 +276,12 @@ public final class GraphSource {
             LOGGER.info("[graph] нужны, но механик нет (implemented=false): {}", missing);
         }
         if (!unconnected.isEmpty() && notes.due("unconnected", now)) {
-            LOGGER.info(
-                    "[graph] задания графа без подключения к доске (их ставит свой сторож или нет цели): {}",
-                    unconnected);
+            if (freeSpirit) {
+                LOGGER.info(
+                        "[graph] задания графа без подключения к доске (нет исполнителя или цели): {}", unconnected);
+            } else {
+                LOGGER.info("[graph] задания графа ждут свободного духа: {}", unconnected);
+            }
         }
         for (GraphPlan.Advice advice : plan.advice()) {
             if (notes.due("advice:" + advice.event() + ":" + advice.rule(), now)) {

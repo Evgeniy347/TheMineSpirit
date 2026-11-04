@@ -40,8 +40,17 @@ public final class SoilLayer {
         Objects.requireNonNull(cell, "Клетка добычи не может быть null");
         boolean surface = cell.ground() == Ground.TURF && cell.above() == Ground.OPEN;
         boolean soilStays = cell.below() == Ground.SOIL || cell.below() == Ground.TURF;
-        boolean aboveWater =
-                cell.waterNear().isEmpty() || cell.y() > cell.waterNear().getAsInt();
-        return surface && soilStays && aboveWater;
+        return surface && soilStays && aboveWater(cell);
+    }
+
+    public static boolean takeableGranular(Cell cell) {
+        Objects.requireNonNull(cell, "Клетка добычи не может быть null");
+        boolean surface = cell.ground() == Ground.SOIL && cell.above() == Ground.OPEN;
+        boolean belowStays = cell.below() == Ground.SOIL || cell.below() == Ground.TURF || cell.below() == Ground.STONE;
+        return surface && belowStays && aboveWater(cell);
+    }
+
+    private static boolean aboveWater(Cell cell) {
+        return cell.waterNear().isEmpty() || cell.y() > cell.waterNear().getAsInt();
     }
 }

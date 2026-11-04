@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.TicketPlans;
+import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.town.StageSite;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,13 +21,13 @@ final class BuiltAuditCache {
             CACHE.clear();
         }
         String key = level.dimension().location() + "|" + step.name() + "|" + stage.anchor() + "|" + fallback;
-        return CACHE.computeIfAbsent(key, ignored -> compute(level, step, stage, fallback));
+        return CACHE.computeIfAbsent(key, ignored -> compute(level, step, stage, fallback, key));
     }
 
     private static FirstStepsRunner.Placed compute(
-            ServerLevel level, BoardCase step, StageSite stage, String fallback) {
-        String wood = BuildingWoodChoice.stored(level, step, stage, fallback);
-        return FirstStepsRunner.placedBlocks(
-                level, TicketPlans.plan(step, 1, FirstStepsRunner.targetFor(level, step, stage, wood)), wood);
+            ServerLevel level, BoardCase step, StageSite stage, String fallback, String key) {
+        BuildGap.Gap gap = FirstStepsRunner.gap(level, step, stage, fallback);
+        AuditJournal.watch(level, step, key, gap);
+        return new FirstStepsRunner.Placed(gap.done(), gap.total(), gap.unknown());
     }
 }

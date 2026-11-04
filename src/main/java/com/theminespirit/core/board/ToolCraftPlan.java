@@ -22,8 +22,12 @@ final class ToolCraftPlan {
     private ToolCraftPlan() {}
 
     static TaskNode of(BoardCase boardCase, TicketTarget target) {
-        int count = Math.min(target.toolCount() > 0 ? target.toolCount() : 1, CatalogLimits.COUNT_MAX);
-        String item = ToolSet.itemId(boardCase);
+        return ofItem(ToolSet.itemId(boardCase), target);
+    }
+
+    static TaskNode ofItem(String item, TicketTarget target) {
+        int count = Math.min(
+                target.toolCount() > 0 ? target.toolCount() : Math.max(1, target.count()), CatalogLimits.COUNT_MAX);
         List<TaskNode> steps = new ArrayList<>(4);
         steps.add(TicketPlans.gotoTarget(target));
         steps.addAll(materials(item, count, target.wood()));

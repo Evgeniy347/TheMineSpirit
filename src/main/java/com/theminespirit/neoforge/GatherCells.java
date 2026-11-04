@@ -14,12 +14,10 @@ import net.minecraft.world.level.block.state.BlockState;
 final class GatherCells {
     private final Level level;
     private final SoilCells soil;
-    private final int surfaceY;
 
-    GatherCells(Level level, int surfaceY) {
+    GatherCells(Level level) {
         this.level = level;
         this.soil = new SoilCells(level);
-        this.surfaceY = surfaceY;
     }
 
     List<BlockCoord> shallow(List<BlockCoord> candidates, TargetBuffer buffer) {
@@ -28,7 +26,7 @@ final class GatherCells {
             BlockState state = level.getBlockState(toPos(candidate));
             boolean loose = state.is(BlockTags.SAND) || state.is(Blocks.GRAVEL);
             boolean refused =
-                    state.is(BlockTags.DIRT) ? !soil.takeable(candidate) : loose && candidate.y() < surfaceY - 1;
+                    state.is(BlockTags.DIRT) ? !soil.takeable(candidate) : loose && !soil.takeableGranular(candidate);
             if (refused) {
                 buffer.remove(candidate);
             } else {

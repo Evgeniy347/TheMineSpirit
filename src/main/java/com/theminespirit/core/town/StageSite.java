@@ -18,6 +18,7 @@ public record StageSite(
         List<BlockCoord> orchardSaplings,
         List<OrchardPlot> extraOrchards,
         ColumnMask level,
+        ColumnMask streets,
         ColumnMask enclosure,
         ColumnMask fenceStrip,
         FenceLine ring) {
@@ -49,6 +50,7 @@ public record StageSite(
         extraOrchards = List.copyOf(
                 Objects.requireNonNull(extraOrchards, "Дополнительные сады не могут быть null: пусто — пустой список"));
         Objects.requireNonNull(level, "Площадки выравнивания не могут быть null");
+        Objects.requireNonNull(streets, "Улицы плана не могут быть null: по ним дух не берёт материалы плана");
         Objects.requireNonNull(enclosure, "Огороженная область не может быть null");
         Objects.requireNonNull(fenceStrip, "Полоса ограды не может быть null: по ней сносится старая ограда");
         Objects.requireNonNull(ring, "Ограда этапа не может быть null");
@@ -139,6 +141,14 @@ public record StageSite(
 
     public boolean inside(int x, int z) {
         return enclosure.contains(x, z);
+    }
+
+    public boolean streetColumn(int x, int z) {
+        return streets.contains(x, z);
+    }
+
+    public boolean gatherProtected(int x, int y, int z) {
+        return planCell(x, y, z) || streetColumn(x, z);
     }
 
     public boolean planCell(int x, int y, int z) {
