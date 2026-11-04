@@ -76,6 +76,7 @@ public final class StageSites {
                 orchardSaplings(orchard, levelY),
                 extraOrchards,
                 level,
+                streets,
                 enclosure,
                 fenceStrip,
                 ring);

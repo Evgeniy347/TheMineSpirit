@@ -78,8 +78,8 @@ class BoardActivitiesTests {
         Board board = new Board(() -> 100);
         board.occupy(SPIRIT, BoardCase.ACTIVITY_SMELT, 100);
 
-        assertTrue(board.vacate(SPIRIT), "Снятие существующего занятия сообщает успех");
-        assertFalse(board.vacate(SPIRIT), "Повторное снятие — нечего снимать");
+        assertTrue(board.vacate(SPIRIT, null), "Снятие существующего занятия сообщает успех");
+        assertFalse(board.vacate(SPIRIT, null), "Повторное снятие — нечего снимать");
         assertEquals(List.of(), board.all(), "Снятое занятие с доски исчезает");
     }
 
@@ -142,16 +142,16 @@ class BoardActivitiesTests {
     }
 
     @Test
-    void currentCard_AssignedRunning_ShowsWhatTheSpiritDoesNow() {
+    void currentCard_AssignedRunning_KeepsJobTicketNotActivityCard() {
         assertEquals(
-                Optional.of(BoardCase.ACTIVITY_MOVE),
+                Optional.empty(),
                 new BoardActivities.CardFacts(false, true, false, null, false, null, true, false, "goto").card(),
-                "Дух с заданием доски, идущий к цели, обязан иметь карточку текущего действия ACTIVITY_MOVE: "
-                        + "иначе на /v1/board 0 карточек ACTIVITY_*, и владелец не видит, чем занят дух");
+                "У духа есть билет задания доски: карточка занятия не ставится, иначе на доске два держателя "
+                        + "одного духа и /v1/bots показывает отменённую activity вместо задания");
         assertEquals(
-                Optional.of(BoardCase.ACTIVITY_FORAGE),
+                Optional.empty(),
                 new BoardActivities.CardFacts(false, true, false, null, false, null, true, false, "gather").card(),
-                "Сбор с назначенным заданием доски — карточка ACTIVITY_FORAGE, а не устаревшее activity из плана");
+                "Карточка занятия не дублирует билет графа: работу показывает сам билет");
     }
 
     @Test

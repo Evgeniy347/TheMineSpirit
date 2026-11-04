@@ -19,6 +19,26 @@
     "bamboo", "cactus", "sugar_cane", "brown_mushroom", "red_mushroom", "dandelion", "poppy", "azure_bluet", "cornflower",
     "oxeye_daisy", "sweet_berry_bush", "cobweb"
   ],
+  "strays": [
+    "fence", "fence_gate", "*_fence", "*_fence_gate", "*_gate",
+    "*_door", "*_trapdoor", "*_planks", "*_slab", "*_stairs", "*_wall", "*_sign",
+    "*_button", "*_pressure_plate", "*_banner", "*_carpet", "*_wool",
+    "cobblestone", "mossy_cobblestone", "stone_bricks", "mossy_stone_bricks", "cracked_stone_bricks",
+    "bricks", "*_bricks", "smooth_stone", "stone_slab", "stone_stairs",
+    "torch", "*_torch", "lantern", "*_lantern", "ladder", "scaffolding",
+    "farmland", "wheat", "carrots", "potatoes", "beetroots",
+    "chest", "trapped_chest", "barrel", "crafting_table", "furnace", "blast_furnace", "smoker",
+    "*_table", "anvil", "chipped_anvil", "damaged_anvil", "grindstone", "loom", "stonecutter",
+    "cartography_table", "fletching_table", "smithing_table", "enchanting_table", "brewing_stand",
+    "bookshelf", "glass", "*_glass", "glass_pane", "*_glass_pane",
+    "dirt_path", "composter", "cauldron", "*_cauldron", "flower_pot", "campfire", "soul_campfire",
+    "hay_block", "target", "bell", "lectern", "jukebox", "note_block", "beacon",
+    "redstone_wire", "redstone_torch", "redstone_wall_torch", "redstone_lamp", "redstone_block",
+    "repeater", "comparator", "observer", "piston", "sticky_piston", "hopper", "dropper", "dispenser",
+    "rail", "*_rail", "iron_bars", "*_bars"
+  ],
+  "demolishStrays": true,
+  "straysInsideFenceOnly": true,
   "buildingThreshold": 6,
   "maxUnprotectVolume": 4096
 }

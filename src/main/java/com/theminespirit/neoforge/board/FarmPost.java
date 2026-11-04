@@ -158,7 +158,7 @@ final class FarmPost {
             return true;
         }
         if ("storage_space".equals(node)) {
-            return ChestSpaceWatch.post(post.level, post.service, post.scan.stage(), post.now);
+            return ChestSpaceWatch.post(post);
         }
         if ("smoker".equals(node)) {
             if (!FishingNeeds.wantsSmoker(post.stock.available(), FishingData.loadDefault())

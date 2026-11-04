@@ -22,6 +22,7 @@ public final class StuckRescue {
 
     public void reset(boolean allowRoutes) {
         cancel();
+        RouteDetour.forget(spirit);
         routes = allowRoutes;
         routeAttempts = 0;
         refusal = null;
@@ -34,9 +35,14 @@ public final class StuckRescue {
             return false;
         }
         if (pending == null) {
+            if (NavigationTickets.prepare(spirit, target, radius)) {
+                spirit.getNavigation().stop();
+                return true;
+            }
             routeAttempts++;
             pending = RouteDetour.begin(spirit, target, radius, "возврат");
             if (pending == null) {
+                NavigationTickets.release(spirit);
                 refusal = "маршрут не найден: цель " + target;
                 return false;
             }
@@ -73,6 +79,7 @@ public final class StuckRescue {
         }
         RouteDetour.removed(spirit, current);
         walk = null;
+        NavigationTickets.release(spirit);
         return false;
     }
 
@@ -94,6 +101,7 @@ public final class StuckRescue {
 
     public void cancel() {
         pending = null;
+        NavigationTickets.release(spirit);
         if (walk != null) {
             walk.cancel();
             walk = null;

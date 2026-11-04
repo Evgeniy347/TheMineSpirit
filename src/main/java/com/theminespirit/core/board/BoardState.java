@@ -100,4 +100,15 @@ public record BoardState(
                 .filter(entry -> entry.ticket().id().equals(ticketId))
                 .findFirst();
     }
+
+    public BoardState withoutLegacy(Set<String> keepPrefixes) {
+        Objects.requireNonNull(keepPrefixes, "Список префиксов не может быть null: пустой набор задают пустым");
+        List<Entry> kept = entries.stream()
+                .filter(entry -> keepPrefixes.stream().anyMatch(entry.ticket().id()::startsWith))
+                .toList();
+        if (kept.size() == entries.size()) {
+            return this;
+        }
+        return new BoardState(kept, ledger, blocked, pauses, stuck);
+    }
 }

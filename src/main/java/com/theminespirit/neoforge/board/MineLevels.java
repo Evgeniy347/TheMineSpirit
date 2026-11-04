@@ -24,14 +24,9 @@ final class MineLevels {
 
     private MineLevels() {}
 
-    static boolean post(
-            ServerLevel level,
-            BoardService service,
-            List<SpiritEntity> spirits,
-            String node,
-            int priority,
-            Map<String, Integer> need,
-            long now) {
+    static boolean post(GraphPost post, String node, int priority, Map<String, Integer> need) {
+        ServerLevel level = post.level;
+        List<SpiritEntity> spirits = post.spirits;
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty() || !node.startsWith(PREFIX)) {
             return false;
         }
@@ -41,7 +36,7 @@ final class MineLevels {
         } catch (NumberFormatException notLevel) {
             return false;
         }
-        BoardStatus status = service.board().statusOf(node).orElse(null);
+        BoardStatus status = post.service.board().statusOf(node).orElse(null);
         if (status == BoardStatus.DONE
                 || status == BoardStatus.PENDING
                 || status == BoardStatus.WAITING_RESOURCES
@@ -70,17 +65,17 @@ final class MineLevels {
                     "Уровень шахты {} не поставлен: нет схемы спуска {}", levelValue, TicketPlans.MINE_DESCENT_SCHEME);
             return false;
         }
-        service.submit(
-                new BoardTicket(
-                        node,
-                        BoardCase.BUILD_MINE,
-                        Optional.empty(),
-                        priority,
-                        now,
+        post.submit(
+                post.leveled(
+                        post.ticket(
+                                node,
+                                BoardCase.BUILD_MINE,
+                                Optional.empty(),
+                                priority,
+                                BoardTicket.ALWAYS_CAUSE,
+                                Map.copyOf(need)),
                         levelValue,
-                        BoardTicket.ALWAYS_CAUSE,
-                        List.of(BoardLedger.key(BoardCase.BUILD_MINE, levelValue - 1)),
-                        Map.copyOf(need)),
+                        List.of(BoardLedger.key(BoardCase.BUILD_MINE, levelValue - 1))),
                 TicketTarget.at(site));
         return true;
     }

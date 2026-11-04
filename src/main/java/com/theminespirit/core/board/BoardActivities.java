@@ -150,13 +150,16 @@ public final class BoardActivities {
             if (removed) {
                 return Optional.empty();
             }
+            if (assigned) {
+                return Optional.empty();
+            }
             if (running && "dig_out".equals(script)) {
                 return Optional.of(BoardCase.ACTIVITY_ESCAPE);
             }
             if (ownActivity && launchedCase != null) {
                 return Optional.of(launchedCase);
             }
-            if (tacticsControl && !assigned && tactic != null) {
+            if (tacticsControl && tactic != null) {
                 Optional<BoardCase> card = caseOf(tactic);
                 if (card.isPresent()) {
                     return card;
@@ -164,9 +167,6 @@ public final class BoardActivities {
             }
             if (running) {
                 return Optional.of(caseOfScript(script).orElse(BoardCase.ACTIVITY_EXTERNAL));
-            }
-            if (assigned) {
-                return Optional.empty();
             }
             if (defenceAssigned) {
                 return Optional.of(BoardCase.ACTIVITY_DEFEND);

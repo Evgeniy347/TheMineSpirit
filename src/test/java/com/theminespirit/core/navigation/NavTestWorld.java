@@ -55,6 +55,11 @@ final class NavTestWorld implements NavWorld {
         return this;
     }
 
+    NavTestWorld load(int chunkX, int chunkZ) {
+        unloaded.remove(NavNode.key(chunkX, 0, chunkZ));
+        return this;
+    }
+
     NavTestWorld unloadFrom(int chunkX) {
         unloadFrom = chunkX;
         return this;

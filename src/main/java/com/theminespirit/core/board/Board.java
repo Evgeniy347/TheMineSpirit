@@ -234,7 +234,7 @@ public final class Board {
         if (holder != null) {
             casePauses.reset(holder, ticket.boardCase());
             if (ticket.boardCase() == BoardCase.RESCUE_SPIRIT) {
-                stuckSpirits.release(holder);
+                stuckSpirits.release(holder, nowTicks.getAsLong(), "выход выполнен заданием " + ticketId);
             }
         }
         statuses.put(ticketId, BoardStatus.DONE);
@@ -268,7 +268,7 @@ public final class Board {
         if (holder != null) {
             noteCaseFailure(holder, ticket, now);
             if (StuckCause.movement(reason)) {
-                stuckSpirits.mark(holder, now);
+                stuckSpirits.mark(holder, now, reason == null ? "провал движения" : reason);
             }
         }
         String previous = reason == null ? null : lastFailReasons.put(ticketId, reason);
@@ -405,7 +405,7 @@ public final class Board {
                 continue;
             }
             if (BoardActivities.isActivity(ticket.boardCase())) {
-                if (vacate(holder)) {
+                if (vacate(holder, null)) {
                     released.add(new HolderRelease(ticket.id(), ticket.boardCase(), holder, true));
                 }
             } else if (release(ticket.id())) {
@@ -438,16 +438,16 @@ public final class Board {
         events.transition(BoardLog.Event.ASSIGNED, ticket, spirit, now);
     }
 
-    public boolean vacate(UUID spirit) {
+    public boolean vacate(UUID spirit, @Nullable String reason) {
         Objects.requireNonNull(spirit, "spirit не может быть null: занятие снимается с конкретного духа");
         String id = BoardActivities.idOf(spirit);
-        BoardTicket ticket = tickets.remove(id);
+        BoardTicket ticket = tickets.remove(BoardActivities.idOf(spirit));
         if (ticket == null) {
             return false;
         }
         statuses.remove(id);
         claimAssignees.remove(id);
-        events.transition(BoardLog.Event.CANCELLED, ticket, spirit, nowTicks.getAsLong());
+        events.transition(BoardLog.Event.CANCELLED, ticket.withFailure(reason), spirit, nowTicks.getAsLong());
         return true;
     }
 

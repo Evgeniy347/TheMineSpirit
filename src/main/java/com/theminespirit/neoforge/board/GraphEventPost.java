@@ -39,8 +39,7 @@ final class GraphEventPost {
             return hungry(post, ticket);
         }
         if (BoardCase.REPAIR_TOOL.name().toLowerCase(Locale.ROOT).equals(ticket.node())) {
-            return RepairWatch.post(
-                    post.level, post.service, post.spirits, ticket.task().priority(), post.now);
+            return RepairWatch.post(post, ticket.task().priority());
         }
         if (ORDER.equals(ticket.node())) {
             CraftOrders.refresh(post.level);
@@ -53,7 +52,7 @@ final class GraphEventPost {
             return town.isPresent();
         }
         if (YardFloorWatch.handles(ticket.node())) {
-            return YardFloorWatch.post(post.level, post.service, post.scan.stage(), post.now);
+            return YardFloorWatch.post(post);
         }
         if ("fill_crater".equals(ticket.node())) {
             return new GraphHarvestPost(post).craters(ticket);
@@ -72,14 +71,7 @@ final class GraphEventPost {
     }
 
     private static boolean hungry(GraphPost post, GraphTickets.Ticket ticket) {
-        GraphFood.post(
-                post.level,
-                post.service,
-                post.spirits,
-                post.stock,
-                ticket.id(),
-                ticket.task().priority(),
-                post.now);
+        GraphFood.post(post, ticket.id(), ticket.task().priority());
         FarmPost.eat(post, ticket);
         return true;
     }

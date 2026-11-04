@@ -179,29 +179,30 @@ public final class FirstStepsRunner {
         return need(level, stock, new OpenStep(caseValue, target, Map.of(), wood), false);
     }
 
-    public static Map<String, Integer> open(
-            ServerLevel level, BoardService service, StockView stock, StageScan scan, StepOrder order, long now) {
+    public static Map<String, Integer> open(GraphPost post, StepOrder order) {
+        ServerLevel level = post.level;
         BoardCase caseValue = order.caseValue();
-        StageSite stage = scan.stage();
-        boolean blocked = scan.facts().blocked().contains(caseValue);
+        StageSite stage = post.scan.stage();
+        boolean blocked = post.scan.facts().blocked().contains(caseValue);
         String wood = blocked
-                ? BuildingWoodChoice.stored(level, caseValue, stage, scan.wood())
-                : BuildingWoodChoice.settle(level, service, caseValue, stage, stock.available(), scan.wood(), now);
+                ? BuildingWoodChoice.stored(level, caseValue, stage, post.scan.wood())
+                : BuildingWoodChoice.settle(
+                        level, post.service, caseValue, stage, post.stock.available(), post.scan.wood(), post.now);
         TicketTarget target = targetFor(level, caseValue, stage, wood);
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
             target = target.withLeveling(leveling(level, stage));
         }
-        Map<String, Integer> need = need(level, stock, new OpenStep(caseValue, target, Map.of(), wood), blocked);
+        Map<String, Integer> need = need(level, post.stock, new OpenStep(caseValue, target, Map.of(), wood), blocked);
         if (StageSettle.AUDIT_STEPS.contains(caseValue)
-                && reopenDone(level, service, new OpenStep(caseValue, target, need, wood), partsOf(caseValue))) {
+                && reopenDone(level, post.service, new OpenStep(caseValue, target, need, wood), partsOf(caseValue))) {
             return Map.of();
         }
-        Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), stock);
+        Map<String, Integer> missing = ResourceGate.missing(new StockNeed(need), post.stock);
         if (!missing.isEmpty()) {
             LOGGER.info("Постройка этапа {} ждёт: не хватает {}", caseValue, missing);
             return missing;
         }
-        openStep(level, service, new OpenStep(caseValue, target, need, wood), order, now);
+        openStep(post, new OpenStep(caseValue, target, need, wood), order);
         return Map.of();
     }
 
@@ -241,8 +242,8 @@ public final class FirstStepsRunner {
 
     record OpenStep(BoardCase caseValue, TicketTarget target, Map<String, Integer> need, String wood) {}
 
-    private static void openStep(ServerLevel level, BoardService service, OpenStep step, StepOrder order, long now) {
-        MaterialSource source = materialSource(level);
+    private static void openStep(GraphPost post, OpenStep step, StepOrder order) {
+        MaterialSource source = materialSource(post.level);
         BoardCase caseValue = step.caseValue();
         TicketTarget target = step.target();
         Map<String, Integer> need = step.need();
@@ -250,7 +251,7 @@ public final class FirstStepsRunner {
         int parts = partsOf(caseValue);
         StageWork work = target.work();
         List<StageBuilds.FencePart> fenceParts = caseValue == BoardCase.BUILD_FENCE && work != null
-                ? FenceParts.of(level, work.site(), parts)
+                ? FenceParts.of(post.level, work.site(), parts)
                 : List.of();
         List<Integer> openParts = FenceParts.open(fenceParts);
         BoardOutcome outcome = BoardOutcome.DUPLICATE;
@@ -267,20 +268,19 @@ public final class FirstStepsRunner {
                 reserve = new HashMap<>(StageSettle.partNeed(source, partTarget, wood));
                 reserve.keySet().retainAll(need.keySet());
             }
-            BoardOutcome submitted = service.submit(
-                    new BoardTicket(
-                            partId(caseValue, part),
-                            caseValue,
-                            Optional.empty(),
-                            order.priority(),
-                            now + part - 1,
-                            1,
-                            order.cause(),
-                            List.of(),
-                            Map.copyOf(reserve)),
+            BoardOutcome submitted = post.submit(
+                    post.dated(
+                            post.ticket(
+                                    partId(caseValue, part),
+                                    caseValue,
+                                    Optional.empty(),
+                                    order.priority(),
+                                    order.cause(),
+                                    Map.copyOf(reserve)),
+                            post.now + part - 1),
                     partTarget);
             if (submitted == BoardOutcome.DUPLICATE) {
-                service.board().reprioritize(partId(caseValue, part), order.priority());
+                post.service.board().reprioritize(partId(caseValue, part), order.priority());
             }
             if (outcome == BoardOutcome.DUPLICATE) {
                 outcome = submitted;

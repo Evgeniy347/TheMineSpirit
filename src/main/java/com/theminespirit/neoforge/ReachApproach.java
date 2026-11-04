@@ -3,14 +3,18 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.ReachPlanner;
 import com.theminespirit.core.building.ReachStands;
+import com.theminespirit.core.building.RetreatPath;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.movement.NetworkLevelView;
+import com.theminespirit.neoforge.movement.PathNetworkService;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
@@ -145,13 +149,43 @@ public final class ReachApproach {
     }
 
     private boolean standReachable(BlockCoord feet) {
-        Path path = spirit.getNavigation().createPath(new BlockPos(feet.x(), feet.y(), feet.z()), 1);
-        boolean reachable = path != null && path.canReach();
+        boolean reachable = routes
+                && spirit.level() instanceof ServerLevel level
+                && PathNetworkService.route(level, feet(), feet).isPresent();
+        if (!reachable) {
+            Path path = spirit.getNavigation().createPath(new BlockPos(feet.x(), feet.y(), feet.z()), 1);
+            reachable = path != null && path.canReach();
+        }
+        if (!reachable) {
+            reachable = twoWayWalk(feet);
+        }
         if (!reachable) {
             rejected++;
-            rejection = path == null ? "путь до стоянки не построен" : "путь до стоянки не доводит";
+            rejection = "до стоянки нет пути пешком от " + feet();
         }
         return reachable;
+    }
+
+    private boolean twoWayWalk(BlockCoord stand) {
+        BlockCoord from = feet();
+        int margin = 8;
+        int minX = Math.min(from.x(), stand.x()) - margin;
+        int maxX = Math.max(from.x(), stand.x()) + margin;
+        int minZ = Math.min(from.z(), stand.z()) - margin;
+        int maxZ = Math.max(from.z(), stand.z()) + margin;
+        int minY = Math.min(from.y(), stand.y()) - margin;
+        int maxY = Math.max(from.y(), stand.y()) + margin;
+        return RetreatPath.walkable(
+                        from,
+                        new NetworkLevelView(spirit.level()),
+                        cell -> cell.x() >= minX
+                                && cell.x() <= maxX
+                                && cell.z() >= minZ
+                                && cell.z() <= maxZ
+                                && cell.y() >= minY
+                                && cell.y() <= maxY)
+                .map(cells -> cells.contains(stand))
+                .orElse(false);
     }
 
     private void finish() {

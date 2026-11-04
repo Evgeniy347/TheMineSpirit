@@ -125,6 +125,8 @@ def test_dig_inputs():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     tasks = dig_inputs(graph, {"spirits": {"spirit-1": {"trapped": True, "trap": "sealed"}}})
     assert "dig_out" in tasks and "restore_trace" in tasks,         "дух без пути обязан дать dig_out и restore_trace"
+    stuck = dig_inputs(graph, {"spirits": {"spirit-1": {"trapped": False, "stuck": True}}})
+    assert "rescue_spirit" in stuck and "restore_trace" in stuck,         "застрявший без замуровки дух обязан дать rescue_spirit и restore_trace: " + str(stuck)
     print("OK: вход копания даёт узлы dig_out и restore_trace")
 
 

@@ -12,7 +12,6 @@ import com.theminespirit.core.pickup.DropRef;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupSpot;
 import com.theminespirit.core.pickup.PickupTuning;
-import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import com.theminespirit.neoforge.inventory.OverflowDecider;
 import com.theminespirit.neoforge.inventory.UnloadScript;
@@ -23,7 +22,6 @@ import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
@@ -424,10 +422,7 @@ public final class DropCollector {
 
     private State dropAndTake(ItemStack stack, int slot) {
         ItemStack exile = spirit.getInventory().removeItemNoUpdate(slot);
-        ItemEntity dropped = drop(spirit, exile);
-        if (spirit.level() instanceof ServerLevel level) {
-            BoardRegistry.get(level).reportDropped(spirit, dropped);
-        }
+        drop(spirit, exile);
         reliefTried = false;
         spirit.getInventory().setItem(slot, stack.copy());
         spirit.take(target, stack.getCount());

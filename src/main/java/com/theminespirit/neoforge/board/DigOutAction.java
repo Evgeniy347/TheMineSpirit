@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.StillWatch;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.movement.PitEscape;
@@ -32,11 +33,24 @@ final class DigOutAction {
             if (spirit.isRemoved()) {
                 continue;
             }
+            if (service.board()
+                    .statusOf("rescue:" + spirit.getUUID())
+                    .filter(status -> status == BoardStatus.PENDING
+                            || status == BoardStatus.ASSIGNED
+                            || status == BoardStatus.WAITING_RESOURCES)
+                    .isPresent()) {
+                continue;
+            }
             BlockPos feet = spirit.blockPosition();
             boolean digging = DIG_OUT.equals(spirit.currentTaskScript().orElse(null))
                     && spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
             boolean paused = now < pausedUntil.getOrDefault(spirit.getUUID(), 0L);
             if (digging || paused) {
+                continue;
+            }
+            if (DigOutScript.embedded(spirit)) {
+                pausedUntil.put(spirit.getUUID(), now + PAUSE_TICKS);
+                start(service, spirit, SurfacePoint.of(level, settlement));
                 continue;
             }
             if (DigOutScript.open(level, feet)) {

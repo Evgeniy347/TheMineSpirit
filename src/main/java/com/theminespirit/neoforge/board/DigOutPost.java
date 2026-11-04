@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.graph.DigFacts;
+import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
@@ -32,8 +33,13 @@ final class DigOutPost {
             if (spirit.isRemoved()) {
                 continue;
             }
+            String id = spirit.getUUID().toString();
+            GraphFacts.Spirit fact = post.facts.spirits().get(id);
+            if ((fact != null && fact.stuck()) || post.open("rescue:" + id)) {
+                continue;
+            }
             BlockPos feet = spirit.blockPosition();
-            boolean matches = (dig && DigOutScript.sealed(post.level, feet))
+            boolean matches = (dig && (DigOutScript.sealed(post.level, feet) || DigOutScript.embedded(spirit)))
                     || (bridge && water(post.level, feet) && !DigOutScript.sealed(post.level, feet))
                     || (pillar && PitRescue.trapped(spirit).isPresent());
             if (!matches) {

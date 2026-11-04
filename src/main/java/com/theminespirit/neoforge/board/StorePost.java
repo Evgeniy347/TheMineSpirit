@@ -38,7 +38,7 @@ final class StorePost {
             case "transfer_pending" -> transfer(post, ticket);
             case "storage_mixed" -> sort(post);
             case "furnace_ready" -> takeSmelted(post);
-            case "storage_full" -> ChestSpaceWatch.post(post.level, post.service, post.scan.stage(), post.now);
+            case "storage_full" -> ChestSpaceWatch.post(post);
             default -> false;
         };
     }

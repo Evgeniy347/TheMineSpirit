@@ -16,6 +16,7 @@ import com.theminespirit.core.plan.TaskNode;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -48,8 +49,12 @@ public final class BuildGap {
             Map<String, Integer> missingItems,
             Map<BlockCoord, String> missingCells,
             List<String> missing,
+            Set<BlockCoord> cells,
+            Set<BlockCoord> unknownCells,
             int unknown) {
         public Gap {
+            cells = Set.copyOf(cells);
+            unknownCells = Set.copyOf(unknownCells);
             if (unknown < 0) {
                 throw new IllegalArgumentException(
                         "Неизвестных клеток " + unknown + ": в незагруженном чанке их не меньше нуля");
@@ -128,6 +133,8 @@ public final class BuildGap {
         private final Map<String, Integer> missingItems = new LinkedHashMap<>();
         private final Map<BlockCoord, String> missingCells = new LinkedHashMap<>();
         private final List<String> missing = new ArrayList<>();
+        private final Set<BlockCoord> cells = new LinkedHashSet<>();
+        private final Set<BlockCoord> unknownCells = new LinkedHashSet<>();
         private int unknown;
 
         private Accumulator(String wood, Probe probe, Schemes schemes) {
@@ -169,6 +176,7 @@ public final class BuildGap {
         private void expect(BlockCoord at, String block) {
             if (!probe.loaded(at)) {
                 unknown++;
+                unknownCells.add(at);
                 return;
             }
             String item = bare(WoodSpecies.swap(SchematicBlocks.itemOf(block), wood));
@@ -186,6 +194,7 @@ public final class BuildGap {
             for (BlockCoord cell : layout.floors()) {
                 if (!probe.loaded(cell)) {
                     unknown++;
+                    unknownCells.add(cell);
                     continue;
                 }
                 String standing = probe.block(cell);
@@ -199,6 +208,7 @@ public final class BuildGap {
             for (BlockCoord cell : layout.air()) {
                 if (!probe.loaded(cell)) {
                     unknown++;
+                    unknownCells.add(cell);
                     continue;
                 }
                 String standing = probe.block(cell);
@@ -207,6 +217,7 @@ public final class BuildGap {
         }
 
         private void count(BlockCoord at, String item, String block, BooleanSupplier done, String suffix) {
+            cells.add(at);
             required.merge(item, 1, Integer::sum);
             if (done.getAsBoolean()) {
                 placed.merge(item, 1, Integer::sum);
@@ -224,6 +235,8 @@ public final class BuildGap {
                     Map.copyOf(missingItems),
                     Map.copyOf(missingCells),
                     List.copyOf(missing),
+                    Set.copyOf(cells),
+                    Set.copyOf(unknownCells),
                     unknown);
         }
     }
