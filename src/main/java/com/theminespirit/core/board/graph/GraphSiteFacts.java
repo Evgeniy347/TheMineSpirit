@@ -32,19 +32,33 @@ public interface GraphSiteFacts {
             Map<String, Integer> cut,
             Map<String, Integer> fill,
             Map<String, Integer> floating,
-            boolean unknown) {
+            boolean unknown,
+            int natural) {
         public Terrain {
-            if (pits < 0 || hanging < 0 || heightDrop < 0 || deepestPit < 0 || traces < 0) {
-                throw new IllegalArgumentException(
-                        "Ямы, висящее, перепад, глубина и следы не бывают отрицательными: " + "отсутствие — ноль");
+            if (pits < 0 || hanging < 0 || heightDrop < 0 || deepestPit < 0 || traces < 0 || natural < 0) {
+                throw new IllegalArgumentException("Ямы, висящее, перепад, глубина, следы и природное не бывают "
+                        + "отрицательными: отсутствие — ноль");
             }
             cut = Map.copyOf(Objects.requireNonNull(cut, "Срезка лота не может быть null"));
             fill = Map.copyOf(Objects.requireNonNull(fill, "Подсыпка лота не может быть null"));
             floating = Map.copyOf(Objects.requireNonNull(floating, "Состав висящего не может быть null"));
         }
 
+        public Terrain(
+                int pits,
+                int hanging,
+                int heightDrop,
+                int deepestPit,
+                int traces,
+                Map<String, Integer> cut,
+                Map<String, Integer> fill,
+                Map<String, Integer> floating,
+                boolean unknown) {
+            this(pits, hanging, heightDrop, deepestPit, traces, cut, fill, floating, unknown, 0);
+        }
+
         public Terrain(int pits, int hanging, int heightDrop, int deepestPit, int traces) {
-            this(pits, hanging, heightDrop, deepestPit, traces, Map.of(), Map.of(), Map.of(), false);
+            this(pits, hanging, heightDrop, deepestPit, traces, Map.of(), Map.of(), Map.of(), false, 0);
         }
 
         public Terrain(

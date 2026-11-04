@@ -1,7 +1,6 @@
 package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
@@ -10,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -46,24 +46,65 @@ class SettlementScanTests {
     }
 
     @Test
-    void scan_PitOutsideStagePlatform_IsFound() {
+    void scan_NaturalDipOutsideLot_IsNotPit() {
         Fake world = new Fake();
         world.hole(4, 3);
 
         SettlementScan.Strays found = scan(world, ColumnMask.rect(0, 0, 6, 6));
 
-        assertTrue(found.pits().containsKey(new BlockCoord(4, LEVEL - 1, 3)), "яма вне площадки этапа видна сканеру");
-        assertEquals(3, found.pits().get(new BlockCoord(4, LEVEL - 1, 3)), "глубина ямы считается вниз");
+        assertEquals(Map.of(), found.pits(), "природная впадина вне лота — не яма и не работа");
     }
 
     @Test
-    void scan_MoundOfDirtOutsidePlan_IsFound() {
+    void scan_NaturalHillOutsideLot_IsNaturalNotMound() {
         Fake world = new Fake();
+        world.put(2, LEVEL, 2, "minecraft:dirt");
+        world.put(2, LEVEL + 1, 2, "minecraft:dirt");
+
+        SettlementScan.Strays found = scan(world, ColumnMask.rect(0, 0, 6, 6));
+
+        assertEquals(List.of(), found.mounds(), "природный холм вне лота — не насыпь и не работа");
+        assertEquals(2, found.natural(), "природный склон помечается natural, чтобы наблюдатель видел не работу");
+    }
+
+    @Test
+    void scan_MoundOnLot_IsMound() {
+        Fake world = new Fake();
+        world.lot(2, 2);
         world.put(2, LEVEL, 2, "minecraft:dirt");
 
         SettlementScan.Strays found = scan(world, ColumnMask.rect(0, 0, 6, 6));
 
-        assertEquals(List.of(new BlockCoord(2, LEVEL, 2)), found.mounds(), "насыпь вне плана входит в рельеф");
+        assertEquals(
+                List.of(new BlockCoord(2, LEVEL, 2)),
+                found.mounds(),
+                "земля выше отметки лота — насыпь на лоте, её духи срезают");
+    }
+
+    @Test
+    void scan_SpiritDugPitOutsideLot_IsPit() {
+        Fake world = new Fake();
+        world.hole(4, 3);
+        world.dug(4, LEVEL - 1, 3);
+
+        SettlementScan.Strays found = scan(world, ColumnMask.rect(0, 0, 6, 6));
+
+        assertEquals(
+                Map.of(new BlockCoord(4, LEVEL - 1, 3), 3),
+                found.pits(),
+                "яма от добычи духа вне лота — явный след по учёту изменений, её засыпают");
+    }
+
+    @Test
+    void scan_DugPitOnPlannedCell_IsNotPit() {
+        Fake world = new Fake();
+        world.hole(4, 3);
+        world.dug(4, LEVEL - 1, 3);
+        world.planned.add(new BlockCoord(4, LEVEL - 1, 3));
+
+        SettlementScan.Strays found = scan(world, ColumnMask.rect(0, 0, 6, 6));
+
+        assertEquals(Map.of(), found.pits(), "клетка плана (шахта, спуск) — не яма для засыпки");
     }
 
     @Test
@@ -120,6 +161,8 @@ class SettlementScanTests {
         private final Set<BlockCoord> spirit = new HashSet<>();
         private final Set<ColumnMask.Cell> unloaded = new HashSet<>();
         private final Set<String> plants = new HashSet<>();
+        private final Set<ColumnMask.Cell> lots = new HashSet<>();
+        private final Map<ColumnMask.Cell, Integer> dug = new HashMap<>();
 
         void put(int x, int y, int z, String id) {
             blocks.put(new BlockCoord(x, y, z), id);
@@ -129,6 +172,14 @@ class SettlementScanTests {
             for (int y = LEVEL - 1; y >= LEVEL - 3; y--) {
                 put(x, y, z, "minecraft:air");
             }
+        }
+
+        void lot(int x, int z) {
+            lots.add(new ColumnMask.Cell(x, z));
+        }
+
+        void dug(int x, int y, int z) {
+            dug.merge(new ColumnMask.Cell(x, z), y, Math::max);
         }
 
         @Override
@@ -151,6 +202,17 @@ class SettlementScanTests {
         @Override
         public boolean planned(int x, int y, int z) {
             return planned.contains(new BlockCoord(x, y, z));
+        }
+
+        @Override
+        public OptionalInt lotLevel(int x, int z) {
+            return lots.contains(new ColumnMask.Cell(x, z)) ? OptionalInt.of(LEVEL) : OptionalInt.empty();
+        }
+
+        @Override
+        public OptionalInt dugTop(int x, int z) {
+            Integer top = dug.get(new ColumnMask.Cell(x, z));
+            return top == null ? OptionalInt.empty() : OptionalInt.of(top);
         }
 
         @Override

@@ -15,6 +15,7 @@ import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -93,6 +94,16 @@ final class WorldAreaScan {
         @Override
         public boolean planned(int x, int y, int z) {
             return WorldAreaScan.planned(site, town, levelY, x, y, z);
+        }
+
+        @Override
+        public OptionalInt lotLevel(int x, int z) {
+            return site.levelColumn(x, z) ? OptionalInt.of(levelY) : OptionalInt.empty();
+        }
+
+        @Override
+        public OptionalInt dugTop(int x, int z) {
+            return SpiritDugStore.get(level).top(x, z);
         }
 
         @Override

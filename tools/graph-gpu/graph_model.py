@@ -725,7 +725,10 @@ class State:
         self._derive_world_events()
 
     def _derive_world_events(self):
-        """GraphWorldEvents: входы участка добавляют узлы уборки и ремонта."""
+        """GraphWorldEvents: входы участка добавляют узлы уборки и ремонта.
+
+        terrain.natural — природный рельеф вне лотов; он не работа и события не поднимает.
+        """
         derived = []
         if self.strays:
             derived.append("demolish_stray")

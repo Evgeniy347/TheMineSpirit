@@ -15,6 +15,7 @@ public final class WorldJson {
         body.put("strayGroups", report.strayGroups());
         body.put("pits", report.pits());
         body.put("mounds", report.mounds());
+        body.put("natural", report.natural());
         body.put("hanging", report.hanging());
         body.put("damagedBuildings", report.damaged());
         body.put("unknown", report.unknown());
