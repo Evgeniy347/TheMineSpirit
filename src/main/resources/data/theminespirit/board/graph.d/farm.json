@@ -10,19 +10,19 @@
     "herd_fed": {
       "xmin": 0,
       "k": 1,
-      "base": 10,
+      "base": 9,
       "stage": 2
     },
     "food_reserve": {
       "xmin": 1,
       "k": 1,
-      "base": 14,
+      "base": 15,
       "stage": 1
     },
     "logistics": {
       "xmin": 0,
       "k": 1,
-      "base": 13,
+      "base": 14,
       "stage": 1
     }
   },
@@ -49,7 +49,7 @@
     "wheat_field": {
       "case": "BUILD_PLACED",
       "stage": 1,
-      "base": 92,
+      "base": 67,
       "materials": {
         "wheat_seeds": 8,
         "dirt": 8
@@ -60,7 +60,7 @@
     "storage_space": {
       "case": "STOCK_CHESTS",
       "stage": 1,
-      "base": 95,
+      "base": 70,
       "materials": {
         "#planks": 32
       },
@@ -114,7 +114,7 @@
       "case": "BREED_ANIMALS",
       "makes": "herd_fed",
       "yield": 1,
-      "weight": 0.575577216,
+      "weight": 0.566218906,
       "consumes": {
         "#crops": 8
       },
@@ -126,7 +126,7 @@
       "case": "LURE_ANIMAL",
       "makes": "herd_cow",
       "yield": 1,
-      "weight": 0.131901184,
+      "weight": 0.126131958,
       "consumes": {
         "wheat": 2
       },
@@ -139,7 +139,7 @@
       "case": "COLLECT_DROPS",
       "makes": "milk_bucket",
       "yield": 1,
-      "weight": 0.68177682,
+      "weight": 0.872654558,
       "consumes": {
         "bucket": 1
       },
@@ -155,7 +155,7 @@
       "case": "TRANSFER_ITEM",
       "makes": "logistics",
       "yield": 1,
-      "weight": 1.280250348,
+      "weight": 1.312871127,
       "consumes": {},
       "ticks": 200,
       "implemented": true
@@ -165,7 +165,7 @@
       "case": "WEAVE_WOOL",
       "makes": "white_wool",
       "yield": 1,
-      "weight": 1.16043019,
+      "weight": 0.957817918,
       "consumes": {
         "string": 4
       },
@@ -177,7 +177,7 @@
       "case": "ACTIVITY_UNLOAD",
       "makes": "logistics",
       "yield": 1,
-      "weight": 0.616187186,
+      "weight": 0.609779455,
       "consumes": {},
       "building": "chests",
       "ticks": 200,
@@ -188,7 +188,7 @@
       "case": "RESTOCK_FOOD",
       "makes": "food_reserve",
       "yield": 1,
-      "weight": 0.42765627,
+      "weight": 0.389092794,
       "consumes": {
         "food": 8
       },

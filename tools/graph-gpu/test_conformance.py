@@ -772,6 +772,24 @@ def test_dead_inputs():
     print("OK: мёртвые входы областей вызываются мирами (ферма, ремонт, снаряжение, жизнь)")
 
 
+def test_new_input_worlds():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    worlds = dict(sim_gpu.input_worlds(graph))
+    dirty = [step[1] for step in sim_gpu.run(worlds["dirty"], limit=1600)["trail"]]
+    for prefix in ("event:demolish_stray:", "event:backfill:", "event:level_lot:",
+                   "event:clear_floating:", "event:repair_"):
+        assert any(task.startswith(prefix) for task in dirty),             "Грязный мир обязан вызвать расчистку/ремонт: " + prefix + " в " + str(dirty[:20])
+    blocked_world = worlds["blocked"]
+    blocked = [step[1] for step in sim_gpu.run(blocked_world, limit=1600)["trail"]]
+    assert blocked.count("rescue_spirit") == 1, "Провал пути даёт одно спасение, а не цикл: " + str(blocked)
+    state = blocked_world.state()
+    for tag in ("more:player_near", "more:dusk_soon", "more:bad_trip_conditions", "more:failures_repeat"):
+        assert tag in state.world, "Обратная связь мира обязана дать метку " + tag
+    field = [step[1] for step in sim_gpu.run(worlds["field"], limit=1600)["trail"]]
+    assert "building:wheat_field" in field and any("plant_crop" in task for task in field),         "Мир грядки обязан строить wheat_field и сажать: " + str(field)
+    print("OK: грязный мир, провалы путей и грядка изображаются симуляцией")
+
+
 def test_stage_two_worlds():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     worlds = [("stage2-full", sim_gpu.baselines(graph)[3]),
@@ -946,6 +964,7 @@ if __name__ == "__main__":
         test_input_worlds()
         test_input_effects()
         test_dead_inputs()
+        test_new_input_worlds()
         test_stage_two_worlds()
         test_failure_memory()
         test_choice_mechanics()

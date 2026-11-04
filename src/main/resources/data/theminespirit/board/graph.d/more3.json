@@ -12,21 +12,21 @@
     ]
   },
   "items": {
-    "danger_known": {"xmin": 0, "k": 1, "base": 15, "stage": 1},
-    "drop_recovered": {"xmin": 0, "k": 1, "base": 16, "stage": 1},
+    "danger_known": {"xmin": 0, "k": 1, "base": 16, "stage": 1},
+    "drop_recovered": {"xmin": 0, "k": 1, "base": 17, "stage": 1},
     "trash_cleared": {"xmin": 0, "k": 1, "base": 8, "stage": 1},
-    "chest_labeled": {"xmin": 0, "k": 1, "base": 9, "stage": 1},
-    "world_repaired": {"xmin": 0, "k": 1, "base": 13, "stage": 1}
+    "chest_labeled": {"xmin": 0, "k": 1, "base": 10, "stage": 1},
+    "world_repaired": {"xmin": 0, "k": 1, "base": 14, "stage": 1}
   },
   "ways": [
     {"id": "secure_danger", "case": "ACTIVITY_ESCAPE", "makes": "danger_known",
-     "yield": 1, "weight": 0.580371153, "ticks": 100, "implemented": true, "todo": "danger_spot"},
+     "yield": 1, "weight": 0.676044757, "ticks": 100, "implemented": true, "todo": "danger_spot"},
     {"id": "recover_death_drop", "case": "COLLECT_DROPS", "makes": "drop_recovered",
-     "yield": 1, "weight": 0.736318965, "ticks": 200, "implemented": true, "todo": "spirit_death_drop"},
+     "yield": 1, "weight": 0.942466922, "ticks": 200, "implemented": true, "todo": "spirit_death_drop"},
     {"id": "clear_trash", "case": "ACTIVITY_UNLOAD", "makes": "trash_cleared",
-     "yield": 1, "weight": 0.616187186, "ticks": 120, "implemented": true, "todo": "trash_found"},
+     "yield": 1, "weight": 0.609779455, "ticks": 120, "implemented": true, "todo": "trash_found"},
     {"id": "assign_chest_purpose", "case": "ACTIVITY_UNLOAD", "makes": "chest_labeled",
-     "yield": 1, "weight": 0.650419807, "ticks": 100, "building": "chests", "implemented": true, "todo": "chest_purpose_missing"}
+     "yield": 1, "weight": 0.643656091, "ticks": 100, "building": "chests", "implemented": true, "todo": "chest_purpose_missing"}
   ],
   "events": {
     "danger_spot": {

@@ -220,6 +220,11 @@ class World:
                     spirit["trapped"] = False
                     spirit["trap"] = None
                     break
+        elif makes == "rescue":
+            for spirit in (facts.get("spirits") or {}).values():
+                if spirit.get("stuck"):
+                    spirit["stuck"] = False
+                    break
         elif makes == "trail_clean":
             self._terrain("traces", -1)
         at = task_id.find("@")
@@ -467,6 +472,58 @@ def _more6_world(graph):
     return world
 
 
+def _dirty_world(graph):
+    world = ready_world(graph)
+    damaged = [bid for bid, building in graph.buildings.items()
+               if not building.optional and building.stage <= 3 and world.buildings.get(bid) == BUILT]
+    damaged = damaged[:4]
+    world.with_facts({
+        "strays": [{"id": "stray-" + str(index), "type": "wall",
+                    "position": {"x": index, "y": 64, "z": 0}, "blocks": {"wall": 1}}
+                   for index in range(236)],
+        "terrain": {"pits": 760, "hanging": 120, "heightDrop": 50, "deepestPit": 5,
+                    "traces": 30, "cut": {"minecraft:dirt": 100},
+                    "fill": {"minecraft:dirt": 200}, "floating": {"minecraft:oak_log": 50}},
+        "buildings": {bid: {"id": bid, "damage": 5, "missing": {"minecraft:dirt": 3},
+                            "extra": {}, "wrong": 0, "auditPercent": 60, "unknown": False}
+                      for bid in damaged},
+        "feedback": {"clock": {"morning": False, "duskSoon": True, "night": False, "dayTime": 12000},
+                     "player": {"near": True, "holdingBlock": True, "usingItem": False, "digging": False},
+                     "failures": []},
+    })
+    return world
+
+
+def _blocked_world(graph):
+    world = ready_world(graph)
+    world.world.update({"more:bad_trip_conditions", "more:work_duplicate"})
+    world.distances.update({"tree:oak": 240, "tree:jungle": 240, "animals": 180})
+    world.events.add("more7_work_pileup")
+    world.with_facts({
+        "spirits": {"spirit-1": {"id": "spirit-1", "position": {"x": 0, "y": 64, "z": 0},
+                                 "stuck": True, "trapped": False}},
+        "feedback": {
+            "clock": {"morning": True, "duskSoon": True, "night": False, "dayTime": 12000},
+            "player": {"near": True, "holdingBlock": False, "usingItem": False, "digging": True},
+            "failures": [
+                {"node": "mine_cobble", "target": "cobblestone", "count": 3, "cause": "NO_PATH", "lastTick": 10},
+                {"node": "chop_oak_log", "target": "oak_log", "count": 2, "cause": "NO_PATH", "lastTick": 20},
+                {"node": "mine_iron", "target": "iron_ingot", "count": 3, "cause": "NOT_REACHED", "lastTick": 30},
+            ],
+        },
+    })
+    return world
+
+
+def _field_world(graph):
+    world = ready_world(graph)
+    world.buildings["wheat_field"] = PLANNED
+    world.stock["wheat_seeds"] = 64
+    world.stock["dirt"] = 64
+    world.events.add("field_empty")
+    return world
+
+
 def _dig_world(graph):
     world = ready_world(graph)
     world.stock["trail_clean"] = 0
@@ -494,6 +551,9 @@ def input_builders():
         ("more3", _more3_world),
         ("more4", _more4_world),
         ("more5", _more5_world),
+        ("dirty", _dirty_world),
+        ("blocked", _blocked_world),
+        ("field", _field_world),
         ("more7", _more7_world),
         ("more6", _more6_world),
         ("dig", _dig_world),
