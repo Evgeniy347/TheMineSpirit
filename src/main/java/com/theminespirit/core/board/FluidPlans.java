@@ -46,12 +46,23 @@ public final class FluidPlans {
     }
 
     public static TaskNode waterCrops(FluidKind fluid, BlockCoord source, BlockCoord cell) {
+        return waterCrops(fluid, source, source, cell);
+    }
+
+    public static TaskNode waterCrops(FluidKind fluid, BlockCoord source, BlockCoord stand, BlockCoord cell) {
         Objects.requireNonNull(fluid, "Жидкость не может быть null: без неё неизвестно, чем поливать");
-        return sequence(acquireBucket(), gotoPoint(source), fill(fluid), pour(fluid, cell));
+        Objects.requireNonNull(stand, "Стоянка у источника не может быть null: иначе дух полезет в воду");
+        return sequence(acquireBucket(), gotoPoint(stand), fill(fluid), pour(fluid, cell));
     }
 
     public static TaskNode acquireBucket() {
         return new ScriptCall(ACQUIRE, Map.of(ITEM, BUCKET, COUNT, 1));
+    }
+
+    public static TaskNode pourFromBucket(FluidKind fluid, BlockCoord cell) {
+        Objects.requireNonNull(fluid, "Жидкость не может быть null: без неё неизвестно, что лить");
+        Objects.requireNonNull(cell, "Клетка не может быть null: без неё неизвестно, куда лить");
+        return pour(fluid, cell);
     }
 
     private static ScriptCall fill(FluidKind fluid) {

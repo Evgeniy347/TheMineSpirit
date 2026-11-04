@@ -463,6 +463,7 @@ final class BuildSchematicScript implements ScriptInstance {
     }
 
     private Optional<ScriptStatus> placeOne(Schematic.PlacedEntry entry) {
+        if (SchematicActions.isFluidPlaced(entry.block())) return waterOne(entry);
         BlockCoord cell = entry.pos();
         if (BuildMakeWay.selfIn(spirit, cell)) {
             lastRefusal = "строитель стоит в клетке " + cell + " — сначала отойти";
@@ -506,6 +507,20 @@ final class BuildSchematicScript implements ScriptInstance {
                 return Optional.empty();
             }
         }
+    }
+
+    private Optional<ScriptStatus> waterOne(Schematic.PlacedEntry entry) {
+        BuildWater.Plan water = BuildWater.plan(spirit, site, entry, buildKey);
+        if (water.task().isEmpty()) {
+            blocked.put(entry.pos(), water.reason());
+            lastRefusal = water.reason();
+            return Optional.empty();
+        }
+        approach.cancel();
+        approachStand = null;
+        supplyRunner = TaskRunner.start(
+                water.task().orElseThrow(), SpiritScripts.registryFor(spirit), ConditionRegistry.of(Map.of()));
+        return Optional.of(ScriptStatus.RUNNING);
     }
 
     private ScriptStatus moveTowards(List<BlockCoord> cells, ReachPlanner.World base, boolean outsideOnly) {
@@ -694,11 +709,13 @@ final class BuildSchematicScript implements ScriptInstance {
                 return startSupply(steps);
             }
         }
-        List<ScriptCall> shovel = PathTrample.restock(spirit, blockId);
-        if (!shovel.isEmpty() && crafts < MAX_OWN_CRAFTS) {
+        List<ScriptCall> tool = SchematicActions.isTilled(blockId)
+                ? PathTrample.restockHoe(spirit)
+                : PathTrample.restock(spirit, blockId);
+        if (!tool.isEmpty() && crafts < MAX_OWN_CRAFTS) {
             crafts++;
-            LOGGER.info("Стройка {}: для тропинки нужна лопата — заход за инструментом", buildKey);
-            return startSupply(shovel);
+            LOGGER.info("Стройка {}: для земли нужен инструмент ({}) — заход за ним", buildKey, blockId);
+            return startSupply(tool);
         }
         int needed = countMissing(blockId);
         if (crafts < MAX_OWN_CRAFTS && "minecraft:torch".equals(blockId)) {
@@ -935,6 +952,7 @@ final class BuildSchematicScript implements ScriptInstance {
         List<Schematic.PlacedEntry> supplied = new ArrayList<>();
         Map<Item, Integer> lacking = new LinkedHashMap<>();
         for (Schematic.PlacedEntry entry : targets) {
+            if (SchematicActions.isFluidPlaced(entry.block())) continue;
             if (BlockItems.countIn(spirit.getInventory(), entry.block()) > 0) {
                 supplied.add(entry);
             } else {
@@ -943,6 +961,7 @@ final class BuildSchematicScript implements ScriptInstance {
         }
         if (supplied.isEmpty() && !lacking.isEmpty() && planTopUps < MAX_PLAN_TOP_UPS) {
             for (Schematic.PlacedEntry entry : site.primaries()) {
+                if (SchematicActions.isFluidPlaced(entry.block())) continue;
                 Item item = BlockItems.itemFor(entry.block());
                 if (lacking.containsKey(item) && !site.matches(entry)) {
                     lacking.merge(item, 1, Integer::sum);

@@ -14,10 +14,12 @@ import com.theminespirit.core.town.TownPlan;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -53,7 +55,12 @@ final class WorldAreaInputs {
             Map<String, GraphFacts.Building> buildings) {
         StageSite site = scan.stage();
         SettlementScan.Strays found = WorldAreaScan.scan(level, site, town);
-        List<GraphFacts.Stray> strays = strays(found, placements(service));
+        List<GraphFacts.Stray> strays = new ArrayList<>(strays(found, placements(service)));
+        Set<GraphFacts.Position> seen = new HashSet<>();
+        strays.forEach(stray -> seen.add(stray.position()));
+        town.ifPresent(plan -> FarmStray.facts(level, site, plan).stream()
+                .filter(stray -> seen.add(stray.position()))
+                .forEach(strays::add));
         List<FloatingBlocks.Finding> floating = town.map(plan -> FloatingScanCycle.find(level, site, plan.region()))
                 .orElse(List.of());
         GraphFacts.Terrain terrain = terrain(
