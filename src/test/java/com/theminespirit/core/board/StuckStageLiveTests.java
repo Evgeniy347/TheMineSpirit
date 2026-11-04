@@ -184,6 +184,50 @@ class StuckStageLiveTests {
                 "Успешное спасение снимает метку «застрял»: дух снова получает обычные задания (observe15 B1)");
     }
 
+    @Test
+    void stuckSpirit_RescueWorkClaimable_OrdinaryWorkRefused() throws IOException {
+        JsonNode boardJson = read("board.json");
+        JsonNode bot = bot(read("bots.json"), "spirit-3");
+        UUID spirit = UUID.fromString(bot.get("id").asText());
+        long now = bot.get("tick").asLong();
+        Board board = new Board(() -> now);
+        BoardTicket mine = ticket(task(boardJson, "first:build_mine"));
+        BoardTicket rescue = new BoardTicket(
+                "rescue:" + spirit,
+                BoardCase.RESCUE_SPIRIT,
+                Optional.of(spirit),
+                BoardRules.priorityOf(BoardCase.RESCUE_SPIRIT),
+                now,
+                1,
+                "graph:rescue_spirit",
+                List.of(),
+                Map.of());
+        assertEquals(BoardOutcome.ACCEPTED, board.submit(mine), "Живое обычное задание принимается доской");
+        assertEquals(BoardOutcome.ACCEPTED, board.submit(rescue), "Задание выхода принимается доской");
+        board.stuck().see(spirit, point(bot.get("position")), now);
+        board.stuck().mark(spirit, now, "застрял (-188.5, 67.0, -516) у двора");
+
+        List<DispatchRound.Candidate> candidates = List.of(candidate(spirit, "spirit-3"));
+        DispatchRound round = new DispatchRound(board, now);
+
+        assertTrue(
+                round.choose(mine, candidates).isEmpty(),
+                "Пока дух не двигается, обычное задание ему не выдают: иначе он снова упадёт");
+        String why = round.why(mine, candidates);
+        assertTrue(
+                why.contains("не двигается") && why.contains("rescue"),
+                "Причина ожидания честно называет выход, который ставит граф: " + why);
+        Optional<DispatchRound.Candidate> exit = round.choose(rescue, candidates);
+        assertTrue(exit.isPresent(), "Задание выхода выдаётся самому застрявшему духу, а не ждёт спасения извне");
+        assertEquals(BoardOutcome.CLAIMED, board.claim(rescue.id(), spirit, now), "Выход выдаётся через claim доски");
+        assertTrue(board.complete(rescue.id()), "Выполненный выход закрывает задание");
+        assertFalse(board.stuck().isStuck(spirit, now), "Выполненный выход снимает метку «не двигается» по факту");
+        assertTrue(
+                board.stuck().drainChanges().stream()
+                        .anyMatch(change -> !change.marked() && change.reason().contains("rescue:" + spirit)),
+                "Снятие метки после выхода попадает в лог изменений с причиной");
+    }
+
     private static DispatchRound.Candidate candidate(UUID id, String name) {
         return new DispatchRound.Candidate(id, name, null, List.of("minecraft:stone_pickaxe"), FED, SpiritView.free());
     }

@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.graph.DigFacts;
+import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
@@ -30,6 +31,11 @@ final class DigOutPost {
         BlockCoord settlement = SettlementHome.of(post.spirits);
         for (SpiritEntity spirit : post.spirits) {
             if (spirit.isRemoved()) {
+                continue;
+            }
+            String id = spirit.getUUID().toString();
+            GraphFacts.Spirit fact = post.facts.spirits().get(id);
+            if ((fact != null && fact.stuck()) || post.open("rescue:" + id)) {
                 continue;
             }
             BlockPos feet = spirit.blockPosition();

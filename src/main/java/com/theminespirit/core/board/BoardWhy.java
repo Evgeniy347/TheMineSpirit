@@ -43,9 +43,9 @@ public final class BoardWhy {
                 && ticket.boardCase() != BoardCase.RESCUE_SPIRIT
                 && board.stuck().of(holder.get(), now).isPresent()) {
             StuckSpirits.Stuck stuck = board.stuck().of(holder.get(), now).orElseThrow();
-            return Optional.of("держатель застрял с тика " + stuck.since()
+            return Optional.of("держатель не двигается с тика " + stuck.since()
                     + (stuck.at() == null ? "" : " в " + stuck.at())
-                    + ": задание ждёт, пока дух освободится");
+                    + ": задание ждёт, пока дух выйдет из ловушки (граф ставит rescue)");
         }
         if (holder.isPresent() && !board.availableTo(holder.get(), ticket, now)) {
             UUID spirit = holder.get();
