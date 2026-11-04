@@ -22,6 +22,19 @@ class GraphMore4FragmentsTests {
             More4Rules.RARE_FOUND,
             More4Rules.RARE_MIXED,
             More4Rules.CAUTION);
+    private static final List<String> IMPLEMENTED = List.of(
+            "more4_guard_settlement",
+            "more4_watch_chests",
+            "more4_bring_player_food",
+            "more4_lend_player_tool",
+            "more4_switch_tool",
+            "more4_guard_portal",
+            "more4_fence_portal",
+            "more4_guard_with_pet",
+            "more4_store_rare",
+            "more4_sort_rare",
+            "more4_feed_hungry",
+            "more4_rest_injured");
     private static final List<String> WAYS = List.of(
             "more4_guard_settlement",
             "more4_watch_chests",
@@ -49,11 +62,11 @@ class GraphMore4FragmentsTests {
     }
 
     @Test
-    void more4Ways_FragmentLoad_AreStubbedWithTodo() {
+    void more4Ways_FragmentLoad_ImplementedAndDeferred() {
         for (String way : WAYS) {
             SupplyGraph.Way known = GRAPH.way(way).orElseThrow();
             assertTrue(known.weight() > 0, "Стартовый вес пути положителен: " + way);
-            assertFalse(GRAPH.implemented(way), "Действия пока нет — путь заглушён: " + way);
+            assertEquals(IMPLEMENTED.contains(way), GRAPH.implemented(way), "Состояние действия пути: " + way);
         }
     }
 
@@ -110,13 +123,16 @@ class GraphMore4FragmentsTests {
     }
 
     @Test
-    void more4EventTasks_EveryTask_PointsAtStubWay() {
+    void more4EventTasks_EveryTask_PointsAtWayWithSameState() {
         for (String event : EVENTS) {
             for (GraphEvent.Task task : GRAPH.events().get(event).tasks()) {
                 assertTrue(
                         GRAPH.way(task.id()).isPresent(),
                         "Задача " + event + " -> " + task.id() + " должна быть путём");
-                assertFalse(task.implemented(), "Задача " + event + " -> " + task.id() + " ещё не реализована");
+                assertEquals(
+                        GRAPH.implemented(task.id()),
+                        task.implemented(),
+                        "Задача " + event + " -> " + task.id() + " повторяет состояние своего пути");
             }
         }
     }

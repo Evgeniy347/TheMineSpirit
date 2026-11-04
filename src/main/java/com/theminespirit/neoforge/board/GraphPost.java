@@ -14,6 +14,7 @@ import com.theminespirit.core.board.graph.ActivityPlans;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphPlan;
+import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
@@ -34,6 +35,8 @@ final class GraphPost {
     static final String MAKE = GraphTickets.PREFIX + "make:";
     static final String PART = ":2";
     private static final Set<String> MINED = Set.of("cobblestone", "coal");
+    private static final Set<BoardStatus> OPEN_STATUSES =
+            Set.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED);
 
     final ServerLevel level;
     final FirstStepsRunner.StageScan scan;
@@ -45,6 +48,7 @@ final class GraphPost {
     final BoardService service;
     final MaterialSource source;
     final PetWork pets;
+    final GraphState state;
     final GraphFacts facts;
     private @Nullable BlockCoord craft;
 
@@ -58,6 +62,7 @@ final class GraphPost {
             long now) {
         this.level = level;
         this.pets = site.pets();
+        this.state = site.state();
         this.service = service;
         this.spirits = spirits;
         this.stock = stock;
@@ -66,13 +71,16 @@ final class GraphPost {
         this.source = FirstStepsRunner.materialSource(level);
         this.around = site.around();
         this.now = now;
-        this.facts = site.facts();
+        this.facts = site.state().facts();
     }
 
-    record Site(FirstStepsRunner.StageScan scan, GraphSurroundings.Around around, PetWork pets, GraphFacts facts) {}
+    record Site(FirstStepsRunner.StageScan scan, GraphSurroundings.Around around, PetWork pets, GraphState state) {}
 
     boolean post(GraphTickets.Ticket ticket) {
         GraphPlan.Task task = ticket.task();
+        if (MoreAreaPost.handles(ticket.node())) {
+            return MoreAreaPost.post(this, ticket);
+        }
         return switch (ticket.kind()) {
             case BUILDING ->
                 MorePost.building(this, ticket)
@@ -220,13 +228,7 @@ final class GraphPost {
     }
 
     boolean open(String id) {
-        return service.board()
-                .statusOf(id)
-                .filter(status -> switch (status) {
-                    case PENDING, WAITING_RESOURCES, ASSIGNED -> true;
-                    default -> false;
-                })
-                .isPresent();
+        return service.board().statusOf(id).filter(OPEN_STATUSES::contains).isPresent();
     }
 
     boolean launchActivity(SpiritEntity spirit, BoardCase activity, ActivityPlans.Plan plan) {

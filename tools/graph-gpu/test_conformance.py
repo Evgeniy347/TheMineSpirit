@@ -521,11 +521,15 @@ MORE4_WAYS = (
 
 def test_more4_nodes():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    deferred = {
+        "more4_plan_expansion", "more4_find_space", "more4_leave_pet_alone", "more4_spare_rare",
+    }
     for event in MORE4_EVENTS:
         assert event in graph.events, "Python-модель не видит событие области more4: " + event
     for way in MORE4_WAYS:
         assert graph.way(way) is not None, "Python-модель не видит путь области more4: " + way
-        assert not graph.implemented(way), "Действие области graphmore4 пока заглушено: " + way
+        assert graph.implemented(way) == (way not in deferred), \
+            "Состояние действия области more4: " + way
     for item in ("more4:settlement_guarded", "more4:player_helped", "more4:tool_ready",
                  "more4:portal_guarded", "more4:expansion_planned", "more4:pet_guarded",
                  "more4:rare_kept", "more4:caution"):

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
@@ -86,21 +87,25 @@ final class More4World {
     }
 
     private static More4Rules.Portal portal(ServerLevel level, BlockCoord home) {
+        return portalPoint(level, home)
+                .map(at -> new BlockPos(at.x(), at.y(), at.z()))
+                .map(at -> new More4Rules.Portal(true, true, enclosed(level, at), hazard(level, at)))
+                .orElseGet(() -> new More4Rules.Portal(false, false, false, false));
+    }
+
+    static Optional<BlockCoord> portalPoint(ServerLevel level, BlockCoord home) {
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
         for (int dx = -PORTAL_RADIUS; dx <= PORTAL_RADIUS; dx++) {
             for (int dz = -PORTAL_RADIUS; dz <= PORTAL_RADIUS; dz++) {
                 for (int dy = -PORTAL_BELOW; dy <= PORTAL_ABOVE; dy++) {
                     BlockPos at = center.offset(dx, dy, dz);
-                    if (!level.isLoaded(at)) {
-                        continue;
-                    }
-                    if (level.getBlockState(at).is(Blocks.NETHER_PORTAL)) {
-                        return new More4Rules.Portal(true, true, enclosed(level, at), hazard(level, at));
+                    if (level.isLoaded(at) && level.getBlockState(at).is(Blocks.NETHER_PORTAL)) {
+                        return Optional.of(new BlockCoord(at.getX(), at.getY(), at.getZ()));
                     }
                 }
             }
         }
-        return new More4Rules.Portal(false, false, false, false);
+        return Optional.empty();
     }
 
     private static boolean enclosed(ServerLevel level, BlockPos at) {
