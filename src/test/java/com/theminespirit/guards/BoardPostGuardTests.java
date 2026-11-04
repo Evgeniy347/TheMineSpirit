@@ -37,8 +37,6 @@ class BoardPostGuardTests {
             Set.of("board.submit("));
 
     private static final Map<String, String> EXECUTORS = Map.of(
-            "ActivityLaunch.java",
-            "запуск занятия по узлу графа через доску: карточку и держателя ведёт BoardService.launch",
             "ExtraOrchardPost.java",
             "исполнитель билета графа: сад по узлу harvest_orchard",
             "PlanDemolition.java",

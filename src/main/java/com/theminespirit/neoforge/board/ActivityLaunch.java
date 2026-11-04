@@ -1,14 +1,12 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.graph.ActivityPlans;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.intellect.TaskStarter;
 import org.jspecify.annotations.Nullable;
 
 final class ActivityLaunch {
-    private static final TaskStarter STARTER = new TaskStarter();
-
     private ActivityLaunch() {}
 
     static boolean launch(GraphPost post, BoardCase activity, String script, TaskNode task) {
@@ -29,7 +27,7 @@ final class ActivityLaunch {
 
     private static boolean start(
             GraphPost post, SpiritEntity spirit, BoardCase activity, String script, TaskNode task) {
-        return post.service.launch(spirit, activity, script, task, STARTER::start, post.now);
+        return post.launchActivity(spirit, activity, new ActivityPlans.Plan(script, task));
     }
 
     private static @Nullable SpiritEntity idle(GraphPost post) {
