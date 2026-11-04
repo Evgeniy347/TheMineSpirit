@@ -6,6 +6,7 @@
 Критерий: набор заданий и feasible совпадают точно, priority расходится не больше чем на 1.
 """
 
+import copy
 import json
 import os
 import sys
@@ -13,7 +14,7 @@ import tempfile
 
 import search
 import sim_gpu
-from graph_model import Graph, Planner, State, plan
+from graph_model import BUILT, Graph, Planner, State, plan
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -259,9 +260,6 @@ MORE = {
     "more:player_building": "more_keep_clear",
     "more:dark_spots": "more_light_dark_spot",
     "more:dusk_soon": "more_return_before_night",
-    "more:bad_trip_conditions": "more_avoid_far_trip",
-    "more:failures_repeat": "more_failure_backoff",
-    "more:station_queue": "more_station_queue",
     "more:drops_expiring": "more_pickup_drops",
     "more:forest_depleted": "more_replant",
     "more:ore_depleted": "more_sustain_mine",
@@ -269,8 +267,6 @@ MORE = {
     "more:door_open_night": "more_secure_door",
     "more:hopper_uncovered": "more_secure_hopper",
     "more:reserve_unused": "more_share_reserve",
-    "more:work_duplicate": "more_avoid_duplicate",
-    "more:strategic_goal": "more_strategic_goal",
 }
 
 
@@ -288,12 +284,12 @@ def test_more_nodes():
         assert path is not None, "Python-модель не видит путь области more: " + way
         assert path.makes in graph.items, "Python-модель не видит узел области more: " + path.makes
         assert graph.items[path.makes].base > 0, "Стартовый вес узла more положителен: " + path.makes
-        if way in MORE_READY:
-            assert graph.implemented(way), "Действие области more связано с исполнением: " + way
-        else:
-            assert way in graph.unimplemented, "Сигнал управления more остаётся без отдельного действия: " + way
+        assert graph.implemented(way), "Действие области more связано с исполнением: " + way
         assert path.world == signal, "Вход области more — метка мира " + signal
-    print("OK: узлы области more и их исполнение читаются из фрагментов")
+    for way in ("more_avoid_far_trip", "more_failure_backoff", "more_station_queue",
+                "more_avoid_duplicate", "more_strategic_goal"):
+        assert graph.way(way) is None, "Правило выбора живёт в механике графа, а не путём: " + way
+    print("OK: узлы области more читаются из фрагментов, правила выбора не выдаются работой")
 
 
 def more_state(events):
@@ -333,16 +329,18 @@ MORE2_READY = {
 
 def test_more2_nodes():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
-    for way in ("more2_sow_food", "more2_breed_food", "more2_unload_carry", "more2_load_carry",
-                "more2_batch_carry", "more2_put_out_fire", "more2_remove_lava", "more2_block_flow",
+    for way in ("more2_sow_food", "more2_breed_food", "more2_unload_carry",
+                "more2_put_out_fire", "more2_remove_lava", "more2_block_flow",
                 "more2_pen_animal", "more2_lure_wild", "more2_guard_villager", "more2_trade_villager",
                 "more2_prepare_stage", "more2_make_bed", "more2_build_trail"):
         assert graph.way(way) is not None, "Python-модель не видит новый путь области graphmore2: " + way
         if way in MORE2_READY:
             assert graph.implemented(way), "Действие области graphmore2 связано с исполнением: " + way
         else:
-            assert not graph.implemented(way), "Сигнал логистики/торговли остаётся без отдельного действия: " + way
-    for item in ("more2:food_plan", "more2:carry_room", "more2:carry_batch", "more2:safe",
+            assert not graph.implemented(way), "Сигнал торговли остаётся без отдельного действия: " + way
+    for way in ("more2_load_carry", "more2_batch_carry"):
+        assert graph.way(way) is None, "Перенос и полевой сундук уже в путях склада: " + way
+    for item in ("more2:food_plan", "more2:carry_room", "more2:safe",
                  "more2:flow_blocked", "more2:animal_penned", "more2:village_safe",
                  "more2:stage_ready", "more2:bed_ready", "more2:trail"):
         assert item in graph.items, "Python-модель не видит новый узел области graphmore2: " + item
@@ -354,7 +352,11 @@ def test_more2_nodes():
                   "more2_animal_outside", "more2_wild_herd", "more2_villager_near",
                   "more2_villager_trade", "more2_stage_prep", "more2_bed_needed", "more2_path_needed"):
         assert event in graph.events, "Python-модель не видит новое событие области: " + event
-    print("OK: узлы и события области graphmore2 читаются из фрагмента")
+    transfer = graph.events["more2_inventory_space"]["tasks"][0]["id"]
+    field = graph.events["more2_long_carry"]["tasks"][0]["id"]
+    assert transfer == "store_carry_transfer", "Перенос в руках ведёт к пути склада: " + transfer
+    assert field == "more5_place_site_chest", "Дальний перенос ведёт к полевому сундуку: " + field
+    print("OK: узлы и события области graphmore2 читаются из фрагмента, дубли перенесены")
 
 
 def test_more2_inputs():
@@ -376,35 +378,35 @@ def test_more2_inputs():
 
 def test_more3_nodes():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
-    events = ("danger_spot", "spirit_death_drop", "work_yield_low", "trash_found",
-              "chest_purpose_missing", "work_conflict", "station_idle", "player_sleep",
-              "sand_collapse", "gravel_collapse", "farmland_trampled", "world_decay",
-              "stage_slow")
-    ways = ("secure_danger", "recover_death_drop", "retune_work_cost", "clear_trash",
-            "assign_chest_purpose", "spread_work", "use_idle_station", "home_night_work",
-            "repair_world_decay", "raise_bottleneck_weight")
+    events = ("danger_spot", "spirit_death_drop", "trash_found", "chest_purpose_missing",
+              "sand_collapse", "gravel_collapse", "farmland_trampled", "world_decay")
+    ways = ("secure_danger", "recover_death_drop", "clear_trash",
+            "assign_chest_purpose", "repair_world_decay")
     for event in events:
         assert event in graph.events, "Python-модель не видит событие области more3: " + event
     for way in ways:
         assert graph.way(way) is not None, "Python-модель не видит путь области more3: " + way
+    for way in ("retune_work_cost", "spread_work", "use_idle_station", "home_night_work",
+                "raise_bottleneck_weight"):
+        assert graph.way(way) is None, "Правило выбора области more3 живёт в механике: " + way
     assert "#trash" in graph.groups, "Python-модель не видит группу мусора"
     tasks = {task["id"] for task in plan(graph, State({
         "stage": 1, "kits": {"spirit-1": {}}, "events": list(events)}))["tasks"]}
     for event in events:
-        assert any(task.startswith("event:" + event + ":") for task in tasks),             "Python: событие области more3 не даёт задания: " + event
+        assert any(task.startswith("event:" + event + ":") for task in tasks), \
+            "Python: событие области more3 не даёт задания: " + event
     print("OK: узлы и события области more3 учитываются в выборе")
 
 
 MORE6_EVENTS = (
-    "more6_spirits_short", "more6_weak_far", "more6_build_unfinished",
+    "more6_spirits_short", "more6_weak_far",
     "more6_carry_materials", "more6_station_broken", "more6_loose_items",
     "more6_water_needed", "more6_lava_needed", "more6_repeat_demand",
     "more6_spirit_idle",
 )
 
 MORE6_WAYS = (
-    "more6_call_spirit", "more6_return_weak", "more6_send_near",
-    "more6_finish_build", "more6_deposit_materials", "more6_refuel_station",
+    "more6_deposit_materials", "more6_refuel_station",
     "more6_place_station", "more6_pickup_items", "more6_fetch_water",
     "more6_fetch_lava", "more6_maintain_stock", "more6_assign_idle",
 )
@@ -418,14 +420,22 @@ def test_more6_nodes():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     for event in MORE6_EVENTS:
         assert event in graph.events, "Python-модель не видит событие области more6: " + event
-        assert graph.events[event]["tasks"], "Событие области more6 ставит работу: " + event
+    for way in ("more6_call_spirit", "more6_return_weak", "more6_send_near", "more6_finish_build"):
+        assert graph.way(way) is None, "Дубль области more6 слит с узлом графа: " + way
+    assert graph.events["more6_spirits_short"]["tasks"] == [], \
+        "Призыв духа — постройка жилья, а не действие духа"
+    assert "building:family_house_1" in graph.events["more6_spirits_short"]["push"], \
+        "Нехватка духов ведёт к постройке жилья"
+    weak = graph.events["more6_weak_far"]["tasks"][0]["id"]
+    assert weak == "more_return_before_night", "Слабый дух возвращается домой существующим путём: " + weak
     for way in MORE6_WAYS:
         path = graph.way(way)
         assert path is not None, "Python-модель не видит путь области more6: " + way
         assert path.makes in graph.items, "Python-модель не видит узел области more6: " + path.makes
         assert graph.items[path.makes].base > 0, "Стартовый вес узла more6 положителен: " + path.makes
-        assert graph.implemented(way) == (way in MORE6_IMPLEMENTED),             "Путь области more6 либо связан с действием, либо честно помечен заглушкой: " + way
-    print("OK: узлы области more6 читаются из фрагментов, заглушки отмечены")
+        assert graph.implemented(way) == (way in MORE6_IMPLEMENTED), \
+            "Путь области more6 либо связан с действием, либо честно помечен заглушкой: " + way
+    print("OK: узлы области more6 читаются из фрагментов, дубли слиты")
 
 
 def test_more6_inputs():
@@ -433,12 +443,15 @@ def test_more6_inputs():
     tasks = {task["id"] for task in plan(graph, State({
         "stage": 1, "kits": {"spirit-1": {}}, "events": list(MORE6_EVENTS)}))["tasks"]}
     for event in MORE6_EVENTS:
+        declared = graph.events[event]
+        if not declared["tasks"]:
+            continue
         assert any(task.startswith("event:" + event + ":") for task in tasks), \
             "Python: событие области more6 не даёт задания: " + event
     quiet = {task["id"] for task in plan(graph, State({"stage": 1, "kits": {"spirit-1": {}}}))["tasks"]}
-    for event in MORE6_EVENTS:
-        assert not any(task.startswith("event:" + event + ":") for task in quiet), \
-            "Python: без входа области more6 задачи нет: " + event
+    for way in MORE6_WAYS:
+        assert not any(task.startswith(way) for task in quiet), \
+            "Python: без входа области more6 задачи нет: " + way
     print("OK: входы области more6 учитываются в выборе")
 
 
@@ -446,11 +459,11 @@ MORE5_EVENTS = ("more5_player_weak", "more5_crops_dark", "more5_saplings_dark",
                 "more5_crops_dry", "more5_growth_unfed", "more5_fuel_low",
                 "more5_build_shortage", "more5_mob_broken", "more5_route_blocked",
                 "more5_chest_far", "more5_mine_dark", "more5_wood_drops")
-MORE5_WAYS = ("more5_defend_player", "more5_feed_player", "more5_heal_player",
+MORE5_WAYS = ("more5_defend_player", "more5_feed_player",
               "more5_light_crops", "more5_light_saplings", "more5_water_crops",
               "more5_fertilize_growth", "more5_gather_fuel", "more5_make_charcoal",
               "more5_gather_build_material", "more5_craft_build_material",
-              "more5_restore_block", "more5_bridge_route", "more5_detour_route",
+              "more5_restore_block", "more5_bridge_route",
               "more5_place_site_chest", "more5_carry_to_site", "more5_light_mine",
               "more5_craft_mine_torch", "more5_pickup_wood_drop", "more5_plant_sapling")
 MORE5_IMPLEMENTED = {
@@ -507,31 +520,29 @@ def test_more5_inputs():
 MORE4_EVENTS = (
     "more4_player_near", "more4_player_hungry", "more4_player_tool_broken",
     "more4_wrong_tool_hand", "more4_portal_found", "more4_portal_unsafe",
-    "more4_space_found", "more4_space_tight", "more4_tamed_pet", "more4_rare_found",
+    "more4_tamed_pet", "more4_rare_found",
     "more4_rare_mixed", "more4_caution",
 )
 MORE4_WAYS = (
     "more4_guard_settlement", "more4_watch_chests", "more4_bring_player_food",
     "more4_lend_player_tool", "more4_switch_tool", "more4_guard_portal",
-    "more4_fence_portal", "more4_plan_expansion", "more4_find_space",
-    "more4_guard_with_pet", "more4_leave_pet_alone", "more4_store_rare",
-    "more4_spare_rare", "more4_sort_rare", "more4_feed_hungry", "more4_rest_injured",
+    "more4_fence_portal",
+    "more4_guard_with_pet", "more4_store_rare",
+    "more4_sort_rare", "more4_feed_hungry", "more4_rest_injured",
 )
 
 
 def test_more4_nodes():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
-    deferred = {
-        "more4_plan_expansion", "more4_find_space", "more4_leave_pet_alone", "more4_spare_rare",
-    }
     for event in MORE4_EVENTS:
         assert event in graph.events, "Python-модель не видит событие области more4: " + event
+    for way in ("more4_plan_expansion", "more4_find_space", "more4_leave_pet_alone", "more4_spare_rare"):
+        assert graph.way(way) is None, "Правило выбора области more4 живёт в механике: " + way
     for way in MORE4_WAYS:
         assert graph.way(way) is not None, "Python-модель не видит путь области more4: " + way
-        assert graph.implemented(way) == (way not in deferred), \
-            "Состояние действия области more4: " + way
+        assert graph.implemented(way), "Состояние действия области more4: " + way
     for item in ("more4:settlement_guarded", "more4:player_helped", "more4:tool_ready",
-                 "more4:portal_guarded", "more4:expansion_planned", "more4:pet_guarded",
+                 "more4:portal_guarded", "more4:pet_guarded",
                  "more4:rare_kept", "more4:caution"):
         assert item in graph.items, "Python-модель не видит новый узел области graphmore4: " + item
         assert graph.items[item].base > 0, "Стартовый вес узла more4 положителен: " + item
@@ -553,32 +564,37 @@ def test_more4_inputs():
 
 
 MORE7 = {
-    "more7:work_split": "more7_spread_work",
-    "more7:stage_gated": "more7_defer_gated",
     "more7:harvest_peak": "more7_harvest_early",
     "more7:return_peak": "more7_return_home",
     "more7:pen_room": "more7_expand_pen",
-    "more7:field_room": "more7_expand_field",
     "more7:order_delivered": "more7_order_to_player",
 }
 
 
 def test_more7_nodes():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
-    events = ("more7_work_pileup", "more7_gated_item", "more7_morning_harvest",
+    events = ("more7_morning_harvest",
               "more7_evening_return", "more7_pen_full", "more7_field_full",
               "more7_order_ready")
-    ways = ("more7_spread_work", "more7_defer_gated", "more7_harvest_early",
-            "more7_return_home", "more7_expand_pen", "more7_hold_herd",
-            "more7_expand_field", "more7_hold_sowing", "more7_order_to_player",
+    ways = ("more7_harvest_early",
+            "more7_return_home", "more7_expand_pen",
+            "more7_order_to_player",
             "more7_order_to_chest")
     for event in events:
         assert event in graph.events, "Python-модель не видит событие области graphmore7: " + event
+    for way in ("more7_spread_work", "more7_defer_gated", "more7_hold_herd", "more7_hold_sowing",
+                "more7_expand_field"):
+        assert graph.way(way) is None, "Правило выбора области more7 живёт в механике: " + way
+    assert graph.events["more7_field_full"]["tasks"] == [], \
+        "Расширение поля — постройка field_2, а не действие духа"
+    assert "building:field_2" in graph.events["more7_field_full"]["push"], \
+        "Полное поле ведёт к следующему полю плана"
     implemented = {"more7_harvest_early", "more7_expand_pen", "more7_return_home",
                    "more7_order_to_chest"}
     for way in ways:
         assert graph.way(way) is not None, "Python-модель не видит путь области graphmore7: " + way
-        assert graph.implemented(way) == (way in implemented),             "Путь области graphmore7 либо связан с действием, либо честно помечен заглушкой: " + way
+        assert graph.implemented(way) == (way in implemented), \
+            "Путь области graphmore7 либо связан с действием, либо честно помечен заглушкой: " + way
     for item, way in MORE7.items():
         assert item in graph.items, "Python-модель не видит узел области graphmore7: " + item
         assert graph.items[item].base > 0, "Стартовый вес узла more7 положителен: " + item
@@ -588,14 +604,14 @@ def test_more7_nodes():
 
 def test_more7_inputs():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    events = ["more7_morning_harvest", "more7_evening_return", "more7_pen_full",
+              "more7_field_full", "more7_order_ready"]
     tasks = {task["id"] for task in plan(graph, State({
-        "stage": 1, "kits": {"spirit-1": {}}, "events": [
-            "more7_work_pileup", "more7_gated_item", "more7_morning_harvest",
-            "more7_evening_return", "more7_pen_full", "more7_field_full",
-            "more7_order_ready"]}))["tasks"]}
-    for event in ("more7_work_pileup", "more7_gated_item", "more7_morning_harvest",
-                  "more7_evening_return", "more7_pen_full", "more7_field_full",
-                  "more7_order_ready"):
+        "stage": 1, "kits": {"spirit-1": {}}, "events": events}))["tasks"]}
+    for event in events:
+        declared = graph.events[event]
+        if not declared["tasks"]:
+            continue
         assert any(task.startswith("event:" + event + ":") for task in tasks), \
             "Python: событие области graphmore7 не даёт задания: " + event
     quiet = {task["id"] for task in plan(graph, State({
@@ -686,7 +702,7 @@ def test_input_worlds():
         "more7": "event:more7_order_ready",
 
 
-        "more6": "event:more6_spirits_short",
+        "more6": "event:more6_weak_far",
     }
     for name, prefix in expected.items():
         assert name in worlds, "Стартовый мир области не собран: " + name
@@ -758,6 +774,89 @@ def test_stage_two_worlds():
     print("OK: миры этапа 2 доходят до этапа 3 (склад и загоны не держат этап)")
 
 
+def test_choice_mechanics():
+    """Правила выбора в Python: те же поправки, что и в Java (GraphChoiceTests)."""
+    base = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+
+    def tuned(**choice):
+        data = copy.deepcopy(base.raw)
+        data.setdefault("choice", {}).update(choice)
+        return Graph(data)
+
+    def far(graph):
+        world = sim_gpu.World.settled(graph)
+        world.world.add("more:dusk_soon")
+        world.distances["more:dusk_soon"] = 40
+        return world
+
+    calm = far(base)
+    harsh = far(tuned(farTrip=3.0))
+    harsh.world.add("more:bad_trip_conditions")
+    assert calm.plan()["tasks"]
+    neutral_tick = next(t["ticks"] for t in calm.plan()["tasks"]
+                        if t["id"] == "more_return_before_night")
+    harsh_tick = next(t["ticks"] for t in harsh.plan()["tasks"]
+                      if t["id"] == "more_return_before_night")
+    assert (neutral_tick, harsh_tick) == (600, 1400), \
+        "Python: непогода утраивает дорогу: %s/%s" % (neutral_tick, harsh_tick)
+    slow = sim_gpu.World.settled(tuned(slowWork=2.0))
+    slow.world.add("more:dusk_soon")
+    slow.events.add("work_yield_low")
+    slow_tick = next(t["ticks"] for t in slow.plan()["tasks"]
+                     if t["id"] == "more_return_before_night")
+    assert slow_tick == 400, "Python: медленная работа удваивает срок: " + str(slow_tick)
+
+    secure = sim_gpu.World.settled(base)
+    secure.world.update({"more:fence_gap", "more:door_open_night", "more:hopper_uncovered"})
+    neutral = min(t["priority"] for t in secure.plan()["tasks"]
+                  if t["id"] in ("more_secure_fence", "more_secure_door", "more_secure_hopper"))
+    duplicate = sim_gpu.World.settled(tuned(duplicate=0.5))
+    duplicate.world.update({"more:fence_gap", "more:door_open_night", "more:hopper_uncovered"})
+    duplicate.world.add("more:work_duplicate")
+    penalized = min(t["priority"] for t in duplicate.plan()["tasks"]
+                    if t["id"] in ("more_secure_fence", "more_secure_door", "more_secure_hopper"))
+    assert penalized < neutral, "Python: дубль работы дешевле: %s/%s" % (penalized, neutral)
+
+    goal = sim_gpu.World.settled(base)
+    goal.world.update({"more:player_near", "more:strategic_goal"})
+    goal_boosted = sim_gpu.World.settled(tuned(strategicBoost=10.0))
+    goal_boosted.world.update({"more:player_near", "more:strategic_goal"})
+    plain = next(t["priority"] for t in goal.plan()["tasks"] if t["id"] == "more_help_player")
+    raised = next(t["priority"] for t in goal_boosted.plan()["tasks"] if t["id"] == "more_help_player")
+    assert raised > plain, "Python: стратегическая цель поднимает вес: %s/%s" % (raised, plain)
+
+    space = sim_gpu.World.empty(tuned(spaceFoundBoost=50.0))
+    space.events.add("more4_space_found")
+    tight = sim_gpu.World.empty(tuned(spaceTight=0.3))
+    tight.events.add("more4_space_tight")
+    quiet = sim_gpu.World.empty(base)
+    fence = lambda world: next(t["priority"] for t in world.plan()["tasks"]
+                               if t["id"] == "building:fence")
+    assert fence(space) > fence(quiet) > fence(tight), \
+        "Python: свободное место поднимает стройку, тесное опускает"
+
+    herd = sim_gpu.World.empty(base)
+    herd.stage = 2
+    herd.buildings["pen_cow"] = BUILT
+    herd.events.add("more7_pen_full")
+    held = sim_gpu.World.empty(tuned(herdFull=0.5))
+    held.stage = 2
+    held.buildings["pen_cow"] = BUILT
+    held.events.add("more7_pen_full")
+    breed = lambda world: next(t["priority"] for t in world.plan()["tasks"] if t["id"] == "breed_cow")
+    assert breed(held) < breed(herd), "Python: полный загон сдерживает разведение"
+
+    field = sim_gpu.World.settled(base)
+    field.events.update({"more2_food_low", "more7_field_full"})
+    full = sim_gpu.World.settled(tuned(fieldFull=0.5))
+    full.events.update({"more2_food_low", "more7_field_full"})
+    sow = "event:more2_food_low:more2_sow_food"
+    assert next(t["priority"] for t in full.plan()["tasks"] if t["id"] == sow) \
+        < next(t["priority"] for t in field.plan()["tasks"] if t["id"] == sow), \
+        "Python: полное поле сдерживает посев"
+    print("OK: поправки выбора (дорога, срок, дубль, цель, место, загон, поле) работают в Python")
+
+
 def test_conformance():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
@@ -802,6 +901,7 @@ if __name__ == "__main__":
         test_input_effects()
         test_dead_inputs()
         test_stage_two_worlds()
+        test_choice_mechanics()
         test_conformance()
     except AssertionError as error:
         print(error)

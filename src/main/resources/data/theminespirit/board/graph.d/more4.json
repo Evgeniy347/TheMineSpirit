@@ -22,7 +22,6 @@
     "more4:player_helped": {"xmin": 0, "k": 1, "base": 14, "stage": 1},
     "more4:tool_ready": {"xmin": 0, "k": 1, "base": 15, "stage": 1},
     "more4:portal_guarded": {"xmin": 0, "k": 1, "base": 16, "stage": 1},
-    "more4:expansion_planned": {"xmin": 0, "k": 1, "base": 12, "stage": 1},
     "more4:pet_guarded": {"xmin": 0, "k": 1, "base": 14, "stage": 1},
     "more4:rare_kept": {"xmin": 0, "k": 1, "base": 16, "stage": 1},
     "more4:caution": {"xmin": 0, "k": 1, "base": 17, "stage": 1}
@@ -44,18 +43,10 @@
     {"id": "more4_fence_portal", "case": "BUILD_FENCE", "makes": "more4:portal_guarded",
      "yield": 1, "weight": 0.557316501, "consumes": {"#building_blocks": 8}, "ticks": 300, "implemented": true,
      "todo": "more4_portal_unsafe"},
-    {"id": "more4_plan_expansion", "case": "ACTIVITY_SENSE", "makes": "more4:expansion_planned",
-     "yield": 1, "weight": 1.094819659, "ticks": 160, "implemented": false, "todo": "more4_space_found"},
-    {"id": "more4_find_space", "case": "ACTIVITY_SENSE", "makes": "more4:expansion_planned",
-     "yield": 1, "weight": 1.167807637, "ticks": 200, "implemented": false, "todo": "more4_space_tight"},
     {"id": "more4_guard_with_pet", "case": "ACTIVITY_GUARD", "makes": "more4:pet_guarded",
      "yield": 1, "weight": 0.650666566, "ticks": 200, "implemented": true, "todo": "more4_tamed_pet"},
-    {"id": "more4_leave_pet_alone", "case": "ACTIVITY_SENSE", "makes": "more4:pet_guarded",
-     "yield": 1, "weight": 0.656891796, "ticks": 60, "implemented": false, "todo": "more4_tamed_pet"},
     {"id": "more4_store_rare", "case": "STOCK_CHESTS", "makes": "more4:rare_kept",
      "yield": 1, "weight": 1.944833366, "ticks": 160, "implemented": true, "todo": "more4_rare_found"},
-    {"id": "more4_spare_rare", "case": "ACTIVITY_SENSE", "makes": "more4:rare_kept",
-     "yield": 1, "weight": 0.875855727, "ticks": 80, "implemented": false, "todo": "more4_rare_found"},
     {"id": "more4_sort_rare", "case": "STOCK_CHESTS", "makes": "more4:rare_kept",
      "yield": 1, "weight": 2.047193016, "ticks": 160, "implemented": true, "todo": "more4_rare_mixed"},
     {"id": "more4_feed_hungry", "case": "RESTOCK_FOOD", "makes": "more4:caution",
@@ -111,32 +102,16 @@
       "push": {"more4:portal_guarded": 6, "#building_blocks": 4},
       "advice": ["fence_unsafe_nether_portal"]
     },
-    "more4_space_found": {
-      "tasks": [
-        {"id": "more4_plan_expansion", "case": "ACTIVITY_SENSE", "base": 40, "consumes": {}, "implemented": false}
-      ],
-      "push": {"more4:expansion_planned": 5},
-      "advice": ["mark_free_ground_for_future_buildings"]
-    },
-    "more4_space_tight": {
-      "tasks": [
-        {"id": "more4_find_space", "case": "ACTIVITY_SENSE", "base": 46, "consumes": {}, "implemented": false}
-      ],
-      "push": {"more4:expansion_planned": 4},
-      "advice": ["search_wider_area_for_expansion"]
-    },
     "more4_tamed_pet": {
       "tasks": [
-        {"id": "more4_guard_with_pet", "case": "ACTIVITY_GUARD", "base": 54, "consumes": {}, "implemented": true},
-        {"id": "more4_leave_pet_alone", "case": "ACTIVITY_SENSE", "base": 24, "consumes": {}, "implemented": false}
+        {"id": "more4_guard_with_pet", "case": "ACTIVITY_GUARD", "base": 54, "consumes": {}, "implemented": true}
       ],
       "push": {"more4:pet_guarded": 5},
       "advice": ["take_tamed_pet_on_guard_duty_and_do_not_disturb"]
     },
     "more4_rare_found": {
       "tasks": [
-        {"id": "more4_store_rare", "case": "STOCK_CHESTS", "base": 48, "consumes": {}, "implemented": true},
-        {"id": "more4_spare_rare", "case": "ACTIVITY_SENSE", "base": 30, "consumes": {}, "implemented": false}
+        {"id": "more4_store_rare", "case": "STOCK_CHESTS", "base": 48, "consumes": {}, "implemented": true}
       ],
       "push": {"more4:rare_kept": 5},
       "advice": ["keep_rare_items_safe_and_do_not_waste_them"]

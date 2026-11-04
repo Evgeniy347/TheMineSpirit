@@ -14,6 +14,11 @@ public final class More3Rules {
     public static final long DROP_LIFETIME_TICKS = 6_000L;
     public static final long STAGE_BUDGET_TICKS = 24_000L;
     public static final String TRASH = "#trash";
+    public static final String WORK_YIELD_LOW = "work_yield_low";
+    public static final String WORK_CONFLICT = "work_conflict";
+    public static final String STATION_IDLE = "station_idle";
+    public static final String PLAYER_SLEEP = "player_sleep";
+    public static final String STAGE_SLOW = "stage_slow";
     private static final String OTHER_CATEGORY = "прочее";
     private static final int CONFLICT_RADIUS = 4;
     private static final int SLOW_FACTOR = 2;
@@ -71,17 +76,17 @@ public final class More3Rules {
         Set<String> events = new LinkedHashSet<>();
         add(events, signals.dangerSpots() > 0, "danger_spot");
         add(events, signals.deathDrops() > 0, "spirit_death_drop");
-        add(events, signals.slowWorks() > 0, "work_yield_low");
+        add(events, signals.slowWorks() > 0, WORK_YIELD_LOW);
         add(events, signals.trashItems() > 0, "trash_found");
         add(events, signals.unlabeledChests() > 0, "chest_purpose_missing");
-        add(events, signals.workConflicts() > 0, "work_conflict");
-        add(events, signals.idleStations() > 0, "station_idle");
-        add(events, signals.playerSleeping(), "player_sleep");
+        add(events, signals.workConflicts() > 0, WORK_CONFLICT);
+        add(events, signals.idleStations() > 0, STATION_IDLE);
+        add(events, signals.playerSleeping(), PLAYER_SLEEP);
         add(events, signals.collapsingSand() > 0, "sand_collapse");
         add(events, signals.collapsingGravel() > 0, "gravel_collapse");
         add(events, signals.trampledFarmland() > 0, "farmland_trampled");
         add(events, signals.leavesDecaying(), "world_decay");
-        add(events, signals.stageSlow(), "stage_slow");
+        add(events, signals.stageSlow(), STAGE_SLOW);
         return Set.copyOf(events);
     }
 

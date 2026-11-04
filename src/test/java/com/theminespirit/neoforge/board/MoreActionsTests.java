@@ -15,17 +15,8 @@ import org.junit.jupiter.api.Test;
 
 class MoreActionsTests {
     private static final SupplyGraph GRAPH = SupplyGraph.loadDefault();
-    private static final List<String> MORE3 = List.of(
-            "secure_danger",
-            "recover_death_drop",
-            "retune_work_cost",
-            "clear_trash",
-            "assign_chest_purpose",
-            "spread_work",
-            "use_idle_station",
-            "home_night_work",
-            "repair_world_decay",
-            "raise_bottleneck_weight");
+    private static final List<String> MORE3 =
+            List.of("secure_danger", "recover_death_drop", "clear_trash", "assign_chest_purpose", "repair_world_decay");
     private static final List<String> MORE4 = List.of(
             "more4_guard_settlement",
             "more4_watch_chests",
@@ -34,12 +25,8 @@ class MoreActionsTests {
             "more4_switch_tool",
             "more4_guard_portal",
             "more4_fence_portal",
-            "more4_plan_expansion",
-            "more4_find_space",
             "more4_guard_with_pet",
-            "more4_leave_pet_alone",
             "more4_store_rare",
-            "more4_spare_rare",
             "more4_sort_rare",
             "more4_feed_hungry",
             "more4_rest_injured");
@@ -59,17 +46,12 @@ class MoreActionsTests {
         for (String event : List.of(
                 "danger_spot",
                 "spirit_death_drop",
-                "work_yield_low",
                 "trash_found",
                 "chest_purpose_missing",
-                "work_conflict",
-                "station_idle",
-                "player_sleep",
                 "sand_collapse",
                 "gravel_collapse",
                 "farmland_trampled",
-                "world_decay",
-                "stage_slow")) {
+                "world_decay")) {
             for (GraphEvent.Task task : GRAPH.events().get(event).tasks()) {
                 if (task.implemented()) {
                     assertTrue(More3Post.handles(task.id()), "Задача события more3 исполняется: " + task.id());
@@ -83,8 +65,6 @@ class MoreActionsTests {
                 "more4_wrong_tool_hand",
                 "more4_portal_found",
                 "more4_portal_unsafe",
-                "more4_space_found",
-                "more4_space_tight",
                 "more4_tamed_pet",
                 "more4_rare_found",
                 "more4_rare_mixed",

@@ -88,6 +88,7 @@ def event_category(name):
 def parameters(graph):
     """Список категорий поиска: баз несколько десятков, а не по пути."""
     categories = set(SCALARS)
+    categories.update("choice:" + name for name in graph.costs.choice.values)
     categories.update(item_category(item) for item in graph.items.values())
     categories.update(building_category(building) for building in graph.buildings.values())
     categories.update(way_category(way) for way in graph.ways)
@@ -101,9 +102,11 @@ def parameters(graph):
 def vector_to_weights(graph, vector, params):
     """Вектор множителей категорий -> множители конкретных весов для Graph.scaled."""
     factors = {name: float(value) for name, value in zip(params, vector)}
-    weights = {"items": {}, "buildings": {}, "ways": {}, "events": {}}
+    weights = {"items": {}, "buildings": {}, "ways": {}, "events": {}, "choice": {}}
     for name in SCALARS:
         weights[name] = factors.get(name, 1.0)
+    for name in graph.costs.choice.values:
+        weights["choice"][name] = factors.get("choice:" + name, 1.0)
     for item_id, item in graph.items.items():
         weights["items"][item_id] = factors.get(item_category(item), 1.0)
     for building_id, building in graph.buildings.items():

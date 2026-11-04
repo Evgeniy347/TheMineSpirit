@@ -44,8 +44,6 @@
      "yield": 1, "weight": 3.840609305, "ticks": 100, "implemented": true, "todo": "more5_defend_player"},
     {"id": "more5_feed_player", "case": "EAT_TO_FULL", "makes": "more5:player_fed",
      "yield": 1, "weight": 1.481858552, "ticks": 80, "consumes": {"food": 1}, "implemented": true, "todo": "more5_feed_player"},
-    {"id": "more5_heal_player", "case": "ACTIVITY_REST", "makes": "more5:player_fed",
-     "yield": 1, "weight": 2.625896821, "ticks": 100, "consumes": {}, "implemented": false, "todo": "more5_heal_player"},
     {"id": "more5_light_crops", "case": "LIGHTING", "makes": "more5:growth_lit",
      "yield": 1, "weight": 1.309969362, "ticks": 100, "consumes": {"torch": 1}, "implemented": true, "todo": "more5_light_crops"},
     {"id": "more5_light_saplings", "case": "LIGHTING", "makes": "more5:growth_lit",
@@ -66,8 +64,6 @@
      "yield": 1, "weight": 0.605961721, "ticks": 120, "consumes": {}, "implemented": true, "todo": "more5_restore_block"},
     {"id": "more5_bridge_route", "case": "ACTIVITY_BUILD", "makes": "more5:route_opened",
      "yield": 1, "weight": 0.692527682, "ticks": 200, "consumes": {"#planks": 4}, "implemented": true, "todo": "more5_bridge_route"},
-    {"id": "more5_detour_route", "case": "ACTIVITY_MOVE", "makes": "more5:route_opened",
-     "yield": 1, "weight": 0.863171609, "ticks": 160, "consumes": {}, "implemented": false, "todo": "more5_detour_route"},
     {"id": "more5_place_site_chest", "case": "STOCK_CHESTS", "makes": "more5:site_chest",
      "yield": 1, "weight": 2.354271969, "ticks": 120, "consumes": {"#planks": 8}, "implemented": true, "todo": "more5_place_site_chest"},
     {"id": "more5_carry_to_site", "case": "TRANSFER_ITEM", "makes": "more5:site_chest",
@@ -86,8 +82,7 @@
       "band": 20,
       "tasks": [
         {"id": "more5_defend_player", "case": "ACTIVITY_DEFEND", "base": 126, "consumes": {}, "implemented": true},
-        {"id": "more5_feed_player", "case": "EAT_TO_FULL", "base": 117, "consumes": {"food": 1}, "implemented": true},
-        {"id": "more5_heal_player", "case": "ACTIVITY_REST", "base": 113, "consumes": {}, "implemented": false}
+        {"id": "more5_feed_player", "case": "EAT_TO_FULL", "base": 117, "consumes": {"food": 1}, "implemented": true}
       ],
       "push": {"more5:player_guard": 20, "more5:player_fed": 12, "food": 10},
       "advice": ["protect_and_feed_player_first"]
@@ -145,8 +140,7 @@
     },
     "more5_route_blocked": {
       "tasks": [
-        {"id": "more5_bridge_route", "case": "ACTIVITY_BUILD", "base": 60, "consumes": {"#planks": 4}, "implemented": true},
-        {"id": "more5_detour_route", "case": "ACTIVITY_MOVE", "base": 52, "consumes": {}, "implemented": false}
+        {"id": "more5_bridge_route", "case": "ACTIVITY_BUILD", "base": 60, "consumes": {"#planks": 4}, "implemented": true}
       ],
       "push": {"more5:route_opened": 10},
       "advice": ["bridge_or_walk_around_water_and_lava"]

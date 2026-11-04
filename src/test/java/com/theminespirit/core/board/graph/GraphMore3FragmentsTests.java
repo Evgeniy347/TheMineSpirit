@@ -12,28 +12,14 @@ class GraphMore3FragmentsTests {
     private static final List<String> EVENTS = List.of(
             "danger_spot",
             "spirit_death_drop",
-            "work_yield_low",
             "trash_found",
             "chest_purpose_missing",
-            "work_conflict",
-            "station_idle",
-            "player_sleep",
             "sand_collapse",
             "gravel_collapse",
             "farmland_trampled",
-            "world_decay",
-            "stage_slow");
-    private static final List<String> WAYS = List.of(
-            "secure_danger",
-            "recover_death_drop",
-            "retune_work_cost",
-            "clear_trash",
-            "assign_chest_purpose",
-            "spread_work",
-            "use_idle_station",
-            "home_night_work",
-            "repair_world_decay",
-            "raise_bottleneck_weight");
+            "world_decay");
+    private static final List<String> WAYS =
+            List.of("secure_danger", "recover_death_drop", "clear_trash", "assign_chest_purpose", "repair_world_decay");
 
     @Test
     void more3Events_FragmentLoad_AreDeclared() {
@@ -52,21 +38,16 @@ class GraphMore3FragmentsTests {
                     .contains(way);
             assertEquals(live, GRAPH.implemented(way), "Состояние действия пути: " + way);
         }
+        for (String rule : List.of(
+                "retune_work_cost", "spread_work", "use_idle_station", "home_night_work", "raise_bottleneck_weight")) {
+            assertTrue(GRAPH.way(rule).isEmpty(), "Правило выбора живёт поправкой графа, а не путём: " + rule);
+        }
     }
 
     @Test
     void more3Items_FragmentLoad_HavePositiveStartWeights() {
-        for (String item : List.of(
-                "danger_known",
-                "drop_recovered",
-                "work_retuned",
-                "trash_cleared",
-                "chest_labeled",
-                "conflict_resolved",
-                "station_loaded",
-                "night_home",
-                "world_repaired",
-                "stage_boosted")) {
+        for (String item :
+                List.of("danger_known", "drop_recovered", "trash_cleared", "chest_labeled", "world_repaired")) {
             assertTrue(GRAPH.items().get(item).base() > 0, "Стартовый вес предмета положителен: " + item);
         }
     }

@@ -1,9 +1,6 @@
 {
   "_note_more6": "Область graphmore6: число духов и жильё, слабый дух вдали/у угрозы, брошенные постройки, материалы в руках, сломанные станции, скопление предметов, вода и лава, повторные запросы, простой. Новые узлы только здесь; сборщик входа — More6Inputs.",
   "items": {
-    "more6:more_spirits": {"xmin": 0, "k": 1, "base": 14, "stage": 1},
-    "more6:weak_spirit_home": {"xmin": 0, "k": 1, "base": 16, "stage": 1},
-    "more6:building_finished": {"xmin": 0, "k": 1, "base": 15, "stage": 1},
     "more6:materials_deposited": {"xmin": 0, "k": 1, "base": 12, "stage": 1},
     "more6:station_ready": {"xmin": 0, "k": 1, "base": 14, "stage": 1},
     "more6:ground_cleared": {"xmin": 0, "k": 1, "base": 14, "stage": 1},
@@ -13,18 +10,6 @@
     "more6:spirit_busy": {"xmin": 0, "k": 1, "base": 11, "stage": 1}
   },
   "ways": [
-    {"id": "more6_call_spirit", "case": "ACTIVITY_SOCIAL", "makes": "more6:more_spirits",
-     "yield": 1, "weight": 1.217580639, "ticks": 200, "consumes": {},
-     "implemented": false, "todo": "more6:more_spirits"},
-    {"id": "more6_return_weak", "case": "ACTIVITY_RETURN", "makes": "more6:weak_spirit_home",
-     "yield": 1, "weight": 1.966216141, "ticks": 120, "consumes": {},
-     "implemented": false, "todo": "more6:weak_spirit_home"},
-    {"id": "more6_send_near", "case": "ACTIVITY_SENSE", "makes": "more6:weak_spirit_home",
-     "yield": 1, "weight": 2.335615273, "ticks": 100, "consumes": {},
-     "implemented": false, "todo": "more6:weak_spirit_home"},
-    {"id": "more6_finish_build", "case": "ACTIVITY_BUILD", "makes": "more6:building_finished",
-     "yield": 1, "weight": 1.385055363, "ticks": 240, "consumes": {"#building_blocks": 1},
-     "implemented": false, "todo": "more6:building_finished"},
     {"id": "more6_deposit_materials", "case": "TRANSFER_ITEM", "makes": "more6:materials_deposited",
      "yield": 1, "weight": 2.146141076, "ticks": 160, "consumes": {},
      "implemented": true, "todo": "more6:materials_deposited"},
@@ -52,27 +37,17 @@
   ],
   "events": {
     "more6_spirits_short": {
-      "tasks": [
-        {"id": "more6_call_spirit", "case": "ACTIVITY_SOCIAL", "base": 58, "consumes": {}, "implemented": false}
-      ],
-      "push": {"more6:more_spirits": 8},
+      "tasks": [],
+      "push": {"building:family_house_1": 8},
       "advice": ["housing_is_ready_call_more_spirits"]
     },
     "more6_weak_far": {
       "tasks": [
-        {"id": "more6_return_weak", "case": "ACTIVITY_RETURN", "base": 74, "consumes": {}, "implemented": false},
-        {"id": "more6_send_near", "case": "ACTIVITY_SENSE", "base": 62, "consumes": {}, "implemented": false}
+        {"id": "more_return_before_night", "case": "ACTIVITY_RETURN", "base": 74, "consumes": {},
+         "implemented": true}
       ],
-      "push": {"more6:weak_spirit_home": 8},
+      "push": {"more:return_before_night": 8},
       "advice": ["do_not_send_weak_spirit_far_or_to_threat"]
-    },
-    "more6_build_unfinished": {
-      "tasks": [
-        {"id": "more6_finish_build", "case": "ACTIVITY_BUILD", "base": 68,
-         "consumes": {"#building_blocks": 1}, "implemented": false}
-      ],
-      "push": {"more6:building_finished": 8, "#building_blocks": 4},
-      "advice": ["finish_started_building_before_new_one"]
     },
     "more6_carry_materials": {
       "tasks": [

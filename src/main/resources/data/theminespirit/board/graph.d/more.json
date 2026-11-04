@@ -5,16 +5,11 @@
     "more:keep_clear": {"xmin": 1, "k": 1, "base": 10, "stage": 1},
     "more:light_dark_spot": {"xmin": 1, "k": 1, "base": 14, "stage": 1},
     "more:return_before_night": {"xmin": 1, "k": 1, "base": 14, "stage": 1},
-    "more:avoid_far_trip": {"xmin": 1, "k": 1, "base": 11, "stage": 1},
-    "more:failure_backoff": {"xmin": 1, "k": 1, "base": 9, "stage": 1},
-    "more:station_queue": {"xmin": 1, "k": 1, "base": 10, "stage": 1},
     "more:pickup_drops": {"xmin": 1, "k": 1, "base": 14, "stage": 1},
     "more:replant": {"xmin": 1, "k": 1, "base": 13, "stage": 1},
     "more:sustain_mine": {"xmin": 1, "k": 1, "base": 11, "stage": 1},
     "more:secure_settlement": {"xmin": 1, "k": 1, "base": 16, "stage": 1},
-    "more:share_reserve": {"xmin": 1, "k": 1, "base": 10, "stage": 2},
-    "more:avoid_duplicate": {"xmin": 1, "k": 1, "base": 8, "stage": 1},
-    "more:strategic_goal": {"xmin": 1, "k": 1, "base": 15, "stage": 1}
+    "more:share_reserve": {"xmin": 1, "k": 1, "base": 10, "stage": 2}
   },
   "ways": [
     {"id": "more_help_player", "case": "ACTIVITY_SOCIAL", "makes": "more:help_player",
@@ -29,15 +24,6 @@
     {"id": "more_return_before_night", "case": "ACTIVITY_RETURN", "makes": "more:return_before_night",
      "yield": 1, "weight": 0.225787169, "ticks": 200, "world": "more:dusk_soon",
      "implemented": true, "todo": "more:return_before_night"},
-    {"id": "more_avoid_far_trip", "case": "ACTIVITY_SENSE", "makes": "more:avoid_far_trip",
-     "yield": 1, "weight": 2.799996219, "ticks": 60, "world": "more:bad_trip_conditions",
-     "implemented": false, "todo": "more:avoid_far_trip"},
-    {"id": "more_failure_backoff", "case": "ACTIVITY_SENSE", "makes": "more:failure_backoff",
-     "yield": 1, "weight": 2.799996219, "ticks": 40, "world": "more:failures_repeat",
-     "implemented": false, "todo": "more:failure_backoff"},
-    {"id": "more_station_queue", "case": "ACTIVITY_UNLOAD", "makes": "more:station_queue",
-     "yield": 1, "weight": 0.684652428, "ticks": 80, "world": "more:station_queue",
-     "implemented": false, "todo": "more:station_queue"},
     {"id": "more_pickup_drops", "case": "COLLECT_DROPS", "makes": "more:pickup_drops",
      "yield": 1, "weight": 0.68177682, "ticks": 100, "world": "more:drops_expiring",
      "implemented": true, "todo": "more:pickup_drops"},
@@ -58,12 +44,6 @@
      "implemented": true, "todo": "more:secure_settlement"},
     {"id": "more_share_reserve", "case": "TRANSFER_ITEM", "makes": "more:share_reserve",
      "yield": 1, "weight": 1.280250348, "ticks": 120, "world": "more:reserve_unused",
-     "implemented": true, "todo": "more:share_reserve"},
-    {"id": "more_avoid_duplicate", "case": "ACTIVITY_MOVE", "makes": "more:avoid_duplicate",
-     "yield": 1, "weight": 2.609372409, "ticks": 60, "world": "more:work_duplicate",
-     "implemented": false, "todo": "more:avoid_duplicate"},
-    {"id": "more_strategic_goal", "case": "ACTIVITY_EXTERNAL", "makes": "more:strategic_goal",
-     "yield": 1, "weight": 1.120342652, "ticks": 100, "world": "more:strategic_goal",
-     "implemented": false, "todo": "more:strategic_goal"}
+     "implemented": true, "todo": "more:share_reserve"}
   ]
 }
