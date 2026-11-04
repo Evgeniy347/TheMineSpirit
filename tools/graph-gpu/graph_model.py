@@ -28,7 +28,6 @@ ABSENT = "ABSENT"
 
 HERD_CULL_BOOST = 70
 EXPLORE_TICKS = 2400
-WATCHER_OWNED = set()
 
 
 STORE_MINIMUM = "store:minimum"
@@ -324,15 +323,45 @@ def band_priority(score, maximum, band):
     return maximum + max(1, min(band, above))
 
 
+class Choice:
+    """GraphChoice: правила выбора (штраф/добавка), нейтральные по умолчанию."""
+
+    NAMES = ("farTrip", "slowWork", "duplicate", "conflict", "pileup", "strategicBoost",
+             "bottleneckBoost", "idleStationBoost", "nightHome", "spaceFoundBoost",
+             "spaceTight", "petAlone", "herdFull", "fieldFull")
+    NEUTRAL = {
+        "farTrip": 1.0, "slowWork": 1.0, "duplicate": 1.0, "conflict": 1.0, "pileup": 1.0,
+        "strategicBoost": 0.0, "bottleneckBoost": 0.0, "idleStationBoost": 0.0,
+        "nightHome": 1.0, "spaceFoundBoost": 0.0, "spaceTight": 1.0,
+        "petAlone": 1.0, "herdFull": 1.0, "fieldFull": 1.0,
+    }
+
+    __slots__ = ("values",)
+
+    def __init__(self, data=None):
+        data = data or {}
+        self.values = {name: float(data.get(name, self.NEUTRAL[name])) for name in self.NAMES}
+        for name, value in self.values.items():
+            if value < 0 or value != value or value in (float("inf"), float("-inf")):
+                raise ValueError("Поправка выбора «%s» = %s: она неотрицательна и конечна" % (name, value))
+
+    def __getattr__(self, name):
+        try:
+            return self.values[name]
+        except KeyError:
+            raise AttributeError(name)
+
+
 class Costs:
-    """GraphCosts: длительность заданий, дорога, износ, ёмкость станций."""
+    """GraphCosts: длительность заданий, дорога, износ, ёмкость станций и поправки выбора."""
 
     __slots__ = ("default_ticks", "case_ticks", "way_ticks", "way_uses",
                  "ticks_per_block", "travel_scale_ticks", "tool_durability",
-                 "station_capacity")
+                 "station_capacity", "choice")
 
     def __init__(self, data, ways):
         costs = data.get("costs")
+        self.choice = Choice(data.get("choice"))
         if costs is None:
             self.default_ticks = 1
             self.case_ticks = {}
@@ -613,6 +642,10 @@ class Graph:
             factor = (weights.get("ways") or {}).get(way.get("id", ""))
             if factor is not None:
                 way["weight"] = float(way.get("weight", 1.0)) * factor
+        for name, factor in (weights.get("choice") or {}).items():
+            if name in Choice.NEUTRAL:
+                section = data.setdefault("choice", {})
+                section[name] = float(section.get(name, Choice.NEUTRAL[name])) * factor
         maximum = int(data.get("maxPriority", 100))
         for event_name, factor in (weights.get("events") or {}).items():
             event = data.get("events", {}).get(event_name)
@@ -782,7 +815,7 @@ def buildings_first(graph, tasks, ready):
         elif task["makes"] in supply and task["consumes"]:
             priority = start
         elif task["makes"] in supply:
-            priority = min(max(0, start - 1), task["priority"] + shift)
+            priority = min(graph.max_priority, task["priority"] + shift)
         else:
             priority = task["priority"]
         if priority != task["priority"]:
@@ -1035,8 +1068,6 @@ class Planner:
                 "reason": "нужна постройка " + building_id + " (" + why + "), её нет в плане",
             })
             return
-        if building.board_case in WATCHER_OWNED:
-            return
         self.push(source, BUILDING + building_id, amount)
 
     def roots(self):
@@ -1260,20 +1291,95 @@ class Planner:
     def result(self, scores):
         tasks = []
         load = {}
-        for key, value in scores.items():
-            if value > 0 and self.is_task(key):
-                value *= self.graph.costs.travel_factor(self.travel(key))
-                task = self.task(key, value)
-                tasks.append(task)
-                building = self.station(key)
-                if building is not None and task["feasible"]:
-                    load[building] = max(load.get(building, 0.0), value)
+        made = set()
+        for key, raw in sorted(scores.items(), key=lambda entry: (-entry[1], entry[0])):
+            if raw <= 0 or not self.is_task(key):
+                continue
+            repeat = self.makes(key) in made
+            made.add(self.makes(key))
+            value = raw * self.graph.costs.travel_factor(self.travel_ticks(key))
+            value = self.choice(key, value, repeat)
+            task = self.task(key, value)
+            tasks.append(task)
+            building = self.station(key)
+            if building is not None and task["feasible"]:
+                load[building] = max(load.get(building, 0.0), value)
         for building, value in load.items():
             extra = self.station_task(building, value, scores)
             if extra is not None:
                 tasks.append(extra)
         return {"tasks": buildings_first(self.graph, tasks, self.ready),
                 "notices": list(self.notices.values()), "advice": list(self.advice)}
+
+    def makes(self, key):
+        if key.startswith(BUILDING) or key.startswith(EVENT) or key.startswith(EXPLORE):
+            return key
+        at = key.find(AT)
+        way = self.graph.way(key if at < 0 else key[:at])
+        return way.makes if way is not None else key
+
+    def choice(self, key, value, repeat):
+        tuning = self.graph.costs.choice
+        way = self.way_of(key)
+        factor = 1.0
+        bonus = 0.0
+        if "more:strategic_goal" in self.state.world:
+            bonus += tuning.strategicBoost
+        if key.startswith(BUILDING):
+            building = self.graph.buildings.get(key[len(BUILDING):])
+            if "more4_space_found" in self.state.events:
+                bonus += tuning.spaceFoundBoost
+            if "more4_space_tight" in self.state.events:
+                factor *= tuning.spaceTight
+            if "stage_slow" in self.state.events and building is not None \
+                    and building.stage == self.state.stage:
+                bonus += tuning.bottleneckBoost
+        elif way is not None:
+            if "stage_slow" in self.state.events and self.stage_of(way) == self.state.stage:
+                bonus += tuning.bottleneckBoost
+            if "station_idle" in self.state.events and self.idle_station(way):
+                bonus += tuning.idleStationBoost
+            if "player_sleep" in self.state.events and self.travel(key) > 0:
+                factor *= tuning.nightHome
+            if "more4_tamed_pet" in self.state.events and way.board_case == "ACTIVITY_GUARD":
+                factor *= tuning.petAlone
+            if "more7_pen_full" in self.state.events and self.holds_herd(way):
+                factor *= tuning.herdFull
+            if "more7_field_full" in self.state.events and self.sows(way):
+                factor *= tuning.fieldFull
+        if repeat:
+            if "more:work_duplicate" in self.state.world:
+                factor *= tuning.duplicate
+            if "work_conflict" in self.state.events:
+                factor *= tuning.conflict
+            if "more7_work_pileup" in self.state.events:
+                factor *= tuning.pileup
+        return value * factor + bonus
+
+    def way_of(self, key):
+        if key.startswith(EVENT):
+            parts = key.split(":", 2)
+            return self.graph.way(parts[2]) if len(parts) == 3 else None
+        at = key.find(AT)
+        return self.graph.way(key if at < 0 else key[:at])
+
+    def stage_of(self, way):
+        item = self.graph.items.get(way.makes)
+        return -1 if item is None else item.stage
+
+    def idle_station(self, way):
+        building = way.building
+        if building is None or building not in self.graph.costs.station_capacity:
+            return False
+        return any(not station.get("busy") and
+                   (station.get("id") == building or station.get("type") == building)
+                   for station in self.state.station_facts.values())
+
+    def holds_herd(self, way):
+        return way.board_case in ("BREED_ANIMALS", "CAPTURE_ANIMAL")
+
+    def sows(self, way):
+        return any(item == "#seeds" or item.endswith("_seeds") for item in way.consumes)
 
     def station(self, key):
         at = key.find(AT)
@@ -1310,6 +1416,18 @@ class Planner:
         if way is None or way.world is None:
             return 0
         return self.graph.costs.travel(self.state.distances.get(way.world, 0))
+
+    def travel_ticks(self, key):
+        raw = self.travel(key)
+        if "more:bad_trip_conditions" not in self.state.world:
+            return raw
+        return int(math.floor(raw * self.graph.costs.choice.farTrip + 0.5))
+
+    def way_ticks(self, key, way):
+        ticks = self.graph.costs.ticks(way.id, way.board_case) + self.travel_ticks(key)
+        if "work_yield_low" in self.state.events:
+            ticks = int(math.floor(ticks * self.graph.costs.choice.slowWork + 0.5))
+        return ticks
 
     def is_task(self, key):
         if key.startswith(BUILDING) or key.startswith(EVENT) or key.startswith(EXPLORE):
@@ -1364,7 +1482,7 @@ class Planner:
         return {"id": key, "makes": way.makes, "spirit": spirit, "priority": prio,
                 "consumes": dict(way.consumes), "feasible": feasible,
                 "chance": key in self.chances, "implemented": graph.implemented(way_id),
-                "ticks": graph.costs.ticks(way_id, way.board_case) + self.travel(key)}
+                "ticks": self.way_ticks(key, way)}
 
     def plan(self):
         self.prepare()

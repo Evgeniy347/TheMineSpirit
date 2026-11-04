@@ -51,15 +51,13 @@ class More2FragmentTests {
             assertTrue(GRAPH.way(way).isPresent(), "Путь действия объявлен: " + way);
             assertTrue(GRAPH.implemented(way), "Действие " + way + " связано с исполнением, узел " + node);
         });
-        for (String control : List.of("more2_load_carry", "more2_batch_carry")) {
-            assertFalse(
-                    GRAPH.implemented(control),
-                    "Путь " + control + " — сигнал логистики без отдельного действия: "
-                            + "перенос уже делает transfer_item");
-        }
-        assertFalse(
-                GRAPH.way("more2_trade_villager").isPresent(),
+        assertTrue(
+                GRAPH.way("more2_trade_villager").isEmpty(),
                 "Торговли у духов нет: узел без потребности удалён, а не висит заглушкой");
+        assertFalse(GRAPH.events().containsKey("more2_villager_trade"), "Событие торговли удалено вместе с узлом");
+        for (String duplicate : List.of("more2_load_carry", "more2_batch_carry")) {
+            assertTrue(GRAPH.way(duplicate).isEmpty(), "Перенос и полевой сундук уже есть путями склада: " + duplicate);
+        }
     }
 
     @Test
@@ -103,7 +101,6 @@ class More2FragmentTests {
         for (String item : List.of(
                 "more2:food_plan",
                 "more2:carry_room",
-                "more2:carry_batch",
                 "more2:safe",
                 "more2:flow_blocked",
                 "more2:animal_penned",

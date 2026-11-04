@@ -16,8 +16,6 @@ class GraphMore4FragmentsTests {
             More4Rules.WRONG_TOOL_HAND,
             More4Rules.PORTAL_FOUND,
             More4Rules.PORTAL_UNSAFE,
-            More4Rules.SPACE_FOUND,
-            More4Rules.SPACE_TIGHT,
             More4Rules.TAMED_PET,
             More4Rules.RARE_FOUND,
             More4Rules.RARE_MIXED,
@@ -43,12 +41,8 @@ class GraphMore4FragmentsTests {
             "more4_switch_tool",
             "more4_guard_portal",
             "more4_fence_portal",
-            "more4_plan_expansion",
-            "more4_find_space",
             "more4_guard_with_pet",
-            "more4_leave_pet_alone",
             "more4_store_rare",
-            "more4_spare_rare",
             "more4_sort_rare",
             "more4_feed_hungry",
             "more4_rest_injured");
@@ -77,11 +71,14 @@ class GraphMore4FragmentsTests {
                 "more4:player_helped",
                 "more4:tool_ready",
                 "more4:portal_guarded",
-                "more4:expansion_planned",
                 "more4:pet_guarded",
                 "more4:rare_kept",
                 "more4:caution")) {
             assertTrue(GRAPH.items().get(item).base() > 0, "Стартовый вес предмета положителен: " + item);
+        }
+        for (String rule :
+                List.of("more4_plan_expansion", "more4_find_space", "more4_leave_pet_alone", "more4_spare_rare")) {
+            assertTrue(GRAPH.way(rule).isEmpty(), "Правило выбора живёт поправкой графа, а не путём: " + rule);
         }
     }
 

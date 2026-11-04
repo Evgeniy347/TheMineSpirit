@@ -1,6 +1,5 @@
 package com.theminespirit.core.board.graph;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -30,24 +29,17 @@ class More4PlannerTests {
     }
 
     @Test
-    void eventStub_DeferredTask_IsNotPosted() {
-        String stub = "event:" + More4Rules.SPACE_FOUND + ":more4_plan_expansion";
+    void eventSpaceFound_TunesBuildingChoice_NotSeparateWork() {
         GraphState state = GraphWorld.empty().event(More4Rules.SPACE_FOUND).state();
         GraphPlan plan = GraphPlanner.plan(GRAPH, state);
 
-        GraphPlan.Task task = plan.tasks().stream()
-                .filter(candidate -> stub.equals(candidate.id()))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("Свободное место обязано дать задание: " + stub));
-        assertFalse(task.implemented(), "Планирование расширения — мета-шаг без изменения мира, он не выдаётся");
-
-        GraphTickets.Result tickets = GraphTickets.of(GRAPH, state, plan);
         assertTrue(
-                tickets.post().stream().noneMatch(ticket -> (GraphTickets.PREFIX + stub).equals(ticket.id())),
-                "Заглушка не ставится на доску: дух не должен брать несуществующее действие");
+                plan.tasks().stream().noneMatch(task -> task.id().startsWith("event:" + More4Rules.SPACE_FOUND + ":")),
+                "Свободное место — условие выбора постройки, а не работа духа");
         assertTrue(
-                tickets.unimplemented().stream().anyMatch(known -> stub.equals(known.id())),
-                "Заглушка попадает в список нереализованных, а не теряется молча");
+                GRAPH.way("more4_plan_expansion").isEmpty()
+                        && GRAPH.way("more4_find_space").isEmpty(),
+                "Пути-заглушки расширения удалены: поправка живёт в graph.json.choice");
     }
 
     @Test
@@ -58,8 +50,6 @@ class More4PlannerTests {
                 More4Rules.WRONG_TOOL_HAND,
                 More4Rules.PORTAL_FOUND,
                 More4Rules.PORTAL_UNSAFE,
-                More4Rules.SPACE_FOUND,
-                More4Rules.SPACE_TIGHT,
                 More4Rules.TAMED_PET,
                 More4Rules.RARE_FOUND,
                 More4Rules.RARE_MIXED,
@@ -81,7 +71,6 @@ class More4PlannerTests {
                 "more4_bring_player_food",
                 "more4_switch_tool",
                 "more4_fence_portal",
-                "more4_plan_expansion",
                 "more4_guard_with_pet",
                 "more4_store_rare",
                 "more4_feed_hungry")) {
