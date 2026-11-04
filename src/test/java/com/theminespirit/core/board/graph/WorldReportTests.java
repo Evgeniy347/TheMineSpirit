@@ -27,7 +27,7 @@ class WorldReportTests {
                 List.of(new GraphSiteFacts.Stray(
                         "stray:fence", "fence", new GraphFacts.Position(1, 64, 1), null, Map.of("oak_fence", 3))),
                 new GraphSiteFacts.Terrain(
-                        2, 4, 3, 5, 1, Map.of("minecraft:dirt", 2), Map.of("minecraft:dirt", 2), Map.of(), false),
+                        2, 4, 3, 5, 1, Map.of("minecraft:dirt", 2), Map.of("minecraft:dirt", 2), Map.of(), false, 9),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
 
         WorldReport report = WorldReport.of(facts);
@@ -36,6 +36,7 @@ class WorldReportTests {
         assertEquals(1, report.strayGroups(), "кусков лишнего — по связным находкам");
         assertEquals(2, report.pits(), "ямы берутся из рельефа");
         assertEquals(2, report.mounds(), "насыпи — из состава срезки");
+        assertEquals(9, report.natural(), "природный склон отдаётся отдельно и не считается работой");
         assertEquals(4, report.hanging(), "висящее берётся из рельефа");
         assertEquals(2, report.damaged(), "повреждёнными считаются известные постройки с уроном, а не неизвестные");
         assertTrue(!report.unknown(), "загруженный мир не помечается неизвестным");

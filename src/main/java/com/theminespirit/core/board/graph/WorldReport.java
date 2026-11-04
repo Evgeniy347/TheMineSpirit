@@ -15,7 +15,8 @@ public record WorldReport(
         int damaged,
         boolean unknown,
         List<Stray> strays,
-        List<Damaged> buildings) {
+        List<Damaged> buildings,
+        int natural) {
     public record Stray(
             String type,
             int x,
@@ -42,11 +43,24 @@ public record WorldReport(
     }
 
     public WorldReport {
-        if (strayBlocks < 0 || strayGroups < 0 || pits < 0 || mounds < 0 || hanging < 0 || damaged < 0) {
+        if (strayBlocks < 0 || strayGroups < 0 || pits < 0 || mounds < 0 || hanging < 0 || damaged < 0 || natural < 0) {
             throw new IllegalArgumentException("Счётчики мира не бывают отрицательными: отсутствие — ноль");
         }
         strays = List.copyOf(Objects.requireNonNull(strays, "Куски лишнего не могут быть null"));
         buildings = List.copyOf(Objects.requireNonNull(buildings, "Повреждённые постройки не могут быть null"));
+    }
+
+    public WorldReport(
+            int strayBlocks,
+            int strayGroups,
+            int pits,
+            int mounds,
+            int hanging,
+            int damaged,
+            boolean unknown,
+            List<Stray> strays,
+            List<Damaged> buildings) {
+        this(strayBlocks, strayGroups, pits, mounds, hanging, damaged, unknown, strays, buildings, 0);
     }
 
     public static WorldReport of(GraphFacts facts) {
@@ -81,6 +95,7 @@ public record WorldReport(
                 buildings.size(),
                 facts.terrain().unknown(),
                 strays,
-                buildings);
+                buildings,
+                facts.terrain().natural());
     }
 }

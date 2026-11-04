@@ -20,7 +20,8 @@ class WorldRoutesTests {
                 1,
                 false,
                 List.of(new WorldReport.Stray("oak_fence", 1, 64, 1, 3, "spirit-1")),
-                List.of(new WorldReport.Damaged("warehouse", 4, false)));
+                List.of(new WorldReport.Damaged("warehouse", 4, false)),
+                11);
         Router router = Router.of(new WorldRoutes(() -> report).routes());
 
         RestResponse response =
@@ -32,6 +33,7 @@ class WorldRoutesTests {
                         && response.body().contains("\"strayGroups\":1")
                         && response.body().contains("\"pits\":2")
                         && response.body().contains("\"mounds\":4")
+                        && response.body().contains("\"natural\":11")
                         && response.body().contains("\"hanging\":5")
                         && response.body().contains("\"damagedBuildings\":1"),
                 "Сводка называет лишнее, ямы, насыпи, висящее и повреждённые постройки. Тело: " + response.body());

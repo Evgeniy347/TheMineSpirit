@@ -229,11 +229,13 @@ public final class GraphSource {
             return;
         }
         LOGGER.info(
-                "[graph] мир: лишних {} (кусков {}), ям {}, насыпей {}, висящих {}, повреждено построек {}{}",
+                "[graph] мир: лишних {} (кусков {}), ям {}, насыпей на лотах {}, природного {} (не работа), "
+                        + "висящих {}, повреждено построек {}{}",
                 report.strayBlocks(),
                 report.strayGroups(),
                 report.pits(),
                 report.mounds(),
+                report.natural(),
                 report.hanging(),
                 report.damaged(),
                 report.unknown() ? " (чанки не загружены)" : "");

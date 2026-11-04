@@ -213,6 +213,11 @@ def test_world_inputs():
     unknown = State({"stage": 1, "kits": {"spirit-1": {}}, "facts": {
         "buildings": {"hut": {"id": "hut", "damage": 5, "unknown": True}}}})
     assert "repair_hut" not in unknown.events, "Неизвестный аудит не ставит ремонт"
+    natural = State({"stage": 1, "kits": {"spirit-1": {}}, "facts": {
+        "terrain": {"pits": 0, "hanging": 0, "heightDrop": 0, "traces": 0,
+                    "cut": {}, "fill": {}, "natural": 3263}}})
+    assert "level_lot" not in natural.events, "Природный склон вне лотов не ставит level_lot в Python"
+    assert "backfill" not in natural.events, "Природная впадина вне лотов не ставит backfill в Python"
     print("OK: входы участка учитываются в выборе")
 
 

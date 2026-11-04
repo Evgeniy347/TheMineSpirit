@@ -105,6 +105,21 @@ class WorldAreaInputsTests {
     }
 
     @Test
+    void terrain_NaturalSlope_IsNotWork() {
+        GraphSiteFacts.Terrain terrain = WorldAreaInputs.terrain(
+                List.of(),
+                Map.of(),
+                List.of(),
+                0,
+                0,
+                new WorldAreaInputs.Marks(Map.of(), Map.of(), Map.of(), 17),
+                false);
+
+        assertEquals(17, terrain.natural(), "природный склон учитывается отдельно от насыпей лота");
+        assertTrue(terrain.cut().isEmpty(), "природный склон не подаётся в cut как работа");
+    }
+
+    @Test
     void terrain_EmptyOrNegative_Handled() {
         GraphSiteFacts.Terrain flat = WorldAreaInputs.terrain(List.of(), Map.of(), List.of(), 0, 0);
 

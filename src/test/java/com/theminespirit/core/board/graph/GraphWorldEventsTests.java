@@ -81,6 +81,19 @@ class GraphWorldEventsTests {
     }
 
     @Test
+    void facts_NaturalSlopeOnly_GivesNoLevelLot() {
+        GraphFacts facts = facts(
+                List.of(),
+                new GraphSiteFacts.Terrain(0, 0, 0, 0, 0, Map.of(), Map.of(), Map.of(), false, 3263),
+                Map.of());
+
+        Set<String> events = GraphWorldEvents.of(facts);
+
+        assertFalse(events.contains(GraphWorldEvents.LEVEL_LOT), "природный склон вне лотов — не работа выравнивания");
+        assertFalse(events.contains(GraphWorldEvents.BACKFILL), "природная впадина — не яма для засыпки");
+    }
+
+    @Test
     void facts_FillComposition_GivesBackfill() {
         GraphFacts facts = facts(
                 List.of(),

@@ -36,7 +36,11 @@ final class WorldAreaInputs {
     private static @Nullable StageSite cachedHouseSite;
     private static long cachedHouseAt = Long.MIN_VALUE;
 
-    record Marks(Map<String, Integer> cut, Map<String, Integer> fill, Map<String, Integer> floating) {}
+    record Marks(Map<String, Integer> cut, Map<String, Integer> fill, Map<String, Integer> floating, int natural) {
+        Marks(Map<String, Integer> cut, Map<String, Integer> fill, Map<String, Integer> floating) {
+            this(cut, fill, floating, 0);
+        }
+    }
 
     record Placed(BlockCoord at, String type, @Nullable String builder) {
         Placed {
@@ -75,7 +79,8 @@ final class WorldAreaInputs {
                         found.pits().isEmpty()
                                 ? Map.of()
                                 : Map.of("minecraft:dirt", found.pits().size()),
-                        floatingCounts(floating)),
+                        floatingCounts(floating),
+                        found.natural()),
                 found.unknown() > 0);
         return new GraphWorldFacts(strays, terrain, buildings);
     }
@@ -149,9 +154,9 @@ final class WorldAreaInputs {
             int traces,
             Marks marks,
             boolean unknown) {
-        if (hanging < 0 || traces < 0) {
-            throw new IllegalArgumentException(
-                    "Висящее " + hanging + " и следы " + traces + " не бывают отрицательными: отсутствие — ноль");
+        if (hanging < 0 || traces < 0 || marks.natural() < 0) {
+            throw new IllegalArgumentException("Висящее " + hanging + ", следы " + traces + " и природное "
+                    + marks.natural() + " не бывают отрицательными: отсутствие — ноль");
         }
         int deepest = depths.values().stream().mapToInt(Integer::intValue).max().orElse(0);
         int heightDrop = 0;
@@ -169,7 +174,8 @@ final class WorldAreaInputs {
                 marks.cut(),
                 marks.fill(),
                 marks.floating(),
-                unknown);
+                unknown,
+                marks.natural());
     }
 
     private static Map<String, Integer> blockCounts(ServerLevel level, List<BlockCoord> cells) {
