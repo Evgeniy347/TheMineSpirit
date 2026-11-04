@@ -236,6 +236,53 @@ Python-модель уже читала аудит (`GraphBuildingMaterials`, `G
 `unit --fast-analyzers` 8181; `pmdMain pmdTest`; `gametest --full` 15/15 (первый прогон упал
 флаком `gatherscene_arenasteps_allpass` на исчезнувшей двери, отдельный и повторный прогон зелёные).
 
+## 03.11-4 — четвёртый пересчёт: без сторожей-постановщиков
+
+**Что изменилось.** Сняты сторожа-постановщики: задачи ставит только граф, `StageCatalog.watcherOwned`
+всегда false, `WATCHER_OWNED` пуст. `GraphSimulation` и `sim_gpu` больше не пропускают склад и загоны:
+этап 2→3 проходит честно, а `warehouse`/`pen_*` строятся узлами `building:*`. Заодно поправлен
+`GraphBuildOrder`: нестроевые поставки не опускаются ниже своего приоритета (иначе «нет кирки —
+булыжник важнее» терялось), а при равном `maxPriority` полоса построек не схлопывается.
+
+**Сверка.** В Python найден настоящий источник расхождений: прямой матричный решатель
+`(I − A)·p = r` давал другой результат, когда 200 итераций Java ещё не сходились (например,
+`explore:tree:acacia` 88 против 78). Теперь `sim_gpu` считает ту же неподвижную точку плотными
+итерациями на CUDA: 200 итераций, `EPSILON`, остановка по строкам — как `GraphFlow.solve`.
+Симуляция снова совпадает с Java на всех базовых мирах.
+
+**Пересчёт.** 87 категорий. Ограниченный прогон
+`--fixed "decay,urgentBoost,way:dig,event:*,way:CRAFT_*,way:GATHER_MATERIALS"`:
+9 поколений × 8 × 2 сида, доля **0.7979**, сумма 1776 → 1655 до исключений. Исключения ради
+зелёных правил: `decay` 0.55, `urgentBoost` 0, `cobblestone`/`stick` 36, `coal` 28,
+`orchard_oak` 50, `craft_*`/`chop_*` веса вдвое ниже найденных, `event:*` и `way:dig` 1.0.
+Без этих ограничений `GraphPlannerTests` насыщает `maxPriority` и теряет порядок.
+
+Метрики стартов (03.11-3 → 03.11-4):
+
+| Старт | До | После |
+|---|---|---|
+| `late3` | 268 | 223, этап 3 |
+| `late3-half` | 83 | 84, этап 3 |
+| `stage2-full` | 1430, этап 3 (не закрыт) | **652, этап 3 закрыт** |
+| `stage2-all` | 1090, этап 3 (не закрыт) | **453, этап 3 закрыт** |
+| `farm` | 60 | 135 (включены `weave_wool` и `lure_animal`) |
+| `world` / `life` / `store` | 21 / 12 / 19 | без изменений |
+| `more4` / `more5` / `more6` / `more7` | 18 / 21 / 13 / 11 | без изменений |
+| `more` / `more2` / `more3` / `gear` / `dig` | 17 / 16 / 20 / 10 / 14 | без изменений |
+
+Базовые миры Java: 84 / 608 / 1007 / 652 / 7455 шагов; Python совпадает по шагам, тикам и порядку.
+Простоя в мирах областей нет; все старты, кроме пустого и «10 духов» (предел решений), закрывают
+этап 3.
+
+Мёртвые узлы: 9 путей-дублей (`assign_chest_purpose`, `clear_trash`, `home_night_work`,
+`raise_bottleneck_weight`, `recover_death_drop`, `repair_world_decay`, `secure_danger`,
+`spread_work`, `use_idle_station`), 2 необязательные заглушки (`more2_field_chest`, `more2_trail`)
+и 6 push-only событий (`crop_dry`, `pen_full`, `gear_kit_*`). `weave_wool` и `lure_animal` ожили
+в мире `farm`.
+
+Проверка: `graphExport` → **200/200** до и после; `sim_gpu` = `GraphSimulationTests`;
+`unit --fast-analyzers` 8189; `pmdMain pmdTest`; `gametest --full` 15/15 (новых GameTest нет).
+
 ## Найдено в данных Java (не правил)
 
 - В слиянии графа два разных пути имеют один `id = craft_bread`: ручной делает `food` (weight 0.7),

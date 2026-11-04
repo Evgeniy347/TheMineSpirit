@@ -2,57 +2,57 @@
   "items": {
     "store:minimum": {
       "xmin": 0,
-      "base": 20,
+      "base": 16,
       "stage": 1
     },
     "store:transfer": {
       "xmin": 0,
-      "base": 15,
+      "base": 13,
       "stage": 1
     },
     "store:smelt": {
       "xmin": 0,
-      "base": 15,
+      "base": 13,
       "stage": 1
     },
     "store:space": {
       "xmin": 0,
-      "base": 17,
+      "base": 14,
       "stage": 1
     },
     "store:sort": {
       "xmin": 0,
-      "base": 10,
+      "base": 8,
       "stage": 1
     },
     "store:carry:deliver": {
       "xmin": 0,
-      "base": 15,
+      "base": 13,
       "stage": 1
     },
     "store:carry:transfer": {
       "xmin": 0,
-      "base": 14,
+      "base": 12,
       "stage": 1
     },
     "store:smelt:load": {
       "xmin": 0,
-      "base": 15,
+      "base": 13,
       "stage": 1
     },
     "store:smelt:take": {
       "xmin": 0,
-      "base": 17,
+      "base": 14,
       "stage": 1
     },
     "store:chests": {
       "xmin": 0,
-      "base": 15,
+      "base": 13,
       "stage": 1
     },
     "store:sorted": {
       "xmin": 0,
-      "base": 10,
+      "base": 8,
       "stage": 1
     }
   },
@@ -62,7 +62,7 @@
       "case": "TRANSFER_ITEM",
       "makes": "store:carry:deliver",
       "yield": 1,
-      "weight": 1.245006242,
+      "weight": 1.280250348,
       "ticks": 200,
       "implemented": true
     },
@@ -71,7 +71,7 @@
       "case": "TRANSFER_ITEM",
       "makes": "store:carry:transfer",
       "yield": 1,
-      "weight": 1.245006242,
+      "weight": 1.280250348,
       "ticks": 200,
       "implemented": true
     },
@@ -80,7 +80,7 @@
       "case": "SMELT_CHARCOAL",
       "makes": "store:smelt:load",
       "yield": 1,
-      "weight": 1.181981026,
+      "weight": 0.912451069,
       "ticks": 200,
       "building": "furnace",
       "implemented": true
@@ -90,7 +90,7 @@
       "case": "ACTIVITY_UNLOAD",
       "makes": "store:smelt:take",
       "yield": 1,
-      "weight": 0.773013769,
+      "weight": 0.684652428,
       "ticks": 40,
       "building": "furnace",
       "implemented": true
@@ -100,7 +100,7 @@
       "case": "STOCK_CHESTS",
       "makes": "store:chests",
       "yield": 1,
-      "weight": 1.386630849,
+      "weight": 2.016808978,
       "ticks": 200
     },
     {
@@ -108,7 +108,7 @@
       "case": "ACTIVITY_UNLOAD",
       "makes": "store:sorted",
       "yield": 1,
-      "weight": 0.773013769,
+      "weight": 0.684652428,
       "ticks": 120,
       "building": "chests",
       "implemented": true

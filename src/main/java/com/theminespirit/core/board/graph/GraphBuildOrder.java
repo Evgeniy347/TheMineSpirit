@@ -68,7 +68,7 @@ final class GraphBuildOrder {
                     } else if (supply.contains(task.makes()) && !task.consumes().isEmpty()) {
                         priority = bandStart;
                     } else if (supply.contains(task.makes())) {
-                        priority = Math.min(Math.max(0, bandStart - 1), task.priority() + shift);
+                        priority = Math.min(graph.maxPriority(), task.priority() + shift);
                     } else {
                         priority = task.priority();
                     }

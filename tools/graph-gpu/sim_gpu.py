@@ -18,7 +18,7 @@ import math
 import os
 import sys
 
-from graph_model import Graph, Planner, State, BUILT, PLANNED, ABSENT, EPSILON, MAX_ITERATIONS, WATCHER_OWNED
+from graph_model import Graph, Planner, State, BUILT, PLANNED, ABSENT, EPSILON, MAX_ITERATIONS
 
 try:
     import torch
@@ -422,10 +422,12 @@ FARM_EVENTS = (
 def _farm_world(graph):
     world = ready_world(graph)
     world.events.update(FARM_EVENTS)
-    world.stock["herd_cow"] = 1
+    world.stock["herd_cow"] = 119
     world.stock["farmland"] = 0
     world.stock["food_reserve"] = 0
     world.stock["milk_bucket"] = 0
+    world.stock["white_wool"] = 239
+    world.world.add("animals")
     return world
 
 
@@ -506,7 +508,6 @@ def input_worlds(graph):
 def unbuilt(world):
     return [b.id for b in world.graph.buildings.values()
             if b.stage <= world.stage and not b.optional
-            and b.board_case not in WATCHER_OWNED
             and world.buildings.get(b.id) != BUILT]
 
 
@@ -723,31 +724,18 @@ def _solve_direct(flows, device):
             torch.tensor(factors, dtype=torch.float64, device=device))
     matrix = flat_matrix.view(count, size, size)
     matrix += torch.eye(size, dtype=torch.float64, device=device)
-    try:
-        solved = torch.linalg.solve(matrix, base.unsqueeze(-1)).squeeze(-1).cpu().tolist()
-    except RuntimeError:
-        solved = _solve_rows(matrix, base, device)
-    result = []
-    for row, flow in enumerate(flows):
-        row_values = solved[row]
-        if row_values is None or any(value < -EPSILON for value in row_values):
-            result.append(flow.solve())
-            continue
-        result.append({key: row_values[idx] + flow.locals.get(key, 0.0)
-                       for key, idx in flow.index.items()})
-    return result
-
-
-def _solve_rows(matrix, base, device):
-    """Запасной путь для вырожденного блока: остальные строки решаем прямо, вырожденную — итерациями Java."""
-    solved = []
-    for row in range(matrix.shape[0]):
-        try:
-            values = torch.linalg.solve(matrix[row], base[row])
-            solved.append(values.cpu().tolist())
-        except RuntimeError:
-            solved.append(None)
-    return solved
+    value = base.clone()
+    active = torch.ones(count, dtype=torch.bool, device=device)
+    for _ in range(MAX_ITERATIONS):
+        moved = base + value - torch.bmm(matrix, value.unsqueeze(-1)).squeeze(-1)
+        delta = (moved - value).abs().amax(dim=1)
+        value = torch.where(active.unsqueeze(1), moved, value)
+        active = active & (delta >= EPSILON)
+        if not bool(active.any()):
+            break
+    solved = value.cpu().tolist()
+    return [{key: solved[row][idx] + flow.locals.get(key, 0.0)
+             for key, idx in flow.index.items()} for row, flow in enumerate(flows)]
 
 def run_many(worlds, limit=4000, device="cuda", direct=True):
     """Симуляция пакета миров во времени (тики заданий, дорога, износ, станции)."""

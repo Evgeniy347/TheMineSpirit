@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -8,6 +9,24 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class GraphStageGateTests {
+    @Test
+    void simulate_StageTwoBaseline_ReachesStageThree() {
+        GraphSimulation.Outcome outcome =
+                GraphSimulation.runUntil(GraphMutations.baselines().get(3), 4000, 3);
+
+        assertEquals(3, outcome.reachedStage(), "Этап 2 проходит честно, без обхода построек сторожа");
+    }
+
+    @Test
+    void unbuilt_StageTwo_ContainsWarehouseAndPens() {
+        GraphWorld world = GraphWorld.settled();
+        world.stage = 2;
+        GraphWorld.GRAPH.buildings().keySet().forEach(id -> world.buildings.put(id, GraphState.Built.PLANNED));
+
+        assertTrue(GraphSimulation.unbuilt(world).contains("warehouse"), "склад строит граф, он держит этап");
+        assertTrue(GraphSimulation.unbuilt(world).contains("pen_cow"), "загон строит граф, он держит этап");
+    }
+
     @Test
     void building_NoMissingAndKnown_Ready() {
         GraphFacts facts = facts(building(Map.of()), GraphFacts.Terrain.empty(), List.of());

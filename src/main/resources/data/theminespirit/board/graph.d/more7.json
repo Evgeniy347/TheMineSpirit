@@ -1,26 +1,26 @@
 {
   "_note_more7": "Область graphmore7: занятость духов, предметы следующего этапа, пики времени суток, заполненность загонов и полей, готовые заказы игрока. Новые узлы только здесь; сборщик входа — More7Inputs.",
   "items": {
-    "more7:harvest_peak": {"xmin": 0, "k": 1, "base": 18, "stage": 1},
-    "more7:return_peak": {"xmin": 0, "k": 1, "base": 17, "stage": 1},
-    "more7:pen_room": {"xmin": 0, "k": 1, "base": 16, "stage": 1},
-    "more7:order_delivered": {"xmin": 0, "k": 1, "base": 20, "stage": 1}
+    "more7:harvest_peak": {"xmin": 0, "k": 1, "base": 14, "stage": 1},
+    "more7:return_peak": {"xmin": 0, "k": 1, "base": 14, "stage": 1},
+    "more7:pen_room": {"xmin": 0, "k": 1, "base": 14, "stage": 1},
+    "more7:order_delivered": {"xmin": 0, "k": 1, "base": 16, "stage": 1}
   },
   "ways": [
     {"id": "more7_harvest_early", "case": "GATHER_MATERIALS", "makes": "more7:harvest_peak",
-     "yield": 1, "weight": 2.43267145, "consumes": {}, "ticks": 160,
+     "yield": 1, "weight": 2.97383381, "consumes": {}, "ticks": 160,
      "implemented": true, "todo": "more7_morning_harvest"},
     {"id": "more7_return_home", "case": "ACTIVITY_RETURN", "makes": "more7:return_peak",
-     "yield": 1, "weight": 2.85, "consumes": {}, "ticks": 100,
+     "yield": 1, "weight": 1.778957461, "consumes": {}, "ticks": 100,
      "implemented": true, "todo": "more7_evening_return"},
     {"id": "more7_expand_pen", "case": "BUILD_PEN", "makes": "more7:pen_room",
-     "yield": 1, "weight": 0.69296642, "consumes": {"#logs": 4}, "ticks": 600,
+     "yield": 1, "weight": 0.749566171, "consumes": {"#logs": 4}, "ticks": 600,
      "implemented": true, "todo": "more7_pen_full"},
     {"id": "more7_order_to_player", "case": "TRANSFER_ITEM", "makes": "more7:order_delivered",
-     "yield": 1, "weight": 3.24985026, "consumes": {}, "ticks": 160,
+     "yield": 1, "weight": 3.341848246, "consumes": {}, "ticks": 160,
      "implemented": false, "todo": "more7_order_ready"},
     {"id": "more7_order_to_chest", "case": "STOCK_CHESTS", "makes": "more7:order_delivered",
-     "yield": 1, "weight": 2.88541805, "consumes": {}, "ticks": 160,
+     "yield": 1, "weight": 4.196745684, "consumes": {}, "ticks": 160,
      "implemented": true, "todo": "more7_order_ready"}
   ],
   "events": {
