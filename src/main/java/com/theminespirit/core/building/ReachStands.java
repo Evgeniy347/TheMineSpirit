@@ -31,21 +31,17 @@ public final class ReachStands {
         }
         Set<BlockCoord> skipped = new LinkedHashSet<>(excluded);
         Set<BlockCoord> blocked = Set.copyOf(targets);
-        BlockCoord first = null;
         for (int probe = 0; probe < probes; probe++) {
             Optional<BlockCoord> next = ReachPlanner.nextStand(reach, feet, targets, world, skipped, blocked);
             if (next.isEmpty()) {
-                return Optional.ofNullable(first);
+                return Optional.empty();
             }
             BlockCoord stand = next.get();
-            if (first == null) {
-                first = stand;
-            }
             if (reachable.test(stand)) {
                 return Optional.of(stand);
             }
             skipped.add(stand);
         }
-        return Optional.ofNullable(first);
+        return Optional.empty();
     }
 }

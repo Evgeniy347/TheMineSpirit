@@ -28,6 +28,9 @@ public final class RouteDetour {
     private static final RouteFailures FAILURES = new RouteFailures();
     private static final long PLAN_TOTAL_MILLIS = 15000;
     private static final long FAIL_TTL_TICKS = 1200;
+    private static final long LOG_TICKS = 1200;
+    private static final RouteThrottle CACHE_LOGS = new RouteThrottle(LOG_TICKS);
+    private static final RouteThrottle SUPPRESSED_LOGS = new RouteThrottle(LOG_TICKS);
     private static final int MAX_SEGMENTS = 32;
     private static final int MIN_CUTOFF = 6;
     private static final double CUTOFF_FACTOR = 0.5;
@@ -73,11 +76,14 @@ public final class RouteDetour {
         long now = spirit.level().getGameTime();
         boolean rescue = "dig_out".equals(why);
         if (!rescue && !THROTTLE.allow(spirit.getUUID(), now)) {
-            LOGGER.info(
-                    "[route] дух {} ({}): перестроение подавлено, прошлый расчёт меньше {} тиков назад",
-                    spirit.displayName(),
-                    why,
-                    RouteThrottle.MIN_TICKS);
+            if (SUPPRESSED_LOGS.allow(spirit.getUUID(), now)) {
+                LOGGER.info(
+                        "[route] дух {} ({}): перестроение подавлено, прошлый расчёт меньше {} тиков назад "
+                                + "(строка одна на окно)",
+                        spirit.displayName(),
+                        why,
+                        RouteThrottle.MIN_TICKS);
+            }
             return null;
         }
         BlockPos feet = spirit.blockPosition();
@@ -85,13 +91,15 @@ public final class RouteDetour {
         int blocks = RouteLevelView.blocks(spirit);
         RouteFailures.Key key = new RouteFailures.Key(spirit.getUUID(), from, target, radius, blocks);
         if (!rescue && FAILURES.recentlyFailed(key, now, FAIL_TTL_TICKS)) {
-            LOGGER.info(
-                    "[route] дух {} ({}): тот же безрезультатный расчёт к {} уже был меньше {} тиков назад — "
-                            + "взят из кэша",
-                    spirit.displayName(),
-                    why,
-                    target,
-                    FAIL_TTL_TICKS);
+            if (CACHE_LOGS.allow(spirit.getUUID(), now)) {
+                LOGGER.info(
+                        "[route] дух {} ({}): тот же безрезультатный расчёт к {} уже был меньше {} тиков назад — "
+                                + "взят из кэша (строка одна на окно)",
+                        spirit.displayName(),
+                        why,
+                        target,
+                        FAIL_TTL_TICKS);
+            }
             return null;
         }
         NavSettings settings = new NavSettings(2000, 2000, 200_000, 50, 3, 12, 2, 20, 2, false, false);

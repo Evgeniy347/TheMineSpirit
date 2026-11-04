@@ -36,6 +36,24 @@ class RouteThrottleLiveTests {
     }
 
     @Test
+    void logGate_RepeatedSuppressedCalls_OneLinePerWindow() {
+        long window = 1200;
+        RouteThrottle logs = new RouteThrottle(window);
+        int lines = 0;
+        for (long tick = 100; tick < 100 + window; tick += 2) {
+            if (logs.allow(SPIRIT, tick)) {
+                lines++;
+            }
+        }
+        assertTrue(
+                lines == 1,
+                "RouteDetour писал INFO на каждый подавленный вызов (657 строк за 17 мин): за окно " + window
+                        + " тиков допустима одна строка, а их " + lines);
+        assertTrue(
+                logs.allow(SPIRIT, 100 + window), "Следующее окно снова даёт одну строку: лог не замолкает навсегда");
+    }
+
+    @Test
     void allow_DifferentSpirits_AreIndependent() throws IOException {
         JsonNode live = new ObjectMapper().readTree(Files.readString(LIVE, StandardCharsets.UTF_8));
         RouteThrottle throttle = new RouteThrottle();

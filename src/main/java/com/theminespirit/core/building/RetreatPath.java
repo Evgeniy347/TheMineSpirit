@@ -51,7 +51,7 @@ public final class RetreatPath {
             }
             BlockCoord from = queue.poll();
             for (int[] side : SIDES) {
-                BlockCoord next = step(from, side[0], side[1], view);
+                BlockCoord next = twoWay(from, side[0], side[1], view);
                 if (next != null && within.test(next) && seen.add(next)) {
                     queue.add(next);
                 }
@@ -99,5 +99,9 @@ public final class RetreatPath {
 
     private static @Nullable BlockCoord step(BlockCoord from, int dx, int dz, SafetyView view) {
         return BodyStep.step(from, dx, dz, view);
+    }
+
+    private static @Nullable BlockCoord twoWay(BlockCoord from, int dx, int dz, SafetyView view) {
+        return BodyStep.twoWay(from, dx, dz, view);
     }
 }
