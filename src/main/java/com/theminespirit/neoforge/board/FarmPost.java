@@ -160,13 +160,6 @@ final class FarmPost {
         if ("storage_space".equals(node)) {
             return ChestSpaceWatch.post(post.level, post.service, post.scan.stage(), post.now);
         }
-        if ("wheat_field".equals(node)) {
-            if (FarmField.exists(post.level, home)) {
-                return true;
-            }
-            BlockCoord origin = new BlockCoord(home.x() + 4, home.y(), home.z() + 4);
-            return launch(post, ActivityPlans.buildFarm(origin, "wheat", 4));
-        }
         if ("smoker".equals(node)) {
             if (!FishingNeeds.wantsSmoker(post.stock.available(), FishingData.loadDefault())
                     || FishingSite.smokerNear(post.level, home)) {

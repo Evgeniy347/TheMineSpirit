@@ -50,10 +50,15 @@ final class WorldAreaInputs {
             Map<String, GraphFacts.Building> buildings) {
         long now = service.board().now();
         StageSite site = scan.stage();
-        List<GraphFacts.Stray> strays = strays(
+        List<GraphFacts.Stray> strays = new ArrayList<>(strays(
                 placements(service),
                 at -> site.enclosure().contains(at.x(), at.z()),
-                at -> site.planned(at.x(), at.y(), at.z()));
+                at -> site.planned(at.x(), at.y(), at.z())));
+        town.ifPresent(plan -> strays.addAll(FarmStray.facts(level, site, plan)));
+        strays.sort(Comparator.comparingInt(
+                        (GraphFacts.Stray stray) -> stray.position().y())
+                .thenComparingInt(stray -> stray.position().x())
+                .thenComparingInt(stray -> stray.position().z()));
         PlotAudit.Audit audit = PlotAudit.audit(level, site, now);
         List<FloatingBlocks.Finding> floating = town.map(plan -> FloatingScanCycle.find(level, site, plan.region()))
                 .orElse(List.of());

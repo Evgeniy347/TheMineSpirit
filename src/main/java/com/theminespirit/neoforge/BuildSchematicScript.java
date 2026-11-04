@@ -50,7 +50,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -67,7 +66,6 @@ final class BuildSchematicScript implements ScriptInstance {
     private static final int HARD_APPROACH_PATH_BUILDS = 4;
 
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int MAKE_WAY_RADIUS = 6;
     private final SpiritEntity spirit;
     private final Level level;
     private final SchematicSite site;
@@ -464,6 +462,7 @@ final class BuildSchematicScript implements ScriptInstance {
     }
 
     private Optional<ScriptStatus> placeOne(Schematic.PlacedEntry entry) {
+        if (SchematicActions.isFluidPlaced(entry.block())) return waterOne(entry);
         BlockCoord cell = entry.pos();
         reservations.reserve(cell, spirit.getUUID());
         BlockPlacer.Begin begin = placer.begin(SchematicSite.toPos(cell), site.wanted(entry), entry.block());
@@ -504,42 +503,22 @@ final class BuildSchematicScript implements ScriptInstance {
         }
     }
 
-    private void makeWay(BlockCoord cell) {
-        AABB box = new AABB(SchematicSite.toPos(cell));
-        for (SpiritEntity other : level.getEntitiesOfClass(SpiritEntity.class, box, e -> !e.equals(spirit))) {
-            if (other.taskStatus().orElse(null) == RunStatus.RUNNING) {
-                continue;
-            }
-            BlockPos feet = other.blockPosition();
-            outsideStand(new BlockCoord(feet.getX(), feet.getY(), feet.getZ())).ifPresent(stand -> {
-                LOGGER.info(
-                        "Стройка {}: дух {} стоит в клетке {} — отходит к {}",
-                        buildKey,
-                        other.displayName(),
-                        cell,
-                        stand);
-                other.startTask(new ScriptCall("goto", Map.of("x", stand.x(), "y", stand.y(), "z", stand.z())));
-            });
+    private Optional<ScriptStatus> waterOne(Schematic.PlacedEntry entry) {
+        BuildWater.Plan water = BuildWater.plan(spirit, site, entry, buildKey);
+        if (water.task().isEmpty()) {
+            blocked.put(entry.pos(), water.reason());
+            lastRefusal = water.reason();
+            return Optional.empty();
         }
+        approach.cancel();
+        approachStand = null;
+        supplyRunner = TaskRunner.start(
+                water.task().orElseThrow(), SpiritScripts.registryFor(spirit), ConditionRegistry.of(Map.of()));
+        return Optional.of(ScriptStatus.RUNNING);
     }
 
-    private Optional<BlockCoord> outsideStand(BlockCoord from) {
-        for (int ring = 1; ring <= MAKE_WAY_RADIUS; ring++) {
-            for (int dx = -ring; dx <= ring; dx++) {
-                for (int dz = -ring; dz <= ring; dz++) {
-                    if (Math.max(Math.abs(dx), Math.abs(dz)) != ring) {
-                        continue;
-                    }
-                    for (int dy = -1; dy <= 1; dy++) {
-                        BlockCoord feet = new BlockCoord(from.x() + dx, from.y() + dy, from.z() + dz);
-                        if (site.outsideFootprint(feet) && site.standable(feet)) {
-                            return Optional.of(feet);
-                        }
-                    }
-                }
-            }
-        }
-        return Optional.empty();
+    private void makeWay(BlockCoord cell) {
+        BuildStands.makeWay(spirit, site, cell, buildKey);
     }
 
     private ScriptStatus moveTowards(List<BlockCoord> cells, ReachPlanner.World base, boolean outsideOnly) {
@@ -757,11 +736,13 @@ final class BuildSchematicScript implements ScriptInstance {
                 return startSupply(steps);
             }
         }
-        List<ScriptCall> shovel = PathTrample.restock(spirit, blockId);
-        if (!shovel.isEmpty() && crafts < MAX_OWN_CRAFTS) {
+        List<ScriptCall> tool = SchematicActions.isTilled(blockId)
+                ? PathTrample.restockHoe(spirit)
+                : PathTrample.restock(spirit, blockId);
+        if (!tool.isEmpty() && crafts < MAX_OWN_CRAFTS) {
             crafts++;
-            LOGGER.info("Стройка {}: для тропинки нужна лопата — заход за инструментом", buildKey);
-            return startSupply(shovel);
+            LOGGER.info("Стройка {}: для земли нужен инструмент ({}) — заход за ним", buildKey, blockId);
+            return startSupply(tool);
         }
         int needed = countMissing(blockId);
         if (crafts < MAX_OWN_CRAFTS && "minecraft:torch".equals(blockId)) {
@@ -989,6 +970,7 @@ final class BuildSchematicScript implements ScriptInstance {
         List<Schematic.PlacedEntry> supplied = new ArrayList<>();
         Map<Item, Integer> lacking = new LinkedHashMap<>();
         for (Schematic.PlacedEntry entry : targets) {
+            if (SchematicActions.isFluidPlaced(entry.block())) continue;
             if (BlockItems.countIn(spirit.getInventory(), entry.block()) > 0) {
                 supplied.add(entry);
             } else {
@@ -997,6 +979,7 @@ final class BuildSchematicScript implements ScriptInstance {
         }
         if (supplied.isEmpty() && !lacking.isEmpty() && planTopUps < MAX_PLAN_TOP_UPS) {
             for (Schematic.PlacedEntry entry : site.primaries()) {
+                if (SchematicActions.isFluidPlaced(entry.block())) continue;
                 Item item = BlockItems.itemFor(entry.block());
                 if (lacking.containsKey(item) && !site.matches(entry)) {
                     lacking.merge(item, 1, Integer::sum);

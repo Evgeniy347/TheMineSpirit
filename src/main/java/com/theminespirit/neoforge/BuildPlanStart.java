@@ -33,7 +33,7 @@ final class BuildPlanStart {
         Map<String, Integer> required = new TreeMap<>();
         Set<BlockCoord> done = new HashSet<>();
         for (Schematic.PlacedEntry entry : site.primaries()) {
-            if (SchematicActions.isActionPlaced(entry.block())) {
+            if (SchematicActions.isActionPlaced(entry.block()) || SchematicActions.isFluidPlaced(entry.block())) {
                 continue;
             }
             if (optionalPresent(spirit, entry)) {
@@ -51,7 +51,9 @@ final class BuildPlanStart {
         }
         Set<BlockCoord> skip = new HashSet<>();
         for (Schematic.PlacedEntry entry : site.schematic().entries(origin, site.rotation())) {
-            if (!BlockItems.hasBlockItem(entry.block()) || SchematicActions.isActionPlaced(entry.block())) {
+            if (!BlockItems.hasBlockItem(entry.block())
+                    || SchematicActions.isActionPlaced(entry.block())
+                    || SchematicActions.isFluidPlaced(entry.block())) {
                 boolean present = spirit.level()
                         .getBlockState(SchematicSite.toPos(entry.pos()))
                         .is(BlockStates.blockFor(entry.block()));

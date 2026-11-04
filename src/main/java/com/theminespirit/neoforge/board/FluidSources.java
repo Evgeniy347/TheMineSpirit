@@ -10,13 +10,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.block.Blocks;
 
-final class FluidSources {
+public final class FluidSources {
     private static final int RADIUS = 16;
     private static final int SLICES = 16;
 
     private FluidSources() {}
 
-    static Optional<BlockCoord> nearest(ServerLevel level, BlockCoord home, FluidKind fluid) {
+    public static Optional<BlockCoord> nearest(ServerLevel level, BlockCoord home, FluidKind fluid) {
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
         BlockLocator.Search search = BlockLocator.search(
                 level, center, RADIUS, Set.of(fluid == FluidKind.WATER ? Blocks.WATER : Blocks.LAVA));

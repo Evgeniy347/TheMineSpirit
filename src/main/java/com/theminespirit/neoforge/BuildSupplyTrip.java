@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildClutter;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SettlementChests;
 import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.DepositSelection;
@@ -172,7 +173,9 @@ final class BuildSupplyTrip {
     private static Set<String> neededItems(SchematicSite site) {
         Set<String> needed = new HashSet<>();
         for (Schematic.PlacedEntry entry : site.primaries()) {
-            if (BlockItems.hasBlockItem(entry.block()) && !site.matches(entry)) {
+            if (BlockItems.hasBlockItem(entry.block())
+                    && !SchematicActions.isActionPlaced(entry.block())
+                    && !site.matches(entry)) {
                 needed.add(BuiltInRegistries.ITEM
                         .getKey(BlockItems.itemFor(entry.block()))
                         .toString());
@@ -201,7 +204,10 @@ final class BuildSupplyTrip {
             SpiritEntity spirit, SchematicSite site, Predicate<Schematic.PlacedEntry> phase) {
         Map<Item, Integer> need = new LinkedHashMap<>();
         for (Schematic.PlacedEntry entry : site.primaries()) {
-            if (BlockItems.hasBlockItem(entry.block()) && !site.matches(entry) && phase.test(entry)) {
+            if (BlockItems.hasBlockItem(entry.block())
+                    && !SchematicActions.isActionPlaced(entry.block())
+                    && !site.matches(entry)
+                    && phase.test(entry)) {
                 need.merge(BlockItems.itemFor(entry.block()), 1, Integer::sum);
             }
         }

@@ -3,6 +3,7 @@ package com.theminespirit.core.building;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class SchematicActions {
     private static final Set<String> FLOWERS = Set.of(
@@ -15,7 +16,17 @@ public final class SchematicActions {
             "blue_orchid",
             "lily_of_the_valley",
             "wither_rose");
+    private static final Map<String, String> ITEM_OVERRIDES = Map.of(
+            "farmland", "dirt",
+            "water", "water_bucket",
+            "wheat", "wheat_seeds",
+            "carrots", "carrot",
+            "potatoes", "potato",
+            "beetroots", "beetroot_seeds");
+
     private static final String DIRT_PATH = "dirt_path";
+    private static final String FARMLAND = "farmland";
+    private static final String WATER = "water";
     private static final String DIRT = "dirt";
     private static final String GRASS = "grass_block";
     private static final String PODZOL = "podzol";
@@ -29,12 +40,27 @@ public final class SchematicActions {
 
     public static boolean buildEntry(String blockId, boolean hasItem) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, входит ли он в стройку");
-        return hasItem || isActionPlaced(blockId);
+        return hasItem || isActionPlaced(blockId) || isFluidPlaced(blockId);
     }
 
     public static boolean isActionPlaced(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, ставится ли он действием");
-        return DIRT_PATH.equals(SchematicBlocks.path(blockId));
+        String path = SchematicBlocks.path(blockId);
+        return DIRT_PATH.equals(path) || FARMLAND.equals(path);
+    }
+
+    public static @Nullable String itemOverride(String path) {
+        return ITEM_OVERRIDES.get(path);
+    }
+
+    public static boolean isTilled(String blockId) {
+        Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, пашут ли его тяпкой");
+        return FARMLAND.equals(SchematicBlocks.path(blockId));
+    }
+
+    public static boolean isFluidPlaced(String blockId) {
+        Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, льётся ли он ведром");
+        return WATER.equals(SchematicBlocks.path(blockId));
     }
 
     public static boolean isDecorFlower(String blockId) {

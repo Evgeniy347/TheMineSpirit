@@ -23,7 +23,7 @@ src/main/java/com/theminespirit/gametest/GameTestFixtures.java	354
 src/main/java/com/theminespirit/gametest/HouseMovementGameTests.java	365
 src/main/java/com/theminespirit/gametest/RestFixture.java	310
 src/main/java/com/theminespirit/neoforge/BlockBreaker.java	395
-src/main/java/com/theminespirit/neoforge/BuildSchematicScript.java	1220
+src/main/java/com/theminespirit/neoforge/BuildSchematicScript.java	1203
 src/main/java/com/theminespirit/neoforge/ChopTreeScript.java	343
 src/main/java/com/theminespirit/neoforge/ClearAreaSession.java	541
 src/main/java/com/theminespirit/neoforge/DescentSession.java	359
@@ -33,7 +33,7 @@ src/main/java/com/theminespirit/neoforge/FillSession.java	616
 src/main/java/com/theminespirit/neoforge/HarvestSession.java	736
 src/main/java/com/theminespirit/neoforge/MineBuildScript.java	518
 src/main/java/com/theminespirit/neoforge/SafeMineSession.java	504
-src/main/java/com/theminespirit/neoforge/SchematicSite.java	363
+src/main/java/com/theminespirit/neoforge/SchematicSite.java	355
 src/main/java/com/theminespirit/neoforge/SpiritEntity.java	758
 src/main/java/com/theminespirit/neoforge/SpiritScripts.java	384
 src/main/java/com/theminespirit/neoforge/WorldScanner.java	306
@@ -56,7 +56,7 @@ src/test/java/com/theminespirit/core/board/BoardTests.java	1026
 src/test/java/com/theminespirit/core/board/BoardTicketTests.java	401
 src/test/java/com/theminespirit/core/board/TicketPlansTests.java	1216
 src/test/java/com/theminespirit/core/board/graph/GraphPlannerTests.java	933
-src/test/java/com/theminespirit/core/building/PresetLibraryTests.java	562
+src/test/java/com/theminespirit/core/building/PresetLibraryTests.java	431
 src/test/java/com/theminespirit/core/engine/TaskRunnerRestoreTests.java	333
 src/test/java/com/theminespirit/core/engine/TaskRunnerTests.java	743
 src/test/java/com/theminespirit/core/farming/FarmJobTests.java	355
