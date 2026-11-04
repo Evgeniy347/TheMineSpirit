@@ -51,4 +51,29 @@ class ReachStandsLiveTests {
         assertTrue(
                 stand.orElseThrow().equals(AROUND), "выбирается ближайшая достижимая стоянка вокруг сундука: " + stand);
     }
+
+    @Test
+    void livePit_AllStandsBehindBarrier_NoStandInsteadOfFirst() {
+        Set<BlockCoord> standable = new HashSet<>();
+        standable.add(BEHIND_WALL);
+        standable.add(AROUND);
+        ReachPlanner.World world = new ReachPlanner.World() {
+            @Override
+            public boolean ready(BlockCoord cell) {
+                return true;
+            }
+
+            @Override
+            public boolean standable(BlockCoord feet) {
+                return standable.contains(feet);
+            }
+        };
+
+        Optional<BlockCoord> stand = ReachStands.next(
+                new SpiritReach(3, 15, 3), FEET, List.of(CHEST), world, Set.of(), candidate -> false, 8);
+
+        assertTrue(
+                stand.isEmpty(),
+                "Ни одна стоянка не достижима пешком — честный отказ, а не первая стоянка за преградой: " + stand);
+    }
 }

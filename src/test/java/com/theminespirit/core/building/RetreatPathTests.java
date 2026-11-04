@@ -71,6 +71,73 @@ class RetreatPathTests {
     }
 
     @Test
+    void walkable_PitDeeperThanStep_NotOffered() {
+        Set<BlockCoord> solid = new HashSet<>();
+        for (int x = -2; x <= 2; x++) {
+            for (int z = -2; z <= 2; z++) {
+                solid.add(cell(x, -1, z));
+            }
+        }
+        for (int y = -1; y >= -3; y--) {
+            for (int x = 2; x <= 3; x++) {
+                for (int z = -1; z <= 1; z++) {
+                    solid.remove(cell(x, y, z));
+                }
+            }
+        }
+        solid.add(cell(2, -4, -1));
+        solid.add(cell(2, -4, 0));
+        solid.add(cell(2, -4, 1));
+        solid.add(cell(3, -4, 1));
+        SafetyView view = coord -> solid.contains(coord) || coord.y() < -4 ? Cell.SOLID : Cell.PASSABLE;
+        Predicate<BlockCoord> near = cell -> Math.abs(cell.x()) <= 4 && Math.abs(cell.z()) <= 4;
+
+        Set<BlockCoord> open = RetreatPath.walkable(cell(0, 0, 0), view, near).orElseThrow();
+
+        assertFalse(
+                open.contains(cell(2, -3, 0)),
+                "Спуск в яму глубже одного блока — ловушка: со дна нет обратного шага, стоянка не годится");
+    }
+
+    @Test
+    void walkable_StepDownAndBackUp_Offered() {
+        Set<BlockCoord> solid = new HashSet<>();
+        for (int x = -2; x <= 2; x++) {
+            for (int z = -2; z <= 2; z++) {
+                solid.add(cell(x, -1, z));
+                solid.add(cell(x, -2, z));
+            }
+        }
+        solid.remove(cell(1, -1, 0));
+        SafetyView view = coord -> solid.contains(coord) || coord.y() < -2 ? Cell.SOLID : Cell.PASSABLE;
+        Predicate<BlockCoord> near = cell -> Math.abs(cell.x()) <= 4 && Math.abs(cell.z()) <= 4;
+
+        Set<BlockCoord> open = RetreatPath.walkable(cell(0, 0, 0), view, near).orElseThrow();
+
+        assertTrue(
+                open.contains(cell(1, -1, 0)),
+                "Ступенька вниз на один блок проходима в обе стороны: со стоянки есть выход обратно");
+    }
+
+    @Test
+    void walkable_ClosedGateOpenable_StandBeyondIsReachable() {
+        BlockCoord gate = cell(1, 0, 0);
+        SafetyView view = coord -> {
+            if (coord.equals(gate)) {
+                return Cell.PASSABLE;
+            }
+            return coord.y() < 0 ? Cell.SOLID : Cell.PASSABLE;
+        };
+        Predicate<BlockCoord> near = cell -> Math.abs(cell.x()) <= 4 && Math.abs(cell.z()) <= 4;
+
+        Set<BlockCoord> open = RetreatPath.walkable(cell(0, 0, 0), view, near).orElseThrow();
+
+        assertTrue(
+                open.contains(cell(2, 0, 0)),
+                "Закрытая калитка открывается по пути: стоянка за ней достижима пешком, отказ был бы ложным");
+    }
+
+    @Test
     void walkable_RoofOrSealedCell_NotOffered() {
         Predicate<BlockCoord> near = cell -> Math.abs(cell.x()) <= 4 && Math.abs(cell.z()) <= 4;
         Set<BlockCoord> open = RetreatPath.walkable(NOOK, nook(Set.of()), near).orElseThrow();
