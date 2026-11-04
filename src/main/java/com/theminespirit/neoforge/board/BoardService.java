@@ -75,6 +75,7 @@ public final class BoardService {
     private static final long EARLY_DISPATCH_TICKS = 1;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String DIG_OUT = "dig_out";
+    final ActivityCards cards = new ActivityCards();
     private final Board board;
     private final HerdCycles animals;
     private final StockReader stockReader;
@@ -84,7 +85,6 @@ public final class BoardService {
     private final CraterProfiles craters = new CraterProfiles(64);
     private final Map<String, Capture> captures = new LinkedHashMap<>();
     private final Map<String, TicketTarget> targets = new HashMap<>();
-    private final ActivityCards cards = new ActivityCards();
     private final TaskStall stall = new TaskStall();
     private long lastActivity;
     private final Map<String, Long> issuedGenerations = new HashMap<>();
@@ -500,9 +500,7 @@ public final class BoardService {
             throw new IllegalArgumentException(
                     "Кейс " + activity + " — не занятие: через launch идут только ACTIVITY_*");
         }
-        if (!launcher.start(spirit, script, task, now)) {
-            return false;
-        }
+        if (!launcher.start(spirit, script, task, now)) return false;
         cards.remember(spirit.getUUID(), activity, spirit.taskGeneration(), script, BoardActivities.targetOf(task));
         board.occupy(spirit.getUUID(), activity, script, BoardActivities.targetOf(task), board.now());
         return true;

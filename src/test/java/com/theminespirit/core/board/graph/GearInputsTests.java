@@ -133,6 +133,72 @@ class GearInputsTests {
                 "Алмазная кирка закрывает железное требование второго этапа");
     }
 
+    @Test
+    void equipUpgrade_BetterToolInChest_NamesItemAndChest() {
+        GraphFacts.Spirit spirit = spirit(null, List.of(tool("pickaxe", 1, 131, 131)), List.of());
+
+        var upgrade = GearRules.equipUpgrade(
+                        spirit, List.of(chest(Map.of("minecraft:iron_pickaxe", 1))), GearInputs.settings())
+                .orElseThrow();
+
+        assertEquals("minecraft:iron_pickaxe", upgrade.item(), "Надеть надо железную кирку из сундука");
+        assertEquals(64, upgrade.chest().y(), "Сундук назван позицией: дух должен дойти до него");
+    }
+
+    @Test
+    void equipUpgrade_NothingBetter_Empty() {
+        GraphFacts.Spirit spirit = spirit(null, List.of(tool("pickaxe", 2, 250, 250)), List.of());
+
+        assertTrue(
+                GearRules.equipUpgrade(
+                                spirit, List.of(chest(Map.of("minecraft:stone_pickaxe", 1))), GearInputs.settings())
+                        .isEmpty(),
+                "Каменная кирка не лучше железной — менять нечего");
+    }
+
+    @Test
+    void missingArmor_StageOne_LeatherHelmet() {
+        GraphFacts.Spirit spirit = spirit(null, List.of(), List.of());
+
+        assertEquals(
+                "leather_helmet",
+                GearRules.missingArmor(spirit, 1, GearInputs.settings()).orElseThrow(),
+                "На первом этапе первый пустой слот закрывают кожаным шлемом");
+    }
+
+    @Test
+    void missingArmor_StageTwo_IronChestplateAfterHelmet() {
+        GraphFacts.Spirit spirit =
+                spirit(null, List.of(), List.of(new GraphFacts.Armor("HEAD", "minecraft:iron_helmet", 165, 165)));
+
+        assertEquals(
+                "iron_chestplate",
+                GearRules.missingArmor(spirit, 2, GearInputs.settings()).orElseThrow(),
+                "Второй слот на втором этапе — железный нагрудник");
+    }
+
+    @Test
+    void craftToolItem_StageTwo_NamesIronTool() {
+        assertEquals(
+                "iron_axe",
+                GearRules.craftToolItem(spirit(null, List.of(), List.of()), "axe", 2, GearInputs.settings()),
+                "Второй этап требует железный топор");
+    }
+
+    @Test
+    void needsTool_StrongerTool_TrueAndFalse() {
+        GearInputs.Settings settings = GearInputs.settings();
+
+        assertTrue(
+                GearRules.needsTool(
+                        spirit(null, List.of(tool("pickaxe", 1, 131, 131)), List.of()), "pickaxe", 2, settings),
+                "Каменная кирка не закрывает железное требование");
+        assertFalse(
+                GearRules.needsTool(
+                        spirit(null, List.of(tool("pickaxe", 2, 250, 250)), List.of()), "pickaxe", 2, settings),
+                "Железная кирка закрывает требование второго этапа");
+    }
+
     private static List<GraphFacts.Armor> allArmor() {
         return List.of(
                 new GraphFacts.Armor("HEAD", "minecraft:iron_helmet", 165, 165),

@@ -27,7 +27,7 @@ class GearFragmentTests {
             GraphEvent event = graph.events().get(node);
             assertTrue(event != null, "Узел снаряжения '" + node + "' объявлен фрагментом gear.json");
             assertFalse(event.tasks().isEmpty(), "Узел снаряжения '" + node + "' несёт задание-заглушку");
-            assertFalse(event.tasks().get(0).implemented(), "Узел снаряжения '" + node + "' пока заглушка");
+            assertTrue(event.tasks().get(0).implemented(), "Узел снаряжения '" + node + "' исполняется действием");
         }
         assertEquals(
                 "equip_best",
@@ -82,7 +82,7 @@ class GearFragmentTests {
 
         GraphPlan.Task stub = plan.task("event:gear_craft_pickaxe:craft_tool:pickaxe")
                 .orElseThrow(() -> new AssertionError("Нет задания запаса кирки: " + taskIds(plan)));
-        assertFalse(stub.implemented(), "Крафт кирки из входов снаряжения пока заглушка с TODO");
+        assertTrue(stub.implemented(), "Крафт кирки из входов снаряжения исполняется действием");
     }
 
     private static List<String> taskIds(GraphPlan plan) {

@@ -55,7 +55,7 @@
         "dirt": 8
       },
       "optional": true,
-      "implemented": false
+      "implemented": true
     },
     "storage_space": {
       "case": "STOCK_CHESTS",
@@ -68,7 +68,7 @@
         "chests"
       ],
       "optional": true,
-      "implemented": false
+      "implemented": true
     }
   },
   "ways": [
@@ -82,7 +82,7 @@
         "dirt": 1
       },
       "ticks": 120,
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "plant_crop",
@@ -96,7 +96,7 @@
       },
       "building": "wheat_field",
       "ticks": 120,
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "harvest_crop",
@@ -107,7 +107,7 @@
       "consumes": {},
       "building": "wheat_field",
       "ticks": 120,
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "feed_animals",
@@ -119,7 +119,7 @@
         "#crops": 8
       },
       "ticks": 200,
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "lure_animal",
@@ -132,7 +132,7 @@
       },
       "world": "animals",
       "ticks": 600,
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "milk_animal",
@@ -148,7 +148,7 @@
         "herd_cow": 1
       },
       "ticks": 200,
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "transfer_item",
@@ -158,7 +158,7 @@
       "weight": 1.245006242,
       "consumes": {},
       "ticks": 200,
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "weave_wool",
@@ -181,7 +181,7 @@
       "consumes": {},
       "building": "chests",
       "ticks": 200,
-      "implemented": false
+      "implemented": true
     },
     {
       "id": "restock_food",
