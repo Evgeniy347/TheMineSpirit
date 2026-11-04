@@ -39,6 +39,23 @@ final class DemolitionGuard {
         return decision instanceof BlockProtection.Refused || BuildingSeeds.adjacentToStructure(ids);
     }
 
+    static boolean protectedStray(ServerLevel level, BlockCoord at, String blockId) {
+        BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
+        if (PlacedBlocksData.get(level).isMarked(pos)) {
+            return true;
+        }
+        BlockProtection.Decision hard = PROTECTION.checkSettlement(blockId, false);
+        return hard instanceof BlockProtection.Refused || BuildingSeeds.adjacentToStructure(neighbours(level, pos));
+    }
+
+    static void claimStray(ServerLevel level, BlockCoord at) {
+        BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
+        PlacedBlocksData placed = PlacedBlocksData.get(level);
+        if (!placed.isMarked(pos)) {
+            placed.markSpirit(pos);
+        }
+    }
+
     static void claimForCleanup(ServerLevel level, PlotPlanBlocks.Plan plan, FloatingBlocks.Finding finding) {
         PlacedBlocksData placed = PlacedBlocksData.get(level);
         for (BlockCoord cell : finding.cells()) {
