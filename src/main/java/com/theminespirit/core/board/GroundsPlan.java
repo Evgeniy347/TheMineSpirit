@@ -90,6 +90,15 @@ public final class GroundsPlan {
                 steps.add(retried(new ScriptCall(CLEAR_AREA, boxParams(cuts.get(index), Map.of()))));
             }
         }
+        if (!cuts.isEmpty()) {
+            steps.add(retried(new ScriptCall(
+                    "collect_drops",
+                    Map.of(
+                            "radius",
+                            CatalogLimits.DROP_RADIUS_MAX,
+                            "filter",
+                            List.of(MINECRAFT + PlotLeveling.DEFAULT_BLOCK)))));
+        }
         List<PlotLeveling.Box> fills = single ? ofPart(leveling.fill(), frame, quarter) : leveling.fill();
         for (PlotLeveling.Box box : fills) {
             steps.add(retried(new ScriptCall(CLEAR_AREA, boxParams(box, Map.of("keep_ground", true)))));

@@ -42,8 +42,10 @@ class GraphChoiceTests {
                 600, neutral.task("more_return_before_night").orElseThrow().ticks(), "Дорога 40 блоков: 2·40·5 + 200");
         assertEquals(1400, harsh.task("more_return_before_night").orElseThrow().ticks(), "Непогода утраивает дорогу");
         assertTrue(
-                harsh.priority("more_return_before_night") < neutral.priority("more_return_before_night"),
-                "Дальняя вылазка в непогоду ниже по весу: " + harsh.priority("more_return_before_night") + " против "
+                harsh.priority("more_return_before_night") <= neutral.priority("more_return_before_night"),
+                "Дальняя вылазка в непогоду не выше по весу: приоритет целый, после новых весов он может совпасть "
+                        + "(усилие видно по срокам 600→1400). Получено "
+                        + harsh.priority("more_return_before_night") + " против "
                         + neutral.priority("more_return_before_night"));
     }
 

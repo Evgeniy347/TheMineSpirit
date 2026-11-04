@@ -59,4 +59,25 @@ class SoilLayerTests {
                 SoilLayer.dirt("minecraft:dirt") && SoilLayer.dirt("dirt") && !SoilLayer.dirt("sand"),
                 "Земля добывается дёрном верхнего слоя: для dirt и minecraft:dirt, не для песка");
     }
+
+    @Test
+    void takeableGranular_SandSurfaceAboveWater_Taken() {
+        assertTrue(
+                SoilLayer.takeableGranular(new Cell(70, Ground.SOIL, Ground.OPEN, Ground.SOIL, OptionalInt.empty())),
+                "Песок открытого верхнего слоя берут: карьер снимает слой за слоем, как и землю");
+    }
+
+    @Test
+    void takeableGranular_SandSecondLayer_Refused() {
+        assertFalse(
+                SoilLayer.takeableGranular(new Cell(69, Ground.SOIL, Ground.SOIL, Ground.SOIL, OptionalInt.empty())),
+                "Второй слой песка не берут: яма глубже соседей и вертикальная стенка — духи падают");
+    }
+
+    @Test
+    void takeableGranular_GravelAtWaterLevel_Refused() {
+        assertFalse(
+                SoilLayer.takeableGranular(new Cell(62, Ground.SOIL, Ground.OPEN, Ground.STONE, OptionalInt.of(62))),
+                "Гравий на уровне воды не берут: карьер зальётся, как и земляной (SoilLayer.WATER_RADIUS)");
+    }
 }
