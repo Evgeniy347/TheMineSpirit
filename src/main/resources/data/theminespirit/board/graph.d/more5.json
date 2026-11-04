@@ -20,7 +20,8 @@
       "acacia_log",
       "dark_oak_log",
       "mangrove_log",
-      "cherry_log"
+      "cherry_log",
+      "lava_bucket"
     ]
   },
   "items": {
@@ -51,7 +52,7 @@
     {"id": "more5_light_saplings", "case": "LIGHTING", "makes": "more5:growth_lit",
      "yield": 1, "weight": 1.41019095, "ticks": 100, "consumes": {"torch": 1}, "implemented": true, "todo": "more5_light_saplings"},
     {"id": "more5_water_crops", "case": "ACTIVITY_FARM", "makes": "more5:growth_watered",
-     "yield": 1, "weight": 1.03472355, "ticks": 120, "consumes": {}, "implemented": false, "todo": "more5_water_crops"},
+     "yield": 1, "weight": 1.03472355, "ticks": 120, "consumes": {}, "implemented": true, "todo": "more5_water_crops"},
     {"id": "more5_fertilize_growth", "case": "ACTIVITY_FARM", "makes": "more5:growth_fed",
      "yield": 1, "weight": 1.0839961, "ticks": 80, "consumes": {"bone_meal": 1}, "implemented": true, "todo": "more5_fertilize_growth"},
     {"id": "more5_gather_fuel", "case": "GATHER_MATERIALS", "makes": "more5:fuel_ready",
@@ -108,7 +109,7 @@
     },
     "more5_crops_dry": {
       "tasks": [
-        {"id": "more5_water_crops", "case": "ACTIVITY_FARM", "base": 56, "consumes": {}, "implemented": false}
+        {"id": "more5_water_crops", "case": "ACTIVITY_FARM", "base": 56, "consumes": {}, "implemented": true}
       ],
       "push": {"more5:growth_watered": 10, "water_bucket": 6},
       "advice": ["water_the_field_before_it_stalls"]

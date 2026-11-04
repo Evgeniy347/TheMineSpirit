@@ -28,7 +28,6 @@ class GraphMore7FragmentsTests {
             Map.entry("more7_hold_herd", More7Rules.PEN_FULL),
             Map.entry("more7_expand_field", More7Rules.FIELD_FULL),
             Map.entry("more7_hold_sowing", More7Rules.FIELD_FULL),
-            Map.entry("more7_order_to_player", More7Rules.ORDER_READY),
             Map.entry("more7_order_to_chest", More7Rules.ORDER_READY));
     private static final Set<String> IMPLEMENTED =
             Set.of("more7_harvest_early", "more7_expand_pen", "more7_return_home", "more7_order_to_chest");

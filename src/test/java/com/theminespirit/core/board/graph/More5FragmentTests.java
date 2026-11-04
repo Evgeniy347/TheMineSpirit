@@ -48,6 +48,7 @@ class More5FragmentTests {
             "more5_feed_player",
             "more5_light_crops",
             "more5_light_saplings",
+            "more5_water_crops",
             "more5_fertilize_growth",
             "more5_gather_fuel",
             "more5_make_charcoal",
@@ -61,7 +62,7 @@ class More5FragmentTests {
             "more5_craft_mine_torch",
             "more5_pickup_wood_drop",
             "more5_plant_sapling");
-    private static final List<String> STUBS = List.of("more5_heal_player", "more5_water_crops", "more5_detour_route");
+    private static final List<String> STUBS = List.of("more5_heal_player", "more5_detour_route");
     private static final List<String> ITEMS = List.of(
             "more5:player_guard",
             "more5:player_fed",

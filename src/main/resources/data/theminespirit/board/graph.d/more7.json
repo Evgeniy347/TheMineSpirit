@@ -34,9 +34,6 @@
     {"id": "more7_hold_sowing", "case": "ACTIVITY_SENSE", "makes": "more7:field_room",
      "yield": 1, "weight": 1.65, "consumes": {}, "ticks": 100,
      "implemented": false, "todo": "more7_field_full"},
-    {"id": "more7_order_to_player", "case": "TRANSFER_ITEM", "makes": "more7:order_delivered",
-     "yield": 1, "weight": 3.24985026, "consumes": {}, "ticks": 160,
-     "implemented": false, "todo": "more7_order_ready"},
     {"id": "more7_order_to_chest", "case": "STOCK_CHESTS", "makes": "more7:order_delivered",
      "yield": 1, "weight": 2.88541805, "consumes": {}, "ticks": 160,
      "implemented": true, "todo": "more7_order_ready"}
@@ -88,7 +85,6 @@
     },
     "more7_order_ready": {
       "tasks": [
-        {"id": "more7_order_to_player", "case": "TRANSFER_ITEM", "base": 66, "consumes": {}, "implemented": false},
         {"id": "more7_order_to_chest", "case": "STOCK_CHESTS", "base": 62, "consumes": {}, "implemented": true}
       ],
       "push": {"more7:order_delivered": 12},

@@ -40,8 +40,6 @@
      "yield": 1, "weight": 1.825077994, "ticks": 200, "implemented": false, "todo": "station_idle"},
     {"id": "home_night_work", "case": "ACTIVITY_BUILD", "makes": "night_home",
      "yield": 1, "weight": 0.715481811, "ticks": 200, "implemented": false, "todo": "player_sleep"},
-    {"id": "repair_world_decay", "case": "FILL_CRATER", "makes": "world_repaired",
-     "yield": 1, "weight": 1.421912881, "ticks": 120, "consumes": {"#building_blocks": 1}, "implemented": false, "todo": "world_decay"},
     {"id": "raise_bottleneck_weight", "case": "ACTIVITY_SENSE", "makes": "stage_boosted",
      "yield": 1, "weight": 2.877182301, "ticks": 100, "implemented": false, "todo": "stage_slow"}
   ],

@@ -36,6 +36,9 @@ final class GraphMorePost {
         if (GraphMoreFarmPost.handles(key)) {
             return GraphMoreFarmPost.post(post, ticket, task, key);
         }
+        if (GraphFluidPost.handles(key)) {
+            return GraphFluidPost.post(post, ticket, key);
+        }
         return switch (key) {
             case "more5_defend_player" -> GraphMoreCarePost.defendPlayer(post, ticket);
             case "more5_feed_player" -> GraphMoreCarePost.feedPlayer(post, ticket);

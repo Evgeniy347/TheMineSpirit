@@ -66,9 +66,6 @@
     {"id": "more2_guard_villager", "case": "ACTIVITY_GUARD", "makes": "more2:village_safe",
      "yield": 1, "weight": 0.123529104, "consumes": {}, "ticks": 200,
      "implemented": true, "todo": "more2:villager_near"},
-    {"id": "more2_trade_villager", "case": "ACTIVITY_SOCIAL", "makes": "more2:village_safe",
-     "yield": 1, "weight": 2.409977822, "consumes": {}, "ticks": 200,
-     "implemented": false, "todo": "more2:villager_trade"},
     {"id": "more2_prepare_stage", "case": "GATHER_MATERIALS", "makes": "more2:stage_ready",
      "yield": 1, "weight": 1.379279886, "consumes": {}, "ticks": 200,
      "implemented": true, "todo": "more2:stage_prep"},
@@ -150,13 +147,6 @@
       ],
       "push": {"more2:village_safe": 6},
       "advice": ["guard_village_nearby"]
-    },
-    "more2_villager_trade": {
-      "tasks": [
-        {"id": "more2_trade_villager", "case": "ACTIVITY_SOCIAL", "base": 36, "consumes": {}, "implemented": false}
-      ],
-      "push": {"more2:village_safe": 3},
-      "advice": ["trade_with_villager"]
     },
     "more2_stage_prep": {
       "tasks": [

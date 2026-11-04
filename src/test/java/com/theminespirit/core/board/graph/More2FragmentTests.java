@@ -21,7 +21,6 @@ class More2FragmentTests {
             More2Rules.ANIMAL_OUTSIDE,
             More2Rules.WILD_HERD,
             More2Rules.VILLAGER_NEAR,
-            More2Rules.VILLAGER_TRADE,
             More2Rules.STAGE_PREP,
             More2Rules.BED_NEEDED,
             More2Rules.PATH_NEEDED);
@@ -52,12 +51,15 @@ class More2FragmentTests {
             assertTrue(GRAPH.way(way).isPresent(), "Путь действия объявлен: " + way);
             assertTrue(GRAPH.implemented(way), "Действие " + way + " связано с исполнением, узел " + node);
         });
-        for (String control : List.of("more2_load_carry", "more2_batch_carry", "more2_trade_villager")) {
+        for (String control : List.of("more2_load_carry", "more2_batch_carry")) {
             assertFalse(
                     GRAPH.implemented(control),
                     "Путь " + control + " — сигнал логистики без отдельного действия: "
-                            + "перенос уже делает transfer_item, торговли у духов нет");
+                            + "перенос уже делает transfer_item");
         }
+        assertFalse(
+                GRAPH.way("more2_trade_villager").isPresent(),
+                "Торговли у духов нет: узел без потребности удалён, а не висит заглушкой");
     }
 
     @Test

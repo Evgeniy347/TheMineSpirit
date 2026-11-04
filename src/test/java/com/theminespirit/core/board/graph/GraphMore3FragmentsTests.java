@@ -32,7 +32,6 @@ class GraphMore3FragmentsTests {
             "spread_work",
             "use_idle_station",
             "home_night_work",
-            "repair_world_decay",
             "raise_bottleneck_weight");
 
     @Test

@@ -39,10 +39,10 @@
      "implemented": true, "todo": "more6:ground_cleared"},
     {"id": "more6_fetch_water", "case": "GATHER_MATERIALS", "makes": "more6:water_source",
      "yield": 1, "weight": 2.0173373, "ticks": 200, "consumes": {"bucket": 1},
-     "implemented": false, "todo": "more6:water_source"},
+     "implemented": true, "todo": "more6:water_source"},
     {"id": "more6_fetch_lava", "case": "GATHER_MATERIALS", "makes": "more6:fuel_reserve",
      "yield": 1, "weight": 1.6613366, "ticks": 200, "consumes": {"bucket": 1},
-     "implemented": false, "todo": "more6:fuel_reserve"},
+     "implemented": true, "todo": "more6:fuel_reserve"},
     {"id": "more6_maintain_stock", "case": "GATHER_MATERIALS", "makes": "more6:stock_reserve",
      "yield": 1, "weight": 1.4240028, "ticks": 180, "consumes": {},
      "implemented": true, "todo": "more6:stock_reserve"},
@@ -101,7 +101,7 @@
     "more6_water_needed": {
       "tasks": [
         {"id": "more6_fetch_water", "case": "GATHER_MATERIALS", "base": 52,
-         "consumes": {"bucket": 1}, "implemented": false}
+         "consumes": {"bucket": 1}, "implemented": true}
       ],
       "push": {"more6:water_source": 6, "bucket": 4},
       "advice": ["bring_water_source_to_field"]
@@ -109,7 +109,7 @@
     "more6_lava_needed": {
       "tasks": [
         {"id": "more6_fetch_lava", "case": "GATHER_MATERIALS", "base": 48,
-         "consumes": {"bucket": 1}, "implemented": false}
+         "consumes": {"bucket": 1}, "implemented": true}
       ],
       "push": {"more6:fuel_reserve": 6, "bucket": 4},
       "advice": ["bring_lava_bucket_as_furnace_fuel"]
