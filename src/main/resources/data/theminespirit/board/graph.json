@@ -4,6 +4,22 @@
   "buildReadyBoost": 16,
   "buildStartShare": 0.25,
   "maxPriority": 100,
+  "choice": {
+    "farTrip": 1.0,
+    "slowWork": 1.0,
+    "duplicate": 1.0,
+    "conflict": 1.0,
+    "pileup": 1.0,
+    "strategicBoost": 0.0,
+    "bottleneckBoost": 0.0,
+    "idleStationBoost": 0.0,
+    "nightHome": 1.0,
+    "spaceFoundBoost": 0.0,
+    "spaceTight": 1.0,
+    "petAlone": 1.0,
+    "herdFull": 1.0,
+    "fieldFull": 1.0
+  },
   "tiers": [
     "wooden",
     "stone",

@@ -51,7 +51,7 @@ class GraphMorePostTests {
                 continue;
             }
             for (GraphEvent.Task task : event.tasks()) {
-                if (task.implemented()) {
+                if (task.implemented() && fragment(task.id())) {
                     expected.add(task.id());
                 }
             }

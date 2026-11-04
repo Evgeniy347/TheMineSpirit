@@ -14,36 +14,21 @@
   "items": {
     "danger_known": {"xmin": 0, "k": 1, "base": 19, "stage": 1},
     "drop_recovered": {"xmin": 0, "k": 1, "base": 20, "stage": 1},
-    "work_retuned": {"xmin": 0, "k": 1, "base": 15, "stage": 1},
     "trash_cleared": {"xmin": 0, "k": 1, "base": 10, "stage": 1},
     "chest_labeled": {"xmin": 0, "k": 1, "base": 11, "stage": 1},
-    "conflict_resolved": {"xmin": 0, "k": 1, "base": 13, "stage": 1},
-    "station_loaded": {"xmin": 0, "k": 1, "base": 17, "stage": 1},
-    "night_home": {"xmin": 0, "k": 1, "base": 14, "stage": 1},
-    "world_repaired": {"xmin": 0, "k": 1, "base": 15, "stage": 1},
-    "stage_boosted": {"xmin": 0, "k": 1, "base": 17, "stage": 1}
+    "world_repaired": {"xmin": 0, "k": 1, "base": 15, "stage": 1}
   },
   "ways": [
     {"id": "secure_danger", "case": "ACTIVITY_ESCAPE", "makes": "danger_known",
      "yield": 1, "weight": 0.493920297, "ticks": 100, "implemented": true, "todo": "danger_spot"},
     {"id": "recover_death_drop", "case": "COLLECT_DROPS", "makes": "drop_recovered",
      "yield": 1, "weight": 0.787477261, "ticks": 200, "implemented": true, "todo": "spirit_death_drop"},
-    {"id": "retune_work_cost", "case": "ACTIVITY_SENSE", "makes": "work_retuned",
-     "yield": 1, "weight": 2.733323185, "ticks": 100, "implemented": false, "todo": "work_yield_low"},
     {"id": "clear_trash", "case": "ACTIVITY_UNLOAD", "makes": "trash_cleared",
      "yield": 1, "weight": 0.695712392, "ticks": 120, "implemented": true, "todo": "trash_found"},
     {"id": "assign_chest_purpose", "case": "ACTIVITY_UNLOAD", "makes": "chest_labeled",
      "yield": 1, "weight": 0.73436308, "ticks": 100, "building": "chests", "implemented": true, "todo": "chest_purpose_missing"},
-    {"id": "spread_work", "case": "ACTIVITY_MOVE", "makes": "conflict_resolved",
-     "yield": 1, "weight": 2.532762893, "ticks": 120, "implemented": false, "todo": "work_conflict"},
-    {"id": "use_idle_station", "case": "CRAFTING_STATION", "makes": "station_loaded",
-     "yield": 1, "weight": 1.825077994, "ticks": 200, "implemented": false, "todo": "station_idle"},
-    {"id": "home_night_work", "case": "ACTIVITY_BUILD", "makes": "night_home",
-     "yield": 1, "weight": 0.715481811, "ticks": 200, "implemented": false, "todo": "player_sleep"},
     {"id": "repair_world_decay", "case": "FILL_CRATER", "makes": "world_repaired",
-     "yield": 1, "weight": 1.421912881, "ticks": 120, "consumes": {"#building_blocks": 1}, "implemented": false, "todo": "world_decay"},
-    {"id": "raise_bottleneck_weight", "case": "ACTIVITY_SENSE", "makes": "stage_boosted",
-     "yield": 1, "weight": 2.877182301, "ticks": 100, "implemented": false, "todo": "stage_slow"}
+     "yield": 1, "weight": 1.421912881, "ticks": 120, "consumes": {"#building_blocks": 1}, "implemented": false, "todo": "world_decay"}
   ],
   "events": {
     "danger_spot": {
@@ -61,14 +46,6 @@
       "push": {"drop_recovered": 15},
       "advice": ["pick_up_spirit_drops_before_despawn"]
     },
-    "work_yield_low": {
-      "tasks": [
-        {"id": "retune_work_cost", "case": "ACTIVITY_SENSE", "base": 70, "consumes": {}, "implemented": false},
-        {"id": "redo_slow_work", "case": "GATHER_MATERIALS", "base": 60, "consumes": {}, "implemented": false}
-      ],
-      "push": {"work_retuned": 8},
-      "advice": ["compare_actual_work_yield_with_expectation"]
-    },
     "trash_found": {
       "tasks": [
         {"id": "clear_trash", "case": "ACTIVITY_UNLOAD", "base": 35, "consumes": {}},
@@ -84,29 +61,6 @@
       ],
       "push": {"chest_labeled": 8},
       "advice": ["assign_chest_purpose"]
-    },
-    "work_conflict": {
-      "tasks": [
-        {"id": "reschedule_work", "case": "ACTIVITY_SENSE", "base": 65, "consumes": {}, "implemented": false},
-        {"id": "move_work", "case": "ACTIVITY_MOVE", "base": 60, "consumes": {}}
-      ],
-      "push": {"conflict_resolved": 6},
-      "advice": ["spread_works_by_time_or_place"]
-    },
-    "station_idle": {
-      "tasks": [
-        {"id": "load_station", "case": "CRAFTING_STATION", "base": 50, "consumes": {}, "implemented": false}
-      ],
-      "push": {"station_loaded": 8},
-      "advice": ["load_idle_station_or_building"]
-    },
-    "player_sleep": {
-      "tasks": [
-        {"id": "night_work_home", "case": "ACTIVITY_BUILD", "base": 55, "consumes": {}, "implemented": false},
-        {"id": "stay_near_home", "case": "ACTIVITY_MOVE", "base": 50, "consumes": {}}
-      ],
-      "push": {"night_home": 5},
-      "advice": ["work_near_home_while_player_sleeps"]
     },
     "sand_collapse": {
       "tasks": [
@@ -135,13 +89,6 @@
       ],
       "push": {"world_repaired": 5},
       "advice": ["sweep_decayed_leaves"]
-    },
-    "stage_slow": {
-      "tasks": [
-        {"id": "boost_stage_bottleneck", "case": "ACTIVITY_SENSE", "base": 72, "consumes": {}, "implemented": false}
-      ],
-      "push": {"stage_boosted": 10},
-      "advice": ["raise_weight_of_lagging_stage_work"]
     }
   }
 }

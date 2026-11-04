@@ -12,7 +12,6 @@ class GraphMore6FragmentsTests {
     private static final List<String> EVENTS = List.of(
             More6Rules.SPIRITS_SHORT,
             More6Rules.WEAK_FAR,
-            More6Rules.BUILD_UNFINISHED,
             More6Rules.CARRY_MATERIALS,
             More6Rules.STATION_BROKEN,
             More6Rules.LOOSE_ITEMS_FOUND,
@@ -21,10 +20,6 @@ class GraphMore6FragmentsTests {
             More6Rules.REPEAT_DEMAND,
             More6Rules.SPIRIT_IDLE);
     private static final List<String> WAYS = List.of(
-            "more6_call_spirit",
-            "more6_return_weak",
-            "more6_send_near",
-            "more6_finish_build",
             "more6_deposit_materials",
             "more6_refuel_station",
             "more6_place_station",
@@ -45,7 +40,14 @@ class GraphMore6FragmentsTests {
     void more6Events_FragmentLoad_AreDeclared() {
         for (String event : EVENTS) {
             assertTrue(GRAPH.events().containsKey(event), "Событие входа области more6 объявлено: " + event);
-            assertFalse(GRAPH.events().get(event).tasks().isEmpty(), "Событие ставит работу: " + event);
+        }
+        for (String event : EVENTS) {
+            if (GRAPH.events().get(event).tasks().isEmpty()) {
+                assertFalse(
+                        GRAPH.events().get(event).push().isEmpty(), "Событие без задач обязано толкать узел: " + event);
+            } else {
+                assertFalse(GRAPH.events().get(event).tasks().isEmpty(), "Событие ставит работу: " + event);
+            }
         }
     }
 
@@ -59,14 +61,15 @@ class GraphMore6FragmentsTests {
                     GRAPH.implemented(way),
                     "Путь " + way + " либо связан с действием, либо честно помечен заглушкой");
         }
+        for (String duplicate :
+                List.of("more6_call_spirit", "more6_return_weak", "more6_send_near", "more6_finish_build")) {
+            assertTrue(GRAPH.way(duplicate).isEmpty(), "Дубль слит с узлом графа и удалён: " + duplicate);
+        }
     }
 
     @Test
     void more6Items_FragmentLoad_HavePositiveStartWeights() {
         for (String item : List.of(
-                "more6:more_spirits",
-                "more6:weak_spirit_home",
-                "more6:building_finished",
                 "more6:materials_deposited",
                 "more6:station_ready",
                 "more6:ground_cleared",
@@ -84,9 +87,8 @@ class GraphMore6FragmentsTests {
             GraphEvent known = GRAPH.events().get(event);
             known.push()
                     .keySet()
-                    .forEach(node -> assertTrue(
-                            GRAPH.items().containsKey(node) || GRAPH.isGroup(node),
-                            "Событие " + event + " толкает неизвестный узел: " + node));
+                    .forEach(
+                            node -> assertTrue(known(node), "Событие " + event + " толкает неизвестный узел: " + node));
         }
     }
 
@@ -96,7 +98,7 @@ class GraphMore6FragmentsTests {
             GraphEvent known = GRAPH.events().get(event);
             for (GraphEvent.Task task : known.tasks()) {
                 assertEquals(
-                        IMPLEMENTED.contains(task.id()),
+                        GRAPH.implemented(task.id()),
                         task.implemented(),
                         "Задача события " + event + " -> " + task.id()
                                 + " не расходится с состоянием пути: иначе граф ставит неисполнимую работу");
@@ -106,8 +108,15 @@ class GraphMore6FragmentsTests {
 
     @Test
     void more6Items_FragmentLoad_AreNotDemandedByDefault() {
-        for (String item : List.of("more6:more_spirits", "more6:weak_spirit_home", "more6:spirit_busy")) {
+        for (String item : List.of("more6:spirit_busy")) {
             assertEquals(0, GRAPH.items().get(item).xmin(), "Вход области не создаёт спрос сам по себе: " + item);
         }
+    }
+
+    private static boolean known(String node) {
+        if (node.startsWith("building:")) {
+            return GRAPH.buildings().containsKey(node.substring("building:".length()));
+        }
+        return GRAPH.items().containsKey(node) || GRAPH.isGroup(node) || GRAPH.isTool(node);
     }
 }

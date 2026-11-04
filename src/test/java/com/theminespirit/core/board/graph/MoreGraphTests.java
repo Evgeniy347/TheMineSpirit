@@ -1,6 +1,5 @@
 package com.theminespirit.core.board.graph;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.LinkedHashMap;
@@ -44,18 +43,21 @@ class MoreGraphTests {
     }
 
     @Test
-    void moreFragment_ControlSignals_StayStubs() {
+    void moreFragment_ControlRules_LiveInChoiceNotInWays() {
         for (String way : List.of(
                 "more_avoid_far_trip",
                 "more_failure_backoff",
                 "more_station_queue",
                 "more_avoid_duplicate",
                 "more_strategic_goal")) {
-            assertFalse(
-                    GRAPH.implemented(way),
-                    "Путь " + way + " — сигнал управления (не идти, подождать, не дублировать), "
-                            + "а не действие: отдельного исполнения у него нет");
+            assertTrue(
+                    GRAPH.way(way).isEmpty(),
+                    "Путь " + way + " — правило выбора (не идти, подождать, не дублировать): "
+                            + "оно живёт поправкой в graph.json.choice, а не работой духа");
         }
+        assertTrue(
+                GRAPH.costs().choice() != null,
+                "Поправки выбора загружены из графа: иначе тюнинг весов некуда вписать");
     }
 
     @Test
@@ -105,9 +107,6 @@ class MoreGraphTests {
         signals.put(MoreRules.PLAYER_BUILDING, "more_keep_clear");
         signals.put(MoreRules.DARK_SPOTS, "more_light_dark_spot");
         signals.put(MoreRules.DUSK_SOON, "more_return_before_night");
-        signals.put(MoreRules.BAD_TRIP_CONDITIONS, "more_avoid_far_trip");
-        signals.put(MoreRules.FAILURES_REPEAT, "more_failure_backoff");
-        signals.put(MoreRules.STATION_QUEUE, "more_station_queue");
         signals.put(MoreRules.DROPS_EXPIRING, "more_pickup_drops");
         signals.put(MoreRules.FOREST_DEPLETED, "more_replant");
         signals.put(MoreRules.ORE_DEPLETED, "more_sustain_mine");
@@ -115,8 +114,6 @@ class MoreGraphTests {
         signals.put(MoreRules.DOOR_OPEN_NIGHT, "more_secure_door");
         signals.put(MoreRules.HOPPER_UNCOVERED, "more_secure_hopper");
         signals.put(MoreRules.RESERVE_UNUSED, "more_share_reserve");
-        signals.put(MoreRules.WORK_DUPLICATE, "more_avoid_duplicate");
-        signals.put(MoreRules.STRATEGIC_GOAL, "more_strategic_goal");
         return Map.copyOf(signals);
     }
 }

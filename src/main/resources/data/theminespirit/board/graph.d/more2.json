@@ -3,7 +3,6 @@
   "items": {
     "more2:food_plan": {"xmin": 0, "k": 1, "base": 18, "stage": 1},
     "more2:carry_room": {"xmin": 0, "k": 1, "base": 17, "stage": 1},
-    "more2:carry_batch": {"xmin": 0, "k": 1, "base": 15, "stage": 1},
     "more2:safe": {"xmin": 0, "k": 1, "base": 20, "stage": 1},
     "more2:flow_blocked": {"xmin": 0, "k": 1, "base": 20, "stage": 1},
     "more2:animal_penned": {"xmin": 0, "k": 1, "base": 17, "stage": 1},
@@ -42,12 +41,6 @@
     {"id": "more2_unload_carry", "case": "TRANSFER_ITEM", "makes": "more2:carry_room",
      "yield": 1, "weight": 1.245006242, "consumes": {}, "ticks": 160,
      "implemented": true, "todo": "more2:inventory_full"},
-    {"id": "more2_load_carry", "case": "TRANSFER_ITEM", "makes": "more2:carry_room",
-     "yield": 1, "weight": 1.245006242, "consumes": {}, "ticks": 160,
-     "implemented": false, "todo": "more2:inventory_space"},
-    {"id": "more2_batch_carry", "case": "TRANSFER_ITEM", "makes": "more2:carry_batch",
-     "yield": 1, "weight": 1.245006242, "consumes": {}, "ticks": 240,
-     "implemented": false, "todo": "more2:long_carry"},
     {"id": "more2_put_out_fire", "case": "CLEAR_GROUNDS", "makes": "more2:safe",
      "yield": 1, "weight": 2.208175335, "consumes": {}, "ticks": 100,
      "implemented": true, "todo": "more2:fire_near_building"},
@@ -97,16 +90,17 @@
     },
     "more2_inventory_space": {
       "tasks": [
-        {"id": "more2_load_carry", "case": "TRANSFER_ITEM", "base": 40, "consumes": {}, "implemented": false}
+        {"id": "store_carry_transfer", "case": "TRANSFER_ITEM", "base": 40, "consumes": {}, "implemented": true}
       ],
       "push": {"store:transfer": 4},
       "advice": ["take_more_from_chest"]
     },
     "more2_long_carry": {
       "tasks": [
-        {"id": "more2_batch_carry", "case": "TRANSFER_ITEM", "base": 44, "consumes": {}, "implemented": false}
+        {"id": "more5_place_site_chest", "case": "STOCK_CHESTS", "base": 44, "consumes": {"#planks": 8},
+         "implemented": true}
       ],
-      "push": {"logistics": 6, "more2:carry_batch": 4},
+      "push": {"logistics": 6},
       "advice": ["carry_in_batches_or_place_field_chest"]
     },
     "more2_fire_near_building": {

@@ -26,6 +26,7 @@ public final class GraphPlanner {
     private final SupplyGraph graph;
     private final GraphState state;
     private final GraphFlow flow = new GraphFlow();
+    private final GraphChoiceRules choices;
     private final Set<String> expanded = new HashSet<>();
     private final Set<String> chances = new HashSet<>();
     private final List<GraphPlan.Advice> advice = new ArrayList<>();
@@ -33,6 +34,7 @@ public final class GraphPlanner {
     private GraphPlanner(SupplyGraph graph, GraphState state) {
         this.graph = Objects.requireNonNull(graph, "Граф не может быть null: без него не из чего выводить задания");
         this.state = Objects.requireNonNull(state, "Состояние не может быть null: задания выводятся из нехваток");
+        this.choices = new GraphChoiceRules(graph, state);
     }
 
     public static GraphPlan plan(SupplyGraph graph, GraphState state) {
@@ -354,17 +356,20 @@ public final class GraphPlanner {
     private GraphPlan result(Map<String, Double> scores) {
         List<GraphPlan.Task> tasks = new ArrayList<>();
         Map<String, Double> load = new LinkedHashMap<>();
-        for (Map.Entry<String, Double> score : scores.entrySet()) {
-            if (score.getValue() > 0 && task(score.getKey())) {
-                double value = score.getValue() * graph.costs().travelFactor(travel(score.getKey()));
-                GraphPlan.Task task = task(
-                        score.getKey(),
-                        GraphEvent.priority(graph.events(), score.getKey(), value, graph.maxPriority()));
-                tasks.add(task);
-                station(score.getKey())
-                        .filter(ignored -> task.feasible())
-                        .ifPresent(building -> load.merge(building, value, Math::max));
+        Set<String> made = new HashSet<>();
+        for (Map.Entry<String, Double> score : GraphChoiceRules.ordered(scores)) {
+            if (score.getValue() <= 0 || !task(score.getKey())) {
+                continue;
             }
+            boolean repeat = !made.add(choices.makes(score.getKey()));
+            double value = score.getValue() * graph.costs().travelFactor(choices.travelTicks(score.getKey()));
+            double adjusted = choices.value(score.getKey(), value, repeat);
+            GraphPlan.Task task = task(
+                    score.getKey(), GraphEvent.priority(graph.events(), score.getKey(), adjusted, graph.maxPriority()));
+            tasks.add(task);
+            station(score.getKey())
+                    .filter(ignored -> task.feasible())
+                    .ifPresent(building -> load.merge(building, adjusted, Math::max));
         }
         load.forEach((building, value) -> stationTask(building, value, scores).ifPresent(tasks::add));
         return new GraphPlan(
@@ -405,14 +410,6 @@ public final class GraphPlanner {
                 false,
                 graph.implemented(building),
                 graph.costs().ticks(STATION + building, known.boardCase())));
-    }
-
-    private int travel(String key) {
-        int at = key.indexOf(AT);
-        return graph.way(at < 0 ? key : key.substring(0, at))
-                .map(SupplyGraph.Way::world)
-                .map(resource -> graph.costs().travel(state.distances().getOrDefault(resource, 0)))
-                .orElse(0);
     }
 
     private GraphPlan.Task task(String key, int priority) {
@@ -489,7 +486,7 @@ public final class GraphPlanner {
                         && GraphLack.stocked(graph, state, way.needs()),
                 chances.contains(key),
                 graph.implemented(wayId),
-                graph.costs().ticks(wayId, way.boardCase()) + travel(key));
+                choices.wayTicks(key, way));
     }
 
     private Map<String, Integer> materials(String building) {

@@ -8,14 +8,8 @@ import org.junit.jupiter.api.Test;
 
 class More7PlannerTests {
     private static final SupplyGraph GRAPH = SupplyGraph.loadDefault();
-    private static final List<String> EVENTS = List.of(
-            More7Rules.WORK_PILEUP,
-            More7Rules.GATED_ITEM,
-            More7Rules.MORNING_HARVEST,
-            More7Rules.EVENING_RETURN,
-            More7Rules.PEN_FULL,
-            More7Rules.FIELD_FULL,
-            More7Rules.ORDER_READY);
+    private static final List<String> EVENTS =
+            List.of(More7Rules.MORNING_HARVEST, More7Rules.EVENING_RETURN, More7Rules.PEN_FULL, More7Rules.ORDER_READY);
 
     @Test
     void eventStubs_Planned_AreNotPostedButNotLost() {

@@ -13,8 +13,10 @@ public record GraphCosts(
         int ticksPerBlock,
         int travelScaleTicks,
         Map<String, Integer> toolDurability,
-        Map<String, Integer> stationCapacity) {
-    public static final GraphCosts NONE = new GraphCosts(1, Map.of(), Map.of(), Map.of(), 0, 1, Map.of(), Map.of());
+        Map<String, Integer> stationCapacity,
+        GraphChoice choice) {
+    public static final GraphCosts NONE =
+            new GraphCosts(1, Map.of(), Map.of(), Map.of(), 0, 1, Map.of(), Map.of(), GraphChoice.NEUTRAL);
 
     public GraphCosts {
         caseTicks = Map.copyOf(caseTicks);
@@ -22,6 +24,10 @@ public record GraphCosts(
         wayUses = Map.copyOf(wayUses);
         toolDurability = Map.copyOf(toolDurability);
         stationCapacity = Map.copyOf(stationCapacity);
+        if (choice == null) {
+            throw new IllegalArgumentException(
+                    "Поправки выбора не могут быть null: нейтральные задаёт GraphChoice.NEUTRAL");
+        }
         if (defaultTicks < 1 || travelScaleTicks < 1) {
             throw new IllegalArgumentException("Длительность по умолчанию " + defaultTicks + " и шкала дороги "
                     + travelScaleTicks + " обязаны быть ≥ 1: задание без времени и деление на ноль ломают метрику");
@@ -71,6 +77,7 @@ public record GraphCosts(
                 costs.path("ticksPerBlock").asInt(0),
                 costs.path("travelScaleTicks").asInt(1200),
                 GraphEvent.counts(costs.path("toolDurability")),
-                GraphEvent.counts(costs.path("stationCapacity")));
+                GraphEvent.counts(costs.path("stationCapacity")),
+                GraphChoice.parse(root.path("choice")));
     }
 }
