@@ -99,7 +99,7 @@ capture_session_id() {
 
 provider_failure_text() {
     local out="$1" err="$2" line
-    line="$(grep -E 'level=(ERROR|WARN)' "$err" 2>/dev/null | grep -m1 -iE "$FAILURE_PATTERN")"
+    line="$(grep -E 'level=(ERROR|WARN)' "$err" 2>/dev/null | grep -viE 'message="(mcp|retrying mcp)|server=[a-z0-9_-]+ error=' | grep -m1 -iE "$FAILURE_PATTERN")"
     if [ -n "$line" ]; then
         printf '%s' "$line"
         return 0
@@ -166,13 +166,13 @@ check_bypass() {
 
 run_attempt() {
     local out="$1.jsonl" err="$1.err" message="$2"
-    local args=(run -m "$MODEL" --format json --auto --print-logs --log-level INFO --dir "$REPO_DIR")
+    local args=(run -m "$MODEL" --format json --auto --standalone --print-logs --log-level info)
     [ -n "$session" ] && args+=(-s "$session")
     : >"$out"
     : >"$err"
     local detach=()
-    command -v setsid >/dev/null && detach=(setsid)
-    "${detach[@]}" "$OPENCODE_BIN" "${args[@]}" "$message"$'\n\n'"$EXECUTOR_RULES" >"$out" 2>"$err" </dev/null &
+    [ "${OPENCODE_SETSID:-0}" = 1 ] && command -v setsid >/dev/null && detach=(setsid)
+    (cd "$REPO_DIR" && exec "${detach[@]}" "$OPENCODE_BIN" "${args[@]}" "$message"$'\n\n'"$EXECUTOR_RULES") >"$out" 2>"$err" </dev/null &
     local pid=$!
     current_pid=$pid
     local bypass_logged=0
@@ -268,7 +268,7 @@ probe_provider() {
     local out="$probe_dir/probe.jsonl" err="$probe_dir/probe.err" code
     : >"$out"
     : >"$err"
-    (cd "$probe_dir" && timeout -k 5 "$PROBE_TIMEOUT" "$OPENCODE_BIN" run -m "$MODEL" --format json --print-logs         --log-level INFO "$PROBE_PROMPT" >"$out" 2>"$err" </dev/null)
+    (cd "$probe_dir" && timeout -k 5 "$PROBE_TIMEOUT" "$OPENCODE_BIN" run -m "$MODEL" --format json --standalone --print-logs         --log-level info "$PROBE_PROMPT" >"$out" 2>"$err" </dev/null)
     code=$?
     if probe_text="$(provider_failure_text "$out" "$err")"; then
         return 1

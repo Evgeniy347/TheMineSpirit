@@ -27,16 +27,16 @@
      "implemented": false, "todo": "more6:building_finished"},
     {"id": "more6_deposit_materials", "case": "TRANSFER_ITEM", "makes": "more6:materials_deposited",
      "yield": 1, "weight": 2.146141076, "ticks": 160, "consumes": {},
-     "implemented": false, "todo": "more6:materials_deposited"},
+     "implemented": true, "todo": "more6:materials_deposited"},
     {"id": "more6_refuel_station", "case": "ACTIVITY_SMELT", "makes": "more6:station_ready",
      "yield": 1, "weight": 0.867808962, "ticks": 120, "consumes": {"#fuel": 1},
-     "implemented": false, "todo": "more6:station_ready"},
+     "implemented": true, "todo": "more6:station_ready"},
     {"id": "more6_place_station", "case": "CRAFTING_STATION", "makes": "more6:station_ready",
      "yield": 1, "weight": 1.025827091, "ticks": 120, "consumes": {"#planks": 4},
-     "implemented": false, "todo": "more6:station_ready"},
+     "implemented": true, "todo": "more6:station_ready"},
     {"id": "more6_pickup_items", "case": "COLLECT_DROPS", "makes": "more6:ground_cleared",
      "yield": 1, "weight": 1.007668651, "ticks": 100, "consumes": {},
-     "implemented": false, "todo": "more6:ground_cleared"},
+     "implemented": true, "todo": "more6:ground_cleared"},
     {"id": "more6_fetch_water", "case": "GATHER_MATERIALS", "makes": "more6:water_source",
      "yield": 1, "weight": 2.466106086, "ticks": 200, "consumes": {"bucket": 1},
      "implemented": false, "todo": "more6:water_source"},
@@ -45,10 +45,10 @@
      "implemented": false, "todo": "more6:fuel_reserve"},
     {"id": "more6_maintain_stock", "case": "GATHER_MATERIALS", "makes": "more6:stock_reserve",
      "yield": 1, "weight": 1.740780767, "ticks": 180, "consumes": {},
-     "implemented": false, "todo": "more6:stock_reserve"},
+     "implemented": true, "todo": "more6:stock_reserve"},
     {"id": "more6_assign_idle", "case": "ACTIVITY_SENSE", "makes": "more6:spirit_busy",
      "yield": 1, "weight": 2.627567182, "ticks": 80, "consumes": {},
-     "implemented": false, "todo": "more6:spirit_busy"}
+     "implemented": true, "todo": "more6:spirit_busy"}
   ],
   "events": {
     "more6_spirits_short": {
@@ -76,7 +76,7 @@
     },
     "more6_carry_materials": {
       "tasks": [
-        {"id": "more6_deposit_materials", "case": "TRANSFER_ITEM", "base": 54, "consumes": {}, "implemented": false}
+        {"id": "more6_deposit_materials", "case": "TRANSFER_ITEM", "base": 54, "consumes": {}, "implemented": true}
       ],
       "push": {"more6:materials_deposited": 6},
       "advice": ["deposit_building_materials_from_hands_to_chest"]
@@ -84,16 +84,16 @@
     "more6_station_broken": {
       "tasks": [
         {"id": "more6_refuel_station", "case": "ACTIVITY_SMELT", "base": 66,
-         "consumes": {"#fuel": 1}, "implemented": false},
+         "consumes": {"#fuel": 1}, "implemented": true},
         {"id": "more6_place_station", "case": "CRAFTING_STATION", "base": 58,
-         "consumes": {"#planks": 4}, "implemented": false}
+         "consumes": {"#planks": 4}, "implemented": true}
       ],
       "push": {"more6:station_ready": 8, "#fuel": 4},
       "advice": ["fuel_furnace_and_put_crafting_table_in_yard"]
     },
     "more6_loose_items": {
       "tasks": [
-        {"id": "more6_pickup_items", "case": "COLLECT_DROPS", "base": 50, "consumes": {}, "implemented": false}
+        {"id": "more6_pickup_items", "case": "COLLECT_DROPS", "base": 50, "consumes": {}, "implemented": true}
       ],
       "push": {"more6:ground_cleared": 6},
       "advice": ["pick_up_items_left_after_dig_or_build"]
@@ -116,14 +116,14 @@
     },
     "more6_repeat_demand": {
       "tasks": [
-        {"id": "more6_maintain_stock", "case": "GATHER_MATERIALS", "base": 46, "consumes": {}, "implemented": false}
+        {"id": "more6_maintain_stock", "case": "GATHER_MATERIALS", "base": 46, "consumes": {}, "implemented": true}
       ],
       "push": {"more6:stock_reserve": 6},
       "advice": ["keep_permanent_stock_of_repeated_resource"]
     },
     "more6_spirit_idle": {
       "tasks": [
-        {"id": "more6_assign_idle", "case": "ACTIVITY_SENSE", "base": 44, "consumes": {}, "implemented": false}
+        {"id": "more6_assign_idle", "case": "ACTIVITY_SENSE", "base": 44, "consumes": {}, "implemented": true}
       ],
       "push": {"more6:spirit_busy": 6},
       "advice": ["raise_weight_of_feasible_work_for_idle_spirit"]

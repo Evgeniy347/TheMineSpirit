@@ -43,6 +43,25 @@ class More5FragmentTests {
             "more5_craft_mine_torch",
             "more5_pickup_wood_drop",
             "more5_plant_sapling");
+    private static final List<String> IMPLEMENTED = List.of(
+            "more5_defend_player",
+            "more5_feed_player",
+            "more5_light_crops",
+            "more5_light_saplings",
+            "more5_fertilize_growth",
+            "more5_gather_fuel",
+            "more5_make_charcoal",
+            "more5_gather_build_material",
+            "more5_craft_build_material",
+            "more5_restore_block",
+            "more5_bridge_route",
+            "more5_place_site_chest",
+            "more5_carry_to_site",
+            "more5_light_mine",
+            "more5_craft_mine_torch",
+            "more5_pickup_wood_drop",
+            "more5_plant_sapling");
+    private static final List<String> STUBS = List.of("more5_heal_player", "more5_water_crops", "more5_detour_route");
     private static final List<String> ITEMS = List.of(
             "more5:player_guard",
             "more5:player_fed",
@@ -68,11 +87,31 @@ class More5FragmentTests {
     }
 
     @Test
-    void more5Ways_FragmentLoad_AreStubbedWithTodo() {
+    void more5Ways_FragmentLoad_AreWiredOrMarkedStub() {
         for (String way : WAYS) {
             SupplyGraph.Way known = GRAPH.way(way).orElseThrow();
             assertTrue(known.weight() > 0, "Стартовый вес пути положителен: " + way);
-            assertFalse(GRAPH.implemented(way), "Действия пока нет — путь заглушён: " + way);
+            assertEquals(
+                    IMPLEMENTED.contains(way),
+                    GRAPH.implemented(way),
+                    "Путь " + way + " либо связан с действием, либо честно помечен заглушкой");
+        }
+        for (String stub : STUBS) {
+            assertFalse(
+                    GRAPH.implemented(stub), "Бессмысленное или дублирующее действие не выдаётся за готовое: " + stub);
+        }
+    }
+
+    @Test
+    void more5Events_FragmentLoad_TasksMatchWayState() {
+        for (String event : EVENTS) {
+            for (GraphEvent.Task task : GRAPH.events().get(event).tasks()) {
+                assertEquals(
+                        IMPLEMENTED.contains(task.id()),
+                        task.implemented(),
+                        "Задача события " + event + " -> " + task.id()
+                                + " не расходится с состоянием пути: иначе граф ставит неисполнимую работу");
+            }
         }
     }
 

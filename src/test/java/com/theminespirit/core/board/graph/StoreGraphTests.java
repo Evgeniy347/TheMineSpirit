@@ -1,7 +1,6 @@
 package com.theminespirit.core.board.graph;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.RepairPlan;
@@ -26,9 +25,9 @@ class StoreGraphTests {
         assertTrue(graph.way("store_smelt_take").isPresent(), "Путь выемки из печи объявлен");
         assertTrue(graph.way("store_space").isPresent(), "Путь новой пары сундуков объявлен");
         assertTrue(graph.way("store_sort").isPresent(), "Путь сортировки сундуков объявлен");
-        assertFalse(graph.implemented("store_carry_deliver"), "Перенос пока заглушка с TODO(store:transfer)");
-        assertFalse(graph.implemented("store_smelt_load"), "Загрузка печи пока заглушка с TODO(store:smelt)");
-        assertFalse(graph.implemented("store_sort"), "Сортировка пока заглушка с TODO(store:sort)");
+        assertTrue(graph.implemented("store_carry_deliver"), "Сдать несомое исполняется действием склада");
+        assertTrue(graph.implemented("store_smelt_load"), "Загрузка печи исполняется выплавкой угля");
+        assertTrue(graph.implemented("store_sort"), "Сортировка исполняется действием склада");
         assertTrue(
                 graph.implemented("store_space"),
                 "Новая пара сундуков исполняется существующим кейсом STOCK_CHESTS, а не сторожем: "

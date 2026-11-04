@@ -44,11 +44,13 @@ class GraphMore3FragmentsTests {
     }
 
     @Test
-    void more3Ways_FragmentLoad_AreStubbedWithTodo() {
+    void more3Ways_FragmentLoad_ImplementedAndDeferred() {
         for (String way : WAYS) {
             SupplyGraph.Way known = GRAPH.way(way).orElseThrow();
             assertTrue(known.weight() > 0, "Стартовый вес пути положителен: " + way);
-            assertFalse(GRAPH.implemented(way), "Действия пока нет — путь заглушён: " + way);
+            boolean live = List.of("secure_danger", "recover_death_drop", "clear_trash", "assign_chest_purpose")
+                    .contains(way);
+            assertEquals(live, GRAPH.implemented(way), "Состояние действия пути: " + way);
         }
     }
 

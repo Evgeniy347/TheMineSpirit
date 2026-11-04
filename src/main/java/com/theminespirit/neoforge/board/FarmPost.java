@@ -8,6 +8,7 @@ import com.theminespirit.core.board.EatNeed;
 import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.graph.ActivityPlans;
 import com.theminespirit.core.board.graph.FarmWays;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
@@ -42,6 +43,9 @@ final class FarmPost {
     }
 
     static boolean way(GraphPost post, GraphTickets.Ticket ticket, GraphPlan.Task task) {
+        if (special(post, ticket)) {
+            return true;
+        }
         BoardCase boardCase = task.boardCase();
         return switch (boardCase) {
             case CAPTURE_ANIMAL, LURE_ANIMAL -> FarmHerd.capture(post, ticket);
@@ -58,7 +62,14 @@ final class FarmPost {
     }
 
     static boolean event(GraphPost post, GraphTickets.Ticket ticket) {
-        if (!"animal_starving".equals(ticket.node())) {
+        String node = ticket.node();
+        if ("crop_ready".equals(node)) {
+            return launch(post, ActivityPlans.harvestCrop(post.scan.home()));
+        }
+        if ("crop_dry".equals(node) || "field_empty".equals(node)) {
+            return launch(post, ActivityPlans.plantCrop(post.scan.home(), "wheat", 8));
+        }
+        if (!"animal_starving".equals(node) && !"pen_full".equals(node)) {
             return false;
         }
         BlockCoord home = post.scan.home();
@@ -69,6 +80,34 @@ final class FarmPost {
         TicketTarget target = TicketTarget.at(home).withSpecies(species);
         submit(post, ticket.id(), BoardCase.BREED_ANIMALS, ticket.task().priority(), target, gate(species));
         return true;
+    }
+
+    private static boolean special(GraphPost post, GraphTickets.Ticket ticket) {
+        return switch (ticket.node()) {
+            case "till_soil" -> launch(post, ActivityPlans.till(post.scan.home()));
+            case "plant_crop" -> launch(post, ActivityPlans.plantCrop(post.scan.home(), "wheat", 8));
+            case "harvest_crop" -> launch(post, ActivityPlans.harvestCrop(post.scan.home()));
+            case "milk_animal" ->
+                post.stock.available().getOrDefault("bucket", 0) > 0
+                        && launch(post, ActivityPlans.milk(post.scan.home(), 1));
+            case "feed_animals" -> {
+                Species species = herdSpecies(post.level, post.scan.home());
+                yield species != null && FarmHerd.breed(post, ticket, species);
+            }
+            case "lure_animal" -> {
+                Species species = FarmHerd.wildSpecies(post.level, post.scan.home());
+                yield species != null && FarmHerd.capture(post, ticket, species);
+            }
+            default -> false;
+        };
+    }
+
+    private static boolean launch(GraphPost post, ActivityPlans.Plan plan) {
+        SpiritEntity spirit = StorePost.idle(post).orElse(null);
+        if (spirit == null) {
+            return false;
+        }
+        return post.launchActivity(spirit, BoardCase.ACTIVITY_FARM, plan);
     }
 
     static boolean building(GraphPost post, GraphTickets.Ticket ticket) {
@@ -117,6 +156,16 @@ final class FarmPost {
                     TicketTarget.at(site.orElseThrow()),
                     need.orElseThrow());
             return true;
+        }
+        if ("storage_space".equals(node)) {
+            return ChestSpaceWatch.post(post.level, post.service, post.scan.stage(), post.now);
+        }
+        if ("wheat_field".equals(node)) {
+            if (FarmField.exists(post.level, home)) {
+                return true;
+            }
+            BlockCoord origin = new BlockCoord(home.x() + 4, home.y(), home.z() + 4);
+            return launch(post, ActivityPlans.buildFarm(origin, "wheat", 4));
         }
         if ("smoker".equals(node)) {
             if (!FishingNeeds.wantsSmoker(post.stock.available(), FishingData.loadDefault())

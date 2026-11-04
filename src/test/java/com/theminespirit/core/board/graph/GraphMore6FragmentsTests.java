@@ -33,6 +33,13 @@ class GraphMore6FragmentsTests {
             "more6_fetch_lava",
             "more6_maintain_stock",
             "more6_assign_idle");
+    private static final List<String> IMPLEMENTED = List.of(
+            "more6_refuel_station",
+            "more6_place_station",
+            "more6_pickup_items",
+            "more6_deposit_materials",
+            "more6_maintain_stock",
+            "more6_assign_idle");
 
     @Test
     void more6Events_FragmentLoad_AreDeclared() {
@@ -43,11 +50,14 @@ class GraphMore6FragmentsTests {
     }
 
     @Test
-    void more6Ways_FragmentLoad_AreStubbedWithTodo() {
+    void more6Ways_FragmentLoad_AreWiredOrMarkedStub() {
         for (String way : WAYS) {
             SupplyGraph.Way known = GRAPH.way(way).orElseThrow();
             assertTrue(known.weight() > 0, "Стартовый вес пути положителен: " + way);
-            assertFalse(GRAPH.implemented(way), "Действия пока нет — путь заглушён: " + way);
+            assertEquals(
+                    IMPLEMENTED.contains(way),
+                    GRAPH.implemented(way),
+                    "Путь " + way + " либо связан с действием, либо честно помечен заглушкой");
         }
     }
 
@@ -81,11 +91,15 @@ class GraphMore6FragmentsTests {
     }
 
     @Test
-    void more6Events_FragmentLoad_TasksAreStubs() {
+    void more6Events_FragmentLoad_TasksMatchWayState() {
         for (String event : EVENTS) {
             GraphEvent known = GRAPH.events().get(event);
             for (GraphEvent.Task task : known.tasks()) {
-                assertFalse(task.implemented(), "Задача события пока заглушена: " + event + " -> " + task.id());
+                assertEquals(
+                        IMPLEMENTED.contains(task.id()),
+                        task.implemented(),
+                        "Задача события " + event + " -> " + task.id()
+                                + " не расходится с состоянием пути: иначе граф ставит неисполнимую работу");
             }
         }
     }

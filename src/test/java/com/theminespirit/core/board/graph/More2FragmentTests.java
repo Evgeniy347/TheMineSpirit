@@ -34,31 +34,34 @@ class More2FragmentTests {
     }
 
     @Test
-    void more2Fragment_ActionWays_AreStubsWithNodeTodo() {
-        Map<String, String> stubs = Map.ofEntries(
+    void more2Fragment_ActionWays_AreImplementedOrControlSignals() {
+        Map<String, String> implemented = Map.ofEntries(
                 Map.entry("more2_sow_food", More2Rules.FOOD_LOW),
                 Map.entry("more2_breed_food", More2Rules.FOOD_LOW),
                 Map.entry("more2_unload_carry", More2Rules.INVENTORY_FULL),
-                Map.entry("more2_load_carry", More2Rules.INVENTORY_SPACE),
-                Map.entry("more2_batch_carry", More2Rules.LONG_CARRY),
                 Map.entry("more2_put_out_fire", More2Rules.FIRE_NEAR_BUILDING),
                 Map.entry("more2_remove_lava", More2Rules.LAVA_NEAR_BUILDING),
                 Map.entry("more2_block_flow", More2Rules.HAZARD_FLOW),
                 Map.entry("more2_pen_animal", More2Rules.ANIMAL_OUTSIDE),
                 Map.entry("more2_lure_wild", More2Rules.WILD_HERD),
                 Map.entry("more2_guard_villager", More2Rules.VILLAGER_NEAR),
-                Map.entry("more2_trade_villager", More2Rules.VILLAGER_TRADE),
                 Map.entry("more2_prepare_stage", More2Rules.STAGE_PREP),
                 Map.entry("more2_make_bed", More2Rules.BED_NEEDED),
                 Map.entry("more2_build_trail", More2Rules.PATH_NEEDED));
-        stubs.forEach((way, node) -> {
+        implemented.forEach((way, node) -> {
             assertTrue(GRAPH.way(way).isPresent(), "Путь действия объявлен: " + way);
-            assertFalse(GRAPH.implemented(way), "Действие " + way + " пока заглушено, узел " + node);
+            assertTrue(GRAPH.implemented(way), "Действие " + way + " связано с исполнением, узел " + node);
         });
+        for (String control : List.of("more2_load_carry", "more2_batch_carry", "more2_trade_villager")) {
+            assertFalse(
+                    GRAPH.implemented(control),
+                    "Путь " + control + " — сигнал логистики без отдельного действия: "
+                            + "перенос уже делает transfer_item, торговли у духов нет");
+        }
     }
 
     @Test
-    void more2Fragment_EventTasks_PointAtStubWays() {
+    void more2Fragment_EventTasks_RepeatWayImplementationFlag() {
         for (String event : EVENTS) {
             GraphEvent known = GRAPH.events().get(event);
             assertFalse(known.tasks().isEmpty(), "Событие " + event + " без задачи не двигает граф");
@@ -66,7 +69,10 @@ class More2FragmentTests {
                 assertTrue(
                         GRAPH.way(task.id()).isPresent(),
                         "Задача " + event + " -> " + task.id() + " должна быть путём");
-                assertFalse(task.implemented(), "Задача " + event + " -> " + task.id() + " ещё не реализована");
+                assertEquals(
+                        GRAPH.implemented(task.id()),
+                        task.implemented(),
+                        "Задача " + event + " -> " + task.id() + " обязана повторять флаг своего пути");
             }
         }
     }
@@ -108,7 +114,7 @@ class More2FragmentTests {
         for (String building : List.of("more2_field_chest", "more2_trail")) {
             SupplyGraph.Building known = GRAPH.buildings().get(building);
             assertTrue(known != null && known.optional(), "Новая постройка необязательна: " + building);
-            assertFalse(GRAPH.implemented(building), "Действие постройки пока заглушено: " + building);
+            assertTrue(GRAPH.implemented(building), "Действие постройки связано с исполнением: " + building);
             assertTrue(known.base() > 0, "Стартовый вес постройки положителен: " + building);
         }
     }

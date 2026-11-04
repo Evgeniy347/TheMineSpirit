@@ -96,7 +96,7 @@ public final class GraphSource {
                 half.service(),
                 half.spirits(),
                 half.stock(),
-                new GraphPost.Site(half.scan(), half.around(), pets),
+                new GraphPost.Site(half.scan(), half.around(), pets, half.state()),
                 half.graph(),
                 half.now());
         List<String> unconnected = new ArrayList<>();
