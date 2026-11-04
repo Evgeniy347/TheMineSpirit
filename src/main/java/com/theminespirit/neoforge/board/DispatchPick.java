@@ -30,7 +30,9 @@ final class DispatchPick {
         for (SpiritEntity spirit : spirits) {
             entities.put(spirit.getUUID(), spirit);
             candidates.put(spirit.getUUID(), candidate(spirit));
-            round.board().stuck().see(spirit.getUUID(), at(spirit));
+            round.board()
+                    .stuck()
+                    .see(spirit.getUUID(), at(spirit), round.board().now());
         }
     }
 

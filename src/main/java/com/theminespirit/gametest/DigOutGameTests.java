@@ -1,14 +1,25 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardState;
+import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
+import com.theminespirit.neoforge.board.BoardService;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
@@ -33,7 +44,8 @@ public final class DigOutGameTests {
 
     private static void pocket(GameTestHelper helper, List<BlockPos> air) {
         GameTestFixtures.reset(helper, 16);
-        BoardRegistry.get(helper.getLevel()).board().restore(new BoardState(List.of(), Set.of()));
+        BoardService board = BoardRegistry.get(helper.getLevel());
+        board.board().restore(new BoardState(List.of(), Set.of()));
         for (int x = 0; x <= 10; x++) {
             for (int y = 1; y <= TOP; y++) {
                 for (int z = 0; z <= 10; z++) {
@@ -47,15 +59,44 @@ public final class DigOutGameTests {
         spirit.getInventory().setItem(1, new ItemStack(Items.COBBLESTONE, 48));
         BlockPos home = helper.absolutePos(new BlockPos(8, TOP + 1, 5));
         spirit.setHome(new BlockCoord(home.getX(), home.getY(), home.getZ()));
+        BlockPos feet = spirit.blockPosition();
+        BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
+        int startY = feet.getY();
+        BlockCoord goal = new BlockCoord(home.getX(), home.getY(), home.getZ());
+        UUID id = spirit.getUUID();
+        long now = helper.getLevel().getGameTime();
+        String ticket = "rescue:" + id;
+        board.board().stuck().see(id, at, now);
+        board.board().stuck().mark(id, now, "сцена: дух замурован в яме");
+        TaskNode plan = new ScriptCall("dig_out", Map.of("x", goal.x(), "y", goal.y(), "z", goal.z()));
+        board.submit(
+                new BoardTicket(
+                        ticket,
+                        BoardCase.RESCUE_SPIRIT,
+                        Optional.of(id),
+                        BoardRules.priorityOf(BoardCase.RESCUE_SPIRIT),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
+                TicketTarget.at(at).withPlan(plan));
 
         helper.succeedWhen(() -> {
-            BlockPos feet = spirit.blockPosition();
+            BlockPos current = spirit.blockPosition();
             helper.assertTrue(
-                    DigOutScript.open(helper.getLevel(), feet) || feet.getY() >= home.getY(),
-                    "замурованный дух обязан сам выбраться наверх (INC-45): стоит в " + feet + ", задача "
-                            + spirit.currentTaskScript().orElse("-") + " "
+                    DigOutScript.open(helper.getLevel(), current) || current.getY() >= startY + 3,
+                    "замурованный дух обязан выбраться из кармана (INC-45): стоит в " + current + ", старт "
+                            + startY + ", задача " + spirit.currentTaskScript().orElse("-") + " "
                             + spirit.taskStatus().orElse(null)
                             + ", причина " + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    board.board().statusOf(ticket).orElse(null) == BoardStatus.DONE,
+                    "выход закрывается заданием доски, статус "
+                            + board.board().statusOf(ticket).orElse(null));
+            helper.assertFalse(
+                    board.board().stuck().isStuck(id, board.board().now()),
+                    "выполненный выход снимает метку «не двигается» по факту, а не по тайм-ауту");
             spirit.discard();
             GameTestFixtures.finish(helper, 16);
         });

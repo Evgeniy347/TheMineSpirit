@@ -950,11 +950,16 @@ class Planner:
 
     def dig_out(self):
         for spirit in self.state.spirit_facts.values():
-            if not spirit.get("trapped", False):
+            trapped = spirit.get("trapped", False)
+            stuck = spirit.get("stuck", False)
+            if not trapped and not stuck:
                 continue
-            cause = spirit.get("trap")
-            node = "pillar_open" if cause == "pit" else "bridge_open" if cause == "water" else "dig_open"
-            self.push(None, node, self.node_weight(node))
+            if stuck:
+                self.push(None, "rescue", self.node_weight("rescue"))
+            if trapped:
+                cause = spirit.get("trap")
+                node = "pillar_open" if cause == "pit" else "bridge_open" if cause == "water" else "dig_open"
+                self.push(None, node, self.node_weight(node))
             self.push(None, "trail_clean", self.node_weight("trail_clean"))
 
     def store_roots(self):

@@ -1,4 +1,23 @@
 {
+  "items": {
+    "rescue": {
+      "xmin": 0,
+      "base": 400,
+      "stage": 1,
+      "implemented": true
+    }
+  },
+  "ways": [
+    {
+      "id": "rescue_spirit",
+      "case": "RESCUE_SPIRIT",
+      "makes": "rescue",
+      "yield": 1,
+      "weight": 1.0,
+      "ticks": 300,
+      "implemented": true
+    }
+  ],
   "events": {
     "life_threat": {
       "band": 20,

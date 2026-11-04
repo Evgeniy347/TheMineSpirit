@@ -12,6 +12,7 @@ import org.jspecify.annotations.Nullable;
 
 public final class StuckSpirits {
     public static final int AREA_RADIUS = 4;
+    private static final int MAX_CHANGES = 64;
 
     public record Stuck(@Nullable BlockCoord at, long since) {
         public Stuck {
@@ -22,12 +23,24 @@ public final class StuckSpirits {
         }
     }
 
+    public record Change(UUID spirit, @Nullable BlockCoord at, long tick, boolean marked, String reason) {
+        public Change {
+            Objects.requireNonNull(spirit, "Дух изменения метки не может быть null: метка принадлежит духу");
+            Objects.requireNonNull(reason, "Причина изменения метки не может быть null: без неё метку не объяснить");
+        }
+    }
+
     private final Map<UUID, BlockCoord> seen = new LinkedHashMap<>();
     private final Map<UUID, Stuck> stuck = new LinkedHashMap<>();
+    private final List<Change> changes = new ArrayList<>();
     private boolean rebasePending;
     private long restoredAt;
 
     public void see(UUID spirit, BlockCoord at) {
+        see(spirit, at, 0);
+    }
+
+    public void see(UUID spirit, BlockCoord at, long now) {
         Objects.requireNonNull(spirit, "Дух не может быть null: позиция наблюдается у конкретного духа");
         Objects.requireNonNull(at, "Позиция не может быть null: по ней видно, сдвинулся ли дух");
         BlockCoord previous = seen.put(spirit, at);
@@ -38,6 +51,7 @@ public final class StuckSpirits {
         BlockCoord origin = known.at() == null ? previous : known.at();
         if (origin != null && !near(origin, at)) {
             stuck.remove(spirit);
+            note(spirit, at, now, false, "сдвинулся с " + origin + " на " + at);
             return;
         }
         if (known.at() == null) {
@@ -52,11 +66,18 @@ public final class StuckSpirits {
     }
 
     public void mark(UUID spirit, long now) {
+        mark(spirit, now, "провал движения");
+    }
+
+    public void mark(UUID spirit, long now, String reason) {
         Objects.requireNonNull(spirit, "Дух не может быть null: застревает конкретный дух");
+        Objects.requireNonNull(reason, "Причина метки не может быть null: без неё метку не объяснить");
         if (now < 0) {
             throw new IllegalArgumentException("Тик " + now + " отрицателен: застревание не ставится в прошлое");
         }
-        stuck.putIfAbsent(spirit, new Stuck(seen.get(spirit), now));
+        if (stuck.putIfAbsent(spirit, new Stuck(seen.get(spirit), now)) == null) {
+            note(spirit, seen.get(spirit), now, true, reason);
+        }
     }
 
     public Optional<Stuck> of(UUID spirit, long now) {
@@ -69,6 +90,16 @@ public final class StuckSpirits {
         if (known == null) {
             return Optional.empty();
         }
+        if (now > known.since() && now - known.since() >= BoardTuning.STUCK_TTL_TICKS) {
+            stuck.remove(spirit);
+            note(
+                    spirit,
+                    known.at(),
+                    now,
+                    false,
+                    "истекла: " + BoardTuning.STUCK_TTL_TICKS + " тиков без выхода из ловушки");
+            return Optional.empty();
+        }
         return Optional.of(known);
     }
 
@@ -77,8 +108,29 @@ public final class StuckSpirits {
     }
 
     public void release(UUID spirit) {
+        release(spirit, 0, "снята вручную");
+    }
+
+    public void release(UUID spirit, long now, String reason) {
         Objects.requireNonNull(spirit, "Дух не может быть null: спасение снимает метку с конкретного духа");
-        stuck.remove(spirit);
+        Objects.requireNonNull(reason, "Причина снятия не может быть null: без неё метку не объяснить");
+        Stuck known = stuck.remove(spirit);
+        if (known != null) {
+            note(spirit, known.at(), now, false, reason);
+        }
+    }
+
+    public List<Change> drainChanges() {
+        List<Change> drained = List.copyOf(changes);
+        changes.clear();
+        return drained;
+    }
+
+    private void note(UUID spirit, @Nullable BlockCoord at, long tick, boolean marked, String reason) {
+        if (changes.size() >= MAX_CHANGES) {
+            changes.remove(0);
+        }
+        changes.add(new Change(spirit, at, Math.max(0, tick), marked, reason));
     }
 
     public List<BoardState.Stuck> snapshot() {
