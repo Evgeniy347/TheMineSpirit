@@ -126,7 +126,7 @@ public final class HarvestSession {
         this.safety = new LevelSafetyView(level);
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
-        this.terrain = new GatherCells(level, spirit.blockPosition().getY());
+        this.terrain = new GatherCells(level);
     }
 
     public static HarvestSession mineVein(SpiritEntity spirit, OreKind ore, int count, int radius) {

@@ -22,13 +22,21 @@ final class SoilCells {
     }
 
     boolean takeable(BlockCoord coord) {
+        return SoilLayer.takeable(cell(coord));
+    }
+
+    boolean takeableGranular(BlockCoord coord) {
+        return SoilLayer.takeableGranular(cell(coord));
+    }
+
+    private SoilLayer.Cell cell(BlockCoord coord) {
         BlockPos pos = new BlockPos(coord.x(), coord.y(), coord.z());
-        return SoilLayer.takeable(new SoilLayer.Cell(
+        return new SoilLayer.Cell(
                 coord.y(),
                 ground(level.getBlockState(pos)),
                 ground(level.getBlockState(pos.above())),
                 ground(level.getBlockState(pos.below())),
-                waterNear(coord.x(), coord.z())));
+                waterNear(coord.x(), coord.z()));
     }
 
     private SoilLayer.Ground ground(BlockState state) {

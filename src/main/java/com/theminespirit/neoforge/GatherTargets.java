@@ -42,10 +42,7 @@ final class GatherTargets implements HarvestTargets {
     GatherTargets(Level level, BlockPos center, int radius, IdFilter filter, boolean settled) {
         this.level = level;
         this.settlement = level instanceof ServerLevel server && settled
-                ? SettlementPlotStore.get(server)
-                        .site()
-                        .filter(site -> site.near(center.getX(), center.getZ()))
-                        .orElse(null)
+                ? SettlementPlotStore.get(server).site().orElse(null)
                 : null;
         this.settled = settled;
         this.center = center;
@@ -163,7 +160,7 @@ final class GatherTargets implements HarvestTargets {
 
     private boolean plannedBySettlement(BlockPos pos) {
         StageSite site = settlement;
-        return site != null && site.planCell(pos.getX(), pos.getY(), pos.getZ());
+        return site != null && site.gatherProtected(pos.getX(), pos.getY(), pos.getZ());
     }
 
     private boolean forbiddenBySettlement(BlockPos pos) {

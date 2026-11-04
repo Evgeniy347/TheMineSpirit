@@ -60,6 +60,15 @@ public final class LevelRepair {
                 target.leveling(), "Восстановление выравнивания без плана: срезать и подсыпать нечего");
         List<TaskNode> steps = new ArrayList<>();
         leveling.cut().forEach(box -> steps.add(retried(new ScriptCall("clear_area", params(box, Map.of())))));
+        if (!leveling.cut().isEmpty()) {
+            steps.add(retried(new ScriptCall(
+                    "collect_drops",
+                    Map.of(
+                            "radius",
+                            CatalogLimits.DROP_RADIUS_MAX,
+                            "filter",
+                            List.of("minecraft:" + PlotLeveling.DEFAULT_BLOCK)))));
+        }
         int volume = leveling.fillVolume();
         if (volume > 0) {
             BlockCoord source = GroundsPlan.dirtSource(target, 1);

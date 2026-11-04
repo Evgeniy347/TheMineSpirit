@@ -23,7 +23,7 @@ class LevelRepairTests {
         List<ScriptCall> calls = new ArrayList<>();
         collect(plan, calls);
         assertEquals(
-                List.of("clear_area", "acquire_at", "fill", "fill"),
+                List.of("clear_area", "collect_drops", "acquire_at", "fill", "fill"),
                 calls.stream()
                         .map(ScriptCall::script)
                         .filter(script -> !"wait".equals(script))
