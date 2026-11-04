@@ -1,5 +1,6 @@
 package com.theminespirit.core.script;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class PortalScripts {
@@ -9,7 +10,7 @@ public final class PortalScripts {
     private PortalScripts() {}
 
     public static List<ScriptSpec> all() {
-        return List.of(
+        List<ScriptSpec> specs = new ArrayList<>(List.of(
                 new ScriptSpec(
                         CAST_OBSIDIAN,
                         "получить обсидиан: залить водой источник лавы и сломать алмазной киркой",
@@ -23,6 +24,8 @@ public final class PortalScripts {
                         "зажечь незажжённую рамку портала огнивом",
                         List.of(ParamSpec.integer("radius", false, 1, 32, LightPortalParams.RADIUS_DEFAULT)),
                         List.of("рядом есть рамка 4×5 из обсидиана с воздухом внутри"),
-                        List.of("внутри рамки зажжён портал Нижнего мира")));
+                        List.of("внутри рамки зажжён портал Нижнего мира"))));
+        specs.addAll(BucketScripts.all());
+        return List.copyOf(specs);
     }
 }

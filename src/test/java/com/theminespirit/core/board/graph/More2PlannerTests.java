@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 class More2PlannerTests {
     private static final SupplyGraph GRAPH = SupplyGraph.loadDefault();
     private static final String FIRE = "event:" + More2Rules.FIRE_NEAR_BUILDING + ":more2_put_out_fire";
-    private static final String TRADE = "event:" + More2Rules.VILLAGER_TRADE + ":more2_trade_villager";
 
     @Test
     void implementedEvent_FlagTrue_IsPosted() {
@@ -32,19 +31,14 @@ class More2PlannerTests {
     }
 
     @Test
-    void controlEvent_Stub_IsNotPosted() {
-        GraphWorld world = GraphWorld.empty().event(More2Rules.VILLAGER_TRADE);
-        GraphState state = world.state();
-        GraphPlan plan = GraphPlanner.plan(GRAPH, state);
-
-        GraphTickets.Result tickets = GraphTickets.of(GRAPH, state, plan);
-
+    void removedVillagerTrade_GraphLoaded_IsAbsent() {
         assertTrue(
-                tickets.post().stream().noneMatch(ticket -> (GraphTickets.PREFIX + TRADE).equals(ticket.id())),
-                "Торговля с жителем не ставится на доску: у духов нет такого действия");
+                GRAPH.way("more2_trade_villager").isEmpty(),
+                "Торговля с жителем удалена: у духов нет такого действия и потребности в нём");
         assertTrue(
-                tickets.unimplemented().stream().anyMatch(known -> TRADE.equals(known.id())),
-                "Заглушка попадает в список нереализованных, а не теряется молча");
+                GRAPH.events().get(More2Rules.VILLAGER_NEAR).tasks().stream()
+                        .noneMatch(task -> "more2_trade_villager".equals(task.id())),
+                "Событие жителей рядом ставит только охрану");
     }
 
     @Test

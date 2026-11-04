@@ -97,11 +97,11 @@ class More2RulesTests {
     }
 
     @Test
-    void villagers_Nearby_GuardAndTrade() {
+    void villagers_Nearby_GuardOnly() {
         Set<String> events = More2Rules.events(signals(new More2Rules.Villagers(2)));
 
         assertTrue(events.contains(More2Rules.VILLAGER_NEAR), "Жители рядом — защищать");
-        assertTrue(events.contains(More2Rules.VILLAGER_TRADE), "Жители рядом — торговать");
+        assertFalse(events.contains("more2_villager_trade"), "Торговли у духов нет: событие не создаётся");
     }
 
     @Test

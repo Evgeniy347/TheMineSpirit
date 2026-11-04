@@ -73,7 +73,7 @@ src/test/java/com/theminespirit/core/planner/ResourceResolverTests.java	566
 src/test/java/com/theminespirit/core/policy/BlockProtectionTests.java	314
 src/test/java/com/theminespirit/core/rest/BoardRoutesTests.java	364
 src/test/java/com/theminespirit/core/rest/TaskRoutesTests.java	884
-src/test/java/com/theminespirit/core/script/ScriptCatalogTests.java	1101
+src/test/java/com/theminespirit/core/script/ScriptCatalogTests.java	1108
 src/test/java/com/theminespirit/core/tactics/FactorTests.java	422
 src/test/java/com/theminespirit/core/tactics/TacticsConfigTests.java	370
 src/test/java/com/theminespirit/core/task/TaskReconcilerTests.java	368
