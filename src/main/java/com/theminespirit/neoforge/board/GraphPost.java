@@ -80,29 +80,29 @@ final class GraphPost {
 
     boolean post(GraphTickets.Ticket ticket) {
         GraphPlan.Task task = ticket.task();
-        if (More3Post.handles(ticket.node())) {
-            return More3Post.post(this, ticket);
+        if (MoreAreaPost.handles(ticket.node())) {
+            return MoreAreaPost.post(this, ticket);
         }
-        return More4Post.handles(ticket.node())
-                ? More4Post.post(this, ticket)
-                : switch (ticket.kind()) {
-                    case BUILDING ->
-                        FarmPost.building(this, ticket)
-                                || GraphNodeBuilds.post(this, ticket, task)
-                                || PortalPost.building(this, ticket)
-                                || (ExtraOrchardPost.handles(ticket.node())
-                                        ? ExtraOrchardPost.post(this, ticket, task)
-                                        : StagePlacePost.handles(ticket.node())
-                                                ? StagePlacePost.post(this, ticket)
-                                                : StageBuilt.ids().contains(ticket.node())
-                                                        ? building(ticket)
-                                                        : routes().building(ticket));
-                    case EVENT -> event(ticket);
-                    case WAY -> way(ticket, task);
-                };
+        return switch (ticket.kind()) {
+            case BUILDING ->
+                MorePost.building(this, ticket)
+                        || FarmPost.building(this, ticket)
+                        || GraphNodeBuilds.post(this, ticket, task)
+                        || PortalPost.building(this, ticket)
+                        || (ExtraOrchardPost.handles(ticket.node())
+                                ? ExtraOrchardPost.post(this, ticket, task)
+                                : StagePlacePost.handles(ticket.node())
+                                        ? StagePlacePost.post(this, ticket)
+                                        : StageBuilt.ids().contains(ticket.node())
+                                                ? building(ticket)
+                                                : routes().building(ticket));
+            case EVENT -> event(ticket);
+            case WAY -> way(ticket, task);
+        };
     }
 
     private boolean event(GraphTickets.Ticket ticket) {
+        if (GraphMorePost.handles(ticket)) return GraphMorePost.post(this, ticket, ticket.task());
         if (ticket.id().startsWith(GraphTickets.PREFIX + "event:life_")) {
             return true;
         }
@@ -136,7 +136,7 @@ final class GraphPost {
         if (WorldPost.handles(ticket.node())) {
             return WorldPost.post(this, ticket);
         }
-        return COLLECT.contains(ticket.node()) && collect(ticket);
+        return MorePost.event(this, ticket) || (COLLECT.contains(ticket.node()) && collect(ticket));
     }
 
     private boolean hungry(GraphTickets.Ticket ticket) {
@@ -169,6 +169,7 @@ final class GraphPost {
     }
 
     private boolean way(GraphTickets.Ticket ticket, GraphPlan.Task task) {
+        if (GraphMorePost.handles(ticket)) return GraphMorePost.post(this, ticket, task);
         BoardCase boardCase = task.boardCase();
         if (ToolSet.isTool(boardCase) && task.spirit().isPresent()) {
             return tool(ticket, task);
@@ -188,7 +189,7 @@ final class GraphPost {
             case SMELT_CHARCOAL -> new GraphCrafting(this).charcoal(ticket, task);
             case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART -> GraphBrew.post(this, ticket, task);
             case ACTIVITY_MOVE -> DigOutPost.digOut(this, service, task);
-            default -> FarmPost.way(this, ticket, task);
+            default -> MorePost.way(this, ticket, task) || FarmPost.way(this, ticket, task);
         };
     }
 

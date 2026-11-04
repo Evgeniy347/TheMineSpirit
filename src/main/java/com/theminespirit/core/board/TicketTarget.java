@@ -3,11 +3,10 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.movement.SelfEscape;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.ResourceKnowledge;
 import com.theminespirit.core.town.StageWork;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
@@ -35,7 +34,8 @@ public record TicketTarget(
         @Nullable PlotLeveling leveling,
         @Nullable StageWork work,
         SelfEscape.@Nullable Plan rescue,
-        @Nullable BlockCoord deposit) {
+        @Nullable BlockCoord deposit,
+        @Nullable TaskNode plan) {
 
     public TicketTarget {
         dropItems = List.copyOf(Objects.requireNonNull(
@@ -48,55 +48,7 @@ public record TicketTarget(
     }
 
     public List<String> details() {
-        List<String> details = new ArrayList<>();
-        details.add(BoardActivities.TARGET_KEY + coords(target));
-        if (schemeFile != null) {
-            details.add("scheme=" + schemeFile);
-        }
-        if (building != null) {
-            details.add("building=" + building);
-        }
-        if (wood != null) {
-            details.add("wood=" + wood);
-        }
-        if (fenceBlock != null) {
-            details.add("fence=" + fenceBlock);
-        }
-        if (lureItem != null) {
-            details.add("lure=" + lureItem);
-        }
-        if (supplyItem != null) {
-            details.add("supply=" + supplyItem + "×" + supplyCount);
-        }
-        if (craftItem != null) {
-            details.add("craft=" + craftItem + "×" + count);
-        }
-        if (species != null) {
-            details.add("species=" + species.name().toLowerCase(Locale.ROOT));
-        }
-        if (from != null) {
-            details.add("from=" + coords(from));
-        }
-        if (to != null) {
-            details.add("to=" + coords(to));
-        }
-        if (deposit != null) {
-            details.add("deposit=" + coords(deposit));
-        }
-        if (toolCount > 0) {
-            details.add("tools=" + toolCount);
-        }
-        if (craterBlocks > 0) {
-            details.add("crater=" + craterBlocks);
-        }
-        if (!dropItems.isEmpty()) {
-            details.add("drops=" + String.join(",", dropItems));
-        }
-        return List.copyOf(details);
-    }
-
-    private static String coords(BlockCoord at) {
-        return at.x() + "," + at.y() + "," + at.z();
+        return TicketDetails.of(this);
     }
 
     public TicketTarget withScheme(String scheme) {
@@ -215,6 +167,13 @@ public record TicketTarget(
         return builder.build();
     }
 
+    public TicketTarget withPlan(TaskNode explicit) {
+        Builder builder = new Builder(this);
+        builder.plan =
+                Objects.requireNonNull(explicit, "Явный план не может быть null: без плана задание нечего исполнять");
+        return builder.build();
+    }
+
     private static final class Builder {
         private BlockCoord target;
         private @Nullable String schemeFile;
@@ -239,6 +198,7 @@ public record TicketTarget(
         private @Nullable StageWork work;
         private SelfEscape.@Nullable Plan rescue;
         private @Nullable BlockCoord deposit;
+        private @Nullable TaskNode plan;
 
         Builder(BlockCoord target) {
             this.target = Objects.requireNonNull(target, "Цель задания не может быть null: от неё строится план");
@@ -268,6 +228,7 @@ public record TicketTarget(
             work = source.work;
             rescue = source.rescue;
             deposit = source.deposit;
+            plan = source.plan;
         }
 
         TicketTarget build() {
@@ -294,7 +255,8 @@ public record TicketTarget(
                     leveling,
                     work,
                     rescue,
-                    deposit);
+                    deposit,
+                    plan);
         }
     }
 }

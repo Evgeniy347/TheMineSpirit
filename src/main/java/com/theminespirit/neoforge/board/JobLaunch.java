@@ -4,6 +4,8 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.MoreActivityPlans;
+import com.theminespirit.core.board.TicketPlanPick;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.plan.ScriptCall;
@@ -21,9 +23,15 @@ final class JobLaunch {
     static TaskNode plan(BoardTicket ticket, TicketTarget target) {
         Objects.requireNonNull(ticket, "Задание не может быть null: план строится по его кейсу");
         Objects.requireNonNull(target, "Цель не может быть null: без неё план не собрать");
-        return TicketPlans.EXTERNAL_CASES.contains(ticket.boardCase())
-                ? new ScriptCall("eat", Map.of())
-                : TicketPlans.plan(ticket.boardCase(), ticket.level(), target);
+        if (target.plan() != null) {
+            return target.plan();
+        }
+        if (TicketPlans.EXTERNAL_CASES.contains(ticket.boardCase())) {
+            return new ScriptCall("eat", Map.of());
+        }
+        return MoreActivityPlans.handles(ticket.boardCase())
+                ? MoreActivityPlans.plan(ticket.boardCase(), target)
+                : TicketPlanPick.plan(ticket.boardCase(), ticket.level(), target);
     }
 
     static void start(Board board, ActivityCards cards, SpiritEntity spirit, String ticketId, TaskNode plan) {
