@@ -21,7 +21,6 @@ public final class More2Rules {
     public static final String ANIMAL_OUTSIDE = "more2_animal_outside";
     public static final String WILD_HERD = "more2_wild_herd";
     public static final String VILLAGER_NEAR = "more2_villager_near";
-    public static final String VILLAGER_TRADE = "more2_villager_trade";
     public static final String STAGE_PREP = "more2_stage_prep";
     public static final String BED_NEEDED = "more2_bed_needed";
     public static final String PATH_NEEDED = "more2_path_needed";
@@ -248,7 +247,6 @@ public final class More2Rules {
         }
         if (signals.villagers().nearby()) {
             events.add(VILLAGER_NEAR);
-            events.add(VILLAGER_TRADE);
         }
         if (signals.stage().prep()) {
             events.add(STAGE_PREP);

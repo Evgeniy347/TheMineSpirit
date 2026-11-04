@@ -16,9 +16,6 @@
     {"id": "more7_expand_pen", "case": "BUILD_PEN", "makes": "more7:pen_room",
      "yield": 1, "weight": 0.749566171, "consumes": {"#logs": 4}, "ticks": 600,
      "implemented": true, "todo": "more7_pen_full"},
-    {"id": "more7_order_to_player", "case": "TRANSFER_ITEM", "makes": "more7:order_delivered",
-     "yield": 1, "weight": 3.341848246, "consumes": {}, "ticks": 160,
-     "implemented": false, "todo": "more7_order_ready"},
     {"id": "more7_order_to_chest", "case": "STOCK_CHESTS", "makes": "more7:order_delivered",
      "yield": 1, "weight": 4.196745684, "consumes": {}, "ticks": 160,
      "implemented": true, "todo": "more7_order_ready"}
@@ -52,7 +49,6 @@
     },
     "more7_order_ready": {
       "tasks": [
-        {"id": "more7_order_to_player", "case": "TRANSFER_ITEM", "base": 66, "consumes": {}, "implemented": false},
         {"id": "more7_order_to_chest", "case": "STOCK_CHESTS", "base": 62, "consumes": {}, "implemented": true}
       ],
       "push": {"more7:order_delivered": 12},

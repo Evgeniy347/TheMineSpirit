@@ -331,7 +331,7 @@ def test_more2_nodes():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     for way in ("more2_sow_food", "more2_breed_food", "more2_unload_carry",
                 "more2_put_out_fire", "more2_remove_lava", "more2_block_flow",
-                "more2_pen_animal", "more2_lure_wild", "more2_guard_villager", "more2_trade_villager",
+                "more2_pen_animal", "more2_lure_wild", "more2_guard_villager",
                 "more2_prepare_stage", "more2_make_bed", "more2_build_trail"):
         assert graph.way(way) is not None, "Python-модель не видит новый путь области graphmore2: " + way
         if way in MORE2_READY:
@@ -350,7 +350,7 @@ def test_more2_nodes():
     for event in ("more2_food_low", "more2_inventory_full", "more2_inventory_space", "more2_long_carry",
                   "more2_fire_near_building", "more2_lava_near_building", "more2_hazard_flow",
                   "more2_animal_outside", "more2_wild_herd", "more2_villager_near",
-                  "more2_villager_trade", "more2_stage_prep", "more2_bed_needed", "more2_path_needed"):
+                  "more2_stage_prep", "more2_bed_needed", "more2_path_needed"):
         assert event in graph.events, "Python-модель не видит новое событие области: " + event
     transfer = graph.events["more2_inventory_space"]["tasks"][0]["id"]
     field = graph.events["more2_long_carry"]["tasks"][0]["id"]
@@ -381,7 +381,7 @@ def test_more3_nodes():
     events = ("danger_spot", "spirit_death_drop", "trash_found", "chest_purpose_missing",
               "sand_collapse", "gravel_collapse", "farmland_trampled", "world_decay")
     ways = ("secure_danger", "recover_death_drop", "clear_trash",
-            "assign_chest_purpose", "repair_world_decay")
+            "assign_chest_purpose")
     for event in events:
         assert event in graph.events, "Python-модель не видит событие области more3: " + event
     for way in ways:
@@ -412,7 +412,8 @@ MORE6_WAYS = (
 )
 MORE6_IMPLEMENTED = {
     "more6_deposit_materials", "more6_refuel_station", "more6_place_station",
-    "more6_pickup_items", "more6_maintain_stock", "more6_assign_idle",
+    "more6_pickup_items", "more6_fetch_water", "more6_fetch_lava",
+    "more6_maintain_stock", "more6_assign_idle",
 }
 
 
@@ -468,7 +469,7 @@ MORE5_WAYS = ("more5_defend_player", "more5_feed_player",
               "more5_craft_mine_torch", "more5_pickup_wood_drop", "more5_plant_sapling")
 MORE5_IMPLEMENTED = {
     "more5_defend_player", "more5_feed_player", "more5_light_crops",
-    "more5_light_saplings", "more5_fertilize_growth", "more5_gather_fuel",
+    "more5_light_saplings", "more5_water_crops", "more5_fertilize_growth", "more5_gather_fuel",
     "more5_make_charcoal", "more5_gather_build_material",
     "more5_craft_build_material", "more5_restore_block", "more5_bridge_route",
     "more5_place_site_chest", "more5_carry_to_site", "more5_light_mine",
@@ -510,8 +511,8 @@ def test_more5_inputs():
                     "event:more5_wood_drops:more5_pickup_wood_drop"):
         assert task_id in tasks, "Python: нет ожидаемого задания области graphmore5: " + task_id
         assert tasks[task_id]["implemented"], "Связанное действие области выдаётся готовым: " + task_id
-    stub = "event:more5_crops_dry:more5_water_crops"
-    assert stub in tasks and not tasks[stub]["implemented"],         "Бессмысленная заглушка области не выдаётся готовой: " + stub
+    water = "event:more5_crops_dry:more5_water_crops"
+    assert water in tasks and tasks[water]["implemented"],         "Полив связан с действием и выдаётся готовым: " + water
     assert tasks["event:more5_player_weak:more5_defend_player"]["priority"] > 100, \
         "Python: защита игрока в бою выше обычного потолка"
     print("OK: входы области graphmore5 учитываются в выборе")
@@ -567,7 +568,7 @@ MORE7 = {
     "more7:harvest_peak": "more7_harvest_early",
     "more7:return_peak": "more7_return_home",
     "more7:pen_room": "more7_expand_pen",
-    "more7:order_delivered": "more7_order_to_player",
+    "more7:order_delivered": "more7_order_to_chest",
 }
 
 
@@ -578,7 +579,6 @@ def test_more7_nodes():
               "more7_order_ready")
     ways = ("more7_harvest_early",
             "more7_return_home", "more7_expand_pen",
-            "more7_order_to_player",
             "more7_order_to_chest")
     for event in events:
         assert event in graph.events, "Python-модель не видит событие области graphmore7: " + event
