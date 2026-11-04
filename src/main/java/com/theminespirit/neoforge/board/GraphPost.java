@@ -94,7 +94,8 @@ final class GraphPost {
     }
 
     private boolean event(GraphTickets.Ticket ticket) {
-        if (life(ticket)) {
+        if (GraphMorePost.handles(ticket)) return GraphMorePost.post(this, ticket, ticket.task());
+        if (ticket.id().startsWith(GraphTickets.PREFIX + "event:life_")) {
             return true;
         }
         if (FarmPost.event(this, ticket)) {
@@ -130,10 +131,6 @@ final class GraphPost {
         return MorePost.event(this, ticket) || (COLLECT.contains(ticket.node()) && collect(ticket));
     }
 
-    private boolean life(GraphTickets.Ticket ticket) {
-        return ticket.id().startsWith(GraphTickets.PREFIX + "event:life_");
-    }
-
     private boolean hungry(GraphTickets.Ticket ticket) {
         GraphFood.post(
                 level, service, spirits, stock, ticket.id(), ticket.task().priority(), now);
@@ -164,6 +161,7 @@ final class GraphPost {
     }
 
     private boolean way(GraphTickets.Ticket ticket, GraphPlan.Task task) {
+        if (GraphMorePost.handles(ticket)) return GraphMorePost.post(this, ticket, task);
         BoardCase boardCase = task.boardCase();
         if (ToolSet.isTool(boardCase) && task.spirit().isPresent()) {
             return tool(ticket, task);

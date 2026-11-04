@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.MoreActivityPlans;
 import com.theminespirit.core.board.TicketPlanPick;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
@@ -25,8 +26,11 @@ final class JobLaunch {
         if (target.plan() != null) {
             return target.plan();
         }
-        return TicketPlans.EXTERNAL_CASES.contains(ticket.boardCase())
-                ? new ScriptCall("eat", Map.of())
+        if (TicketPlans.EXTERNAL_CASES.contains(ticket.boardCase())) {
+            return new ScriptCall("eat", Map.of());
+        }
+        return MoreActivityPlans.handles(ticket.boardCase())
+                ? MoreActivityPlans.plan(ticket.boardCase(), target)
                 : TicketPlanPick.plan(ticket.boardCase(), ticket.level(), target);
     }
 
