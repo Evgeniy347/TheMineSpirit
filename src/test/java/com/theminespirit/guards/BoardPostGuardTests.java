@@ -44,6 +44,8 @@ class BoardPostGuardTests {
             "исполнитель билета графа: снос по узлу demolish_stray/clear_floating",
             "TransferWatch.java",
             "доставка материалов по билету графа: причина под-задачи — id задания графа, work выбирает граф",
+            "SupplyTickets.java",
+            "снабжение по requiredItems уже стоящих билетов: работа выводится из потребности графа, не из порога",
             "SpiritBoardGateway.java",
             "REST POST /v1/board/tasks — внешний вход стратега; задача приходит от игрока, а не от сторожа");
 
@@ -94,7 +96,6 @@ class BoardPostGuardTests {
         assertFalse(names.contains("OldChests.java"), "Перенос старых сундуков выбирает узел store:transfer");
         assertFalse(names.contains("PenBuild.java"), "Загон строит узел building:pen");
         assertFalse(names.contains("WoolWatch.java"), "Шерсть и кровати — узлы графа, а не пороги сторожа");
-        assertFalse(names.contains("SupplyTickets.java"), "Снабжение выбирает граф, а не отдельный сторож");
     }
 
     @Test
