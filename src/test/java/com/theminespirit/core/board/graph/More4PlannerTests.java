@@ -11,7 +11,7 @@ class More4PlannerTests {
     private static final String NEAR = "event:" + More4Rules.PLAYER_NEAR + ":more4_guard_settlement";
 
     @Test
-    void eventStub_PlannedStub_IsNotPosted() {
+    void eventImplemented_PlannedTask_IsPosted() {
         GraphWorld world = GraphWorld.empty().event(More4Rules.PLAYER_NEAR);
         GraphState state = world.state();
         GraphPlan plan = GraphPlanner.plan(GRAPH, state);
@@ -20,15 +20,33 @@ class More4PlannerTests {
                 .filter(candidate -> NEAR.equals(candidate.id()))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Чужой игрок обязан дать задание охраны: " + NEAR));
-        assertFalse(task.implemented(), "Заглушка «охранять поселение» ещё не реализована");
+        assertTrue(task.implemented(), "Охрана поселения подключена к действию");
         assertTrue(task.priority() > 0, "Игрок у поселения — заметный приоритет, а не ноль");
 
         GraphTickets.Result tickets = GraphTickets.of(GRAPH, state, plan);
         assertTrue(
-                tickets.post().stream().noneMatch(ticket -> (GraphTickets.PREFIX + NEAR).equals(ticket.id())),
-                "Реализация-заглушка не ставится на доску: дух не должен брать несуществующее действие");
+                tickets.post().stream().anyMatch(ticket -> (GraphTickets.PREFIX + NEAR).equals(ticket.id())),
+                "Реализованное действие ставится на доску: дух обязан взять охрану");
+    }
+
+    @Test
+    void eventStub_DeferredTask_IsNotPosted() {
+        String stub = "event:" + More4Rules.SPACE_FOUND + ":more4_plan_expansion";
+        GraphState state = GraphWorld.empty().event(More4Rules.SPACE_FOUND).state();
+        GraphPlan plan = GraphPlanner.plan(GRAPH, state);
+
+        GraphPlan.Task task = plan.tasks().stream()
+                .filter(candidate -> stub.equals(candidate.id()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Свободное место обязано дать задание: " + stub));
+        assertFalse(task.implemented(), "Планирование расширения — мета-шаг без изменения мира, он не выдаётся");
+
+        GraphTickets.Result tickets = GraphTickets.of(GRAPH, state, plan);
         assertTrue(
-                tickets.unimplemented().stream().anyMatch(known -> NEAR.equals(known.id())),
+                tickets.post().stream().noneMatch(ticket -> (GraphTickets.PREFIX + stub).equals(ticket.id())),
+                "Заглушка не ставится на доску: дух не должен брать несуществующее действие");
+        assertTrue(
+                tickets.unimplemented().stream().anyMatch(known -> stub.equals(known.id())),
                 "Заглушка попадает в список нереализованных, а не теряется молча");
     }
 

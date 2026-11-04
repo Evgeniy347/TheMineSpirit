@@ -11,6 +11,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphPlan;
+import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
@@ -38,6 +39,8 @@ final class GraphPost {
     private static final String ORDER = "craft_player_order";
     private static final Set<String> DEMOLITION = Set.of("demolish_stray", "clear_floating");
     private static final Set<String> COLLECT = Set.of("collect_drops", "collect_saplings");
+    private static final Set<BoardStatus> OPEN_STATUSES =
+            Set.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED);
 
     final ServerLevel level;
     final FirstStepsRunner.StageScan scan;
@@ -49,6 +52,7 @@ final class GraphPost {
     final BoardService service;
     final MaterialSource source;
     final PetWork pets;
+    final GraphState state;
     private @Nullable BlockCoord craft;
 
     GraphPost(
@@ -61,6 +65,7 @@ final class GraphPost {
             long now) {
         this.level = level;
         this.pets = site.pets();
+        this.state = site.state();
         this.service = service;
         this.spirits = spirits;
         this.stock = stock;
@@ -71,29 +76,34 @@ final class GraphPost {
         this.now = now;
     }
 
-    record Site(FirstStepsRunner.StageScan scan, GraphSurroundings.Around around, PetWork pets) {}
+    record Site(FirstStepsRunner.StageScan scan, GraphSurroundings.Around around, PetWork pets, GraphState state) {}
 
     boolean post(GraphTickets.Ticket ticket) {
         GraphPlan.Task task = ticket.task();
-        return switch (ticket.kind()) {
-            case BUILDING ->
-                FarmPost.building(this, ticket)
-                        || GraphNodeBuilds.post(this, ticket, task)
-                        || PortalPost.building(this, ticket)
-                        || (ExtraOrchardPost.handles(ticket.node())
-                                ? ExtraOrchardPost.post(this, ticket, task)
-                                : StagePlacePost.handles(ticket.node())
-                                        ? StagePlacePost.post(this, ticket)
-                                        : StageBuilt.ids().contains(ticket.node())
-                                                ? building(ticket)
-                                                : routes().building(ticket));
-            case EVENT -> event(ticket);
-            case WAY -> way(ticket, task);
-        };
+        if (More3Post.handles(ticket.node())) {
+            return More3Post.post(this, ticket);
+        }
+        return More4Post.handles(ticket.node())
+                ? More4Post.post(this, ticket)
+                : switch (ticket.kind()) {
+                    case BUILDING ->
+                        FarmPost.building(this, ticket)
+                                || GraphNodeBuilds.post(this, ticket, task)
+                                || PortalPost.building(this, ticket)
+                                || (ExtraOrchardPost.handles(ticket.node())
+                                        ? ExtraOrchardPost.post(this, ticket, task)
+                                        : StagePlacePost.handles(ticket.node())
+                                                ? StagePlacePost.post(this, ticket)
+                                                : StageBuilt.ids().contains(ticket.node())
+                                                        ? building(ticket)
+                                                        : routes().building(ticket));
+                    case EVENT -> event(ticket);
+                    case WAY -> way(ticket, task);
+                };
     }
 
     private boolean event(GraphTickets.Ticket ticket) {
-        if (life(ticket)) {
+        if (ticket.id().startsWith(GraphTickets.PREFIX + "event:life_")) {
             return true;
         }
         if (FarmPost.event(this, ticket)) {
@@ -127,10 +137,6 @@ final class GraphPost {
             return WorldPost.post(this, ticket);
         }
         return COLLECT.contains(ticket.node()) && collect(ticket);
-    }
-
-    private boolean life(GraphTickets.Ticket ticket) {
-        return ticket.id().startsWith(GraphTickets.PREFIX + "event:life_");
     }
 
     private boolean hungry(GraphTickets.Ticket ticket) {
@@ -273,9 +279,7 @@ final class GraphPost {
 
     BoardOutcome submit(BoardTicket ticket, TicketTarget target) {
         BoardOutcome outcome = service.submit(ticket, target);
-        if (outcome == BoardOutcome.DUPLICATE) {
-            service.board().reprioritize(ticket.id(), ticket.priority());
-        }
+        if (outcome == BoardOutcome.DUPLICATE) service.board().reprioritize(ticket.id(), ticket.priority());
         return outcome;
     }
 
@@ -284,13 +288,7 @@ final class GraphPost {
     }
 
     boolean open(String id) {
-        return service.board()
-                .statusOf(id)
-                .filter(status -> switch (status) {
-                    case PENDING, WAITING_RESOURCES, ASSIGNED -> true;
-                    default -> false;
-                })
-                .isPresent();
+        return service.board().statusOf(id).filter(OPEN_STATUSES::contains).isPresent();
     }
 
     private GraphRoutes routes() {
