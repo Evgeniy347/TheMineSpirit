@@ -53,7 +53,7 @@ public record WorldReport(
         Objects.requireNonNull(facts, "Факты графа не могут быть null: из них собирается сводка мира");
         int blocks = 0;
         List<Stray> strays = new ArrayList<>();
-        for (GraphFacts.Stray stray : facts.strays()) {
+        for (GraphSiteFacts.Stray stray : facts.strays()) {
             int size =
                     stray.blocks().values().stream().mapToInt(Integer::intValue).sum();
             blocks += Math.max(1, size);

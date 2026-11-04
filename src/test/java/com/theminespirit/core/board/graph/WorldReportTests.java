@@ -24,11 +24,11 @@ class WorldReportTests {
                                 "warehouse", 1, 90, 4, Map.of("minecraft:oak_planks", 4), Map.of(), 0, null, false),
                         "mine",
                         new GraphFacts.Building("mine", 1, 0, 9, Map.of(), Map.of(), 0, null, true)),
-                List.of(new GraphFacts.Stray(
+                List.of(new GraphSiteFacts.Stray(
                         "stray:fence", "fence", new GraphFacts.Position(1, 64, 1), null, Map.of("oak_fence", 3))),
-                new GraphFacts.Terrain(
+                new GraphSiteFacts.Terrain(
                         2, 4, 3, 5, 1, Map.of("minecraft:dirt", 2), Map.of("minecraft:dirt", 2), Map.of(), false),
-                new GraphFacts.StageReqs(Map.of(), Map.of()));
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
 
         WorldReport report = WorldReport.of(facts);
 
@@ -50,7 +50,7 @@ class WorldReportTests {
         GraphFacts facts = GraphFacts.empty()
                 .withWorld(new GraphWorldFacts(
                         List.of(),
-                        new GraphFacts.Terrain(0, 0, 0, 0, 0, Map.of(), Map.of(), Map.of(), true),
+                        new GraphSiteFacts.Terrain(0, 0, 0, 0, 0, Map.of(), Map.of(), Map.of(), true),
                         Map.of()));
 
         assertTrue(WorldReport.of(facts).unknown(), "незагруженные чанки видны наблюдателю как неизвестность");

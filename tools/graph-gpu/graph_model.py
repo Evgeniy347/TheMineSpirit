@@ -328,12 +328,12 @@ class Choice:
 
     NAMES = ("farTrip", "slowWork", "duplicate", "conflict", "pileup", "strategicBoost",
              "bottleneckBoost", "idleStationBoost", "nightHome", "spaceFoundBoost",
-             "spaceTight", "petAlone", "herdFull", "fieldFull")
+             "spaceTight", "petAlone", "herdFull", "fieldFull", "failureBackoff")
     NEUTRAL = {
         "farTrip": 1.0, "slowWork": 1.0, "duplicate": 1.0, "conflict": 1.0, "pileup": 1.0,
         "strategicBoost": 0.0, "bottleneckBoost": 0.0, "idleStationBoost": 0.0,
         "nightHome": 1.0, "spaceFoundBoost": 0.0, "spaceTight": 1.0,
-        "petAlone": 1.0, "herdFull": 1.0, "fieldFull": 1.0,
+        "petAlone": 1.0, "herdFull": 1.0, "fieldFull": 1.0, "failureBackoff": 0.5,
     }
 
     __slots__ = ("values",)
@@ -718,6 +718,10 @@ class State:
         self.strays = list(self.facts.get("strays") or [])
         self.terrain = dict(self.facts.get("terrain") or {})
         self.stage_reqs = dict(self.facts.get("stageReqs") or {})
+        feedback = dict(self.facts.get("feedback") or {})
+        self.clock = dict(feedback.get("clock") or {})
+        self.player = dict(feedback.get("player") or {})
+        self.failures = list(feedback.get("failures") or [])
         self._derive_world_events()
 
     def _derive_world_events(self):
@@ -1170,7 +1174,8 @@ class Planner:
                 if self.available(way):
                     self.flow.link(node, way.id, way.weight)
                     self.expand_way(way.id, way)
-                if way.world is not None and way.world not in state.world and way.world not in missing:
+                if way.world is not None and way.world not in state.world \
+                        and not way.world.startswith("more:") and way.world not in missing:
                     missing.append(way.world)
             if missing and not self.sourced(node):
                 self.notices.setdefault(node, {
@@ -1359,7 +1364,18 @@ class Planner:
                 factor *= tuning.conflict
             if "more7_work_pileup" in self.state.events:
                 factor *= tuning.pileup
+        failures = self.failure_count(key)
+        if failures > 0:
+            factor *= tuning.failureBackoff ** min(failures, 3)
         return value * factor + bonus
+
+    def failure_count(self, key):
+        base = key.split(AT, 1)[0]
+        total = 0
+        for failure in self.state.failures:
+            if failure.get("node") in (key, base):
+                total += int(failure.get("count", 0))
+        return total
 
     def way_of(self, key):
         if key.startswith(EVENT):
@@ -1424,7 +1440,7 @@ class Planner:
 
     def travel_ticks(self, key):
         raw = self.travel(key)
-        if "more:bad_trip_conditions" not in self.state.world:
+        if "more:bad_trip_conditions" not in self.state.world and self.failure_count(key) == 0:
             return raw
         return int(math.floor(raw * self.graph.costs.choice.farTrip + 0.5))
 

@@ -18,7 +18,8 @@
     "spaceTight": 1.0,
     "petAlone": 1.0,
     "herdFull": 1.0,
-    "fieldFull": 1.0
+    "fieldFull": 1.0,
+    "failureBackoff": 0.5
   },
   "tiers": [
     "wooden",

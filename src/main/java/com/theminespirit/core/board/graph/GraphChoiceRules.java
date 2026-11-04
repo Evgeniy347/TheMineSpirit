@@ -90,15 +90,35 @@ final class GraphChoiceRules {
                 factor *= tuning.pileup();
             }
         }
+        int failures = failures(key);
+        if (failures > 0) {
+            factor *= Math.pow(tuning.failureBackoff(), Math.min(failures, 3));
+        }
         return value * factor + bonus;
     }
 
     int travelTicks(String key) {
         int raw = travel(key);
-        if (!state.world().contains(MoreRules.BAD_TRIP_CONDITIONS)) {
+        if (!state.world().contains(MoreRules.BAD_TRIP_CONDITIONS) && failures(key) == 0) {
             return raw;
         }
         return (int) Math.round(raw * graph.costs().choice().farTrip());
+    }
+
+    private int failures(String key) {
+        String base = baseKey(key);
+        int total = 0;
+        for (GraphFeedback.Failure failure : state.facts().feedback().failures()) {
+            if (failure.node().equals(key) || failure.node().equals(base)) {
+                total += failure.count();
+            }
+        }
+        return total;
+    }
+
+    private static String baseKey(String key) {
+        int at = key.indexOf(AT);
+        return at < 0 ? key : key.substring(0, at);
     }
 
     int wayTicks(String key, SupplyGraph.Way way) {

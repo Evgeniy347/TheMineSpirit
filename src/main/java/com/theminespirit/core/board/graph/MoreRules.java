@@ -24,7 +24,11 @@ public final class MoreRules {
     private static final int STATION_WAITERS = 2;
     private static final int TREES_LOW = 4;
 
-    public record Player(boolean near, boolean holdingBlock, boolean usingItem) {}
+    public record Player(boolean near, boolean holdingBlock, boolean usingItem, boolean digging) {
+        public Player(boolean near, boolean holdingBlock, boolean usingItem) {
+            this(near, holdingBlock, usingItem, false);
+        }
+    }
 
     public record Clock(boolean duskSoon, boolean badWeather) {}
 
@@ -113,7 +117,7 @@ public final class MoreRules {
             return;
         }
         tags.add(PLAYER_NEAR);
-        if (player.holdingBlock() || player.usingItem()) {
+        if (player.holdingBlock() || player.usingItem() || player.digging()) {
             tags.add(PLAYER_BUILDING);
         }
     }

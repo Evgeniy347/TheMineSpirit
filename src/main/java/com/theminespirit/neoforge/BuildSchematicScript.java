@@ -123,7 +123,6 @@ final class BuildSchematicScript implements ScriptInstance {
     private @Nullable List<ScriptCall> supplyWalk;
     private int approachPathMark;
     private final Set<BlockCoord> planCarried = new HashSet<>();
-    private int planPlacedMark;
     private long planStands;
     private long planTrips;
     private int planDeviations;
@@ -909,7 +908,6 @@ final class BuildSchematicScript implements ScriptInstance {
     private ScriptStatus standStep(BuildPlanCursor cursor, BuildPlanCursor.StandAt at) {
         if (!planStandVisited) {
             planStandVisited = true;
-            planPlacedMark = placed;
             if (!feet().equals(at.stand())) {
                 if (BuildStandPath.plannedReachable(site, at.stand(), WALK_MARGIN, feet())) {
                     return beginApproach(at.stand());
@@ -922,9 +920,6 @@ final class BuildSchematicScript implements ScriptInstance {
                         feet(),
                         cursor.index());
             }
-        }
-        if (placed != planPlacedMark) {
-            planPlacedMark = placed;
         }
         planCarried.removeIf(cell -> !pendingCell(cell));
         List<BlockCoord> cells = new ArrayList<>(at.cells());

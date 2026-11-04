@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphNames;
+import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.StoreRules;
 import com.theminespirit.core.board.graph.SupplyGraph;
@@ -55,7 +56,7 @@ final class StoreInputs {
                 facts.buildings(),
                 facts.strays(),
                 facts.terrain(),
-                new GraphFacts.StageReqs(minimum, real));
+                new GraphSiteFacts.StageReqs(minimum, real));
         boolean storageFull = state.storageFreePercent() < graph.storage().minFreePercent();
         int mixed = StoreRules.mixedChests(facts.chests(), config.maxItemTypesPerChest());
         boolean carried = facts.spirits().values().stream()

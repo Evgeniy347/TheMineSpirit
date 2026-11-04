@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.List;
@@ -36,8 +37,8 @@ class More6InputsTests {
                 Map.of(),
                 Map.of(),
                 List.of(),
-                GraphFacts.Terrain.empty(),
-                new GraphFacts.StageReqs(Map.of(), Map.of()));
+                GraphSiteFacts.Terrain.empty(),
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
 
         assertEquals(
                 Map.of("oak_log", 7, "coal", 2),
@@ -72,8 +73,8 @@ class More6InputsTests {
                         "barn", building("barn", new GraphFacts.Position(3, 64, 3)),
                         "field_carrot", building("field_carrot", null)),
                 List.of(),
-                GraphFacts.Terrain.empty(),
-                new GraphFacts.StageReqs(Map.of(), Map.of()));
+                GraphSiteFacts.Terrain.empty(),
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
         GraphState state = state(
                 facts,
                 Map.of(),
@@ -102,8 +103,8 @@ class More6InputsTests {
                         "crafting_table", station("crafting_table")),
                 Map.of(),
                 List.of(),
-                GraphFacts.Terrain.empty(),
-                new GraphFacts.StageReqs(Map.of(), Map.of()));
+                GraphSiteFacts.Terrain.empty(),
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
         GraphState state =
                 state(facts, Map.of(), Map.of(), Map.of("furnace", Built.BUILT, "crafting_table", Built.PLANNED));
 
@@ -126,8 +127,8 @@ class More6InputsTests {
                 Map.of(),
                 Map.of(),
                 List.of(),
-                GraphFacts.Terrain.empty(),
-                new GraphFacts.StageReqs(Map.of(), Map.of()));
+                GraphSiteFacts.Terrain.empty(),
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
 
         assertEquals(
                 List.of("blank", "free"),

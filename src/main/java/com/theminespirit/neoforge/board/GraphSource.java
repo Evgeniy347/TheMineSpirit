@@ -33,6 +33,7 @@ public final class GraphSource {
     private static final long GRAPH_INTERVAL_TICKS = 600;
     private static final long DEEP_INTERVAL_TICKS = 1200;
 
+    final GraphDecisionNote decisionLog = new GraphDecisionNote();
     private final GraphNotes notes = new GraphNotes();
     private final PetWork pets = new PetWork();
     private String lastBuildings = "";
@@ -121,6 +122,7 @@ public final class GraphSource {
             }
         }
         report(half.plan(), half.result(), unconnected, freeSpirit(half), half.now());
+        decisionLog.note(half.plan(), half.now());
         reportWorld(half.state(), half.now());
         if (half.deep()) {
             String buildings = new TreeMap<>(half.state().buildings()) + " "

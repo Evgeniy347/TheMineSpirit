@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.StageSite;
@@ -93,12 +94,12 @@ final class FarmStray {
         }
     }
 
-    static List<GraphFacts.Stray> facts(ServerLevel level, StageSite site, TownPlan plan) {
-        List<GraphFacts.Stray> strays = new ArrayList<>();
+    static List<GraphSiteFacts.Stray> facts(ServerLevel level, StageSite site, TownPlan plan) {
+        List<GraphSiteFacts.Stray> strays = new ArrayList<>();
         for (BlockCoord cell : cells(level, site, plan)) {
             BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
             String type = BlockStates.idOf(level.getBlockState(pos));
-            strays.add(new GraphFacts.Stray(
+            strays.add(new GraphSiteFacts.Stray(
                     "stray:" + type + "@" + cell.x() + "," + cell.y() + "," + cell.z(),
                     type,
                     new GraphFacts.Position(cell.x(), cell.y(), cell.z()),

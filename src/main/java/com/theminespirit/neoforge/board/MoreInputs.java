@@ -5,25 +5,21 @@ import com.theminespirit.core.board.BoardState;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphFeedback;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.board.graph.MoreRules;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
-import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.HopperBlock;
 import net.minecraft.world.level.block.SaplingBlock;
@@ -33,7 +29,6 @@ import net.minecraft.world.phys.AABB;
 import org.jspecify.annotations.Nullable;
 
 final class MoreInputs {
-    private static final int PLAYER_RADIUS = 16;
     private static final int DROP_RADIUS = 24;
     private static final int DROP_WARN_TICKS = 1200;
     private static final int DROP_DESPAWN_TICKS = 6000;
@@ -53,10 +48,9 @@ final class MoreInputs {
             GraphState state,
             ServerLevel level,
             BoardService service,
-            List<SpiritEntity> spirits,
             FirstStepsRunner.StageScan scan,
             SupplyGraph graph) {
-        MoreRules.Signals signals = signals(state, level, service, spirits, scan, graph);
+        MoreRules.Signals signals = signals(state, level, service, scan, graph);
         Set<String> world = new LinkedHashSet<>(state.world());
         world.addAll(MoreRules.signals(signals));
         return new GraphState(
@@ -78,15 +72,14 @@ final class MoreInputs {
             GraphState state,
             ServerLevel level,
             BoardService service,
-            List<SpiritEntity> spirits,
             FirstStepsRunner.StageScan scan,
             SupplyGraph graph) {
-        MoreRules.Player player = player(level, spirits, scan.home());
+        MoreRules.Player player = player(state.facts().feedback().player());
         Blocks blocks = blocks(level, scan.home());
         return new MoreRules.Signals(
                 player,
                 darkCells(level, scan.stage().enclosure()),
-                clock(level),
+                clock(state.facts().feedback().clock(), level),
                 repeatedFailures(service),
                 stationWaiters(service),
                 drops(level, scan.home()),
@@ -101,30 +94,8 @@ final class MoreInputs {
                 strategicGoals(service));
     }
 
-    private static MoreRules.Player player(ServerLevel level, List<SpiritEntity> spirits, BlockCoord home) {
-        BlockPos center = new BlockPos(home.x(), home.y(), home.z());
-        boolean near = false;
-        boolean holdingBlock = false;
-        boolean usingItem = false;
-        long limit = (long) PLAYER_RADIUS * PLAYER_RADIUS;
-        for (ServerPlayer player : level.players()) {
-            if (!near(player, spirits, center, limit)) {
-                continue;
-            }
-            near = true;
-            ItemStack hand = player.getMainHandItem();
-            holdingBlock |= !hand.isEmpty() && hand.getItem() instanceof BlockItem;
-            usingItem |= player.isUsingItem();
-        }
-        return new MoreRules.Player(near, holdingBlock, usingItem);
-    }
-
-    private static boolean near(ServerPlayer player, List<SpiritEntity> spirits, BlockPos home, long limit) {
-        BlockPos at = player.blockPosition();
-        if (spirits.isEmpty()) {
-            return home.distSqr(at) <= limit;
-        }
-        return spirits.stream().anyMatch(spirit -> spirit.blockPosition().distSqr(at) <= limit);
+    private static MoreRules.Player player(GraphFeedback.Player fact) {
+        return new MoreRules.Player(fact.near(), fact.holdingBlock(), fact.usingItem(), fact.digging());
     }
 
     private static int darkCells(ServerLevel level, ColumnMask enclosure) {
@@ -139,11 +110,9 @@ final class MoreInputs {
         return dark;
     }
 
-    private static MoreRules.Clock clock(ServerLevel level) {
-        long time = level.getDayTime() % 24000L;
-        boolean duskSoon = (time >= 11500L && time < 13000L) || time >= 22500L;
+    private static MoreRules.Clock clock(GraphFeedback.Clock fact, ServerLevel level) {
         boolean badWeather = level.isRaining() || level.isThundering();
-        return new MoreRules.Clock(duskSoon, badWeather);
+        return new MoreRules.Clock(fact.duskSoon(), badWeather);
     }
 
     private static int repeatedFailures(BoardService service) {

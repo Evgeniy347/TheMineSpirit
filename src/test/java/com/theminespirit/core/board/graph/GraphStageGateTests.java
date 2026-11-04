@@ -29,14 +29,14 @@ class GraphStageGateTests {
 
     @Test
     void building_NoMissingAndKnown_Ready() {
-        GraphFacts facts = facts(building(Map.of()), GraphFacts.Terrain.empty(), List.of());
+        GraphFacts facts = facts(building(Map.of()), GraphSiteFacts.Terrain.empty(), List.of());
 
         assertTrue(GraphStageGate.buildingReady(facts, "hut"), "целая известная постройка закрывает свой шаг этапа");
     }
 
     @Test
     void building_MissingBlocks_NotReady() {
-        GraphFacts facts = facts(building(Map.of("minecraft:dirt", 3)), GraphFacts.Terrain.empty(), List.of());
+        GraphFacts facts = facts(building(Map.of("minecraft:dirt", 3)), GraphSiteFacts.Terrain.empty(), List.of());
 
         assertFalse(GraphStageGate.buildingReady(facts, "hut"), "недостача блоков держит этап открытым");
     }
@@ -44,7 +44,7 @@ class GraphStageGateTests {
     @Test
     void building_UnknownChunks_NotReady() {
         GraphFacts.Building unknown = new GraphFacts.Building("hut", 1, 100, 0, Map.of(), Map.of(), 0, null, true);
-        GraphFacts facts = facts(unknown, GraphFacts.Terrain.empty(), List.of());
+        GraphFacts facts = facts(unknown, GraphSiteFacts.Terrain.empty(), List.of());
 
         assertFalse(GraphStageGate.buildingReady(facts, "hut"), "неизвестное — не готово: этап не закрывается");
     }
@@ -65,8 +65,8 @@ class GraphStageGateTests {
     void strays_UnknownBuilder_Block() {
         GraphFacts facts = facts(
                 building(Map.of()),
-                GraphFacts.Terrain.empty(),
-                List.of(new GraphFacts.Stray("s", "oak_fence", new GraphFacts.Position(1, 64, 1), null)));
+                GraphSiteFacts.Terrain.empty(),
+                List.of(new GraphSiteFacts.Stray("s", "oak_fence", new GraphFacts.Position(1, 64, 1), null)));
 
         assertFalse(
                 GraphStageGate.straysReady(facts),
@@ -77,8 +77,8 @@ class GraphStageGateTests {
     void strays_SpiritBuilt_Block() {
         GraphFacts facts = facts(
                 building(Map.of()),
-                GraphFacts.Terrain.empty(),
-                List.of(new GraphFacts.Stray("s", "oak_fence", new GraphFacts.Position(1, 64, 1), "spirit-1")));
+                GraphSiteFacts.Terrain.empty(),
+                List.of(new GraphSiteFacts.Stray("s", "oak_fence", new GraphFacts.Position(1, 64, 1), "spirit-1")));
 
         assertFalse(GraphStageGate.straysReady(facts), "лишняя постройка духа должна исчезнуть до закрытия этапа");
     }
@@ -87,12 +87,12 @@ class GraphStageGateTests {
         return new GraphFacts.Building("hut", 1, 90, 3, missing, Map.of(), 0, null, false);
     }
 
-    private static GraphFacts.Terrain terrain(Map<String, Integer> cut, Map<String, Integer> fill) {
-        return new GraphFacts.Terrain(0, 0, 0, 0, 0, cut, fill, Map.of(), false);
+    private static GraphSiteFacts.Terrain terrain(Map<String, Integer> cut, Map<String, Integer> fill) {
+        return new GraphSiteFacts.Terrain(0, 0, 0, 0, 0, cut, fill, Map.of(), false);
     }
 
     private static GraphFacts facts(
-            GraphFacts.Building building, GraphFacts.Terrain terrain, List<GraphFacts.Stray> strays) {
+            GraphFacts.Building building, GraphSiteFacts.Terrain terrain, List<GraphSiteFacts.Stray> strays) {
         return new GraphFacts(
                 Map.of(),
                 List.of(),
@@ -102,6 +102,6 @@ class GraphStageGateTests {
                 Map.of("hut", building),
                 strays,
                 terrain,
-                new GraphFacts.StageReqs(Map.of("hut", 1), Map.of()));
+                new GraphSiteFacts.StageReqs(Map.of("hut", 1), Map.of()));
     }
 }

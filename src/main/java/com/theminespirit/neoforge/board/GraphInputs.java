@@ -60,6 +60,7 @@ final class GraphInputs {
                 GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around)
                         .withThreats(life.threats())
                         .withChests(GraphFactInputs.chestFacts(StockReader.chests(level)))
+                        .withFeedback(GraphWorldFeedbackInputs.of(level, spirits, scan.home(), service))
                         .withWorld(WorldAreaInputs.of(
                                 level,
                                 service,
@@ -87,7 +88,6 @@ final class GraphInputs {
                                 FarmInputs.apply(StoreInputs.apply(state, level, graph), level, graph, scan),
                                 level,
                                 service,
-                                spirits,
                                 scan,
                                 graph),
                         level,

@@ -190,14 +190,16 @@ class StoreGraphTests {
     }
 
     private static GraphFacts facts(Map<String, Integer> minimum, Map<String, Integer> actual) {
-        return new Facts().stageReqs(new GraphFacts.StageReqs(minimum, actual)).build();
+        return new Facts()
+                .stageReqs(new GraphSiteFacts.StageReqs(minimum, actual))
+                .build();
     }
 
     private static final class Facts {
         private Map<String, GraphFacts.Spirit> spirits = Map.of();
         private List<GraphFacts.Chest> chests = List.of();
         private Map<String, GraphFacts.Station> stations = Map.of();
-        private GraphFacts.StageReqs stageReqs = new GraphFacts.StageReqs(Map.of(), Map.of());
+        private GraphSiteFacts.StageReqs stageReqs = new GraphSiteFacts.StageReqs(Map.of(), Map.of());
 
         Facts spirit(GraphFacts.Spirit spirit) {
             spirits = Map.of(spirit.id(), spirit);
@@ -215,7 +217,7 @@ class StoreGraphTests {
             return this;
         }
 
-        Facts stageReqs(GraphFacts.StageReqs reqs) {
+        Facts stageReqs(GraphSiteFacts.StageReqs reqs) {
             stageReqs = reqs;
             return this;
         }
@@ -231,7 +233,7 @@ class StoreGraphTests {
                             "furnace",
                             new GraphFacts.Building("furnace", 1, 100, 0, Map.of(), Map.of(), 0, null, false)),
                     List.of(),
-                    GraphFacts.Terrain.empty(),
+                    GraphSiteFacts.Terrain.empty(),
                     stageReqs);
         }
     }

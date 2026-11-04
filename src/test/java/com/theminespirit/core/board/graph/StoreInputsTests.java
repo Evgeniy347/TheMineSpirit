@@ -11,7 +11,8 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class StoreInputsTests {
-    private static final GraphFacts.StageReqs EMPTY = new GraphFacts.StageReqs(Map.of("hut", 1), Map.of("hut", 0));
+    private static final GraphSiteFacts.StageReqs EMPTY =
+            new GraphSiteFacts.StageReqs(Map.of("hut", 1), Map.of("hut", 0));
 
     @Test
     void minimums_DefaultSettings_HoldOwnersStageOneNumbers() {
@@ -36,7 +37,7 @@ class StoreInputsTests {
                 2,
                 27));
 
-        GraphFacts.StageReqs reqs = StoreInputs.stageReqs(EMPTY, settings, SupplyGraph.loadDefault(), chests);
+        GraphSiteFacts.StageReqs reqs = StoreInputs.stageReqs(EMPTY, settings, SupplyGraph.loadDefault(), chests);
 
         assertEquals(80, reqs.minimum().get("#logs"), "Минимум брёвен = 64 настройки + 16 резерва");
         assertEquals(160, reqs.minimum().get("cobblestone"), "Минимум булыжника = 128 + 32");
@@ -50,7 +51,7 @@ class StoreInputsTests {
     void stageReqs_MissingItemInChests_IsZeroNotAbsent() {
         StoreMinimums settings = new StoreMinimums(Map.of("bread", new StoreMinimums.Entry(16, 4)));
 
-        GraphFacts.StageReqs reqs = StoreInputs.stageReqs(EMPTY, settings, SupplyGraph.loadDefault(), List.of());
+        GraphSiteFacts.StageReqs reqs = StoreInputs.stageReqs(EMPTY, settings, SupplyGraph.loadDefault(), List.of());
 
         assertEquals(20, reqs.minimum().get("bread"), "Минимум хлеба = 16 + 4");
         assertEquals(0, reqs.actual().get("bread"), "Нет хлеба в сундуках — факт 0, а не пропуск");

@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.rest;
 
 import com.theminespirit.core.rest.BoardRoutes;
+import com.theminespirit.core.rest.GraphRoutes;
 import com.theminespirit.core.rest.HealthGateway;
 import com.theminespirit.core.rest.HealthRoutes;
 import com.theminespirit.core.rest.IdempotencyCache;
@@ -43,6 +44,7 @@ public final class RestRouter {
         routes.addAll(taskRoutes.routes());
         BoardRoutes boardRoutes = new BoardRoutes(boardGateway, new IdempotencyCache());
         routes.addAll(boardRoutes.routes());
+        routes.addAll(GraphRoutes.of(new SpiritGraphGateway(gateway.server())));
         PolicyRoutes policyRoutes = new PolicyRoutes(new SpiritPolicyGateway(gateway.server()), new IdempotencyCache());
         routes.addAll(policyRoutes.routes());
         SettlementRoutes settlementRoutes = new SettlementRoutes(

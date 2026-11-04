@@ -16,9 +16,10 @@ public record GraphChoice(
         double spaceTight,
         double petAlone,
         double herdFull,
-        double fieldFull) {
+        double fieldFull,
+        double failureBackoff) {
     public static final GraphChoice NEUTRAL =
-            new GraphChoice(1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0);
+            new GraphChoice(1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.5);
 
     public GraphChoice {
         requireNonNegative("дальняя дорога", farTrip);
@@ -35,6 +36,7 @@ public record GraphChoice(
         requireNonNegative("приручённый питомец", petAlone);
         requireNonNegative("полный загон", herdFull);
         requireNonNegative("полное поле", fieldFull);
+        requireNonNegative("память неудач", failureBackoff);
     }
 
     static GraphChoice parse(JsonNode root) {
@@ -55,7 +57,8 @@ public record GraphChoice(
                 root.path("spaceTight").asDouble(NEUTRAL.spaceTight()),
                 root.path("petAlone").asDouble(NEUTRAL.petAlone()),
                 root.path("herdFull").asDouble(NEUTRAL.herdFull()),
-                root.path("fieldFull").asDouble(NEUTRAL.fieldFull()));
+                root.path("fieldFull").asDouble(NEUTRAL.fieldFull()),
+                root.path("failureBackoff").asDouble(NEUTRAL.failureBackoff()));
     }
 
     private static void requireNonNegative(String name, double value) {
