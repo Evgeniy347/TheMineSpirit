@@ -4,10 +4,8 @@ import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
-public final class GraphSiteFacts {
-    private GraphSiteFacts() {}
-
-    public record Stray(
+public interface GraphSiteFacts {
+    record Stray(
             String id,
             String type,
             GraphFacts.Position position,
