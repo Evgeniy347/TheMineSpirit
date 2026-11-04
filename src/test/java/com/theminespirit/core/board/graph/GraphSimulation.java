@@ -1,6 +1,5 @@
 package com.theminespirit.core.board.graph;
 
-import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -200,9 +199,7 @@ final class GraphSimulation {
             world.stage++;
             int stage = world.stage;
             world.graph.buildings().values().stream()
-                    .filter(building -> building.stage() == stage
-                            && !building.optional()
-                            && !StageCatalog.watcherOwned(building.boardCase()))
+                    .filter(building -> building.stage() == stage && !building.optional())
                     .filter(building -> world.buildings.get(building.id()) != Built.BUILT)
                     .forEach(building -> world.buildings.put(building.id(), Built.PLANNED));
         }
@@ -210,9 +207,7 @@ final class GraphSimulation {
 
     static List<String> unbuilt(GraphWorld world) {
         return world.graph.buildings().values().stream()
-                .filter(building -> building.stage() <= world.stage
-                        && !building.optional()
-                        && !StageCatalog.watcherOwned(building.boardCase()))
+                .filter(building -> building.stage() <= world.stage && !building.optional())
                 .filter(building -> world.buildings.get(building.id()) != Built.BUILT)
                 .map(SupplyGraph.Building::id)
                 .toList();

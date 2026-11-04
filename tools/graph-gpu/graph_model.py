@@ -28,7 +28,6 @@ ABSENT = "ABSENT"
 
 HERD_CULL_BOOST = 70
 EXPLORE_TICKS = 2400
-WATCHER_OWNED = set()
 
 
 STORE_MINIMUM = "store:minimum"
@@ -782,7 +781,7 @@ def buildings_first(graph, tasks, ready):
         elif task["makes"] in supply and task["consumes"]:
             priority = start
         elif task["makes"] in supply:
-            priority = min(max(0, start - 1), task["priority"] + shift)
+            priority = min(graph.max_priority, task["priority"] + shift)
         else:
             priority = task["priority"]
         if priority != task["priority"]:
@@ -1034,8 +1033,6 @@ class Planner:
                 "building": building_id,
                 "reason": "нужна постройка " + building_id + " (" + why + "), её нет в плане",
             })
-            return
-        if building.board_case in WATCHER_OWNED:
             return
         self.push(source, BUILDING + building_id, amount)
 
