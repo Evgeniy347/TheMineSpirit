@@ -710,6 +710,8 @@ def test_stage_two_worlds():
     worlds = [("stage2-full", sim_gpu.baselines(graph)[3]),
               ("stage2-all", search.make_world(graph, 2))]
     for name, world in worlds:
+        unbuilt = sim_gpu.unbuilt(world)
+        assert "warehouse" in unbuilt and "pen_cow" in unbuilt,             "Склад и загон строит граф, они обязаны держать этап: " + str(unbuilt)
         outcome = sim_gpu.run(world, limit=4000)
         assert outcome["stage"] >= 3,             "Мир " + name + " обязан пройти этап 2 без сторожей: " + outcome["stuck"]
     print("OK: миры этапа 2 доходят до этапа 3 (склад и загоны не держат этап)")

@@ -4,25 +4,25 @@
     "farmland": {
       "xmin": 1,
       "k": 1,
-      "base": 7,
+      "base": 5,
       "stage": 1
     },
     "herd_fed": {
       "xmin": 0,
       "k": 1,
-      "base": 8,
+      "base": 10,
       "stage": 2
     },
     "food_reserve": {
       "xmin": 1,
       "k": 1,
-      "base": 17,
+      "base": 14,
       "stage": 1
     },
     "logistics": {
       "xmin": 0,
       "k": 1,
-      "base": 15,
+      "base": 13,
       "stage": 1
     }
   },
@@ -49,7 +49,7 @@
     "wheat_field": {
       "case": "BUILD_PLACED",
       "stage": 1,
-      "base": 88,
+      "base": 92,
       "materials": {
         "wheat_seeds": 8,
         "dirt": 8
@@ -60,7 +60,7 @@
     "storage_space": {
       "case": "STOCK_CHESTS",
       "stage": 1,
-      "base": 91,
+      "base": 95,
       "materials": {
         "#planks": 32
       },
@@ -77,7 +77,7 @@
       "case": "GATHER_MATERIALS",
       "makes": "farmland",
       "yield": 1,
-      "weight": 1.379279886,
+      "weight": 1.686108972,
       "consumes": {
         "dirt": 1
       },
@@ -89,7 +89,7 @@
       "case": "GATHER_MATERIALS",
       "makes": "wheat",
       "yield": 1,
-      "weight": 1.44824388,
+      "weight": 1.770414421,
       "consumes": {
         "farmland": 1,
         "wheat_seeds": 1
@@ -103,7 +103,7 @@
       "case": "GATHER_MATERIALS",
       "makes": "wheat",
       "yield": 4,
-      "weight": 1.379279886,
+      "weight": 1.686108972,
       "consumes": {},
       "building": "wheat_field",
       "ticks": 120,
@@ -114,7 +114,7 @@
       "case": "BREED_ANIMALS",
       "makes": "herd_fed",
       "yield": 1,
-      "weight": 0.858380804,
+      "weight": 0.575577216,
       "consumes": {
         "#crops": 8
       },
@@ -126,7 +126,7 @@
       "case": "LURE_ANIMAL",
       "makes": "herd_cow",
       "yield": 1,
-      "weight": 0.294988531,
+      "weight": 0.131901184,
       "consumes": {
         "wheat": 2
       },
@@ -139,7 +139,7 @@
       "case": "COLLECT_DROPS",
       "makes": "milk_bucket",
       "yield": 1,
-      "weight": 0.729145612,
+      "weight": 0.68177682,
       "consumes": {
         "bucket": 1
       },
@@ -155,7 +155,7 @@
       "case": "TRANSFER_ITEM",
       "makes": "logistics",
       "yield": 1,
-      "weight": 1.245006242,
+      "weight": 1.280250348,
       "consumes": {},
       "ticks": 200,
       "implemented": false
@@ -165,7 +165,7 @@
       "case": "WEAVE_WOOL",
       "makes": "white_wool",
       "yield": 1,
-      "weight": 1.173088275,
+      "weight": 1.16043019,
       "consumes": {
         "string": 4
       },
@@ -177,7 +177,7 @@
       "case": "ACTIVITY_UNLOAD",
       "makes": "logistics",
       "yield": 1,
-      "weight": 0.695712392,
+      "weight": 0.616187186,
       "consumes": {},
       "building": "chests",
       "ticks": 200,
@@ -188,7 +188,7 @@
       "case": "RESTOCK_FOOD",
       "makes": "food_reserve",
       "yield": 1,
-      "weight": 0.390952051,
+      "weight": 0.42765627,
       "consumes": {
         "food": 8
       },
