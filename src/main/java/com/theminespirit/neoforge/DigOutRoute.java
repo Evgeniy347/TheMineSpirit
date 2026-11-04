@@ -23,6 +23,7 @@ final class DigOutRoute {
     private @Nullable RouteWalk route;
     private @Nullable Pending pending;
     private int retries;
+    private boolean routeFailed;
 
     DigOutRoute(SpiritEntity spirit, BlockCoord target, boolean descending, int radius) {
         this.spirit = spirit;
@@ -32,7 +33,7 @@ final class DigOutRoute {
     }
 
     State tick() {
-        if (route == null && pending == null && retries < RETRIES) {
+        if (route == null && pending == null && retries < RETRIES && !routeFailed) {
             route = (descending ? SurfaceRoute.planDescent(spirit, target) : SurfaceRoute.plan(spirit)).orElse(null);
             if (route == null) {
                 pending = RouteDetour.begin(spirit, target, radius, "dig_out");
@@ -60,6 +61,7 @@ final class DigOutRoute {
         }
         if (state == RouteWalk.State.FAILED) {
             RouteDetour.failed(spirit, current);
+            routeFailed = true;
         }
         RouteDetour.removed(spirit, current);
         route = null;

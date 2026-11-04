@@ -465,6 +465,14 @@ final class BuildSchematicScript implements ScriptInstance {
     private Optional<ScriptStatus> placeOne(Schematic.PlacedEntry entry) {
         if (SchematicActions.isFluidPlaced(entry.block())) return waterOne(entry);
         BlockCoord cell = entry.pos();
+        if (BuildMakeWay.selfIn(spirit, cell)) {
+            lastRefusal = "строитель стоит в клетке " + cell + " — сначала отойти";
+            return BuildMakeWay.outsideStand(site, feet()).map(this::beginApproach);
+        }
+        if (!BuildMakeWay.clear(spirit, level, site, buildKey, cell)) {
+            lastRefusal = "клетку " + cell + " занимает живое существо: сначала отойти";
+            return Optional.empty();
+        }
         reservations.reserve(cell, spirit.getUUID());
         BlockPlacer.Begin begin = placer.begin(SchematicSite.toPos(cell), site.wanted(entry), entry.block());
         reservations.release(cell, spirit.getUUID());
@@ -492,9 +500,6 @@ final class BuildSchematicScript implements ScriptInstance {
                 if (refused.reason() == BlockPlacer.RefuseReason.NO_MATERIAL) {
                     return Optional.of(noMaterial(entry.block()));
                 }
-                if (refused.reason() == BlockPlacer.RefuseReason.OCCUPIED) {
-                    makeWay(cell);
-                }
                 int attempts = refusals.merge(cell, 1, Integer::sum);
                 if (attempts >= BuildTuning.MAX_CONSECUTIVE_SKIPS) {
                     blocked.put(cell, lastRefusal);
@@ -516,10 +521,6 @@ final class BuildSchematicScript implements ScriptInstance {
         supplyRunner = TaskRunner.start(
                 water.task().orElseThrow(), SpiritScripts.registryFor(spirit), ConditionRegistry.of(Map.of()));
         return Optional.of(ScriptStatus.RUNNING);
-    }
-
-    private void makeWay(BlockCoord cell) {
-        BuildStands.makeWay(spirit, site, cell, buildKey);
     }
 
     private ScriptStatus moveTowards(List<BlockCoord> cells, ReachPlanner.World base, boolean outsideOnly) {
