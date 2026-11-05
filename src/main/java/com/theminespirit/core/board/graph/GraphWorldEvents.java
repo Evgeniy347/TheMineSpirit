@@ -32,9 +32,16 @@ public final class GraphWorldEvents {
             events.add(RESTORE_TRACE);
         }
         facts.buildings().values().stream()
-                .filter(building -> !building.unknown() && building.damage() > 0)
+                .filter(GraphWorldEvents::repairNeeded)
                 .map(building -> REPAIR + building.id())
                 .forEach(events::add);
         return Set.copyOf(events);
+    }
+
+    static boolean repairNeeded(GraphFacts.Building building) {
+        if (building.unknown()) {
+            return false;
+        }
+        return building.damage() > 0 || (building.auditPercent() > 0 && building.auditPercent() < 100);
     }
 }

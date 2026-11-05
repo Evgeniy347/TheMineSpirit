@@ -250,7 +250,7 @@ public final class GraphPlanner {
                                             : "")));
             return;
         }
-        if (StageCatalog.watcherOwned(building.boardCase())) return;
+        if (StageCatalog.watcherOwned(building.boardCase()) || GraphAudit.settles(state, id)) return;
         push(from, BUILDING + id, amount);
     }
 

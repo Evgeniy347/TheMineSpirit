@@ -29,4 +29,19 @@ public final class GraphBuildingMaterials {
         });
         return Map.copyOf(out);
     }
+
+    public static Map<String, Map<String, Integer>> merged(
+            Map<String, Map<String, Integer>> declared, GraphFacts facts, SupplyGraph graph) {
+        Objects.requireNonNull(declared, "Объявленные материалы не могут быть null: без них — пустая карта");
+        Map<String, Map<String, Integer>> out = new LinkedHashMap<>(declared);
+        of(facts, graph).forEach((id, missing) -> {
+            GraphFacts.Building fact = facts.buildings().get(id);
+            if (fact != null && !fact.unknown() && fact.auditPercent() > 0) {
+                out.put(id, missing);
+            } else {
+                out.putIfAbsent(id, missing);
+            }
+        });
+        return Map.copyOf(out);
+    }
 }
