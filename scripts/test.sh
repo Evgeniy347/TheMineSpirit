@@ -720,8 +720,25 @@ analyze_unit() {
     return 1
 }
 
+gametest_shard_passed() {
+    grep -E "All [0-9]+ required tests passed" "$1" 2>/dev/null | tail -1 \
+        | sed -E 's/.*All ([0-9]+) required tests passed.*/\1/'
+}
+
+gametest_shard_share() {
+    local line
+    line=$(grep -E "GameTest filter .*осталось [0-9]+" "$1" 2>/dev/null | tail -1)
+    [ -n "$line" ] || return 0
+    printf '%s %s\n' \
+        "$(printf '%s\n' "$line" | sed -E 's/.*из ([0-9]+), осталось.*/\1/')" \
+        "$(printf '%s\n' "$line" | sed -E 's/.*осталось ([0-9]+).*/\1/')"
+}
+
+# Проверка итога: каждый шард обязан дойти до «All N required tests passed», иначе
+# его сцены молча не запускались (так пропали шарды 0 и 1: сборка упала, а итог был 7).
 analyze_gametest() {
-    local log="$1"
+    local log="$1" shards="${2:-1}" base="${3:-$1}" code="${4:-0}"
+    local i shard_log shard_code
 
     local failed_line=$(grep -E "[0-9]+ required tests failed" "$log" | tail -1)
     if [ -n "$failed_line" ]; then
@@ -734,14 +751,69 @@ analyze_gametest() {
         return 1
     fi
 
+    if [ "$shards" -gt 1 ]; then
+        local counts=() total=0 registry="" s_total s_share n breakdown
+        for ((i = 0; i < shards; i++)); do
+            shard_log="$base.shard-$i"
+            shard_code="${SHARD_CODES[$i]:-?}"
+            if [ ! -s "$shard_log" ]; then
+                echo "FAIL gametest: шард $i не запускал сцены — его лог пуст (код gradle $shard_code)"
+                echo "шард обязан напечатать «All N required tests passed»; без этого его сцены не проверены"
+                echo "полный лог: $log"
+                return 1
+            fi
+            n=$(gametest_shard_passed "$shard_log")
+            if [ -z "$n" ]; then
+                echo "FAIL gametest: шард $i не дошёл до «All N required tests passed» (код gradle $shard_code)"
+                grep -E "BUILD FAILED|What went wrong|Unable to|error:|Exception" "$shard_log" | head -3
+                echo "полный лог: $log"
+                return 1
+            fi
+            if [ "$shard_code" != 0 ]; then
+                echo "FAIL gametest: шард $i напечатал итог, но сборка ушла с кодом $shard_code"
+                grep -E "BUILD FAILED|What went wrong|Unable to|error:" "$shard_log" | head -3
+                echo "полный лог: $log"
+                return 1
+            fi
+            read -r s_total s_share <<<"$(gametest_shard_share "$shard_log")"
+            if [ -n "${s_share:-}" ] && [ "$n" != "$s_share" ]; then
+                echo "FAIL gametest: шард $i прошёл $n тестов, а ему назначено $s_share сцен — фильтр шарда не сработал"
+                echo "полный лог: $log"
+                return 1
+            fi
+            if [ -n "${s_total:-}" ]; then
+                if [ -z "$registry" ]; then
+                    registry="$s_total"
+                elif [ "$registry" != "$s_total" ]; then
+                    echo "FAIL gametest: шарды видят разный набор сцен ($registry и $s_total) — фильтр применился по-разному"
+                    echo "полный лог: $log"
+                    return 1
+                fi
+            fi
+            counts+=("$n")
+            total=$((total + n))
+        done
+        breakdown=$(printf '%s+' "${counts[@]}")
+        breakdown="${breakdown%+}"
+        echo "OK gametest: $total тестов ($shards шардов: $breakdown), $ELAPSED с"
+        return 0
+    fi
+
     local passed_line=$(grep -E "All [0-9]+ required tests passed" "$log" | tail -1)
 
-    if [ -n "$passed_line" ]; then
+    if [ -n "$passed_line" ] && [ "$code" -eq 0 ]; then
         local count
         count=$(grep -E "All [0-9]+ required tests passed" "$log" \
             | sed -E 's/.*All ([0-9]+) required tests passed.*/\1/' | awk '{s += $1} END {print s + 0}')
         echo "OK gametest: $count тестов, $ELAPSED с"
         return 0
+    fi
+
+    if [ -n "$passed_line" ]; then
+        echo "FAIL gametest: тесты прошли, но прогон ушёл с кодом $code — результат не засчитан"
+        grep -E "BUILD FAILED|What went wrong|Unable to|error:" "$log" | head -3
+        echo "полный лог: $log"
+        return 1
     fi
 
     echo "FAIL gametest: результат не распознан"
@@ -848,9 +920,14 @@ else
 
     SHARD_EXCLUDES=()
     if [ "$GAMETEST_SHARDS" -gt 1 ]; then
-        "$GRADLEW" createMinecraftArtifacts classes \
-            writeGameTestServerLegacyClasspath prepareGameTestServerRun \
-            >"$LOG_FILE.preflight" 2>&1 &
+        # Сборка общая на все шарды и делается один раз: шарды делят build/, и если каждый
+        # начнёт писать одни и те же jar-файлы, часть упадёт на «Unable to delete file».
+        PRE_TASKS=(createMinecraftArtifacts classes jar
+            writeGameTestServerLegacyClasspath prepareGameTestServerRun)
+        while read -r module_path; do
+            [ -n "$module_path" ] && PRE_TASKS+=("$module_path:jar")
+        done < <(sed -nE "s/^include +'(:[^.][^']*)'.*/\1/p" settings.gradle)
+        "$GRADLEW" "${PRE_TASKS[@]}" >"$LOG_FILE.preflight" 2>&1 &
         PRE_PID=$!
         echo "$PRE_PID" >>"$LOG_FILE.gradlepids"
         wait "$PRE_PID"
@@ -866,7 +943,7 @@ else
         fi
         rm -f "$LOG_FILE.preflight"
         SHARD_EXCLUDES=(-x createMinecraftArtifacts -x compileJava -x generateModMetadata
-            -x processResources -x classes -x downloadAssets
+            -x processResources -x classes -x downloadAssets -x jar -x :build-logic:jar
             -x writeGameTestServerLegacyClasspath -x prepareGameTestServerRun)
     fi
 
@@ -909,9 +986,11 @@ else
     done
 
     CODE=0
+    SHARD_CODES=()
     for pid in "${GRADLE_PIDS[@]}"; do
         wait "$pid"
         shard_code=$?
+        SHARD_CODES+=("$shard_code")
         if [ "$shard_code" -ne 0 ] && [ "$CODE" -eq 0 ]; then
             CODE=$shard_code
         fi
@@ -927,7 +1006,6 @@ else
 
     if [ "$GAMETEST_SHARDS" -gt 1 ]; then
         cat "$LOG_FILE".shard-* >"$LOG_FILE"
-        rm -f "$LOG_FILE".shard-*
     fi
     rm -f "$LOG_FILE.gradlepids"
 
@@ -942,6 +1020,8 @@ else
         exit 75
     fi
 
-    analyze_gametest "$LOG_FILE"
-    exit $?
+    analyze_gametest "$LOG_FILE" "$GAMETEST_SHARDS" "$LOG_FILE" "$CODE"
+    RESULT=$?
+    [ "$GAMETEST_SHARDS" -gt 1 ] && rm -f "$LOG_FILE".shard-*
+    exit $RESULT
 fi
