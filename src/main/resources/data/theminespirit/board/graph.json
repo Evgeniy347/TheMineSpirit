@@ -4365,7 +4365,7 @@
       "case": "CRAFT_STONE_PICKAXE",
       "makes": "stone_pickaxe",
       "yield": 1,
-      "weight": 0.919023001,
+      "weight": 0.643316101,
       "consumes": {
         "stick": 2,
         "#stone_crafting": 3
