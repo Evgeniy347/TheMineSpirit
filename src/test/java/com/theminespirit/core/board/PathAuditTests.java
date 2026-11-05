@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.MineLayout;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.reload.DataTables;
@@ -64,6 +65,41 @@ class PathAuditTests {
         @Override
         public boolean passable(BlockCoord at) {
             return false;
+        }
+    }
+
+    @Test
+    void streets_SunkPathBelowLevel_CountedEvenWhenProbeMapsDirt() {
+        ScriptCall call = new ScriptCall(
+                "build_schematic", Map.of("file", "street5_straight", "x", FEET.x(), "y", FEET.y(), "z", FEET.z()));
+
+        BuildGap.Gap gap = BuildGap.trace(call, "oak", new SunkMappedPathProbe(), new PresetSchemes());
+
+        assertEquals(
+                pathColumns().size(),
+                gap.placed().getOrDefault("dirt", 0),
+                "Тропа, утопленная в поверхность ниже уровня схемы, — готовая улица: аудит улиц сверяет её по "
+                        + "настоящему блоку, а не по подмене «дёрн». Не хватает: " + gap.missingCells());
+    }
+
+    private static final class SunkMappedPathProbe implements BuildGap.Probe {
+        @Override
+        public String block(BlockCoord at) {
+            String raw = rawBlock(at);
+            return DIRT_PATH.equals(SchematicBlocks.path(raw)) ? "minecraft:dirt" : raw;
+        }
+
+        @Override
+        public String rawBlock(BlockCoord at) {
+            if (at.y() == FEET.y() - 2 && pathColumns().contains(new BlockCoord(at.x(), 0, at.z()))) {
+                return "minecraft:" + DIRT_PATH;
+            }
+            return "minecraft:air";
+        }
+
+        @Override
+        public boolean passable(BlockCoord at) {
+            return at.y() == FEET.y() - 1;
         }
     }
 
