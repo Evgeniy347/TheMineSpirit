@@ -3,7 +3,9 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.building.BlockMatch;
 import com.theminespirit.core.building.MineLayout;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
+import com.theminespirit.core.building.SchematicGround;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ConditionNode;
@@ -31,6 +33,10 @@ public final class BuildGap {
         String block(BlockCoord at);
 
         boolean passable(BlockCoord at);
+
+        default String rawBlock(BlockCoord at) {
+            return block(at);
+        }
 
         default boolean loaded(BlockCoord at) {
             return true;
@@ -181,12 +187,12 @@ public final class BuildGap {
             }
             String item = bare(WoodSpecies.swap(SchematicBlocks.itemOf(block), wood));
             String standing = probe.block(at);
-            count(
-                    at,
-                    item,
-                    block,
-                    () -> BlockMatch.matches(standing, item),
-                    " ожидается " + item + ", стоит " + standing);
+            BlockCoord below = new BlockCoord(at.x(), at.y() - 1, at.z());
+            boolean done = SchematicActions.isWalkway(block)
+                    ? SchematicGround.walkwayPlaced(
+                            block, probe.rawBlock(at), probe.rawBlock(below), probe.passable(at))
+                    : BlockMatch.matches(standing, item);
+            count(at, item, block, () -> done, " ожидается " + item + ", стоит " + standing);
         }
 
         private void mine(MineLayout layout) {

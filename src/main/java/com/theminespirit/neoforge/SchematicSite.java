@@ -7,6 +7,7 @@ import com.theminespirit.core.building.RetreatPath;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
+import com.theminespirit.core.building.SchematicGround;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.forestry.TreeSpan;
 import com.theminespirit.core.mining.Cell;
@@ -184,7 +185,17 @@ final class SchematicSite {
         boolean block = current.is(wanted.getBlock())
                 || WoodSpecies.sameRole(BlockStates.idOf(current), BlockStates.idOf(wanted))
                 || EarthCover.covers(BlockStates.idOf(current), BlockStates.idOf(wanted));
-        return block && sameSpecifiedState(current, wanted, entry.state());
+        if (block && sameSpecifiedState(current, wanted, entry.state())) {
+            return true;
+        }
+        if (!SchematicActions.isWalkway(entry.block()) || !current.isAir()) {
+            return false;
+        }
+        return SchematicGround.walkwayPlaced(
+                entry.block(),
+                BlockStates.idOf(current),
+                BlockStates.idOf(level.getBlockState(toPos(entry.pos()).below())),
+                true);
     }
 
     boolean rightBlockWrongState(Schematic.PlacedEntry entry) {

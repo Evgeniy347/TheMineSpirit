@@ -201,6 +201,11 @@ final class BuildingAudit {
             }
 
             @Override
+            public String rawBlock(BlockCoord at) {
+                return base.block(at);
+            }
+
+            @Override
             public boolean loaded(BlockCoord at) {
                 return base.loaded(at);
             }

@@ -74,9 +74,9 @@ class FluidPlansTests {
                 List.of());
 
         assertEquals(
-                List.of(new BlockCoord(3, 0, 3), new BlockCoord(3, 0, 8)),
+                List.of(new BlockCoord(3, -1, 3), new BlockCoord(3, -1, 8)),
                 FarmWaterCell.plannedAll(scheme, new BlockCoord(0, 0, 0)),
-                "Полив видит обе клетки воды плана: иначе вторая ямка останется сухой");
+                "Полив видит обе клетки воды в поверхности поля: иначе вторая ямка останется сухой");
     }
 
     @Test
@@ -127,9 +127,9 @@ class FluidPlansTests {
         BlockCoord origin = new BlockCoord(100, 64, -50);
 
         assertEquals(
-                new BlockCoord(104, 64, -46),
+                new BlockCoord(104, 63, -46),
                 FarmWaterCell.planned(scheme, origin).orElseThrow(),
-                "Вода ставится в клетку схемы поля, а не в любую лужу рядом");
+                "Вода ставится в поверхность поля, в клетку схемы по x/z, а не в любую лужу рядом");
         assertTrue(FarmWaterCell.field("wheat_field"), "Поле узнаётся по id");
         assertTrue(FarmWaterCell.field("field_a"), "Поле этапа узнаётся по id");
         assertFalse(FarmWaterCell.field("barn"), "Сарай не считается полем");

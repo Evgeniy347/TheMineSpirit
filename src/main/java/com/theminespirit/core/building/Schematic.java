@@ -4,10 +4,13 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public record Schematic(
@@ -253,10 +256,27 @@ public record Schematic(
     public List<BlockCoord> airCells(BlockCoord origin, BuildRotation rotation) {
         Objects.requireNonNull(origin, "Якорь схемы не может быть null: без него неизвестно, где очищать");
         Objects.requireNonNull(rotation, "Поворот схемы не может быть null: без него очистится не та клетка");
-        List<BlockCoord> cells = new ArrayList<>(air.size());
+        Set<BlockCoord> cells = new LinkedHashSet<>();
         for (Cell cell : air) {
             BuildRotation.Cell rotated = rotation.rotate(cell.dx(), cell.dz(), sizeX, sizeZ);
             cells.add(new BlockCoord(origin.x() + rotated.x(), origin.y() + cell.dy(), origin.z() + rotated.z()));
+        }
+        if (SchematicGround.groundLayer(this)) {
+            Set<BlockCoord> occupied = new HashSet<>();
+            for (PlacedEntry entry : entries(origin, rotation)) {
+                occupied.add(entry.pos());
+            }
+            for (Entry entry : blocks) {
+                if (entry.dy() != 0 || !SchematicGround.inGround(entry.block())) {
+                    continue;
+                }
+                BuildRotation.Cell rotated = rotation.rotate(entry.dx(), entry.dz(), sizeX, sizeZ);
+                BlockCoord cell =
+                        new BlockCoord(origin.x() + rotated.x(), origin.y() + entry.dy(), origin.z() + rotated.z());
+                if (!occupied.contains(cell)) {
+                    cells.add(cell);
+                }
+            }
         }
         return List.copyOf(cells);
     }
@@ -269,10 +289,12 @@ public record Schematic(
         Objects.requireNonNull(origin, "Якорь схемы не может быть null: без него неизвестно, куда ставить");
         Objects.requireNonNull(rotation, "Поворот схемы не может быть null: без него блок встанет не туда");
         List<PlacedEntry> placed = new ArrayList<>(blocks.size());
+        boolean grounded = SchematicGround.groundLayer(this);
         for (Entry entry : blocks) {
             BuildRotation.Cell cell = rotation.rotate(entry.dx(), entry.dz(), sizeX, sizeZ);
+            int dy = grounded && entry.dy() == 0 && SchematicGround.inGround(entry.block()) ? -1 : entry.dy();
             placed.add(new PlacedEntry(
-                    new BlockCoord(origin.x() + cell.x(), origin.y() + entry.dy(), origin.z() + cell.z()),
+                    new BlockCoord(origin.x() + cell.x(), origin.y() + dy, origin.z() + cell.z()),
                     entry.block(),
                     entry.state(),
                     entry.text(),
