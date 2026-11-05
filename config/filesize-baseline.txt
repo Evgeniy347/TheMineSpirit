@@ -1,5 +1,5 @@
 src/main/java/com/theminespirit/core/board/Board.java	677
-src/main/java/com/theminespirit/core/board/TicketPlans.java	896
+src/main/java/com/theminespirit/core/board/TicketPlans.java	897
 src/main/java/com/theminespirit/core/board/graph/GraphFacts.java	306
 src/main/java/com/theminespirit/core/board/graph/GraphPlanner.java	537
 src/main/java/com/theminespirit/core/board/graph/RecipeImport.java	555
@@ -39,8 +39,8 @@ src/main/java/com/theminespirit/neoforge/SpiritScripts.java	384
 src/main/java/com/theminespirit/neoforge/WorldScanner.java	306
 src/main/java/com/theminespirit/neoforge/board/BoardService.java	1007
 src/main/java/com/theminespirit/neoforge/board/FirstStepsRunner.java	686
-src/main/java/com/theminespirit/neoforge/board/GraphPost.java	312
-src/main/java/com/theminespirit/neoforge/board/GraphSource.java	301
+src/main/java/com/theminespirit/neoforge/board/GraphPost.java	306
+src/main/java/com/theminespirit/neoforge/board/GraphSource.java	302
 src/main/java/com/theminespirit/neoforge/board/TransferWatch.java	569
 src/main/java/com/theminespirit/neoforge/coordinator/SpiritCoordinator.java	372
 src/main/java/com/theminespirit/neoforge/crafting/CraftScript.java	383

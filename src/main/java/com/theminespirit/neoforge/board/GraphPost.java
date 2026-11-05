@@ -4,11 +4,9 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
-import com.theminespirit.core.board.GatherBatch;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.board.ToolGate;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.graph.ActivityPlans;
 import com.theminespirit.core.board.graph.GraphFacts;
@@ -35,7 +33,7 @@ import org.jspecify.annotations.Nullable;
 final class GraphPost {
     static final String MAKE = GraphTickets.PREFIX + "make:";
     static final String PART = ":2";
-    private static final Set<String> MINED = Set.of("cobblestone", "coal");
+    static final Set<String> MINED = Set.of("cobblestone", "coal");
     private static final Set<BoardStatus> OPEN_STATUSES =
             Set.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED);
 
@@ -52,6 +50,7 @@ final class GraphPost {
     final GraphState state;
     final GraphFacts facts;
     private final Set<String> waiting = new HashSet<>();
+    private final GatherPost demands = new GatherPost(this);
     private @Nullable BlockCoord craft;
 
     GraphPost(
@@ -202,20 +201,15 @@ final class GraphPost {
     }
 
     void gather(String id, String cause, int priority, String item, int count, BlockCoord at) {
-        int output = source.outputCount(item);
-        int helpers = MINED.contains(item) ? GraphCrew.miners(spirits) : spirits.size();
-        List<Integer> portions = GatherBatch.split(GatherBatch.round(count, output), output, helpers);
-        for (int part = 0; part < portions.size(); part++) {
-            String partId = part == 0 ? id : id + PART;
-            if (service.board().statusOf(partId).orElse(null) == BoardStatus.DONE) {
-                service.reopen(partId);
-            }
-            submit(
-                    ToolGate.withTool(
-                            ticket(partId, BoardCase.GATHER_MATERIALS, Optional.empty(), priority, cause, Map.of()),
-                            item),
-                    TicketTarget.at(at).withSupply(item, portions.get(part)));
-        }
+        demands.need(id, cause, priority, item, count, at);
+    }
+
+    void flush() {
+        demands.flush();
+    }
+
+    Set<String> live(Set<String> live) {
+        return demands.live(live);
     }
 
     private boolean tool(GraphTickets.Ticket ticket, GraphPlan.Task task) {
