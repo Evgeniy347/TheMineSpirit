@@ -762,6 +762,8 @@ start_heartbeat
 if [ "$MODE" = "unit" ]; then
     rm -f TestResults/unit/xml/TEST-*.xml TestResults/unit/test-cost.csv
     rm -f TestResults/api/xml/TEST-*.xml
+    rm -f TestResults/mech-mining/xml/TEST-*.xml TestResults/mech-movement/xml/TEST-*.xml
+    rm -f TestResults/mech-inventory/xml/TEST-*.xml
     start_monitor "unit"
 
     UNIT_EXTRA=()
@@ -773,7 +775,12 @@ if [ "$MODE" = "unit" ]; then
             UNIT_EXTRA=(staticAnalysis --continue)
         fi
     else
-        UNIT_EXCLUDE=(-x :api:test)
+        UNIT_EXCLUDE=(
+            -x :api:test
+            -x :mech:mining:test
+            -x :mech:movement:test
+            -x :mech:inventory:test
+        )
     fi
 
     if command -v setsid >/dev/null 2>&1; then
@@ -867,7 +874,8 @@ else
         rm -f "$LOG_FILE.preflight"
         SHARD_EXCLUDES=(-x createMinecraftArtifacts -x compileJava -x generateModMetadata
             -x processResources -x classes -x downloadAssets
-            -x writeGameTestServerLegacyClasspath -x prepareGameTestServerRun)
+            -x writeGameTestServerLegacyClasspath -x prepareGameTestServerRun
+            -x jar)
     fi
 
     for ((shard = 0; shard < GAMETEST_SHARDS; shard++)); do

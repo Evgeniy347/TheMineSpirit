@@ -36,8 +36,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT_PACKAGE = "com.theminespirit"
-DEFAULT_MAIN = "src/main/java,api/src/main/java"
-DEFAULT_TEST = "src/test/java,api/src/test/java"
+DEFAULT_MAIN = (
+    "src/main/java,api/src/main/java,"
+    "mech/mining/src/main/java,mech/movement/src/main/java,mech/inventory/src/main/java"
+)
+DEFAULT_TEST = (
+    "src/test/java,api/src/test/java,"
+    "mech/mining/src/test/java,mech/movement/src/test/java,mech/inventory/src/test/java"
+)
 
 PACKAGE_RE = re.compile(r"^\s*package\s+([\w.]+)\s*;", re.MULTILINE)
 IMPORT_RE = re.compile(r"^\s*import\s+(static\s+)?([\w.*]+)\s*;", re.MULTILINE)

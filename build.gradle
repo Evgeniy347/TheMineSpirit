@@ -62,9 +62,14 @@ base {
     archivesName = mod_id
 }
 
-sourceSets.main.output.classesDirs.from(provider { project(':api').sourceSets.main.output.classesDirs })
+sourceSets.main.output.classesDirs.from(provider {
+    project(':api').sourceSets.main.output.classesDirs +
+            project(':mech:mining').sourceSets.main.output.classesDirs +
+            project(':mech:movement').sourceSets.main.output.classesDirs +
+            project(':mech:inventory').sourceSets.main.output.classesDirs
+})
 tasks.named('classes') {
-    dependsOn ':api:classes'
+    dependsOn ':api:classes', ':mech:mining:classes', ':mech:movement:classes', ':mech:inventory:classes'
 }
 
 neoForge {
@@ -119,6 +124,9 @@ configurations {
 
 dependencies {
     implementation project(':api')
+    implementation project(':mech:mining')
+    implementation project(':mech:movement')
+    implementation project(':mech:inventory')
     implementation "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
     additionalRuntimeClasspath "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
     jarJar("com.fasterxml.jackson.core:jackson-databind:${jackson_version}") {
@@ -182,7 +190,7 @@ publishing {
 
 def unitTestThreads = (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}") as int
 tasks.named('test', Test) {
-    dependsOn ':api:test'
+    dependsOn ':api:test', ':mech:mining:test', ':mech:movement:test', ':mech:inventory:test'
     useJUnitPlatform {
         excludeTags 'slow', 'mutation', 'export'
     }
@@ -305,6 +313,18 @@ tasks.withType(Test).configureEach {
 
 tasks.named('check') {
     dependsOn tasks.named('test')
+}
+
+tasks.named('staticAnalysisFast') {
+    dependsOn ':mech:mining:staticAnalysisFast', ':mech:movement:staticAnalysisFast', ':mech:inventory:staticAnalysisFast'
+}
+
+tasks.named('pmdMain') {
+    dependsOn ':api:pmdMain', ':mech:mining:pmdMain', ':mech:movement:pmdMain', ':mech:inventory:pmdMain'
+}
+
+tasks.named('pmdTest') {
+    dependsOn ':api:pmdTest', ':mech:mining:pmdTest', ':mech:movement:pmdTest', ':mech:inventory:pmdTest'
 }
 
 tasks.named('test') {

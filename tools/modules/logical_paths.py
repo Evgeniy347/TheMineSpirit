@@ -17,11 +17,19 @@ from pathlib import Path
 
 MAIN = "src/main/java/com/theminespirit/"
 TEST = "src/test/java/com/theminespirit/"
+MECH_PREFIXES = (
+    "mech/mining/src/main/java/com/theminespirit/",
+    "mech/mining/src/test/java/com/theminespirit/",
+    "mech/movement/src/main/java/com/theminespirit/",
+    "mech/movement/src/test/java/com/theminespirit/",
+    "mech/inventory/src/main/java/com/theminespirit/",
+    "mech/inventory/src/test/java/com/theminespirit/",
+)
 DEFAULT_FILES = ("config/filesize-baseline.txt", "config/comment-baseline.txt")
 
 
 def logical(path: str) -> str:
-    for prefix in (MAIN, TEST):
+    for prefix in (MAIN, TEST, *MECH_PREFIXES):
         if path.startswith(prefix):
             return path[len(prefix):]
     return path
