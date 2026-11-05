@@ -78,6 +78,25 @@ public final class GearRules {
         return Optional.empty();
     }
 
+    public static Map<String, Integer> chestToolRanks(List<GraphFacts.Chest> chests, GearInputs.Settings settings) {
+        Objects.requireNonNull(chests, "Сундуки не могут быть null: без них нечего брать");
+        Map<String, Integer> best = new LinkedHashMap<>();
+        for (GraphFacts.Chest chest : chests) {
+            for (String item : chest.contents().keySet()) {
+                String name = shortId(item);
+                String kind = toolKind(name);
+                if (kind == null) {
+                    continue;
+                }
+                int rank = settings.rank(tier(name));
+                if (rank >= 0) {
+                    best.merge(kind, rank, Math::max);
+                }
+            }
+        }
+        return Map.copyOf(best);
+    }
+
     public static boolean needsTool(GraphFacts.Spirit spirit, String kind, int stage, GearInputs.Settings settings) {
         Objects.requireNonNull(spirit, "Дух не может быть null: инструмент куют ему");
         String tier =

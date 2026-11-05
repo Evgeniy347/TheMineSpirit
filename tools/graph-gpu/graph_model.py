@@ -741,7 +741,10 @@ class State:
         if int(self.terrain.get("traces", 0)) > 0:
             derived.append("restore_trace")
         for building_id, building in self.building_facts.items():
-            if int(building.get("damage", 0)) > 0 and not building.get("unknown", False):
+            if building.get("unknown", False):
+                continue
+            percent = int(building.get("auditPercent", 0))
+            if int(building.get("damage", 0)) > 0 or 0 < percent < 100:
                 derived.append("repair_" + building_id)
         derived.extend(_life_events(self))
         derived.extend(_gear_events(self))
@@ -1098,7 +1101,18 @@ class Planner:
                 "reason": "нужна постройка " + building_id + " (" + why + "), её нет в плане",
             })
             return
+        if self.audit_settles(building_id):
+            return
         self.push(source, BUILDING + building_id, amount)
+
+    def audit_settles(self, building_id):
+        """Аудит решает судьбу постройки: известный прогресс или неизвестность — не полная стройка."""
+        if self.state.built(building_id) == BUILT:
+            return False
+        fact = self.state.building_facts.get(building_id)
+        if fact is None:
+            return False
+        return bool(fact.get("unknown", False)) or int(fact.get("auditPercent", 0)) > 0
 
     def roots(self):
         graph = self.graph
@@ -1498,7 +1512,11 @@ class Planner:
                 raise KeyError("Событие " + parts[1] + " задания не описано в графе")
             consumes = self.event_consumes(task)
             building = task.get("building")
-            feasible = self.stocked(consumes) and (building is None or state.built(building) == BUILT)
+            fact = None if building is None else state.building_facts.get(building)
+            target = building is None or state.built(building) == BUILT or (
+                fact is not None and not fact.get("unknown", False)
+                and int(fact.get("auditPercent", 0)) > 0)
+            feasible = self.stocked(consumes) and target
             return {"id": key, "makes": task.get("id"), "spirit": None, "priority": prio,
                     "consumes": consumes, "feasible": feasible, "chance": False,
                     "implemented": bool(task.get("implemented", True)),

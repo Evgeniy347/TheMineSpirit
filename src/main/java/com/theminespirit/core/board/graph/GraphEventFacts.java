@@ -20,7 +20,15 @@ public final class GraphEventFacts {
 
     public static boolean feasible(SupplyGraph graph, GraphState state, GraphEvent.Task task) {
         return GraphLack.stocked(graph, state, consumes(state, task))
-                && (task.building() == null || state.built(task.building()) == GraphState.Built.BUILT);
+                && (task.building() == null || repairTarget(state, task.building()));
+    }
+
+    private static boolean repairTarget(GraphState state, String building) {
+        if (state.built(building) == GraphState.Built.BUILT) {
+            return true;
+        }
+        GraphFacts.Building fact = state.facts().buildings().get(building);
+        return fact != null && !fact.unknown() && fact.auditPercent() > 0;
     }
 
     public static int weight(GraphState state, GraphEvent.Task task) {
