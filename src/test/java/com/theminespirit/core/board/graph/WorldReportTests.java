@@ -47,6 +47,32 @@ class WorldReportTests {
     }
 
     @Test
+    void hangingText_WithComposition_ListsTypesAndCounts() {
+        GraphFacts facts = GraphFacts.empty()
+                .withWorld(new GraphWorldFacts(
+                        List.of(),
+                        new GraphSiteFacts.Terrain(
+                                0,
+                                183,
+                                0,
+                                0,
+                                0,
+                                Map.of(),
+                                Map.of(),
+                                Map.of("minecraft:oak_leaves", 120, "minecraft:oak_log", 63),
+                                false),
+                        Map.of()));
+
+        WorldReport report = WorldReport.of(facts);
+
+        assertEquals(
+                "183 (minecraft:oak_leaves=120, minecraft:oak_log=63)",
+                report.hangingText(),
+                "Наблюдатель видит не только число висящих, но и типы блоков: иначе непонятно, что и зачем "
+                        + "убирает clear_floating");
+    }
+
+    @Test
     void of_UnknownTerrain_IsReported() {
         GraphFacts facts = GraphFacts.empty()
                 .withWorld(new GraphWorldFacts(

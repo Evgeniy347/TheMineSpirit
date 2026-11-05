@@ -1,0 +1,10 @@
+{
+  "source": "observe23, main 926009a8, 04.11.2026: [plot-edit] «Хижина» — забор more3_fence:-183,69,-505 снимает стену дома",
+  "events": [
+    {"cell": "-178,69,-505", "planBlock": "minecraft:oak_planks", "who": "spirit-1", "task": "more3_fence:-183,69,-505"},
+    {"cell": "-179,69,-505", "planBlock": "minecraft:oak_planks", "who": "spirit-1", "task": "more3_fence:-183,69,-505"},
+    {"cell": "-176,69,-505", "planBlock": "minecraft:oak_planks", "who": "spirit-1", "task": "more3_fence:-183,69,-505"},
+    {"cell": "-177,69,-505", "planBlock": "minecraft:oak_planks", "who": "spirit-1", "task": "more3_fence:-183,69,-505"},
+    {"cell": "-180,69,-505", "planBlock": "minecraft:oak_planks", "who": "spirit-1", "task": "more3_fence:-183,69,-505"}
+  ]
+}

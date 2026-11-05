@@ -29,4 +29,8 @@ public interface BoardGateway {
     BoardTask cancel(String ticketId);
 
     List<BoardLogEntry> log(int limit);
+
+    default List<BoardLogEntry> log(int limit, long sinceTick) {
+        return log(limit).stream().filter(entry -> entry.tick() > sinceTick).toList();
+    }
 }

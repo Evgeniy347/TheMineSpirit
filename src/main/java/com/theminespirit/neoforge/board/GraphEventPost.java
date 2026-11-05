@@ -47,8 +47,8 @@ final class GraphEventPost {
         }
         if (DEMOLITION.contains(ticket.node())) {
             Optional<TownPlan> town = SettlementPlotStore.get(post.level).town();
-            town.ifPresent(
-                    plan -> PlanDemolition.tick(post.level, post.service, post.scan.stage(), plan, post.now, post));
+            town.ifPresent(plan -> PlanDemolition.tick(
+                    post.level, post.service, post.scan.stage(), plan, post.now, post, ticket.id()));
             return town.isPresent();
         }
         if (YardFloorWatch.handles(ticket.node())) {

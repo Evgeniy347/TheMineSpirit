@@ -31,6 +31,31 @@ public record BuildingWood(String species, String reason) {
         return new BuildingWood(WoodSpecies.ofBiome(biome), "биом " + biome + ": ни запаса, ни деревьев вокруг");
     }
 
+    public static BuildingWood fixed(Map<String, Integer> standing, BuildingWood fresh) {
+        Objects.requireNonNull(standing, "Стоящие блоки не могут быть null: по ним видна порода постройки");
+        Objects.requireNonNull(fresh, "Свежий выбор не может быть null: без него нечего закреплять");
+        String byStanding = bestStanding(standing, fresh.species());
+        int count = standing.getOrDefault(byStanding, 0);
+        if (count == 0) {
+            return fresh;
+        }
+        return new BuildingWood(
+                byStanding, "постройка уже стоит: порода закреплена, " + count + " блоков " + byStanding);
+    }
+
+    private static String bestStanding(Map<String, Integer> standing, String fresh) {
+        String best = fresh;
+        int bestCount = standing.getOrDefault(fresh, 0);
+        for (String species : WoodSpecies.ALL) {
+            int count = standing.getOrDefault(species, 0);
+            if (count > bestCount) {
+                best = species;
+                bestCount = count;
+            }
+        }
+        return best;
+    }
+
     private static String best(Map<String, Integer> items, boolean withPlanks) {
         String best = WoodSpecies.OAK;
         int bestCount = planks(items, best, withPlanks);

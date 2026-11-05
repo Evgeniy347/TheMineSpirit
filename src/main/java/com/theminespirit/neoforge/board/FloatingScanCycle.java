@@ -7,8 +7,10 @@ import com.theminespirit.core.observation.SectionSlice;
 import com.theminespirit.core.observation.SectionSweep;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.FloatingBlocks;
+import com.theminespirit.core.town.FloatingSweep;
 import com.theminespirit.core.town.FloatingWindow;
 import com.theminespirit.core.town.StageSite;
+import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.BlockStates;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,7 +28,8 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 
 final class FloatingScanCycle {
-    private static final int SLICES_PER_TICK = 2;
+    static final int SLICES_PER_STEP = FloatingSweep.SLICES_PER_STEP;
+    static final int STEP_EVERY_TICKS = FloatingSweep.STEP_EVERY_TICKS;
     private static final int WHOLE_CYCLE = 1_000_000;
     private static final Map<ResourceKey<Level>, FloatingScanCycle> CYCLES = new HashMap<>();
 
@@ -57,6 +60,27 @@ final class FloatingScanCycle {
         }
         return CYCLES.computeIfAbsent(level.dimension(), key -> new FloatingScanCycle())
                 .step(level, site, area, bottom, top);
+    }
+
+    static void advance(ServerLevel level) {
+        if (level.getGameTime() % STEP_EVERY_TICKS != 0) {
+            return;
+        }
+        Optional<StageSite> site = SettlementPlotStore.get(level).site();
+        Optional<TownPlan> town = SettlementPlotStore.get(level).town();
+        if (site.isEmpty() || town.isEmpty()) {
+            return;
+        }
+        find(level, site.orElseThrow(), town.orElseThrow().region());
+    }
+
+    static List<FloatingBlocks.Finding> latest(ServerLevel level) {
+        FloatingScanCycle cycle = CYCLES.get(level.dimension());
+        return cycle == null ? List.of() : cycle.published;
+    }
+
+    static long cycleTicks(int slices) {
+        return FloatingSweep.cycleTicks(slices);
     }
 
     static List<FloatingBlocks.Finding> full(
@@ -98,7 +122,7 @@ final class FloatingScanCycle {
 
     private void reset(Area next, ColumnMask area, int bottom, int top) {
         this.area = next;
-        sweep = new SectionSweep(box(area, bottom, top), center(area, bottom, top), SLICES_PER_TICK);
+        sweep = new SectionSweep(box(area, bottom, top), center(area, bottom, top), SLICES_PER_STEP);
         pending = new ArrayList<>();
         published = List.of();
         seen = new LinkedHashSet<>();

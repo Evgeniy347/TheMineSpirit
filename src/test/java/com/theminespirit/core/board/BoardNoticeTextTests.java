@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -57,6 +58,24 @@ class BoardNoticeTextTests {
                 "Строка BLOCKED обязана нести ту же причину, что REST: иначе grep по waitReason не находит "
                         + "заблокированное задание (пункт E отчёта); строка: " + line);
         assertFalse(line.contains("waitReason=—"), "Поле waitReason у BLOCKED больше не пустое: строка: " + line);
+    }
+
+    @Test
+    void blockedLine_HistoryInReason_IsNotRepeatedAsSecondField() {
+        long[] now = {0};
+        Board board = blockedBoard(now);
+        BoardLogEntry entry = board.drainBlocks().get(0);
+
+        String line = BoardNoticeText.line(board, entry, new StockView(Map.of()), now[0]);
+
+        assertFalse(
+                line.contains("история="),
+                "История провалов уже названа в причине (history=); второй раз в строке BLOCKED она раздувает "
+                        + "инцидент до килобайтов: " + line);
+        assertEquals(
+                1,
+                line.split("history=", -1).length - 1,
+                "История провалов печатается ровно один раз: дубль мешает читать лог: " + line);
     }
 
     @Test

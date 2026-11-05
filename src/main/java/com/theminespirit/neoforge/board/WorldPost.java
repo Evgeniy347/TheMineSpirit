@@ -12,11 +12,13 @@ import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.town.SettlementScan;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 final class WorldPost {
     static final String REPAIR_NODE = "repair:";
@@ -86,17 +88,13 @@ final class WorldPost {
         if (found.pits().isEmpty()) {
             return false;
         }
-        boolean posted = false;
-        for (BlockCoord at :
-                found.pits().keySet().stream().sorted(ORDER).limit(BATCH).toList()) {
-            String id = "world:backfill:" + key(at);
-            if (post.done(id) || post.open(id)) {
-                posted = true;
-                continue;
-            }
+        for (BlockCoord at : fresh(
+                found.pits().keySet().stream().sorted(ORDER).toList(),
+                BATCH,
+                cell -> busy(post, "world:backfill:", cell))) {
             post.submit(
                     post.ticket(
-                            id,
+                            "world:backfill:" + key(at),
                             BoardCase.FILL_CRATER,
                             Optional.empty(),
                             priority,
@@ -104,9 +102,8 @@ final class WorldPost {
                             post.items(ticket.task())),
                     TicketTarget.at(at)
                             .withCraterBlocks(Math.min(found.pits().getOrDefault(at, 0) + 1, CatalogLimits.COUNT_MAX)));
-            posted = true;
         }
-        return posted;
+        return true;
     }
 
     private static boolean lot(GraphPost post, GraphTickets.Ticket ticket, SettlementScan.Strays found, int priority) {
@@ -150,6 +147,25 @@ final class WorldPost {
             posted = true;
         }
         return posted;
+    }
+
+    private static boolean busy(GraphPost post, String prefix, BlockCoord at) {
+        String id = prefix + key(at);
+        return post.done(id) || post.open(id);
+    }
+
+    static List<BlockCoord> fresh(List<BlockCoord> sorted, int batch, Predicate<BlockCoord> busy) {
+        List<BlockCoord> fresh = new ArrayList<>();
+        for (BlockCoord at : sorted) {
+            if (fresh.size() >= batch) {
+                break;
+            }
+            if (busy.test(at)) {
+                continue;
+            }
+            fresh.add(at);
+        }
+        return List.copyOf(fresh);
     }
 
     private static String key(BlockCoord at) {
