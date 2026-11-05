@@ -10,7 +10,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class CraftedMaterialSourceGuardTests {
-    private static final Path BOARD = Path.of("src/main/java/com/theminespirit/neoforge/board");
+    private static final Path BOARD = SourceFiles.path("neoforge/board");
     private static final Path GRAPH_POST = BOARD.resolve("GraphPost.java");
     private static final String MAKE_GATHER = "gather(MAKE + item";
     private static final String CRAFTED_CHECK = "CraftedItems.isCrafted(item)";

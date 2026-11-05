@@ -2,8 +2,11 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-GAMETEST_WORKTREE="$(pwd -P)"
-GAMETEST_RUN_DIR="$GAMETEST_WORKTREE/build/gametest-run"
+PROJECT_ROOT="$(pwd -P)"
+. scripts/module-paths.sh
+
+GAMETEST_WORKTREE="$PROJECT_ROOT"
+GAMETEST_RUN_DIR="$GAMETEST_WORKTREE/${THEMINESPIRIT_GAMETEST_RUN_DIR:-build/gametest-run}"
 
 GRADLEW="${THEMINESPIRIT_GRADLEW:-./gradlew}"
 LOG_DIR="TestResults/logs"

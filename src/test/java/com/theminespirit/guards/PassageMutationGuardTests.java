@@ -15,11 +15,11 @@ class PassageMutationGuardTests {
     private static final Set<String> MUTATIONS =
             Set.of("setBlock", "destroyBlock", "placeBlock", "removeBlock", "BlockBreaker", "BlockPlacer");
     private static final List<Path> DECISION_LAYERS = List.of(
-            Path.of("src/main/java/com/theminespirit/core/board"),
-            Path.of("src/main/java/com/theminespirit/neoforge/board"),
-            Path.of("src/main/java/com/theminespirit/core/navigation"),
-            Path.of("src/main/java/com/theminespirit/core/route"),
-            Path.of("src/main/java/com/theminespirit/core/movement"));
+            SourceFiles.path("core/board"),
+            SourceFiles.path("neoforge/board"),
+            SourceFiles.path("core/navigation"),
+            SourceFiles.path("core/route"),
+            SourceFiles.path("core/movement"));
 
     @Test
     void decisionLayers_WorldMutationApis_AreAbsent() {

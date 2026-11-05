@@ -1,164 +1,164 @@
-src/main/java/com/theminespirit/gametest/AcquireGameTests.java	[флак] добыча железа с нуля без дерева: верстак и печь в мире, каменная кирка снабжается
-src/main/java/com/theminespirit/gametest/AcquireGameTests.java	заранее (резолвер не планирует крафт инструментов — RequiredTier вне ResourceKnowledge),
-src/main/java/com/theminespirit/gametest/AcquireGameTests.java	остальное дух добывает, крафтит и плавит сам; замерено ~340 тиков, запас 2×.
-src/main/java/com/theminespirit/gametest/BoardGameTests.java	[флак] добыча одного бревна вручную, путь к сундуку и ожидание пересборки: под нагрузкой
-src/main/java/com/theminespirit/gametest/BoardGameTests.java	машины не укладывается в 400 тиков, запас двойной.
-src/main/java/com/theminespirit/gametest/BoardV2GameTests.java	[флак] перенос: путь, разбор старого загона и стройка нового 4×5; под нагрузкой
-src/main/java/com/theminespirit/gametest/BoardV2GameTests.java	машины 400 тиков мало, запас двойной.
-src/main/java/com/theminespirit/gametest/ChopBigTreesGameTests.java	[флак] замер 885 тиков: 80 брёвен 2×2 высотой 20 рубятся с одной стоянки; потолок 1800 ≈ 2× замера
-src/main/java/com/theminespirit/gametest/ChopReplantGameTests.java	[флак] обновление участка: шесть саженцев — ствол и досадка сеткой, каждую клетку дух обходит;
-src/main/java/com/theminespirit/gametest/ChopReplantGameTests.java	потолок с запасом на флаки полного прогона
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] два свободных слота: заходы к сундуку и обратно — запас тиков на подходы, тест меряет результат
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 2 — зал и две комнаты под крышей 16×15: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 2 — зал и две комнаты под крышей 16×15: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 2 — зал и две комнаты под крышей 16×15: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 2 — зал и две комнаты под крышей 16×15: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 3 — два этажа 20×17, материалы заходами: запас тиков на подходы и заходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 3 — два этажа 20×17, материалы заходами: запас тиков на подходы и заходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 3 — два этажа 20×17, материалы заходами: запас тиков на подходы и заходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом игрока 3 — два этажа 20×17, материалы заходами: запас тиков на подходы и заходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 2 — сотни блоков и несколько этажей: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 2 — сотни блоков и несколько этажей: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 2 — сотни блоков и несколько этажей: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 2 — сотни блоков и несколько этажей: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 3 — два этажа и заходы за материалами: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 3 — два этажа и заходы за материалами: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 3 — два этажа и заходы за материалами: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 3 — два этажа и заходы за материалами: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] колодец 2 с крышей на столбах: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] колодец 2 с крышей на столбах: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] колодец 2 с крышей на столбах: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] колодец 2 с крышей на столбах: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] особняк 22×20 с залом на два этажа, материалы заходами: запас тиков на подходы и заходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] особняк 22×20 с залом на два этажа, материалы заходами: запас тиков на подходы и заходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] особняк 22×20 с залом на два этажа, материалы заходами: запас тиков на подходы и заходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] особняк 22×20 с залом на два этажа, материалы заходами: запас тиков на подходы и заходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] площадь 15×16 с колодцем: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] площадь 15×16 с колодцем: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] площадь 15×16 с колодцем: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] площадь 15×16 с колодцем: запас тиков на подходы, тест меряет результат. Краснела (21.10) четырьмя
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] площадь 2 — мощение 19×20 с узором, скамьи и клумбы: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] площадь 2 — мощение 19×20 с узором, скамьи и клумбы: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] площадь 2 — мощение 19×20 с узором, скамьи и клумбы: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] площадь 2 — мощение 19×20 с узором, скамьи и клумбы: запас тиков на подходы, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] площадь 3 — мощение 25×25 с кольцом, фонтан, скамьи и клумбы: запас тиков на подходы и заходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] площадь 3 — мощение 25×25 с кольцом, фонтан, скамьи и клумбы: запас тиков на подходы и заходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] площадь 3 — мощение 25×25 с кольцом, фонтан, скамьи и клумбы: запас тиков на подходы и заходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] площадь 3 — мощение 25×25 с кольцом, фонтан, скамьи и клумбы: запас тиков на подходы и заходы, тест меряет
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] полный инвентарь: заход к сундуку и обратно с освобождением слотов — запас тиков на подходы
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] фонарь на столбе: запас тиков на подход, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] фонарь на столбе: запас тиков на подход, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] фонарь на столбе: запас тиков на подход, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] фонарь на столбе: запас тиков на подход, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] фонарь на цепи: запас тиков на подход, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] фонарь на цепи: запас тиков на подход, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] фонарь на цепи: запас тиков на подход, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	[флак] фонарь на цепи: запас тиков на подход, тест меряет результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	видела.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	гравия под стоянками плана: запасные стоянки отмечали их недоступными, и после плана обычная стройка их не
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	клетками
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DemoAuditGameTests.java	результат.
-src/main/java/com/theminespirit/gametest/DigOutGameTests.java	[флак] 7 ступеней по 3 блока камня деревянной киркой (~70 тиков на ступень) и шаги; запас 2× к ~1000 тиков
-src/main/java/com/theminespirit/gametest/FarmSafetyGameTests.java	[флак] замер 974 тика: посадка, подкормка и три сбора 9 клеток; потолок 1950 ≈ 2× замера
-src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	[флак] длинная цепочка: верстак, кирка, печь, плавка и факелы; запас 2× к замеру. Деревья стоят
-src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	компактно (проверка CORNER_DISTANCE). Разнести деревья нельзя — печь уезжает за духом.
-src/main/java/com/theminespirit/gametest/FirstToolsGameTests.java	кучно у рабочего угла намеренно: стол и печь ставятся рядом с духом, и работа у угла держит их
-src/main/java/com/theminespirit/gametest/FullCycleGameTests.java	[флак] вся цепочка: добыча 8 булыжников по одному, крафт, плавка, сундук; замерено 339 тиков духа, запас 2×
-src/main/java/com/theminespirit/gametest/HouseMovementGameTests.java	[флак] путь из глубины дома — до 60 шагов по лестнице (≈ 600 тиков), под нагрузкой полного прогона запас 4×.
-src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск с водой в стене и потолке: пробки и 9 ступеней с выходом; замерено ~750 тиков, запас 2×
-src/main/java/com/theminespirit/gametest/MineBuildGameTests.java	[флак] спуск через пещеру: пол и стенки над пустотой, 9 ступеней и выход; замерено ~650 тиков, запас 2×
-src/main/java/com/theminespirit/gametest/MineVeinDurabilityGameTests.java	[флак] полный инвентарь, путь до сундука и добыча руды: под нагрузкой машины запас двойной.
-src/main/java/com/theminespirit/gametest/MineLevelsGameTests.java	[флак] три задачи подряд (спуск, расширение 60+ клеток, 8 ступенек): подход к каждой клетке,
-src/main/java/com/theminespirit/gametest/MineLevelsGameTests.java	замер духа на порядок больше базового; запас 2× к ожидаемым тикам.
-src/main/java/com/theminespirit/gametest/PresetBuildGameTests.java	[флак] каменный дом с места, с запасом на подходы; тест меряет результат, а не скорость.
-src/main/java/com/theminespirit/gametest/RestFixture.java	[флак] Тики сервера GameTest идут без пауз, а ответ моста приходит по HTTP за реальное время: срок ответа
-src/main/java/com/theminespirit/gametest/RestFixture.java	считается в секундах (REPLY_DEADLINE = 30 с), потолок тиков только запасной и заведомо больше любого
-src/main/java/com/theminespirit/gametest/RestFixture.java	честного ожидания. Потолок не тиковый, поэтому правило «timeoutTicks ≈ 2× тиков духа» к нему не применимо.
-src/main/java/com/theminespirit/gametest/SafeMineGameTests.java	[флак] восемь ступеней (14 блоков), подход и сбор дропа на каждой ступени: запас 2× к ожидаемым тикам.
-src/main/java/com/theminespirit/gametest/SettlementChestGameTests.java	[флак] дух идёт 60 блоков до склада и обратно: замер ~600 тиков, запас 2× на движение и заходы.
-src/main/java/com/theminespirit/gametest/ShelterBuildGameTests.java	[флак] полная схема 6×6: расчистка 36 клеток земли, план, 130 блоков корпуса, полублок и факел;
-src/main/java/com/theminespirit/gametest/ShelterBuildGameTests.java	запас на подходы полного прогона
-src/main/java/com/theminespirit/gametest/WarehouseGameTests.java	[флак] 176 блоков склада дух ставит по одному за тик с подходом к каждой клетке; запас двойной,
-src/main/java/com/theminespirit/gametest/WarehouseGameTests.java	иначе тест меряет скорость стройки, а не её результат.
-src/main/java/com/theminespirit/gametest/Observe9ScenesGameTests.java	[флак] шаг наблюдения 9 ждёт 900 тиков тактики, а не мгновенного события: бюджет двойной.
-src/main/java/com/theminespirit/gametest/BoardGameTests.java	[флак] замер ~300 тиков: подход, добыча материалов и крафт; бюджет 800 ≈ 2×
-src/main/java/com/theminespirit/gametest/FarmScenesGameTests.java	[флак] замер ~2500 тиков: 132 клетки грядки (пахота, посев, вода); бюджет 4000 ≈ 1,6×
+gametest/AcquireGameTests.java	[флак] добыча железа с нуля без дерева: верстак и печь в мире, каменная кирка снабжается
+gametest/AcquireGameTests.java	заранее (резолвер не планирует крафт инструментов — RequiredTier вне ResourceKnowledge),
+gametest/AcquireGameTests.java	остальное дух добывает, крафтит и плавит сам; замерено ~340 тиков, запас 2×.
+gametest/BoardGameTests.java	[флак] добыча одного бревна вручную, путь к сундуку и ожидание пересборки: под нагрузкой
+gametest/BoardGameTests.java	машины не укладывается в 400 тиков, запас двойной.
+gametest/BoardV2GameTests.java	[флак] перенос: путь, разбор старого загона и стройка нового 4×5; под нагрузкой
+gametest/BoardV2GameTests.java	машины 400 тиков мало, запас двойной.
+gametest/ChopBigTreesGameTests.java	[флак] замер 885 тиков: 80 брёвен 2×2 высотой 20 рубятся с одной стоянки; потолок 1800 ≈ 2× замера
+gametest/ChopReplantGameTests.java	[флак] обновление участка: шесть саженцев — ствол и досадка сеткой, каждую клетку дух обходит;
+gametest/ChopReplantGameTests.java	потолок с запасом на флаки полного прогона
+gametest/DemoAuditGameTests.java	[флак] два свободных слота: заходы к сундуку и обратно — запас тиков на подходы, тест меряет результат
+gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом игрока 2 — зал и две комнаты под крышей 16×15: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом игрока 2 — зал и две комнаты под крышей 16×15: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом игрока 2 — зал и две комнаты под крышей 16×15: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом игрока 2 — зал и две комнаты под крышей 16×15: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом игрока 3 — два этажа 20×17, материалы заходами: запас тиков на подходы и заходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] дом игрока 3 — два этажа 20×17, материалы заходами: запас тиков на подходы и заходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] дом игрока 3 — два этажа 20×17, материалы заходами: запас тиков на подходы и заходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] дом игрока 3 — два этажа 20×17, материалы заходами: запас тиков на подходы и заходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 2 — сотни блоков и несколько этажей: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 2 — сотни блоков и несколько этажей: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 2 — сотни блоков и несколько этажей: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 2 — сотни блоков и несколько этажей: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 3 — два этажа и заходы за материалами: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 3 — два этажа и заходы за материалами: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 3 — два этажа и заходы за материалами: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 3 — два этажа и заходы за материалами: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] дом семьи уровня 4 — усадьба в два этажа, материалы заходами: запас тиков на подходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] колодец 2 с крышей на столбах: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] колодец 2 с крышей на столбах: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] колодец 2 с крышей на столбах: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] колодец 2 с крышей на столбах: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] особняк 22×20 с залом на два этажа, материалы заходами: запас тиков на подходы и заходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] особняк 22×20 с залом на два этажа, материалы заходами: запас тиков на подходы и заходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] особняк 22×20 с залом на два этажа, материалы заходами: запас тиков на подходы и заходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] особняк 22×20 с залом на два этажа, материалы заходами: запас тиков на подходы и заходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] площадь 15×16 с колодцем: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] площадь 15×16 с колодцем: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] площадь 15×16 с колодцем: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] площадь 15×16 с колодцем: запас тиков на подходы, тест меряет результат. Краснела (21.10) четырьмя
+gametest/DemoAuditGameTests.java	[флак] площадь 2 — мощение 19×20 с узором, скамьи и клумбы: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] площадь 2 — мощение 19×20 с узором, скамьи и клумбы: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] площадь 2 — мощение 19×20 с узором, скамьи и клумбы: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] площадь 2 — мощение 19×20 с узором, скамьи и клумбы: запас тиков на подходы, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] площадь 3 — мощение 25×25 с кольцом, фонтан, скамьи и клумбы: запас тиков на подходы и заходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] площадь 3 — мощение 25×25 с кольцом, фонтан, скамьи и клумбы: запас тиков на подходы и заходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] площадь 3 — мощение 25×25 с кольцом, фонтан, скамьи и клумбы: запас тиков на подходы и заходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] площадь 3 — мощение 25×25 с кольцом, фонтан, скамьи и клумбы: запас тиков на подходы и заходы, тест меряет
+gametest/DemoAuditGameTests.java	[флак] полный инвентарь: заход к сундуку и обратно с освобождением слотов — запас тиков на подходы
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] стройка с места с запасом на подходы; тест меряет результат и число подходов, а не скорость.
+gametest/DemoAuditGameTests.java	[флак] фонарь на столбе: запас тиков на подход, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] фонарь на столбе: запас тиков на подход, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] фонарь на столбе: запас тиков на подход, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] фонарь на столбе: запас тиков на подход, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] фонарь на цепи: запас тиков на подход, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] фонарь на цепи: запас тиков на подход, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] фонарь на цепи: запас тиков на подход, тест меряет результат.
+gametest/DemoAuditGameTests.java	[флак] фонарь на цепи: запас тиков на подход, тест меряет результат.
+gametest/DemoAuditGameTests.java	видела.
+gametest/DemoAuditGameTests.java	гравия под стоянками плана: запасные стоянки отмечали их недоступными, и после плана обычная стройка их не
+gametest/DemoAuditGameTests.java	клетками
+gametest/DemoAuditGameTests.java	результат.
+gametest/DemoAuditGameTests.java	результат.
+gametest/DemoAuditGameTests.java	результат.
+gametest/DemoAuditGameTests.java	результат.
+gametest/DemoAuditGameTests.java	результат.
+gametest/DemoAuditGameTests.java	результат.
+gametest/DemoAuditGameTests.java	результат.
+gametest/DemoAuditGameTests.java	результат.
+gametest/DemoAuditGameTests.java	результат.
+gametest/DemoAuditGameTests.java	результат.
+gametest/DemoAuditGameTests.java	результат.
+gametest/DemoAuditGameTests.java	результат.
+gametest/DemoAuditGameTests.java	результат.
+gametest/DemoAuditGameTests.java	результат.
+gametest/DemoAuditGameTests.java	результат.
+gametest/DemoAuditGameTests.java	результат.
+gametest/DigOutGameTests.java	[флак] 7 ступеней по 3 блока камня деревянной киркой (~70 тиков на ступень) и шаги; запас 2× к ~1000 тиков
+gametest/FarmSafetyGameTests.java	[флак] замер 974 тика: посадка, подкормка и три сбора 9 клеток; потолок 1950 ≈ 2× замера
+gametest/FirstToolsGameTests.java	[флак] длинная цепочка: верстак, кирка, печь, плавка и факелы; запас 2× к замеру. Деревья стоят
+gametest/FirstToolsGameTests.java	компактно (проверка CORNER_DISTANCE). Разнести деревья нельзя — печь уезжает за духом.
+gametest/FirstToolsGameTests.java	кучно у рабочего угла намеренно: стол и печь ставятся рядом с духом, и работа у угла держит их
+gametest/FullCycleGameTests.java	[флак] вся цепочка: добыча 8 булыжников по одному, крафт, плавка, сундук; замерено 339 тиков духа, запас 2×
+gametest/HouseMovementGameTests.java	[флак] путь из глубины дома — до 60 шагов по лестнице (≈ 600 тиков), под нагрузкой полного прогона запас 4×.
+gametest/MineBuildGameTests.java	[флак] спуск с водой в стене и потолке: пробки и 9 ступеней с выходом; замерено ~750 тиков, запас 2×
+gametest/MineBuildGameTests.java	[флак] спуск через пещеру: пол и стенки над пустотой, 9 ступеней и выход; замерено ~650 тиков, запас 2×
+gametest/MineVeinDurabilityGameTests.java	[флак] полный инвентарь, путь до сундука и добыча руды: под нагрузкой машины запас двойной.
+gametest/MineLevelsGameTests.java	[флак] три задачи подряд (спуск, расширение 60+ клеток, 8 ступенек): подход к каждой клетке,
+gametest/MineLevelsGameTests.java	замер духа на порядок больше базового; запас 2× к ожидаемым тикам.
+gametest/PresetBuildGameTests.java	[флак] каменный дом с места, с запасом на подходы; тест меряет результат, а не скорость.
+gametest/RestFixture.java	[флак] Тики сервера GameTest идут без пауз, а ответ моста приходит по HTTP за реальное время: срок ответа
+gametest/RestFixture.java	считается в секундах (REPLY_DEADLINE = 30 с), потолок тиков только запасной и заведомо больше любого
+gametest/RestFixture.java	честного ожидания. Потолок не тиковый, поэтому правило «timeoutTicks ≈ 2× тиков духа» к нему не применимо.
+gametest/SafeMineGameTests.java	[флак] восемь ступеней (14 блоков), подход и сбор дропа на каждой ступени: запас 2× к ожидаемым тикам.
+gametest/SettlementChestGameTests.java	[флак] дух идёт 60 блоков до склада и обратно: замер ~600 тиков, запас 2× на движение и заходы.
+gametest/ShelterBuildGameTests.java	[флак] полная схема 6×6: расчистка 36 клеток земли, план, 130 блоков корпуса, полублок и факел;
+gametest/ShelterBuildGameTests.java	запас на подходы полного прогона
+gametest/WarehouseGameTests.java	[флак] 176 блоков склада дух ставит по одному за тик с подходом к каждой клетке; запас двойной,
+gametest/WarehouseGameTests.java	иначе тест меряет скорость стройки, а не её результат.
+gametest/Observe9ScenesGameTests.java	[флак] шаг наблюдения 9 ждёт 900 тиков тактики, а не мгновенного события: бюджет двойной.
+gametest/BoardGameTests.java	[флак] замер ~300 тиков: подход, добыча материалов и крафт; бюджет 800 ≈ 2×
+gametest/FarmScenesGameTests.java	[флак] замер ~2500 тиков: 132 клетки грядки (пахота, посев, вода); бюджет 4000 ≈ 1,6×

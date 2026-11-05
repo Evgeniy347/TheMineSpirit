@@ -200,10 +200,7 @@ class MethodShapeGuardTests {
     private record Violation(String file, long line, String owner, String name, int params, int booleans) {}
 
     private static String key(MethodTree node, ClassTree owner, String file) {
-        String path = file.replace('\\', '/');
-        int root = path.indexOf("src/main/java/");
-        String relative = root < 0 ? path : path.substring(root + "src/main/java/".length());
-        return relative + "#" + owner.getSimpleName() + "." + node.getName() + "/"
+        return SourceFiles.logical(Path.of(file)) + "#" + owner.getSimpleName() + "." + node.getName() + "/"
                 + node.getParameters().size();
     }
 

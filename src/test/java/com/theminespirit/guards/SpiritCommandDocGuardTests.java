@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 
 class SpiritCommandDocGuardTests {
     private static final Path README = Path.of("README.md");
-    private static final Path NEOFORGE = Path.of("src/main/java/com/theminespirit/neoforge");
+    private static final Path NEOFORGE = SourceFiles.path("neoforge");
     private static final String COMMANDS_HEADING = "## Команды духов";
     private static final Pattern REGISTERED = Pattern.compile("spirit\\.then\\(literal\\(\"([a-z_]+)\"\\)");
     private static final Pattern DOCUMENTED = Pattern.compile("`/spirit ([a-z_]+)");

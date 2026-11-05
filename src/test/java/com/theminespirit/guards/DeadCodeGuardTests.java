@@ -293,7 +293,7 @@ class DeadCodeGuardTests {
         Frame[] frames = frames(tokens);
         List<Declaration> declarations = new ArrayList<>();
         Set<Integer> declarationsAt = new HashSet<>();
-        String path = file.toString().replace('\\', '/');
+        String path = SourceFiles.logical(file);
 
         Matcher types = TYPE.matcher(code);
         while (types.find()) {

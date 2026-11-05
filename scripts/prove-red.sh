@@ -3,8 +3,9 @@ set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 2
 REPO_DIR="$PWD"
-TEST_DIR="src/test/java"
-GAMETEST_DIR="src/main/java/com/theminespirit/gametest"
+. scripts/module-paths.sh
+TEST_DIR="$MOD_TEST_DIR"
+GAMETEST_DIR="$MOD_GAME_TESTS_DIR"
 EXIT_ERROR=2
 EXIT_NOTHING=3
 

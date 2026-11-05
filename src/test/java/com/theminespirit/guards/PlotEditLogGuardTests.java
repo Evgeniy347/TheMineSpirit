@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,7 +61,7 @@ class PlotEditLogGuardTests {
 
     private static String read(String file) {
         try {
-            return Files.readString(Path.of(file), StandardCharsets.UTF_8);
+            return Files.readString(SourceFiles.path(file), StandardCharsets.UTF_8);
         } catch (IOException error) {
             throw new IllegalStateException(
                     "Файл хука правок мира '" + file + "' не прочитан: " + error.getMessage(), error);
@@ -71,8 +70,8 @@ class PlotEditLogGuardTests {
 
     private static Map<String, String> hooks() {
         Map<String, String> hooks = new LinkedHashMap<>();
-        hooks.put("src/main/java/com/theminespirit/neoforge/BlockBreaker.java", "BreakNotice.broken(");
-        hooks.put("src/main/java/com/theminespirit/neoforge/policy/PolicyEvents.java", "PlotEditLog.broken(");
+        hooks.put("neoforge/BlockBreaker.java", "BreakNotice.broken(");
+        hooks.put("neoforge/policy/PolicyEvents.java", "PlotEditLog.broken(");
         return Map.copyOf(hooks);
     }
 }
