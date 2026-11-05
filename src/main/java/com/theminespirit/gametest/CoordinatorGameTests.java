@@ -29,7 +29,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class CoordinatorGameTests {
     private CoordinatorGameTests() {}
 
-    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true, board = true)
     public static void defense_FourSpiritsOneMob_PostsAroundHomeAndOneEngages(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockPos absoluteHome = helper.absolutePos(new BlockPos(5, 1, 5));

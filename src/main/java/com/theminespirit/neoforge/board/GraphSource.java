@@ -97,6 +97,7 @@ public final class GraphSource {
     }
 
     private Set<String> finish(Half half) {
+        pending = null;
         GraphPost post = new GraphPost(
                 half.level(),
                 half.service(),
@@ -153,7 +154,6 @@ public final class GraphSource {
         tellStrategist(half.level(), half.graph(), half.state(), half.plan(), half.now());
         cadence.finished(half.now(), half.signals());
         lastLive = post.live(half.result().live());
-        pending = null;
         return lastLive;
     }
 

@@ -21,7 +21,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 
 public final class StockReader {
-    public static final int STOCK_READ_BUDGET = 4096;
     public static final int STOCK_CONTAINER_BUDGET = 8;
     public static final int STOCK_RADIUS = 8;
     public static final int STOCK_HEIGHT = 4;

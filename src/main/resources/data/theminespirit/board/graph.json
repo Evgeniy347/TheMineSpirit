@@ -9854,6 +9854,13 @@
       ]
     },
     "night": {
+      "band": 10,
+      "tasks": [
+        {"id": "more4_guard_settlement", "case": "ACTIVITY_GUARD", "base": 80, "consumes": {},
+         "implemented": true},
+        {"id": "more4_watch_chests", "case": "ACTIVITY_GUARD", "base": 79, "consumes": {},
+         "implemented": true}
+      ],
       "push": {
         "building:lighting": 15,
         "torch": 15,

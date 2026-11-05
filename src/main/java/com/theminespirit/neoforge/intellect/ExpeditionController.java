@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.intellect;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.intellect.DescentKit;
 import com.theminespirit.core.intellect.Expedition;
 import com.theminespirit.core.intellect.IntellectTuning;
@@ -13,7 +12,6 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.inventory.InventoryTables;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
@@ -33,8 +31,8 @@ public final class ExpeditionController {
     private static final int PARTNER_RADIUS = 3;
     private static final Map<String, Object> MINE_PARAMS = Map.of("ore", "any", "count", 8, "radius", 16);
 
-    private final TaskStarter starter;
     private final Invitation invitation = new Invitation();
+    private Launcher launcher;
     private Dispatch lastDispatch;
     private Expedition active;
     private UUID expeditionId;
@@ -45,12 +43,27 @@ public final class ExpeditionController {
     private UUID missionLeader;
     private String refusal;
 
-    public ExpeditionController(TaskStarter starter) {
-        if (starter == null) {
-            throw new IllegalArgumentException(
-                    "Поход без стартера задач не ведётся: выход команды идёт через общий откат провалов");
+    @FunctionalInterface
+    public interface Launcher {
+        boolean launch(SpiritEntity spirit, String script, TaskNode task, long now);
+    }
+
+    public void offer(Expedition planned) {
+        if (planned == null) {
+            throw new IllegalArgumentException("Поход без плана не предлагается: команда и цель обязательны");
         }
-        this.starter = starter;
+        if (active != null) {
+            return;
+        }
+        active = planned;
+        expeditionId = UUID.randomUUID();
+        dispatched = false;
+        invitation.open(planned.startedAt());
+        lastRepeatTick = planned.startedAt();
+    }
+
+    public boolean dispatchedRecently(long now) {
+        return dispatched && now - closedAt < IntellectTuning.loadDefault().inviteTtlTicks();
     }
 
     public Optional<Expedition> active() {
@@ -87,27 +100,13 @@ public final class ExpeditionController {
         return true;
     }
 
-    public void update(ServerLevel level, Optional<Expedition> planned, List<SpiritEntity> members, long now) {
-        if (level == null || planned == null || members == null) {
+    public void update(ServerLevel level, List<SpiritEntity> members, long now, Launcher tasks) {
+        if (level == null || members == null || tasks == null) {
             throw new IllegalArgumentException(
-                    "Поход без уровня, плана или духов не ведётся: команда идёт конкретным составом");
+                    "Поход без уровня, духов или исполнителя не ведётся: команда идёт конкретным составом");
         }
+        launcher = tasks;
         monitorMission(members, now);
-        if (active == null
-                && planned.isPresent()
-                && !dispatched
-                && (closedAt == Long.MIN_VALUE
-                        || now - closedAt >= IntellectTuning.loadDefault().inviteTtlTicks())) {
-            active = planned.get();
-            expeditionId = UUID.randomUUID();
-            dispatched = false;
-            invitation.open(now);
-            lastRepeatTick = now;
-            SpiritEntity inviter = inviter(members, active);
-            if (inviter != null) {
-                ChatInvitation.send(level, inviter, expeditionId, active.team().size());
-            }
-        }
         if (active == null) {
             return;
         }
@@ -135,7 +134,7 @@ public final class ExpeditionController {
         if (player == null || members == null) {
             throw new IllegalArgumentException("Согласие без игрока не принять: за кем-то нужно идти");
         }
-        if (active == null) {
+        if (active == null || launcher == null) {
             return;
         }
         if (dispatchFollow(members, active, player, now)) {
@@ -275,10 +274,6 @@ public final class ExpeditionController {
     }
 
     private boolean launch(SpiritEntity spirit, String script, TaskNode task, long now) {
-        if (spirit.level() instanceof ServerLevel server) {
-            return BoardRegistry.get(server)
-                    .launch(spirit, BoardCase.ACTIVITY_EXPEDITION, script, task, starter::start, now);
-        }
-        return starter.start(spirit, script, task, now);
+        return launcher != null && launcher.launch(spirit, script, task, now);
     }
 }

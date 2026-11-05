@@ -48,6 +48,14 @@
       "push": {"building:field_2": 8},
       "advice": ["expand_field_or_stop_sowing"]
     },
+    "expedition_ready": {
+      "band": 15,
+      "tasks": [
+        {"id": "expedition", "case": "ACTIVITY_EXPEDITION", "base": 90, "consumes": {},
+         "implemented": true}
+      ],
+      "advice": ["go_mining_expedition"]
+    },
     "more7_order_ready": {
       "tasks": [
         {"id": "more7_order_to_chest", "case": "STOCK_CHESTS", "base": 62, "consumes": {}, "implemented": true}
