@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -78,9 +79,9 @@ public final class RecipeImport {
     }
 
     public static List<SupplyGraph.Way> select(List<SupplyGraph.Way> ways, SupplyGraph manual, int max) {
-        Map<String, Integer> manualWays = new TreeMap<>();
+        Set<String> manualMakes = new HashSet<>();
         for (SupplyGraph.Way way : manual.ways()) {
-            manualWays.merge(way.makes(), 1, Integer::sum);
+            manualMakes.add(way.makes());
         }
         Map<String, List<SupplyGraph.Way>> byMakes = new TreeMap<>();
         for (SupplyGraph.Way way : ways) {
@@ -88,15 +89,14 @@ public final class RecipeImport {
         }
         List<SupplyGraph.Way> selected = new ArrayList<>();
         byMakes.forEach((makes, candidates) -> {
-            int left = max - manualWays.getOrDefault(makes, 0);
-            if (left <= 0) {
+            if (manualMakes.contains(makes)) {
                 return;
             }
             candidates.stream()
                     .sorted(Comparator.comparingInt(
                                     (SupplyGraph.Way way) -> way.consumes().size())
                             .thenComparing(SupplyGraph.Way::id))
-                    .limit(left)
+                    .limit(max)
                     .forEach(selected::add);
         });
         selected.sort(Comparator.comparing(SupplyGraph.Way::id));

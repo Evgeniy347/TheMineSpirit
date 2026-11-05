@@ -12,10 +12,16 @@ final class GraphChoiceRules {
 
     private final SupplyGraph graph;
     private final GraphState state;
+    private final GraphReach reach;
 
     GraphChoiceRules(SupplyGraph graph, GraphState state) {
+        this(graph, state, new GraphReach(graph, state));
+    }
+
+    GraphChoiceRules(SupplyGraph graph, GraphState state, GraphReach reach) {
         this.graph = graph;
         this.state = state;
+        this.reach = reach;
     }
 
     static List<Map.Entry<String, Double>> ordered(Map<String, Double> scores) {
@@ -32,9 +38,8 @@ final class GraphChoiceRules {
             return key;
         }
         int at = key.indexOf(AT);
-        return graph.way(at < 0 ? key : key.substring(0, at))
-                .map(SupplyGraph.Way::makes)
-                .orElse(key);
+        SupplyGraph.Way way = reach.find(at < 0 ? key : key.substring(0, at));
+        return way == null ? key : way.makes();
     }
 
     double value(String key, double value, boolean repeat) {
@@ -139,18 +144,17 @@ final class GraphChoiceRules {
     private SupplyGraph.@Nullable Way way(String key) {
         if (key.startsWith(EVENT)) {
             String[] parts = key.split(":", 3);
-            return parts.length == 3 ? graph.way(parts[2]).orElse(null) : null;
+            return parts.length == 3 ? reach.find(parts[2]) : null;
         }
         int at = key.indexOf(AT);
-        return graph.way(at < 0 ? key : key.substring(0, at)).orElse(null);
+        return reach.find(at < 0 ? key : key.substring(0, at));
     }
 
     private int travel(String key) {
         int at = key.indexOf(AT);
-        return graph.way(at < 0 ? key : key.substring(0, at))
-                .map(SupplyGraph.Way::world)
-                .map(resource -> graph.costs().travel(state.distances().getOrDefault(resource, 0)))
-                .orElse(0);
+        SupplyGraph.Way way = reach.find(at < 0 ? key : key.substring(0, at));
+        String resource = way == null ? null : way.world();
+        return resource == null ? 0 : graph.costs().travel(state.distances().getOrDefault(resource, 0));
     }
 
     private int stageOf(SupplyGraph.Way way) {
