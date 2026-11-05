@@ -840,6 +840,17 @@ def test_failure_memory():
     far_ticks = next(t["ticks"] for t in far.plan()["tasks"]
                      if t["id"] == "more_return_before_night")
     assert far_ticks == 2200, "Python: провал дальней дороги удлиняет её по farTrip: " + str(far_ticks)
+
+    life = sim_gpu.World.settled(base).event("life_threat")
+    calm_life = next(t["priority"] for t in life.plan()["tasks"]
+                     if t["id"] == "event:life_threat:defend")
+    life_failed = life.copy()
+    life_failed.with_facts({"feedback": {"failures": [
+        {"node": "event:life_threat:defend", "target": "0,64,0", "count": 3, "cause": "NO_PATH", "lastTick": 100}]}})
+    failed_life = next(t["priority"] for t in life_failed.plan()["tasks"]
+                       if t["id"] == "event:life_threat:defend")
+    assert failed_life == calm_life, \
+        "Python: защита жизни не штрафуется памятью неудач: %s/%s" % (failed_life, calm_life)
     print("OK: память неудач штрафует узел и дальнюю дорогу в Python")
 
 

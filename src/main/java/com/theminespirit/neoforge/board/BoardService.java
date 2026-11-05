@@ -849,7 +849,7 @@ public final class BoardService {
                 claims++;
                 round.take(spirit.getUUID());
                 WorkReserveHub.reserve(spirit, new WorkTarget(WorkKind.CELL, target.target()));
-                notices.assigned(board, ticket, target, pick.whyChosen(ticket, spirit, crafters));
+                notices.assigned(board, ticket, target, pick.whyChosen(ticket, spirit, crafters), spirit);
             } else {
                 JobLaunch.dropUnclaimed(cards, spirit, ticket.id(), outcome);
             }

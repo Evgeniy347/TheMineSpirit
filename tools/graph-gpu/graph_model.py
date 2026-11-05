@@ -1392,6 +1392,8 @@ class Planner:
 
     def failure_count(self, key):
         base = key.split(AT, 1)[0]
+        if base == "rescue_spirit" or base.startswith(EVENT + "life_"):
+            return 0
         total = 0
         for failure in self.state.failures:
             if failure.get("node") in (key, base):

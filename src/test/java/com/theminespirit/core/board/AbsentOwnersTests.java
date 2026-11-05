@@ -3,6 +3,7 @@ package com.theminespirit.core.board;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -72,5 +73,37 @@ class AbsentOwnersTests {
         assertTrue(
                 later.isEmpty(),
                 "Вернувшийся дух сбрасывает отсчёт: его запас не снимается за прошлое отсутствие, снято " + later);
+    }
+
+    @Test
+    void sweep_NoPathMarkOfRemovedSpirit_RemovedAfterGrace() {
+        Board board = new Board(() -> 0);
+        board.stuck().see(REMOVED, new BlockCoord(1, 2, 3), 0);
+        board.stuck().mark(REMOVED, 0, "пути нет: дух замурован");
+        AbsentOwners owners = new AbsentOwners();
+
+        owners.sweep(board, Set.of(ALIVE), 0);
+        assertTrue(
+                board.stuck().of(REMOVED, 1).isPresent(),
+                "До срока метка удалённого духа живёт: дух мог не успеть загрузиться после перезапуска");
+
+        owners.sweep(board, Set.of(ALIVE), AbsentOwners.GRACE_TICKS);
+        assertTrue(
+                board.stuck().of(REMOVED, AbsentOwners.GRACE_TICKS + 1).isEmpty(),
+                "Метка «пути нет» удалённого духа снимается после срока: иначе она висит вечно и держит спасение");
+    }
+
+    @Test
+    void sweep_NoPathMarkOfLiveSpirit_Kept() {
+        Board board = new Board(() -> 0);
+        board.stuck().see(ALIVE, new BlockCoord(1, 2, 3), 0);
+        board.stuck().mark(ALIVE, 0, "пути нет: дух замурован");
+        AbsentOwners owners = new AbsentOwners();
+
+        owners.sweep(board, Set.of(ALIVE), AbsentOwners.GRACE_TICKS);
+
+        assertTrue(
+                board.stuck().of(ALIVE, AbsentOwners.GRACE_TICKS + 1).isPresent(),
+                "Метка живого духа не снимается уборкой отсутствующих: его спасает граф");
     }
 }

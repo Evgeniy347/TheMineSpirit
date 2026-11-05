@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BlockNoteLog;
 import com.theminespirit.core.board.Board;
+import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardNoticeText;
@@ -11,11 +12,15 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.BoardWhy;
 import com.theminespirit.core.board.PendingStall;
+import com.theminespirit.core.board.RescuePlans;
 import com.theminespirit.core.board.StatusNote;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
+import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
 final class BoardNotices {
@@ -46,7 +51,10 @@ final class BoardNotices {
         }
     }
 
-    void assigned(Board board, BoardTicket ticket, TicketTarget target, String chosen) {
+    void assigned(Board board, BoardTicket ticket, TicketTarget target, String chosen, SpiritEntity spirit) {
+        if (ticket.boardCase() == BoardCase.RESCUE_SPIRIT) {
+            rescueClaimed(ticket, spirit);
+        }
         String details = "цель=" + target.target() + " предмет=" + text(target.supplyItem()) + " количество="
                 + target.count() + " попыток=" + board.ticketFailures(ticket.id());
         LOGGER.info(StatusNote.line(
@@ -57,6 +65,27 @@ final class BoardNotices {
                 board.waitNote(ticket.id()).orElse(null),
                 chosen,
                 details));
+    }
+
+    private static void rescueClaimed(BoardTicket ticket, SpiritEntity helper) {
+        UUID rescuee = RescuePlans.rescuee(ticket.id()).orElse(null);
+        if (rescuee == null) {
+            LOGGER.info("[rescue] {} назначен на задание {}", helper.displayName(), ticket.id());
+            return;
+        }
+        LOGGER.info(
+                "[rescue] {}: {}",
+                RescuePlans.claimNote(helper.getUUID(), rescuee, helper.displayName(), name(helper, rescuee)),
+                ticket.id());
+    }
+
+    private static String name(SpiritEntity helper, UUID id) {
+        if (helper.level() instanceof ServerLevel level) {
+            if (level.getEntity(id) instanceof SpiritEntity rescuee) {
+                return rescuee.displayName();
+            }
+        }
+        return id.toString();
     }
 
     private static String text(String value) {

@@ -31,8 +31,18 @@ public final class AbsentOwners {
                 orphaned.add(ticket);
             }
         }
+        for (BoardState.Stuck mark : board.stuck().snapshot()) {
+            if (!live.contains(mark.spirit())) {
+                absent.add(mark.spirit());
+            }
+        }
         missingSince.keySet().retainAll(absent);
         absent.forEach(owner -> missingSince.putIfAbsent(owner, now));
+        for (UUID owner : absent) {
+            if (now - missingSince.getOrDefault(owner, now) >= GRACE_TICKS) {
+                board.stuck().release(owner, now, "метка снята: дух удалён или не появлялся " + GRACE_TICKS + " тиков");
+            }
+        }
         List<String> cancelled = new ArrayList<>();
         for (BoardTicket ticket : orphaned) {
             UUID owner =
