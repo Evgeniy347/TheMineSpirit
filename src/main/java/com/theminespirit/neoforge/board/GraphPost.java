@@ -23,6 +23,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.planner.CraftedItems;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,6 +51,7 @@ final class GraphPost {
     final PetWork pets;
     final GraphState state;
     final GraphFacts facts;
+    private final Set<String> waiting = new HashSet<>();
     private @Nullable BlockCoord craft;
 
     GraphPost(
@@ -114,6 +116,12 @@ final class GraphPost {
         }
         if (StorePost.way(this, ticket)) {
             return true;
+        }
+        if (FarmPost.way(this, ticket, task)) {
+            return true;
+        }
+        if (WorldPost.handles(ticket.node())) {
+            return WorldPost.post(this, ticket);
         }
         return switch (boardCase) {
             case REPAIR_TOOL -> RepairWatch.post(this, task.priority());
@@ -225,14 +233,19 @@ final class GraphPost {
         return Map.copyOf(items);
     }
 
+    BoardTicket ticket(String id, BoardCase c, Optional<UUID> a, int p, String cause, Map<String, Integer> req) {
+        return ticket(id, c, a, p, cause, req, List.of());
+    }
+
     BoardTicket ticket(
             String id,
             BoardCase boardCase,
             Optional<UUID> assignee,
             int priority,
             String cause,
-            Map<String, Integer> required) {
-        return new BoardTicket(id, boardCase, assignee, priority, now, 1, cause, List.of(), required);
+            Map<String, Integer> required,
+            List<String> modifiers) {
+        return new BoardTicket(id, boardCase, assignee, priority, now, 1, cause, List.of(), required, modifiers);
     }
 
     BoardTicket leveled(BoardTicket base, int level, List<String> dependsOn) {
@@ -273,6 +286,10 @@ final class GraphPost {
 
     boolean open(String id) {
         return service.board().statusOf(id).filter(OPEN_STATUSES::contains).isPresent();
+    }
+
+    Set<String> waiting() {
+        return waiting;
     }
 
     boolean launchActivity(SpiritEntity spirit, BoardCase activity, ActivityPlans.Plan plan) {

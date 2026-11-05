@@ -4,6 +4,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.graph.ActivityPlans;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphTickets;
+import com.theminespirit.core.board.graph.StoreRules;
 import com.theminespirit.core.board.graph.StoreTransfer;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -25,33 +26,42 @@ final class StorePost {
             return transfer(post, ticket);
         }
         if (TAKE.equals(node)) {
-            return takeSmelted(post);
+            return takeSmelted(post, ticket);
         }
         if (SORT.equals(node)) {
-            return sort(post);
+            return sort(post, ticket);
         }
         return false;
     }
 
+    static boolean handlesEvent(String node) {
+        return StoreRules.handlesEvent(node);
+    }
+
     static boolean event(GraphPost post, GraphTickets.Ticket ticket) {
+        if (!handlesEvent(ticket.node())) {
+            return false;
+        }
         return switch (ticket.node()) {
-            case "transfer_pending" -> transfer(post, ticket);
-            case "storage_mixed" -> sort(post);
-            case "furnace_ready" -> takeSmelted(post);
-            case "storage_full" -> ChestSpaceWatch.post(post);
+            case "transfer_item", "store_carry_transfer" -> transfer(post, ticket);
+            case "sort_chest" -> sort(post, ticket);
+            case "take_smelted" -> takeSmelted(post, ticket);
+            case "add_chest_pair" -> ChestSpaceWatch.post(post);
+            case "store_minimum" -> true;
             default -> false;
         };
     }
 
     private static boolean transfer(GraphPost post, GraphTickets.Ticket ticket) {
         SpiritEntity spirit = idle(post).orElse(null);
-        if (spirit == null) {
-            return false;
-        }
         if (ticket.node().contains(DELIVER)) {
             if (!StoreTransfer.hasFreeChest(post.facts.chests())
                     || post.facts.spirits().values().stream()
                             .noneMatch(fact -> !fact.inventory().isEmpty())) {
+                return true;
+            }
+            if (spirit == null) {
+                post.waiting().add(ticket.id());
                 return false;
             }
             GraphFacts.Chest to = post.facts.chests().stream()
@@ -62,6 +72,10 @@ final class StorePost {
         }
         Optional<StoreTransfer.Move> move = StoreTransfer.chestMove(post.facts.chests());
         if (move.isEmpty()) {
+            return true;
+        }
+        if (spirit == null) {
+            post.waiting().add(ticket.id());
             return false;
         }
         StoreTransfer.Move known = move.orElseThrow();
@@ -69,13 +83,14 @@ final class StorePost {
         return launch(post, spirit, ActivityPlans.moveItem(from, at(known.to()), from, known.item(), known.count()));
     }
 
-    private static boolean takeSmelted(GraphPost post) {
+    private static boolean takeSmelted(GraphPost post, GraphTickets.Ticket ticket) {
         Optional<GraphFacts.Station> furnace = furnace(post.level, post.facts, true);
         if (furnace.isEmpty()) {
             return false;
         }
         SpiritEntity spirit = idle(post).orElse(null);
         if (spirit == null) {
+            post.waiting().add(ticket.id());
             return false;
         }
         GraphFacts.Station station = furnace.orElseThrow();
@@ -83,13 +98,14 @@ final class StorePost {
         return launch(post, spirit, ActivityPlans.withdraw(point, point, station.output(), FURNACE_BATCH));
     }
 
-    private static boolean sort(GraphPost post) {
+    private static boolean sort(GraphPost post, GraphTickets.Ticket ticket) {
         Optional<GraphFacts.Chest> chest = post.facts.chests().stream().findFirst();
         if (chest.isEmpty()) {
             return false;
         }
         SpiritEntity spirit = idle(post).orElse(null);
         if (spirit == null) {
+            post.waiting().add(ticket.id());
             return false;
         }
         return launch(

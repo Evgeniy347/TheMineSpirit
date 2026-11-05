@@ -96,6 +96,10 @@ class DigGraphPlannerTests {
                 DigFacts.node(DigFacts.trap(DigFacts.Cause.WATER)),
                 "Причина water ведёт к мосту");
         assertNull(DigFacts.trap(DigFacts.Cause.OPEN), "Свободный проход не имеет причины");
+        assertNull(
+                DigFacts.trap(DigFacts.Cause.WALL),
+                "Стена рядом — не замуровка: дух под крышей или в пещере не копает выход, "
+                        + "иначе граф каждый цикл ставит dig_out без исполнителя");
     }
 
     private static GraphPlan plan(String trap) {

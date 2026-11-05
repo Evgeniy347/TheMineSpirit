@@ -28,10 +28,51 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class BoardGameTests {
     private static final String BUILD_ID = "build_house";
     private static final String SUPPLY_ID = "supply_gather:oak_log";
+    private static final String PICKAXE_ID = "test:craft_stone_pickaxe";
     private static final int GATE_LOGS = 1;
     private static final int SUPPLY_WAIT_LIMIT = 200;
 
     private BoardGameTests() {}
+
+    // [флак] замер ~300 тиков: подход, добыча материалов и крафт; бюджет 800 ≈ 2×
+    @SceneStep(template = "arena", timeoutTicks = 800, board = true)
+    public static void craftStonePickaxe_BoardTicket_GivesSpiritTool(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        BoardService board = BoardRegistry.get(helper.getLevel());
+        for (BoardTicket ticket : board.board().all()) {
+            board.board().cancel(ticket.id());
+        }
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 8));
+        spirit.getInventory().setItem(1, new ItemStack(Items.STICK, 4));
+        helper.setBlock(new BlockPos(2, 1, 2), Blocks.CRAFTING_TABLE);
+        BlockCoord home = absolute(helper, new BlockPos(1, 1, 1));
+        board.submit(
+                new BoardTicket(
+                        PICKAXE_ID,
+                        BoardCase.CRAFT_STONE_PICKAXE,
+                        Optional.of(spirit.getUUID()),
+                        90,
+                        helper.getLevel().getGameTime(),
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
+                TicketTarget.at(home).withToolCount(1));
+
+        helper.succeedWhen(() -> {
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.STONE_PICKAXE) >= 1,
+                    "Дух без кирки обязан получить её по заданию доски: без этого шахта ждёт инструмент, "
+                            + "которого никто не делает; инвентарь " + spirit.getInventory());
+            helper.assertTrue(
+                    board.board().statusOf(PICKAXE_ID).orElse(null) == BoardStatus.DONE,
+                    "Задание крафта кирки обязано закрыться по факту предмета, статус "
+                            + board.board().statusOf(PICKAXE_ID).orElse(null));
+            GameTestFixtures.finish(helper);
+        });
+    }
 
     // [флак] добыча одного бревна вручную, путь к сундуку и ожидание пересборки: под нагрузкой
     // машины не укладывается в 400 тиков, запас двойной.

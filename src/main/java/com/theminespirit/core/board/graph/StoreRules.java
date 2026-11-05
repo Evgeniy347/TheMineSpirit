@@ -11,6 +11,8 @@ import java.util.Set;
 
 public final class StoreRules {
     public static final String RESOURCE = "data/theminespirit/board/graph.d/farm.json";
+    private static final Set<String> EVENT_TASKS = Set.of(
+            "transfer_item", "store_carry_transfer", "sort_chest", "take_smelted", "add_chest_pair", "store_minimum");
 
     public record Config(
             int reservePercent,
@@ -19,6 +21,10 @@ public final class StoreRules {
             int maxItemTypesPerChest) {}
 
     private StoreRules() {}
+
+    public static boolean handlesEvent(String taskId) {
+        return EVENT_TASKS.contains(taskId);
+    }
 
     public static Config config() {
         JsonNode root = JsonResource.parse(JsonResource.readClasspath(RESOURCE), RESOURCE);

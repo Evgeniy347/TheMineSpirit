@@ -30,19 +30,19 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
-final class FarmActions {
+public final class FarmActions {
     private static final int NO_SLOT = -1;
     private static final double TOP_FACE_OFFSET = 0.5;
 
     private final SpiritEntity spirit;
     private final Level level;
 
-    FarmActions(SpiritEntity spirit) {
+    public FarmActions(SpiritEntity spirit) {
         this.spirit = Objects.requireNonNull(spirit, "Дух не может быть null: без него некому работать на грядке");
         this.level = spirit.level();
     }
 
-    boolean hasSupplies(FarmJob job, CropKind crop) {
+    public boolean hasSupplies(FarmJob job, CropKind crop) {
         return switch (job) {
             case TILL -> hoeSlot() != NO_SLOT;
             case PLANT -> count(CropRegistry.plantItem(crop)) > 0;

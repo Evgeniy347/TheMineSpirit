@@ -53,6 +53,27 @@ class ToolGateTests {
     }
 
     @Test
+    void allows_HoeModifier_RequiresHoe() {
+        BoardTicket ticket = new BoardTicket(
+                "graph:building:wheat_field",
+                BoardCase.BUILD_PLACED,
+                Optional.empty(),
+                60,
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of(),
+                List.of(ToolGate.TOOL_MODIFIER + "hoe"));
+        assertTrue(
+                ToolGate.allows(ticket, List.of("minecraft:wooden_hoe")),
+                "Грядка требует тяпку: дух с тяпкой получает задание пахоты");
+        assertFalse(
+                ToolGate.allows(ticket, List.of("minecraft:stone_pickaxe")),
+                "Кирка не заменяет тяпку: без неё грядка не пашется, задание ждёт инструмент, а не падает в воздух");
+    }
+
+    @Test
     void allows_ChopLogWithoutAxe_NotGiven() {
         assertFalse(
                 ToolGate.allows(BoardCase.GATHER_MATERIALS, List.of("minecraft:wooden_shovel"), "jungle_log"),
