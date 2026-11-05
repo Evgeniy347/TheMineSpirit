@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphFactsUpdates;
 import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.board.graph.StoreInputs;
 import com.theminespirit.core.board.graph.StoreMinimums;
@@ -30,16 +31,7 @@ final class GraphStoreInputs {
                 StoreInputs.stageReqs(base.stageReqs(), StoreMinimums.loadDefault(), graph, base.chests());
         Map<String, GraphFacts.Station> stations = new LinkedHashMap<>(base.stations());
         stations.replaceAll((id, station) -> readFurnace(level, station));
-        return new GraphFacts(
-                base.spirits(),
-                base.threats(),
-                base.chests(),
-                base.resources(),
-                stations,
-                base.buildings(),
-                base.strays(),
-                base.terrain(),
-                reqs);
+        return GraphFactsUpdates.withStageReqs(GraphFactsUpdates.withStations(base, stations), reqs);
     }
 
     private static GraphFacts.Station readFurnace(ServerLevel level, GraphFacts.Station station) {

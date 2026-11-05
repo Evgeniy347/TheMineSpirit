@@ -87,7 +87,7 @@ public record GraphFeedback(Clock clock, Player player, List<Failure> failures) 
         }
     }
 
-    public record Failure(String node, String target, int count, Cause cause, long lastTick) {
+    public record Failure(String node, String target, int count, Cause cause, long lastTick, double weight) {
         public Failure {
             Objects.requireNonNull(node, "Узел провала не может быть null: по нему граф помнит неудачу");
             Objects.requireNonNull(target, "Цель провала не может быть null: неизвестную задают пустой строкой");
@@ -100,6 +100,14 @@ public record GraphFeedback(Clock clock, Player player, List<Failure> failures) 
                 throw new IllegalArgumentException("Тик последнего провала " + lastTick
                         + " отрицателен: время идёт вперёд, неизвестное не записывают");
             }
+            if (!Double.isFinite(weight) || weight < 0) {
+                throw new IllegalArgumentException("Вес провала " + weight
+                        + ": он неотрицателен и конечен, затухание считает память, а не тот, кто читает факт");
+            }
+        }
+
+        public Failure(String node, String target, int count, Cause cause, long lastTick) {
+            this(node, target, count, cause, lastTick, count);
         }
     }
 }

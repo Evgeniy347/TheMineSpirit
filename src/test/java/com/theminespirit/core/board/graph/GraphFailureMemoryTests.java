@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class GraphFailureMemoryTests {
@@ -34,18 +35,63 @@ class GraphFailureMemoryTests {
     }
 
     @Test
-    void facts_OldFailures_FallOutOfWindow() {
+    void facts_OldFailures_DecayInsteadOfHardWindow() {
         GraphFailureMemory memory = new GraphFailureMemory();
+        double halfLife = 1000.0;
 
         memory.note("make:dirt", "10,64,20", "маршрут не найден", 100);
 
+        GraphFeedback.Failure fresh =
+                memory.recent("make:dirt", "10,64,20", 100, halfLife).orElseThrow();
+        GraphFeedback.Failure half =
+                memory.recent("make:dirt", "10,64,20", 1100, halfLife).orElseThrow();
+        assertEquals(1.0, fresh.weight(), 1e-9, "Свежий провал весит целый счётчик");
+        assertEquals(0.5, half.weight(), 1e-9, "Через полураспад штраф цели вдвое слабее, а не обрывается");
         assertTrue(
-                memory.facts(100 + GraphFailureMemory.WINDOW_TICKS).isEmpty(),
-                "Провал старше окна не штрафует выбор: иначе дух навсегда боится узла");
+                memory.facts(100 + 40_000, halfLife).isEmpty(),
+                "Спустя много полураспадов провал затухает до нуля и не держит память вечно");
         assertTrue(
-                memory.recent("make:dirt", "10,64,20", 100 + GraphFailureMemory.WINDOW_TICKS)
-                        .isEmpty(),
-                "Просроченная цель не считается недавней");
+                memory.recent("make:dirt", "10,64,20", 100 + 40_000, halfLife).isEmpty(),
+                "Затухшая цель не считается недавней");
+    }
+
+    @Test
+    void succeed_SameTarget_ResetsItsCounter() {
+        GraphFailureMemory memory = new GraphFailureMemory();
+
+        memory.note("chop_jungle_log", "10,64,20", "маршрут не найден", 100);
+        memory.note("chop_jungle_log", "10,64,20", "маршрут не найден", 120);
+        memory.succeed("chop_jungle_log", "10,64,20", 130);
+
+        assertTrue(
+                memory.recent("chop_jungle_log", "10,64,20", 130).isEmpty(),
+                "Успех по цели сбрасывает её счётчик: удачная рубка не тащит старый провал дальше");
+        memory.note("chop_jungle_log", "10,64,20", "маршрут не найден", 140);
+        assertEquals(
+                1,
+                memory.recent("chop_jungle_log", "10,64,20", 140).orElseThrow().count(),
+                "После сброса новый провал считается первым");
+    }
+
+    @Test
+    void unreachableTargets_NoPathAndNotReached_OnlyThoseAreMarked() {
+        GraphFailureMemory memory = new GraphFailureMemory();
+
+        memory.note("chop_jungle_log", "1,64,1", "маршрут не найден", 100);
+        memory.note("chop_jungle_log", "2,64,2", "застрял, не дошёл", 100);
+        memory.note("chop_jungle_log", "3,64,3", "чанк не загружен", 100);
+        memory.note("chop_jungle_log", "4,64,4", "не хватает dirt=12", 100);
+        memory.note("chop_jungle_log", "5,64,5", "причина не записана", 100);
+
+        assertEquals(
+                Set.of("1,64,1", "2,64,2"),
+                memory.unreachableTargets("chop_jungle_log", 100, 1000),
+                "Недостижимы только «нет пути» и «не дошёл»: чанк, материал и прочее не исключают цель");
+        memory.succeed("chop_jungle_log", "1,64,1", 110);
+        assertEquals(
+                Set.of("2,64,2"),
+                memory.unreachableTargets("chop_jungle_log", 110, 1000),
+                "Успех цели убирает её из недостижимых");
     }
 
     @Test

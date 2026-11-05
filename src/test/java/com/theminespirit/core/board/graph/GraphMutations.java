@@ -228,7 +228,39 @@ final class GraphMutations {
                     building + ".lotReady=false", world -> world.copy().lotReady(building, false)));
             all.add(new Mutation(building + ".wrong=1", world -> world.copy().wrong(building, 1)));
         }
+        addFailureMutations(all);
         return all;
+    }
+
+    private static void addFailureMutations(List<Mutation> all) {
+        for (String node : List.of("chop_oak_log", "mine_cobble", "more_return_before_night")) {
+            if (GraphWorld.GRAPH.way(node).isEmpty()) {
+                continue;
+            }
+            all.add(new Mutation(
+                    "неудача " + node + " NO_PATH x2",
+                    world -> failure(world, node, GraphFeedback.Cause.NO_PATH, 2, 2)));
+            all.add(new Mutation(
+                    "неудача " + node + " CHUNK", world -> failure(world, node, GraphFeedback.Cause.CHUNK, 4, 2)));
+            all.add(new Mutation(
+                    "неудача " + node + " NO_MATERIAL",
+                    world -> failure(world, node, GraphFeedback.Cause.NO_MATERIAL, 4, 2)));
+            all.add(new Mutation(
+                    "неудача " + node + " OTHER", world -> failure(world, node, GraphFeedback.Cause.OTHER, 3, 2)));
+        }
+    }
+
+    private static GraphWorld failure(
+            GraphWorld world, String node, GraphFeedback.Cause cause, int count, int targets) {
+        GraphWorld copy = world.copy();
+        List<GraphFeedback.Failure> failures =
+                new ArrayList<>(copy.facts.feedback().failures());
+        for (int index = 0; index < targets; index++) {
+            failures.add(new GraphFeedback.Failure(node, index + ",64,0", count, cause, 100));
+        }
+        copy.facts = copy.facts.withFeedback(
+                new GraphFeedback(GraphFeedback.Clock.unknown(), GraphFeedback.Player.none(), failures));
+        return copy;
     }
 
     static List<Mutation> exported() {

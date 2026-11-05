@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphFeedback;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -21,7 +22,16 @@ final class GraphWorldFeedbackInputs {
         return new GraphFeedback(
                 GraphFeedback.Clock.of(level.getDayTime()),
                 player(level, spirits, home),
-                service.sources.graphFailures().facts(service.board().now()));
+                service.sources
+                        .graphFailures()
+                        .facts(
+                                service.board().now(),
+                                DataTables.INSTANCE
+                                        .graph()
+                                        .current()
+                                        .costs()
+                                        .choice()
+                                        .failureHalfLife()));
     }
 
     private static GraphFeedback.Player player(ServerLevel level, List<SpiritEntity> spirits, BlockCoord home) {

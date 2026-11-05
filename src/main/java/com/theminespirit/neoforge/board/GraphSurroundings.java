@@ -4,9 +4,11 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -34,6 +36,9 @@ final class GraphSurroundings {
     private static final int BELOW = 4;
     private static final int ABOVE = 12;
     private static final int DROP_RADIUS = 24;
+    private static final int CANDIDATE_LIMIT = 32;
+    private static final int TARGET_LIMIT = 4;
+    private static final int TARGET_SEPARATION = 8;
 
     private GraphSurroundings() {}
 
@@ -43,11 +48,22 @@ final class GraphSurroundings {
             Map<String, BlockCoord> drops,
             Optional<BlockCoord> decay,
             Map<String, BlockCoord> nearest,
-            Map<String, Integer> distances) {
+            Map<String, Integer> distances,
+            Map<String, List<BlockCoord>> targets) {
+        Around(
+                Set<String> world,
+                Set<String> events,
+                Map<String, BlockCoord> drops,
+                Optional<BlockCoord> decay,
+                Map<String, BlockCoord> nearest,
+                Map<String, Integer> distances) {
+            this(world, events, drops, decay, nearest, distances, Map.of());
+        }
+
         Around with(Set<String> more) {
             Set<String> all = new HashSet<>(events);
             all.addAll(more);
-            return new Around(world, Set.copyOf(all), drops, decay, nearest, distances);
+            return new Around(world, Set.copyOf(all), drops, decay, nearest, distances, targets);
         }
 
         Around withRoutes(Set<String> moreEvents, Set<String> moreWorld) {
@@ -55,11 +71,20 @@ final class GraphSurroundings {
             allEvents.addAll(moreEvents);
             Set<String> allWorld = new HashSet<>(world);
             allWorld.addAll(moreWorld);
-            return new Around(Set.copyOf(allWorld), Set.copyOf(allEvents), drops, decay, nearest, distances);
+            return new Around(Set.copyOf(allWorld), Set.copyOf(allEvents), drops, decay, nearest, distances, targets);
         }
 
         Optional<BlockCoord> resource(String world) {
             return Optional.ofNullable(nearest.get(world));
+        }
+
+        List<BlockCoord> targets(String world) {
+            List<BlockCoord> known = targets.get(world);
+            if (known != null && !known.isEmpty()) {
+                return known;
+            }
+            BlockCoord one = nearest.get(world);
+            return one == null ? List.of() : List.of(one);
         }
 
         Optional<BlockCoord> drop(String item) {
@@ -75,7 +100,10 @@ final class GraphSurroundings {
             Set<String> blocks,
             Optional<BlockCoord> decay,
             Map<String, BlockCoord> nearest,
-            Map<String, Integer> distances) {}
+            Map<String, Integer> distances,
+            Map<String, List<BlockCoord>> targets) {}
+
+    private record Near(BlockCoord at, int distance) {}
 
     static Around of(ServerLevel level, BoardService service, BlockCoord home) {
         Scan scan = blocks(level, home);
@@ -109,7 +137,13 @@ final class GraphSurroundings {
             distances.put(GraphNames.SOIL, soil.distance());
         });
         return new Around(
-                Set.copyOf(world), Set.copyOf(events), drops, scan.decay(), Map.copyOf(nearest), Map.copyOf(distances));
+                Set.copyOf(world),
+                Set.copyOf(events),
+                drops,
+                scan.decay(),
+                Map.copyOf(nearest),
+                Map.copyOf(distances),
+                scan.targets());
     }
 
     private static <T extends Entity> void marked(
@@ -166,6 +200,7 @@ final class GraphSurroundings {
         Map<String, BlockCoord> nearest = new HashMap<>();
         Map<String, Integer> squared = new HashMap<>();
         Map<String, Set<String>> tagCache = new HashMap<>();
+        Map<String, List<Near>> candidates = new HashMap<>();
         for (int dx = -RADIUS; dx <= RADIUS; dx += STEP) {
             for (int dz = -RADIUS; dz <= RADIUS; dz += STEP) {
                 for (int dy = -BELOW; dy <= ABOVE; dy++) {
@@ -179,11 +214,13 @@ final class GraphSurroundings {
                     Set<String> tags = tagCache.computeIfAbsent(id, GraphNames::blockWorld);
                     if (!tags.isEmpty()) {
                         int distance = dx * dx + dy * dy + dz * dz;
+                        BlockCoord at = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
                         for (String tag : tags) {
                             if (distance < squared.getOrDefault(tag, Integer.MAX_VALUE)) {
                                 squared.put(tag, distance);
-                                nearest.put(tag, new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
+                                nearest.put(tag, at);
                             }
+                            offer(candidates.computeIfAbsent(tag, key -> new ArrayList<>()), new Near(at, distance));
                         }
                     }
                     if (decay == null && decaying(state)) {
@@ -194,7 +231,56 @@ final class GraphSurroundings {
         }
         Map<String, Integer> distances = new HashMap<>();
         squared.forEach((tag, value) -> distances.put(tag, (int) Math.round(Math.sqrt(value))));
-        return new Scan(Set.copyOf(blocks), Optional.ofNullable(decay), Map.copyOf(nearest), Map.copyOf(distances));
+        return new Scan(
+                Set.copyOf(blocks),
+                Optional.ofNullable(decay),
+                Map.copyOf(nearest),
+                Map.copyOf(distances),
+                Map.copyOf(targets(candidates)));
+    }
+
+    private static void offer(List<Near> known, Near candidate) {
+        for (Near before : known) {
+            if (before.at().equals(candidate.at())) {
+                return;
+            }
+        }
+        int at = 0;
+        while (at < known.size() && known.get(at).distance() <= candidate.distance()) {
+            at++;
+        }
+        known.add(at, candidate);
+        if (known.size() > CANDIDATE_LIMIT) {
+            known.remove(known.size() - 1);
+        }
+    }
+
+    private static Map<String, List<BlockCoord>> targets(Map<String, List<Near>> candidates) {
+        Map<String, List<BlockCoord>> targets = new HashMap<>();
+        candidates.forEach((tag, known) -> {
+            List<BlockCoord> chosen = new ArrayList<>();
+            for (Near candidate : known) {
+                boolean distinct = chosen.stream()
+                        .allMatch(at -> distanceSquared(at, candidate.at()) >= TARGET_SEPARATION * TARGET_SEPARATION);
+                if (distinct) {
+                    chosen.add(candidate.at());
+                }
+                if (chosen.size() >= TARGET_LIMIT) {
+                    break;
+                }
+            }
+            if (!chosen.isEmpty()) {
+                targets.put(tag, List.copyOf(chosen));
+            }
+        });
+        return targets;
+    }
+
+    private static int distanceSquared(BlockCoord one, BlockCoord two) {
+        int dx = one.x() - two.x();
+        int dy = one.y() - two.y();
+        int dz = one.z() - two.z();
+        return dx * dx + dy * dy + dz * dz;
     }
 
     private static boolean decaying(BlockState state) {

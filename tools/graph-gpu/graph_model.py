@@ -328,12 +328,15 @@ class Choice:
 
     NAMES = ("farTrip", "slowWork", "duplicate", "conflict", "pileup", "strategicBoost",
              "bottleneckBoost", "idleStationBoost", "nightHome", "spaceFoundBoost",
-             "spaceTight", "petAlone", "herdFull", "fieldFull", "failureBackoff")
+             "spaceTight", "petAlone", "herdFull", "fieldFull", "failureBackoff",
+             "failureTargets", "failureHalfLife", "failureSoft", "failureTargetRadius")
     NEUTRAL = {
         "farTrip": 1.0, "slowWork": 1.0, "duplicate": 1.0, "conflict": 1.0, "pileup": 1.0,
         "strategicBoost": 0.0, "bottleneckBoost": 0.0, "idleStationBoost": 0.0,
         "nightHome": 1.0, "spaceFoundBoost": 0.0, "spaceTight": 1.0,
         "petAlone": 1.0, "herdFull": 1.0, "fieldFull": 1.0, "failureBackoff": 0.5,
+        "failureTargets": 2.0, "failureHalfLife": 3000.0, "failureSoft": 0.5,
+        "failureTargetRadius": 6.0,
     }
 
     __slots__ = ("values",)
@@ -344,6 +347,12 @@ class Choice:
         for name, value in self.values.items():
             if value < 0 or value != value or value in (float("inf"), float("-inf")):
                 raise ValueError("Поправка выбора «%s» = %s: она неотрицательна и конечна" % (name, value))
+        if self.values["failureTargets"] < 1:
+            raise ValueError("Порог разных целей «память неудач» = %s: он не меньше 1"
+                             % self.values["failureTargets"])
+        if self.values["failureHalfLife"] <= 0:
+            raise ValueError("Полураспад памяти неудач = %s тиков: он положителен"
+                             % self.values["failureHalfLife"])
 
     def __getattr__(self, name):
         try:
@@ -1401,20 +1410,36 @@ class Planner:
                 factor *= tuning.conflict
             if "more7_work_pileup" in self.state.events:
                 factor *= tuning.pileup
-        failures = self.failure_count(key)
-        if failures > 0:
-            factor *= tuning.failureBackoff ** min(failures, 3)
+        penalized, penalty = self.failure_stats(key)
+        if penalty > 0:
+            factor *= tuning.failureBackoff ** min(penalty, 3.0)
         return value * factor + bonus
 
-    def failure_count(self, key):
+    def failure_stats(self, key):
+        """Память неудач: цель отдельно, узел — только когда провалились разные цели (GraphChoiceRules)."""
         base = key.split(AT, 1)[0]
         if base == "rescue_spirit" or base.startswith(EVENT + "life_"):
-            return 0
-        total = 0
+            return False, 0.0
+        unreachable = 0.0
+        soft = 0.0
+        targets = set()
         for failure in self.state.failures:
-            if failure.get("node") in (key, base):
-                total += int(failure.get("count", 0))
-        return total
+            if failure.get("node") not in (key, base):
+                continue
+            weight = float(failure.get("weight", failure.get("count", 0)))
+            if weight <= 0:
+                continue
+            cause = failure.get("cause", "OTHER")
+            if cause in ("NO_PATH", "NOT_REACHED"):
+                unreachable += weight
+                targets.add(failure.get("target", ""))
+            elif cause == "OTHER":
+                soft += weight
+        tuning = self.graph.costs.choice
+        penalized = len(targets) >= math.ceil(tuning.failureTargets)
+        penalty = min(unreachable, 3.0) if penalized else 0.0
+        penalty += min(soft * tuning.failureSoft, 3.0)
+        return penalized, penalty
 
     def way_of(self, key):
         if key.startswith(EVENT):
@@ -1479,7 +1504,7 @@ class Planner:
 
     def travel_ticks(self, key):
         raw = self.travel(key)
-        if "more:bad_trip_conditions" not in self.state.world and self.failure_count(key) == 0:
+        if "more:bad_trip_conditions" not in self.state.world and not self.failure_stats(key)[0]:
             return raw
         return int(math.floor(raw * self.graph.costs.choice.farTrip + 0.5))
 

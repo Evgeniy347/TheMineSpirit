@@ -179,13 +179,13 @@ final class GraphPost {
     }
 
     BlockCoord source(String wayId) {
-        return GraphTargets.source(level, graph.way(wayId), around, scan, this::craftPoint);
+        return GraphTargets.source(level, graph.way(wayId), around, scan, service, graph, now);
     }
 
     private BlockCoord sourceFor(String item) {
         for (SupplyGraph.Way way : graph.producers(item)) {
             if (way.world() != null) {
-                return GraphTargets.source(level, Optional.of(way), around, scan, this::craftPoint);
+                return source(way.id());
             }
         }
         return craftPoint();

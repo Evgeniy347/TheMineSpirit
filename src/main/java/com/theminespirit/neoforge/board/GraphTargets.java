@@ -1,12 +1,15 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.WorkStand;
+import com.theminespirit.core.board.graph.FailureTargets;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.pickup.LeafDropStand;
+import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
@@ -37,22 +40,38 @@ final class GraphTargets {
             Optional<SupplyGraph.Way> way,
             GraphSurroundings.Around around,
             FirstStepsRunner.StageScan scan,
-            Supplier<BlockCoord> fallback) {
+            BoardService service,
+            SupplyGraph graph,
+            long now) {
+        double halfLife = graph.costs().choice().failureHalfLife();
+        Set<String> unreachable = way.map(SupplyGraph.Way::id)
+                .map(id -> service.sources.graphUnreachable(id, now, halfLife))
+                .orElse(Set.of());
+        double radius = graph.costs().choice().failureTargetRadius();
         Optional<BlockCoord> resource = way.map(SupplyGraph.Way::world).flatMap(around::resource);
         if (resource.isPresent()) {
-            return stand(level, resource.orElseThrow());
+            String world = way.map(SupplyGraph.Way::world).orElse(null);
+            List<BlockCoord> candidates = world == null ? List.of() : around.targets(world);
+            List<BlockCoord> known = candidates.isEmpty() ? List.of(resource.orElseThrow()) : candidates;
+            List<BlockCoord> stands = known.stream().map(at -> stand(level, at)).toList();
+            return FailureTargets.choose(stands, unreachable, radius);
         }
         String building = way.map(SupplyGraph.Way::building).orElse(null);
         if (building == null) {
-            return fallback.get();
+            return craftPoint(level, scan);
         }
         if ("mine".equals(building)) {
             return stand(level, scan.stage().mineEntrance());
         }
         if (building.startsWith("mine_level_")) {
-            return mineBottom(level, scan).orElseGet(fallback);
+            return mineBottom(level, scan).orElseGet(() -> craftPoint(level, scan));
         }
-        return fallback.get();
+        return craftPoint(level, scan);
+    }
+
+    private static BlockCoord craftPoint(ServerLevel level, FirstStepsRunner.StageScan scan) {
+        boolean yard = scan.facts().done().contains(BoardCase.STOCK_CHESTS);
+        return craft(level, yard ? scan.stage().workYard() : scan.stage().anchor());
     }
 
     private static Optional<BlockCoord> mineBottom(ServerLevel level, FirstStepsRunner.StageScan scan) {

@@ -19,7 +19,11 @@
     "petAlone": 1.0,
     "herdFull": 1.0,
     "fieldFull": 1.0,
-    "failureBackoff": 0.5
+    "failureBackoff": 0.5,
+    "failureTargets": 2.0,
+    "failureHalfLife": 3000.0,
+    "failureSoft": 0.5,
+    "failureTargetRadius": 6.0
   },
   "tiers": [
     "wooden",
