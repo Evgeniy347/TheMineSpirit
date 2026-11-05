@@ -19,20 +19,20 @@ final class ChopStand {
 
     static @Nullable BlockPos first(SpiritEntity spirit, Tree target) {
         Vec3 from = spirit.position();
-        return best(spirit.level(), target, null, pos -> from.distanceToSqr(Vec3.atBottomCenterOf(pos)));
+        return best(spirit.level(), target, List.of(), pos -> from.distanceToSqr(Vec3.atBottomCenterOf(pos)));
     }
 
-    static @Nullable BlockPos second(SpiritEntity spirit, Tree target, List<BlockCoord> rest, @Nullable BlockPos used) {
+    static @Nullable BlockPos next(SpiritEntity spirit, Tree target, List<BlockCoord> rest, List<BlockPos> used) {
         return best(spirit.level(), target, used, pos -> nearest(pos, rest));
     }
 
     private static @Nullable BlockPos best(
-            Level level, Tree target, @Nullable BlockPos used, ToDoubleFunction<BlockPos> score) {
+            Level level, Tree target, List<BlockPos> used, ToDoubleFunction<BlockPos> score) {
         BlockPos best = null;
         double bestScore = Double.MAX_VALUE;
         for (BlockCoord stand : ChopStands.stands(target, feet -> isStandable(level, toPos(feet)))) {
             BlockPos pos = toPos(stand);
-            if (pos.equals(used)) {
+            if (used.contains(pos)) {
                 continue;
             }
             boolean diagonal = pos.getX() != target.base().x()

@@ -29,6 +29,7 @@
       "advice": ["harvest_before_the_day_gets_busy"]
     },
     "more7_evening_return": {
+      "band": 10,
       "tasks": [
         {"id": "more7_return_home", "case": "ACTIVITY_RETURN", "base": 60, "consumes": {}, "implemented": true}
       ],
