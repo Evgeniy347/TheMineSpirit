@@ -106,7 +106,11 @@ final class GraphChaos {
     }
 
     static List<GraphMutations.Mutation> combo(Random random, int size) {
-        List<GraphMutations.Mutation> all = new ArrayList<>(GraphMutations.single());
+        return combo(random, size, GraphMutations.single());
+    }
+
+    static List<GraphMutations.Mutation> combo(Random random, int size, List<GraphMutations.Mutation> source) {
+        List<GraphMutations.Mutation> all = new ArrayList<>(source);
         List<GraphMutations.Mutation> chosen = new ArrayList<>();
         for (int index = 0; index < size && !all.isEmpty(); index++) {
             chosen.add(all.remove(random.nextInt(all.size())));

@@ -28,7 +28,8 @@ class GraphExportTests {
         Random random = new Random(58);
         List<GraphWorld> bases = GraphMutations.baselines();
         for (int index = 0; index < CASES; index++) {
-            List<GraphMutations.Mutation> combo = GraphChaos.combo(random, 1 + random.nextInt(4));
+            List<GraphMutations.Mutation> combo =
+                    GraphChaos.combo(random, 1 + random.nextInt(4), GraphMutations.exported());
             GraphWorld world = GraphChaos.apply(bases.get(index % bases.size()), combo);
             GraphPlan plan = world.plan();
             Map<String, Object> entry = new LinkedHashMap<>();

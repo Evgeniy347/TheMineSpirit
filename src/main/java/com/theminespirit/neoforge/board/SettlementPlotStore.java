@@ -31,6 +31,7 @@ public final class SettlementPlotStore extends SavedData {
     private static final String COLUMNS = "Columns";
     private static final String WOOD = "Wood";
     private static final String LEVELED = "Leveled";
+    private static final String LEVEL_RULE = "LevelRule";
     private static final String TOWN = "Town";
     private static final String BUILDING_WOOD = "BuildingWood";
     private static final int FIRST_STAGE = 1;
@@ -42,6 +43,7 @@ public final class SettlementPlotStore extends SavedData {
     private @Nullable TownPlan town;
     private @Nullable StageSite site;
     private boolean leveled;
+    private String levelRule = "";
     private BuildingWoods woods = BuildingWoods.NONE;
 
     private SettlementPlotStore() {}
@@ -63,6 +65,7 @@ public final class SettlementPlotStore extends SavedData {
         plot = null;
         site = null;
         leveled = false;
+        levelRule = "";
         woods = BuildingWoods.NONE;
         setDirty();
     }
@@ -109,9 +112,26 @@ public final class SettlementPlotStore extends SavedData {
                 || before.anchor().x() != next.anchor().x()
                 || before.anchor().z() != next.anchor().z()) {
             leveled = false;
+            levelRule = "";
             woods = BuildingWoods.NONE;
         }
         plot = next;
+        site = null;
+        setDirty();
+    }
+
+    public boolean levelMarked() {
+        return SettlementLevel.marked(levelRule);
+    }
+
+    public void settle(SettlementPlot next) {
+        fix(next);
+        TownPlan plan = town;
+        if (levelMarked() || plan == null) {
+            return;
+        }
+        town = plan.atLevel(SettlementLevel.of(next));
+        levelRule = SettlementLevel.RULE;
         site = null;
         setDirty();
     }
@@ -141,6 +161,7 @@ public final class SettlementPlotStore extends SavedData {
         town = null;
         site = null;
         leveled = false;
+        levelRule = "";
         woods = BuildingWoods.NONE;
         setDirty();
     }
@@ -148,6 +169,7 @@ public final class SettlementPlotStore extends SavedData {
     private static SettlementPlotStore load(CompoundTag tag, HolderLookup.Provider ignoredRegistries) {
         SettlementPlotStore store = new SettlementPlotStore();
         store.leveled = tag.getBoolean(LEVELED);
+        store.levelRule = tag.getString(LEVEL_RULE);
         CompoundTag chosen = tag.getCompound(BUILDING_WOOD);
         Map<String, String> woods = new HashMap<>();
         chosen.getAllKeys().forEach(key -> woods.put(key, chosen.getString(key)));
@@ -176,6 +198,7 @@ public final class SettlementPlotStore extends SavedData {
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         SettlementPlot current = plot;
         tag.putBoolean(LEVELED, leveled);
+        tag.putString(LEVEL_RULE, levelRule);
         CompoundTag chosen = new CompoundTag();
         woods.chosen().forEach(chosen::putString);
         tag.put(BUILDING_WOOD, chosen);

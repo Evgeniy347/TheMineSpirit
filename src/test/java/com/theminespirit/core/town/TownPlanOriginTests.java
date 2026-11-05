@@ -13,6 +13,19 @@ class TownPlanOriginTests {
     private static final List<List<String>> STAGES = StageRules.load().plans();
 
     @Test
+    void atLevel_KeepsLayout_WritesOneHeightIntoPlan() {
+        TownPlan base = TownPlannerTests.plan((x, z) -> 70, (x, z) -> 0);
+
+        TownPlan leveled = base.atLevel(63);
+
+        assertEquals(63, leveled.anchor().y(), "Высота поселения — единственная высота плана после основания");
+        assertEquals(base.anchor().x(), leveled.anchor().x(), "Перенос высоты не двигает план по x");
+        assertEquals(base.anchor().z(), leveled.anchor().z(), "Перенос высоты не двигает план по z");
+        assertEquals(base.region(), leveled.region(), "Контур плана при смене высоты не меняется");
+        assertEquals(base.placements(), leveled.placements(), "Места построек при смене высоты не меняются");
+    }
+
+    @Test
     void keepStored_OldProbeRadius_KeepsPlanOrigins() {
         TownPlan base = TownPlannerTests.plan((x, z) -> 70, (x, z) -> 0);
         TownPlan old = new TownPlan(
