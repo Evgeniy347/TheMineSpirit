@@ -20,6 +20,9 @@ public final class GearInputs {
     public static final String CRAFT_ARMOR = "gear_craft_armor";
     public static final String CRAFT_TOOL = "gear_craft_";
     public static final String KIT = "gear_kit_";
+    public static final String EQUIP_TASK = "equip_best";
+    public static final String ARMOR_TASK = "craft_armor";
+    public static final String TOOL_TASK = "craft_tool:";
     private static final String NAMESPACE = "minecraft:";
     private static final List<String> ARMOR_SLOTS = List.of("HEAD", "CHEST", "LEGS", "FEET");
     private static final Map<String, String> ARMOR_SUFFIXES = Map.of(
@@ -126,6 +129,10 @@ public final class GearInputs {
                 armorTiers,
                 required,
                 kits);
+    }
+
+    public static boolean handlesTask(String taskId) {
+        return EQUIP_TASK.equals(taskId) || ARMOR_TASK.equals(taskId) || taskId.startsWith(TOOL_TASK);
     }
 
     public static Set<String> events(GraphFacts facts, int stage) {

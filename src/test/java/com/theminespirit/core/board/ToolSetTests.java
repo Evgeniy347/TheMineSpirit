@@ -8,6 +8,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.planner.Ingredient;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
@@ -82,6 +83,27 @@ class ToolSetTests {
         assertTrue(
                 ToolSet.itemId(boardCase).startsWith("minecraft:"),
                 "Предмет инструмента несёт полный id: по нему craft ищет рецепт сервера");
+    }
+
+    @Test
+    void caseFor_ToolItem_FindsCraftCase() {
+        assertEquals(
+                Optional.of(BoardCase.CRAFT_STONE_PICKAXE),
+                ToolSet.caseFor("minecraft:stone_pickaxe"),
+                "По предмету кирки доска находит свой кейс крафта: иначе кирка не попадёт на доску");
+        assertEquals(
+                Optional.of(BoardCase.CRAFT_WOODEN_SHOVEL),
+                ToolSet.caseFor("wooden_shovel"),
+                "Короткое имя предмета тоже находит кейс: граф называет предметы без namespace");
+    }
+
+    @Test
+    void caseFor_Hoe_HasNoToolCase() {
+        assertEquals(
+                Optional.empty(),
+                ToolSet.caseFor("minecraft:wooden_hoe"),
+                "У тяпки нет кейса набора инструментов: её крафт идёт общим путём GATHER_MATERIALS "
+                        + "с целью craft, иначе тяпку не скрафтить");
     }
 
     @Test

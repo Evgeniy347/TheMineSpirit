@@ -29,20 +29,22 @@ final class DigOutPost {
             return false;
         }
         BlockCoord settlement = SettlementHome.of(post.spirits);
+        boolean matched = false;
         for (SpiritEntity spirit : post.spirits) {
             if (spirit.isRemoved()) {
                 continue;
             }
             String id = spirit.getUUID().toString();
             GraphFacts.Spirit fact = post.facts.spirits().get(id);
-            if ((fact != null && fact.stuck()) || post.open("rescue:" + id)) {
-                continue;
-            }
             BlockPos feet = spirit.blockPosition();
             boolean matches = (dig && (DigOutScript.sealed(post.level, feet) || DigOutScript.embedded(spirit)))
                     || (bridge && water(post.level, feet) && !DigOutScript.sealed(post.level, feet))
                     || (pillar && PitRescue.trapped(spirit).isPresent());
             if (!matches) {
+                continue;
+            }
+            matched = true;
+            if ((fact != null && fact.stuck()) || post.open("rescue:" + id)) {
                 continue;
             }
             BlockCoord goal = SurfacePoint.of(post.level, settlement);
@@ -51,6 +53,9 @@ final class DigOutPost {
                     new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z())),
                     new ScriptCall(WALK_CAREFUL, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z())))));
             return true;
+        }
+        if (matched) {
+            post.waiting().add("graph:" + DIG_OUT);
         }
         return false;
     }

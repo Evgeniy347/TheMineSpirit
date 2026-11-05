@@ -111,7 +111,9 @@ public final class GraphSource {
                 continue;
             }
             if (!post.post(ticket)) {
-                unconnected.add(ticket.id());
+                if (!post.waiting().contains(ticket.id())) {
+                    unconnected.add(ticket.id());
+                }
             }
         }
         for (GraphPlan.Task task : half.plan().tasks()) {
