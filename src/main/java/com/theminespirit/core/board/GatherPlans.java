@@ -180,9 +180,21 @@ final class GatherPlans {
     }
 
     private static TaskNode axe() {
+        return tool(AXE, "wooden_axe");
+    }
+
+    static TaskNode pickaxe() {
+        return tool("*_pickaxe", "wooden_pickaxe");
+    }
+
+    static TaskNode shovel() {
+        return tool("*_shovel", "wooden_shovel");
+    }
+
+    private static TaskNode tool(String kind, String wooden) {
         return new FallbackNode(List.of(
-                new ScriptCall(ACQUIRE, Map.of(ITEM, AXE, COUNT, 1)),
-                new ScriptCall(ACQUIRE, Map.of(ITEM, "wooden_axe", COUNT, 1))));
+                new ScriptCall(ACQUIRE, Map.of(ITEM, kind, COUNT, 1)),
+                new ScriptCall(ACQUIRE, Map.of(ITEM, wooden, COUNT, 1))));
     }
 
     private static TaskNode sequence(TaskNode... steps) {

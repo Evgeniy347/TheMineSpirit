@@ -788,6 +788,7 @@ public final class TicketPlans {
         String kind = found.name().toLowerCase(Locale.ROOT);
         return sequence(
                 gotoTarget(target),
+                GatherPlans.pickaxe(),
                 new ScriptCall("mine_vein", Map.of("ore", kind, COUNT, 1, RADIUS, LEFT_ORE_RADIUS)));
     }
 

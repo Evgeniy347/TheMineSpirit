@@ -8,6 +8,7 @@ import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.mining.LeftOreRules;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
@@ -15,6 +16,7 @@ import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -70,15 +72,14 @@ public final class StockReader {
         StockScan.Result found =
                 StockScan.containers(rotate(centers), CONTAINER_RADIUS, SCAN_HEIGHT, blockBudget, blocks(level));
         int reads = 0;
-        List<BlockCoord> known = SettlementChestStore.get(level).chests().all();
-        for (BlockCoord pos : StockScan.knownFirst(known, found.containers())) {
+        for (BlockCoord pos : StockScan.knownFirst(ChestSnapshots.positions(level), found.containers())) {
             if (reads >= containerBudget) {
                 break;
             }
-            BlockPos at = new BlockPos(pos.x(), pos.y(), pos.z());
-            if (!level.isLoaded(at)) {
+            if (!ChestSnapshots.countable(level, pos)) {
                 continue;
             }
+            BlockPos at = new BlockPos(pos.x(), pos.y(), pos.z());
             ContainerAccess.Open open = ContainerAccess.open(level, at);
             if (open instanceof ContainerAccess.Opened container) {
                 StackMapper mapper = new StackMapper();
@@ -111,15 +112,19 @@ public final class StockReader {
         }
     }
 
-    static List<ContainerSnapshot> chests(ServerLevel level) {
-        List<ContainerSnapshot> found = new ArrayList<>();
+    public static List<ContainerSnapshot> chests(ServerLevel level) {
+        return ChestSnapshots.read(level, ChestSnapshots.positions(level));
+    }
+
+    public static List<ContainerSnapshot> chests(ServerLevel level, ColumnMask area) {
+        Set<BlockCoord> positions = new LinkedHashSet<>();
         for (BlockCoord pos : SettlementChestStore.get(level).chests().all()) {
-            BlockPos at = new BlockPos(pos.x(), pos.y(), pos.z());
-            if (level.isLoaded(at) && ContainerAccess.open(level, at) instanceof ContainerAccess.Opened container) {
-                found.add(new ContainerSnapshot(pos, new StackMapper().map(container.container())));
+            if (area.contains(pos.x(), pos.z())) {
+                positions.add(pos);
             }
         }
-        return found;
+        positions.addAll(ChestSnapshots.inArea(level, area));
+        return ChestSnapshots.read(level, List.copyOf(positions));
     }
 
     private static StockScan.Blocks blocks(ServerLevel level) {

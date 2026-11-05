@@ -119,6 +119,7 @@ public final class GraphSource {
                 }
             }
         }
+        post.flush();
         for (GraphPlan.Task task : half.plan().tasks()) {
             if (task.implemented() && task.priority() > 0) {
                 GraphTicketIds.ids(task, half.graph())
@@ -150,7 +151,7 @@ public final class GraphSource {
         }
         tellStrategist(half.level(), half.graph(), half.state(), half.plan(), half.now());
         cadence.finished(half.now(), half.signals());
-        lastLive = half.result().live();
+        lastLive = post.live(half.result().live());
         pending = null;
         return live();
     }
