@@ -46,6 +46,20 @@ class GraphRepairPlannerTests {
                         + task(light.plan()).priority());
     }
 
+    @Test
+    void repair_NotStartedBuilding_NotFeasible() {
+        GraphWorld world = GraphWorld.settled()
+                .with("dirt", 3)
+                .built("hut", Built.PLANNED)
+                .event("repair_hut")
+                .facts(facts(0, Map.of("minecraft:dirt", 3)));
+        world.materials.put("hut", Map.of("dirt", 3));
+
+        assertTrue(
+                !task(world.plan()).feasible(),
+                "Постройка на 0% не ремонтируется: её строят с нуля, иначе задание ремонта подменяет стройку");
+    }
+
     private static GraphPlan.Task task(GraphPlan plan) {
         List<GraphPlan.Task> repairs =
                 plan.tasks().stream().filter(task -> REPAIR.equals(task.id())).toList();

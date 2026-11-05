@@ -43,6 +43,35 @@ class GraphBuildingMaterialsTests {
                 "лишнее убирают отдельным путём ремонта, а не закупкой материалов: недостачи нет");
     }
 
+    @Test
+    void merged_PartialBuilding_AuditMissingWinsOverScheme() {
+        GraphFacts facts =
+                facts(new GraphFacts.Building("hut", 1, 95, 5, Map.of("minecraft:dirt", 5), Map.of(), 0, null, false));
+
+        Map<String, Map<String, Integer>> merged =
+                GraphBuildingMaterials.merged(Map.of("hut", Map.of("oak_log", 12, "oak_planks", 30)), facts, GRAPH);
+
+        assertEquals(
+                Map.of("dirt", 5),
+                merged.get("hut"),
+                "Частично построенный дом ремонтируют недостающими блоками аудита: полный набор схемы "
+                        + "заставил бы духа тащить лишнее и снова строить целое");
+    }
+
+    @Test
+    void merged_NotStartedBuilding_KeepsDeclaredScheme() {
+        GraphFacts facts =
+                facts(new GraphFacts.Building("hut", 1, 0, 0, Map.of("minecraft:dirt", 30), Map.of(), 0, null, false));
+
+        Map<String, Map<String, Integer>> merged =
+                GraphBuildingMaterials.merged(Map.of("hut", Map.of("oak_log", 12, "oak_planks", 30)), facts, GRAPH);
+
+        assertEquals(
+                Map.of("oak_log", 12, "oak_planks", 30),
+                merged.get("hut"),
+                "Не начатая постройка строится по объявленному набору схемы: аудит нуля не заменяет стройку");
+    }
+
     private static GraphFacts facts(GraphFacts.Building building) {
         return new GraphFacts(
                 Map.of(),
