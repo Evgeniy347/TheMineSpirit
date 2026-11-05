@@ -5,9 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.BuildingSeeds;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,7 +30,7 @@ class A2HutProtectionLiveTests {
 
     @BeforeAll
     void load() throws IOException {
-        protection = ProtectionConfig.load();
+        protection = DataTables.INSTANCE.protection().current();
         blocks = read();
     }
 
@@ -87,9 +89,9 @@ class A2HutProtectionLiveTests {
     }
 
     private static Map<String, String> read() throws IOException {
-        try (InputStream stream =
-                A2HutProtectionLiveTests.class.getResourceAsStream("/live/n24b-hut-plan/hut-blocks.json")) {
-            assertTrue(stream != null, "Живая фикстура блоков хижины не найдена: тест без неё слеп");
+        Path fixture = Path.of("src/test/resources/live/n24b-hut-plan/hut-blocks.json");
+        assertTrue(Files.isRegularFile(fixture), "Живая фикстура блоков хижины не найдена: тест без неё слеп");
+        try (var stream = Files.newInputStream(fixture)) {
             JsonNode root = MAPPER.readTree(stream);
             Map<String, String> values = new LinkedHashMap<>();
             root.fields()

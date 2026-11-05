@@ -7,13 +7,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.forestry.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
-import com.theminespirit.core.policy.ProtectionConfig;
+import com.theminespirit.core.reload.DataTables;
 import java.util.EnumSet;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class StrayRuleTests {
-    private static final BlockProtection PROTECTION = ProtectionConfig.load();
+    private static final BlockProtection PROTECTION =
+            DataTables.INSTANCE.protection().current();
 
     @Test
     void stray_OldFenceNotInRegistry_IsDemolished() {

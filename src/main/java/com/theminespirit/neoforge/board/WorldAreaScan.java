@@ -3,7 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.PlotCells;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
-import com.theminespirit.core.policy.ProtectionConfig;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.SettlementScan;
@@ -33,7 +33,7 @@ final class WorldAreaScan {
     private WorldAreaScan() {}
 
     static SettlementScan.Strays scan(ServerLevel level, StageSite site, Optional<TownPlan> town) {
-        BlockProtection rules = ProtectionConfig.load();
+        BlockProtection rules = DataTables.INSTANCE.protection().current();
         ColumnMask area = town.isEmpty() || rules.straysInsideFenceOnly()
                 ? site.enclosure()
                 : town.orElseThrow().region();
@@ -52,7 +52,7 @@ final class WorldAreaScan {
     }
 
     static boolean demolishStrays() {
-        return ProtectionConfig.load().demolishStrays();
+        return DataTables.INSTANCE.protection().current().demolishStrays();
     }
 
     private static String key(ServerLevel level) {

@@ -7,6 +7,8 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,12 @@ public final class SourceFiles {
     private static final Path TEST_PACKAGE = TEST.resolve(PACKAGE_ROOT);
     private static final Path API_PACKAGE = API.resolve(PACKAGE_ROOT);
     private static final Path API_TEST_PACKAGE = API_TEST.resolve(PACKAGE_ROOT);
+    private static final List<Path> MODULE_ROOTS = roots("module_roots");
+    private static final List<Path> MODULE_TEST_ROOTS = roots("module_test_roots");
+    private static final List<Path> MODULE_PACKAGES =
+            MODULE_ROOTS.stream().map(root -> root.resolve(PACKAGE_ROOT)).toList();
+    private static final List<Path> MODULE_TEST_PACKAGES =
+            MODULE_TEST_ROOTS.stream().map(root -> root.resolve(PACKAGE_ROOT)).toList();
 
     private static final Map<Path, Map<Path, String>> CACHE = new ConcurrentHashMap<>();
     private static final Pattern TEXT_BLOCK = Pattern.compile("\"\"\"[ \\t]*\\n(?s:.*?)(?<!\\\\)\"\"\"");
@@ -74,14 +82,33 @@ public final class SourceFiles {
 
     public static Path path(String logical) {
         String normalized = logical.replace('\\', '/');
-        for (Path root : new Path[] {MAIN_PACKAGE, TEST_PACKAGE, API_PACKAGE, API_TEST_PACKAGE}) {
+        for (Path root : searchPackages()) {
             Path candidate = root.resolve(normalized).normalize();
             if (Files.exists(candidate)) {
                 return candidate;
             }
         }
         throw new IllegalArgumentException("Логический путь " + normalized + " не найден ни в "
-                + roots(MAIN_PACKAGE, TEST_PACKAGE, API_PACKAGE, API_TEST_PACKAGE));
+                + roots(searchPackages().toArray(Path[]::new)));
+    }
+
+    private static List<Path> searchPackages() {
+        List<Path> all = new ArrayList<>(List.of(MAIN_PACKAGE, TEST_PACKAGE, API_PACKAGE, API_TEST_PACKAGE));
+        all.addAll(MODULE_PACKAGES);
+        all.addAll(MODULE_TEST_PACKAGES);
+        return all;
+    }
+
+    private static List<Path> roots(String key) {
+        String value = layout().getProperty(key);
+        if (value == null || value.isBlank()) {
+            return List.of();
+        }
+        return Arrays.stream(value.split(","))
+                .map(String::trim)
+                .filter(text -> !text.isEmpty())
+                .map(Path::of)
+                .toList();
     }
 
     private static String roots(Path... roots) {
@@ -96,11 +123,23 @@ public final class SourceFiles {
     }
 
     public static List<Path> mainPackages() {
-        return List.of(MAIN_PACKAGE, API_PACKAGE);
+        List<Path> all = new ArrayList<>(List.of(MAIN_PACKAGE, API_PACKAGE));
+        all.addAll(MODULE_PACKAGES);
+        return List.copyOf(all);
     }
 
     public static List<Path> testPackages() {
-        return List.of(TEST_PACKAGE, API_TEST_PACKAGE);
+        List<Path> all = new ArrayList<>(List.of(TEST_PACKAGE, API_TEST_PACKAGE));
+        all.addAll(MODULE_TEST_PACKAGES);
+        return List.copyOf(all);
+    }
+
+    public static List<Path> moduleMainRoots() {
+        return MODULE_ROOTS;
+    }
+
+    public static List<Path> moduleTestRoots() {
+        return MODULE_TEST_ROOTS;
     }
 
     public static Path apiPackage() {
@@ -132,7 +171,10 @@ public final class SourceFiles {
     }
 
     public static List<Path> sourceRoots() {
-        return List.of(MAIN, TEST, API, API_TEST);
+        List<Path> all = new ArrayList<>(List.of(MAIN, TEST, API, API_TEST));
+        all.addAll(MODULE_ROOTS);
+        all.addAll(MODULE_TEST_ROOTS);
+        return List.copyOf(all);
     }
 
     public static boolean isSourcePath(String relativePath) {
@@ -151,7 +193,7 @@ public final class SourceFiles {
 
     public static String logical(Path file) {
         Path normalized = file.normalize();
-        for (Path root : new Path[] {MAIN_PACKAGE, TEST_PACKAGE, API_PACKAGE, API_TEST_PACKAGE}) {
+        for (Path root : searchPackages()) {
             if (normalized.startsWith(root)) {
                 return root.relativize(normalized).toString().replace('\\', '/');
             }
