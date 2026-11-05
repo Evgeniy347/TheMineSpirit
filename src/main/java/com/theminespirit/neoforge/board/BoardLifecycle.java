@@ -30,6 +30,7 @@ public final class BoardLifecycle {
             return;
         }
         for (ServerLevel level : event.getServer().getAllLevels()) {
+            FloatingWatch.tick(level);
             long watch = TickWatch.start();
             long tick = level.getGameTime();
             try {

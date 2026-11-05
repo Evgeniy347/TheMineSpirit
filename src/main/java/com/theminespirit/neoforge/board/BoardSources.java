@@ -96,7 +96,6 @@ public final class BoardSources {
         Set<String> fences = guard.call("fence", () -> FenceWatch.liveCauses(level), Set.of());
         live.addAll(craters);
         live.addAll(fences);
-        guard.run("floating", () -> FloatingScanCycle.advance(level));
         live.addAll(guard.call(
                 "graph",
                 () -> graph.tick(

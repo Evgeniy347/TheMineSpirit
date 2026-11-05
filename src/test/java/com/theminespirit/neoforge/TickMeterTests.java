@@ -33,7 +33,7 @@ class TickMeterTests {
         String line = TickMeter.line(1200, 1200L * 20_000_000L, 90_000_000L);
 
         assertEquals(
-                "[tick] MSPT 20.0, худший 90.0 за 1200 тиков (24 с)",
+                "[tick] MSPT 20.0, худший 90.0 за 1200 тиков",
                 line,
                 "Формат [tick] называет среднее, худшее за окно: по нему видно просадку без «Can't keep up»");
         assertFalse(line.contains("null"), "В строке не должно быть пустых полей: " + line);

@@ -61,13 +61,7 @@ public final class TickMeter {
         }
         double averageMillis = totalNanos / NANOS_PER_MILLI / ticks;
         double worstMillis = worstNanos / NANOS_PER_MILLI;
-        double seconds = totalNanos / 1_000_000_000.0;
         return String.format(
-                Locale.ROOT,
-                "[tick] MSPT %.1f, худший %.1f за %d тиков (%.0f с)",
-                averageMillis,
-                worstMillis,
-                ticks,
-                seconds);
+                Locale.ROOT, "[tick] MSPT %.1f, худший %.1f за %d тиков", averageMillis, worstMillis, ticks);
     }
 }
