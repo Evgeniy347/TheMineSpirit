@@ -5,9 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import org.junit.jupiter.api.Test;
 
@@ -116,6 +118,25 @@ class RecipeImportTests {
         assertTrue(
                 hasWay("iron_ingot", "iron_nugget", RecipeImport.REVERSE_WEIGHT),
                 "Путь самородок → слиток обязан иметь низкий вес");
+    }
+
+    @Test
+    void select_ManualMakes_AreNotGenerated() {
+        Set<String> manualMakes = new HashSet<>();
+        MANUAL.ways().forEach(way -> manualMakes.add(way.makes()));
+        List<SupplyGraph.Way> selected = RecipeImport.select(IMPORT.ways(), MANUAL, 3);
+        List<String> dead = selected.stream()
+                .filter(way -> manualMakes.contains(way.makes()))
+                .map(SupplyGraph.Way::id)
+                .toList();
+        assertEquals(
+                List.of(),
+                dead,
+                "Сгенерированный путь для предмета с ручным способом мёртв: слияние графа отбрасывает его по makes. "
+                        + "Файл graph-recipes.json копит пути, которых нет в графе; пропускай makes ручного графа");
+        assertTrue(
+                selected.stream().anyMatch(way -> !manualMakes.contains(way.makes())),
+                "Отбор обязан оставить сгенерированные пути для предметов без ручного способа");
     }
 
     @Test
