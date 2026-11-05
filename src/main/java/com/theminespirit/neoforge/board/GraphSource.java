@@ -10,7 +10,6 @@ import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.GraphWhy;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
-import com.theminespirit.core.board.graph.WorldReport;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.TownSnapshot;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -125,7 +124,8 @@ public final class GraphSource {
         }
         report(half.plan(), half.result(), unconnected, freeSpirit(half), half.now());
         decisionLog.note(half.plan(), half.now());
-        reportWorld(half.state(), half.now());
+        reportWorld(half.level(), half.state(), half.now());
+        reportMine(half.level(), half.service(), half.graph(), half.state(), half.scan(), half.now());
         if (half.deep()) {
             String buildings = new TreeMap<>(half.state().buildings()) + " "
                     + half.plan().tasks().stream()
@@ -224,23 +224,23 @@ public final class GraphSource {
         return task.feasible() ? "" : "?(" + GraphWhy.building(graph, state, task.makes()) + ")";
     }
 
-    private void reportWorld(GraphState state, long now) {
-        WorldReport report = WorldReport.of(state.facts());
-        WorldFactsStore.set(report);
-        if (!notes.due("world", now)) {
-            return;
+    private void reportWorld(ServerLevel level, GraphState state, long now) {
+        GraphObserve.remember(state);
+        if (notes.due("world", now)) {
+            GraphObserve.world(level, state);
         }
-        LOGGER.info(
-                "[graph] мир: лишних {} (кусков {}), ям {}, насыпей на лотах {}, природного {} (не работа), "
-                        + "висящих {}, повреждено построек {}{}",
-                report.strayBlocks(),
-                report.strayGroups(),
-                report.pits(),
-                report.mounds(),
-                report.natural(),
-                report.hanging(),
-                report.damaged(),
-                report.unknown() ? " (чанки не загружены)" : "");
+    }
+
+    private void reportMine(
+            ServerLevel level,
+            BoardService service,
+            SupplyGraph graph,
+            GraphState state,
+            FirstStepsRunner.StageScan scan,
+            long now) {
+        if (notes.due("plot:mine", now)) {
+            GraphObserve.mine(level, service, graph, state, scan);
+        }
     }
 
     private void tellStrategist(ServerLevel level, SupplyGraph graph, GraphState state, GraphPlan plan, long now) {

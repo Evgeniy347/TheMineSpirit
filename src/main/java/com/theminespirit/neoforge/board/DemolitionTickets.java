@@ -27,6 +27,27 @@ final class DemolitionTickets {
 
     private DemolitionTickets() {}
 
+    static void logTidy(
+            String id,
+            long now,
+            String cause,
+            List<BlockCoord> stray,
+            List<FloatingBlocks.Finding> findings,
+            PlanDemolition.Collected collected,
+            BoardService service) {
+        LOGGER.info(
+                "[tidy] {}: уборка в тик {} по узлу графа {} — {} из {}, первые {}; прошлый {}; недостижимых {}; {}",
+                id,
+                now,
+                cause,
+                stray.size(),
+                findings.size(),
+                stray.stream().limit(PlanDemolition.shown()).toList(),
+                DemolitionHistory.previous(service),
+                collected.unreachable(),
+                collected.notes());
+    }
+
     static void warnExcluded(String world, int excluded, List<String> notes, long now) {
         if (excluded == 0) {
             return;
@@ -50,14 +71,15 @@ final class DemolitionTickets {
         return PlanDemolition.PREFIX + Long.toUnsignedString(hash, 36);
     }
 
-    static boolean submit(GraphPost post, StageSite site, List<PlannedBlock> blocks, String id, Placement placement) {
+    static boolean submit(
+            GraphPost post, StageSite site, List<PlannedBlock> blocks, String id, Placement placement, String cause) {
         BoardOutcome outcome = post.submit(
                 post.ticket(
                         id,
                         BoardCase.DISMANTLE_SHELTER,
                         Optional.empty(),
                         BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER),
-                        BoardTicket.ALWAYS_CAUSE,
+                        cause,
                         Map.of()),
                 target(site, blocks, placement));
         return outcome == BoardOutcome.ACCEPTED;

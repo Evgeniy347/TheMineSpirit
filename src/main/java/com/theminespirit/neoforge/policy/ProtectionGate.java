@@ -14,6 +14,9 @@ import com.theminespirit.core.policy.SettlementBreak;
 import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.policy.ZonePolicy;
 import com.theminespirit.core.town.FenceDemolition;
+import com.theminespirit.core.town.PlanBuilding;
+import com.theminespirit.core.town.PlanBuildings;
+import com.theminespirit.neoforge.BuildPlanOwner;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
@@ -41,7 +44,7 @@ public final class ProtectionGate {
     }
 
     public BlockProtection.Decision checkBreak(BlockPos pos, BlockState state) {
-        return decideBreak(pos, state, false, false);
+        return decideBreak(pos, state, false, false, PlanBuilding.NONE);
     }
 
     public BlockProtection.Decision checkBreakOrEscape(BlockPos pos, BlockState state, boolean escaping) {
@@ -52,19 +55,21 @@ public final class ProtectionGate {
                         new BlockCoord(feet.getX(), feet.getY(), feet.getZ()))) {
             return new BlockProtection.Allowed();
         }
-        return decideBreak(pos, state, false, false);
+        return decideBreak(pos, state, false, false, PlanBuilding.NONE);
     }
 
     public BlockProtection.Decision checkHarvest(BlockPos pos, BlockState state) {
-        return decideBreak(pos, state, true, false);
+        return decideBreak(pos, state, true, false, PlanBuilding.NONE);
     }
 
     public BlockProtection.Decision checkDemolish(BlockPos pos, BlockState state) {
+        PlanBuilding ownBuilding = BuildPlanOwner.of(spirit);
         if (spirit.level() instanceof ServerLevel server
-                && PlacedBlocksData.get(server).isSpiritMarked(pos)) {
+                && PlacedBlocksData.get(server).isSpiritMarked(pos)
+                && !foreignPlan(server, pos, ownBuilding)) {
             return new BlockProtection.Allowed();
         }
-        return decideBreak(pos, state, false, true);
+        return decideBreak(pos, state, false, true, ownBuilding);
     }
 
     private static boolean inPlan(ServerLevel level, BlockCoord coord) {
@@ -95,7 +100,21 @@ public final class ProtectionGate {
                 .orElse(false);
     }
 
-    private BlockProtection.Decision decideBreak(BlockPos pos, BlockState state, boolean tended, boolean demolish) {
+    private static PlanBuilding planBuilding(ServerLevel level, BlockCoord coord) {
+        PlanBuilding owner = SettlementPlotStore.get(level)
+                .site()
+                .map(site -> site.planBuilding(coord.x(), coord.y(), coord.z()))
+                .orElse(PlanBuilding.NONE);
+        return owner == PlanBuilding.MINE ? PlanBuilding.NONE : owner;
+    }
+
+    private static boolean foreignPlan(ServerLevel level, BlockPos pos, PlanBuilding ownBuilding) {
+        return PlanBuildings.foreign(
+                ownBuilding, planBuilding(level, new BlockCoord(pos.getX(), pos.getY(), pos.getZ())));
+    }
+
+    private BlockProtection.Decision decideBreak(
+            BlockPos pos, BlockState state, boolean tended, boolean demolish, PlanBuilding ownBuilding) {
         checks++;
         BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
         BlockProtection.Decision outside = checkTravel(coord);
@@ -127,18 +146,21 @@ public final class ProtectionGate {
             boolean placedByPlayer = false;
             boolean onPlot = false;
             boolean inPlan = false;
+            PlanBuilding owner = PlanBuilding.NONE;
             if (level instanceof ServerLevel server) {
                 spiritMarked = PlacedBlocksData.get(server).isSpiritMarked(pos);
                 placedByPlayer = !spiritMarked && PlacedBlocksData.get(server).isMarked(pos);
                 onPlot = onSettlementPlot(server, coord);
                 inPlan = inPlan(server, coord) && !mineCell(server, coord);
+                owner = planBuilding(server, coord);
             }
             SettlementBreak.Origin origin = placedByPlayer
                     ? SettlementBreak.Origin.PLAYER
                     : spiritMarked ? SettlementBreak.Origin.SPIRIT : SettlementBreak.Origin.UNKNOWN;
             decision = SettlementBreak.decide(
                     PROTECTION,
-                    new SettlementBreak.Facts(origin, onPlot, inPlan, blockId(state), inProtectedZone, unprotectArea),
+                    new SettlementBreak.Facts(
+                            origin, onPlot, inPlan, blockId(state), inProtectedZone, unprotectArea, owner, ownBuilding),
                     demolish ? SettlementBreak.Intent.DEMOLISH : SettlementBreak.Intent.BREAK,
                     () -> neighbours(level, pos));
         }

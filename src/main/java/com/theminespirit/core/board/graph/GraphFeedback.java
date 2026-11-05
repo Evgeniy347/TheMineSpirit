@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.board.StuckCause;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -65,11 +66,7 @@ public record GraphFeedback(Clock clock, Player player, List<Failure> failures) 
             if (text.contains("чанк") || text.contains("chunk") || text.contains("не загружен")) {
                 return CHUNK;
             }
-            if (text.contains("маршрут не найден")
-                    || text.contains("нет пути")
-                    || text.contains("путь не найден")
-                    || text.contains("недостижим")
-                    || text.contains("тупик")) {
+            if (StuckCause.noPath(reason)) {
                 return NO_PATH;
             }
             if (text.contains("не дошёл")

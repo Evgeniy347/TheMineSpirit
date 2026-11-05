@@ -43,7 +43,17 @@ public final class SupplyGate {
         if (isToolTierSupply(ticket.id())) {
             return false;
         }
-        return BoardTicket.ALWAYS_CAUSE.equals(ticket.cause()) || liveCauses.contains(ticket.cause());
+        return BoardTicket.ALWAYS_CAUSE.equals(ticket.cause())
+                || liveCauses.contains(ticket.cause())
+                || liveCauses.contains(baseCause(ticket.cause()));
+    }
+
+    private static String baseCause(String cause) {
+        if (!cause.startsWith("graph:")) {
+            return cause;
+        }
+        int at = cause.indexOf('@');
+        return at < 0 ? cause : cause.substring(0, at);
     }
 
     public static boolean isToolTierSupply(String ticketId) {

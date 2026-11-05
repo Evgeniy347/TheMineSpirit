@@ -2,7 +2,15 @@ package com.theminespirit.core.policy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.town.PlanBuilding;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeAll;
@@ -11,6 +19,8 @@ import org.junit.jupiter.api.TestInstance;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SettlementBreakProtectionTests {
+    private static final Path OBSERVE23 = Path.of("src/test/resources/live/observe23/plot-edits.json");
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     private BlockProtection protection;
 
     @BeforeAll
@@ -74,6 +84,137 @@ class SettlementBreakProtectionTests {
                 new BlockProtection.Allowed(),
                 decision,
                 "Одинокая доска среди травы — висящий остаток, а не постройка: уборка обязана уметь её снять");
+    }
+
+    @Test
+    void demolish_OwnHousePlanCell_Allowed() {
+        BlockProtection.Decision decision = SettlementBreak.decide(
+                protection,
+                new SettlementBreak.Facts(
+                        SettlementBreak.Origin.SPIRIT,
+                        true,
+                        true,
+                        "minecraft:oak_planks",
+                        false,
+                        false,
+                        PlanBuilding.HOUSE,
+                        PlanBuilding.HOUSE),
+                SettlementBreak.Intent.DEMOLISH,
+                () -> natural(BlockProtection.NEIGHBOUR_COUNT));
+
+        assertEquals(
+                new BlockProtection.Allowed(),
+                decision,
+                "Ремонт дома обязан снимать свои клетки плана: без этого повреждённую хижину не восстановить");
+    }
+
+    @Test
+    void demolish_FenceOverHousePlanCell_Refused() {
+        BlockProtection.Decision decision = SettlementBreak.decide(
+                protection,
+                new SettlementBreak.Facts(
+                        SettlementBreak.Origin.SPIRIT,
+                        true,
+                        true,
+                        "minecraft:oak_planks",
+                        false,
+                        false,
+                        PlanBuilding.HOUSE,
+                        PlanBuilding.FENCE),
+                SettlementBreak.Intent.DEMOLISH,
+                () -> natural(BlockProtection.NEIGHBOUR_COUNT));
+
+        BlockProtection.Refused refused = assertInstanceOf(
+                BlockProtection.Refused.class,
+                decision,
+                "Забор не имеет права расчищать клетку дома: в observe23 он снял стену хижины "
+                        + "в (-178..-176,69,-505), аудит 100→94; забор обязан обойти дом или ждать");
+        assertEquals(
+                PolicyId.PROTECTED_BLOCKS,
+                refused.policy(),
+                "Отказ обязан помечать защиту блока плана: по коду видно, почему забор не тронул дом");
+        assertTrue(
+                refused.reason().contains("HOUSE") && refused.reason().contains("FENCE"),
+                "Причина отказа обязана называть чужую постройку и виновника: " + refused.reason());
+    }
+
+    @Test
+    void demolish_LiveObserve23FenceEdits_Refused() throws IOException {
+        JsonNode root = MAPPER.readTree(Files.readString(OBSERVE23, StandardCharsets.UTF_8));
+        int checked = 0;
+        for (JsonNode event : root.get("events")) {
+            BlockProtection.Decision decision = SettlementBreak.decide(
+                    protection,
+                    new SettlementBreak.Facts(
+                            SettlementBreak.Origin.SPIRIT,
+                            true,
+                            true,
+                            event.get("planBlock").asText(),
+                            false,
+                            false,
+                            PlanBuilding.HOUSE,
+                            PlanBuilding.FENCE),
+                    SettlementBreak.Intent.DEMOLISH,
+                    () -> natural(BlockProtection.NEIGHBOUR_COUNT));
+            assertInstanceOf(
+                    BlockProtection.Refused.class,
+                    decision,
+                    "Живая фикстура observe23: забор снял "
+                            + event.get("planBlock").asText() + " в "
+                            + event.get("cell") + " (дух " + event.get("who").asText() + ", задание "
+                            + event.get("task").asText() + "); клетка дома чужая для забора");
+            checked++;
+        }
+        assertTrue(
+                checked >= 5,
+                "В фикстуре observe23 меньше 5 событий [plot-edit] забора: тест перестал повторять живой прогон, "
+                        + "проверено " + checked);
+    }
+
+    @Test
+    void demolish_FenceOverHousePlacedByPlayer_Refused() {
+        BlockProtection.Decision decision = SettlementBreak.decide(
+                protection,
+                new SettlementBreak.Facts(
+                        SettlementBreak.Origin.PLAYER,
+                        true,
+                        true,
+                        "minecraft:oak_planks",
+                        false,
+                        false,
+                        PlanBuilding.HOUSE,
+                        PlanBuilding.FENCE),
+                SettlementBreak.Intent.DEMOLISH,
+                () -> natural(BlockProtection.NEIGHBOUR_COUNT));
+
+        assertInstanceOf(
+                BlockProtection.Refused.class,
+                decision,
+                "Забор не имеет права снимать стену дома, даже если доску поставил игрок: клетка принадлежит плану "
+                        + "дома, а не забора");
+    }
+
+    @Test
+    void demolish_UnknownActionOverHouse_Refused() {
+        BlockProtection.Decision decision = SettlementBreak.decide(
+                protection,
+                new SettlementBreak.Facts(
+                        SettlementBreak.Origin.UNKNOWN,
+                        true,
+                        true,
+                        "minecraft:grass_block",
+                        false,
+                        false,
+                        PlanBuilding.HOUSE,
+                        PlanBuilding.NONE),
+                SettlementBreak.Intent.DEMOLISH,
+                () -> natural(BlockProtection.NEIGHBOUR_COUNT));
+
+        assertInstanceOf(
+                BlockProtection.Refused.class,
+                decision,
+                "Уборка без своей постройки тоже не имеет права снимать клетку дома: в observe23 такая расчистка "
+                        + "сняла oak_stairs в (-178,69,-510), и дом потерял блок");
     }
 
     private static List<String> artificial(int count) {

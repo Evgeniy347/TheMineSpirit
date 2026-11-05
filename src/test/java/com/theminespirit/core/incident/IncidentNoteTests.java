@@ -48,6 +48,20 @@ class IncidentNoteTests {
     }
 
     @Test
+    void brief_WhatAlreadyLoggedOutside_PrintsPlaceTaskInventoryAndSnapshot() {
+        IncidentNote note = new IncidentNote(
+                "spirit-3", "демо:4 (кейс) провалено", new BlockCoord(1, 2, 3), "clear_area", Map.of("dirt", 12));
+
+        String brief = note.brief(Path.of("a.nbt"));
+
+        assertEquals(
+                "дух spirit-3 в (1, 2, 3): задача clear_area; инвентарь {dirt=12}; снимок a.nbt",
+                brief,
+                "Инцидент не повторяет задание и причину, уже названные строкой лога: дубль раздувал запись "
+                        + "до килобайтов, но место, ход задачи и снимок остаются для разбора");
+    }
+
+    @Test
     void line_SnapshotPath_IsAppended() {
         IncidentNote note = new IncidentNote(
                 "spirit-1", "задание стоит 1200 тиков", new BlockCoord(-162, 72, -505), "demolish:1", Map.of());

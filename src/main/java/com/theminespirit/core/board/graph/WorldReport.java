@@ -3,6 +3,7 @@ package com.theminespirit.core.board.graph;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
@@ -16,7 +17,8 @@ public record WorldReport(
         boolean unknown,
         List<Stray> strays,
         List<Damaged> buildings,
-        int natural) {
+        int natural,
+        Map<String, Integer> floating) {
     public record Stray(
             String type,
             int x,
@@ -48,6 +50,21 @@ public record WorldReport(
         }
         strays = List.copyOf(Objects.requireNonNull(strays, "Куски лишнего не могут быть null"));
         buildings = List.copyOf(Objects.requireNonNull(buildings, "Повреждённые постройки не могут быть null"));
+        floating = Map.copyOf(Objects.requireNonNull(floating, "Состав висящего не может быть null: пустой — карта"));
+    }
+
+    public WorldReport(
+            int strayBlocks,
+            int strayGroups,
+            int pits,
+            int mounds,
+            int hanging,
+            int damaged,
+            boolean unknown,
+            List<Stray> strays,
+            List<Damaged> buildings,
+            int natural) {
+        this(strayBlocks, strayGroups, pits, mounds, hanging, damaged, unknown, strays, buildings, natural, Map.of());
     }
 
     public WorldReport(
@@ -60,7 +77,19 @@ public record WorldReport(
             boolean unknown,
             List<Stray> strays,
             List<Damaged> buildings) {
-        this(strayBlocks, strayGroups, pits, mounds, hanging, damaged, unknown, strays, buildings, 0);
+        this(strayBlocks, strayGroups, pits, mounds, hanging, damaged, unknown, strays, buildings, 0, Map.of());
+    }
+
+    public String hangingText() {
+        if (floating.isEmpty()) {
+            return Integer.toString(hanging);
+        }
+        String types = floating.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .reduce((left, right) -> left + ", " + right)
+                .orElse("");
+        return hanging + " (" + types + ")";
     }
 
     public static WorldReport of(GraphFacts facts) {
@@ -96,6 +125,7 @@ public record WorldReport(
                 facts.terrain().unknown(),
                 strays,
                 buildings,
-                facts.terrain().natural());
+                facts.terrain().natural(),
+                facts.terrain().floating());
     }
 }
