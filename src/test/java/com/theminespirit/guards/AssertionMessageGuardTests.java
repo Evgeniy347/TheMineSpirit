@@ -28,7 +28,7 @@ class AssertionMessageGuardTests {
     @Test
     void testSources_EveryAssertion_CarriesMessage() {
         List<String> offenders = new ArrayList<>();
-        SourceFiles.javaUnder(SourceFiles.TEST).forEach((file, text) -> {
+        SourceFiles.allTests().forEach((file, text) -> {
             for (String call : callsWithoutMessage(text)) {
                 offenders.add(file + ":" + call);
             }

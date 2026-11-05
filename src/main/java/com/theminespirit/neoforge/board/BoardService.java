@@ -7,7 +7,6 @@ import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
-import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardReserve;
 import com.theminespirit.core.board.BoardState;
@@ -48,7 +47,6 @@ import com.theminespirit.core.town.StageWork;
 import com.theminespirit.neoforge.IncidentSnapshots;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
-import com.theminespirit.neoforge.defense.DefenseService;
 import com.theminespirit.neoforge.inventory.SpiritSupplies;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import com.theminespirit.neoforge.net.BuildFingerprint;
@@ -97,7 +95,6 @@ public final class BoardService {
     private final Map<UUID, String> orphans = new HashMap<>();
     private final CrafterMemory crafters = new CrafterMemory();
     private final TransferWait transferWait = new TransferWait();
-    private final DefenseService defense = new DefenseService();
     private StockView stock = new StockView(Map.of());
     private Set<String> liveCauses = Set.of();
     private long lastRebuild = -1;
@@ -284,10 +281,6 @@ public final class BoardService {
 
     public JournalService journal() {
         return journal;
-    }
-
-    public DefenseService defense() {
-        return defense;
     }
 
     public CraterProfiles craters() {
@@ -731,6 +724,7 @@ public final class BoardService {
         SettleNotes.note(spirit, ticket, success, supplyClosed, spirit.level().getGameTime());
         String why = verdict != null ? verdict : spirit.taskFailureReason().orElse("причина не записана");
         if (success) {
+            sources.graphSuccess(ticket, targets.get(ticket.id()), board.now());
             PlanCompletion.complete(board, ticket, targets.get(ticket.id()));
             if (ticket.boardCase() == BoardCase.TRANSFER_ITEM) {
                 TransferNote.delivered(spirit, ticket, targets.get(ticket.id()));
@@ -748,9 +742,7 @@ public final class BoardService {
             sources.graphFailure(ticket, targets.get(ticket.id()), failure, board.now());
             board.fail(ticket.id(), stock, failure);
             incidents.failed(spirit, ticket, targets.get(ticket.id()), why, board.now());
-            for (BoardLogEntry entry : board.drainDetachments()) {
-                journal.recordEntry(entry);
-            }
+            board.drainDetachments().forEach(journal::recordEntry);
             flushBlockNotes();
             if (ticket.boardCase() == BoardCase.CAPTURE_ANIMAL) {
                 captureFailed(ticket.id());

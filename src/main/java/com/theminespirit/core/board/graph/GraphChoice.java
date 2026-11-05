@@ -17,9 +17,13 @@ public record GraphChoice(
         double petAlone,
         double herdFull,
         double fieldFull,
-        double failureBackoff) {
-    public static final GraphChoice NEUTRAL =
-            new GraphChoice(1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.5);
+        double failureBackoff,
+        double failureTargets,
+        double failureHalfLife,
+        double failureSoft,
+        double failureTargetRadius) {
+    public static final GraphChoice NEUTRAL = new GraphChoice(
+            1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.5, 2.0, 3000.0, 0.5, 6.0);
 
     public GraphChoice {
         requireNonNegative("дальняя дорога", farTrip);
@@ -37,6 +41,16 @@ public record GraphChoice(
         requireNonNegative("полный загон", herdFull);
         requireNonNegative("полное поле", fieldFull);
         requireNonNegative("память неудач", failureBackoff);
+        if (!Double.isFinite(failureTargets) || failureTargets < 1) {
+            throw new IllegalArgumentException("Порог разных целей «память неудач» = " + failureTargets
+                    + ": узел штрафуется, только когда провалились хотя бы одна цель, порог не меньше 1");
+        }
+        if (!Double.isFinite(failureHalfLife) || failureHalfLife <= 0) {
+            throw new IllegalArgumentException("Полураспад памяти неудач = " + failureHalfLife
+                    + " тиков: штраф затухает, поэтому полураспад положителен");
+        }
+        requireNonNegative("мягкий штраф прочих провалов", failureSoft);
+        requireNonNegative("радиус недоступной цели", failureTargetRadius);
     }
 
     static GraphChoice parse(JsonNode root) {
@@ -58,7 +72,11 @@ public record GraphChoice(
                 root.path("petAlone").asDouble(NEUTRAL.petAlone()),
                 root.path("herdFull").asDouble(NEUTRAL.herdFull()),
                 root.path("fieldFull").asDouble(NEUTRAL.fieldFull()),
-                root.path("failureBackoff").asDouble(NEUTRAL.failureBackoff()));
+                root.path("failureBackoff").asDouble(NEUTRAL.failureBackoff()),
+                root.path("failureTargets").asDouble(NEUTRAL.failureTargets()),
+                root.path("failureHalfLife").asDouble(NEUTRAL.failureHalfLife()),
+                root.path("failureSoft").asDouble(NEUTRAL.failureSoft()),
+                root.path("failureTargetRadius").asDouble(NEUTRAL.failureTargetRadius()));
     }
 
     private static void requireNonNegative(String name, double value) {

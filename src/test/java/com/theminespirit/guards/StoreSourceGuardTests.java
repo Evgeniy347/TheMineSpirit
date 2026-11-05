@@ -9,7 +9,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class StoreSourceGuardTests {
-    private static final Path BOARD = Path.of("src/main/java/com/theminespirit/neoforge/board");
+    private static final Path BOARD = SourceFiles.path("neoforge/board");
     private static final Map<Path, String> SOURCES = SourceFiles.javaUnder(BOARD);
 
     @Test

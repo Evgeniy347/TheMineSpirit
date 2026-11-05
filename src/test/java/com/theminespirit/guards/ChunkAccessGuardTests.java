@@ -18,8 +18,8 @@ class ChunkAccessGuardTests {
     @Test
     void neoforgeSources_GetChunkWithStatus_Forbidden() {
         List<String> offenders = new ArrayList<>();
-        SourceFiles.javaUnder(SourceFiles.MAIN).forEach((file, text) -> {
-            if (!file.startsWith(SourceFiles.MAIN.resolve("com/theminespirit/neoforge"))) {
+        SourceFiles.allMain().forEach((file, text) -> {
+            if (!file.startsWith(SourceFiles.path("neoforge"))) {
                 return;
             }
             Matcher badMatcher = GET_CHUNK_WITH_STATUS.matcher(text);

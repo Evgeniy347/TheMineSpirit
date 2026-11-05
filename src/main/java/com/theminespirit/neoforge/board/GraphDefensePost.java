@@ -38,7 +38,7 @@ final class GraphDefensePost {
                 CoordinatorTuning.DEFENSE_RADIUS,
                 snapshots,
                 post.now);
-        DefensePlan plan = post.service.defense().plan(post.level, post.spirits, state);
+        DefensePlan plan = BoardRegistry.defense(post.level).plan(post.level, post.spirits, state);
         boolean posted = false;
         for (DefenderOrder order : plan.orders()) {
             if (order.target().isEmpty()) {

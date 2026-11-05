@@ -149,7 +149,7 @@ public final class DefenseGameTests {
     }
 
     private static boolean nakedOrderedOffCreeper(GameTestHelper helper, SpiritEntity naked, Creeper creeper) {
-        DefensePlan duelPlan = BoardRegistry.get(helper.getLevel()).defense().lastPlan();
+        DefensePlan duelPlan = BoardRegistry.defense(helper.getLevel()).lastPlan();
         return orderOf(duelPlan, naked)
                 .map(order -> order.target().isEmpty()
                         || !order.target().get().id().equals(creeper.getUUID().toString()))

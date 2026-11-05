@@ -8,7 +8,7 @@ import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.SchematicWood;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.reload.DataTables;
@@ -113,7 +113,7 @@ final class BuildingAudit {
         String key = level.dimension().location() + "|" + scheme + "|" + at + "|" + wood;
         RepairAudit.Report report = SCHEMES.get(key);
         if (report == null) {
-            Schematic wanted = WoodSpecies.swap(SchematicResources.load(scheme), wood);
+            Schematic wanted = SchematicWood.swap(SchematicResources.load(scheme), wood);
             report = RepairAudit.audit(
                     wanted,
                     new BlockCoord(at.x(), at.y(), at.z()),

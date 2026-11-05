@@ -63,13 +63,28 @@ public final class BoardSources {
         if (node == null) {
             return;
         }
-        String where = target == null
+        graphFailures.note(node, graphTarget(target), reason, now);
+    }
+
+    public void graphSuccess(BoardTicket ticket, @Nullable TicketTarget target, long now) {
+        String node = GraphFailureMemory.node(ticket.id(), ticket.cause());
+        if (node == null) {
+            return;
+        }
+        graphFailures.succeed(node, graphTarget(target), now);
+    }
+
+    public Set<String> graphUnreachable(String node, long now, double halfLifeTicks) {
+        return graphFailures.unreachableTargets(node, now, halfLifeTicks);
+    }
+
+    private static String graphTarget(@Nullable TicketTarget target) {
+        return target == null
                 ? ""
                 : GraphFailureMemory.target(
                         target.target().x(),
                         target.target().y(),
                         target.target().z());
-        graphFailures.note(node, where, reason, now);
     }
 
     private void report(String source, RuntimeException error, boolean repeated) {

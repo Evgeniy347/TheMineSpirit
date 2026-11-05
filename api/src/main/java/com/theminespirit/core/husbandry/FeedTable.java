@@ -6,7 +6,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.inventory.JsonResource;
-import com.theminespirit.core.reload.DataTables;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Iterator;
@@ -14,11 +13,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public record FeedTable(Map<Species, List<String>> feeds) {
     public static final String RESOURCE = "data/theminespirit/husbandry/feed.json";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static volatile Supplier<FeedTable> source = FeedTable::defaults;
     private static final FeedTable DEFAULTS = load(Map.of(
             "cow", List.of("minecraft:wheat"),
             "sheep", List.of("minecraft:wheat"),
@@ -41,7 +42,12 @@ public record FeedTable(Map<Species, List<String>> feeds) {
 
     public static List<String> feedFor(Species species) {
         Objects.requireNonNull(species, "Вид животного не может быть null: без него неизвестно, чем кормить стадо");
-        return DataTables.INSTANCE.feed().current().feedForInstance(species);
+        return source.get().feedForInstance(species);
+    }
+
+    public static void useSource(Supplier<FeedTable> supplier) {
+        source = Objects.requireNonNull(
+                supplier, "Источник таблицы кормов не может быть null: без него загрузка таблицы не видна");
     }
 
     public static FeedTable defaults() {

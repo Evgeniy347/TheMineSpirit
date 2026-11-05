@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphFeedback;
 import com.theminespirit.core.board.graph.GraphKits;
 import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.board.graph.GraphState.Built;
@@ -43,7 +44,8 @@ public final class GraphFactInputs {
                 buildingFacts(buildings, town, scan),
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
-                stageReqs(service, service.board().ledger().stage()));
+                stageReqs(service, service.board().ledger().stage()),
+                GraphFeedback.none());
     }
 
     private static Map<String, GraphFacts.Spirit> spiritFacts(

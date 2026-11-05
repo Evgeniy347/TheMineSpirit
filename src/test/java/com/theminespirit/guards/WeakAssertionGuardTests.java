@@ -15,7 +15,7 @@ class WeakAssertionGuardTests {
     @Test
     void testSources_Scanned_UseNoNotNullOrDoesNotThrowChecks() {
         List<String> offenders = new ArrayList<>();
-        SourceFiles.javaUnder(SourceFiles.TEST).forEach((file, text) -> {
+        SourceFiles.allTests().forEach((file, text) -> {
             Matcher matcher = WEAK_ASSERTION.matcher(text);
             while (matcher.find()) {
                 offenders.add(file + ":" + SourceFiles.lineOf(text, matcher.start()) + " " + matcher.group());

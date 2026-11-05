@@ -176,13 +176,13 @@ final class GraphPost {
     }
 
     BlockCoord source(String wayId) {
-        return GraphTargets.source(level, graph.way(wayId), around, scan, this::craftPoint);
+        return GraphTargets.source(level, graph.way(wayId), around, scan, service, graph, now);
     }
 
     private BlockCoord sourceFor(String item) {
         for (SupplyGraph.Way way : graph.producers(item)) {
             if (way.world() != null) {
-                return GraphTargets.source(level, Optional.of(way), around, scan, this::craftPoint);
+                return source(way.id());
             }
         }
         return craftPoint();
@@ -236,43 +236,16 @@ final class GraphPost {
             String cause,
             Map<String, Integer> required,
             List<String> modifiers) {
-        return new BoardTicket(
-                id,
-                boardCase,
-                assignee,
-                Math.min(100, Math.max(0, priority)),
-                now,
-                1,
-                cause,
-                List.of(),
-                required,
-                modifiers);
+        return GraphTicketFactory.ticket(
+                this, new GraphTicketFactory.Request(id, boardCase, assignee, priority, cause, required, modifiers));
     }
 
     BoardTicket leveled(BoardTicket base, int level, List<String> dependsOn) {
-        return new BoardTicket(
-                base.id(),
-                base.boardCase(),
-                base.assignee(),
-                base.priority(),
-                base.createdAt(),
-                level,
-                base.cause(),
-                dependsOn,
-                base.requiredItems());
+        return GraphTicketFactory.leveled(base, level, dependsOn);
     }
 
     BoardTicket dated(BoardTicket base, long createdAt) {
-        return new BoardTicket(
-                base.id(),
-                base.boardCase(),
-                base.assignee(),
-                base.priority(),
-                createdAt,
-                base.level(),
-                base.cause(),
-                base.dependsOn(),
-                base.requiredItems());
+        return GraphTicketFactory.dated(base, createdAt);
     }
 
     BoardOutcome submit(BoardTicket ticket, TicketTarget target) {

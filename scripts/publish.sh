@@ -7,6 +7,8 @@ CLIENT_DIR="${CLIENT_DIR:-/opt/minecraft/client}"
 GATEWAY_DIR="${GATEWAY_DIR:-/opt/gateway}"
 STATUS_REL="users/admin/sites/the-mine-spirit/server/mod.json"
 SERVER_FILES="$MOD_DIR/server"
+. "$MOD_DIR/scripts/module-paths.sh"
+JAR_DIR="$MOD_DIR/$MOD_JAR_DIR"
 WORLD_BACKUPS="${WORLD_BACKUPS:-/opt/minecraft/backups/world}"
 CLEANUP_SCRIPT_DIR="${CLEANUP_SCRIPT_DIR:-/opt/minecraft/scripts}"
 
@@ -337,7 +339,7 @@ fi
 if $dry_run; then
     echo "Режим --dry-run: ниже план, изменения не вносятся."
     echo "  1. сборка мода: ./gradlew --quiet assemble (без тестов — решение владельца 25.10)"
-    echo "  2. поиск build/libs/theminespirit-*.jar (кроме -sources/-javadoc), берётся самый свежий"
+    echo "  2. поиск $MOD_JAR_DIR/theminespirit-*.jar (кроме -sources/-javadoc), берётся самый свежий"
     echo "  3. раскладка скриптов и конфигов сервера: $SERVER_FILES → $SERVER_DIR (cron сторожа зависания)"
     if [ "$mode" = full ]; then
         echo "  4. снимок мира: $SERVER_DIR/scripts/world-snapshot.sh publish-<версия>"
@@ -366,14 +368,14 @@ cd "$MOD_DIR"
 echo "Сборка мода..."
 ./gradlew --quiet assemble
 
-mapfile -t jars < <(find build/libs -maxdepth 1 -name 'theminespirit-*.jar' \
+mapfile -t jars < <(find "$JAR_DIR" -maxdepth 1 -name 'theminespirit-*.jar' \
     ! -name '*-sources.jar' ! -name '*-javadoc.jar' -printf '%T@ %p\n' | sort -rn | cut -d' ' -f2-)
 if [ "${#jars[@]}" -eq 0 ]; then
-    echo "Сборка не дала theminespirit-*.jar в build/libs/" >&2
+    echo "Сборка не дала theminespirit-*.jar в $MOD_JAR_DIR/" >&2
     exit 1
 fi
 if [ "${#jars[@]}" -gt 1 ]; then
-    echo "В build/libs несколько jar мода, беру самый свежий:" >&2
+    echo "В $MOD_JAR_DIR несколько jar мода, беру самый свежий:" >&2
     printf '  %s\n' "${jars[@]}" >&2
 fi
 jar="${jars[0]}"

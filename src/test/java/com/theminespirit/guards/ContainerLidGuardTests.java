@@ -14,8 +14,8 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 class ContainerLidGuardTests {
-    private static final Path LID = Path.of("src/main/java/com/theminespirit/neoforge/inventory/ContainerLid.java");
-    private static final Path CELLS = Path.of("src/main/java/com/theminespirit/neoforge/inventory/ContainerCells.java");
+    private static final Path LID = SourceFiles.path("neoforge/inventory/ContainerLid.java");
+    private static final Path CELLS = SourceFiles.path("neoforge/inventory/ContainerCells.java");
     private static final Pattern CHEST_TYPE_READ = Pattern.compile("getValue\\(\\s*ChestBlock\\.TYPE\\s*\\)");
 
     @Test

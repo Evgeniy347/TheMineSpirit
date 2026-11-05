@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 class DefensePerimeterGuardTests {
-    private static final Path ROOT = Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
+    private static final Path ROOT = SourceFiles.resource(PresetLibrary.SCHEMATICS_ROOT);
 
     static List<String> lowBlocks(Schematic schematic) {
         List<String> problems = new ArrayList<>();

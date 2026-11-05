@@ -14,9 +14,9 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class BoardPostGuardTests {
-    private static final Path BOARD = Path.of("src/main/java/com/theminespirit/neoforge/board");
-    private static final Path REST = Path.of("src/main/java/com/theminespirit/neoforge/rest");
-    private static final Path INTELLECT = Path.of("src/main/java/com/theminespirit/neoforge/intellect");
+    private static final Path BOARD = SourceFiles.path("neoforge/board");
+    private static final Path REST = SourceFiles.path("neoforge/rest");
+    private static final Path INTELLECT = SourceFiles.path("neoforge/intellect");
 
     private static final List<String> OFFENCES = List.of(
             "service.submit(",
@@ -31,6 +31,8 @@ class BoardPostGuardTests {
     private static final Map<String, Set<String>> INFRASTRUCTURE = Map.of(
             GRAPH_POST,
             Set.copyOf(OFFENCES),
+            "GraphTicketFactory.java",
+            Set.of("new BoardTicket("),
             "BoardStateStore.java",
             Set.of("new BoardTicket("),
             "BoardService.java",
@@ -83,10 +85,10 @@ class BoardPostGuardTests {
 
     @Test
     void graphPostTicket_PriorityOutsideBoardRange_Clamped() {
-        String source = SourceFiles.javaUnder(BOARD).get(BOARD.resolve("GraphPost.java"));
+        String source = SourceFiles.javaUnder(BOARD).get(BOARD.resolve("GraphTicketFactory.java"));
 
         assertTrue(
-                source.contains("Math.min(100, Math.max(0, priority))"),
+                source.contains("Math.min(100, Math.max(0, request.priority()))"),
                 "Билет графа с весом события выше 100 обязан зажиматься к диапазону BoardTicket: иначе источник "
                         + "доски падает с IllegalArgumentException и задача (оборона/еда) не ставится");
     }

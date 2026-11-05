@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 class ParserBoundsGuardTests {
-    private static final Path TACTICS = SourceFiles.MAIN.resolve("com/theminespirit/core/tactics");
+    private static final Path TACTICS = SourceFiles.path("core/tactics");
     private static final List<String> PARSERS =
             List.of("FactorScalesParser.java", "EnemyProfilesParser.java", "ModesParser.java", "WeightsParser.java");
     private static final Pattern BOUNDED_READ = Pattern.compile("\\.(?:number|integer)\\(\\s*[^)\\s][^)]*\\)");

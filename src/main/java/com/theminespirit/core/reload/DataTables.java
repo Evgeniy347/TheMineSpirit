@@ -55,7 +55,6 @@ public final class DataTables {
     public static final DataTables INSTANCE = new DataTables(Clock.systemUTC());
 
     public static final String TACTICS_ROOT = "data/theminespirit/tactics/";
-
     private final TableRegistry registry;
     private final AtomicInteger armorSeeds = new AtomicInteger();
     private final TableHolder<TacticsConfig> tactics;
@@ -176,6 +175,7 @@ public final class DataTables {
                 single("observation", ObservationLimits.RESOURCE, ObservationLimits::parse, ObservationLimits::load);
         this.schematics = DataTableDefinitions.schematics(registry);
         this.processing = single("processing", ProcessingRules.RESOURCE, ProcessingRules::parse, ProcessingRules::load);
+        DataTableBindings.bind(this);
     }
 
     private <T> TableHolder<T> single(

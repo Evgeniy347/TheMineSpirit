@@ -20,7 +20,7 @@ class JqwikTriesGuardTests {
     @Test
     void propertyTries_Over200_WithoutSlowTag() {
         List<String> offenders = new ArrayList<>();
-        collectOffenders(SourceFiles.javaUnder(SourceFiles.TEST), offenders);
+        collectOffenders(SourceFiles.allTests(), offenders);
 
         assertEquals(
                 List.of(),

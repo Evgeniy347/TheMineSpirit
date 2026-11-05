@@ -15,7 +15,7 @@ class NoTeleportGuardTests {
     @Test
     void production_TeleportOrMoveToCalls_AreAbsent() {
         List<String> found = new ArrayList<>();
-        SourceFiles.javaUnder(SourceFiles.MAIN).forEach((path, text) -> {
+        SourceFiles.allMain().forEach((path, text) -> {
             String file = path.toString().replace(File.separatorChar, '/');
             if (allowed(file)) {
                 return;

@@ -54,6 +54,25 @@ class GraphStateFactsTests {
     }
 
     @Test
+    void withStationsAndStageReqs_FeedbackKnown_StaysSame() {
+        GraphFeedback feedback = new GraphFeedback(
+                GraphFeedback.Clock.unknown(),
+                GraphFeedback.Player.none(),
+                List.of(new GraphFeedback.Failure("mine_coal", "100,64,100", 2, GraphFeedback.Cause.NO_PATH, 100)));
+        GraphFacts facts = facts().withFeedback(feedback);
+
+        assertEquals(
+                feedback,
+                GraphFactsUpdates.withStations(facts, Map.of()).feedback(),
+                "Пересборка станций не теряет память неудач: иначе провалы не доходят до выбора");
+        assertEquals(
+                feedback,
+                GraphFactsUpdates.withStageReqs(facts, new GraphSiteFacts.StageReqs(Map.of(), Map.of()))
+                        .feedback(),
+                "Пересборка требований этапа не теряет память неудач");
+    }
+
+    @Test
     void chest_FreeSlotsAboveTotal_Rejected() {
         assertThrows(
                 IllegalArgumentException.class,
@@ -150,7 +169,8 @@ class GraphStateFactsTests {
                 Map.of(),
                 strays,
                 GraphSiteFacts.Terrain.empty(),
-                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
+                GraphFeedback.none());
         strays.add(new GraphSiteFacts.Stray("s", "wall", new GraphFacts.Position(0, 0, 0), null));
 
         assertEquals(List.of(), facts.strays(), "Список лишних построек копируется");
@@ -181,6 +201,7 @@ class GraphStateFactsTests {
                 Map.of(),
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
-                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
+                GraphFeedback.none());
     }
 }

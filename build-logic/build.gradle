@@ -1,0 +1,16 @@
+plugins {
+    id 'groovy-gradle-plugin'
+}
+
+def rootProperties = new Properties()
+file('../gradle.properties').withInputStream { rootProperties.load(it) }
+def versionOf = { String key -> rootProperties.getProperty(key) }
+
+dependencies {
+    implementation "com.diffplug.spotless:spotless-plugin-gradle:${versionOf('spotless_plugin_version')}"
+    implementation "net.neoforged:moddev-gradle:${versionOf('moddev_plugin_version')}"
+    implementation "net.ltgt.gradle:gradle-errorprone-plugin:${versionOf('errorprone_plugin_version')}"
+    implementation "com.github.spotbugs.snom:spotbugs-gradle-plugin:${versionOf('spotbugs_plugin_version')}"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)

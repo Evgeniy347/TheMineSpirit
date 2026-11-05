@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 class GameTestHolderGuardTests {
-    private static final Path TEMPLATES = Path.of("src/main/resources/data/theminespirit/structure");
+    private static final Path TEMPLATES = SourceFiles.resource("data/theminespirit/structure");
     private static final Pattern CLASS = Pattern.compile("\\b(?:class|record|enum|interface)\\s+(\\w+)");
     private static final Pattern GAMETEST_METHOD = Pattern.compile("@GameTest\\s*\\(");
     private static final Pattern GAMETEST_ANNOTATION = Pattern.compile("@GameTest\\s*\\(([^)]*)\\)");

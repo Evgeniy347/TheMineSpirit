@@ -39,8 +39,7 @@ class SchemeBuildGuardTests {
     @Test
     void plannedBlocks_ProductionSources_OnlyGroundAndSapling() {
         List<String> found = new ArrayList<>();
-        for (Map.Entry<Path, String> file :
-                SourceFiles.javaUnder(SourceFiles.MAIN).entrySet()) {
+        for (Map.Entry<Path, String> file : SourceFiles.allMain().entrySet()) {
             found.addAll(violations(file.getKey().getFileName().toString(), file.getValue()));
         }
         assertEquals(List.of(), found, HOW);

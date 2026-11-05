@@ -16,9 +16,8 @@ import org.junit.jupiter.api.Test;
 class NavigationReadOnlyGuardTests {
     private static final Set<String> MUTATIONS =
             Set.of("setBlock", "destroyBlock", "placeBlock", "removeBlock", "BlockBreaker", "BlockPlacer");
-    private static final List<Path> SOURCES = List.of(
-            Path.of("src/main/java/com/theminespirit/core/navigation"),
-            Path.of("src/main/java/com/theminespirit/neoforge/movement/LevelNavWorld.java"));
+    private static final List<Path> SOURCES =
+            List.of(SourceFiles.path("core/navigation"), SourceFiles.path("neoforge/movement/LevelNavWorld.java"));
 
     @Test
     void navigationSources_WorldMutationApis_AreAbsent() {

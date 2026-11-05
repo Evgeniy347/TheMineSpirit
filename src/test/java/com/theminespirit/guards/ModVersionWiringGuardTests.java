@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class ModVersionWiringGuardTests {
     private static final Path BUILD = Path.of("build.gradle");
     private static final Path PROPERTIES = Path.of("gradle.properties");
-    private static final Path TEMPLATE = Path.of("src/main/templates/META-INF/neoforge.mods.toml");
+    private static final Path TEMPLATE = SourceFiles.TEMPLATES.resolve("META-INF/neoforge.mods.toml");
 
     @Test
     void buildGradle_BuildNumber_ComesFromGitOrExplicitProperty() throws IOException {

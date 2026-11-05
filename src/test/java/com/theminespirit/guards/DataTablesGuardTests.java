@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 class DataTablesGuardTests {
-    private static final Path DATA_ROOT = Path.of("src/main/resources/data/theminespirit");
+    private static final Path DATA_ROOT = SourceFiles.resource("data/theminespirit");
 
     private static final Map<String, String> EXCLUDED = Map.of(
             "data/theminespirit/schematics/buildings.json",
@@ -77,7 +77,7 @@ class DataTablesGuardTests {
         List<String> missing = new ArrayList<>();
 
         for (String path : registeredPaths) {
-            Path filePath = Path.of("src/main/resources/" + path);
+            Path filePath = SourceFiles.resource(path);
             if (!Files.isRegularFile(filePath)) {
                 missing.add(path);
             }

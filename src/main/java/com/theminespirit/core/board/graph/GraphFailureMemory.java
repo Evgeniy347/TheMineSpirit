@@ -7,42 +7,76 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 import org.jspecify.annotations.Nullable;
 
 public final class GraphFailureMemory {
-    public static final long WINDOW_TICKS = 6000L;
+    public static final double DEFAULT_HALF_LIFE_TICKS = 3000.0;
     private static final int MAX_COUNT = 999;
     private static final int MAX_ENTRIES = 128;
+    private static final int MAX_TICKS = 32;
+    private static final double MIN_WEIGHT = 1e-3;
     private static final char KEY_SEPARATOR = '\u0000';
 
     private final Map<String, Entry> entries = new LinkedHashMap<>();
 
-    private record Entry(String node, String target, int count, GraphFeedback.Cause cause, long lastTick) {}
+    private record Entry(
+            String node, String target, GraphFeedback.Cause cause, long lastTick, List<Long> ticks, int count) {
+        double weight(long now, double halfLife) {
+            double total = 0.0;
+            for (long tick : ticks) {
+                total += Math.pow(0.5, (now - tick) / halfLife);
+            }
+            int older = count - ticks.size();
+            if (older > 0) {
+                long oldest = ticks.isEmpty() ? lastTick : ticks.get(0);
+                total += older * Math.pow(0.5, (now - oldest) / halfLife);
+            }
+            return total;
+        }
+    }
 
     public void note(String node, String target, @Nullable String reason, long now) {
         Objects.requireNonNull(node, "Узел провала не может быть null: память адресная");
         Objects.requireNonNull(target, "Цель провала не может быть null: неизвестную задают пустой строкой");
-        if (now < 0) {
-            throw new IllegalArgumentException("Тик провала " + now + " отрицателен: время идёт вперёд");
-        }
-        prune(now);
-        String key = node + KEY_SEPARATOR + target;
-        Entry previous = entries.get(key);
-        int count = previous == null ? 1 : Math.min(MAX_COUNT, previous.count() + 1);
-        entries.put(key, new Entry(node, target, count, GraphFeedback.Cause.of(reason), now));
-        while (entries.size() > MAX_ENTRIES) {
-            Iterator<String> oldest = entries.keySet().iterator();
-            oldest.next();
-            oldest.remove();
-        }
+        requireTick(now, "провала");
+        Entry previous = entries.get(node + KEY_SEPARATOR + target);
+        GraphFeedback.Cause cause = GraphFeedback.Cause.of(reason);
+        Entry next = previous == null
+                ? new Entry(node, target, cause, now, List.of(now), 1)
+                : new Entry(
+                        previous.node(),
+                        previous.target(),
+                        cause,
+                        now,
+                        withTick(previous.ticks(), now),
+                        Math.min(MAX_COUNT, previous.count() + 1));
+        entries.put(node + KEY_SEPARATOR + target, next);
+        trim();
     }
 
-    public List<GraphFeedback.Failure> facts(long now) {
-        prune(now);
+    public void succeed(String node, String target, long now) {
+        Objects.requireNonNull(node, "Узел успеха не может быть null: память адресная");
+        Objects.requireNonNull(target, "Цель успеха не может быть null: неизвестную задают пустой строкой");
+        requireTick(now, "успеха");
+        entries.remove(node + KEY_SEPARATOR + target);
+    }
+
+    public List<GraphFeedback.Failure> facts(long now, double halfLifeTicks) {
+        requireTick(now, "чтения памяти");
+        requireHalfLife(halfLifeTicks);
         List<GraphFeedback.Failure> facts = new ArrayList<>(entries.size());
-        for (Entry entry : entries.values()) {
+        Iterator<Entry> known = entries.values().iterator();
+        while (known.hasNext()) {
+            Entry entry = known.next();
+            double weight = entry.weight(now, halfLifeTicks);
+            if (weight < MIN_WEIGHT) {
+                known.remove();
+                continue;
+            }
             facts.add(new GraphFeedback.Failure(
-                    entry.node(), entry.target(), entry.count(), entry.cause(), entry.lastTick()));
+                    entry.node(), entry.target(), entry.count(), entry.cause(), entry.lastTick(), weight));
         }
         facts.sort((one, two) -> {
             int byTime = Long.compare(two.lastTick(), one.lastTick());
@@ -51,33 +85,75 @@ public final class GraphFailureMemory {
         return List.copyOf(facts);
     }
 
-    public Optional<GraphFeedback.Failure> recent(String node, String target, long now) {
-        prune(now);
-        Entry entry = entries.get(node + KEY_SEPARATOR + target);
-        return entry == null
-                ? Optional.empty()
-                : Optional.of(new GraphFeedback.Failure(
-                        entry.node(), entry.target(), entry.count(), entry.cause(), entry.lastTick()));
+    public List<GraphFeedback.Failure> facts(long now) {
+        return facts(now, DEFAULT_HALF_LIFE_TICKS);
     }
 
-    public int count(String node, long now) {
-        prune(now);
-        int total = 0;
-        for (Entry entry : entries.values()) {
-            if (entry.node().equals(node)) {
-                total += entry.count();
+    public Optional<GraphFeedback.Failure> recent(String node, String target, long now, double halfLifeTicks) {
+        return facts(now, halfLifeTicks).stream()
+                .filter(failure ->
+                        failure.node().equals(node) && failure.target().equals(target))
+                .findFirst();
+    }
+
+    public Optional<GraphFeedback.Failure> recent(String node, String target, long now) {
+        return recent(node, target, now, DEFAULT_HALF_LIFE_TICKS);
+    }
+
+    public Set<String> unreachableTargets(String node, long now, double halfLifeTicks) {
+        Objects.requireNonNull(node, "Узел памяти не может быть null: недостижимость адресная");
+        Set<String> targets = new TreeSet<>();
+        for (GraphFeedback.Failure failure : facts(now, halfLifeTicks)) {
+            if (failure.node().equals(node) && unreachable(failure.cause()) && failure.weight() > 0) {
+                targets.add(failure.target());
             }
         }
-        return total;
+        return Set.copyOf(targets);
     }
 
     public boolean isEmpty() {
         return entries.isEmpty();
     }
 
-    private void prune(long now) {
-        long oldest = now - WINDOW_TICKS;
-        entries.values().removeIf(entry -> entry.lastTick() <= oldest);
+    public static boolean unreachable(GraphFeedback.Cause cause) {
+        return cause == GraphFeedback.Cause.NO_PATH || cause == GraphFeedback.Cause.NOT_REACHED;
+    }
+
+    private static List<Long> withTick(List<Long> ticks, long now) {
+        List<Long> next = new ArrayList<>(ticks.size() + 1);
+        next.addAll(ticks);
+        next.add(now);
+        if (next.size() > MAX_TICKS) {
+            next.remove(0);
+        }
+        return List.copyOf(next);
+    }
+
+    private void trim() {
+        while (entries.size() > MAX_ENTRIES) {
+            String oldestKey = null;
+            long oldestTick = Long.MAX_VALUE;
+            for (Map.Entry<String, Entry> entry : entries.entrySet()) {
+                if (entry.getValue().lastTick() < oldestTick) {
+                    oldestTick = entry.getValue().lastTick();
+                    oldestKey = entry.getKey();
+                }
+            }
+            entries.remove(oldestKey);
+        }
+    }
+
+    private static void requireTick(long now, String what) {
+        if (now < 0) {
+            throw new IllegalArgumentException("Тик " + what + " " + now + " отрицателен: время идёт вперёд");
+        }
+    }
+
+    private static void requireHalfLife(double halfLifeTicks) {
+        if (!Double.isFinite(halfLifeTicks) || halfLifeTicks <= 0) {
+            throw new IllegalArgumentException("Полураспад памяти неудач " + halfLifeTicks
+                    + " тиков: штраф затухает, поэтому полураспад положителен");
+        }
     }
 
     public static @Nullable String node(String ticketId, @Nullable String cause) {

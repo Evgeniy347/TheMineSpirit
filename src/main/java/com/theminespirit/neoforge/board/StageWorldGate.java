@@ -6,6 +6,7 @@ import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.StageGate;
 import com.theminespirit.core.board.StageWorld;
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphFeedback;
 import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.board.graph.GraphStageGate;
 import com.theminespirit.core.board.graph.GraphWorldFacts;
@@ -138,7 +139,8 @@ final class StageWorldGate {
                         area.buildings(),
                         area.strays(),
                         area.terrain(),
-                        new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
+                        new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
+                        GraphFeedback.none());
     }
 
     private static String graphId(BoardCase boardCase) {

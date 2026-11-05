@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 class ActionCardGuardTests {
-    private static final Path NEOFORGE = SourceFiles.MAIN.resolve("com/theminespirit/neoforge");
+    private static final Path NEOFORGE = SourceFiles.path("neoforge");
     private static final Pattern REGISTERED = Pattern.compile("\\.put\\(\\s*\"([a-z][a-z_]*)\"\\s*,\\s*spirit\\s*->");
     private static final String RULE = "Каждый скрипт духа обязан иметь кейс карточки доски (BoardActivities): "
             + "иначе действие идёт без видимой карточки, и владелец не знает, чем занят дух. "

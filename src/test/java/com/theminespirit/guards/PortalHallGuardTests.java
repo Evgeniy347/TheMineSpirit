@@ -26,8 +26,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class PortalHallGuardTests {
-    private static final Path FILE =
-            Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT + "portal_hall_1.txt");
+    private static final Path FILE = SourceFiles.resource(PresetLibrary.SCHEMATICS_ROOT + "portal_hall_1.txt");
     private static final Set<String> STONE_SHELL = Set.of("stone", "stone_bricks", "stone_slab", "obsidian", "torch");
     private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 

@@ -21,7 +21,7 @@ class EntityRendererGuardTests {
 
     @Test
     void modEntityType_WithoutClientRenderer_IsReported() {
-        Map<Path, String> sources = SourceFiles.javaUnder(SourceFiles.MAIN);
+        Map<Path, String> sources = SourceFiles.allMain();
 
         assertEquals(
                 List.of(),
@@ -36,8 +36,7 @@ class EntityRendererGuardTests {
     @Test
     void rendererRegistration_OutsideClientOnlySubscriber_IsReported() {
         List<String> offenders = new ArrayList<>();
-        for (Map.Entry<Path, String> source :
-                SourceFiles.javaUnder(SourceFiles.MAIN).entrySet()) {
+        for (Map.Entry<Path, String> source : SourceFiles.allMain().entrySet()) {
             if (!renderers(List.of(source.getValue())).isEmpty()
                     && !source.getValue().contains(CLIENT_ONLY_SUBSCRIBER)) {
                 offenders.add(source.getKey().toString());

@@ -13,3 +13,11 @@ pluginManagement {
 plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
+
+rootProject.name = 'the-mine-spirit'
+
+includeBuild('build-logic')
+
+include ':api'
+include ':board'
+include ':mod'

@@ -17,7 +17,7 @@ class SilentCatchGuardTests {
     @Test
     void productionSources_Scanned_HaveNoEmptyCatchBlocks() {
         List<String> offenders = new ArrayList<>();
-        SourceFiles.javaUnder(SourceFiles.MAIN).forEach((file, text) -> {
+        SourceFiles.allMain().forEach((file, text) -> {
             Matcher matcher = EMPTY_CATCH.matcher(text);
             while (matcher.find()) {
                 offenders.add(file + ":" + SourceFiles.lineOf(text, matcher.start()));
@@ -36,7 +36,7 @@ class SilentCatchGuardTests {
     @Test
     void productionSources_Scanned_HaveNoCatchThatOnlyRethrows() {
         List<String> offenders = new ArrayList<>();
-        SourceFiles.javaUnder(SourceFiles.MAIN).forEach((file, text) -> {
+        SourceFiles.allMain().forEach((file, text) -> {
             Matcher matcher = RETHROW_ONLY_CATCH.matcher(text);
             while (matcher.find()) {
                 offenders.add(file + ":" + SourceFiles.lineOf(text, matcher.start()));

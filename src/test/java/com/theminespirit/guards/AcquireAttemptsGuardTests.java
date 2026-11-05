@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 class AcquireAttemptsGuardTests {
-    private static final Path NEOFORGE = SourceFiles.MAIN.resolve("com/theminespirit/neoforge");
+    private static final Path NEOFORGE = SourceFiles.path("neoforge");
     private static final Pattern ATTEMPT_CONSTANT =
             Pattern.compile("static\\s+final\\s+int\\s+\\w*ACQUIRE\\w*ATTEMPT\\w*\\s*=", Pattern.CASE_INSENSITIVE);
 

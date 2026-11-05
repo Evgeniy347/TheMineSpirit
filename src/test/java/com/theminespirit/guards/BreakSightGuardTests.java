@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 class BreakSightGuardTests {
-    private static final Path NEOFORGE = Path.of("src/main/java/com/theminespirit/neoforge");
+    private static final Path NEOFORGE = SourceFiles.path("neoforge");
     private static final Pattern DIRECT_DESTROY = Pattern.compile("\\b(?:destroyBlock|destroyBlockProgress)\\s*\\(");
     private static final Pattern UNLIMITED = Pattern.compile("\\.begin(?:AnyDistance|Chop)\\s*\\(");
     private static final Pattern CLEAR_AIR = Pattern.compile("setBlock\\([^;]*Blocks\\.AIR\\b");
