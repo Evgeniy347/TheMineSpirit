@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.EatNeed;
 import com.theminespirit.core.board.SpiritView;
+import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolGate;
 import com.theminespirit.core.engine.RunStatus;
@@ -24,16 +25,25 @@ final class DispatchPick {
     private final DispatchRound round;
     private final Map<UUID, SpiritEntity> entities = new LinkedHashMap<>();
     private final Map<UUID, DispatchRound.Candidate> candidates = new LinkedHashMap<>();
+    private final List<String> stockTools;
 
-    DispatchPick(DispatchRound round, List<SpiritEntity> spirits) {
+    DispatchPick(DispatchRound round, List<SpiritEntity> spirits, StockView stock) {
         this.round = round;
+        this.stockTools = stockTools(stock);
         for (SpiritEntity spirit : spirits) {
             entities.put(spirit.getUUID(), spirit);
-            candidates.put(spirit.getUUID(), candidate(spirit));
+            candidates.put(spirit.getUUID(), candidate(spirit, stockTools));
             round.board()
                     .stuck()
                     .see(spirit.getUUID(), at(spirit), round.board().now());
         }
+    }
+
+    static List<String> stockTools(StockView stock) {
+        return stock.available().entrySet().stream()
+                .filter(entry -> entry.getValue() > 0)
+                .map(Map.Entry::getKey)
+                .toList();
     }
 
     private static BlockCoord at(SpiritEntity spirit) {
@@ -92,6 +102,9 @@ final class DispatchPick {
         String supply = target == null ? null : target.supplyItem();
         List<DispatchRound.Candidate> all = new ArrayList<>(candidates.values());
         boolean tooled = all.stream().anyMatch(spirit -> ToolGate.allows(ticket, spirit.items()));
+        if (!tooled) {
+            tooled = ToolGate.allowsFromStock(ticket, stockTools);
+        }
         if (!all.isEmpty() && !tooled && ToolGate.required(ticket).isPresent()) {
             return "нет духа с инструментом: ждёт инструмент (граф ставит его крафт духу без инструмента)";
         }
@@ -100,7 +113,7 @@ final class DispatchPick {
 
     private void refresh() {
         for (SpiritEntity spirit : entities.values()) {
-            candidates.put(spirit.getUUID(), candidate(spirit));
+            candidates.put(spirit.getUUID(), candidate(spirit, stockTools));
         }
     }
 
@@ -113,6 +126,10 @@ final class DispatchPick {
     }
 
     static DispatchRound.Candidate candidate(SpiritEntity spirit) {
+        return candidate(spirit, List.of());
+    }
+
+    static DispatchRound.Candidate candidate(SpiritEntity spirit, List<String> stockTools) {
         RunStatus status = spirit.taskStatus().orElse(null);
         boolean running =
                 status == RunStatus.RUNNING || spirit.currentTaskScript().isPresent();
@@ -133,6 +150,7 @@ final class DispatchPick {
                         spirit.hunger().foodLevel(), (int) Math.ceil(spirit.getHealth()), SpiritHunger.MAX_FOOD, (int)
                                 Math.ceil(spirit.getMaxHealth())),
                 new SpiritView(control, false, status == RunStatus.RUNNING),
-                spirit.isInWater());
+                spirit.isInWater(),
+                stockTools);
     }
 }
