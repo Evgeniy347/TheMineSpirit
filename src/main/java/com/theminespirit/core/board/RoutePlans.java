@@ -40,6 +40,7 @@ final class RoutePlans {
             steps.add(new ScriptCall(
                     ACQUIRE, Map.of(ITEM, full(plan.block()), COUNT, Math.min(left, CatalogLimits.COUNT_MAX))));
         }
+        steps.add(GatherPlans.shovel());
         plan.cutTopDown().forEach(box -> steps.add(new ScriptCall(CLEAR_AREA, boxParams(box, null))));
         plan.fill().forEach(box -> steps.add(new ScriptCall(FILL, boxParams(box, plan.block()))));
         return new SequenceNode(steps);
@@ -51,6 +52,7 @@ final class RoutePlans {
         List<TaskNode> steps = new ArrayList<>();
         BlockCoord dig = target.from() == null ? target.target() : target.from();
         steps.add(PlanSteps.gotoPoint(dig));
+        steps.add(GatherPlans.shovel());
         plan.cutTopDown().forEach(box -> steps.add(new ScriptCall(CLEAR_AREA, boxParams(box, null))));
         steps.add(new ScriptCall("collect_drops", Map.of(RADIUS, CatalogLimits.DROP_RADIUS_MAX)));
         steps.add(PlanSteps.gotoPoint(target.target()));

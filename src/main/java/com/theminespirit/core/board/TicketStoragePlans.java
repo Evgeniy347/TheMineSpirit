@@ -89,6 +89,7 @@ final class TicketStoragePlans {
         if (COAL.equals(item)) {
             return new SequenceNode(List.of(
                     TicketPlans.gotoTarget(target),
+                    GatherPlans.pickaxe(),
                     new ScriptCall(
                             "mine_vein",
                             Map.of(
@@ -102,6 +103,7 @@ final class TicketStoragePlans {
         if (COBBLESTONE.equals(item)) {
             return new SequenceNode(List.of(
                     TicketPlans.gotoTarget(target),
+                    GatherPlans.pickaxe(),
                     new ScriptCall(
                             "gather", Map.of(BLOCK, "stone", COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX))));
         }
