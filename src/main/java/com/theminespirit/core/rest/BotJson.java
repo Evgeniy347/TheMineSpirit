@@ -36,6 +36,7 @@ public final class BotJson {
         map.put("position_tick", bot.positionTick());
         map.put("state_since_tick", bot.stateSinceTick());
         map.put("food", bot.food());
+        map.put("inventory", bot.inventory());
         return map;
     }
 

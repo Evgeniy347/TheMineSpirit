@@ -67,6 +67,7 @@ final class GraphInputs {
                                 scan,
                                 town,
                                 BuildingAuditInputs.buildings(level, service, scan, buildings, town))));
+        GraphStockNote.log(facts, spirits);
         GraphState state = new GraphState(
                         GraphNames.stock(
                                 stock.available(),
