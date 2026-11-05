@@ -313,11 +313,11 @@ public record SupplyGraph(
     }
 
     public Optional<Way> way(String id) {
-        return ways.stream().filter(way -> way.id().equals(id)).findFirst();
+        return Optional.ofNullable(GraphWayIndex.of(ways).byId().get(id));
     }
 
     public List<Way> producers(String node) {
-        return ways.stream().filter(way -> way.makes().equals(node)).toList();
+        return GraphWayIndex.of(ways).byMakes().getOrDefault(node, List.of());
     }
 
     public boolean isTool(String node) {

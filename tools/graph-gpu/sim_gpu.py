@@ -816,14 +816,8 @@ def _solve_direct(flows, device):
     matrix = flat_matrix.view(count, size, size)
     matrix += torch.eye(size, dtype=torch.float64, device=device)
     value = base.clone()
-    active = torch.ones(count, dtype=torch.bool, device=device)
     for _ in range(MAX_ITERATIONS):
-        moved = base + value - torch.bmm(matrix, value.unsqueeze(-1)).squeeze(-1)
-        delta = (moved - value).abs().amax(dim=1)
-        value = torch.where(active.unsqueeze(1), moved, value)
-        active = active & (delta >= EPSILON)
-        if not bool(active.any()):
-            break
+        value = base + value - torch.bmm(matrix, value.unsqueeze(-1)).squeeze(-1)
     solved = value.cpu().tolist()
     return [{key: solved[row][idx] + flow.locals.get(key, 0.0)
              for key, idx in flow.index.items()} for row, flow in enumerate(flows)]

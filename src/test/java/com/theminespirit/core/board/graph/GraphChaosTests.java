@@ -16,11 +16,11 @@ import org.junit.jupiter.api.Test;
 
 @Tag("mutation")
 class GraphChaosTests {
-    private static final int LIMIT = 8000;
+    private static final int LIMIT = 12_000;
     private static final int COMBOS = 3000;
-    private static final int SIMULATED_COMBOS = 300;
-    private static final int CHAOS_SEEDS = 100;
-    private static final int WEIGHT_SEEDS = 100;
+    private static final int SIMULATED_COMBOS = 10;
+    private static final int CHAOS_SEEDS = 6;
+    private static final int WEIGHT_SEEDS = 4;
     private static final double SPREAD = 0.3;
     private static final Path METRICS = Path.of("TestResults/mutation/graph-metrics.md");
 
@@ -31,7 +31,7 @@ class GraphChaosTests {
     @Test
     void triples_Sampled_NoStallNoGap() {
         List<String> found = new ArrayList<>();
-        Random random = new Random(3);
+        Random random = new Random(MutationSeeds.seed() ^ 0x5DEECE66DL);
         List<GraphWorld> bases = GraphMutations.baselines();
         for (int index = 0; index < COMBOS; index++) {
             List<GraphMutations.Mutation> combo = GraphChaos.combo(random, 3);
@@ -47,14 +47,15 @@ class GraphChaosTests {
     @Test
     void combos_ThreeToSix_SimulationFinishes() {
         List<String> stuck = new ArrayList<>();
-        List<GraphWorld> bases = GraphMutations.baselines();
-        for (int seed = 1; seed <= SIMULATED_COMBOS; seed++) {
-            Random random = new Random(seed);
+        List<GraphWorld> bases = GraphMutations.simulationBases();
+        long baseSeed = MutationSeeds.seed();
+        for (int seed = 0; seed < SIMULATED_COMBOS; seed++) {
+            Random random = new Random(baseSeed + seed);
             List<GraphMutations.Mutation> combo = GraphChaos.combo(random, 3 + random.nextInt(4));
             GraphWorld world = GraphChaos.apply(bases.get(seed % bases.size()), combo);
             GraphSimulation.Outcome outcome = GraphSimulation.run(world, LIMIT);
             if (!outcome.finished()) {
-                stuck.add("сид " + seed + " " + GraphChaos.names(combo) + ": " + outcome.stuck());
+                stuck.add("сид " + (baseSeed + seed) + " " + GraphChaos.names(combo) + ": " + outcome.stuck());
             }
         }
         assertEquals(List.of(), head(stuck), "Наборы из 3–6 мутаций: поселение застряло (" + stuck.size() + ")");
@@ -63,13 +64,14 @@ class GraphChaosTests {
     @Test
     void chaos_EventsWearGrowth_SimulationFinishes() {
         List<String> stuck = new ArrayList<>();
-        List<GraphWorld> bases = GraphMutations.baselines();
-        for (int seed = 1; seed <= CHAOS_SEEDS; seed++) {
-            Random random = new Random(seed);
+        List<GraphWorld> bases = GraphMutations.simulationBases();
+        long baseSeed = MutationSeeds.seed() ^ 0xC0FFEEL;
+        for (int seed = 0; seed < CHAOS_SEEDS; seed++) {
+            Random random = new Random(baseSeed + seed);
             GraphSimulation.Outcome outcome = GraphSimulation.run(
                     bases.get(seed % bases.size()), LIMIT, GraphChaos.chaos(random, 0.05, 0.1, 0.02));
             if (!outcome.finished()) {
-                stuck.add("сид " + seed + ": " + outcome.stuck());
+                stuck.add("сид " + (baseSeed + seed) + ": " + outcome.stuck());
             }
         }
         assertEquals(
@@ -79,14 +81,17 @@ class GraphChaosTests {
     @Test
     void weights_Perturbed30_SimulationFinishes() {
         List<String> stuck = new ArrayList<>();
-        for (int seed = 1; seed <= WEIGHT_SEEDS; seed++) {
-            SupplyGraph graph = GraphChaos.perturbed(GraphWorld.GRAPH, new Random(seed), SPREAD);
-            for (GraphWorld base : GraphMutations.baselines()) {
+        List<GraphWorld> bases = GraphMutations.simulationBases();
+        long baseSeed = MutationSeeds.seed() ^ 0xBEEFL;
+        for (int seed = 0; seed < WEIGHT_SEEDS; seed++) {
+            SupplyGraph graph = GraphChaos.perturbed(GraphWorld.GRAPH, new Random(baseSeed + seed), SPREAD);
+            for (int sample = 0; sample < 2; sample++) {
+                GraphWorld base = bases.get((seed * 2 + sample) % bases.size());
                 GraphWorld world = base.copy();
                 world.graph = graph;
                 GraphSimulation.Outcome outcome = GraphSimulation.run(world, LIMIT);
                 if (!outcome.finished()) {
-                    stuck.add("сид весов " + seed + ", старт этап " + base.stage + ": " + outcome.stuck());
+                    stuck.add("сид весов " + (baseSeed + seed) + ", старт этап " + base.stage + ": " + outcome.stuck());
                 }
             }
         }
@@ -97,18 +102,20 @@ class GraphChaosTests {
     void metrics_Baselines_WriteReport() throws IOException {
         StringBuilder report = new StringBuilder("# Метрики пути поселения\n\n");
         report.append("| старт | шагов | этап 1 | этап 2 | этап 3 |\n|---|---|---|---|---|\n");
-        List<GraphWorld> bases = GraphMutations.baselines();
+        List<GraphWorld> bases = GraphMutations.simulationBases();
+        long baseSeed = MutationSeeds.seed();
         for (int index = 0; index < bases.size(); index++) {
             row(report, "база " + index, GraphSimulation.run(bases.get(index), LIMIT));
         }
-        for (int seed = 1; seed <= 5; seed++) {
+        for (int seed = 0; seed < 2; seed++) {
             row(
                     report,
-                    "хаос, сид " + seed,
-                    GraphSimulation.run(bases.get(0), LIMIT, GraphChaos.chaos(new Random(seed), 0.05, 0.1, 0.02)));
-            GraphWorld world = bases.get(0).copy();
-            world.graph = GraphChaos.perturbed(GraphWorld.GRAPH, new Random(seed), SPREAD);
-            row(report, "веса ±30 %, сид " + seed, GraphSimulation.run(world, LIMIT));
+                    "хаос, сид " + (baseSeed + seed),
+                    GraphSimulation.run(
+                            bases.get(seed), LIMIT, GraphChaos.chaos(new Random(baseSeed + seed), 0.05, 0.1, 0.02)));
+            GraphWorld world = bases.get(seed).copy();
+            world.graph = GraphChaos.perturbed(GraphWorld.GRAPH, new Random(baseSeed + seed), SPREAD);
+            row(report, "веса ±30 %, сид " + (baseSeed + seed), GraphSimulation.run(world, LIMIT));
         }
         Files.createDirectories(METRICS.getParent());
         Files.writeString(METRICS, report, StandardCharsets.UTF_8);

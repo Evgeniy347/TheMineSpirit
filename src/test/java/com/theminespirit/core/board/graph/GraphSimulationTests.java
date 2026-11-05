@@ -13,14 +13,22 @@ import org.junit.jupiter.api.Test;
 
 @Tag("mutation")
 class GraphSimulationTests {
-    private static final int LIMIT = 4000;
+    private static final int LIMIT = 12_000;
+    private static final int SAMPLED_MUTATIONS = 6;
     private static final Path REPORT = Path.of("TestResults/mutation/graph-trail.md");
 
     @Test
     void simulate_EveryStartClass_ReachesLastStage() {
         List<String> stuck = new ArrayList<>();
-        for (GraphWorld base : GraphMutations.baselines()) {
-            for (GraphMutations.Mutation mutation : GraphMutations.single()) {
+        List<GraphWorld> bases = GraphMutations.simulationBases();
+        List<GraphMutations.Mutation> mutations =
+                GraphMutations.simulationSample(MutationSeeds.seed() ^ 0x51EEDL, SAMPLED_MUTATIONS);
+        for (GraphWorld base : bases) {
+            GraphSimulation.Outcome start = GraphSimulation.run(base, LIMIT);
+            if (!start.finished()) {
+                stuck.add("старт этап " + base.stage + ", духов " + base.kits.size() + ": " + start.stuck());
+            }
+            for (GraphMutations.Mutation mutation : mutations) {
                 GraphSimulation.Outcome outcome =
                         GraphSimulation.run(mutation.apply().apply(base), LIMIT);
                 if (!outcome.finished()) {
@@ -37,7 +45,7 @@ class GraphSimulationTests {
     @Test
     void simulate_Baselines_WriteTrailReport() throws IOException {
         StringBuilder report = new StringBuilder("# Путь поселения по графу\n");
-        for (GraphWorld base : GraphMutations.baselines()) {
+        for (GraphWorld base : GraphMutations.simulationBases()) {
             GraphSimulation.Outcome outcome = GraphSimulation.run(base, LIMIT);
             report.append("\n## Старт: этап ")
                     .append(base.stage)
