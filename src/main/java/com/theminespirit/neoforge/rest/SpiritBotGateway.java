@@ -24,6 +24,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,8 +32,10 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import org.jspecify.annotations.Nullable;
 
@@ -170,7 +173,26 @@ public final class SpiritBotGateway implements BotGateway {
                 positionTick(spirit, position),
                 activity,
                 script,
-                stateSince(spirit.getUUID(), state, activity, script, now));
+                stateSince(spirit.getUUID(), state, activity, script, now),
+                inventory(spirit));
+    }
+
+    private static Map<String, Integer> inventory(SpiritEntity spirit) {
+        Map<String, Integer> items = new LinkedHashMap<>();
+        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
+            add(items, spirit.getInventory().getItem(slot));
+        }
+        if (spirit.mainHandOwned()) {
+            add(items, spirit.getMainHandItem());
+        }
+        return Map.copyOf(items);
+    }
+
+    private static void add(Map<String, Integer> items, ItemStack stack) {
+        if (!stack.isEmpty()) {
+            String id = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+            items.merge(id, stack.getCount(), Integer::sum);
+        }
     }
 
     private static @Nullable BotBoardTask boardTask(SpiritEntity spirit) {

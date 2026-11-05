@@ -23,7 +23,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
-final class GraphFactInputs {
+public final class GraphFactInputs {
     private GraphFactInputs() {}
 
     static GraphFacts of(
@@ -79,7 +79,7 @@ final class GraphFactInputs {
                 spirit.blockPosition().getZ());
     }
 
-    private static Map<String, Integer> inventory(SpiritEntity spirit) {
+    public static Map<String, Integer> inventory(SpiritEntity spirit) {
         Map<String, Integer> inventory = new LinkedHashMap<>();
         for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
             addItem(inventory, spirit.getInventory().getItem(slot));
@@ -108,7 +108,7 @@ final class GraphFactInputs {
         return armor;
     }
 
-    private static List<GraphFacts.Tool> tools(SpiritEntity spirit, SupplyGraph graph) {
+    public static List<GraphFacts.Tool> tools(SpiritEntity spirit, SupplyGraph graph) {
         List<GraphFacts.Tool> tools = new ArrayList<>();
         for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
             addTool(tools, spirit.getInventory().getItem(slot), graph);
