@@ -184,10 +184,8 @@ public final class FirstStepsRunner {
         BoardCase caseValue = order.caseValue();
         StageSite stage = post.scan.stage();
         boolean blocked = post.scan.facts().blocked().contains(caseValue);
-        String wood = blocked
-                ? BuildingWoodChoice.stored(level, caseValue, stage, post.scan.wood())
-                : BuildingWoodChoice.settle(
-                        level, post.service, caseValue, stage, post.stock.available(), post.scan.wood(), post.now);
+        String wood = BuildingWoodChoice.settle(
+                level, post.service, caseValue, stage, post.stock.available(), post.scan.wood(), post.now);
         TicketTarget target = targetFor(level, caseValue, stage, wood);
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
             target = target.withLeveling(leveling(level, stage));
@@ -316,7 +314,6 @@ public final class FirstStepsRunner {
         }
         if (StageAudit.unbuilt(missing, gap.total(), BoardTuning.rebuildPercent())) {
             PlotTrace.reportGap(level, caseValue, step.target(), step.wood(), missing, gap.total(), true);
-            BuildingWoodChoice.rebuilt(level, caseValue, work.site());
             StageClose.reopen(service, caseValue, parts);
             return false;
         }

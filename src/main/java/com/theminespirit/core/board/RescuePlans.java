@@ -12,14 +12,99 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 public final class RescuePlans {
     public static final String GOTO = "goto";
     public static final String CLEAR_AREA = "clear_area";
     public static final String WAIT = "wait";
+    public static final String NODE = "graph:rescue_spirit";
+    private static final String ID_PREFIX = "rescue:";
+
+    public enum Self {
+        NONE,
+        PIT,
+        WALK,
+        DIG
+    }
+
+    public record Situation(boolean pit, boolean steps, boolean tool, boolean open, boolean noPath) {}
+
+    public enum Mode {
+        SELF,
+        HELPER,
+        IMPOSSIBLE
+    }
+
+    public record Assignment(Mode mode, String cause, Optional<UUID> assignee, String why) {
+        public Assignment {
+            Objects.requireNonNull(mode, "Способ спасения не может быть null: доска ставит билет или отказывает");
+            Objects.requireNonNull(cause, "Причина спасения не может быть null: по ней доска отличает эпизоды");
+            Objects.requireNonNull(assignee, "Исполнитель спасения не может быть null: помощника задают пустым");
+            Objects.requireNonNull(why, "Объяснение спасения не может быть null: без него лог не читается");
+        }
+    }
 
     private RescuePlans() {}
+
+    public static Assignment assign(UUID stuck, long since, @Nullable String selfRefusal, boolean helperAvailable) {
+        Objects.requireNonNull(stuck, "Застрявший дух не может быть null: спасение адресное");
+        String cause = cause(since);
+        if (selfRefusal == null) {
+            return new Assignment(Mode.SELF, cause, Optional.of(stuck), "выходит сам: план выхода есть");
+        }
+        if (helperAvailable) {
+            return new Assignment(
+                    Mode.HELPER,
+                    cause,
+                    Optional.empty(),
+                    "сам не выйдет (" + selfRefusal + "): назначается свободный помощник");
+        }
+        return new Assignment(
+                Mode.IMPOSSIBLE, cause, Optional.empty(), "невозможно: " + selfRefusal + ", свободного помощника нет");
+    }
+
+    public static String cause(long since) {
+        if (since < 0) {
+            throw new IllegalArgumentException("Тик эпизода " + since
+                    + " отрицателен: причина спасения отличает эпизоды по тику метки, а он идёт вперёд");
+        }
+        return NODE + "@" + since;
+    }
+
+    public static Optional<UUID> rescuee(String ticketId) {
+        Objects.requireNonNull(ticketId, "id задания спасения не может быть null: по нему находят спасённого");
+        if (!ticketId.startsWith(ID_PREFIX)) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(UUID.fromString(ticketId.substring(ID_PREFIX.length())));
+        } catch (IllegalArgumentException broken) {
+            return Optional.empty();
+        }
+    }
+
+    public static void complete(StuckSpirits stuck, BoardTicket ticket, @Nullable UUID holder, long now) {
+        Objects.requireNonNull(stuck, "Метки застревания не могут быть null: спасение снимает одну из них");
+        Objects.requireNonNull(ticket, "Задание спасения не может быть null: по нему находят спасённого");
+        if (ticket.boardCase() != BoardCase.RESCUE_SPIRIT) {
+            return;
+        }
+        rescuee(ticket.id())
+                .or(() -> Optional.ofNullable(holder))
+                .ifPresent(rescuee -> stuck.release(rescuee, now, "выход выполнен заданием " + ticket.id()));
+    }
+
+    public static Self self(Situation situation) {
+        if (situation.pit()) {
+            return situation.steps() || situation.tool() ? Self.PIT : Self.NONE;
+        }
+        if (situation.open() && !situation.noPath()) {
+            return Self.WALK;
+        }
+        return situation.tool() ? Self.DIG : Self.NONE;
+    }
 
     public static Optional<TaskNode> plan(BoardCase boardCase, TicketTarget target) {
         Objects.requireNonNull(boardCase, "Кейс спасения не может быть null: план строится по кейсу");

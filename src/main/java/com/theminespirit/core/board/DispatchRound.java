@@ -111,11 +111,14 @@ public final class DispatchRound {
         if (ticket.boardCase() == BoardCase.DISMANTLE_SHELTER && spirit.wet()) {
             return Optional.of("в воде или под крышей: до стоянки уборки не дойдёт");
         }
-        if (ticket.boardCase() != BoardCase.RESCUE_SPIRIT) {
+        boolean ownRescue = ticket.boardCase() == BoardCase.RESCUE_SPIRIT
+                && ticket.assignee().filter(spirit.id()::equals).isPresent();
+        if (!ownRescue) {
             Optional<StuckSpirits.Stuck> stuck = board.stuck().of(spirit.id(), now);
             if (stuck.isPresent()) {
                 StuckSpirits.Stuck mark = stuck.orElseThrow();
-                return Optional.of("не двигается с тика " + mark.since()
+                return Optional.of((mark.noPath() ? "пути нет: " : "")
+                        + "не двигается с тика " + mark.since()
                         + (mark.at() == null ? "" : " в " + mark.at())
                         + ": ждёт выход из ловушки (граф ставит rescue)");
             }

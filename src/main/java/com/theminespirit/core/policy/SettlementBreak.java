@@ -1,5 +1,7 @@
 package com.theminespirit.core.policy;
 
+import com.theminespirit.core.town.PlanBuilding;
+import com.theminespirit.core.town.PlanBuildings;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -43,10 +45,24 @@ public final class SettlementBreak {
             boolean inPlan,
             String blockId,
             boolean inProtectedZone,
-            boolean unprotectArea) {
+            boolean unprotectArea,
+            PlanBuilding planBuilding,
+            PlanBuilding ownBuilding) {
         public Facts {
             Objects.requireNonNull(origin, "Происхождение блока не может быть null: от него зависит правило");
             Objects.requireNonNull(blockId, "Id блока не может быть null: неизвестно, что проверяем");
+            Objects.requireNonNull(planBuilding, "Постройка клетки не названа: без неё не отличить чужую клетку плана");
+            Objects.requireNonNull(ownBuilding, "Своя постройка не названа: без неё не отличить чужую клетку плана");
+        }
+
+        public Facts(
+                Origin origin,
+                boolean onPlot,
+                boolean inPlan,
+                String blockId,
+                boolean inProtectedZone,
+                boolean unprotectArea) {
+            this(origin, onPlot, inPlan, blockId, inProtectedZone, unprotectArea, PlanBuilding.NONE, PlanBuilding.NONE);
         }
     }
 
@@ -62,11 +78,24 @@ public final class SettlementBreak {
         Objects.requireNonNull(intent, "Намерение ломки не может быть null: от него зависит, трогать ли план");
         Objects.requireNonNull(neighbours, "Соседи не могут быть null: без них не отличить постройку");
         Place place = place(facts.onPlot(), facts.inPlan());
-        if (place == Place.PLAN && intent == Intent.BREAK && facts.origin() == Origin.SPIRIT) {
+        if (place == Place.PLAN
+                && intent == Intent.BREAK
+                && (facts.planBuilding() != PlanBuilding.NONE || facts.origin() == Origin.SPIRIT)) {
             return new BlockProtection.Refused(
                     PolicyId.PROTECTED_BLOCKS,
-                    "блок '" + facts.blockId() + "' в клетке плана постройки поселения: его не добывают и не копают, "
-                            + "снимают только сносом по заданию (observe14: дух рубил стены хижины ради брёвен)");
+                    "блок '" + facts.blockId() + "' в клетке плана постройки поселения (" + facts.planBuilding()
+                            + "): его не добывают и не копают, снимают только сносом по заданию "
+                            + "(observe14: дух рубил стены хижины ради брёвен)");
+        }
+        if (place == Place.PLAN
+                && intent == Intent.DEMOLISH
+                && PlanBuildings.foreign(facts.ownBuilding(), facts.planBuilding())) {
+            return new BlockProtection.Refused(
+                    PolicyId.PROTECTED_BLOCKS,
+                    "блок '" + facts.blockId() + "' принадлежит постройке " + facts.planBuilding()
+                            + ", а задание строит " + facts.ownBuilding()
+                            + ": чужую постройку плана не разбирают (observe23: забор снял стену хижины "
+                            + "в (-178..-176,69,-505), дом 100→94)");
         }
         return switch (of(facts.origin(), place)) {
             case SETTLEMENT -> settlement(protection, facts, neighbours);

@@ -233,10 +233,8 @@ public final class Board {
         UUID holder = holder(ticket);
         if (holder != null) {
             casePauses.reset(holder, ticket.boardCase());
-            if (ticket.boardCase() == BoardCase.RESCUE_SPIRIT) {
-                stuckSpirits.release(holder, nowTicks.getAsLong(), "выход выполнен заданием " + ticketId);
-            }
         }
+        RescuePlans.complete(stuckSpirits, ticket, holder, nowTicks.getAsLong());
         statuses.put(ticketId, BoardStatus.DONE);
         ledger.complete(ticket.boardCase(), ticket.level());
         events.transition(BoardLog.Event.DONE, ticket, claimAssignees.get(ticketId), nowTicks.getAsLong());
