@@ -238,8 +238,7 @@ final class GraphInputs {
             Map<String, Integer> need = FirstStepsRunner.materialsOf(level, stock, scan, building.boardCase());
             materials.put(id, known(graph, source, need));
         }
-        GraphBuildingMaterials.of(facts, graph).forEach(materials::putIfAbsent);
-        return materials;
+        return GraphBuildingMaterials.merged(materials, facts, graph);
     }
 
     private static boolean booked(BoardService service, BoardCase boardCase) {
