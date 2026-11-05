@@ -70,7 +70,7 @@ public final class GraphSource {
         }
         Set<String> signals = GraphSignals.of(events, spirits, service, now);
         if (!cadence.due(now, signals)) {
-            return live();
+            return lastLive;
         }
         SupplyGraph graph = DataTables.INSTANCE.graph().current();
         Optional<FirstStepsRunner.StageScan> scan = FirstStepsRunner.tick(level, service, spirits, stock, now);
@@ -93,7 +93,7 @@ public final class GraphSource {
         GraphTickets.Result result = GraphTickets.of(graph, state, plan);
         pending = new Half(
                 level, service, spirits, stock, stageScan, around, state, plan, graph, result, now, deep, signals);
-        return live();
+        return lastLive;
     }
 
     private Set<String> finish(Half half) {
@@ -106,6 +106,7 @@ public final class GraphSource {
                 half.graph(),
                 half.now());
         List<String> unconnected = new ArrayList<>();
+        GraphStanding.seed(post, half.plan().tasks(), half.result().live());
         for (GraphTickets.Ticket ticket : half.result().post()) {
             BoardStatus status = half.service().board().statusOf(ticket.id()).orElse(null);
             if (status == BoardStatus.DONE) {
@@ -153,10 +154,6 @@ public final class GraphSource {
         cadence.finished(half.now(), half.signals());
         lastLive = post.live(half.result().live());
         pending = null;
-        return live();
-    }
-
-    private Set<String> live() {
         return lastLive;
     }
 

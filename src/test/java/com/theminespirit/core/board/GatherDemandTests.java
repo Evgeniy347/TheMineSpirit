@@ -66,6 +66,43 @@ class GatherDemandTests {
     }
 
     @Test
+    void onePerWood_StrippedLogAndPlainLog_PlainLogWins() {
+        List<GatherDemand.Need> merged = GatherDemand.onePerWood(List.of(
+                need("graph:strip_jungle_log", "stripped_jungle_log", 32, 90),
+                need("graph:chop_jungle_log", "jungle_log", 64, 80)));
+
+        assertEquals(1, merged.size(), "Ошкуренное бревно и обычное — одна порода и одна рубка: " + merged);
+        assertEquals(
+                "jungle_log",
+                merged.get(0).item(),
+                "Побеждает обычное бревно: ошкуривание — не повод держать вторую лесную заявку: " + merged);
+    }
+
+    @Test
+    void demandItem_FuelPlanks_ResolvesSpeciesFromScan() {
+        assertEquals(
+                "jungle_planks",
+                GatherDemand.demandItem("fuel_planks", "jungle"),
+                "Топливные доски превращаются в доски выбранной сканом породы, а не остаются fuel_planks");
+        assertEquals(
+                "oak_log",
+                GatherDemand.demandItem("oak_log", "jungle"),
+                "Обычный предмет не переименовывается: порода уже в его имени");
+    }
+
+    @Test
+    void onePerWood_FuelPlanksResolved_StayApartFromSameSpeciesLog() {
+        List<GatherDemand.Need> merged = GatherDemand.onePerWood(List.of(
+                need("graph:chop_jungle_log", "jungle_log", 64, 80),
+                need("graph:craft_fuel_planks", GatherDemand.demandItem("fuel_planks", "jungle"), 8, 90)));
+
+        assertEquals(
+                2,
+                merged.size(),
+                "Доски из топлива — крафт, а не вторая рубка бревна той же породы: заявки не сливаются: " + merged);
+    }
+
+    @Test
     void wood_LogPlanksSapling_GivesSpecies() {
         assertEquals("jungle", GatherDemand.wood("jungle_log"), "Бревно называет породу");
         assertEquals("jungle", GatherDemand.wood("jungle_planks"), "Доски — та же порода");

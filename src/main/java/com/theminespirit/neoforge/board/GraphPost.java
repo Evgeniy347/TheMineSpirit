@@ -49,8 +49,8 @@ final class GraphPost {
     final PetWork pets;
     final GraphState state;
     final GraphFacts facts;
+    final GatherPost demands = new GatherPost(this);
     private final Set<String> waiting = new HashSet<>();
-    private final GatherPost demands = new GatherPost(this);
     private @Nullable BlockCoord craft;
 
     GraphPost(
@@ -162,10 +162,7 @@ final class GraphPost {
     }
 
     private boolean gather(GraphTickets.Ticket ticket, GraphPlan.Task task) {
-        String item = GraphNames.item(graph, task.makes(), scan.wood());
-        if ("fuel_planks".equals(task.makes())) {
-            item = scan.wood() + "_planks";
-        }
+        String item = demands.item(task);
         if (!graph.items().containsKey(task.makes()) || !GraphItemIds.known(item)) {
             return false;
         }
