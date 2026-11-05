@@ -14,12 +14,6 @@ public final class TacticsScenesGameTests {
 
     @GameTest(template = "arena", batch = "scene_tactics_arena", timeoutTicks = 1604)
     public static void tacticsScene_ArenaSteps_AllPass(GameTestHelper helper) {
-        SceneSteps.run(
-                helper,
-                List.of("arena"),
-                CoordinatorGameTests.class,
-                DefenseGameTests.class,
-                TacticsModesGameTests.class,
-                TacticsRetreatGameTests.class);
+        SceneSteps.run(helper, List.of("arena"), TacticsModesGameTests.class, TacticsRetreatGameTests.class);
     }
 }

@@ -307,10 +307,6 @@ public final class TacticsService {
         return Optional.ofNullable(outcome);
     }
 
-    public ExecutionResult lastResult() {
-        return result;
-    }
-
     public RetreatTracker retreat() {
         return retreat;
     }

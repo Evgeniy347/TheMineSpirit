@@ -236,33 +236,16 @@ final class GraphPost {
             String cause,
             Map<String, Integer> required,
             List<String> modifiers) {
-        return new BoardTicket(id, boardCase, assignee, priority, now, 1, cause, List.of(), required, modifiers);
+        return GraphTicketFactory.ticket(
+                this, new GraphTicketFactory.Request(id, boardCase, assignee, priority, cause, required, modifiers));
     }
 
     BoardTicket leveled(BoardTicket base, int level, List<String> dependsOn) {
-        return new BoardTicket(
-                base.id(),
-                base.boardCase(),
-                base.assignee(),
-                base.priority(),
-                base.createdAt(),
-                level,
-                base.cause(),
-                dependsOn,
-                base.requiredItems());
+        return GraphTicketFactory.leveled(base, level, dependsOn);
     }
 
     BoardTicket dated(BoardTicket base, long createdAt) {
-        return new BoardTicket(
-                base.id(),
-                base.boardCase(),
-                base.assignee(),
-                base.priority(),
-                createdAt,
-                base.level(),
-                base.cause(),
-                base.dependsOn(),
-                base.requiredItems());
+        return GraphTicketFactory.dated(base, createdAt);
     }
 
     BoardOutcome submit(BoardTicket ticket, TicketTarget target) {

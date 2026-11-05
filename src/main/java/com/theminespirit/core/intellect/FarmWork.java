@@ -9,8 +9,4 @@ public record FarmWork(int matureCrops, int farmland, int seeds) {
                     + matureCrops + ", пашни = " + farmland + ", семян = " + seeds);
         }
     }
-
-    public boolean hasHarvest() {
-        return matureCrops > 0;
-    }
 }

@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.night.NightLeash;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 final class GraphReach {
+    private static final NightLeash LEASH = NightLeash.withDefaultRules();
     private final SupplyGraph graph;
     private final GraphState state;
     private final Map<String, List<SupplyGraph.Way>> producers = new HashMap<>();
@@ -39,6 +41,9 @@ final class GraphReach {
         if (way.world() != null && !state.world().contains(way.world())) {
             return false;
         }
+        if (farAtNight(way)) {
+            return false;
+        }
         for (String input : way.consumes().keySet()) {
             SupplyGraph.Item item = graph.items().get(input);
             if (item != null && item.stage() > state.stage()) {
@@ -50,6 +55,17 @@ final class GraphReach {
         if (building == null) return true;
         boolean planned = !building.optional() || state.built(building.id()) != GraphState.Built.ABSENT;
         return building.stage() <= state.stage() && planned;
+    }
+
+    private boolean farAtNight(SupplyGraph.Way way) {
+        if (way.world() == null || way.world().startsWith("more:")) {
+            return false;
+        }
+        boolean night = state.events().contains("night") || state.world().contains("more:dusk_soon");
+        if (!night) {
+            return false;
+        }
+        return state.distances().getOrDefault(way.world(), 0) > LEASH.settlementRadius();
     }
 
     boolean sourced(String node) {
