@@ -180,7 +180,7 @@ public final class ChopTreeScript implements ScriptInstance {
             search.markKnown(List.of(start.get()));
             return ScriptStatus.RUNNING;
         }
-        TreeDetection detection = TreeShape.detect(start.get(), treeView);
+        TreeDetection detection = TreeShape.detect(start.get(), treeView, true);
         if (detection instanceof NotATree notATree) {
             return reject(notATree);
         }
@@ -247,7 +247,7 @@ public final class ChopTreeScript implements ScriptInstance {
             search.markKnown(found.logs());
             return Optional.empty();
         }
-        TreeDetection detection = TreeShape.detect(surviving.get(), treeView);
+        TreeDetection detection = TreeShape.detect(surviving.get(), treeView, true);
         if (detection instanceof Tree tree) {
             return Optional.of(tree);
         }

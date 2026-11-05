@@ -25,6 +25,9 @@ final class GatherPlans {
     private static final String RADIUS = "radius";
     private static final String MINECRAFT = "minecraft:";
     private static final String AXE = "*_axe";
+    private static final String CONTAINER = "container";
+    private static final String WAIT = "wait";
+    private static final String TICKS = "ticks";
 
     private GatherPlans() {}
 
@@ -67,7 +70,7 @@ final class GatherPlans {
         int trees = Math.min(CatalogLimits.COUNT_MAX, Math.max(1, (batch + 1) / 2));
         int leaves = Math.max(16, batch * LEAVES_PER_SAPLING);
         List<TaskNode> steps = new ArrayList<>();
-        steps.add(axe());
+        steps.add(takeAxe());
         steps.add(new ScriptCall(
                 "chop_tree",
                 Map.of(SPECIES, species.id(), COUNT, trees, RADIUS, BoardTuning.chopRadius(), "replant", false)));
@@ -110,7 +113,8 @@ final class GatherPlans {
         TaskNode chop = new ScriptCall(
                 "chop_tree",
                 Map.of(SPECIES, tree.id(), COUNT, trees, RADIUS, BoardTuning.chopRadius(), "replant", true));
-        return sequence(TicketPlans.gotoTarget(target), new FallbackNode(List.of(sequence(axe(), chop), withoutTrees)));
+        return sequence(
+                TicketPlans.gotoTarget(target), new FallbackNode(List.of(sequence(takeAxe(), chop), withoutTrees)));
     }
 
     private static Optional<TaskNode> pathPlan(TicketTarget target, String item, int batch) {
@@ -165,6 +169,14 @@ final class GatherPlans {
 
     private static String pathOf(String item) {
         return item.startsWith(MINECRAFT) ? item.substring(MINECRAFT.length()) : item;
+    }
+
+    private static TaskNode takeAxe() {
+        return new FallbackNode(List.of(
+                new ScriptCall(
+                        "withdraw",
+                        Map.of(CONTAINER, "auto", ITEM, AXE, COUNT, 1, RADIUS, CatalogLimits.CONTAINER_RADIUS_DEFAULT)),
+                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
     private static TaskNode axe() {

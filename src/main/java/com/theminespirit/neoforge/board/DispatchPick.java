@@ -7,7 +7,6 @@ import com.theminespirit.core.board.EatNeed;
 import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.board.ToolGate;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.hunger.SpiritHunger;
 import com.theminespirit.core.observation.BlockCoord;
@@ -100,15 +99,7 @@ final class DispatchPick {
 
     String why(BoardTicket ticket, @Nullable TicketTarget target) {
         String supply = target == null ? null : target.supplyItem();
-        List<DispatchRound.Candidate> all = new ArrayList<>(candidates.values());
-        boolean tooled = all.stream().anyMatch(spirit -> ToolGate.allows(ticket, spirit.items()));
-        if (!tooled) {
-            tooled = ToolGate.allowsFromStock(ticket, stockTools);
-        }
-        if (!all.isEmpty() && !tooled && ToolGate.required(ticket).isPresent()) {
-            return "нет духа с инструментом: ждёт инструмент (граф ставит его крафт духу без инструмента)";
-        }
-        return round.why(ticket, all, supply);
+        return round.why(ticket, new ArrayList<>(candidates.values()), supply);
     }
 
     private void refresh() {

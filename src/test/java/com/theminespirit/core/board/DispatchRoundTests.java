@@ -92,6 +92,32 @@ class DispatchRoundTests {
     }
 
     @Test
+    void refusal_ChopWithoutAxe_ToolIsPreferenceNotBan() {
+        BoardTicket chop = new BoardTicket(
+                "graph:chop_oak_log",
+                CASE,
+                Optional.empty(),
+                BoardRules.priorityOf(CASE),
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of(),
+                List.of(ToolGate.TOOL_MODIFIER + ToolGate.AXE));
+        Board board = board(List.of(chop));
+        DispatchRound round = new DispatchRound(board, 0);
+        DispatchRound.Candidate bareHands =
+                new DispatchRound.Candidate(new UUID(0, 1), "spirit-1", null, List.of(), FED, SpiritView.free());
+
+        assertTrue(
+                round.refusal(chop, bareHands).isEmpty(),
+                "Рубка без топора выдаётся: инструмент — предпочтение и скорость, а не запрет (владелец 05.11); "
+                        + "иначе на пустом старте поселение ждёт топор без дерева");
+        Optional<DispatchRound.Candidate> chosen = round.choose(chop, List.of(bareHands));
+        assertTrue(chosen.isPresent(), "Дух с пустыми руками получает рубку и рубит дерево руками");
+    }
+
+    @Test
     void refusal_WetSpiritOnCleanup_IsRefusedUntilItDries() {
         UUID id = new UUID(0, 7);
         DispatchRound.Candidate wet =

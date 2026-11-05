@@ -15,20 +15,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.StockView;
-import com.theminespirit.core.board.TicketPlans;
-import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolLossRelease;
-import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.plan.FallbackNode;
-import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.plan.SequenceNode;
-import com.theminespirit.core.plan.TaskNode;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -37,9 +29,9 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class GraphDispatchChainTests {
-    private static final Map<String, Integer> NO_CHEST = Map.of();
+    static final Map<String, Integer> NO_CHEST = Map.of();
 
-    private static GraphWorld withoutAxes(int spirits, Map<String, Integer> chest) {
+    static GraphWorld withoutAxes(int spirits, Map<String, Integer> chest) {
         GraphWorld world = community(spirits);
         List<GraphFacts.Spirit> facts = new ArrayList<>();
         for (int index = 1; index <= spirits; index++) {
@@ -56,7 +48,7 @@ class GraphDispatchChainTests {
         return item.startsWith("minecraft:") ? item.substring("minecraft:".length()) : item;
     }
 
-    private static void feed(Board board, List<GraphTickets.Ticket> works) {
+    static void feed(Board board, List<GraphTickets.Ticket> works) {
         works.stream().map(AllocationCases::boardTicket).forEach(board::submit);
     }
 
@@ -159,18 +151,22 @@ class GraphDispatchChainTests {
     }
 
     @Test
-    void case03_NoAxeAnywhere_SpiritWaitsInsteadOfCarousel() {
+    void case03_NoAxeAnywhere_ChopGivenToBareHandsAndKept() {
         GraphWorld world = withoutAxes(5, NO_CHEST);
         world.with("oak_log", 0);
         List<GraphTickets.Ticket> works = only(tickets(world), "chop_oak_log");
         Board board = new Board(() -> 0);
         feed(board, works);
 
-        assertEquals(0, runTicks(board, world, List.of()), "Без топора рубка не выдаётся ни разу");
         assertEquals(
-                BoardStatus.PENDING,
+                1,
+                runTicks(board, world, List.of()),
+                "Без топора нигде рубка всё равно выдаётся: дух рубит дерево руками, а не ждёт инструмент "
+                        + "(владелец 05.11: инструмент — предпочтение, не запрет)");
+        assertEquals(
+                BoardStatus.ASSIGNED,
                 board.statusOf("graph:chop_oak_log").orElseThrow(),
-                "Заявка ждёт топор, а не крутится по духам");
+                "Выданная рубка остаётся за духом: карусели «выдать → вернуть» без топора нет");
     }
 
     @Test
@@ -256,34 +252,5 @@ class GraphDispatchChainTests {
                 pairs.stream().anyMatch(pair -> pair.ticket().contains("_axe")),
                 "Недостающий топор крафтит второй дух, а не простаивает: " + pairs);
         assertEquals(2, pairs.stream().map(Pair::spirit).distinct().count(), "Работу делят оба духа: " + pairs);
-    }
-
-    @Test
-    void chopPlan_NoAxeInHand_AcquiresAxeBeforeTrees() {
-        List<ScriptCall> calls = new ArrayList<>();
-        collect(
-                TicketPlans.plan(
-                        BoardCase.GATHER_MATERIALS,
-                        TicketTarget.at(new BlockCoord(0, 64, 0)).withSupply("jungle_log", 8)),
-                calls);
-        assertTrue(
-                calls.stream()
-                        .anyMatch(call -> "acquire".equals(call.script())
-                                && String.valueOf(call.params().get("item")).endsWith("_axe")),
-                "Перед рубкой дух берёт топор со склада: иначе выданная рубка возвращается доске каждый тик: " + calls);
-    }
-
-    private static void collect(TaskNode node, List<ScriptCall> calls) {
-        if (node instanceof ScriptCall call) {
-            calls.add(call);
-            return;
-        }
-        if (node instanceof SequenceNode sequence) {
-            sequence.steps().forEach(step -> collect(step, calls));
-            return;
-        }
-        if (node instanceof FallbackNode fallback) {
-            fallback.steps().forEach(step -> collect(step, calls));
-        }
     }
 }

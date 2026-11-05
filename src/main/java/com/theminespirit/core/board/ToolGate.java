@@ -147,6 +147,8 @@ public final class ToolGate {
 
     public static Verdict keep(
             BoardTicket ticket, Collection<String> items, boolean walledIn, @Nullable String supplyItem) {
+        Objects.requireNonNull(ticket, "Задание не может быть null: проверяется его инструмент");
+        Objects.requireNonNull(items, "Инвентарь не может быть null: пустой — пустой набор");
         Optional<String> declared = required(ticket);
         Optional<String> tool = declared.isPresent() ? declared : required(ticket.boardCase(), supplyItem);
         if (tool.isEmpty()) {
@@ -160,12 +162,13 @@ public final class ToolGate {
             return new Release("дух замурован и " + missing + " нет: задание " + ticket.boardCase()
                     + " возвращено доске, дух выбирается руками, инструмент — первым делом после выхода");
         }
-        return new Release(missing + " нет: задание " + ticket.boardCase()
-                + " возвращено доске и ждёт инструмент, руками не работаем — сначала добыть, сделать или починить");
+        return new Keep();
     }
 
     public static Verdict keep(
             BoardCase boardCase, Collection<String> items, boolean walledIn, @Nullable String supplyItem) {
+        Objects.requireNonNull(boardCase, "Кейс не может быть null: по нему выбран инструмент");
+        Objects.requireNonNull(items, "Инвентарь не может быть null: пустой — пустой набор");
         if (allows(boardCase, items, supplyItem)) {
             return new Keep();
         }
@@ -174,7 +177,6 @@ public final class ToolGate {
             return new Release("дух замурован и " + tool + " нет: задание " + boardCase
                     + " возвращено доске, дух выбирается руками, инструмент — первым делом после выхода");
         }
-        return new Release(tool + " нет: задание " + boardCase
-                + " возвращено доске и ждёт инструмент, руками не работаем — сначала добыть, сделать или починить");
+        return new Keep();
     }
 }

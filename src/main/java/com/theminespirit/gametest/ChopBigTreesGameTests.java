@@ -2,6 +2,7 @@ package com.theminespirit.gametest;
 
 import static com.theminespirit.gametest.ChopSceneSupport.buildOakTree;
 import static com.theminespirit.gametest.ChopSceneSupport.buildSquaredTree;
+import static com.theminespirit.gametest.ChopSceneSupport.buildTree;
 import static com.theminespirit.gametest.ChopSceneSupport.clearField;
 import static com.theminespirit.gametest.ChopTestSupport.LOGGER;
 import static com.theminespirit.gametest.ChopTestSupport.PLATFORM;
@@ -13,10 +14,12 @@ import static com.theminespirit.gametest.ChopTestSupport.spawnChopper;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.SequenceNode;
+import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LeavesBlock;
@@ -53,6 +56,7 @@ final class ChopBigTreesGameTests {
                 }
             }
         }
+        BrokenAxes broken = brokenAxes(helper);
         SpiritEntity spirit = spawnChopper(helper);
 
         BlockPos[] standAt = {null};
@@ -81,7 +85,7 @@ final class ChopBigTreesGameTests {
                             + spirit.taskFailureReason().orElse("нет"));
             int logsInWorld = countBlocksInWorld(helper, Blocks.SPRUCE_LOG);
             helper.assertTrue(logsInWorld == 0, "все 80 брёвен ели 2×2 обязаны быть срублены, осталось " + logsInWorld);
-            int logsInInventory = GameTestFixtures.countInInventory(spirit.getInventory(), Items.SPRUCE_LOG);
+            int logsInInventory = spruce(spirit) + broken.spruce();
             int logsOnGround = GameTestFixtures.countInWorld(helper, Items.SPRUCE_LOG);
             helper.assertTrue(
                     logsInInventory + logsOnGround == 80,
@@ -97,6 +101,7 @@ final class ChopBigTreesGameTests {
                     oakLogs == 0,
                     "дуб с боковой веткой обязан срубиться целиком: пня и висящей верхушки не остаётся, " + "а в мире "
                             + oakLogs);
+            broken.assertDone(helper);
             helper.assertTrue(
                     standAt[0] != null, "рубка обязана начаться: верхнее бревно срублено, стоянка зафиксирована");
             helper.assertTrue(
@@ -107,5 +112,55 @@ final class ChopBigTreesGameTests {
 
             clearField(helper, 22);
         });
+    }
+
+    private record BrokenAxes(SpiritEntity mid, SpiritEntity last, SpiritRun midRun, SpiritRun lastRun) {
+        int spruce() {
+            return ChopBigTreesGameTests.spruce(mid) + ChopBigTreesGameTests.spruce(last);
+        }
+
+        void assertDone(GameTestHelper helper) {
+            helper.assertTrue(
+                    midRun.started() && lastRun.started(), "оба духа с ломающимися топорами обязаны начать рубку");
+            helper.assertTrue(
+                    mid.taskStatus().orElse(null) == RunStatus.SUCCEEDED
+                            && last.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "поломка топора на середине и на последнем блоке не бросает дерево: статусы "
+                            + mid.taskStatus().orElse(null) + "/"
+                            + last.taskStatus().orElse(null) + ", причины: "
+                            + mid.taskFailureReason().orElse("нет") + " / "
+                            + last.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    countBlocksInWorld(helper, Blocks.BIRCH_LOG) == 0,
+                    "берёзы дорубаются после поломки топора: брёвен не осталось, пни убраны");
+            helper.assertTrue(
+                    mid.getInventory().getItem(0).isEmpty()
+                            && last.getInventory().getItem(0).isEmpty(),
+                    "топоры с ограниченным запасом обязаны сломаться в сцене, иначе поломка не проверена");
+        }
+    }
+
+    private static BrokenAxes brokenAxes(GameTestHelper helper) {
+        buildTree(helper, 1, 5, 3, Blocks.BIRCH_LOG, Blocks.BIRCH_LEAVES);
+        buildTree(helper, 8, 5, 3, Blocks.BIRCH_LOG, Blocks.BIRCH_LEAVES);
+        SpiritEntity mid = spawnChopperAt(helper, new BlockPos(0, 1, 5), 1);
+        SpiritEntity last = spawnChopperAt(helper, new BlockPos(9, 1, 5), 3);
+        SpiritRun midRun = SpiritRun.launch(helper, mid, chopCall("birch", 1), SETTLE_TICKS);
+        SpiritRun lastRun = SpiritRun.launch(helper, last, chopCall("birch", 1), SETTLE_TICKS);
+        return new BrokenAxes(mid, last, midRun, lastRun);
+    }
+
+    private static int spruce(SpiritEntity spirit) {
+        ItemStack hand = spirit.getMainHandItem();
+        return GameTestFixtures.countInInventory(spirit.getInventory(), Items.SPRUCE_LOG)
+                + (hand.is(Items.SPRUCE_LOG) ? hand.getCount() : 0);
+    }
+
+    private static SpiritEntity spawnChopperAt(GameTestHelper helper, BlockPos pos, int uses) {
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), pos);
+        ItemStack axe = new ItemStack(Items.WOODEN_AXE);
+        axe.setDamageValue(axe.getMaxDamage() - uses);
+        spirit.getInventory().setItem(0, axe);
+        return spirit;
     }
 }

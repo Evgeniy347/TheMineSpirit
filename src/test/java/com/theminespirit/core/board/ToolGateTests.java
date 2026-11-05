@@ -125,18 +125,19 @@ class ToolGateTests {
     }
 
     @Test
-    void keep_ChopLogAxeLost_ReleasedToBoard() {
+    void keep_ChopLogAxeLost_TicketStaysWithSpirit() {
         assertTrue(
                 ToolGate.keep(BoardCase.GATHER_MATERIALS, List.of("minecraft:wooden_axe"), false, "jungle_log")
                         instanceof ToolGate.Keep,
                 "С топором задание рубки остаётся у духа");
         assertTrue(
-                ToolGate.keep(BoardCase.GATHER_MATERIALS, List.of(), false, "jungle_log") instanceof ToolGate.Release,
-                "Потерял топор — задание возвращено доске и ждёт инструмент, а не рубит руками");
+                ToolGate.keep(BoardCase.GATHER_MATERIALS, List.of(), false, "jungle_log") instanceof ToolGate.Keep,
+                "Топор сломался — задание рубки остаётся у духа и дерево дорубается руками: инструмент — "
+                        + "предпочтение (владелец 05.11), а не причина бросить работу и вернуть её доске");
     }
 
     @Test
-    void withTool_LogGather_MarkedAxeAndNotGivenToBareHands() {
+    void withTool_LogGather_MarkedAxeButGivenToBareHands() {
         BoardTicket bare = new BoardTicket(
                 "graph:chop_jungle_log",
                 BoardCase.GATHER_MATERIALS,
@@ -155,8 +156,11 @@ class ToolGateTests {
                 "Рубка бревна несёт пометку топора в самом задании: " + marked);
         assertFalse(
                 ToolGate.allows(marked, List.of("minecraft:stone_sword", "minecraft:wooden_shovel")),
-                "Духу без топора рубка не выдаётся: иначе доска отдаёт её и сразу получает назад");
-        assertTrue(ToolGate.allows(marked, List.of("minecraft:stone_axe")), "С топором та же рубка выдаётся");
+                "Пометка топора остаётся сведением «топора нет»: по нему выбирают скорость, а не запрет работы");
+        assertTrue(
+                ToolGate.keep(marked, List.of("minecraft:stone_sword"), false) instanceof ToolGate.Keep,
+                "Без топора рубка не снимается с духа: дерево рубят руками, топор — предпочтение (владелец 05.11)");
+        assertTrue(ToolGate.allows(marked, List.of("minecraft:stone_axe")), "С топором та же рубка идёт быстрее");
     }
 
     @Test

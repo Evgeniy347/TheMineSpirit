@@ -154,9 +154,6 @@ public final class DispatchRound {
             return Optional.of("на паузе кейса " + ticket.boardCase() + " после "
                     + board.consecutiveFailures(spirit.id(), ticket.boardCase()) + " провалов");
         }
-        if (!ToolGate.allows(ticket, spirit.items()) && !ToolGate.allowsFromStock(ticket, spirit.stockTools())) {
-            return Optional.of("нет инструмента " + ToolGate.required(ticket).orElse("?"));
-        }
         if (!ToolGate.carries(ticket, spirit.items())) {
             return Optional.of("нет запаса " + ToolGate.carry(ticket).orElse("?")
                     + " в инвентаре: сначала взять со склада или скрафтить");
@@ -188,11 +185,20 @@ public final class DispatchRound {
 
     public Optional<Candidate> choose(BoardTicket ticket, List<Candidate> preference, @Nullable String supplyItem) {
         for (Candidate spirit : preference) {
-            if (fits(ticket, spirit, supplyItem)) {
+            if (tooled(ticket, spirit) && fits(ticket, spirit, supplyItem)) {
+                return Optional.of(spirit);
+            }
+        }
+        for (Candidate spirit : preference) {
+            if (!tooled(ticket, spirit) && fits(ticket, spirit, supplyItem)) {
                 return Optional.of(spirit);
             }
         }
         return Optional.empty();
+    }
+
+    private static boolean tooled(BoardTicket ticket, Candidate spirit) {
+        return ToolGate.allows(ticket, spirit.items()) || ToolGate.allowsFromStock(ticket, spirit.stockTools());
     }
 
     public void take(UUID spirit) {

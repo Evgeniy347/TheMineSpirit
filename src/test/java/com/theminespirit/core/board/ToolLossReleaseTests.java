@@ -29,21 +29,20 @@ class ToolLossReleaseTests {
     }
 
     @Test
-    void apply_MineHolderLostPickaxe_ReleasesToPending() {
+    void apply_MineHolderLostPickaxe_KeepsTicketWithSpirit() {
         Board board = boardWith("first:build_mine", BoardCase.BUILD_MINE);
 
         List<ToolLossRelease.Released> released =
                 ToolLossRelease.apply(board, SPIRIT, List.of("minecraft:oak_log"), false);
 
+        assertTrue(
+                released.isEmpty(),
+                "Поломка кирки не снимает шахту с духа: задание не возвращается на доску и не отдаётся другому "
+                        + "(владелец 05.11), снято " + released);
         assertEquals(
-                List.of("first:build_mine"),
-                released.stream().map(ToolLossRelease.Released::ticketId).toList(),
-                "Дух без кирки бросает шахту (владелец 27.10, INC-94): иначе копает руками без булыжника и держит "
-                        + "задание");
-        assertEquals(
-                Optional.of(BoardStatus.PENDING),
+                Optional.of(BoardStatus.ASSIGNED),
                 board.statusOf("first:build_mine"),
-                "Снятая шахта ждёт на доске духа с киркой, а не проваливается");
+                "Дух продолжает свою работу сам: берёт новую кирку или дорубает тем, что есть");
     }
 
     @Test
