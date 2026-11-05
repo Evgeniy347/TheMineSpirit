@@ -1,6 +1,5 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairData;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -27,7 +26,7 @@ public final class BoardRules {
         if (boardCase == null) {
             throw new IllegalArgumentException("Приоритет кейса не задан: доска не решит, что важнее, без кейса");
         }
-        Integer priority = DataTables.INSTANCE.board().current().priorities().get(boardCase.name());
+        Integer priority = BoardConfig.current().priorities().get(boardCase.name());
         if (priority != null) {
             return priority;
         }
@@ -43,8 +42,7 @@ public final class BoardRules {
         if (boardCase == null) {
             throw new IllegalArgumentException("Приоритет ремонта не задан: доска не решит, что чинить первым");
         }
-        RepairData.Priorities priorities =
-                DataTables.INSTANCE.repair().current().priorities();
+        RepairData.Priorities priorities = RepairData.current().priorities();
         return switch (boardCase) {
             case BUILD_FENCE -> priorities.wall();
             case BUILD_HOUSE -> priorities.housing();

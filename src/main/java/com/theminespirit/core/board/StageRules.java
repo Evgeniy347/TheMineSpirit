@@ -2,6 +2,7 @@ package com.theminespirit.core.board;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.reload.TableSlot;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -11,9 +12,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public record StageRules(List<Stage> stages, Map<BoardCase, List<String>> schemes, Map<String, BoardCase> planCases) {
     public static final String RESOURCE = "data/theminespirit/board/stages.json";
+
+    private static final TableSlot<StageRules> SOURCE = new TableSlot<>(StageRules::load);
     private static final Set<String> ROOT_FIELDS = Set.of("stages", "schemes", "planCases");
     private static final Set<String> STAGE_FIELDS = Set.of("stage", "buildings", "plan", "requires");
 
@@ -147,6 +151,14 @@ public record StageRules(List<Stage> stages, Map<BoardCase, List<String>> scheme
         } catch (IllegalArgumentException error) {
             throw new IllegalStateException("Файл '" + origin + "': " + error.getMessage(), error);
         }
+    }
+
+    public static StageRules current() {
+        return SOURCE.current();
+    }
+
+    public static void useSource(Supplier<StageRules> supplier) {
+        SOURCE.use(supplier);
     }
 
     public static StageRules load() {

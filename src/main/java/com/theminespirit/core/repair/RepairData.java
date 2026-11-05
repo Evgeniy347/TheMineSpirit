@@ -2,10 +2,11 @@ package com.theminespirit.core.repair;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
-import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.reload.TableSlot;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
 public record RepairData(
@@ -27,6 +28,8 @@ public record RepairData(
     public static final int WARN_TICKS_DEFAULT = 3600;
     public static final int WARN_REPEAT_DEFAULT = 1200;
     public static final int REBUILD_PERCENT_DEFAULT = 50;
+
+    private static final TableSlot<RepairData> SOURCE = new TableSlot<>(RepairData::load);
 
     private static final Set<String> FIELDS = Set.of(
             "maxDurabilityPercent",
@@ -108,7 +111,15 @@ public record RepairData(
     }
 
     public static RepairData loadDefault() {
-        return DataTables.INSTANCE.repair().current();
+        return current();
+    }
+
+    public static RepairData current() {
+        return SOURCE.current();
+    }
+
+    public static void useSource(Supplier<RepairData> supplier) {
+        SOURCE.use(supplier);
     }
 
     public static RepairData load() {

@@ -1,7 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.building.Preset;
-import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.building.PresetLibrary;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -13,7 +13,7 @@ public final class UpgradePlan {
     private UpgradePlan() {}
 
     public static Map<String, Integer> materials(String scheme) {
-        Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(scheme);
+        Optional<Preset> preset = PresetLibrary.current().byId(scheme);
         if (preset.isEmpty()) {
             throw new IllegalArgumentException(
                     "Схема '" + scheme + "' не найдена в библиотеке пресетов: материалы уровня считать не из чего");

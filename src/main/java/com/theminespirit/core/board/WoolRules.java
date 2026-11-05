@@ -1,6 +1,5 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.reload.DataTables;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -202,7 +201,7 @@ public final class WoolRules {
     }
 
     private static int woolValue(String key, int fallback) {
-        Integer value = DataTables.INSTANCE.board().current().wool().get(key);
+        Integer value = BoardConfig.current().wool().get(key);
         return value == null || value < 1 ? fallback : value;
     }
 }

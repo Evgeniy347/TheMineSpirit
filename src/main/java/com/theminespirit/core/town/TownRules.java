@@ -2,15 +2,18 @@ package com.theminespirit.core.town;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.reload.TableSlot;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public record TownRules(Ground ground, Streets streets, Spacing spacing, List<TownEntry> buildings) {
     public static final String RESOURCE = "data/theminespirit/board/town.json";
+    private static final TableSlot<TownRules> SOURCE = new TableSlot<>(TownRules::load);
     private static final Set<String> ROOT = Set.of("ground", "streets", "spacing", "buildings");
     private static final Set<String> GROUND = Set.of("area", "probeRadius", "cliffStep", "slopeWeight", "slopeMax");
     private static final Set<String> STREETS = Set.of("main", "side", "ring", "ringInset", "blockSize");
@@ -125,6 +128,14 @@ public record TownRules(Ground ground, Streets streets, Spacing spacing, List<To
         } catch (IllegalArgumentException error) {
             throw new IllegalStateException("Файл '" + origin + "': " + error.getMessage(), error);
         }
+    }
+
+    public static TownRules current() {
+        return SOURCE.current();
+    }
+
+    public static void useSource(Supplier<TownRules> supplier) {
+        SOURCE.use(supplier);
     }
 
     public static TownRules load() {

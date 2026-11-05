@@ -1,7 +1,6 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.husbandry.Species;
-import com.theminespirit.core.reload.DataTables;
 import java.util.Objects;
 import java.util.Set;
 
@@ -42,7 +41,7 @@ public final class HerdCap {
     }
 
     private static int herdValue(String key, int fallback) {
-        Integer value = DataTables.INSTANCE.board().current().herd().get(key);
+        Integer value = BoardConfig.current().herd().get(key);
         return value == null || value < 1 ? fallback : value;
     }
 }

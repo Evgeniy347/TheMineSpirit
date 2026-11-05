@@ -2,16 +2,18 @@ package com.theminespirit.core.board;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
-import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.reload.TableSlot;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public record DemandRules(int bedsReserve, int storageFreePercentMin, int darkCellsMin, boolean stageEnabled) {
     public static final String RESOURCE = "data/theminespirit/board/settlement_demand.json";
+    private static final TableSlot<DemandRules> SOURCE = new TableSlot<>(DemandRules::load);
 
     private static final Set<String> FIELDS =
             Set.of("bedsReserve", "storageFreePercentMin", "darkCellsMin", "stageEnabled");
@@ -85,7 +87,15 @@ public record DemandRules(int bedsReserve, int storageFreePercentMin, int darkCe
     }
 
     public static DemandRules loadDefault() {
-        return DataTables.INSTANCE.demand().current();
+        return current();
+    }
+
+    public static DemandRules current() {
+        return SOURCE.current();
+    }
+
+    public static void useSource(Supplier<DemandRules> supplier) {
+        SOURCE.use(supplier);
     }
 
     public static DemandRules load() {

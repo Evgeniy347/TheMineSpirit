@@ -142,8 +142,7 @@ public final class DataTables {
                 "data/theminespirit/policy/protection.json",
                 ProtectionConfig::parse,
                 ProtectionConfig::readClasspath);
-        this.presets = registry.registerLazy(
-                DataTableDefinitions.presets(), () -> PresetLibrary.parse(DataTableDefinitions.presetBodies()));
+        this.presets = registry.registerLazy(DataTableDefinitions.presets(), PresetLibrary::loadDefault);
         this.board = single("board", BoardConfig.RESOURCE, BoardConfig::fromJson, BoardConfig::readFromClasspath);
         this.graph = DataTableDefinitions.graph(registry);
         this.building = single("building", BuildData.RESOURCE, BuildData::parse, BuildData::load);

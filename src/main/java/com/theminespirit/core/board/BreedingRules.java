@@ -2,7 +2,6 @@ package com.theminespirit.core.board;
 
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.Species;
-import com.theminespirit.core.reload.DataTables;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -52,11 +51,8 @@ public final class BreedingRules {
 
     public static Map<String, Integer> stockPerCapita(Species species) {
         Objects.requireNonNull(species, "Вид нормы не может быть null: без него неизвестно, что считать");
-        Map<String, Integer> perCapita = DataTables.INSTANCE
-                .board()
-                .current()
-                .products()
-                .get(species.name().toLowerCase(Locale.ROOT));
+        Map<String, Integer> perCapita =
+                BoardConfig.current().products().get(species.name().toLowerCase(Locale.ROOT));
         return perCapita == null ? Map.of() : perCapita;
     }
 

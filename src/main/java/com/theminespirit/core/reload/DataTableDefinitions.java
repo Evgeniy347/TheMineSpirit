@@ -7,7 +7,6 @@ import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicTextParser;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.tactics.TacticsConfig;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,16 +80,5 @@ final class DataTableDefinitions {
                 "retreat_nook",
                 "shelter",
                 "state_demo");
-    }
-
-    static List<LoadedContent> presetBodies() {
-        String indexPath = PresetLibrary.SCHEMATICS_ROOT + PresetLibrary.INDEX_ID + ".json";
-        String indexJson = JsonResource.readClasspath(indexPath);
-        List<LoadedContent> contents = new ArrayList<>();
-        contents.add(new LoadedContent(indexJson, indexPath + " (мод)", TableStatus.Source.MOD));
-        for (String path : PresetLibrary.bodyPaths(indexJson, indexPath)) {
-            contents.add(new LoadedContent(JsonResource.readClasspath(path), path + " (мод)", TableStatus.Source.MOD));
-        }
-        return List.copyOf(contents);
     }
 }
