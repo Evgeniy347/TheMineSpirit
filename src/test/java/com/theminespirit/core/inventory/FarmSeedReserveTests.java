@@ -1,13 +1,7 @@
-package com.theminespirit.core.farming;
+package com.theminespirit.core.inventory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.theminespirit.core.inventory.BaseKit;
-import com.theminespirit.core.inventory.DepositSelection;
-import com.theminespirit.core.inventory.KitFor;
-import com.theminespirit.core.inventory.Slice;
-import com.theminespirit.core.inventory.Stack;
-import com.theminespirit.core.inventory.ValueTable;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

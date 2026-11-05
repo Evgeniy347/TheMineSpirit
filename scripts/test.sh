@@ -658,19 +658,26 @@ analyze_unit() {
     case "$errors" in ''|*[!0-9]*) errors=0 ;; esac
     [ "${#report[@]}" -gt 1 ] && failed_names=("${report[@]:1}")
 
-    local api_report=()
-    if [ -d TestResults/api/xml ]; then
-        mapfile -t api_report < <(parse_unit_reports TestResults/api/xml)
-        local api_total=0 api_failures=0 api_errors=0
-        read -r api_total api_failures api_errors <<<"${api_report[0]:-}"
-        case "$api_total" in ''|*[!0-9]*) api_total=0 ;; esac
-        case "$api_failures" in ''|*[!0-9]*) api_failures=0 ;; esac
-        case "$api_errors" in ''|*[!0-9]*) api_errors=0 ;; esac
-        total=$((total + api_total))
-        failures=$((failures + api_failures))
-        errors=$((errors + api_errors))
-        [ "${#api_report[@]}" -gt 1 ] && failed_names+=("${api_report[@]:1}")
-    fi
+    local extra_dirs=(TestResults/api/xml)
+    local module_root name
+    for module_root in ${MOD_MODULE_MAIN_ROOTS//,/ }; do
+        name="${module_root%%/src/*}"
+        extra_dirs+=("TestResults/$(basename "$name")/xml")
+    done
+    local extra_dir extra_report=()
+    for extra_dir in "${extra_dirs[@]}"; do
+        [ -d "$extra_dir" ] || continue
+        mapfile -t extra_report < <(parse_unit_reports "$extra_dir")
+        local extra_total=0 extra_failures=0 extra_errors=0
+        read -r extra_total extra_failures extra_errors <<<"${extra_report[0]:-}"
+        case "$extra_total" in ''|*[!0-9]*) extra_total=0 ;; esac
+        case "$extra_failures" in ''|*[!0-9]*) extra_failures=0 ;; esac
+        case "$extra_errors" in ''|*[!0-9]*) extra_errors=0 ;; esac
+        total=$((total + extra_total))
+        failures=$((failures + extra_failures))
+        errors=$((errors + extra_errors))
+        [ "${#extra_report[@]}" -gt 1 ] && failed_names+=("${extra_report[@]:1}")
+    done
 
     if [ "$failures" -eq 0 ] && [ "$errors" -eq 0 ] && [ "$total" -gt 0 ]; then
         if [ "$gradle_code" -ne 0 ]; then
@@ -762,6 +769,10 @@ start_heartbeat
 if [ "$MODE" = "unit" ]; then
     rm -f TestResults/unit/xml/TEST-*.xml TestResults/unit/test-cost.csv
     rm -f TestResults/api/xml/TEST-*.xml
+    for module_root in ${MOD_MODULE_MAIN_ROOTS//,/ }; do
+        name="${module_root%%/src/*}"
+        rm -f "TestResults/$(basename "$name")/xml/TEST-*.xml"
+    done
     start_monitor "unit"
 
     UNIT_EXTRA=()
