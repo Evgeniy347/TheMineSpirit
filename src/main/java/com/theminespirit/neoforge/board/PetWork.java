@@ -1,8 +1,10 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.graph.HerdCap;
 import com.theminespirit.core.husbandry.PetKind;
 import com.theminespirit.core.husbandry.PetRules;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.husbandry.HerdActions;
 import java.util.ArrayList;
@@ -41,6 +43,20 @@ final class PetWork {
         return breedStep(level, kind, own(level, spirits, kind), spirits, now);
     }
 
+    private static List<PetRules.PetWay> petWays() {
+        return DataTables.INSTANCE.graph().current().ways().stream()
+                .map(way -> new PetRules.PetWay(
+                        way.id(),
+                        way.boardCase(),
+                        way.makes(),
+                        List.copyOf(way.consumes().keySet())))
+                .toList();
+    }
+
+    private static Map<String, HerdCap> herdCaps() {
+        return DataTables.INSTANCE.graph().current().herdCaps();
+    }
+
     private static List<Animal> wild(ServerLevel level, List<SpiritEntity> spirits, PetKind kind) {
         return animals(level, homeOf(spirits)).stream()
                 .filter(animal -> kindOf(animal).filter(kind::equals).isPresent())
@@ -59,7 +75,7 @@ final class PetWork {
         if (wild.isEmpty()) {
             return false;
         }
-        List<String> foods = PetRules.tameFoods(kind);
+        List<String> foods = PetRules.tameFoods(kind, petWays());
         Animal target = wild.get(0);
         SpiritEntity worker = workerWith(spirits, foods);
         if (worker == null) {
@@ -86,11 +102,11 @@ final class PetWork {
     private boolean breedStep(ServerLevel level, PetKind kind, List<Animal> own, List<SpiritEntity> spirits, long now) {
         List<Animal> parents = own.stream().filter(animal -> !animal.isBaby()).toList();
         if (parents.size() < 2
-                || parents.size() >= PetRules.cap(kind, spirits.size())
+                || parents.size() >= PetRules.cap(kind, spirits.size(), herdCaps())
                 || now < nextBreed.getOrDefault(kind, 0L)) {
             return false;
         }
-        List<String> foods = PetRules.breedFoods(kind);
+        List<String> foods = PetRules.breedFoods(kind, petWays());
         Animal first = parents.get(0);
         Animal second = parents.get(1);
         SpiritEntity worker = workerWith(spirits, foods);

@@ -22,6 +22,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class CullPolicyTests {
     private static final BlockCoord CENTER = new BlockCoord(0, 64, 0);
+    private static final Map<String, SwordTier> SWORDS = SwordTier.loadFile();
 
     static Stream<Arguments> cullRows() {
         BlockCoord near = new BlockCoord(1, 64, 0);
@@ -197,32 +198,32 @@ class CullPolicyTests {
     void swordTiers_ProductionTable_MatchesVanillaOrder() {
         assertEquals(
                 SwordTier.WOOD,
-                SwordTier.ofItem("minecraft:wooden_sword"),
+                SwordTier.ofItem("minecraft:wooden_sword", SWORDS),
                 "Деревянный меч обязан читаться из таблицы: иначе забой разрешит не тот тир");
         assertEquals(
                 SwordTier.IRON,
-                SwordTier.ofItem("minecraft:iron_sword"),
+                SwordTier.ofItem("minecraft:iron_sword", SWORDS),
                 "Железный меч обязан читаться из таблицы: порог забоя считается по таблице, а не по урону");
         assertEquals(
                 SwordTier.NETHERITE,
-                SwordTier.ofItem("minecraft:netherite_sword"),
+                SwordTier.ofItem("minecraft:netherite_sword", SWORDS),
                 "Незеритовый меч обязан читаться из таблицы: иначе лучшему мечу откажут");
         assertEquals(
                 SwordTier.HAND,
-                SwordTier.ofItem("minecraft:air"),
+                SwordTier.ofItem("minecraft:air", SWORDS),
                 "Пустая рука обязана быть ниже дерева: руками стадо не забивают");
         assertTrue(
                 SwordTier.NETHERITE.atLeast(SwordTier.IRON) && !SwordTier.GOLD.atLeast(SwordTier.IRON),
                 "Порядок тиров обязан идти от руки к незериту: иначе золотой меч сойдёт за железный");
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SwordTier.ofItem("minecraft:diamond_axe"),
+                () -> SwordTier.ofItem("minecraft:diamond_axe", SWORDS),
                 "Алмазный топор — не меч: тир считается по таблице, а не по урону, топору обязаны отказать");
     }
 
     @Test
     void swordTable_FileItems_MatchProduction() {
-        Map<String, SwordTier> items = SwordTier.items();
+        Map<String, SwordTier> items = SWORDS;
 
         assertTrue(
                 items.get("minecraft:iron_sword") == SwordTier.IRON

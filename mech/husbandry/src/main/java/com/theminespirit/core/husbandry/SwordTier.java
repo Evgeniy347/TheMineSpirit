@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.inventory.JsonResource;
-import com.theminespirit.core.reload.DataTables;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -42,9 +41,10 @@ public enum SwordTier {
         };
     }
 
-    public static SwordTier ofItem(String itemId) {
+    public static SwordTier ofItem(String itemId, Map<String, SwordTier> table) {
         Objects.requireNonNull(itemId, "id предмета не может быть null: без него тир меча не определить");
-        SwordTier tier = items().get(canonicalId(itemId));
+        Objects.requireNonNull(table, "Таблица мечей не может быть null: из неё берут тир оружия");
+        SwordTier tier = table.get(canonicalId(itemId));
         if (tier == null) {
             throw new IllegalArgumentException("Предмет '" + itemId + "' — не меч из таблицы " + RESOURCE
                     + ": бить им стадо запрещено, возьмите меч из таблицы");
@@ -72,10 +72,6 @@ public enum SwordTier {
         }
         table.put(EMPTY_HAND_ID, HAND);
         return Map.copyOf(table);
-    }
-
-    public static Map<String, SwordTier> items() {
-        return DataTables.INSTANCE.swords().current();
     }
 
     public static Map<String, SwordTier> parse(String json, String origin) {
