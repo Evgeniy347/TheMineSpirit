@@ -27,6 +27,7 @@ final class BoardStateNbt {
     private static final String DETACHED_KEY = "Detached";
     private static final String TOKEN_KEY = "Token";
     private static final String AT_KEY = "At";
+    private static final String NO_PATH_KEY = "NoPath";
     private static final String X_KEY = "X";
     private static final String Y_KEY = "Y";
     private static final String Z_KEY = "Z";
@@ -71,6 +72,7 @@ final class BoardStateNbt {
             CompoundTag item = new CompoundTag();
             item.putUUID(SPIRIT_KEY, entry.spirit());
             item.putLong(SINCE_KEY, entry.since());
+            item.putBoolean(NO_PATH_KEY, entry.noPath());
             if (entry.at() != null) {
                 CompoundTag at = new CompoundTag();
                 at.putInt(X_KEY, entry.at().x());
@@ -115,7 +117,8 @@ final class BoardStateNbt {
                 CompoundTag point = item.getCompound(AT_KEY);
                 at = new BlockCoord(point.getInt(X_KEY), point.getInt(Y_KEY), point.getInt(Z_KEY));
             }
-            stuck.add(new BoardState.Stuck(item.getUUID(SPIRIT_KEY), at, item.getLong(SINCE_KEY)));
+            stuck.add(new BoardState.Stuck(
+                    item.getUUID(SPIRIT_KEY), at, item.getLong(SINCE_KEY), item.getBoolean(NO_PATH_KEY)));
         }
         return new Parts(blocked, pauses, stuck);
     }

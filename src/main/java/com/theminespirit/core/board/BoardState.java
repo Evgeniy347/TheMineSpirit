@@ -56,7 +56,11 @@ public record BoardState(
         }
     }
 
-    public record Stuck(UUID spirit, @Nullable BlockCoord at, long since) {
+    public record Stuck(UUID spirit, @Nullable BlockCoord at, long since, boolean noPath) {
+        public Stuck(UUID spirit, @Nullable BlockCoord at, long since) {
+            this(spirit, at, since, false);
+        }
+
         public Stuck {
             Objects.requireNonNull(spirit, "Дух застревания не может быть null: метка адресная");
             if (since < 0) {
