@@ -1,5 +1,6 @@
 package com.theminespirit.gametest;
 
+import static com.theminespirit.gametest.ChopSceneSupport.buildOakTree;
 import static com.theminespirit.gametest.ChopSceneSupport.buildSquaredTree;
 import static com.theminespirit.gametest.ChopSceneSupport.clearField;
 import static com.theminespirit.gametest.ChopTestSupport.LOGGER;
@@ -11,11 +12,14 @@ import static com.theminespirit.gametest.ChopTestSupport.spawnChopper;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LeavesBlock;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -34,6 +38,21 @@ final class ChopBigTreesGameTests {
             }
         }
         buildSquaredTree(helper, 4, 4, 20, 20, Blocks.SPRUCE_LOG, Blocks.SPRUCE_LEAVES);
+        buildOakTree(helper, 8, 8, 5);
+        helper.setBlock(9, 3, 8, Blocks.OAK_LOG);
+        helper.setBlock(10, 3, 8, Blocks.OAK_LOG);
+        helper.setBlock(10, 4, 8, Blocks.OAK_LOG);
+        var leaves = Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, false);
+        for (int dx = 8; dx <= 10; dx++) {
+            for (int dz = 7; dz <= 9; dz++) {
+                for (int y = 3; y <= 5; y++) {
+                    BlockPos pos = new BlockPos(dx, y, dz);
+                    if (helper.getBlockState(pos).isAir()) {
+                        helper.setBlock(pos, leaves);
+                    }
+                }
+            }
+        }
         SpiritEntity spirit = spawnChopper(helper);
 
         BlockPos[] standAt = {null};
@@ -50,7 +69,8 @@ final class ChopBigTreesGameTests {
             }
         });
 
-        SpiritRun run = SpiritRun.launch(helper, spirit, chopCall("spruce", 1), SETTLE_TICKS);
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, new SequenceNode(List.of(chopCall("spruce", 1), chopCall("oak", 1))), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();
@@ -72,6 +92,11 @@ final class ChopBigTreesGameTests {
             helper.assertTrue(
                     countBlocksInWorld(helper, Blocks.COBBLESTONE) == 0,
                     "столб не строится: булыжника в мире быть не должно");
+            int oakLogs = countBlocksInWorld(helper, Blocks.OAK_LOG);
+            helper.assertTrue(
+                    oakLogs == 0,
+                    "дуб с боковой веткой обязан срубиться целиком: пня и висящей верхушки не остаётся, " + "а в мире "
+                            + oakLogs);
             helper.assertTrue(
                     standAt[0] != null, "рубка обязана начаться: верхнее бревно срублено, стоянка зафиксирована");
             helper.assertTrue(

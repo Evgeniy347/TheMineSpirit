@@ -10,6 +10,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import net.minecraft.core.BlockPos;
@@ -49,7 +50,7 @@ final class TreeChop {
     private boolean lackedSaplings;
     private boolean breaking;
     private boolean guarded;
-    private boolean secondStand;
+    private final List<BlockPos> usedStands = new ArrayList<>();
     private @Nullable BlockPos stand;
     private @Nullable ChopOutcome refusal;
 
@@ -74,7 +75,7 @@ final class TreeChop {
         lackedSaplings = false;
         breaking = false;
         guarded = false;
-        secondStand = false;
+        usedStands.clear();
         clearing.begin(target, new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ()));
         refusal = startApproach();
         if (stand != null) {
@@ -105,6 +106,7 @@ final class TreeChop {
         BlockCoord from = new BlockCoord(stand.getX(), stand.getY(), stand.getZ());
         plan = ChopPlan.of(tree, from);
         planIndex = 0;
+        usedStands.add(stand);
         approach.begin(Vec3.atBottomCenterOf(stand), ChopTuning.CHOP_ARRIVAL);
         phase = Phase.APPROACH;
         return null;
@@ -156,7 +158,8 @@ final class TreeChop {
         return switch (approach.tick()) {
             case MOVING -> ChopOutcome.running();
             case ARRIVED -> resumeChop();
-            case STUCK, TIMEOUT -> secondStand ? leftStanding() : ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
+            case STUCK, TIMEOUT ->
+                usedStands.size() > 1 ? leftStanding() : ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
         };
     }
 
@@ -205,25 +208,23 @@ final class TreeChop {
     private ChopOutcome afterPass() {
         BlockCoord from = stand == null ? tree.base() : new BlockCoord(stand.getX(), stand.getY(), stand.getZ());
         ChopPlan rest = plan.rest(view, from);
+        plan = rest;
         if (rest.order().isEmpty()) {
             return startCollect();
         }
-        plan = rest;
-        if (secondStand) {
-            return leftStanding();
-        }
-        secondStand = true;
-        planIndex = 0;
-        stand = ChopStand.second(spirit, tree, rest.order(), stand);
+        stand = ChopStand.next(spirit, tree, rest.order(), usedStands);
         if (stand == null) {
             return leftStanding();
         }
+        usedStands.add(stand);
+        planIndex = 0;
         LOGGER.info(
-                "[chop] {} у дерева {}: после прохода стоят {} брёвен — добивка со второй стоянки {}",
+                "[chop] {} у дерева {}: после прохода стоят {} брёвен — добивка со стоянки {} (попытка {})",
                 spirit.getName().getString(),
                 tree.base(),
                 rest.order().size(),
-                stand.toShortString());
+                stand.toShortString(),
+                usedStands.size());
         approach.begin(Vec3.atBottomCenterOf(stand), ChopTuning.CHOP_ARRIVAL);
         phase = Phase.APPROACH;
         return ChopOutcome.running();
@@ -232,7 +233,7 @@ final class TreeChop {
     private ChopOutcome leftStanding() {
         standingLogs = plan.rest(view, tree.base()).order().size();
         LOGGER.warn(
-                "[chop] {} у дерева {}: и со второй стоянки не срублено {} брёвен: {}",
+                "[chop] {} у дерева {}: и с последней стоянки не срублено {} брёвен: {}",
                 spirit.getName().getString(),
                 tree.base(),
                 standingLogs,

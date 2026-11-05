@@ -9870,6 +9870,7 @@
       }
     },
     "hungry": {
+      "band": 20,
       "tasks": [
         {
           "id": "eat",
