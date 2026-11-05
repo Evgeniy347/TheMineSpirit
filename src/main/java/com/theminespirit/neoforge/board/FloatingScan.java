@@ -6,7 +6,7 @@ import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
-import com.theminespirit.core.policy.ProtectionConfig;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.FloatingWindow;
@@ -35,7 +35,8 @@ import org.jspecify.annotations.Nullable;
 
 public final class FloatingScan {
     private static final String AIR = "minecraft:air";
-    private static final BlockProtection PROTECTION = ProtectionConfig.load();
+    private static final BlockProtection PROTECTION =
+            DataTables.INSTANCE.protection().current();
 
     private FloatingScan() {}
 

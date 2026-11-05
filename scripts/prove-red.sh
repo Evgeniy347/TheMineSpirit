@@ -5,6 +5,15 @@ cd "$(dirname "$0")/.." || exit 2
 REPO_DIR="$PWD"
 . scripts/module-paths.sh
 TEST_DIR="$MOD_TEST_DIR"
+TEST_DIRS=("$MOD_TEST_DIR")
+for module_test_root in ${MOD_MODULE_TEST_ROOTS//,/ }; do
+    TEST_DIRS+=("$module_test_root")
+done
+REPORT_DIRS=("TestResults/unit/xml")
+for module_test_root in ${MOD_MODULE_TEST_ROOTS//,/ }; do
+    module_base="${module_test_root%%/src/*}"
+    REPORT_DIRS+=("TestResults/$(basename "$module_base")/xml")
+done
 GAMETEST_DIR="$MOD_GAME_TESTS_DIR"
 EXIT_ERROR=2
 EXIT_NOTHING=3
@@ -23,13 +32,13 @@ out_root="$REPO_DIR/TestResults/prove-red"
 work="$out_root/$short"
 mkdir -p "$out_root"
 
-changed_tests="$(git diff --name-only --diff-filter=AM "$parent" "$fix" -- "$TEST_DIR")"
+changed_tests="$(git diff --name-only --diff-filter=AM "$parent" "$fix" -- "${TEST_DIRS[@]}")"
 gametest_changed="$(git diff --name-only --diff-filter=AM "$parent" "$fix" -- "$GAMETEST_DIR")"
 if [ -n "$gametest_changed" ]; then
     echo "GameTest не проверяется скриптом, доказывай подлогом вручную: $(echo "$gametest_changed" | xargs -n1 basename | tr '\n' ' ')"
 fi
 if [ -z "$changed_tests" ]; then
-    echo "Коммит $short не добавил и не изменил JUnit-тестов в $TEST_DIR — доказывать нечего."
+    echo "Коммит $short не добавил и не изменил JUnit-тестов в ${TEST_DIRS[*]} — доказывать нечего."
     exit "$EXIT_NOTHING"
 fi
 
@@ -37,7 +46,13 @@ classes=()
 filters=()
 while IFS= read -r file; do
     git show "$fix:$file" | grep -qE '@(Test|Example|Property|ParameterizedTest|RepeatedTest|TestFactory)\b' || continue
-    fqn="${file#"$TEST_DIR"/}"
+    fqn=""
+    for test_dir in "${TEST_DIRS[@]}"; do
+        case "$file" in
+            "$test_dir"/*) fqn="${file#"$test_dir"/}"; break ;;
+        esac
+    done
+    [ -n "$fqn" ] || continue
     fqn="${fqn%.java}"
     fqn="${fqn//\//.}"
     classes+=("$fqn")
@@ -67,16 +82,21 @@ git worktree add --detach --quiet "$work" "$parent" || { echo "Не удалос
 
 run_gradle() {
     local log="$1" code
-    rm -rf "$work/TestResults/unit"
+    local report_dir
+    for report_dir in "${REPORT_DIRS[@]}"; do
+        rm -rf "$work/$report_dir"
+    done
     (cd "$work" && ./gradlew test --rerun --console=plain "${filter_args[@]}") >"$log" 2>&1
     code=$?
     [ "$code" -eq 0 ] && return 0
-    if grep -q "Execution failed for task ':compileTestJava'" "$log"; then
+    if grep -qE "Execution failed for task ':.*compileTestJava'" "$log"; then
         return 11
     fi
-    if ls "$work"/TestResults/unit/xml/TEST-*.xml >/dev/null 2>&1; then
-        return 10
-    fi
+    for report_dir in "${REPORT_DIRS[@]}"; do
+        if ls "$work/$report_dir"/TEST-*.xml >/dev/null 2>&1; then
+            return 10
+        fi
+    done
     return 12
 }
 
@@ -97,17 +117,21 @@ PYTHON="$(pick_python)" || {
 }
 
 class_statuses() {
-    "$PYTHON" -I - "$work/TestResults/unit/xml" "$@" <<'PY'
-import glob, sys, xml.etree.ElementTree as ET
-xml_dir, wanted = sys.argv[1], sys.argv[2:]
+    "$PYTHON" -I - "$work" "$@" <<'PY'
+import glob, os, sys, xml.etree.ElementTree as ET
+root, wanted = sys.argv[1], sys.argv[2:]
 stats = {}
-for path in glob.glob(xml_dir + "/TEST-*.xml"):
-    suite = ET.parse(path).getroot()
-    top = suite.get("name", "").split("$")[0]
-    ran = int(suite.get("tests", 0)) - int(suite.get("skipped", 0))
-    bad = int(suite.get("failures", 0)) + int(suite.get("errors", 0))
-    prev = stats.get(top, (0, 0))
-    stats[top] = (prev[0] + ran, prev[1] + bad)
+for xml_dir in [os.path.join(root, "TestResults", "unit", "xml")] + [
+    os.path.join(root, "TestResults", name, "xml") for name in os.listdir(os.path.join(root, "TestResults"))
+    if os.path.isdir(os.path.join(root, "TestResults", name, "xml"))
+]:
+    for path in glob.glob(xml_dir + "/TEST-*.xml"):
+        suite = ET.parse(path).getroot()
+        top = suite.get("name", "").split("$")[0]
+        ran = int(suite.get("tests", 0)) - int(suite.get("skipped", 0))
+        bad = int(suite.get("failures", 0)) + int(suite.get("errors", 0))
+        prev = stats.get(top, (0, 0))
+        stats[top] = (prev[0] + ran, prev[1] + bad)
 names = list(wanted) + sorted(n for n in stats if n not in wanted)
 for name in names:
     ran, bad = stats.get(name, (0, 0))

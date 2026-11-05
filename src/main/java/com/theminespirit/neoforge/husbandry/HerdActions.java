@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.husbandry;
 
 import com.theminespirit.core.husbandry.SwordTier;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +72,8 @@ public final class HerdActions {
             }
             SwordTier tier;
             try {
-                tier = SwordTier.ofItem(itemId(stack));
+                tier = SwordTier.ofItem(
+                        itemId(stack), DataTables.INSTANCE.swords().current());
             } catch (IllegalArgumentException error) {
                 unknown.add(itemId(stack));
                 continue;

@@ -2,8 +2,8 @@ package com.theminespirit.neoforge.policy;
 
 import com.theminespirit.core.observation.BlockBox;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.policy.UnprotectArea;
+import com.theminespirit.core.reload.DataTables;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -44,7 +44,7 @@ public final class UnprotectService {
         UnprotectArea area = new UnprotectArea(
                 UUID.randomUUID().toString(), dimension, box, grantedBy, nowMillis, reason, expiresAt);
         return UnprotectAreasData.get(overworld)
-                .add(area, ProtectionConfig.load().maxUnprotectVolume(), nowMillis);
+                .add(area, DataTables.INSTANCE.protection().current().maxUnprotectVolume(), nowMillis);
     }
 
     public List<UnprotectArea> list() {

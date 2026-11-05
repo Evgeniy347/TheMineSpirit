@@ -4,7 +4,7 @@
 # board/, mod/, build-logic/, config/, build.gradle, gradle.properties или settings.gradle — прогоняет
 # scripts/test.sh unit и при красном отклоняет коммит.
 # Коммиты только документов и скриптов, слияния — без прогона.
-WATCHED='^(src/|api/|board/|mod/|build-logic/|config/|build\.gradle$|gradle\.properties$|settings\.gradle$)'
+WATCHED='^(src/|api/|policy/|mech/|board/|mod/|build-logic/|config/|build\.gradle$|gradle\.properties$|settings\.gradle$)'
 
 git rev-parse -q --verify MERGE_HEAD >/dev/null && exit 0
 

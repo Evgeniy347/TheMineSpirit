@@ -224,7 +224,7 @@ public final class SpiritPolicies {
         }
         return HungerPolicy.evaluate(
                 spirit.hunger().foodLevel(),
-                spirit.hunger().rules(),
+                spirit.hunger().rules().eatFoodThreshold(),
                 spirit.hunger().hasFood(),
                 spirit.tactics().wantsControl());
     }

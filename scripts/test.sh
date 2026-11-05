@@ -658,19 +658,26 @@ analyze_unit() {
     case "$errors" in ''|*[!0-9]*) errors=0 ;; esac
     [ "${#report[@]}" -gt 1 ] && failed_names=("${report[@]:1}")
 
-    local api_report=()
-    if [ -d TestResults/api/xml ]; then
-        mapfile -t api_report < <(parse_unit_reports TestResults/api/xml)
-        local api_total=0 api_failures=0 api_errors=0
-        read -r api_total api_failures api_errors <<<"${api_report[0]:-}"
-        case "$api_total" in ''|*[!0-9]*) api_total=0 ;; esac
-        case "$api_failures" in ''|*[!0-9]*) api_failures=0 ;; esac
-        case "$api_errors" in ''|*[!0-9]*) api_errors=0 ;; esac
-        total=$((total + api_total))
-        failures=$((failures + api_failures))
-        errors=$((errors + api_errors))
-        [ "${#api_report[@]}" -gt 1 ] && failed_names+=("${api_report[@]:1}")
-    fi
+    local extra_dirs=(TestResults/api/xml)
+    local module_root name
+    for module_root in ${MOD_MODULE_MAIN_ROOTS//,/ }; do
+        name="${module_root%%/src/*}"
+        extra_dirs+=("TestResults/$(basename "$name")/xml")
+    done
+    local extra_dir extra_report=()
+    for extra_dir in "${extra_dirs[@]}"; do
+        [ -d "$extra_dir" ] || continue
+        mapfile -t extra_report < <(parse_unit_reports "$extra_dir")
+        local extra_total=0 extra_failures=0 extra_errors=0
+        read -r extra_total extra_failures extra_errors <<<"${extra_report[0]:-}"
+        case "$extra_total" in ''|*[!0-9]*) extra_total=0 ;; esac
+        case "$extra_failures" in ''|*[!0-9]*) extra_failures=0 ;; esac
+        case "$extra_errors" in ''|*[!0-9]*) extra_errors=0 ;; esac
+        total=$((total + extra_total))
+        failures=$((failures + extra_failures))
+        errors=$((errors + extra_errors))
+        [ "${#extra_report[@]}" -gt 1 ] && failed_names+=("${extra_report[@]:1}")
+    done
 
     if [ "$failures" -eq 0 ] && [ "$errors" -eq 0 ] && [ "$total" -gt 0 ]; then
         if [ "$gradle_code" -ne 0 ]; then
@@ -720,8 +727,23 @@ analyze_unit() {
     return 1
 }
 
+gametest_shard_passed() {
+    grep -E "All [0-9]+ required tests passed" "$1" 2>/dev/null | tail -1 \
+        | sed -E 's/.*All ([0-9]+) required tests passed.*/\1/'
+}
+
+gametest_shard_share() {
+    local line
+    line=$(grep -E "GameTest filter .*осталось [0-9]+" "$1" 2>/dev/null | tail -1)
+    [ -n "$line" ] || return 0
+    printf '%s %s\n' \
+        "$(printf '%s\n' "$line" | sed -E 's/.*из ([0-9]+), осталось.*/\1/')" \
+        "$(printf '%s\n' "$line" | sed -E 's/.*осталось ([0-9]+).*/\1/')"
+}
+
 analyze_gametest() {
-    local log="$1"
+    local log="$1" shards="${2:-1}" base="${3:-$1}" code="${4:-0}"
+    local i shard_log shard_code
 
     local failed_line=$(grep -E "[0-9]+ required tests failed" "$log" | tail -1)
     if [ -n "$failed_line" ]; then
@@ -734,14 +756,69 @@ analyze_gametest() {
         return 1
     fi
 
+    if [ "$shards" -gt 1 ]; then
+        local counts=() total=0 registry="" s_total s_share n breakdown
+        for ((i = 0; i < shards; i++)); do
+            shard_log="$base.shard-$i"
+            shard_code="${SHARD_CODES[$i]:-?}"
+            if [ ! -s "$shard_log" ]; then
+                echo "FAIL gametest: шард $i не запускал сцены — его лог пуст (код gradle $shard_code)"
+                echo "шард обязан напечатать «All N required tests passed»; без этого его сцены не проверены"
+                echo "полный лог: $log"
+                return 1
+            fi
+            n=$(gametest_shard_passed "$shard_log")
+            if [ -z "$n" ]; then
+                echo "FAIL gametest: шард $i не дошёл до «All N required tests passed» (код gradle $shard_code)"
+                grep -E "BUILD FAILED|What went wrong|Unable to|error:|Exception" "$shard_log" | head -3
+                echo "полный лог: $log"
+                return 1
+            fi
+            if [ "$shard_code" != 0 ]; then
+                echo "FAIL gametest: шард $i напечатал итог, но сборка ушла с кодом $shard_code"
+                grep -E "BUILD FAILED|What went wrong|Unable to|error:" "$shard_log" | head -3
+                echo "полный лог: $log"
+                return 1
+            fi
+            read -r s_total s_share <<<"$(gametest_shard_share "$shard_log")"
+            if [ -n "${s_share:-}" ] && [ "$n" != "$s_share" ]; then
+                echo "FAIL gametest: шард $i прошёл $n тестов, а ему назначено $s_share сцен — фильтр шарда не сработал"
+                echo "полный лог: $log"
+                return 1
+            fi
+            if [ -n "${s_total:-}" ]; then
+                if [ -z "$registry" ]; then
+                    registry="$s_total"
+                elif [ "$registry" != "$s_total" ]; then
+                    echo "FAIL gametest: шарды видят разный набор сцен ($registry и $s_total) — фильтр применился по-разному"
+                    echo "полный лог: $log"
+                    return 1
+                fi
+            fi
+            counts+=("$n")
+            total=$((total + n))
+        done
+        breakdown=$(printf '%s+' "${counts[@]}")
+        breakdown="${breakdown%+}"
+        echo "OK gametest: $total тестов ($shards шардов: $breakdown), $ELAPSED с"
+        return 0
+    fi
+
     local passed_line=$(grep -E "All [0-9]+ required tests passed" "$log" | tail -1)
 
-    if [ -n "$passed_line" ]; then
+    if [ -n "$passed_line" ] && [ "$code" -eq 0 ]; then
         local count
         count=$(grep -E "All [0-9]+ required tests passed" "$log" \
             | sed -E 's/.*All ([0-9]+) required tests passed.*/\1/' | awk '{s += $1} END {print s + 0}')
         echo "OK gametest: $count тестов, $ELAPSED с"
         return 0
+    fi
+
+    if [ -n "$passed_line" ]; then
+        echo "FAIL gametest: тесты прошли, но прогон ушёл с кодом $code — результат не засчитан"
+        grep -E "BUILD FAILED|What went wrong|Unable to|error:" "$log" | head -3
+        echo "полный лог: $log"
+        return 1
     fi
 
     echo "FAIL gametest: результат не распознан"
@@ -762,8 +839,10 @@ start_heartbeat
 if [ "$MODE" = "unit" ]; then
     rm -f TestResults/unit/xml/TEST-*.xml TestResults/unit/test-cost.csv
     rm -f TestResults/api/xml/TEST-*.xml
-    rm -f TestResults/mech-mining/xml/TEST-*.xml TestResults/mech-movement/xml/TEST-*.xml
-    rm -f TestResults/mech-inventory/xml/TEST-*.xml
+    for module_root in ${MOD_MODULE_MAIN_ROOTS//,/ }; do
+        name="${module_root%%/src/*}"
+        rm -f "TestResults/$(basename "$name")/xml/TEST-*.xml"
+    done
     start_monitor "unit"
 
     UNIT_EXTRA=()
@@ -775,12 +854,11 @@ if [ "$MODE" = "unit" ]; then
             UNIT_EXTRA=(staticAnalysis --continue)
         fi
     else
-        UNIT_EXCLUDE=(
-            -x :api:test
-            -x :mech:mining:test
-            -x :mech:movement:test
-            -x :mech:inventory:test
-        )
+        UNIT_EXCLUDE=(-x :api:test)
+        for module_root in ${MOD_MODULE_MAIN_ROOTS//,/ }; do
+            name="${module_root%%/src/*}"
+            UNIT_EXCLUDE+=(-x ":${name//\//:}:test")
+        done
     fi
 
     if command -v setsid >/dev/null 2>&1; then
@@ -855,9 +933,12 @@ else
 
     SHARD_EXCLUDES=()
     if [ "$GAMETEST_SHARDS" -gt 1 ]; then
-        "$GRADLEW" createMinecraftArtifacts classes \
-            writeGameTestServerLegacyClasspath prepareGameTestServerRun \
-            >"$LOG_FILE.preflight" 2>&1 &
+        PRE_TASKS=(createMinecraftArtifacts classes jar
+            writeGameTestServerLegacyClasspath prepareGameTestServerRun)
+        while read -r module_path; do
+            [ -n "$module_path" ] && PRE_TASKS+=("$module_path:jar")
+        done < <(sed -nE "s/^include +'(:[^.][^']*)'.*/\1/p" settings.gradle)
+        "$GRADLEW" "${PRE_TASKS[@]}" >"$LOG_FILE.preflight" 2>&1 &
         PRE_PID=$!
         echo "$PRE_PID" >>"$LOG_FILE.gradlepids"
         wait "$PRE_PID"
@@ -873,9 +954,8 @@ else
         fi
         rm -f "$LOG_FILE.preflight"
         SHARD_EXCLUDES=(-x createMinecraftArtifacts -x compileJava -x generateModMetadata
-            -x processResources -x classes -x downloadAssets
-            -x writeGameTestServerLegacyClasspath -x prepareGameTestServerRun
-            -x jar)
+            -x processResources -x classes -x downloadAssets -x jar -x :build-logic:jar
+            -x writeGameTestServerLegacyClasspath -x prepareGameTestServerRun)
     fi
 
     for ((shard = 0; shard < GAMETEST_SHARDS; shard++)); do
@@ -917,9 +997,11 @@ else
     done
 
     CODE=0
+    SHARD_CODES=()
     for pid in "${GRADLE_PIDS[@]}"; do
         wait "$pid"
         shard_code=$?
+        SHARD_CODES+=("$shard_code")
         if [ "$shard_code" -ne 0 ] && [ "$CODE" -eq 0 ]; then
             CODE=$shard_code
         fi
@@ -935,7 +1017,6 @@ else
 
     if [ "$GAMETEST_SHARDS" -gt 1 ]; then
         cat "$LOG_FILE".shard-* >"$LOG_FILE"
-        rm -f "$LOG_FILE".shard-*
     fi
     rm -f "$LOG_FILE.gradlepids"
 
@@ -950,6 +1031,8 @@ else
         exit 75
     fi
 
-    analyze_gametest "$LOG_FILE"
-    exit $?
+    analyze_gametest "$LOG_FILE" "$GAMETEST_SHARDS" "$LOG_FILE" "$CODE"
+    RESULT=$?
+    [ "$GAMETEST_SHARDS" -gt 1 ] && rm -f "$LOG_FILE".shard-*
+    exit $RESULT
 fi

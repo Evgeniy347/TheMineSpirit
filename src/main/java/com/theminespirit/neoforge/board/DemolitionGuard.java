@@ -2,8 +2,8 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
-import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.policy.SettlementBreak;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.BuildingSeeds;
 import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.neoforge.BlockStates;
@@ -14,7 +14,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
 final class DemolitionGuard {
-    private static final BlockProtection PROTECTION = ProtectionConfig.load();
+    private static final BlockProtection PROTECTION =
+            DataTables.INSTANCE.protection().current();
     private static final String AIR = "minecraft:air";
 
     private DemolitionGuard() {}
