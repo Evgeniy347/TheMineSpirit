@@ -6,10 +6,7 @@ import java.util.List;
 final class DeadCodeExemptions {
     static final List<Exemption> OPEN_TASKS = List.of(
             new Exemption(
-                    "core/scene/SceneGenerator.java|method|SceneGenerator#generate",
-                    "Генератор сцены по сиду — чистая функция core, вход только из GameTest first_stage"),
-            new Exemption(
-                    "core/board/graph/RecipeImport.java|method|RecipeImport#importRecipes",
+                    "core/board/graph/RecipeImport.java|class|<top>#RecipeImport",
                     "Генератор graph-recipes.json (export-задача): рецепты импортируются при генерации, "
                             + "в игре читается готовый файл; TestResults/task.md"),
             new Exemption(
@@ -34,12 +31,6 @@ final class DeadCodeExemptions {
                     "neoforge/crafting/RecipeKnowledge.java|method|RecipeKnowledge#indexBuilds",
                     "Заготовка под открытую задачу: todo.md → «Кузнечество»"),
             new Exemption(
-                    "neoforge/intellect/SettlementIntellect.java|method|SettlementIntellect#taskFailures",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exemption(
-                    "neoforge/intellect/SettlementIntellect.java|method|SettlementIntellect#taskStarts",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exemption(
                     "neoforge/tactics/TacticsService.java|method|TacticsService#lastOutcome",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
             new Exemption(
@@ -61,8 +52,8 @@ final class DeadCodeExemptions {
                     "core/board/HiveRules.java|method|HiveRules#placementReady",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
             new Exemption(
-                    "core/building/PillarPlan.java|method|PillarPlan#dismantle",
-                    "Заготовка под открытую задачу: todo.md → «Строительство»"),
+                    "core/building/PillarPlan.java|class|<top>#PillarPlan",
+                    "Заготовка под открытую задачу: todo.md → «Строительство» (прототип столба/разбора)"),
             new Exemption(
                     "core/building/PresetLibrary.java|method|PresetLibrary#byStage",
                     "Заготовка под открытую задачу: todo.md → «Строительство»"),
@@ -70,8 +61,8 @@ final class DeadCodeExemptions {
                     "core/building/PresetLibrary.java|method|PresetLibrary#byTypeAndStage",
                     "Заготовка под открытую задачу: todo.md → «Строительство»"),
             new Exemption(
-                    "core/building/WarehouseLayout.java|method|WarehouseLayout#stacksWithoutSign",
-                    "Заготовка под открытую задачу: todo.md → «Строительство»"),
+                    "core/building/WarehouseLayout.java|class|<top>#WarehouseLayout",
+                    "Заготовка под открытую задачу: todo.md → «Строительство»; раскладки сундуков — docs/settlement/catalog.md"),
             new Exemption(
                     "core/coordinator/SettlementGroups.java|method|SettlementGroups#partition",
                     "Заготовка под открытую задачу: todo.md → «Строительство»"),
@@ -87,9 +78,6 @@ final class DeadCodeExemptions {
             new Exemption(
                     "core/husbandry/PenBounds.java|method|PenBounds#escapedOf",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
-            new Exemption(
-                    "core/intellect/ActivityCatalog.java|method|ActivityCatalog#forChild",
-                    "Заготовка под открытую задачу: todo.md → «Дети»"),
             new Exemption(
                     "core/intellect/Forage.java|method|Forage#hasWater",
                     "Заготовка под открытую задачу: todo.md → «Рыболовство»"),
@@ -142,20 +130,81 @@ final class DeadCodeExemptions {
                     "core/movement/network/TrailTrack.java|class|<top>#TrailTrack",
                     "Прототип графа внешних троп для разведки дальности пути: docs/research/pathfinding-range.md"),
             new Exemption(
-                    "core/movement/network/BreadcrumbTrail.java|method|BreadcrumbTrail#backtrack",
+                    "core/movement/network/BreadcrumbTrail.java|class|<top>#BreadcrumbTrail",
                     "Прототип обратного маршрута по крошкам: docs/research/pathfinding-range.md"),
             new Exemption(
                     "core/navigation/NavCachedWorld.java|method|NavCachedWorld#cachedBytes",
                     "Счётчик памяти кэша для отчёта: docs/research/baritone-navigation.md"),
             new Exemption(
-                    "core/navigation/NavPathSplicer.java|method|NavPathSplicer#splice",
+                    "core/navigation/NavAStarSearch.java|class|<top>#NavAStarSearch",
+                    "Прототип поиска Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
+            new Exemption(
+                    "core/navigation/NavGoalComposite.java|class|<top>#NavGoalComposite",
+                    "Прототип цели Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
+            new Exemption(
+                    "core/navigation/NavGoalGetToBlock.java|class|<top>#NavGoalGetToBlock",
+                    "Прототип цели Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
+            new Exemption(
+                    "core/navigation/NavPathSplicer.java|class|<top>#NavPathSplicer",
                     "Склейка сегментов Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
             new Exemption(
-                    "core/navigation/NavSegmentedPlanner.java|method|NavSegmentedPlanner#follow",
+                    "core/navigation/NavSegmentedPlanner.java|class|<top>#NavSegmentedPlanner",
                     "Сегментированный дальний путь Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
             new Exemption(
-                    "core/route/RouteBreakAudit.java|method|RouteBreakAudit#firstVeto",
+                    "core/movement/ApproachRoute.java|class|<top>#ApproachRoute",
+                    "Прототип маршрута подхода: docs/research/pathfinding-range.md"),
+            new Exemption(
+                    "core/movement/ProgressWatch.java|class|<top>#ProgressWatch",
+                    "Прототип сторожа прогресса пути: docs/research/pathfinding-range.md"),
+            new Exemption(
+                    "core/route/RouteBreakAudit.java|class|<top>#RouteBreakAudit",
                     "Старый аудит ломки RoutePlanner: навигация ходит без ломки, docs/ARCHITECTURE.md"),
+            new Exemption(
+                    "core/route/RouteDeadline.java|class|<top>#RouteDeadline",
+                    "Прототип бюджета времени пути: docs/research/baritone-navigation.md"),
+            new Exemption(
+                    "core/mining/MineTunnel.java|field|MineTunnel#MAX_STEPS",
+                    "Бюджет прохода шахты — доменное число: вход проверки кейса observe10; в игре передаётся из настроек"),
+            new Exemption(
+                    "core/coordinator/CoordinatorState.java|method|CoordinatorState#workers",
+                    "Запрос работников — публичное чтение снимка поселения, проверяется свойствами; игра берёт defenders()"),
+            new Exemption(
+                    "core/intellect/FoodNorm.java|method|FoodNorm#perSoul",
+                    "Норма еды на душу — публичная чистая функция, проверяется свойствами; в игре зовут demand()"),
+            new Exemption(
+                    "core/inventory/InventoryFill.java|method|InventoryFill#extraFraction",
+                    "Доля лишнего в инвентаре — публичный запрос домена, проверяется нормами"),
+            new Exemption(
+                    "core/inventory/InventoryFill.java|method|InventoryFill#occupiedFraction",
+                    "Доля занятых ячеек — публичный запрос домена, проверяется нормами"),
+            new Exemption(
+                    "core/processing/ProcessingStock.java|method|ProcessingStock#hasLogs",
+                    "Признак запаса переработки — публичный запрос домена, проверяется таблицами"),
+            new Exemption(
+                    "core/processing/ProcessingStock.java|method|ProcessingStock#hasPlanks",
+                    "Признак запаса переработки — публичный запрос домена, проверяется таблицами"),
+            new Exemption(
+                    "core/processing/ProcessingStock.java|method|ProcessingStock#hasRawFood",
+                    "Признак запаса переработки — публичный запрос домена, проверяется таблицами"),
+            new Exemption(
+                    "core/processing/ProcessingStock.java|method|ProcessingStock#plankProduct",
+                    "Выбор породы досок — публичный запрос домена, проверяется таблицами"),
+            new Exemption(
+                    "core/board/PriorityContext.java|method|PriorityContext#none",
+                    "Пустой контекст приоритетов — публичная заготовка домена: в игре создаётся прямым конструктором, "
+                            + "none() нужен тестам; удалить вместе с пересмотром приоритетов"),
+            new Exemption(
+                    "core/board/route/RouteResource.java|method|RouteResource#ofBlock",
+                    "Разбор ресурса по блоку — публичный запрос домена, в игре ресурс берут по тегу/постройке"),
+            new Exemption(
+                    "core/intellect/Forage.java|method|Forage#hasRod",
+                    "Признак удочки — публичный запрос домена: сканер поселения считает снасть своим способом"),
+            new Exemption(
+                    "core/tactics/Scorer.java|method|Scorer#combine",
+                    "Комбинация оценок — публичная чистая функция, проверяется свойствами; в игре зовут другие методы"),
+            new Exemption(
+                    "core/board/graph/RecipeImport.java|method|Tags#groupOf",
+                    "Часть генератора graph-recipes.json: рецепты импортируются при генерации, в игре читается файл"),
             new Exemption(
                     "core/board/TicketTarget.java|method|TicketTarget#withRescue",
                     "Заготовка под узел графа спасения: RESCUE_SPIRIT ставит граф, а не RescueWatch; "

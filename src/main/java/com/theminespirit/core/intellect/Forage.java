@@ -25,23 +25,11 @@ public record Forage(String containerFood, int prey, String preySpecies, boolean
         }
     }
 
-    public boolean hasContainerFood() {
-        return !containerFood.isBlank();
-    }
-
-    public boolean hasPrey() {
-        return prey > 0;
-    }
-
     public boolean hasWater() {
         return water;
     }
 
     public boolean hasRod() {
         return rod;
-    }
-
-    public boolean canFish() {
-        return water && rod;
     }
 }

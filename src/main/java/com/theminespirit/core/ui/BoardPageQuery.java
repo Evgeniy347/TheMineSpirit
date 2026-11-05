@@ -10,7 +10,6 @@ public record BoardPageQuery(
         @Nullable BoardTileGroup status,
         BoardFilter.Spirit spirit,
         @Nullable String spiritName) {
-    public static final int DEFAULT_LIMIT = 30;
     public static final int MAX_LIMIT = 512;
 
     public BoardPageQuery {

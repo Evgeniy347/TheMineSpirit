@@ -1,7 +1,6 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageSites;
@@ -30,7 +29,7 @@ public final class SettlementLevel {
 
     public static Optional<StageSite> site(TownPlan plan, int stage, int level) {
         Objects.requireNonNull(plan, "План не может быть null: места этапа берутся из него");
-        return StageSites.find(plan, stage, level, DataTables.INSTANCE.town().current());
+        return StageSites.find(plan, stage, level, TownRules.current());
     }
 
     public static Optional<StageSite> site(TownPlan plan, int stage, SettlementPlot plot) {
@@ -39,8 +38,8 @@ public final class SettlementLevel {
 
     public static Optional<ColumnMask> finalArea(TownPlan plan) {
         Objects.requireNonNull(plan, "План не может быть null: площадь финального этапа берётся из него");
-        TownRules rules = DataTables.INSTANCE.town().current();
-        int stage = DataTables.INSTANCE.stages().current().stages().size();
+        TownRules rules = TownRules.current();
+        int stage = StageRules.current().stages().size();
         Optional<ColumnMask> area = StageSites.levelArea(plan, stage, rules);
         return area.isPresent() ? area : StageSites.levelArea(plan, FIRST_STAGE, rules);
     }

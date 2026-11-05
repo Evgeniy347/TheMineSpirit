@@ -8,7 +8,6 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.town.PlannedBlock;
@@ -77,9 +76,7 @@ public final class StagePlans {
             steps.add(LevelRepair.plan(target));
         }
         steps.add(PlanSteps.gotoPoint(origin));
-        DataTables.INSTANCE
-                .presets()
-                .current()
+        PresetLibrary.current()
                 .byId(scheme)
                 .ifPresent(preset -> PresetLibrary.countMaterials(preset.schematic())
                         .forEach((item, count) -> {
@@ -103,9 +100,7 @@ public final class StagePlans {
     }
 
     private static TaskNode hut(TicketTarget target, StageSite site) {
-        String scheme = DataTables.INSTANCE
-                .stages()
-                .current()
+        String scheme = StageRules.current()
                 .scheme(BoardCase.BUILD_HOUSE, 1)
                 .orElseThrow(() -> new IllegalStateException(
                         "stages.json: нет схемы дома уровня 1 — хижине этапа 1 не по чему строиться"));
@@ -120,9 +115,7 @@ public final class StagePlans {
         }
         List<TaskNode> steps = new ArrayList<>();
         steps.add(PlanSteps.gotoPoint(site.workYard()));
-        DataTables.INSTANCE
-                .presets()
-                .current()
+        PresetLibrary.current()
                 .byId(scheme)
                 .ifPresent(preset -> PresetLibrary.countMaterials(preset.schematic())
                         .forEach((item, count) -> {

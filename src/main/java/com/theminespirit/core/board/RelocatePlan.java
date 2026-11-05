@@ -1,7 +1,6 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.reload.DataTables;
 import java.util.Objects;
 import java.util.Set;
 
@@ -26,7 +25,7 @@ public final class RelocatePlan {
         Objects.requireNonNull(
                 boardCase,
                 "Кейс неподвижности не может быть null: без него неизвестно, " + "можно ли переносить постройку");
-        return DataTables.INSTANCE.board().current().immovable().contains(boardCase.name());
+        return BoardConfig.current().immovable().contains(boardCase.name());
     }
 
     public static String schemeFor(BoardCase boardCase) {
@@ -44,7 +43,7 @@ public final class RelocatePlan {
     }
 
     public static Set<String> immovableNames() {
-        return Set.copyOf(DataTables.INSTANCE.board().current().immovable());
+        return Set.copyOf(BoardConfig.current().immovable());
     }
 
     public static void assertMovable(BoardCase boardCase) {

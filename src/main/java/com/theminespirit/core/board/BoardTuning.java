@@ -1,6 +1,5 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.CatalogLimits;
 import java.util.Set;
 
@@ -149,7 +148,7 @@ public final class BoardTuning {
     }
 
     private static long interval(String key, long fallback) {
-        Long value = DataTables.INSTANCE.board().current().intervals().get(key);
+        Long value = BoardConfig.current().intervals().get(key);
         return value == null || value <= 0 ? fallback : value;
     }
 

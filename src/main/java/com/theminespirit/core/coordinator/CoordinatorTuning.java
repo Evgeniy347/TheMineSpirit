@@ -9,7 +9,6 @@ public final class CoordinatorTuning {
     public static final long SNAPSHOT_STALE_TICKS = 40;
     public static final int SNAPSHOT_GROUP_QUERIES = 1;
     public static final int SNAPSHOT_SPIRIT_QUERIES = 1;
-    public static final long CALM_POST_IDLE_TICKS = 200;
 
     private CoordinatorTuning() {}
 }

@@ -1,6 +1,5 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.reload.DataTables;
 import java.util.Set;
 
 public final class HiveRules {
@@ -130,7 +129,7 @@ public final class HiveRules {
     }
 
     private static int hiveValue(String key, int fallback) {
-        Integer value = DataTables.INSTANCE.board().current().hive().get(key);
+        Integer value = BoardConfig.current().hive().get(key);
         return value == null || value < 1 ? fallback : value;
     }
 }

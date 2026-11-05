@@ -1,14 +1,10 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.reload.DataTables;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public final class SettlementStage {
-    public static final int FIRST_STAGE_LOGS = 64;
-    private static final int MAX_SHIFT = 16;
-
     private SettlementStage() {}
 
     public static int of(BoardLedger ledger) {
@@ -71,13 +67,6 @@ public final class SettlementStage {
         return level <= stage;
     }
 
-    public static int logCap(int stage) {
-        if (stage < 1) {
-            throw new IllegalArgumentException("Этап " + stage + ": этапы считаются с первого");
-        }
-        return FIRST_STAGE_LOGS << Math.min(stage - 1, MAX_SHIFT);
-    }
-
     private static Map<String, Integer> missing(
             StageRules rules, BoardLedger ledger, StageRules.Stage stage, StageWorld world) {
         Map<String, Integer> missing = new LinkedHashMap<>(rules.missingOf(ledger, stage.stage()));
@@ -93,6 +82,6 @@ public final class SettlementStage {
     }
 
     private static StageRules rules() {
-        return DataTables.INSTANCE.stages().current();
+        return StageRules.current();
     }
 }
