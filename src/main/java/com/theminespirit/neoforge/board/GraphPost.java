@@ -8,6 +8,7 @@ import com.theminespirit.core.board.GatherBatch;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.ToolGate;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.graph.ActivityPlans;
 import com.theminespirit.core.board.graph.GraphFacts;
@@ -155,7 +156,7 @@ final class GraphPost {
                 FirstStepsRunner.open(this, new FirstStepsRunner.StepOrder(boardCase, task.priority(), ticket.id()));
         missing.forEach((item, count) -> {
             if (GraphItemIds.known(item) && !CraftedItems.isCrafted(item)) {
-                gather(MAKE + item, ticket.id(), task.priority(), item, count, craftPoint());
+                gather(MAKE + item, ticket.id(), task.priority(), item, count, sourceFor(item));
             }
         });
         return true;
@@ -182,6 +183,15 @@ final class GraphPost {
         return GraphTargets.source(level, graph.way(wayId), around, scan, this::craftPoint);
     }
 
+    private BlockCoord sourceFor(String item) {
+        for (SupplyGraph.Way way : graph.producers(item)) {
+            if (way.world() != null) {
+                return GraphTargets.source(level, Optional.of(way), around, scan, this::craftPoint);
+            }
+        }
+        return craftPoint();
+    }
+
     BlockCoord craftPoint() {
         if (craft == null) {
             boolean yard = scan.facts().done().contains(BoardCase.STOCK_CHESTS);
@@ -197,8 +207,13 @@ final class GraphPost {
         List<Integer> portions = GatherBatch.split(GatherBatch.round(count, output), output, helpers);
         for (int part = 0; part < portions.size(); part++) {
             String partId = part == 0 ? id : id + PART;
+            if (service.board().statusOf(partId).orElse(null) == BoardStatus.DONE) {
+                service.reopen(partId);
+            }
             submit(
-                    ticket(partId, BoardCase.GATHER_MATERIALS, Optional.empty(), priority, cause, Map.of()),
+                    ToolGate.withTool(
+                            ticket(partId, BoardCase.GATHER_MATERIALS, Optional.empty(), priority, cause, Map.of()),
+                            item),
                     TicketTarget.at(at).withSupply(item, portions.get(part)));
         }
     }

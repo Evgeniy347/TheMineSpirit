@@ -87,6 +87,16 @@ public final class ToolGate {
         return Optional.empty();
     }
 
+    public static BoardTicket withTool(BoardTicket ticket, @Nullable String supplyItem) {
+        Objects.requireNonNull(ticket, "Задание не может быть null: пометку ставят в конкретное задание");
+        if (required(ticket).isPresent()) {
+            return ticket;
+        }
+        return required(ticket.boardCase(), supplyItem)
+                .map(tool -> ticket.withModifier(TOOL_MODIFIER + tool))
+                .orElse(ticket);
+    }
+
     public static boolean carries(BoardTicket ticket, Collection<String> items) {
         Objects.requireNonNull(items, "Инвентарь не может быть null: пустой — пустой набор");
         return carry(ticket)

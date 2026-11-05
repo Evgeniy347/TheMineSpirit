@@ -10,6 +10,7 @@ import java.util.Set;
 
 public final class GraphNames {
     public static final String FOOD = "food";
+    public static final String SOIL = "soil";
     private static final String NAMESPACE = "minecraft:";
     private static final Map<String, String> SUFFIXES = Map.of("_bed", "bed");
     private static final String DIAMOND_FOUND = "ore:diamond_found";

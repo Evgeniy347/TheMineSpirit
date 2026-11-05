@@ -23,7 +23,7 @@ final class GraphWorld {
     final Map<String, Integer> stations = new HashMap<>();
     final Map<String, Integer> distances = new HashMap<>();
     final Set<String> world = new HashSet<>(
-            Set.of("tree:oak", "tree:jungle", "sand", "clay", "animals", "flower:poppy", "flower:dandelion"));
+            Set.of("tree:oak", "tree:jungle", "sand", "clay", "animals", "flower:poppy", "flower:dandelion", "soil"));
     GraphFacts facts = GraphFacts.empty();
 
     static GraphWorld empty() {
@@ -76,6 +76,26 @@ final class GraphWorld {
 
     GraphWorld built(String building, Built state) {
         buildings.put(building, state);
+        return this;
+    }
+
+    GraphWorld needs(String building, String item, int count) {
+        materials.put(building, Map.of(item, count));
+        return this;
+    }
+
+    GraphWorld world(String tag) {
+        world.add(tag);
+        return this;
+    }
+
+    GraphWorld noWorld(String tag) {
+        world.remove(tag);
+        return this;
+    }
+
+    GraphWorld distance(String tag, int value) {
+        distances.put(tag, value);
         return this;
     }
 

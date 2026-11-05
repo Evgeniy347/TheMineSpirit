@@ -97,6 +97,7 @@ public final class BoardService {
     private final CrafterMemory crafters = new CrafterMemory();
     private final TransferWait transferWait = new TransferWait();
     private StockView stock = new StockView(Map.of());
+    private Set<String> liveCauses = Set.of();
     private long lastRebuild = -1;
     private int rebuilds;
     private boolean freshTickets;
@@ -234,7 +235,7 @@ public final class BoardService {
 
     public void rebuild(ServerLevel level, long now) {
         freshTickets = false;
-        board.prune(now);
+        board.prune(now, liveCauses);
         Set<String> alive = new HashSet<>();
         for (BoardTicket ticket : board.all()) {
             alive.add(ticket.id());
@@ -247,11 +248,12 @@ public final class BoardService {
         StockParts parts = refreshStock(level, spirits);
         ensureSupply(level, spirits, stock, now);
         StockView unreserved = parts.free(BoardReserve.items(board));
-        Set<String> liveCauses = sources.tick(level, this, spirits, unreserved, now);
-        liveCauses.addAll(liveHerdCauses(level));
-        liveCauses.addAll(liveDropCauses(level));
+        Set<String> live = sources.tick(level, this, spirits, unreserved, now);
+        live.addAll(liveHerdCauses(level));
+        live.addAll(liveDropCauses(level));
+        liveCauses = live;
         if (!sources.failedRound()) {
-            board.retain(liveCauses, now);
+            board.retain(live, now);
             retains++;
         }
         ForceloadGuard.tick(level, spirits, board, targets);

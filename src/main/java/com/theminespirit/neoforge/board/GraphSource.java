@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.graph.GraphCadence;
 import com.theminespirit.core.board.graph.GraphNotes;
@@ -105,12 +106,11 @@ public final class GraphSource {
                 half.graph(),
                 half.now());
         List<String> unconnected = new ArrayList<>();
-        Set<String> present = new HashSet<>();
-        for (var existing : half.service().board().all()) {
-            present.add(existing.id());
-        }
         for (GraphTickets.Ticket ticket : half.result().post()) {
-            if (present.contains(ticket.id())) {
+            BoardStatus status = half.service().board().statusOf(ticket.id()).orElse(null);
+            if (status == BoardStatus.DONE) {
+                half.service().board().reopen(ticket.id());
+            } else if (status != null) {
                 continue;
             }
             if (!post.post(ticket)) {
