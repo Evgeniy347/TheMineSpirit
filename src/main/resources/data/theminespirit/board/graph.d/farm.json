@@ -81,6 +81,8 @@
       "consumes": {
         "dirt": 1
       },
+      "tool": "hoe",
+      "tier": "wooden",
       "ticks": 120,
       "implemented": true
     },
