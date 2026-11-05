@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
@@ -74,6 +75,49 @@ class ToolGateTests {
         assertTrue(
                 ToolGate.keep(BoardCase.GATHER_MATERIALS, List.of(), false, "jungle_log") instanceof ToolGate.Release,
                 "Потерял топор — задание возвращено доске и ждёт инструмент, а не рубит руками");
+    }
+
+    @Test
+    void withTool_LogGather_MarkedAxeAndNotGivenToBareHands() {
+        BoardTicket bare = new BoardTicket(
+                "graph:chop_jungle_log",
+                BoardCase.GATHER_MATERIALS,
+                Optional.empty(),
+                94,
+                0,
+                1,
+                "graph:chop_jungle_log",
+                List.of(),
+                Map.of());
+
+        BoardTicket marked = ToolGate.withTool(bare, "jungle_log");
+
+        assertTrue(
+                marked.modifiers().contains(ToolGate.TOOL_MODIFIER + ToolGate.AXE),
+                "Рубка бревна несёт пометку топора в самом задании: " + marked);
+        assertFalse(
+                ToolGate.allows(marked, List.of("minecraft:stone_sword", "minecraft:wooden_shovel")),
+                "Духу без топора рубка не выдаётся: иначе доска отдаёт её и сразу получает назад");
+        assertTrue(ToolGate.allows(marked, List.of("minecraft:stone_axe")), "С топором та же рубка выдаётся");
+    }
+
+    @Test
+    void withTool_DirtGather_NoToolMark() {
+        BoardTicket dirt = new BoardTicket(
+                "graph:dig_dirt",
+                BoardCase.GATHER_MATERIALS,
+                Optional.empty(),
+                48,
+                0,
+                1,
+                "graph:dig_dirt",
+                List.of(),
+                Map.of());
+
+        assertEquals(
+                List.of(),
+                ToolGate.withTool(dirt, "dirt").modifiers(),
+                "Землю дух берёт руками: пометки инструмента у добычи земли нет — задание не ждёт топора");
     }
 
     @Test

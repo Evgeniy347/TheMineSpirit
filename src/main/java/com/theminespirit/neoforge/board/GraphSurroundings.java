@@ -100,13 +100,16 @@ final class GraphSurroundings {
         if (scan.nearest().containsKey("lava")) {
             events.add("lava_seen");
         }
+        Set<String> world = new HashSet<>(GraphNames.world(scan.blocks(), creatures));
+        Map<String, Integer> distances = new HashMap<>(scan.distances());
+        SoilQuarry.Result soil = SoilQuarry.find(level, home);
+        soil.point().ifPresent(at -> {
+            world.add(GraphNames.SOIL);
+            nearest.put(GraphNames.SOIL, at);
+            distances.put(GraphNames.SOIL, soil.distance());
+        });
         return new Around(
-                GraphNames.world(scan.blocks(), creatures),
-                Set.copyOf(events),
-                drops,
-                scan.decay(),
-                Map.copyOf(nearest),
-                scan.distances());
+                Set.copyOf(world), Set.copyOf(events), drops, scan.decay(), Map.copyOf(nearest), Map.copyOf(distances));
     }
 
     private static <T extends Entity> void marked(

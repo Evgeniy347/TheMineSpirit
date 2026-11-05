@@ -90,6 +90,14 @@ public record BoardTicket(
                 id, boardCase, assignee, next, createdAt, level, cause, dependsOn, requiredItems, modifiers);
     }
 
+    public BoardTicket withModifier(String modifier) {
+        Objects.requireNonNull(modifier, "Модификатор не может быть null: пустой список задают List.of()");
+        List<String> details = new ArrayList<>(modifiers);
+        details.add(modifier);
+        return new BoardTicket(
+                id, boardCase, assignee, priority, createdAt, level, cause, dependsOn, requiredItems, details);
+    }
+
     public BoardTicket withFailure(@Nullable String reason) {
         if (reason == null || reason.isBlank()) {
             return this;
