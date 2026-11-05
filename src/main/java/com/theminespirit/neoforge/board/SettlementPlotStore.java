@@ -3,9 +3,9 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.BuildingWoods;
+import com.theminespirit.core.board.SettlementLevel;
 import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageSites;
 import com.theminespirit.core.town.TownPlan;
@@ -88,11 +88,7 @@ public final class SettlementPlotStore extends SavedData {
         }
         StageSite cached = site;
         if (cached == null || cached.anchor().y() != current.anchor().y() || cached.stage() != stage) {
-            Optional<StageSite> found = StageSites.find(
-                    plan,
-                    stage,
-                    current.anchor().y(),
-                    DataTables.INSTANCE.town().current());
+            Optional<StageSite> found = SettlementLevel.site(plan, stage, current);
             if (found.isEmpty()) {
                 return Optional.empty();
             }

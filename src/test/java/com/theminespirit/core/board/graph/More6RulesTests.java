@@ -191,6 +191,7 @@ class More6RulesTests {
     }
 
     private static GraphFacts.Building building(String id, int percent, boolean unknown) {
-        return new GraphFacts.Building(id, 1, percent, 0, new GraphFacts.Position(0, 64, 0), unknown);
+        return new GraphFacts.Building(
+                id, 1, percent, 0, Map.of(), Map.of(), 0, new GraphFacts.Position(0, 64, 0), unknown, true);
     }
 }

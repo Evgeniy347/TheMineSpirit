@@ -231,7 +231,7 @@ class StoreGraphTests {
                     stations,
                     Map.of(
                             "furnace",
-                            new GraphFacts.Building("furnace", 1, 100, 0, Map.of(), Map.of(), 0, null, false)),
+                            new GraphFacts.Building("furnace", 1, 100, 0, Map.of(), Map.of(), 0, null, false, true)),
                     List.of(),
                     GraphSiteFacts.Terrain.empty(),
                     stageReqs);

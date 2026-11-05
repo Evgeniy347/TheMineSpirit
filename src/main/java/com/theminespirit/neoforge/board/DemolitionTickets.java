@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.DemolitionKey;
 import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
@@ -34,7 +35,7 @@ final class DemolitionTickets {
             List<BlockCoord> stray,
             List<FloatingBlocks.Finding> findings,
             PlanDemolition.Collected collected,
-            BoardService service) {
+            String previous) {
         LOGGER.info(
                 "[tidy] {}: уборка в тик {} по узлу графа {} — {} из {}, первые {}; прошлый {}; недостижимых {}; {}",
                 id,
@@ -43,7 +44,7 @@ final class DemolitionTickets {
                 stray.size(),
                 findings.size(),
                 stray.stream().limit(PlanDemolition.shown()).toList(),
-                DemolitionHistory.previous(service),
+                previous,
                 collected.unreachable(),
                 collected.notes());
     }
@@ -64,11 +65,7 @@ final class DemolitionTickets {
     }
 
     static String idFor(List<BlockCoord> stray) {
-        long hash = 17L;
-        for (BlockCoord at : stray) {
-            hash = hash * 31L + at.hashCode();
-        }
-        return PlanDemolition.PREFIX + Long.toUnsignedString(hash, 36);
+        return DemolitionKey.idFor(stray);
     }
 
     static boolean submit(

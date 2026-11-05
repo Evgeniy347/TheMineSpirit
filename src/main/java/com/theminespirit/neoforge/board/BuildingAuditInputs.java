@@ -92,8 +92,7 @@ public final class BuildingAuditInputs {
         Map<String, GraphFacts.Building> facts = new LinkedHashMap<>(GraphFactInputs.buildingFacts(states, town, scan));
         house(level, service, scan, facts, now);
         stage(level, scan, states, facts, now);
-        town.ifPresent(
-                plan -> plan.placements().forEach(place -> placement(level, plan, place, scan, states, facts, now)));
+        town.ifPresent(plan -> plan.placements().forEach(place -> placement(level, place, scan, states, facts, now)));
         return facts;
     }
 
@@ -145,7 +144,6 @@ public final class BuildingAuditInputs {
 
     private static void placement(
             ServerLevel level,
-            TownPlan plan,
             Placement place,
             FirstStepsRunner.StageScan scan,
             Map<String, Built> states,
@@ -162,7 +160,7 @@ public final class BuildingAuditInputs {
         GraphFacts.Building base = facts.get(key);
         int currentLevel = built || (base != null && base.level() > 0) ? 1 : 0;
         GraphFacts.Position at =
-                new GraphFacts.Position(place.x(), plan.anchor().y(), place.z());
+                new GraphFacts.Position(place.x(), scan.stage().anchor().y(), place.z());
         Optional<StageCatalog.Entry> entry = StageCatalog.entry(place.id());
         Audit audit = entry.map(value -> BuildingAudit.scheme(level, value.scheme(), at, scan.wood(), now))
                 .orElseGet(() -> BuildingAudit.stageOrchard(level, at, scan.wood(), now));
@@ -187,11 +185,11 @@ public final class BuildingAuditInputs {
 
     static GraphFacts.Building fact(String id, int level, GraphFacts.Position at, Audit audit, boolean built) {
         if (audit.unknown() > 0) {
-            return new GraphFacts.Building(id, level, 0, 0, Map.of(), Map.of(), 0, at, true);
+            return new GraphFacts.Building(id, level, 0, 0, Map.of(), Map.of(), 0, at, true, true);
         }
         int percent = audit.total() == 0 ? (built ? 100 : 0) : Math.min(100, audit.done() * 100 / audit.total());
         int damage = built ? Math.max(audit.missingCount() + audit.extraCount(), audit.total() - audit.done()) : 0;
         return new GraphFacts.Building(
-                id, level, percent, damage, audit.missing(), audit.extra(), audit.wrong(), at, false);
+                id, level, percent, damage, audit.missing(), audit.extra(), audit.wrong(), at, false, true);
     }
 }

@@ -150,6 +150,38 @@ class RepairAuditTests {
     }
 
     @Test
+    void audit_BuildingAtWrongHeight_MissingBelowAndExtraAbove() {
+        Schematic scheme = new Schematic(
+                3,
+                2,
+                1,
+                List.of(
+                        new Schematic.Entry(0, 0, 0, "cobblestone"),
+                        new Schematic.Entry(1, 0, 0, "cobblestone"),
+                        new Schematic.Entry(2, 0, 0, "cobblestone")),
+                List.of(new Schematic.Cell(1, 1, 0)));
+        Map<BlockCoord, String> world = new HashMap<>();
+        world.put(ORIGIN, AIR);
+        world.put(new BlockCoord(11, 64, 10), "minecraft:cobblestone");
+        world.put(new BlockCoord(12, 64, 10), "minecraft:cobblestone");
+        world.put(new BlockCoord(11, 65, 10), "minecraft:cobblestone");
+
+        RepairAudit.Report report = repairAudit(scheme, world, Set.of(), Map.of(), 100);
+
+        assertTrue(
+                report.fixes()
+                        .contains(
+                                new RepairAudit.Fix(ORIGIN, RepairAudit.Action.PLACE, "minecraft:cobblestone", AIR, 0)),
+                "Постройка на другой высоте: на единой высоте клетка пуста — её ставят заново: " + report.fixes());
+        assertTrue(
+                report.fixes()
+                        .contains(new RepairAudit.Fix(
+                                new BlockCoord(11, 65, 10), RepairAudit.Action.CLEAR, AIR, "minecraft:cobblestone", 0)),
+                "Блок, стоящий не на единой высоте, становится extra (снос): иначе дом остался бы повисшим: "
+                        + report.fixes());
+    }
+
+    @Test
     void audit_SoftBlockMissing_SkippedAsNotDamage() {
         Schematic scheme = new Schematic(1, 1, 1, List.of(new Schematic.Entry(0, 0, 0, "poppy")));
         Map<BlockCoord, String> world = new HashMap<>();

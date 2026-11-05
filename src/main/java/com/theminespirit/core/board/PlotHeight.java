@@ -1,10 +1,8 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.IntBinaryOperator;
 
 public record PlotHeight(int level, int cut, int fill, int surplusPercent) {
@@ -13,35 +11,18 @@ public record PlotHeight(int level, int cut, int fill, int surplusPercent) {
         return "[plot] высота " + level + ": срезка " + cut + ", подсыпка " + fill + ", запас " + surplusPercent + "%";
     }
 
-    public static PlotHeight choose(ColumnMask area, IntBinaryOperator feet, LevelingRules rules) {
+    public static PlotHeight choose(ColumnMask area, IntBinaryOperator feet, LevelingRules rules, int lowest) {
         int[] heights = heights(area, feet);
         int[] sorted = heights.clone();
         Arrays.sort(sorted);
-        for (int level = sorted[sorted.length / 2]; level > sorted[0]; level--) {
+        int bottom = Math.max(sorted[0], lowest);
+        for (int level = sorted[sorted.length / 2]; level > bottom; level--) {
             PlotHeight candidate = measure(heights, level, rules);
             if (rules.enough(candidate.cut(), candidate.fill())) {
                 return candidate;
             }
         }
-        return measure(heights, sorted[0], rules);
-    }
-
-    public static PlotHeight at(int level, ColumnMask area, IntBinaryOperator feet, LevelingRules rules) {
-        return measure(heights(area, feet), level, rules);
-    }
-
-    public static Optional<PlotHeight> recheck(
-            SettlementPlot stored, ColumnMask area, IntBinaryOperator feet, LevelingRules rules) {
-        Objects.requireNonNull(stored, "План участка не может быть null: перепроверяется сохранённая высота");
-        BlockCoord anchor = stored.anchor();
-        if (PlotLeveling.isLevel(anchor, area, feet)) {
-            return Optional.empty();
-        }
-        PlotHeight current = at(anchor.y(), area, feet, rules);
-        if (rules.enough(current.cut(), current.fill())) {
-            return Optional.empty();
-        }
-        return Optional.of(choose(area, feet, rules));
+        return measure(heights, bottom, rules);
     }
 
     private static PlotHeight measure(int[] heights, int level, LevelingRules rules) {

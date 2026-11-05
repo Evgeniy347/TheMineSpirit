@@ -192,7 +192,8 @@ public record GraphFacts(
             Map<String, Integer> extra,
             int wrong,
             @Nullable Position position,
-            boolean unknown) {
+            boolean unknown,
+            boolean lotReady) {
         public Building {
             Objects.requireNonNull(id, "id постройки не может быть null: по нему сверяют план");
             missing = Map.copyOf(
@@ -203,10 +204,6 @@ public record GraphFacts(
                 throw new IllegalArgumentException("Уровень, процент, повреждения и чужие блоки вне границ: "
                         + "отсутствие — ноль, процент 0..100, неизвестное отмечают флагом unknown");
             }
-        }
-
-        public Building(String id, int level, int auditPercent, int damage, @Nullable Position at, boolean unknown) {
-            this(id, level, auditPercent, damage, Map.of(), Map.of(), 0, at, unknown);
         }
 
         public int missingCount() {

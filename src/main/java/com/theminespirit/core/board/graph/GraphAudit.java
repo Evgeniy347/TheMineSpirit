@@ -10,6 +10,9 @@ public final class GraphAudit {
             return false;
         }
         GraphFacts.Building fact = state.facts().buildings().get(building);
-        return fact != null && (fact.unknown() || fact.auditPercent() > 0);
+        if (fact == null) {
+            return false;
+        }
+        return fact.unknown() || fact.auditPercent() > 0 || !fact.lotReady();
     }
 }

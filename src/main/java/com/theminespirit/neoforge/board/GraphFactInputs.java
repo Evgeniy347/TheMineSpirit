@@ -199,7 +199,8 @@ final class GraphFactInputs {
                             Map.of(),
                             0,
                             position(id, town, scan),
-                            false));
+                            false,
+                            true));
         });
         return facts;
     }

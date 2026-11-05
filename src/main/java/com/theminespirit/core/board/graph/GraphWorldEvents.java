@@ -42,6 +42,8 @@ public final class GraphWorldEvents {
         if (building.unknown()) {
             return false;
         }
-        return building.damage() > 0 || (building.auditPercent() > 0 && building.auditPercent() < 100);
+        return building.damage() > 0
+                || building.wrong() > 0
+                || (building.auditPercent() > 0 && building.auditPercent() < 100);
     }
 }

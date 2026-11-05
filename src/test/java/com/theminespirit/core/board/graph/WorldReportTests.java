@@ -18,12 +18,22 @@ class WorldReportTests {
                 Map.of(),
                 Map.of(
                         "hut",
-                        new GraphFacts.Building("hut", 1, 75, 5, Map.of("minecraft:dirt", 5), Map.of(), 0, null, false),
+                        new GraphFacts.Building(
+                                "hut", 1, 75, 5, Map.of("minecraft:dirt", 5), Map.of(), 0, null, false, true),
                         "warehouse",
                         new GraphFacts.Building(
-                                "warehouse", 1, 90, 4, Map.of("minecraft:oak_planks", 4), Map.of(), 0, null, false),
+                                "warehouse",
+                                1,
+                                90,
+                                4,
+                                Map.of("minecraft:oak_planks", 4),
+                                Map.of(),
+                                0,
+                                null,
+                                false,
+                                true),
                         "mine",
-                        new GraphFacts.Building("mine", 1, 0, 9, Map.of(), Map.of(), 0, null, true)),
+                        new GraphFacts.Building("mine", 1, 0, 9, Map.of(), Map.of(), 0, null, true, true)),
                 List.of(new GraphSiteFacts.Stray(
                         "stray:fence", "fence", new GraphFacts.Position(1, 64, 1), null, Map.of("oak_fence", 3))),
                 new GraphSiteFacts.Terrain(

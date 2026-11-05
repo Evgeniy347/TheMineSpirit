@@ -96,7 +96,10 @@ public final class FloatingScan {
     }
 
     public static boolean reachable(ServerLevel level, BlockCoord at) {
-        return !StandSpots.of(at, new LevelSafetyView(level), at).isEmpty();
+        if (!StandSpots.of(at, new LevelSafetyView(level), at).isEmpty()) {
+            return true;
+        }
+        return GraphTargets.standNear(level, at).isPresent();
     }
 
     private static int groundBelow(ServerLevel level, BlockCoord base) {

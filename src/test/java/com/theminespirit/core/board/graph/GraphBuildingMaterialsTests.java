@@ -12,8 +12,8 @@ class GraphBuildingMaterialsTests {
 
     @Test
     void materials_MissingBlocks_BecomeItems() {
-        GraphFacts facts =
-                facts(new GraphFacts.Building("hut", 1, 75, 3, Map.of("minecraft:dirt", 3), Map.of(), 0, null, false));
+        GraphFacts facts = facts(
+                new GraphFacts.Building("hut", 1, 75, 3, Map.of("minecraft:dirt", 3), Map.of(), 0, null, false, true));
 
         Map<String, Map<String, Integer>> materials = GraphBuildingMaterials.of(facts, GRAPH);
 
@@ -25,8 +25,8 @@ class GraphBuildingMaterialsTests {
 
     @Test
     void materials_UnknownChunks_GiveNothing() {
-        GraphFacts facts =
-                facts(new GraphFacts.Building("hut", 1, 0, 0, Map.of("minecraft:dirt", 3), Map.of(), 0, null, true));
+        GraphFacts facts = facts(
+                new GraphFacts.Building("hut", 1, 0, 0, Map.of("minecraft:dirt", 3), Map.of(), 0, null, true, true));
 
         assertTrue(
                 GraphBuildingMaterials.of(facts, GRAPH).isEmpty(),
@@ -35,8 +35,8 @@ class GraphBuildingMaterialsTests {
 
     @Test
     void materials_CleanBuilding_GivesNothing() {
-        GraphFacts facts = facts(
-                new GraphFacts.Building("hut", 1, 100, 0, Map.of(), Map.of("minecraft:stone", 1), 0, null, false));
+        GraphFacts facts = facts(new GraphFacts.Building(
+                "hut", 1, 100, 0, Map.of(), Map.of("minecraft:stone", 1), 0, null, false, true));
 
         assertTrue(
                 GraphBuildingMaterials.of(facts, GRAPH).isEmpty(),
@@ -45,8 +45,8 @@ class GraphBuildingMaterialsTests {
 
     @Test
     void merged_PartialBuilding_AuditMissingWinsOverScheme() {
-        GraphFacts facts =
-                facts(new GraphFacts.Building("hut", 1, 95, 5, Map.of("minecraft:dirt", 5), Map.of(), 0, null, false));
+        GraphFacts facts = facts(
+                new GraphFacts.Building("hut", 1, 95, 5, Map.of("minecraft:dirt", 5), Map.of(), 0, null, false, true));
 
         Map<String, Map<String, Integer>> merged =
                 GraphBuildingMaterials.merged(Map.of("hut", Map.of("oak_log", 12, "oak_planks", 30)), facts, GRAPH);
@@ -60,8 +60,8 @@ class GraphBuildingMaterialsTests {
 
     @Test
     void merged_NotStartedBuilding_KeepsDeclaredScheme() {
-        GraphFacts facts =
-                facts(new GraphFacts.Building("hut", 1, 0, 0, Map.of("minecraft:dirt", 30), Map.of(), 0, null, false));
+        GraphFacts facts = facts(
+                new GraphFacts.Building("hut", 1, 0, 0, Map.of("minecraft:dirt", 30), Map.of(), 0, null, false, true));
 
         Map<String, Map<String, Integer>> merged =
                 GraphBuildingMaterials.merged(Map.of("hut", Map.of("oak_log", 12, "oak_planks", 30)), facts, GRAPH);

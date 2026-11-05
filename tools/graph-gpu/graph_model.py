@@ -744,7 +744,8 @@ class State:
             if building.get("unknown", False):
                 continue
             percent = int(building.get("auditPercent", 0))
-            if int(building.get("damage", 0)) > 0 or 0 < percent < 100:
+            if (int(building.get("damage", 0)) > 0 or int(building.get("wrong", 0)) > 0
+                    or 0 < percent < 100):
                 derived.append("repair_" + building_id)
         derived.extend(_life_events(self))
         derived.extend(_gear_events(self))
@@ -1112,7 +1113,8 @@ class Planner:
         fact = self.state.building_facts.get(building_id)
         if fact is None:
             return False
-        return bool(fact.get("unknown", False)) or int(fact.get("auditPercent", 0)) > 0
+        return (bool(fact.get("unknown", False)) or int(fact.get("auditPercent", 0)) > 0
+                or not bool(fact.get("lotReady", True)))
 
     def roots(self):
         graph = self.graph
