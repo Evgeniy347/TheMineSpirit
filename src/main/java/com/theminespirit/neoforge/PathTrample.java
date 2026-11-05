@@ -20,7 +20,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ShovelItem;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -48,29 +47,21 @@ final class PathTrample {
                     BlockPlacer.RefuseReason.NO_MATERIAL, "нет лопаты для тропинки: сначала нужна лопата");
         }
         ItemStack shovel = spirit.getInventory().getItem(slot);
-        if (raised) {
-            level.setBlock(target, Blocks.DIRT_PATH.defaultBlockState(), Block.UPDATE_ALL);
-            SpiritGesture.workOn(spirit, target);
-            shovel.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
-            if (level instanceof ServerLevel server) {
-                PlacedBlocksData.get(server).markSpirit(target);
-            }
-            return new BlockPlacer.Started(target.immutable());
-        }
-        UseOnContext context = new UseOnContext(level, null, InteractionHand.MAIN_HAND, shovel, topFace(target));
+        BlockPos ground = raised ? target.below() : target;
+        UseOnContext context = new UseOnContext(level, null, InteractionHand.MAIN_HAND, shovel, topFace(ground));
         InteractionResult result = shovel.getItem().useOn(context);
-        if (!result.consumesAction() || !level.getBlockState(target).is(Blocks.DIRT_PATH)) {
+        if (!result.consumesAction() || !level.getBlockState(ground).is(Blocks.DIRT_PATH)) {
             return new BlockPlacer.Refused(
                     BlockPlacer.RefuseReason.NO_SUPPORT,
-                    "лопатой по " + target.toShortString()
+                    "лопатой по " + ground.toShortString()
                             + " тропинка не вышла: нужна земля или трава под открытым небом");
         }
-        SpiritGesture.workOn(spirit, target);
+        SpiritGesture.workOn(spirit, ground);
         shovel.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
         if (level instanceof ServerLevel server) {
-            PlacedBlocksData.get(server).markSpirit(target);
+            PlacedBlocksData.get(server).markSpirit(ground);
         }
-        return new BlockPlacer.Started(target.immutable());
+        return new BlockPlacer.Started(ground.immutable());
     }
 
     static List<ScriptCall> restock(SpiritEntity spirit, String blockId) {

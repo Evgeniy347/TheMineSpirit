@@ -70,9 +70,16 @@ class StreetWorkTests {
         assertFalse(builds.isEmpty(), "на выровненных площадках этапа 1 есть улицы: плиткам есть где лечь");
         ColumnMask within = StreetWork.within(site);
         for (SchemeBuild build : builds) {
-            assertEquals(site.anchor().y() - 1, build.origin().y(), "плитка ложится в слой земли под ногами");
+            assertEquals(
+                    site.anchor().y(),
+                    build.origin().y(),
+                    "плитка ставится от клетки под ногами: слой земли схемы сам ложится на поверхность");
             for (Schematic.PlacedEntry entry :
                     PRESETS.byId(build.scheme()).orElseThrow().schematic().entries(build.origin(), build.rotation())) {
+                assertEquals(
+                        site.anchor().y() - 1,
+                        entry.pos().y(),
+                        "покрытие улицы лежит в слое земли, а не блоком над улицей: " + entry.pos());
                 assertTrue(
                         within.contains(entry.pos().x(), entry.pos().z()),
                         "плитка " + build + " вышла за выровненную улицу — на столб ограды или постройку");

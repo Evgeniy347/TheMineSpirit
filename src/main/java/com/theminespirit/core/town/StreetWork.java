@@ -31,7 +31,7 @@ public final class StreetWork {
         Objects.requireNonNull(town, "План поселения не может быть null: улицы берутся из него");
         List<StreetTile> tiles = StreetLayout.of(presets)
                 .town(town.streets(), town.anchor().x(), town.anchor().z(), rules, within(site));
-        int ground = site.anchor().y() - 1;
+        int ground = site.anchor().y();
         return tiles.stream()
                 .map(tile -> new SchemeBuild(
                         scheme(tile.scheme(), level), new BlockCoord(tile.x(), ground, tile.z()), tile.rotation()))
