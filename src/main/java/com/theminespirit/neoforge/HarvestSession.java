@@ -57,7 +57,8 @@ public final class HarvestSession {
         BREAK,
         COLLECT,
         DEPOSIT,
-        TUNNEL
+        TUNNEL,
+        REARM
     }
 
     private static final double APPROACH_ARRIVAL = 0.6;
@@ -95,6 +96,7 @@ public final class HarvestSession {
     private final Set<BlockCoord> tunnelTried = new HashSet<>();
     private String tunnelRefusal;
     private DropCollector collector;
+    private final HarvestRearm rearm;
     private HarvestDeposit deposit;
     private boolean depositTried;
     private boolean depositFreed;
@@ -106,15 +108,11 @@ public final class HarvestSession {
     private int unreachable;
     private int noTool;
     private int protectedSkipped;
-    private int planCalls;
-    private int collectTicks;
-    private int collectRuns;
-
-    private int entityQueries;
     private final GatherCells terrain;
 
     private HarvestSession(SpiritEntity spirit, Spec spec) {
         this.spirit = spirit;
+        this.rearm = new HarvestRearm(spirit);
         this.level = spirit.level();
         this.targets = spec.targets();
         this.kind = spec.kind();
@@ -175,6 +173,12 @@ public final class HarvestSession {
             }
             beginRetryCollect();
         }
+        if (state == State.REARM) {
+            if (rearm.tick()) {
+                state = State.PICK;
+            }
+            return outcome;
+        }
 
         watchdog.tick();
         if (vein && mined == 0) {
@@ -194,6 +198,11 @@ public final class HarvestSession {
             case COLLECT -> collectTick();
             case DEPOSIT -> depositTick();
             case TUNNEL -> tunnelTick();
+            case REARM -> {
+                if (rearm.tick()) {
+                    state = State.PICK;
+                }
+            }
         }
         return outcome;
     }
@@ -211,6 +220,7 @@ public final class HarvestSession {
         if (tunnel != null) {
             tunnel.cancel();
         }
+        rearm.cancel();
     }
 
     public void suspend() {
@@ -231,14 +241,7 @@ public final class HarvestSession {
         if (tunnel != null) {
             tunnel.suspend();
         }
-    }
-
-    public int crackStage() {
-        return breaker.crackStage();
-    }
-
-    public Outcome outcome() {
-        return outcome;
+        rearm.suspend();
     }
 
     public String failureReason() {
@@ -247,10 +250,6 @@ public final class HarvestSession {
 
     public ScriptInstance.Progress progress() {
         return new ScriptInstance.Progress(Math.min(mined, count), count);
-    }
-
-    public int mined() {
-        return mined;
     }
 
     public Map<String, Object> saveState() {
@@ -262,30 +261,6 @@ public final class HarvestSession {
         if (value instanceof Number number) {
             mined = Math.max(mined, number.intValue());
         }
-    }
-
-    public int planCalls() {
-        return planCalls;
-    }
-
-    public int slicesUsed() {
-        return targets.slicesUsed();
-    }
-
-    public int collectTicks() {
-        return collectTicks;
-    }
-
-    public int collectRuns() {
-        return collectRuns;
-    }
-
-    public int entityQueries() {
-        return entityQueries;
-    }
-
-    public int maxSlicesPerTick() {
-        return targets.maxSlicesPerTick();
     }
 
     private void find() {
@@ -316,7 +291,6 @@ public final class HarvestSession {
         if (buffer.needsRefill() && !targets.done()) {
             buffer.offer(targets.advance());
         }
-        planCalls++;
         BlockPos from = spirit.blockPosition();
         BlockCoord origin = new BlockCoord(from.getX(), from.getY(), from.getZ());
         List<BlockCoord> candidates = buffer.targets(origin);
@@ -403,8 +377,16 @@ public final class HarvestSession {
         BlockState targetState = level.getBlockState(toPos(target));
         buffer.remove(target);
         if (!breaker.dropsAllowedFor(targetState)) {
-            if (breaker.toolBroke()) {
-                fail("инструмент сломался: добыто " + mined + " из " + count);
+            String brokenTool = breaker.brokenToolSuffix();
+            if (!brokenTool.isEmpty()) {
+                if (!rearm.tried()) {
+                    buffer.offer(List.of(target));
+                    rearm.start(brokenTool);
+                    state = State.REARM;
+                    return false;
+                }
+                fail("инструмент сломался: добыто " + mined + " из " + count
+                        + (rearm.failure() == null ? "" : "; замена не добыта: " + rearm.failure()));
                 return false;
             }
             if (mined == 0 && !skipWithoutTool) {
@@ -639,7 +621,7 @@ public final class HarvestSession {
                 mined++;
                 watchdog.progress();
                 veinMining.progress();
-                collectRuns++;
+                rearm.broken(breaker);
                 collector = newCollector(currentTarget);
                 state = State.COLLECT;
             }
@@ -653,12 +635,10 @@ public final class HarvestSession {
     }
 
     private void collectTick() {
-        collectTicks++;
         DropCollector.State collected = collector.tick();
         if (collected == DropCollector.State.RUNNING) {
             return;
         }
-        entityQueries += collector.entityQueries();
         if (collected == DropCollector.State.FAILED) {
             String reason = collector.failureReason();
             if (mined >= count) {
@@ -669,6 +649,9 @@ public final class HarvestSession {
             collector = null;
             currentTarget = null;
             currentStand = null;
+            if (startPending()) {
+                return;
+            }
             state = State.PICK;
             return;
         }
@@ -679,7 +662,18 @@ public final class HarvestSession {
             depositTried = false;
             depositFreed = false;
         }
+        if (startPending()) {
+            return;
+        }
         state = State.PICK;
+    }
+
+    private boolean startPending() {
+        if (!rearm.startPending(mined, count)) {
+            return false;
+        }
+        state = State.REARM;
+        return true;
     }
 
     private void beginRetryCollect() {

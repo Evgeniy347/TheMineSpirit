@@ -74,12 +74,22 @@ public final class GatherDemand {
     }
 
     private static boolean strongerWood(Need candidate, Need current) {
-        boolean log = candidate.item().endsWith("_log");
-        boolean currentLog = current.item().endsWith("_log");
+        boolean log = plainLog(candidate.item());
+        boolean currentLog = plainLog(current.item());
         if (log != currentLog) {
             return log;
         }
         return candidate.priority() > current.priority();
+    }
+
+    private static boolean plainLog(String item) {
+        return item.endsWith("_log") && !item.contains(STRIPPED);
+    }
+
+    public static String demandItem(String item, String wood) {
+        Objects.requireNonNull(item, "Предмет спроса не может быть null: без него не собрать заявку");
+        Objects.requireNonNull(wood, "Порода дерева не может быть null: 'fuel_planks' без неё не станет досками");
+        return "fuel_planks".equals(item) ? wood + "_planks" : item;
     }
 
     public static @Nullable String wood(String item) {

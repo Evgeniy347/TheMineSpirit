@@ -6,6 +6,7 @@ import com.theminespirit.core.mining.ToolChoice;
 import com.theminespirit.core.mining.ToolChoice.Choice;
 import com.theminespirit.core.mining.ToolChoice.ToolOption;
 import com.theminespirit.core.mining.ToolReserve;
+import com.theminespirit.core.mining.ToolSuffix;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.tactics.adapter.Visibility;
@@ -74,6 +75,7 @@ public final class BlockBreaker {
     private int crackStage = NO_STAGE;
     private boolean active;
     private boolean toolBroke;
+    private String brokenToolSuffix = "";
     private int forcedSlot = NO_FORCED_SLOT;
 
     public BlockBreaker(SpiritEntity spirit) {
@@ -242,14 +244,6 @@ public final class BlockBreaker {
         return choice != null && choice.dropsAllowed();
     }
 
-    public int crackStage() {
-        return crackStage;
-    }
-
-    public int requiredTicks() {
-        return requiredTicks;
-    }
-
     public Choice choice() {
         return choice;
     }
@@ -260,8 +254,8 @@ public final class BlockBreaker {
                 .dropsAllowed();
     }
 
-    public boolean toolBroke() {
-        return toolBroke;
+    public String brokenToolSuffix() {
+        return brokenToolSuffix;
     }
 
     private List<ToolOption> toolOptions(BlockState targetState) {
@@ -373,11 +367,15 @@ public final class BlockBreaker {
             Block.dropResources(broken, level, brokenPos, blockEntity, spirit, usedTool);
         }
         if (!usedTool.isEmpty() && wearsTool) {
+            String suffix = ToolSuffix.ofItem(
+                    BuiltInRegistries.ITEM.getKey(usedTool.getItem()).toString());
             int breaksBefore = spirit.toolBreaks();
             usedTool.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
             toolBroke = usedTool.isEmpty() || spirit.toolBreaks() > breaksBefore;
+            brokenToolSuffix = toolBroke ? suffix : "";
         } else {
             toolBroke = false;
+            brokenToolSuffix = "";
         }
     }
 
