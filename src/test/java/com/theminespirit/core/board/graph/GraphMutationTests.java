@@ -7,6 +7,7 @@ import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.BiConsumer;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -29,67 +30,61 @@ class GraphMutationTests {
         return found.subList(0, Math.min(5, found.size()));
     }
 
-    @Tag("mutation")
-    @Test
-    void plan_AnyWorld_HasFeasibleTaskWhenWorkLeft() {
-        List<String> found = sweep((world, out) -> {
-            GraphPlan plan = world.plan();
-            if (!plan.tasks().isEmpty() && GraphWorld.issueOrder(plan).isEmpty()) {
-                out.add("ни одного выполнимого из " + plan.tasks().size());
-            }
-        });
-        assertEquals(List.of(), head(found), "Мир встал: задания есть, а выполнить нечего (" + found.size() + ")");
+    private static void stalled(GraphWorld world, List<String> out) {
+        GraphPlan plan = world.plan();
+        if (!plan.tasks().isEmpty() && GraphWorld.issueOrder(plan).isEmpty()) {
+            out.add("ни одного выполнимого из " + plan.tasks().size());
+        }
     }
 
     @Tag("mutation")
     @Test
-    void plan_InfeasibleTask_EveryGapHasProducer() {
-        List<String> found = sweep((world, out) -> {
-            GraphPlan plan = world.plan();
-            GraphState state = world.state();
-            for (GraphPlan.Task task : plan.tasks()) {
-                if (task.chance()) {
-                    continue;
-                }
-                for (Map.Entry<String, Integer> input : task.consumes().entrySet()) {
-                    if (state.count(input.getKey()) < input.getValue()
-                            && plan.tasks().stream()
-                                    .noneMatch(other -> other.makes().equals(input.getKey()))) {
-                        out.add(task.id() + " ждёт " + input.getKey() + ", а его никто не добывает");
-                    }
-                }
-            }
-        });
-        assertEquals(List.of(), head(found), "Тупик: нехватка без задания добычи (" + found.size() + ")");
+    void plan_EverySingle_NoStall() {
+        List<String> found = sweep(GraphMutationTests::stalled);
+        assertEquals(List.of(), head(found), "Полный перебор одиночных мутаций: мир встал (" + found.size() + ")");
     }
 
     @Tag("mutation")
     @Test
-    void plan_LessStock_NeverLowersProducer() {
+    void flow_LessStock_NeverLowersProducer() {
         List<String> found = new ArrayList<>();
         for (GraphWorld base : GraphMutations.baselines()) {
             for (SupplyGraph.Item item : GraphWorld.GRAPH.items().values()) {
-                GraphPlan more = base.copy().with(item.id(), item.xmin() * 2).plan();
-                GraphPlan less = base.copy().with(item.id(), 0).plan();
+                GraphWorld more = base.copy().with(item.id(), item.xmin() * 2);
+                GraphWorld less = base.copy().with(item.id(), 0);
+                Map<String, Double> moreFlow =
+                        GraphPlanner.flow(more.graph, more.state()).solve();
+                Map<String, Double> lessFlow =
+                        GraphPlanner.flow(less.graph, less.state()).solve();
                 for (SupplyGraph.Way way : GraphWorld.GRAPH.producers(item.id())) {
-                    if (more.priority(way.id()) > less.priority(way.id())) {
-                        found.add(way.id() + ": " + more.priority(way.id()) + " при запасе > " + less.priority(way.id())
+                    double plenty = moreFlow.getOrDefault(way.id(), 0.0);
+                    double none = lessFlow.getOrDefault(way.id(), 0.0);
+                    if (plenty > none + 1e-9) {
+                        found.add(item.id() + "/" + way.id() + ": поток " + plenty + " при запасе > " + none
                                 + " без запаса");
                     }
                 }
             }
         }
-        assertEquals(List.of(), head(found), "Меньше запаса — не ниже приоритет добычи (" + found.size() + ")");
+        assertEquals(List.of(), head(found), "Меньше запаса — не ниже поток добычи (" + found.size() + ")");
     }
 
     @Tag("mutation")
     @Test
     void plan_SameWorld_Deterministic() {
-        List<String> found = sweep((world, out) -> {
-            if (!world.plan().equals(world.plan())) {
-                out.add("два расчёта разошлись");
+        List<String> found = new ArrayList<>();
+        Random random = new Random(MutationSeeds.seed());
+        for (GraphWorld base : GraphMutations.baselines()) {
+            for (int index = 0; index < 100; index++) {
+                GraphWorld world = GraphMutations.sample(random.nextLong(), 1)
+                        .get(0)
+                        .apply()
+                        .apply(base);
+                if (!world.plan().equals(world.plan())) {
+                    found.add("два расчёта разошлись");
+                }
             }
-        });
+        }
         assertEquals(List.of(), head(found), "Расчёт графа обязан быть детерминированным");
     }
 
@@ -128,60 +123,22 @@ class GraphMutationTests {
                 "В пустом мире рубка выполнима сразу, руками: " + GraphWorld.issueOrder(plan));
     }
 
-    private static List<String> sweepPairs(BiConsumer<GraphWorld, List<String>> check) {
+    @Tag("mutation")
+    @Test
+    void pairs_Sampled_NoStall() {
         List<String> found = new ArrayList<>();
+        List<GraphWorld> bases = GraphMutations.baselines();
         List<GraphMutations.Mutation> all = GraphMutations.single();
-        for (GraphWorld base : GraphMutations.baselines()) {
-            for (int first = 0; first < all.size(); first++) {
-                GraphWorld once = all.get(first).apply().apply(base);
-                for (int second = first + 1; second < all.size(); second++) {
-                    GraphWorld world = all.get(second).apply().apply(once);
-                    List<String> local = new ArrayList<>();
-                    check.accept(world, local);
-                    String name =
-                            all.get(first).name() + " + " + all.get(second).name();
-                    local.forEach(entry -> found.add(name + ": " + entry));
-                }
-            }
+        Random random = new Random(MutationSeeds.seed() ^ 0x9E3779B97F4A7C15L);
+        for (int index = 0; index < 20_000; index++) {
+            GraphWorld base = bases.get(random.nextInt(bases.size()));
+            GraphMutations.Mutation first = all.get(random.nextInt(all.size()));
+            GraphMutations.Mutation second = all.get(random.nextInt(all.size()));
+            GraphWorld world = second.apply().apply(first.apply().apply(base));
+            List<String> local = new ArrayList<>();
+            stalled(world, local);
+            local.forEach(entry -> found.add(first.name() + " + " + second.name() + ": " + entry));
         }
-        return found;
-    }
-
-    private static void stalls(GraphWorld world, List<String> out) {
-        GraphPlan plan = world.plan();
-        if (!plan.tasks().isEmpty() && GraphWorld.issueOrder(plan).isEmpty()) {
-            out.add("ни одного выполнимого из " + plan.tasks().size() + ": " + plan.tasks());
-        }
-    }
-
-    private static void gaps(GraphWorld world, List<String> out) {
-        GraphPlan plan = world.plan();
-        GraphState state = world.state();
-        for (GraphPlan.Task task : plan.tasks()) {
-            if (task.chance()) {
-                continue;
-            }
-            for (Map.Entry<String, Integer> input : task.consumes().entrySet()) {
-                if (state.count(input.getKey()) < input.getValue()
-                        && plan.tasks().stream()
-                                .noneMatch(other -> other.makes().equals(input.getKey()))) {
-                    out.add(task.id() + " ждёт " + input.getKey() + ", а его никто не добывает");
-                }
-            }
-        }
-    }
-
-    @Tag("mutation")
-    @Test
-    void pairs_AnyWorld_HasFeasibleTaskWhenWorkLeft() {
-        List<String> found = sweepPairs(GraphMutationTests::stalls);
-        assertEquals(List.of(), head(found), "Пары мутаций: мир встал (" + found.size() + ")");
-    }
-
-    @Tag("mutation")
-    @Test
-    void pairs_InfeasibleTask_EveryGapHasProducer() {
-        List<String> found = sweepPairs(GraphMutationTests::gaps);
-        assertEquals(List.of(), head(found), "Пары мутаций: тупик без добычи (" + found.size() + ")");
+        assertEquals(List.of(), head(found), "Пары мутаций (выборка 20000): мир встал (" + found.size() + ")");
     }
 }

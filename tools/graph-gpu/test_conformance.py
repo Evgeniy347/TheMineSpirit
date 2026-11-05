@@ -1008,6 +1008,20 @@ def test_recipe_weights():
     print("OK: веса auto_*-рецептов заморожены, поиск их не подбирает")
 
 
+def test_best_weights():
+    path = os.path.join(HERE, "best-weights.json")
+    with open(path, "r", encoding="utf-8") as handle:
+        weights = json.load(handle)
+    stale = sorted(
+        key
+        for section in ("weights", "absolute")
+        for key in (weights.get(section) or {}).get("ways", {})
+        if key.startswith("auto_"))
+    assert not stale, ("в best-weights.json исторические auto_*-ключи: graphExport пересобирает эти пути, "
+                       "их веса в файле мёртвые и вводят в заблуждение: " + ", ".join(stale[:5]))
+    print("OK: в best-weights.json нет исторических auto_*-ключей")
+
+
 def test_conformance():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
@@ -1058,6 +1072,7 @@ if __name__ == "__main__":
         test_failure_memory()
         test_choice_mechanics()
         test_recipe_weights()
+        test_best_weights()
         test_conformance()
     except AssertionError as error:
         print(error)

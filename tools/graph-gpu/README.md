@@ -52,6 +52,17 @@ PYTHONIOENCODING=utf-8 py -3.9 sim_gpu.py
 (`TestResults/mutation/graph-trail.md`): шаги, тики и порядок заданий по 5 базовым мирам
 `GraphMutations.baselines()` совпадают точно (78/2077/4302/2266/6729 шагов).
 
+## Перебор мутаций на видеокарте
+
+```bash
+PYTHONIOENCODING=utf-8 py -3.9 mutation_gpu.py --sample 3 --limit 1200
+```
+
+`mutation_gpu.py` берёт `TestResults/mutation/simulation.json` (его пишет `GraphGpuMutationTests` из Java),
+считает те же миры и сверяет шаги/этап/финиш (Python = Java), затем гоняет пачку миров с мутациями
+`GraphMutations` (постройки, события, предметы, запас) на CUDA. Сид ротации — `MUTATION_SEED`; полный
+перебор не нужен, набор и бюджет держит `docs/TESTING.md`.
+
 ## Поиск весов
 
 ```bash
@@ -83,6 +94,7 @@ PYTHONIOENCODING=utf-8 py -3.9 search.py --mode es --generations 10 --population
 |---|---|
 | `graph_model.py` | Правила `GraphPlanner`/`GraphFlow`/`SupplyGraph`/`GraphCosts`/`GraphState` на Python |
 | `sim_gpu.py` | `GraphSimulation`/`GraphWorld`: время, тики, пакет миров, этапы 1–3 |
+| `mutation_gpu.py` | Перебор мутаций на CUDA и сверка выборки с Java |
 | `search.py` | Поиск множителей по категориям и отчёт по стартам |
 | `test_conformance.py` | Сверка с выгрузкой Java |
 | `REPORT.md` | Результаты сверки и поиска |
