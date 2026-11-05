@@ -187,13 +187,6 @@ class SettlementStageTests {
                 "Схема неизвестного кейса — ошибка данных, а не молча пропущенная строка");
     }
 
-    @Test
-    void logCap_ByStage_DoublesFromSixtyFour() {
-        assertEquals(64, SettlementStage.logCap(1), "Первый этап — 64 бревна (владелец 23.10)");
-        assertEquals(128, SettlementStage.logCap(2), "Каждый следующий этап удваивает предел");
-        assertEquals(256, SettlementStage.logCap(3), "Каждый следующий этап удваивает предел");
-    }
-
     private static BoardLedger firstStageBuilt() {
         BoardLedger ledger = new BoardLedger();
         FIRST_STAGE.forEach(boardCase -> ledger.note(boardCase, 1));

@@ -9,7 +9,6 @@ import java.util.function.IntBinaryOperator;
 
 public final class RouteDigging {
     public static final int MAX_WATER = 10;
-    public static final int WATER_RADIUS = 2;
 
     @FunctionalInterface
     public interface WaterAround {

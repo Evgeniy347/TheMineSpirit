@@ -560,11 +560,6 @@ public final class SpiritEntity extends PathfinderMob {
         brain().start(plan);
     }
 
-    public void startBackgroundTask(TaskNode plan) {
-        startTask(plan);
-        backgroundGeneration = taskGeneration();
-    }
-
     public boolean runsBackgroundTask() {
         return backgroundGeneration != SpiritReading.UNKNOWN_GENERATION
                 && backgroundGeneration == taskGeneration()

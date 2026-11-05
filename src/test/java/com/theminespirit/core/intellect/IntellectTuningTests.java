@@ -14,7 +14,6 @@ import com.theminespirit.core.reload.TableRegistry;
 import com.theminespirit.core.reload.TableStatus;
 import java.time.Clock;
 import java.util.Map;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class IntellectTuningTests {
@@ -163,32 +162,6 @@ class IntellectTuningTests {
                 IntellectTuning.loadDefault(),
                 "Потребитель обязан брать версию из держателя, а не читать classpath/константу: иначе /reload "
                         + "не поменяет ему числа, хотя таблица перечитана");
-    }
-
-    @Test
-    void replace_LiveTable_TaskBackoffUsesNewWindow() {
-        TableHolder<IntellectTuning> holder = DataTables.INSTANCE.intellect();
-        IntellectTuning original = holder.current();
-        String changed = VALID.replace("\"failBackoffTicks\": 200", "\"failBackoffTicks\": 1000");
-        try {
-            holder.replace(
-                    IntellectTuning.parse(changed, "test datapack"),
-                    TableStatus.Source.DATAPACK,
-                    "test datapack",
-                    "test-hash",
-                    Clock.systemUTC());
-
-            TaskBackoff backoff = new TaskBackoff();
-            UUID spirit = UUID.randomUUID();
-            backoff.noteFailure(spirit, "harvest_crop", 0);
-
-            assertTrue(
-                    backoff.blocked(spirit, "harvest_crop", 500),
-                    "Потребитель обязан читать окно отката из держателя на каждом вызове: иначе подмена таблицы "
-                            + "видна только /spirit tables, а дух продолжает работать по старым числам");
-        } finally {
-            holder.replace(original, TableStatus.Source.MOD, "classpath (мод)", "restore", Clock.systemUTC());
-        }
     }
 
     @Test

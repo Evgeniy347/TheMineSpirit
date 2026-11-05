@@ -16,8 +16,6 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 public final class LevelRepair {
-    public static final String ID = RepairPlan.PREFIX + "level";
-
     private LevelRepair() {}
 
     public static PlotLeveling leveling(List<BlockCoord> holes, List<BlockCoord> extras) {

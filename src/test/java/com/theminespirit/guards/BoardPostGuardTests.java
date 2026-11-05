@@ -31,6 +31,8 @@ class BoardPostGuardTests {
     private static final Map<String, Set<String>> INFRASTRUCTURE = Map.of(
             GRAPH_POST,
             Set.copyOf(OFFENCES),
+            "GraphTicketFactory.java",
+            Set.of("new BoardTicket("),
             "BoardStateStore.java",
             Set.of("new BoardTicket("),
             "BoardService.java",
@@ -79,6 +81,46 @@ class BoardPostGuardTests {
                 "Интеллект снова выбирает работу мимо графа: занятие идёт на доску без веса и узла, "
                         + "а следующий пересчёт спорит с ним. Как надо: интеллект отдаёт факты (idle/hungry/"
                         + "угрозы/отдых) во вход графа, работу выбирает GraphPlanner. Нарушители");
+    }
+
+    @Test
+    void graphPostTicket_PriorityOutsideBoardRange_Clamped() {
+        String source = SourceFiles.javaUnder(BOARD).get(BOARD.resolve("GraphTicketFactory.java"));
+
+        assertTrue(
+                source.contains("Math.min(100, Math.max(0, request.priority()))"),
+                "Билет графа с весом события выше 100 обязан зажиматься к диапазону BoardTicket: иначе источник "
+                        + "доски падает с IllegalArgumentException и задача (оборона/еда) не ставится");
+    }
+
+    @Test
+    void tasksAndDefenseOrders_OutsideGraph_StartNothing() {
+        Map<Path, String> sources = new LinkedHashMap<>(SourceFiles.javaUnder(INTELLECT));
+        sources.putAll(SourceFiles.javaUnder(BOARD));
+        sources.putAll(SourceFiles.javaUnder(Path.of("src/main/java/com/theminespirit/neoforge/coordinator")));
+        sources.putAll(SourceFiles.javaUnder(Path.of("src/main/java/com/theminespirit/neoforge/defense")));
+        List<String> found = new ArrayList<>();
+        for (Map.Entry<Path, String> source : sources.entrySet()) {
+            String text = SourceFiles.withoutTextBlocks(source.getValue());
+            for (String pattern : List.of(
+                    "new TaskStarter(",
+                    "starter.start(",
+                    "DefenseIssuedOrder",
+                    "defense.tick(",
+                    "expeditions.update(")) {
+                if (text.contains(pattern)) {
+                    found.add(source.getKey().getFileName() + ": " + pattern);
+                }
+            }
+        }
+
+        assertEquals(
+                List.of(),
+                found,
+                "Задачи и приказы обороны стартуют мимо графа: контроллер/координатор сам выбирает работу или "
+                        + "накладывает приказ поверх билета. Цена: вес и этап не участвуют, граф спорит с самим "
+                        + "собой. Как надо: факт — во вход графа, билет ставит GraphPost, исполнитель работает по "
+                        + "билету. Нарушители");
     }
 
     @Test

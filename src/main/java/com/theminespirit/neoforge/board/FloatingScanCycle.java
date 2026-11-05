@@ -79,10 +79,6 @@ final class FloatingScanCycle {
         return cycle == null ? List.of() : cycle.published;
     }
 
-    static long cycleTicks(int slices) {
-        return FloatingSweep.cycleTicks(slices);
-    }
-
     static List<FloatingBlocks.Finding> full(
             ServerLevel level, StageSite site, ColumnMask region, int bottom, int top) {
         ColumnMask area = site.enclosure().intersect(region);
