@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.BoardCase;
@@ -10,6 +11,32 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class GraphExplainTests {
+    @Test
+    void of_ChosenFeasibleNextInfeasible_ExplainsNextNotChosen() {
+        GraphPlan plan = plan(task("chop_jungle_log", 90, true), task("building:streets", 89, false));
+
+        GraphDecisions.Row first = GraphExplain.of(plan, 1).decisions().get(0);
+
+        assertFalse(
+                first.why().contains("неосуществима") && !first.why().contains("следующая"),
+                "Причина выбранной работы не описывает её саму как неосуществимую, если она осуществима: "
+                        + first.why());
+        assertTrue(
+                first.why().contains("следующая неосуществима"),
+                "Неосуществимость следующего кандидата объясняется его словом, а не выбранной работы: " + first.why());
+    }
+
+    @Test
+    void of_ChosenInfeasible_ExplainsItsOwnInfeasibility() {
+        GraphPlan plan = plan(task("building:streets", 90, false), task("chop_jungle_log", 80, true));
+
+        GraphDecisions.Row first = GraphExplain.of(plan, 1).decisions().get(0);
+
+        assertTrue(
+                first.why().contains("выше по весу, но неосуществима"),
+                "Если выбрана неосуществимая работа, причина говорит о ней, а не о следующей: " + first.why());
+    }
+
     @Test
     void of_ChosenAndNext_ExplainsWeightGap() {
         GraphPlan plan =

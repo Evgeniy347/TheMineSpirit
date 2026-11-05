@@ -25,7 +25,9 @@ public final class BoardNoticeText {
         List<String> parts = new ArrayList<>();
         if (entry.event() == BoardLog.Event.BLOCKED) {
             parts.add("причина=" + String.join(", ", entry.modifiers()));
-            parts.add("история=" + String.join("; ", board.failureHistory(entry.ticketId())));
+            if (entry.modifiers().stream().noneMatch(modifier -> modifier.startsWith("history="))) {
+                parts.add("история=" + String.join("; ", board.failureHistory(entry.ticketId())));
+            }
         } else if (entry.event() == BoardLog.Event.UNBLOCKED) {
             parts.add("изменилось: " + String.join(", ", entry.modifiers()));
             parts.add("старая причина: " + String.join("; ", board.failureHistory(entry.ticketId())));

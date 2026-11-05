@@ -32,6 +32,7 @@ final class StageProgressWatch {
     private static final Set<BoardCase> BUILDS = EnumSet.of(
             BoardCase.BUILD_FENCE,
             BoardCase.BUILD_HOUSE,
+            BoardCase.BUILD_MINE,
             BoardCase.LIGHTING,
             BoardCase.BUILD_ORCHARD,
             BoardCase.BUILD_STREETS,

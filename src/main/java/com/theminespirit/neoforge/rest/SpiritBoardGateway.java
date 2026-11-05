@@ -87,6 +87,13 @@ public final class SpiritBoardGateway implements BoardGateway {
                 () -> BoardRegistry.get(server.overworld()).journal().last(limit), RestTuning.SERVER_CALL_TIMEOUT);
     }
 
+    @Override
+    public List<BoardLogEntry> log(int limit, long sinceTick) {
+        return serverCall.call(
+                () -> BoardRegistry.get(server.overworld()).journal().newer(limit, sinceTick),
+                RestTuning.SERVER_CALL_TIMEOUT);
+    }
+
     private BoardCounts readCounts() {
         BoardService service = BoardRegistry.get(server.overworld());
         return new BoardCounts(

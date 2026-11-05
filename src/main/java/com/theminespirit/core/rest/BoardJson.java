@@ -12,11 +12,20 @@ public final class BoardJson {
     private BoardJson() {}
 
     public static String logJson(List<BoardLogEntry> entries) {
+        return logJson(entries, 0L);
+    }
+
+    public static String logJson(List<BoardLogEntry> entries, long sinceTick) {
         List<Object> lines = new ArrayList<>(entries.size());
         for (BoardLogEntry entry : entries) {
             lines.add(BoardLog.toMap(entry));
         }
-        return RestJson.write(Map.of("entries", lines));
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("entries", lines);
+        body.put(
+                "sinceTick",
+                entries.stream().mapToLong(BoardLogEntry::tick).max().orElse(sinceTick));
+        return RestJson.write(body);
     }
 
     public static String toJson(BoardTask task) {
@@ -24,6 +33,10 @@ public final class BoardJson {
     }
 
     public static String listJson(BoardListing listing, BoardCounts counts) {
+        return listJson(listing, counts, 0L);
+    }
+
+    public static String listJson(BoardListing listing, BoardCounts counts, long sinceTick) {
         List<Object> items = new ArrayList<>(listing.tasks().size());
         for (BoardTask task : listing.tasks()) {
             items.add(toMap(task));
@@ -33,6 +46,7 @@ public final class BoardJson {
         body.put("total", listing.total());
         body.put("offset", listing.offset());
         body.put("limit", listing.limit());
+        body.put("sinceTick", sinceTick);
         body.put("groups", groupNames(listing.groups()));
         body.put("version", listing.version());
         if (listing.nextCursor() != null) {

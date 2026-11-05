@@ -24,6 +24,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.storage.LevelResource;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 public final class IncidentSnapshots {
@@ -36,13 +37,42 @@ public final class IncidentSnapshots {
     private IncidentSnapshots() {}
 
     public static String record(ServerLevel level, SpiritEntity spirit, String what) {
+        Saved saved = save(level, spirit, what);
+        if (saved.stale() != null) {
+            return saved.note().line() + "; " + saved.stale();
+        }
+        if (saved.error() != null) {
+            return saved.note().line() + "; " + saved.error();
+        }
+        return saved.note().line(saved.file());
+    }
+
+    public static String brief(ServerLevel level, SpiritEntity spirit, String what) {
+        Saved saved = save(level, spirit, what);
+        if (saved.stale() != null) {
+            return saved.note().brief() + "; " + saved.stale();
+        }
+        if (saved.error() != null) {
+            return saved.note().brief() + "; " + saved.error();
+        }
+        return saved.note().brief(saved.file());
+    }
+
+    private record Saved(
+            IncidentNote note,
+            @Nullable Path file,
+            @Nullable String stale,
+            @Nullable String error) {}
+
+    private static Saved save(ServerLevel level, SpiritEntity spirit, String what) {
         IncidentNote note = note(spirit, what);
         long now = level.getGameTime();
         Long last = LAST.get(spirit.getUUID());
         if (last != null && now - last < MIN_GAP_TICKS && now >= last) {
             Path previous = LAST_FILE.get(spirit.getUUID());
             String where = previous == null ? "" : " (" + previous.normalize() + ")";
-            return note.line() + "; снимок окрестности — прошлый, моложе " + MIN_GAP_TICKS + " тиков" + where;
+            return new Saved(
+                    note, null, "снимок окрестности — прошлый, моложе " + MIN_GAP_TICKS + " тиков" + where, null);
         }
         LAST.put(spirit.getUUID(), now);
         Path file = level.getServer()
@@ -53,10 +83,10 @@ public final class IncidentSnapshots {
             write(level, note, spirit, file);
         } catch (UncheckedIOException failure) {
             LOGGER.error("[incident] снимок {} не записан: {}", file, failure.getMessage());
-            return note.line() + "; снимок " + file.normalize() + " не записан: " + failure.getMessage();
+            return new Saved(note, null, null, "снимок " + file.normalize() + " не записан: " + failure.getMessage());
         }
         LAST_FILE.put(spirit.getUUID(), file);
-        return note.line(file.normalize());
+        return new Saved(note, file.normalize(), null, null);
     }
 
     public static IncidentNote note(SpiritEntity spirit, String what) {

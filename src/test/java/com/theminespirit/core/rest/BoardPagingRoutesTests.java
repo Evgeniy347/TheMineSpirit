@@ -70,6 +70,24 @@ class BoardPagingRoutesTests {
     }
 
     @Test
+    void get_SinceTick_ReturnsOnlyNewerTasksAndEchoesTick() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            gateway.with(task("board-" + i, "PENDING", i, null));
+        }
+
+        RestResponse response =
+                router.handle(new RestRequest("GET", "/v1/board", Map.of("sinceTick", "2"), Map.of(), new byte[0]));
+
+        JsonNode body = MAPPER.readTree(response.body());
+        assertEquals(
+                Set.of("board-2", "board-3", "board-4"),
+                ids(body),
+                "sinceTick на доске отдаёт задания, поставленные на этом тике и позже: наблюдатель опрашивает "
+                        + "только новое");
+        assertEquals(2L, body.get("sinceTick").asLong(), "Ответ эхает sinceTick: по нему клиент продолжает опрос");
+    }
+
+    @Test
     void get_OffsetAndLimit_ReturnsSecondPortion() throws Exception {
         for (int i = 0; i < 5; i++) {
             gateway.with(task("board-" + i, "PENDING", i, null));
