@@ -78,6 +78,62 @@ class TicketToolPlanTests {
                 "Оставленную руду тоже берут киркой со склада, а не голыми руками: " + steps);
     }
 
+    @Test
+    void shovel_NoShovelAnywhere_PlanContinuesByHand() {
+        TaskNode shovel = GatherPlans.shovel();
+        List<ScriptCall> steps = calls(shovel);
+
+        assertTrue(
+                shovel instanceof FallbackNode fallback
+                        && fallback.steps().get(fallback.steps().size() - 1) instanceof ScriptCall wait
+                        && "wait".equals(wait.script()),
+                "Нет лопаты нигде — acquire завершается ожиданием, а расчистка идёт руками: инструмент — "
+                        + "предпочтение, а не запрет: " + steps);
+        assertTrue(
+                index(
+                                steps,
+                                call -> "acquire".equals(call.script())
+                                        && "*_shovel".equals(call.params().get("item")))
+                        < index(steps, call -> "wait".equals(call.script())),
+                "Лопату сначала ищут на складе, и только потом работают руками: " + steps);
+    }
+
+    @Test
+    void pickaxe_StoneNeedsTool_StaysMandatory() {
+        List<TaskNode> steps = ((FallbackNode) GatherPlans.pickaxe()).steps();
+
+        assertTrue(
+                steps.stream().allMatch(step -> step instanceof ScriptCall call && "acquire".equals(call.script())),
+                "Камень без кирки не добывается: ветка кирки — честный acquire/крафт без перехода на руки: " + steps);
+    }
+
+    @Test
+    void saplingPlan_NoAxeNearby_TakesFromWarehouseThenWorksByHand() {
+        TaskNode plan = TicketPlans.plan(
+                BoardCase.GATHER_MATERIALS,
+                TicketTarget.at(new BlockCoord(10, 60, -5)).withSupply("jungle_sapling", 2));
+        List<ScriptCall> steps = calls(plan);
+
+        int nearby = index(
+                steps,
+                call -> "withdraw".equals(call.script())
+                        && "auto".equals(call.params().get("container")));
+        int warehouse = index(
+                steps,
+                call -> "withdraw".equals(call.script())
+                        && "warehouse".equals(call.params().get("container")));
+        int hands = index(steps, call -> "wait".equals(call.script()));
+        int chop = index(steps, call -> "chop_tree".equals(call.script()));
+
+        assertTrue(
+                nearby < warehouse,
+                "Сначала топор ищут в контейнерах рядом с духом, потом на складе поселения: " + steps);
+        assertTrue(warehouse < hands, "Топор со склада берут раньше, чем соглашаются рубить руками: " + steps);
+        assertTrue(
+                hands < chop,
+                "Если топора нет нигде, рубка всё равно идёт руками: задание не ждёт инструмент: " + steps);
+    }
+
     private static TaskNode gather(String item, int count) {
         return TicketPlans.plan(
                 BoardCase.GATHER_MATERIALS,

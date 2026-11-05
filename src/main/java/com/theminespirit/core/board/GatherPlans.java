@@ -26,6 +26,7 @@ final class GatherPlans {
     private static final String MINECRAFT = "minecraft:";
     private static final String AXE = "*_axe";
     private static final String CONTAINER = "container";
+    private static final String WAREHOUSE = "warehouse";
     private static final String WAIT = "wait";
     private static final String TICKS = "ticks";
 
@@ -176,6 +177,17 @@ final class GatherPlans {
                 new ScriptCall(
                         "withdraw",
                         Map.of(CONTAINER, "auto", ITEM, AXE, COUNT, 1, RADIUS, CatalogLimits.CONTAINER_RADIUS_DEFAULT)),
+                new ScriptCall(
+                        "withdraw",
+                        Map.of(
+                                CONTAINER,
+                                WAREHOUSE,
+                                ITEM,
+                                AXE,
+                                COUNT,
+                                1,
+                                RADIUS,
+                                CatalogLimits.CONTAINER_RADIUS_DEFAULT)),
                 new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
@@ -188,7 +200,12 @@ final class GatherPlans {
     }
 
     static TaskNode shovel() {
-        return tool("*_shovel", "wooden_shovel");
+        return optionalTool("*_shovel", "wooden_shovel");
+    }
+
+    private static TaskNode optionalTool(String kind, String wooden) {
+        return new FallbackNode(
+                List.of(tool(kind, wooden), new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
     private static TaskNode tool(String kind, String wooden) {

@@ -51,6 +51,11 @@ final class MineVeinDurabilityGameTests {
         wornShovel.setDamageValue(wornShovel.getMaxDamage() - 1);
         SpiritRun digRun = SpiritRun.launch(helper, digger, gatherCall("dirt", 2), SETTLE_TICKS);
 
+        SpiritEntity refiller = spawnWith(helper, new BlockPos(2, 1, 2), Items.WOODEN_PICKAXE);
+        ItemStack refillWornPick = refiller.getInventory().getItem(0);
+        refillWornPick.setDamageValue(refillWornPick.getMaxDamage() - 1);
+        SpiritRun refillRun = startRefillScene(helper, refiller);
+
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(
@@ -87,7 +92,32 @@ final class MineVeinDurabilityGameTests {
                     GameTestFixtures.countInInventory(digger.getInventory(), Items.DIRT) >= 2,
                     "работа не брошена: земля добыта руками, фактически "
                             + GameTestFixtures.countInInventory(digger.getInventory(), Items.DIRT));
+            refillRun.assertStarted();
+            helper.assertTrue(
+                    refiller.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "кирка сломалась, запасной в инвентаре нет — дух обязан взять кирку из сундука и "
+                            + "продолжить добычу, статус "
+                            + refiller.taskStatus().orElse(null) + ", причина: "
+                            + refiller.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(refiller.getInventory(), Items.COBBLESTONE) >= 2,
+                    "работа не брошена: камень добыт после замены кирки, фактически "
+                            + GameTestFixtures.countInInventory(refiller.getInventory(), Items.COBBLESTONE));
             GameTestFixtures.finish(helper);
         });
+    }
+
+    private static SpiritRun startRefillScene(GameTestHelper helper, SpiritEntity refiller) {
+        helper.setBlock(new BlockPos(8, 1, 2), Blocks.CHEST);
+        var pickChest = helper.getLevel().getBlockEntity(helper.absolutePos(new BlockPos(8, 1, 2)));
+        helper.assertTrue(
+                pickChest instanceof Container,
+                "сундук с запасной киркой обязан появиться на сцене: без него проверка замены бессмысленна");
+        if (pickChest instanceof Container container) {
+            container.setItem(0, new ItemStack(Items.STONE_PICKAXE));
+        }
+        helper.setBlock(new BlockPos(3, 1, 2), Blocks.STONE);
+        helper.setBlock(new BlockPos(3, 1, 3), Blocks.STONE);
+        return SpiritRun.launch(helper, refiller, gatherCall("stone", 2), SETTLE_TICKS);
     }
 }

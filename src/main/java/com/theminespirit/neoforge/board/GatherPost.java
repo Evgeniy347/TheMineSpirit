@@ -3,9 +3,12 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.GatherBatch;
+import com.theminespirit.core.board.GatherConsolidation;
 import com.theminespirit.core.board.GatherDemand;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolGate;
+import com.theminespirit.core.board.graph.GraphNames;
+import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
@@ -20,6 +23,7 @@ import java.util.Set;
 final class GatherPost {
     private final GraphPost post;
     private final Map<String, GatherDemand.Need> needs = new LinkedHashMap<>();
+    private final List<GatherDemand.Need> standing = new ArrayList<>();
     private final Set<String> suppressed = new HashSet<>();
 
     GatherPost(GraphPost post) {
@@ -37,20 +41,24 @@ final class GatherPost {
                 canonical, new GatherDemand.Need(canonical, item, cause, count, priority, at), GatherDemand.Need::plus);
     }
 
-    void flush() {
-        List<GatherDemand.Need> merged = GatherDemand.merge(new ArrayList<>(needs.values()));
-        List<GatherDemand.Need> chosen = GatherDemand.onePerWood(merged);
-        Set<String> keep = new HashSet<>();
-        chosen.forEach(need -> keep.add(need.id()));
-        suppressed.clear();
-        for (GatherDemand.Need need : merged) {
-            if (GatherDemand.wood(need.item()) != null && !keep.contains(need.id())) {
-                suppressed.add(need.id());
-                suppressed.add(need.cause());
-            }
+    String item(GraphPlan.Task task) {
+        return GatherDemand.demandItem(GraphNames.item(post.graph, task.makes(), post.scan.wood()), post.scan.wood());
+    }
+
+    void standing(GraphPlan.Task task, BlockCoord at) {
+        String item = item(task);
+        if (GatherDemand.wood(item) != null) {
+            standing.add(new GatherDemand.Need(task.id(), item, task.id(), 1, task.priority(), at));
         }
+    }
+
+    void flush() {
+        GatherConsolidation.Result result = GatherConsolidation.of(standing, new ArrayList<>(needs.values()));
+        suppressed.clear();
+        suppressed.addAll(result.suppressed());
         needs.clear();
-        chosen.forEach(this::submit);
+        standing.clear();
+        result.submit().forEach(this::submit);
     }
 
     Set<String> live(Set<String> live) {

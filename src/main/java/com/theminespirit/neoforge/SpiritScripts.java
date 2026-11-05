@@ -299,7 +299,7 @@ public final class SpiritScripts {
         table.put("acquire_at", spirit -> params -> acquire(spirit, AcquireParams.fromPlace(params)));
     }
 
-    private static ScriptInstance acquire(SpiritEntity spirit, AcquireParams parsed) {
+    static ScriptInstance acquire(SpiritEntity spirit, AcquireParams parsed) {
         {
             SpiritSupplies supplies = new SpiritSupplies(spirit, CatalogLimits.CONTAINER_RADIUS_DEFAULT);
             int count = parsed.count();
