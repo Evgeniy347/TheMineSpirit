@@ -1,4 +1,4 @@
-src/main/java/com/theminespirit/core/board/Board.java	674
+src/main/java/com/theminespirit/core/board/Board.java	672
 src/main/java/com/theminespirit/core/board/TicketPlans.java	896
 src/main/java/com/theminespirit/core/board/graph/GraphFacts.java	309
 src/main/java/com/theminespirit/core/board/graph/GraphPlanner.java	538
