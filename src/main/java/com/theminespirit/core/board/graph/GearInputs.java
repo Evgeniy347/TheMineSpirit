@@ -138,6 +138,7 @@ public final class GearInputs {
     public static Set<String> events(GraphFacts facts, int stage) {
         Settings settings = settings();
         Map<String, String> required = settings.requiredAt(stage);
+        Map<String, Integer> chestTools = GearRules.chestToolRanks(facts.chests(), settings);
         Set<String> events = new LinkedHashSet<>();
         for (GraphFacts.Spirit spirit : facts.spirits().values()) {
             if (spirit.tools().stream().anyMatch(tool -> worn(tool.durability(), tool.maxDurability(), settings))) {
@@ -152,7 +153,7 @@ public final class GearInputs {
             Map<String, Integer> best = bestTools(spirit);
             required.forEach((kind, tier) -> {
                 int rank = settings.rank(tier);
-                if (rank >= 0 && best.getOrDefault(kind, -1) < rank) {
+                if (rank >= 0 && best.getOrDefault(kind, -1) < rank && chestTools.getOrDefault(kind, -1) < rank) {
                     events.add(CRAFT_TOOL + kind);
                 }
             });
@@ -171,7 +172,9 @@ public final class GearInputs {
                             .filter(spirit -> kit.getValue().activity().equals(spirit.activity()))
                             .anyMatch(spirit -> kit.getValue().tools().stream().anyMatch(kind -> {
                                 String tier = required.get(kind);
-                                return tier != null && bestTools(spirit).getOrDefault(kind, -1) < settings.rank(tier);
+                                return tier != null
+                                        && bestTools(spirit).getOrDefault(kind, -1) < settings.rank(tier)
+                                        && chestTools.getOrDefault(kind, -1) < settings.rank(tier);
                             }));
             if (lacks) {
                 events.add(KIT + kit.getKey());

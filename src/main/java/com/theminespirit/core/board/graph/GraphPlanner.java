@@ -136,6 +136,7 @@ public final class GraphPlanner {
         if (node.startsWith(TOOL)) {
             String kind = node.substring(TOOL.length(), node.indexOf(AT));
             String spirit = node.substring(node.indexOf(AT) + 1);
+            if (ChestTools.covers(graph, state, kind, graph.rank(graph.kit().tier(kind, state.stage())))) return;
             for (String tier : graph.tiers()) {
                 if (graph.rank(tier) <= state.tier(spirit, kind)) {
                     continue;
@@ -510,9 +511,7 @@ public final class GraphPlanner {
         }
         SupplyGraph.Building building =
                 way.building() == null ? null : graph.buildings().get(way.building());
-        if (building == null) {
-            return true;
-        }
+        if (building == null) return true;
         boolean planned = !building.optional() || state.built(building.id()) != Built.ABSENT;
         return building.stage() <= state.stage() && planned;
     }
