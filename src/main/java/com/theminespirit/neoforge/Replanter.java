@@ -9,6 +9,7 @@ import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.forestry.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
@@ -54,7 +55,7 @@ final class Replanter {
         this.town = townOf(spirit);
         this.saplingItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(species.saplingId()));
         this.saplingState = Block.byItem(saplingItem).defaultBlockState();
-        this.data = ReplantData.loadDefault();
+        this.data = DataTables.INSTANCE.replant().current();
         this.view = view;
         this.trunkCells = List.copyOf(cells);
         this.approach = new Approach(spirit);
@@ -148,9 +149,21 @@ final class Replanter {
         planted++;
     }
 
+    private ReplantSite.@Nullable Plan site() {
+        if (town == null) {
+            return null;
+        }
+        return new ReplantSite.Plan(
+                town.placements().stream()
+                        .map(place ->
+                                new ReplantSite.Plot(place.id(), place.x(), place.z(), place.width(), place.depth()))
+                        .toList(),
+                town.streets()::contains);
+    }
+
     private boolean canPlantAt(BlockPos cell) {
         Level level = spirit.level();
-        if (!ReplantSite.allowed(town, toCoord(cell))) {
+        if (!ReplantSite.allowed(site(), toCoord(cell))) {
             return false;
         }
         if (level.getChunkSource().getChunkNow(cell.getX() >> 4, cell.getZ() >> 4) == null) {

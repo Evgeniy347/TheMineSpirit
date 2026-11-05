@@ -2,7 +2,6 @@ package com.theminespirit.core.forestry;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
-import com.theminespirit.core.reload.DataTables;
 import java.util.Set;
 
 public record ReplantData(int squareSaplings, int areaRadius, int areaStep, int buildingGap) {
@@ -45,10 +44,6 @@ public record ReplantData(int squareSaplings, int areaRadius, int areaStep, int 
 
     public static ReplantData defaults() {
         return DEFAULTS;
-    }
-
-    public static ReplantData loadDefault() {
-        return DataTables.INSTANCE.replant().current();
     }
 
     public static ReplantData load() {
