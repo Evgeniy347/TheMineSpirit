@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -39,6 +40,46 @@ class GraphTicketRepeatTests {
                 BoardStatus.PENDING,
                 board.statusOf("graph:dig_dirt").orElseThrow(),
                 "Новая добыча земли снова в очереди доски");
+    }
+
+    @Test
+    void prune_LiveGraphTick_NotEvictedEvenWhenOldest() {
+        Board board = new Board(() -> 100);
+        BoardTicket live = new BoardTicket(
+                "graph:dig_dirt",
+                BoardCase.GATHER_MATERIALS,
+                Optional.empty(),
+                48,
+                0,
+                1,
+                "graph:dig_dirt",
+                List.of(),
+                Map.of());
+        board.submit(live);
+        for (int index = 0; index <= BoardTuning.maxPending(); index++) {
+            board.submit(new BoardTicket(
+                    "test:gather:" + index,
+                    BoardCase.GATHER_MATERIALS,
+                    Optional.empty(),
+                    10,
+                    1 + index,
+                    1,
+                    "always",
+                    List.of(),
+                    Map.of()));
+        }
+
+        board.prune(100, Set.of("graph:dig_dirt"));
+
+        assertEquals(
+                BoardStatus.PENDING,
+                board.statusOf("graph:dig_dirt").orElseThrow(),
+                "Живая работа графа не вытесняется из переполненной доски: иначе добыча земли стареет и "
+                        + "снимается раньше, чем её возьмёт дух");
+        assertEquals(
+                BoardStatus.CANCELLED,
+                board.statusOf("test:gather:0").orElseThrow(),
+                "Переполнение по-прежнему разгружает доску за счёт неживых заданий");
     }
 
     @Test

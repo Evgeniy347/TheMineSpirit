@@ -460,6 +460,11 @@ public final class Board {
     }
 
     public int prune(long now) {
+        return prune(now, Set.of());
+    }
+
+    public int prune(long now, Set<String> liveCauses) {
+        Objects.requireNonNull(liveCauses, "Живые причины не могут быть null: пустой набор задают пустым");
         BoardTiming.require(now);
         int removed = 0;
         List<String> removableIds = new ArrayList<>();
@@ -477,7 +482,7 @@ public final class Board {
             removed++;
         }
         failTicks.entrySet().removeIf(mark -> now - mark.getValue() >= BoardTuning.failBackoffTicks());
-        removed += evictOverflow();
+        removed += evictOverflow(liveCauses);
         return removed;
     }
 
@@ -632,8 +637,8 @@ public final class Board {
         }
     }
 
-    private int evictOverflow() {
-        return PendingEvict.evict(tickets, statuses, this::cancel);
+    private int evictOverflow(Set<String> liveCauses) {
+        return PendingEvict.evict(tickets, statuses, this::cancel, liveCauses);
     }
 
     private void noteCaseFailure(UUID spirit, BoardTicket ticket, long now) {
