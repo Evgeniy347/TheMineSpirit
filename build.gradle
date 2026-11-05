@@ -1,14 +1,8 @@
 plugins {
-    id 'java-library'
+    id 'theminespirit.neoforge-mod'
     id 'maven-publish'
     id 'jacoco'
-    id 'net.neoforged.moddev'
     id 'idea'
-    id 'com.diffplug.spotless'
-    id 'net.ltgt.errorprone'
-    id 'checkstyle'
-    id 'pmd'
-    id 'com.github.spotbugs'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -56,7 +50,6 @@ sourceSets.main.resources {
 }
 
 repositories {
-    mavenCentral()
     maven {
         url = "https://maven.blamejared.com"
         content {
@@ -69,17 +62,7 @@ base {
     archivesName = mod_id
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-
 neoForge {
-    version = project.neo_version
-
-    parchment {
-        mappingsVersion = project.parchment_mappings_version
-        minecraftVersion = project.parchment_minecraft_version
-    }
-
-
     runs {
         client {
             client()
@@ -151,17 +134,6 @@ dependencies {
         }
     }
 
-    testImplementation platform("org.junit:junit-bom:${junit_version}")
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testImplementation "org.junit.platform:junit-platform-launcher"
-
-    testImplementation "net.jqwik:jqwik:${jqwik_version}"
-    testImplementation "com.tngtech.archunit:archunit:${archunit_version}"
-
-    errorprone "com.google.errorprone:error_prone_core:${errorprone_version}"
-    errorprone "com.uber.nullaway:nullaway:${nullaway_version}"
-    compileOnly "org.jspecify:jspecify:${jspecify_version}"
-    testCompileOnly "org.jspecify:jspecify:${jspecify_version}"
     compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
 
 
@@ -200,87 +172,6 @@ publishing {
             url "file://${project.projectDir}/repo"
         }
     }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-    options.compilerArgs.addAll(['-Xlint:all', '-Xlint:-processing', '-Werror'])
-    options.errorprone {
-        disableWarningsInGeneratedCode = true
-        disable('UnnecessaryLambda')
-        disable('ImmutableEnumChecker')
-    }
-}
-
-tasks.named('compileJava', JavaCompile) {
-    options.errorprone {
-        check('NullAway', net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
-        option('NullAway:AnnotatedPackages', 'com.theminespirit.core')
-    }
-}
-
-tasks.named('compileTestJava', JavaCompile) {
-    options.errorprone.disable('NullAway')
-}
-
-spotless {
-    java {
-        target 'src/*/java/**/*.java'
-        palantirJavaFormat(palantir_java_format_version)
-    }
-}
-
-checkstyle {
-    toolVersion = checkstyle_version
-    maxWarnings = 0
-    ignoreFailures = false
-}
-
-pmd {
-    toolVersion = pmd_version
-    consoleOutput = false
-    ignoreFailures = false
-    ruleSets = []
-}
-tasks.named('pmdMain', Pmd) {
-    ruleSetFiles = files('config/pmd/main.xml')
-}
-tasks.named('pmdTest', Pmd) {
-    ruleSetFiles = files('config/pmd/test.xml')
-}
-
-spotbugs {
-    toolVersion = spotbugs_version
-    ignoreFailures = false
-    excludeFilter = file('config/spotbugs/exclude.xml')
-}
-tasks.named('spotbugsTest') {
-    excludeFilter = file('config/spotbugs/exclude-test.xml')
-}
-tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
-    reports {
-        xml.required = true
-        html.required = false
-    }
-}
-
-tasks.register('staticAnalysisFast') {
-    group = 'verification'
-    description = 'Быстрые анализаторы: формат (Spotless), Checkstyle — без SpotBugs и PMD'
-    dependsOn tasks.named('spotlessCheck')
-    dependsOn tasks.named('checkstyleMain'), tasks.named('checkstyleTest')
-}
-
-tasks.register('staticAnalysis') {
-    group = 'verification'
-    description = 'Строгие анализаторы кода: формат (Spotless) и прочие из tasks/46'
-    dependsOn tasks.named('staticAnalysisFast')
-    dependsOn tasks.named('pmdMain'), tasks.named('pmdTest')
-    dependsOn tasks.named('spotbugsMain'), tasks.named('spotbugsTest')
-}
-
-tasks.named('check') {
-    dependsOn tasks.named('staticAnalysis')
 }
 
 def unitTestThreads = (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}") as int
