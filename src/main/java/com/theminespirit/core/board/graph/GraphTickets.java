@@ -50,6 +50,7 @@ public final class GraphTickets {
         Objects.requireNonNull(plan, "Расчёт графа не может быть null: из него ставятся задания доски");
         List<Ticket> post = new ArrayList<>();
         Set<String> live = new LinkedHashSet<>();
+        Set<String> posted = new LinkedHashSet<>();
         List<GraphPlan.Task> unimplemented = new ArrayList<>();
         Map<String, Integer> demand = buildingDemand(graph, plan);
         for (GraphPlan.Task task : plan.tasks()) {
@@ -62,6 +63,9 @@ public final class GraphTickets {
             }
             live.add(id(task));
             if (!task.feasible()) {
+                continue;
+            }
+            if (!posted.add(id(task))) {
                 continue;
             }
             Kind kind = kind(task);

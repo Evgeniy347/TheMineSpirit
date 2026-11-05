@@ -244,8 +244,8 @@ public final class BoardService {
         issuedGenerations.keySet().retainAll(alive);
         List<SpiritEntity> spirits = SpiritCensus.all(level);
         cancelOrphans(level, spirits);
-        settleOwners(spirits);
         StockParts parts = refreshStock(level, spirits);
+        settleOwners(spirits);
         ensureSupply(level, spirits, stock, now);
         StockView unreserved = parts.free(BoardReserve.items(board));
         Set<String> live = sources.tick(level, this, spirits, unreserved, now);
@@ -648,7 +648,8 @@ public final class BoardService {
                 spirit.getUUID(),
                 SpiritItems.ids(spirit),
                 walledIn,
-                ticket -> sources.supplyOf(ticket, targets))) {
+                ticket -> sources.supplyOf(ticket, targets),
+                DispatchPick.stockTools(stock))) {
             Long issued = issuedGenerations.remove(freed.ticketId());
             if (issued != null
                     && issued == spirit.taskGeneration()
@@ -783,7 +784,7 @@ public final class BoardService {
         transferWait.retain(board);
         crafters.retain(id -> board.statusOf(id).filter(TransferWatch::open).isPresent());
         DispatchRound round = new DispatchRound(board, now);
-        DispatchPick pick = new DispatchPick(round, spirits);
+        DispatchPick pick = new DispatchPick(round, spirits, stock);
         for (BoardTicket ticket : claimable) {
             SpiritEntity spirit = pick.choose(ticket, targets.get(ticket.id()), crafters);
             if (spirit == null) {

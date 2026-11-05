@@ -74,6 +74,43 @@ class ToolGateTests {
     }
 
     @Test
+    void allowsFromStock_AxeOnly_TakeBeforeChop() {
+        BoardTicket chop = new BoardTicket(
+                "graph:chop_jungle_log",
+                BoardCase.GATHER_MATERIALS,
+                Optional.empty(),
+                94,
+                0,
+                1,
+                "graph:chop_jungle_log",
+                List.of(),
+                Map.of(),
+                List.of(ToolGate.TOOL_MODIFIER + "_axe"));
+        BoardTicket mine = new BoardTicket(
+                "building:mine",
+                BoardCase.BUILD_MINE,
+                Optional.empty(),
+                100,
+                0,
+                1,
+                "building:mine",
+                List.of(),
+                Map.of(),
+                List.of(ToolGate.TOOL_MODIFIER + "_pickaxe"));
+
+        assertTrue(
+                ToolGate.allowsFromStock(chop, List.of("minecraft:stone_axe")),
+                "Топор в сундуке закрывает рубку: дух берёт его до дерева, а не ждёт крафт");
+        assertFalse(
+                ToolGate.allowsFromStock(chop, List.of("minecraft:stone_pickaxe")),
+                "Кирка не заменяет топор: рубка ждёт именно топор");
+        assertFalse(
+                ToolGate.allowsFromStock(mine, List.of("minecraft:stone_pickaxe")),
+                "Со склада пока берётся только топор: кирку шахтёр получает из рук, иначе задание выдадут "
+                        + "духу, который не умеет её взять");
+    }
+
+    @Test
     void allows_ChopLogWithoutAxe_NotGiven() {
         assertFalse(
                 ToolGate.allows(BoardCase.GATHER_MATERIALS, List.of("minecraft:wooden_shovel"), "jungle_log"),

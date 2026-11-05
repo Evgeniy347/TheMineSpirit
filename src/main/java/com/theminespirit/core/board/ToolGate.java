@@ -111,6 +111,13 @@ public final class ToolGate {
                 .orElse(true);
     }
 
+    public static boolean allowsFromStock(BoardTicket ticket, Collection<String> stock) {
+        Objects.requireNonNull(ticket, "Задание не может быть null: по нему решают, нужен ли топор со склада");
+        Objects.requireNonNull(stock, "Склад не может быть null: пустой склад задают пустым набором");
+        return required(ticket).filter(AXE::equals).isPresent()
+                && stock.stream().anyMatch(item -> item.endsWith(AXE));
+    }
+
     public static boolean allows(BoardCase boardCase, Collection<String> items) {
         return allows(boardCase, items, null);
     }

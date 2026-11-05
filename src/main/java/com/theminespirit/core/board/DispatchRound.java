@@ -20,10 +20,22 @@ public final class DispatchRound {
             List<String> items,
             EatNeed eat,
             SpiritView view,
-            boolean wet) {
+            boolean wet,
+            List<String> stockTools) {
         public Candidate(
                 UUID id, String name, @Nullable String busyWith, List<String> items, EatNeed eat, SpiritView view) {
-            this(id, name, busyWith, items, eat, view, false);
+            this(id, name, busyWith, items, eat, view, false, List.of());
+        }
+
+        public Candidate(
+                UUID id,
+                String name,
+                @Nullable String busyWith,
+                List<String> items,
+                EatNeed eat,
+                SpiritView view,
+                boolean wet) {
+            this(id, name, busyWith, items, eat, view, wet, List.of());
         }
 
         public Candidate {
@@ -32,6 +44,8 @@ public final class DispatchRound {
             items = List.copyOf(items);
             Objects.requireNonNull(eat, "Сытость духа выдачи не может быть null: по ней решают еду");
             Objects.requireNonNull(view, "Состояние духа выдачи не может быть null: по нему решают применимость");
+            stockTools = List.copyOf(Objects.requireNonNull(
+                    stockTools, "Инструменты склада не могут быть null: пустой склад задают пустым списком"));
         }
     }
 
@@ -140,7 +154,7 @@ public final class DispatchRound {
             return Optional.of("на паузе кейса " + ticket.boardCase() + " после "
                     + board.consecutiveFailures(spirit.id(), ticket.boardCase()) + " провалов");
         }
-        if (!ToolGate.allows(ticket, spirit.items())) {
+        if (!ToolGate.allows(ticket, spirit.items()) && !ToolGate.allowsFromStock(ticket, spirit.stockTools())) {
             return Optional.of("нет инструмента " + ToolGate.required(ticket).orElse("?"));
         }
         if (!ToolGate.carries(ticket, spirit.items())) {

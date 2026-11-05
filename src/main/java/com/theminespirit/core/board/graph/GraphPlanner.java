@@ -136,7 +136,7 @@ public final class GraphPlanner {
         if (node.startsWith(TOOL)) {
             String kind = node.substring(TOOL.length(), node.indexOf(AT));
             String spirit = node.substring(node.indexOf(AT) + 1);
-            if (ChestTools.covers(graph, state, kind, graph.rank(graph.kit().tier(kind, state.stage())))) return;
+            if (ChestTools.covered(graph, state).contains(kind + AT + spirit)) return;
             for (String tier : graph.tiers()) {
                 if (graph.rank(tier) <= state.tier(spirit, kind)) {
                     continue;

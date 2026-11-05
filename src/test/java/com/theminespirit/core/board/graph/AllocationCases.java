@@ -45,12 +45,17 @@ final class AllocationCases {
     }
 
     static List<DispatchRound.Candidate> candidates(GraphWorld world) {
+        List<String> stockTools = world.stock.entrySet().stream()
+                .filter(entry -> entry.getValue() > 0)
+                .map(Map.Entry::getKey)
+                .toList();
         List<DispatchRound.Candidate> spirits = new ArrayList<>();
         world.kits.forEach((spirit, kit) -> {
             List<String> items = new ArrayList<>();
             kit.forEach((kind, tier) ->
                     items.add("minecraft:" + GraphWorld.GRAPH.tiers().get(tier) + "_" + kind));
-            spirits.add(new DispatchRound.Candidate(id(spirit), spirit, null, items, FED, SpiritView.free()));
+            spirits.add(new DispatchRound.Candidate(
+                    id(spirit), spirit, null, items, FED, SpiritView.free(), false, stockTools));
         });
         return spirits;
     }

@@ -44,10 +44,14 @@ class LiveOakSupplyPlanTests {
                 chop.params().get("radius"),
                 "Рубка дуба обязана искать настоящее дерево в том же радиусе, что и сад: " + chop);
         assertTrue(
-                index(calls, call -> "acquire".equals(call.script()))
+                index(calls, call -> "acquire".equals(call.script()) && planks(call))
                         > index(calls, call -> "chop_tree".equals(call.script())),
                 "Крафт досок идёт запасной веткой после рубки: при брёвнах в инвентаре acquire крафтит, "
                         + "а при настоящем дереве рядом сначала рубит его: " + calls);
+    }
+
+    private static boolean planks(ScriptCall call) {
+        return String.valueOf(call.params().get("item")).endsWith("oak_planks");
     }
 
     @Test

@@ -20,7 +20,7 @@ final class WaitRefresh {
             CrafterMemory crafters,
             long now) {
         DispatchRound round = new DispatchRound(board, now);
-        DispatchPick pick = new DispatchPick(round, spirits);
+        DispatchPick pick = new DispatchPick(round, spirits, stock);
         for (BoardTicket ticket : DispatchRound.order(board.claimable(stock, now))) {
             SpiritEntity chosen = pick.choose(ticket, targets.get(ticket.id()), crafters);
             board.noteWait(ticket.id(), chosen == null ? pick.why(ticket, targets.get(ticket.id())) : null);
