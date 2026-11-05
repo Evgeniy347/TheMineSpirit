@@ -24,6 +24,15 @@ class RecipeExportTests {
 
     @Test
     void export_VanillaRecipes_WriteGraphRecipes() throws IOException {
+        String text = render();
+        Files.writeString(OUT, text, StandardCharsets.UTF_8);
+        assertTrue(
+                Files.size(OUT) > 0,
+                "Импорт ванильных рецептов записан в " + OUT + ": путей "
+                        + text.lines().count());
+    }
+
+    static String render() throws IOException {
         SupplyGraph manual = SupplyGraph.parse(JsonResource.readClasspath(SupplyGraph.RESOURCE), SupplyGraph.RESOURCE);
         RecipeImport.Result result =
                 RecipeImport.importRecipes(MinecraftRecipeData.recipes(), MinecraftRecipeData.tags(), manual);
@@ -35,13 +44,11 @@ class RecipeExportTests {
         root.put("buildings", buildings(result.buildings()));
         root.put("ways", ways(ways));
 
-        new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValue(OUT.toFile(), root);
-        String text = Files.readString(OUT, StandardCharsets.UTF_8).replace("\r\n", "\n");
-        Files.writeString(OUT, text + "\n", StandardCharsets.UTF_8);
-        assertTrue(
-                Files.size(OUT) > 0,
-                "Импорт ванильных рецептов записан в " + OUT + ": путей " + ways.size() + ", предметов "
-                        + result.items().size());
+        String text = new ObjectMapper()
+                .enable(SerializationFeature.INDENT_OUTPUT)
+                .writeValueAsString(root)
+                .replace("\r\n", "\n");
+        return text + "\n";
     }
 
     private static Map<String, Object> items(Map<String, SupplyGraph.Item> items) {

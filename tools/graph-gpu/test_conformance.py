@@ -996,6 +996,18 @@ def test_choice_mechanics():
     print("OK: поправки выбора (дорога, срок, дубль, цель, место, загон, поле) работают в Python")
 
 
+def test_recipe_weights():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    params = search.parameters(graph)
+    weights = search.vector_to_weights(graph, [1.0] * len(params), params)
+    frozen = sorted(way for way in weights["ways"] if way.startswith("auto_"))
+    assert not frozen, ("авто-рецепты пересобирает graphExport, их веса нельзя подбирать: "
+                        + ", ".join(frozen[:5]))
+    assert any(way.id.startswith("auto_") for way in graph.ways), \
+        "в графе нет auto_*-рецептов: проверка заморозки ничего не доказала"
+    print("OK: веса auto_*-рецептов заморожены, поиск их не подбирает")
+
+
 def test_conformance():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
@@ -1045,6 +1057,7 @@ if __name__ == "__main__":
         test_stage_two_worlds()
         test_failure_memory()
         test_choice_mechanics()
+        test_recipe_weights()
         test_conformance()
     except AssertionError as error:
         print(error)

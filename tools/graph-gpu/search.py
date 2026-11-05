@@ -59,6 +59,15 @@ def way_category(way):
     return "way:" + str(way.board_case or "other")
 
 
+def searchable(way):
+    """auto_*-рецепты пересобирает graphExport: вес 1.0/0.1 задаёт импорт.
+
+    Подобранный поиском множитель пропал бы при следующей выгрузке, поэтому
+    такие пути заморожены и в vector_to_weights не попадают.
+    """
+    return not way.id.startswith("auto_")
+
+
 def event_category(name):
     """Полосы новых областей: жизнь, склад, ферма, снаряжение, more2/more3."""
     if name.startswith("life_"):
@@ -92,7 +101,7 @@ def parameters(graph):
     categories.update("choice:" + name for name in graph.costs.choice.values)
     categories.update(item_category(item) for item in graph.items.values())
     categories.update(building_category(building) for building in graph.buildings.values())
-    categories.update(way_category(way) for way in graph.ways)
+    categories.update(way_category(way) for way in graph.ways if searchable(way))
     categories.update(category for category in (event_category(name) for name in graph.events)
                       if category is not None)
     scalars = [name for name in SCALARS if name in categories]
@@ -113,6 +122,8 @@ def vector_to_weights(graph, vector, params):
     for building_id, building in graph.buildings.items():
         weights["buildings"][building_id] = factors.get(building_category(building), 1.0)
     for way in graph.ways:
+        if not searchable(way):
+            continue
         weights["ways"][way.id] = factors.get(way_category(way), 1.0)
     for name in graph.events:
         category = event_category(name)
