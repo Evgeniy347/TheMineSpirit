@@ -2,7 +2,6 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.RescuePlans;
 import com.theminespirit.core.board.StuckSpirits;
 import com.theminespirit.core.board.TicketTarget;
@@ -57,11 +56,14 @@ final class GraphRescuePost {
                 posted = true;
                 continue;
             }
-            TaskNode plan =
-                    assignment.mode() == RescuePlans.Mode.SELF ? escape.plan() : RescueTicket.helper(spirit, home);
             BlockPos feet = spirit.blockPosition();
             BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-            BoardOutcome outcome = post.submit(
+            TaskNode plan = assignment.mode() == RescuePlans.Mode.SELF
+                    ? escape.plan()
+                    : RescuePlans.plan(
+                                    BoardCase.RESCUE_SPIRIT, TicketTarget.at(at).withRelocate(at, home))
+                            .orElseThrow();
+            post.submit(
                     post.ticket(
                             ticketId,
                             BoardCase.RESCUE_SPIRIT,
@@ -70,14 +72,6 @@ final class GraphRescuePost {
                             assignment.cause(),
                             Map.of()),
                     TicketTarget.at(at).withPlan(plan));
-            if (outcome == BoardOutcome.ACCEPTED) {
-                say(
-                        post,
-                        spirit,
-                        since,
-                        (assignment.mode() == RescuePlans.Mode.SELF ? "назначен сам — " : "назначен помощник — ")
-                                + assignment.why());
-            }
             posted = true;
         }
         return posted;

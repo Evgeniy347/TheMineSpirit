@@ -107,6 +107,9 @@ final class GraphChoiceRules {
 
     private int failures(String key) {
         String base = baseKey(key);
+        if (life(base)) {
+            return 0;
+        }
         int total = 0;
         for (GraphFeedback.Failure failure : state.facts().feedback().failures()) {
             if (failure.node().equals(key) || failure.node().equals(base)) {
@@ -114,6 +117,10 @@ final class GraphChoiceRules {
             }
         }
         return total;
+    }
+
+    private static boolean life(String base) {
+        return "rescue_spirit".equals(base) || base.startsWith(EVENT + "life_");
     }
 
     private static String baseKey(String key) {

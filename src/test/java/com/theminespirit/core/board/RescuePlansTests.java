@@ -15,6 +15,7 @@ import com.theminespirit.core.script.CoreScripts;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class RescuePlansTests {
@@ -44,9 +45,10 @@ class RescuePlansTests {
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
 
         assertEquals(
-                List.of("goto", "wait", "clear_area", "goto"),
+                List.of("goto", "dig_out", "wait", "clear_area", "goto"),
                 scripts(plan),
-                "план спасения проходит каталог: подойти, вскрыть клетку вокруг духа, снова подойти");
+                "план спасения проходит каталог: подойти (с прокопом, если проход закрыт), вскрыть клетку вокруг духа,"
+                        + " снова подойти");
     }
 
     @Test
@@ -164,6 +166,58 @@ class RescuePlansTests {
                 100,
                 BoardRules.priorityOf(BoardCase.RESCUE_SPIRIT),
                 "спасение духа — самый высокий приоритет: застрявший дух не работает, пока его не выручат");
+    }
+
+    @Test
+    void helper_RestoredPlan_IsSameAsPostedPlan() {
+        BlockCoord home = new BlockCoord(10, 64, -5);
+
+        TaskNode posted = RescuePlans.helper(TRAPPED, home);
+        TaskNode restored = RescuePlans.plan(
+                        BoardCase.RESCUE_SPIRIT, TicketTarget.at(TRAPPED).withRelocate(TRAPPED, home))
+                .orElseThrow();
+
+        PlanValidator.validate(posted, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
+        assertEquals(
+                scripts(restored),
+                scripts(posted),
+                "План помощника один: выставление задания и восстановление из NBT не расходятся");
+        assertEquals(
+                List.of("goto", "dig_out", "wait", "clear_area", "dig_out", "goto"),
+                scripts(posted),
+                "Помощник идёт к духу (с прокопом и ожиданием), вскрывает клетку, выводит к дому");
+    }
+
+    @Test
+    void helper_WithoutHome_ReturnsToTrapped() {
+        TaskNode plan = RescuePlans.helper(TRAPPED, null);
+
+        PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
+        assertEquals(
+                List.of("goto", "dig_out", "wait", "clear_area", "goto"),
+                scripts(plan),
+                "Без дома план возвращает помощника к самому духу, а не оставляет в пустоте");
+    }
+
+    @Test
+    void claimNote_Helper_NamesHelperAndRescuee() {
+        UUID helper = new UUID(0, 1);
+        UUID rescuee = new UUID(0, 2);
+
+        assertEquals(
+                "Айвенго назначен помощником Мирный",
+                RescuePlans.claimNote(helper, rescuee, "Айвенго", "Мирный"),
+                "Журнал выдачи называет имя помощника: без него непонятно, кто выручает");
+    }
+
+    @Test
+    void claimNote_Self_NamesRescueeOnly() {
+        UUID rescuee = new UUID(0, 2);
+
+        assertEquals(
+                "Мирный спасает себя",
+                RescuePlans.claimNote(rescuee, rescuee, "Мирный", "Мирный"),
+                "Выдача самому себе не выдаёт себя за помощника");
     }
 
     private static List<String> scripts(TaskNode plan) {

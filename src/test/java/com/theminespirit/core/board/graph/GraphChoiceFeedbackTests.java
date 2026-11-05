@@ -66,9 +66,57 @@ class GraphChoiceFeedbackTests {
         return world;
     }
 
+    @Test
+    void failureBackoff_LifeEvent_NotPenalized() {
+        GraphWorld world = GraphWorld.settled().event("life_threat");
+        GraphPlan calm = GraphPlanner.plan(GRAPH, world.state());
+        GraphPlan penalized = GraphPlanner.plan(
+                GRAPH, failedNode(world, "event:life_threat:defend", 3).state());
+
+        assertEquals(
+                calm.priority("event:life_threat:defend"),
+                penalized.priority("event:life_threat:defend"),
+                "Защита жизни не штрафуется памятью неудач: она меняет способ, а не отступает с максимального веса");
+    }
+
+    @Test
+    void failureBackoff_RescueSpirit_NotPenalized() {
+        GraphWorld world = GraphWorld.settled();
+        double calm = new GraphChoiceRules(GRAPH, world.state()).value("rescue_spirit", 1.0, false);
+        double penalized = new GraphChoiceRules(
+                        GRAPH, failedNode(world, "rescue_spirit", 3).state())
+                .value("rescue_spirit", 1.0, false);
+
+        assertEquals(
+                calm,
+                penalized,
+                1e-9,
+                "Спасение духа не штрафуется памятью неудач: выход меняется (помощник/выход), вес остаётся максимальным");
+    }
+
+    @Test
+    void failureBackoff_OrdinaryNode_StillPenalized() {
+        GraphWorld world = GraphWorld.settled();
+        double calm = new GraphChoiceRules(GRAPH, world.state()).value("more_return_before_night", 1.0, false);
+        double penalized = new GraphChoiceRules(
+                        GRAPH, failedNode(world, "more_return_before_night", 3).state())
+                .value("more_return_before_night", 1.0, false);
+
+        assertTrue(
+                penalized < calm,
+                "Обычный узел по-прежнему штрафуется: послабление только для жизни: " + penalized + " против " + calm);
+    }
+
     private static GraphWorld failed(GraphWorld world, int count) {
         GraphFeedback.Failure failure = new GraphFeedback.Failure(
                 "more_return_before_night", "0,64,0", count, GraphFeedback.Cause.NO_PATH, 100);
+        return world.facts(world.facts.withFeedback(
+                new GraphFeedback(GraphFeedback.Clock.unknown(), GraphFeedback.Player.none(), List.of(failure))));
+    }
+
+    private static GraphWorld failedNode(GraphWorld world, String node, int count) {
+        GraphFeedback.Failure failure =
+                new GraphFeedback.Failure(node, "0,64,0", count, GraphFeedback.Cause.NO_PATH, 100);
         return world.facts(world.facts.withFeedback(
                 new GraphFeedback(GraphFeedback.Clock.unknown(), GraphFeedback.Player.none(), List.of(failure))));
     }
