@@ -84,17 +84,17 @@ class DeadCodeGuardTests {
                 missingTests,
                 "Проба масштаба ссылается на несуществующий тест: исключение устарело и прикрывает мёртвый код. "
                         + "Верните тест или удалите пробу: " + missingTests);
-        List<Finding> findings = deadCode(production());
+        List<Finding> findings = deadCode(production(), gameTests());
         List<String> offenders = new ArrayList<>();
         List<String> stale = new ArrayList<>();
         for (Finding finding : findings) {
-            if (EXCEPTIONS.stream().anyMatch(exception -> exception.key().equals(finding.key()))) {
+            if (exempt(finding)) {
                 continue;
             }
             offenders.add(finding.describe());
         }
         for (DeadCodeExemptions.Exemption exception : EXCEPTIONS) {
-            boolean found = findings.stream().anyMatch(finding -> finding.key().equals(exception.key()));
+            boolean found = findings.stream().anyMatch(finding -> covered(exception, finding));
             if (!found) {
                 stale.add(exception.key() + " — " + exception.reason());
             }
@@ -211,6 +211,52 @@ class DeadCodeGuardTests {
                 "Сторож ложно считает ссылкой упоминание в комментарии или строке: такой код остаётся мёртвым");
     }
 
+    @Test
+    void deadCodeScanner_CodeUsedOnlyByDeadCode_IsFound() {
+        Map<Path, String> sources = new LinkedHashMap<>();
+        sources.put(Path.of("Orphan.java"), """
+                class Orphan {
+                    Helper helper = new Helper();
+                    void tick() { helper.run(); }
+                }
+                class Helper {
+                    void run() {}
+                }
+                """);
+
+        assertEquals(
+                List.of(
+                        "Orphan.java:5 class <top>#Helper",
+                        "Orphan.java:1 class <top>#Orphan",
+                        "Orphan.java:2 field Orphan#helper",
+                        "Orphan.java:6 method Helper#run",
+                        "Orphan.java:3 method Orphan#tick"),
+                deadCode(sources).stream().map(Finding::describe).toList(),
+                "Сторож считает ссылкой вызов из мёртвого кода: класс, поле и метод, на которые ссылаются "
+                        + "только недостижимые друг от друга объявления, обязаны находиться. Цена: мёртвая "
+                        + "подсистема держит тесты и выглядит живой");
+    }
+
+    @Test
+    void deadCodeScanner_TransitiveEntryPointChain_IsLive() {
+        Map<Path, String> sources = new LinkedHashMap<>();
+        sources.put(Path.of("Entry.java"), """
+                @Mod
+                class Entry {
+                    Entry() { start(); }
+                    void start() { new Worker().work(); }
+                }
+                class Worker {
+                    void work() { System.out.println("ok"); }
+                }
+                """);
+
+        assertEquals(
+                List.of(),
+                deadCode(sources).stream().map(Finding::describe).toList(),
+                "Сторож ослеп на достижимости: точка входа @Mod зовёт Worker, а тот — work; это живая цепочка");
+    }
+
     private static Set<String> testMethodNames() {
         Set<String> names = new HashSet<>();
         Matcher matcher;
@@ -246,45 +292,315 @@ class DeadCodeGuardTests {
     }
 
     private static List<Finding> deadCode(Map<Path, String> sources) {
-        Map<String, Integer> references = new HashMap<>();
-        Map<String, List<Declaration>> declarations = new HashMap<>();
-        for (Map.Entry<Path, String> entry : sources.entrySet()) {
-            Parsed parsed = parse(entry.getKey(), entry.getValue());
-            for (Token token : parsed.tokens()) {
-                if (token.identifier() && !parsed.ignored()[token.offset()]) {
-                    references.merge(token.text(), 1, Integer::sum);
-                }
+        return deadCode(sources, Map.of());
+    }
+
+    private static List<Finding> deadCode(Map<Path, String> production, Map<Path, String> entrySources) {
+        Map<Path, Parsed> parsed = new TreeMap<>();
+        Map<String, List<Declaration>> byName = new HashMap<>();
+        for (Map.Entry<Path, String> entry : production.entrySet()) {
+            addParsed(parsed, byName, entry, false);
+        }
+        for (Map.Entry<Path, String> entry : entrySources.entrySet()) {
+            addParsed(parsed, byName, entry, true);
+        }
+        Set<String> liveTypes = liveTypes(parsed, byName);
+        Map<String, Integer> references = references(parsed, byName, liveTypes, entrySources.keySet());
+        Map<String, Integer> declarations = new HashMap<>();
+        for (Map.Entry<Path, Parsed> entry : parsed.entrySet()) {
+            if (!production.containsKey(entry.getKey())) {
+                continue;
             }
-            for (Declaration declaration : parsed.declarations()) {
-                declarations
-                        .computeIfAbsent(declaration.name(), name -> new ArrayList<>())
-                        .add(declaration);
+            for (Declaration declaration : entry.getValue().declarations()) {
+                if (!isType(declaration)) {
+                    declarations.merge(memberKey(declaration), 1, Integer::sum);
+                }
             }
         }
         List<Finding> findings = new ArrayList<>();
-        declarations.forEach((name, group) -> {
-            if (references.getOrDefault(name, 0) != group.size()) {
-                return;
+        for (Map.Entry<Path, Parsed> entry : parsed.entrySet()) {
+            if (!production.containsKey(entry.getKey())) {
+                continue;
             }
-            for (Declaration declaration : group) {
-                findings.add(new Finding(
-                        declaration.file(),
-                        declaration.line(),
-                        declaration.kind(),
-                        declaration.owner(),
-                        declaration.name()));
+            for (Declaration declaration : entry.getValue().declarations()) {
+                if (declaration.entry()) {
+                    continue;
+                }
+                boolean dead;
+                if (isType(declaration)) {
+                    dead = !liveTypes.contains(declaration.name());
+                } else {
+                    int used = references.getOrDefault(memberKey(declaration), 0);
+                    int declared = declarations.getOrDefault(memberKey(declaration), 0);
+                    dead = !liveTypes.contains(declaration.owner()) || used == declared;
+                }
+                if (dead) {
+                    findings.add(new Finding(
+                            declaration.file(),
+                            declaration.line(),
+                            declaration.kind(),
+                            declaration.owner(),
+                            declaration.name()));
+                }
             }
-        });
+        }
         findings.sort((first, second) -> first.key().compareTo(second.key()));
         return findings;
+    }
+
+    private static void addParsed(
+            Map<Path, Parsed> parsed,
+            Map<String, List<Declaration>> byName,
+            Map.Entry<Path, String> entry,
+            boolean everyDeclarationIsEntry) {
+        Parsed file = parse(entry.getKey(), entry.getValue());
+        if (everyDeclarationIsEntry) {
+            List<Declaration> entries = file.declarations().stream()
+                    .map(declaration -> new Declaration(
+                            declaration.file(),
+                            declaration.line(),
+                            declaration.kind(),
+                            declaration.owner(),
+                            declaration.name(),
+                            declaration.offset(),
+                            declaration.end(),
+                            true))
+                    .toList();
+            file = new Parsed(file.tokens(), entries, file.ignored(), file.importedTypes(), file.staticImports());
+        }
+        parsed.put(entry.getKey(), file);
+        for (Declaration declaration : file.declarations()) {
+            byName.computeIfAbsent(declaration.name(), name -> new ArrayList<>())
+                    .add(declaration);
+        }
+    }
+
+    private static Set<String> liveTypes(Map<Path, Parsed> parsed, Map<String, List<Declaration>> byName) {
+        Map<String, Set<String>> edges = new HashMap<>();
+        Map<String, Declaration> types = new HashMap<>();
+        Set<String> roots = new HashSet<>();
+        Set<String> entryOwners = new HashSet<>();
+        parsed.values().stream()
+                .flatMap(file -> file.declarations().stream())
+                .filter(declaration -> declaration.entry() && !isType(declaration) && "main".equals(declaration.name()))
+                .forEach(declaration -> entryOwners.add(declaration.owner()));
+        for (Parsed file : parsed.values()) {
+            List<Declaration> fileTypes = file.declarations().stream()
+                    .filter(DeadCodeGuardTests::isType)
+                    .toList();
+            Set<Integer> declarationOffsets = new HashSet<>();
+            file.declarations().forEach(declaration -> declarationOffsets.add(declaration.offset()));
+            for (Declaration type : fileTypes) {
+                types.put(key(type), type);
+                if (type.entry() || entryOwners.contains(type.name())) {
+                    roots.add(key(type));
+                }
+                for (Token token : file.tokens()) {
+                    if (token.offset() <= type.offset()
+                            || token.offset() >= type.end()
+                            || !token.identifier()
+                            || file.ignored()[token.offset()]
+                            || declarationOffsets.contains(token.offset())) {
+                        continue;
+                    }
+                    for (Declaration candidate : byName.getOrDefault(token.text(), List.of())) {
+                        if (isType(candidate)) {
+                            edge(edges, type, candidate);
+                        }
+                    }
+                }
+                for (String imported : file.importedTypes()) {
+                    for (Declaration candidate : byName.getOrDefault(imported, List.of())) {
+                        if (isType(candidate)) {
+                            edge(edges, type, candidate);
+                        }
+                    }
+                }
+            }
+        }
+        Set<String> reached = new HashSet<>();
+        Deque<String> queue = new ArrayDeque<>();
+        for (String root : roots) {
+            if (reached.add(root)) {
+                queue.add(root);
+            }
+        }
+        while (!queue.isEmpty()) {
+            String current = queue.removeFirst();
+            for (String next : edges.getOrDefault(current, Set.of())) {
+                if (reached.add(next)) {
+                    queue.add(next);
+                }
+            }
+        }
+        Set<String> live = new HashSet<>();
+        for (String key : reached) {
+            Declaration type = types.get(key);
+            if (type != null) {
+                live.add(type.name());
+            }
+        }
+        return live;
+    }
+
+    private static Map<String, Integer> references(
+            Map<Path, Parsed> parsed,
+            Map<String, List<Declaration>> byName,
+            Set<String> liveTypes,
+            Set<Path> entrySources) {
+        Map<String, Integer> references = new HashMap<>();
+        for (Map.Entry<Path, Parsed> entry : parsed.entrySet()) {
+            Parsed file = entry.getValue();
+            boolean allLive = entrySources.contains(entry.getKey());
+            List<Declaration> types = file.declarations().stream()
+                    .filter(DeadCodeGuardTests::isType)
+                    .sorted((first, second) -> Integer.compare(first.offset(), second.offset()))
+                    .toList();
+            Map<Integer, Declaration> members = new HashMap<>();
+            file.declarations().stream()
+                    .filter(declaration -> !isType(declaration))
+                    .forEach(declaration -> members.put(declaration.offset(), declaration));
+            Deque<Declaration> stack = new ArrayDeque<>();
+            int next = 0;
+            List<Token> tokens = file.tokens();
+            for (int index = 0; index < tokens.size(); index++) {
+                Token token = tokens.get(index);
+                while (next < types.size() && types.get(next).offset() <= token.offset()) {
+                    stack.push(types.get(next));
+                    next++;
+                }
+                while (!stack.isEmpty() && stack.peek().end() <= token.offset()) {
+                    stack.pop();
+                }
+                if (!token.identifier() || file.ignored()[token.offset()] || stack.isEmpty()) {
+                    continue;
+                }
+                Declaration type = stack.peek();
+                if (!allLive && !liveTypes.contains(type.name())) {
+                    continue;
+                }
+                Declaration declaration = members.get(token.offset());
+                if (declaration != null) {
+                    references.merge(memberKey(declaration), 1, Integer::sum);
+                    continue;
+                }
+                for (String owner : memberOwners(file, tokens, index, type, byName)) {
+                    references.merge(owner + "#" + token.text(), 1, Integer::sum);
+                }
+            }
+        }
+        return references;
+    }
+
+    private static List<String> memberOwners(
+            Parsed file, List<Token> tokens, int index, Declaration type, Map<String, List<Declaration>> byName) {
+        Token token = tokens.get(index);
+        boolean qualified = index > 1 && ".".equals(tokens.get(index - 1).text());
+        if (qualified) {
+            Token qualifier = tokens.get(index - 2);
+            if (qualifier.identifier() && isTypeName(qualifier.text(), byName)) {
+                return List.of(qualifier.text());
+            }
+        } else if (hasMember(byName, type.name(), token.text())) {
+            return List.of(type.name());
+        }
+        String imported = file.staticImports().get(token.text());
+        if (imported != null) {
+            return List.of(imported);
+        }
+        return byName.getOrDefault(token.text(), List.of()).stream()
+                .filter(declaration -> !isType(declaration))
+                .map(Declaration::owner)
+                .distinct()
+                .toList();
+    }
+
+    private static boolean hasMember(Map<String, List<Declaration>> byName, String owner, String name) {
+        return byName.getOrDefault(name, List.of()).stream()
+                .anyMatch(declaration ->
+                        !isType(declaration) && declaration.owner().equals(owner));
+    }
+
+    private static boolean isTypeName(String name, Map<String, List<Declaration>> byName) {
+        return byName.getOrDefault(name, List.of()).stream().anyMatch(DeadCodeGuardTests::isType);
+    }
+
+    private static String memberKey(Declaration declaration) {
+        return declaration.owner() + "#" + declaration.name();
+    }
+
+    private static void edge(Map<String, Set<String>> edges, Declaration from, Declaration to) {
+        if (!key(from).equals(key(to))) {
+            edges.computeIfAbsent(key(from), unused -> new HashSet<>()).add(key(to));
+        }
+    }
+
+    private static boolean isType(Declaration declaration) {
+        return switch (declaration.kind()) {
+            case "class", "interface", "enum", "record" -> true;
+            default -> false;
+        };
+    }
+
+    private static String key(Declaration declaration) {
+        return declaration.file() + "|" + declaration.kind() + "|" + declaration.owner() + "#" + declaration.name();
+    }
+
+    private static boolean exempt(Finding finding) {
+        return EXCEPTIONS.stream().anyMatch(exception -> covered(exception, finding));
+    }
+
+    private static boolean covered(DeadCodeExemptions.Exemption exception, Finding finding) {
+        if (exception.key().equals(finding.key())) {
+            return true;
+        }
+        int type = exception.key().indexOf("|class|");
+        if (type < 0) {
+            return false;
+        }
+        String file = exception.key().substring(0, type);
+        String name = exception.key().substring(exception.key().indexOf('#', type) + 1);
+        boolean typeDeclaration = switch (finding.kind()) {
+            case "class", "interface", "enum", "record" -> true;
+            default -> false;
+        };
+        return file.equals(finding.file())
+                && (name.equals(finding.owner()) || (typeDeclaration && name.equals(finding.name())));
     }
 
     private static Parsed parse(Path file, String raw) {
         String code = strip(raw);
         List<Token> tokens = tokenize(code);
         boolean[] ignored = new boolean[code.length()];
+        Set<String> importedTypes = new HashSet<>();
+        Map<String, String> staticImports = new HashMap<>();
         Matcher imports = IMPORT.matcher(code);
         while (imports.find()) {
+            String statement = imports.group();
+            if (statement.trim().startsWith("import static ")) {
+                String name = statement
+                        .substring(statement.indexOf("import static ") + "import static ".length())
+                        .replace(";", "")
+                        .trim();
+                int lastDot = name.lastIndexOf('.');
+                int typeDot = lastDot < 0 ? -1 : name.lastIndexOf('.', lastDot - 1);
+                if (typeDot > 0) {
+                    String type = name.substring(typeDot + 1, lastDot);
+                    String member = name.substring(lastDot + 1);
+                    importedTypes.add(type);
+                    if (!"*".equals(member)) {
+                        staticImports.put(member, type);
+                    }
+                }
+            } else if (statement.trim().startsWith("import ")) {
+                String name = statement
+                        .substring(statement.indexOf("import ") + "import ".length())
+                        .replace(";", "")
+                        .trim();
+                if (!name.endsWith(".*")) {
+                    importedTypes.add(name.substring(name.lastIndexOf('.') + 1));
+                }
+            }
             for (int offset = imports.start(); offset < imports.end(); offset++) {
                 ignored[offset] = true;
             }
@@ -305,15 +621,23 @@ class DeadCodeGuardTests {
             String keyword = types.group(2);
             String owner = frame == null ? "<top>" : frame.name();
             boolean annotation = "@".equals(types.group(1)) && "interface".equals(keyword);
-            if (annotation || entryPointType(code, types.start())) {
+            if (annotation) {
                 continue;
             }
-            declarations.add(declaration(path, code, token.offset(), keyword, owner, types.group(3)));
+            declarations.add(declaration(
+                    path,
+                    code,
+                    tokens,
+                    indexOf(tokens, token),
+                    keyword,
+                    owner,
+                    types.group(3),
+                    entryPointType(code, types.start())));
             declarationsAt.add(token.offset());
         }
         collectMembers(METHOD, code, tokens, frames, recordHeaders, declarations, declarationsAt, path, true);
         collectMembers(FIELD, code, tokens, frames, recordHeaders, declarations, declarationsAt, path, false);
-        return new Parsed(tokens, declarations, ignored);
+        return new Parsed(tokens, declarations, ignored, importedTypes, staticImports);
     }
 
     private static void collectMembers(
@@ -351,13 +675,20 @@ class DeadCodeGuardTests {
                 continue;
             }
             String text = matcher.group();
-            if (text.contains("@Override")
+            boolean entry = text.contains("@Override")
                     || text.contains("@SubscribeEvent")
                     || text.contains("@JsonProperty")
-                    || (method && "main".equals(name) && "void".equals(type.trim()))) {
-                continue;
-            }
-            declarations.add(declaration(path, code, token.offset(), method ? "method" : "field", frame.name(), name));
+                    || text.contains("@GameTest")
+                    || (method && "main".equals(name) && "void".equals(type.trim()));
+            declarations.add(declaration(
+                    path,
+                    code,
+                    tokens,
+                    indexOf(tokens, token),
+                    method ? "method" : "field",
+                    frame.name(),
+                    name,
+                    entry));
             declarationsAt.add(token.offset());
         }
     }
@@ -369,12 +700,60 @@ class DeadCodeGuardTests {
                         Math.max(code.lastIndexOf('{', offset), code.lastIndexOf('}', offset))),
                 0);
         String before = code.substring(start, offset);
-        return before.contains("@Mod") || before.contains("@EventBusSubscriber") || before.contains("@JeiPlugin");
+        return before.contains("@Mod")
+                || before.contains("@EventBusSubscriber")
+                || before.contains("@JeiPlugin")
+                || before.contains("@GameTestHolder");
     }
 
     private static Declaration declaration(
-            String path, String code, int offset, String kind, String owner, String name) {
-        return new Declaration(path, SourceFiles.lineOf(code, offset), kind, owner, name);
+            String path,
+            String code,
+            List<Token> tokens,
+            int index,
+            String kind,
+            String owner,
+            String name,
+            boolean entry) {
+        int offset = tokens.get(index).offset();
+        return new Declaration(
+                path,
+                SourceFiles.lineOf(code, offset),
+                kind,
+                owner,
+                name,
+                offset,
+                declarationEnd(tokens, index),
+                entry);
+    }
+
+    private static int declarationEnd(List<Token> tokens, int start) {
+        int parentheses = 0;
+        for (int index = start; index < tokens.size(); index++) {
+            String text = tokens.get(index).text();
+            if ("(".equals(text)) {
+                parentheses++;
+            } else if (")".equals(text)) {
+                parentheses--;
+            } else if ("{".equals(text) && parentheses == 0) {
+                int depth = 0;
+                for (int inner = index; inner < tokens.size(); inner++) {
+                    String nested = tokens.get(inner).text();
+                    if ("{".equals(nested)) {
+                        depth++;
+                    } else if ("}".equals(nested)) {
+                        depth--;
+                        if (depth == 0) {
+                            return tokens.get(inner).offset() + 1;
+                        }
+                    }
+                }
+                return tokens.get(tokens.size() - 1).offset() + 1;
+            } else if (";".equals(text) && parentheses == 0) {
+                return tokens.get(index).offset() + 1;
+            }
+        }
+        return tokens.get(tokens.size() - 1).offset() + 1;
     }
 
     private static boolean inRanges(List<int[]> ranges, int offset) {
@@ -588,7 +967,8 @@ class DeadCodeGuardTests {
 
     private record Token(String text, int offset, boolean identifier) {}
 
-    private record Declaration(String file, int line, String kind, String owner, String name) {}
+    private record Declaration(
+            String file, int line, String kind, String owner, String name, int offset, int end, boolean entry) {}
 
     private record Finding(String file, int line, String kind, String owner, String name) {
         String key() {
@@ -604,11 +984,20 @@ class DeadCodeGuardTests {
         private final List<Token> tokens;
         private final List<Declaration> declarations;
         private final boolean[] ignored;
+        private final Set<String> importedTypes;
+        private final Map<String, String> staticImports;
 
-        private Parsed(List<Token> tokens, List<Declaration> declarations, boolean[] ignored) {
+        private Parsed(
+                List<Token> tokens,
+                List<Declaration> declarations,
+                boolean[] ignored,
+                Set<String> importedTypes,
+                Map<String, String> staticImports) {
             this.tokens = tokens;
             this.declarations = declarations;
             this.ignored = ignored;
+            this.importedTypes = importedTypes;
+            this.staticImports = staticImports;
         }
 
         private List<Token> tokens() {
@@ -623,23 +1012,34 @@ class DeadCodeGuardTests {
             return ignored;
         }
 
+        private Set<String> importedTypes() {
+            return importedTypes;
+        }
+
+        private Map<String, String> staticImports() {
+            return staticImports;
+        }
+
         @Override
         public boolean equals(Object o) {
             return o instanceof Parsed other
                     && Objects.equals(tokens, other.tokens)
                     && Objects.equals(declarations, other.declarations)
+                    && Objects.equals(importedTypes, other.importedTypes)
+                    && Objects.equals(staticImports, other.staticImports)
                     && Arrays.equals(ignored, other.ignored);
         }
 
         @Override
         public int hashCode() {
-            return 31 * Objects.hash(tokens, declarations) + Arrays.hashCode(ignored);
+            return 31 * Objects.hash(tokens, declarations, importedTypes, staticImports) + Arrays.hashCode(ignored);
         }
 
         @Override
         public String toString() {
             return "Parsed[" + "tokens=" + tokens + ", " + "declarations=" + declarations + ", " + "ignored="
-                    + Arrays.toString(ignored) + "]";
+                    + Arrays.toString(ignored) + ", importedTypes=" + importedTypes + ", staticImports="
+                    + staticImports + "]";
         }
     }
 }

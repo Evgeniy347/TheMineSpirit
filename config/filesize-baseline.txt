@@ -49,7 +49,7 @@ src/main/java/com/theminespirit/neoforge/husbandry/HerdSession.java	436
 src/main/java/com/theminespirit/neoforge/husbandry/HiveSession.java	410
 src/main/java/com/theminespirit/neoforge/movement/ExploreScript.java	309
 src/main/java/com/theminespirit/neoforge/repair/RepairScript.java	304
-src/main/java/com/theminespirit/neoforge/tactics/TacticsService.java	653
+src/main/java/com/theminespirit/neoforge/tactics/TacticsService.java	649
 src/test/java/com/theminespirit/core/board/AnimalLifecycleTests.java	303
 src/test/java/com/theminespirit/core/board/BoardConfigTests.java	401
 src/test/java/com/theminespirit/core/board/BoardLogTests.java	422
@@ -79,7 +79,7 @@ src/test/java/com/theminespirit/core/tactics/FactorTests.java	422
 src/test/java/com/theminespirit/core/tactics/TacticsConfigTests.java	370
 src/test/java/com/theminespirit/core/task/TaskReconcilerTests.java	368
 src/test/java/com/theminespirit/core/task/TaskRegistryTests.java	312
-src/test/java/com/theminespirit/guards/DeadCodeGuardTests.java	645
+src/test/java/com/theminespirit/guards/DeadCodeGuardTests.java	1045
 src/test/java/com/theminespirit/guards/DependencyVersionGuardTests.java	364
 src/test/java/com/theminespirit/guards/GameTestIsolationGuardTests.java	352
 src/test/java/com/theminespirit/guards/GameTestTimeoutGuardTests.java	484

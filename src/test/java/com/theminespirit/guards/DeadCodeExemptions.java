@@ -6,10 +6,7 @@ import java.util.List;
 final class DeadCodeExemptions {
     static final List<Exemption> OPEN_TASKS = List.of(
             new Exemption(
-                    "src/main/java/com/theminespirit/core/scene/SceneGenerator.java|method|SceneGenerator#generate",
-                    "Генератор сцены по сиду — чистая функция core, вход только из GameTest first_stage"),
-            new Exemption(
-                    "src/main/java/com/theminespirit/core/board/graph/RecipeImport.java|method|RecipeImport#importRecipes",
+                    "src/main/java/com/theminespirit/core/board/graph/RecipeImport.java|class|<top>#RecipeImport",
                     "Генератор graph-recipes.json (export-задача): рецепты импортируются при генерации, "
                             + "в игре читается готовый файл; TestResults/task.md"),
             new Exemption(
@@ -61,8 +58,8 @@ final class DeadCodeExemptions {
                     "src/main/java/com/theminespirit/core/board/HiveRules.java|method|HiveRules#placementReady",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
             new Exemption(
-                    "src/main/java/com/theminespirit/core/building/PillarPlan.java|method|PillarPlan#dismantle",
-                    "Заготовка под открытую задачу: todo.md → «Строительство»"),
+                    "src/main/java/com/theminespirit/core/building/PillarPlan.java|class|<top>#PillarPlan",
+                    "Заготовка под открытую задачу: todo.md → «Строительство» (прототип столба/разбора)"),
             new Exemption(
                     "src/main/java/com/theminespirit/core/building/PresetLibrary.java|method|PresetLibrary#byStage",
                     "Заготовка под открытую задачу: todo.md → «Строительство»"),
@@ -70,8 +67,8 @@ final class DeadCodeExemptions {
                     "src/main/java/com/theminespirit/core/building/PresetLibrary.java|method|PresetLibrary#byTypeAndStage",
                     "Заготовка под открытую задачу: todo.md → «Строительство»"),
             new Exemption(
-                    "src/main/java/com/theminespirit/core/building/WarehouseLayout.java|method|WarehouseLayout#stacksWithoutSign",
-                    "Заготовка под открытую задачу: todo.md → «Строительство»"),
+                    "src/main/java/com/theminespirit/core/building/WarehouseLayout.java|class|<top>#WarehouseLayout",
+                    "Заготовка под открытую задачу: todo.md → «Строительство»; раскладки сундуков — docs/settlement/catalog.md"),
             new Exemption(
                     "src/main/java/com/theminespirit/core/coordinator/SettlementGroups.java|method|SettlementGroups#partition",
                     "Заготовка под открытую задачу: todo.md → «Строительство»"),
@@ -142,20 +139,60 @@ final class DeadCodeExemptions {
                     "src/main/java/com/theminespirit/core/movement/network/TrailTrack.java|class|<top>#TrailTrack",
                     "Прототип графа внешних троп для разведки дальности пути: docs/research/pathfinding-range.md"),
             new Exemption(
-                    "src/main/java/com/theminespirit/core/movement/network/BreadcrumbTrail.java|method|BreadcrumbTrail#backtrack",
+                    "src/main/java/com/theminespirit/core/movement/network/BreadcrumbTrail.java|class|<top>#BreadcrumbTrail",
                     "Прототип обратного маршрута по крошкам: docs/research/pathfinding-range.md"),
             new Exemption(
                     "src/main/java/com/theminespirit/core/navigation/NavCachedWorld.java|method|NavCachedWorld#cachedBytes",
                     "Счётчик памяти кэша для отчёта: docs/research/baritone-navigation.md"),
             new Exemption(
-                    "src/main/java/com/theminespirit/core/navigation/NavPathSplicer.java|method|NavPathSplicer#splice",
+                    "src/main/java/com/theminespirit/core/navigation/NavAStarSearch.java|class|<top>#NavAStarSearch",
+                    "Прототип поиска Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/navigation/NavGoalComposite.java|class|<top>#NavGoalComposite",
+                    "Прототип цели Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/navigation/NavGoalGetToBlock.java|class|<top>#NavGoalGetToBlock",
+                    "Прототип цели Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/navigation/NavPathSplicer.java|class|<top>#NavPathSplicer",
                     "Склейка сегментов Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
             new Exemption(
-                    "src/main/java/com/theminespirit/core/navigation/NavSegmentedPlanner.java|method|NavSegmentedPlanner#follow",
+                    "src/main/java/com/theminespirit/core/navigation/NavSegmentedPlanner.java|class|<top>#NavSegmentedPlanner",
                     "Сегментированный дальний путь Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
             new Exemption(
-                    "src/main/java/com/theminespirit/core/route/RouteBreakAudit.java|method|RouteBreakAudit#firstVeto",
+                    "src/main/java/com/theminespirit/core/movement/ApproachRoute.java|class|<top>#ApproachRoute",
+                    "Прототип маршрута подхода: docs/research/pathfinding-range.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/movement/ProgressWatch.java|class|<top>#ProgressWatch",
+                    "Прототип сторожа прогресса пути: docs/research/pathfinding-range.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/route/RouteBreakAudit.java|class|<top>#RouteBreakAudit",
                     "Старый аудит ломки RoutePlanner: навигация ходит без ломки, docs/ARCHITECTURE.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/route/RouteDeadline.java|class|<top>#RouteDeadline",
+                    "Прототип бюджета времени пути: docs/research/baritone-navigation.md"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/mining/MineTunnel.java|field|MineTunnel#MAX_STEPS",
+                    "Бюджет прохода шахты — доменное число: вход проверки кейса observe10; в игре передаётся из настроек"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/board/PriorityContext.java|method|PriorityContext#none",
+                    "Пустой контекст приоритетов — публичная заготовка домена: в игре создаётся прямым конструктором, "
+                            + "none() нужен тестам; удалить вместе с пересмотром приоритетов"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/board/graph/GraphFailureMemory.java|method|GraphFailureMemory#recent",
+                    "Запрос последнего провала — публичное чтение памяти графа для REST/тестов; игра берёт список facts"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/board/route/RouteResource.java|method|RouteResource#ofBlock",
+                    "Разбор ресурса по блоку — публичный запрос домена, в игре ресурс берут по тегу/постройке"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/intellect/Forage.java|method|Forage#hasRod",
+                    "Признак удочки — публичный запрос домена: сканер поселения считает снасть своим способом"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/tactics/Scorer.java|method|Scorer#combine",
+                    "Комбинация оценок — публичная чистая функция, проверяется свойствами; в игре зовут другие методы"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/board/graph/RecipeImport.java|method|Tags#groupOf",
+                    "Часть генератора graph-recipes.json: рецепты импортируются при генерации, в игре читается файл"),
             new Exemption(
                     "src/main/java/com/theminespirit/core/board/TicketTarget.java|method|TicketTarget#withRescue",
                     "Заготовка под узел графа спасения: RESCUE_SPIRIT ставит граф, а не RescueWatch; "

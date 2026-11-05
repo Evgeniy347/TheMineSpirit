@@ -7,7 +7,6 @@ public final class MineStyle {
     public static final int RECT_BORDER = 0xFFE0D6C2;
     public static final int HOVER_BORDER = 0xFFFFF3B0;
     public static final int TEXT = 0xFFFFFFFF;
-    public static final int LABEL_BACKGROUND = 0x99000000;
     private static final int PASSAGE = 0xFF3B342B;
     private static final int DESCENT = 0xFF9A8F7B;
     private static final int FLOOR = 0xFF6E5B41;
