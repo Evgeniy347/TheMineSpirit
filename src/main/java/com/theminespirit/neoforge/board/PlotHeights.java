@@ -4,43 +4,55 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.LevelingRules;
-import com.theminespirit.core.board.PlotHeight;
+import com.theminespirit.core.board.SettlementLevel;
 import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.StageSite;
+import com.theminespirit.core.town.TownPlan;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.function.IntBinaryOperator;
+import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
 final class PlotHeights {
     private static final Logger LOGGER = LogUtils.getLogger();
 
+    record Draft(ColumnMask area, BlockCoord center, int homes, String wood, int above) {}
+
     private PlotHeights() {}
 
+    static Optional<StageSite> finalSite(TownPlan town, BlockCoord center) {
+        int stage = DataTables.INSTANCE.stages().current().stages().size();
+        return SettlementLevel.site(town, stage, center.y()).or(() -> SettlementLevel.site(town, 1, center.y()));
+    }
+
+    static int waterAbove(ServerLevel level, ColumnMask area) {
+        int above = Integer.MIN_VALUE;
+        for (ColumnMask.Cell cell : area.cells()) {
+            int water = GroundProbe.waterTop(level, cell.x(), cell.z(), Integer.MIN_VALUE);
+            if (water != Integer.MIN_VALUE) {
+                above = Math.max(above, water + 1);
+            }
+        }
+        return above;
+    }
+
     static SettlementPlot surveyed(
-            BoardService service,
-            SettlementPlotStore store,
-            StageSite draft,
-            int homes,
-            String wood,
-            IntBinaryOperator feet,
-            long now) {
-        ColumnMask area = draft.level();
-        BlockCoord center = draft.anchor();
-        PlotHeight height = PlotHeight.choose(area, feet, rules());
-        SettlementPlot plot = SettlementPlot.survey(center, area, feet, wood, OptionalInt.of(height.level()));
+            BoardService service, SettlementPlotStore store, Draft draft, IntBinaryOperator feet, long now) {
+        ColumnMask area = draft.area();
+        BlockCoord center = draft.center();
+        String wood = draft.wood();
+        int above = draft.above();
+        int homes = draft.homes();
+        SettlementPlot plot = SettlementLevel.survey(center, area, feet, wood, above, rules());
         store.fix(plot);
+        String note = "высота " + SettlementLevel.of(plot) + ", не ниже воды выше " + above;
         LOGGER.info(
-                "{}; медиана {}, мин {} макс {} по {} колонкам площадок этапа, центр ({}, {}) по {} домам духов, "
-                        + "порода {}",
-                height.describe(),
-                SettlementPlot.survey(center, area, feet, wood, OptionalInt.empty())
-                        .anchor()
-                        .y(),
+                "{}; мин {} макс {} по {} колонкам финального этапа, центр ({}, {}) по {} домам духов, порода {}",
+                note,
                 plot.min(),
                 plot.max(),
                 plot.columns(),
@@ -48,7 +60,7 @@ final class PlotHeights {
                 plot.anchor().z(),
                 homes,
                 wood);
-        service.journal().recordEntry(plot.journalEntry(now, ConfigStamp.current(), List.of(height.describe())));
+        service.journal().recordEntry(plot.journalEntry(now, ConfigStamp.current(), List.of(note)));
         return plot;
     }
 
@@ -57,27 +69,7 @@ final class PlotHeights {
         if (service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1)) {
             store.markLeveled();
         }
-        Optional<StageSite> site = store.site();
-        if (store.leveled() || site.isEmpty()) {
-            return stored;
-        }
-        StageSite current = site.orElseThrow();
-        BlockCoord anchor = stored.anchor();
-        IntBinaryOperator plotFeet = (x, z) -> current.mineColumn(x, z) ? anchor.y() : feet.applyAsInt(x, z);
-        Optional<PlotHeight> better = PlotHeight.recheck(stored, current.level(), plotFeet, rules());
-        if (better.isEmpty() || better.get().level() == anchor.y()) {
-            return stored;
-        }
-        SettlementPlot fixed = stored.withLevel(better.get().level());
-        store.fix(fixed);
-        LOGGER.info(
-                "{}; сохранённая высота {} не даёт срезки на подсыпку с запасом — план пересчитан",
-                better.get().describe(),
-                anchor.y());
-        service.journal()
-                .recordEntry(fixed.journalEntry(
-                        now, ConfigStamp.current(), List.of(better.get().describe())));
-        return fixed;
+        return stored;
     }
 
     private static LevelingRules rules() {

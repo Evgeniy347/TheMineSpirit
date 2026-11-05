@@ -178,7 +178,7 @@ class More6InputsTests {
     }
 
     private static GraphFacts.Building building(String id, GraphFacts.Position position) {
-        return new GraphFacts.Building(id, 1, 100, 0, position, false);
+        return new GraphFacts.Building(id, 1, 100, 0, Map.of(), Map.of(), 0, position, false, true);
     }
 
     private static GraphFacts.Station station(String id) {

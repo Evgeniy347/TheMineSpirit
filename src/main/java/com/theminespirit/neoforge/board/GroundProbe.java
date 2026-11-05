@@ -31,6 +31,24 @@ public final class GroundProbe {
         return fallback;
     }
 
+    public static int waterTop(ServerLevel level, int x, int z, int fallback) {
+        int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(x, top, z);
+        for (int step = 0; step < SCAN_DEPTH; step++) {
+            pos.move(0, -1, 0);
+            if (!level.isLoaded(pos)) {
+                return fallback;
+            }
+            if (!level.getFluidState(pos).isEmpty()) {
+                return level.getFluidState(pos).is(FluidTags.WATER) ? pos.getY() : fallback;
+            }
+            if (isGround(level.getBlockState(pos))) {
+                return fallback;
+            }
+        }
+        return fallback;
+    }
+
     public static int top(ServerLevel level, int x, int z, int fallback) {
         if (!level.isLoaded(new BlockPos(x, level.getMinBuildHeight(), z))) {
             return fallback;

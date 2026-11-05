@@ -119,18 +119,18 @@ final class GraphWorld {
 
     GraphState state() {
         return new GraphState(
-                stock,
-                stage,
-                kits,
-                buildings,
-                materials,
-                storageFree,
-                events,
-                world,
-                distances,
-                stations,
-                Map.of(),
-                facts);
+                        stock,
+                        stage,
+                        kits,
+                        buildings,
+                        materials,
+                        storageFree,
+                        events,
+                        world,
+                        distances,
+                        stations,
+                        Map.of())
+                .withFacts(facts);
     }
 
     static List<GraphPlan.Task> issueOrder(GraphPlan plan) {

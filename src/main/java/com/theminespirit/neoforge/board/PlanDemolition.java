@@ -6,6 +6,7 @@ import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ConfigStamp;
+import com.theminespirit.core.board.DemolitionKey;
 import com.theminespirit.core.board.DemolitionRetry;
 import com.theminespirit.core.board.StagePlans;
 import com.theminespirit.core.board.StateChangeLog;
@@ -31,10 +32,9 @@ import net.minecraft.world.Container;
 import org.slf4j.Logger;
 
 final class PlanDemolition {
-    static final String PREFIX = "demolish:";
+    static final String PREFIX = DemolitionKey.PREFIX;
     static final long COOLDOWN = 600;
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int BATCH = 48;
     private static final int SHOWN = 4;
     private static final int PROTECTED_SHOWN = 10;
     private static final SubmitGate SUBMITS = new SubmitGate();
@@ -77,11 +77,10 @@ final class PlanDemolition {
         Collected base = collect(level, service, site, plan, yardReady, findings, UnreachableCellsStore.of(level));
         Collected collected = FarmStray.withFarm(base, level, site, town, plan);
         List<BlockCoord> candidates = collected.treeCells().isEmpty() ? collected.remove() : collected.treeCells();
-        List<BlockCoord> stray = candidates.stream()
+        List<BlockCoord> stray = DemolitionKey.piece(candidates.stream()
                 .distinct()
                 .sorted(Comparator.comparingInt(BlockCoord::y).reversed().thenComparing(Comparator.naturalOrder()))
-                .limit(collected.treeCells().isEmpty() ? BATCH : candidates.size())
-                .toList();
+                .toList());
         List<PlannedBlock> blocks = stray.stream()
                 .map(cell -> new PlannedBlock(cell, StagePlans.AIR))
                 .toList();
@@ -111,13 +110,14 @@ final class PlanDemolition {
             }
             return;
         }
+        String previous = DemolitionHistory.previous(service);
         if (!DemolitionTickets.submit(post, site, blocks, id, placement, cause)) {
             return;
         }
         RETRIES.submitted(id, now, COOLDOWN);
         DemolitionHistory.supersede(level, service, id);
         if (CHANGES.changed("tidy:" + world, id)) {
-            DemolitionTickets.logTidy(id, now, cause, stray, findings, collected, service);
+            DemolitionTickets.logTidy(id, now, cause, stray, findings, collected, previous);
         }
         service.journal()
                 .recordEntry(BoardLog.note(

@@ -43,7 +43,8 @@ class GraphStageGateTests {
 
     @Test
     void building_UnknownChunks_NotReady() {
-        GraphFacts.Building unknown = new GraphFacts.Building("hut", 1, 100, 0, Map.of(), Map.of(), 0, null, true);
+        GraphFacts.Building unknown =
+                new GraphFacts.Building("hut", 1, 100, 0, Map.of(), Map.of(), 0, null, true, true);
         GraphFacts facts = facts(unknown, GraphSiteFacts.Terrain.empty(), List.of());
 
         assertFalse(GraphStageGate.buildingReady(facts, "hut"), "неизвестное — не готово: этап не закрывается");
@@ -84,7 +85,7 @@ class GraphStageGateTests {
     }
 
     private static GraphFacts.Building building(Map<String, Integer> missing) {
-        return new GraphFacts.Building("hut", 1, 90, 3, missing, Map.of(), 0, null, false);
+        return new GraphFacts.Building("hut", 1, 90, 3, missing, Map.of(), 0, null, false, true);
     }
 
     private static GraphSiteFacts.Terrain terrain(Map<String, Integer> cut, Map<String, Integer> fill) {

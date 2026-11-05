@@ -24,6 +24,10 @@ final class GraphTargets {
         return WorkStand.near(point, ground(level)).orElse(point);
     }
 
+    static Optional<BlockCoord> standNear(ServerLevel level, BlockCoord point) {
+        return WorkStand.near(point, ground(level));
+    }
+
     static Optional<BlockCoord> leafDropStand(ServerLevel level, BlockCoord leaf) {
         return LeafDropStand.of(leaf, ground(level));
     }

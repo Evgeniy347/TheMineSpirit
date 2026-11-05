@@ -25,7 +25,7 @@ class GraphWorldEventsTests {
                 Map.of(
                         "hut",
                         new GraphFacts.Building(
-                                "hut", 1, 75, 5, Map.of("minecraft:dirt", 5), Map.of(), 0, null, false)));
+                                "hut", 1, 75, 5, Map.of("minecraft:dirt", 5), Map.of(), 0, null, false, true)));
 
         Set<String> events = GraphWorldEvents.of(facts);
 
@@ -45,8 +45,8 @@ class GraphWorldEventsTests {
                 Map.of(
                         "hut",
                                 new GraphFacts.Building(
-                                        "hut", 1, 0, 5, Map.of("minecraft:dirt", 5), Map.of(), 0, null, true),
-                        "mine", new GraphFacts.Building("mine", 1, 100, 0, Map.of(), Map.of(), 0, null, false)));
+                                        "hut", 1, 0, 5, Map.of("minecraft:dirt", 5), Map.of(), 0, null, true, true),
+                        "mine", new GraphFacts.Building("mine", 1, 100, 0, Map.of(), Map.of(), 0, null, false, true)));
 
         Set<String> events = GraphWorldEvents.of(facts);
 

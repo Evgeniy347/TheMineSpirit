@@ -61,15 +61,6 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, S
         return Math.abs(center.x() - anchor.x()) <= DRIFT && Math.abs(center.z() - anchor.z()) <= DRIFT;
     }
 
-    public SettlementPlot withLevel(int level) {
-        return new SettlementPlot(
-                new BlockCoord(anchor.x(), level, anchor.z()),
-                Math.min(min, level),
-                Math.max(max, level),
-                columns,
-                wood);
-    }
-
     public SettlementPlot withWood(String species) {
         return new SettlementPlot(anchor, min, max, columns, species);
     }

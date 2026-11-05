@@ -24,7 +24,15 @@ final class PlanCaseFacts {
 
     static GraphFacts.Building building(
             String id, int percent, int damage, Map<String, Integer> missing, boolean unknown) {
-        return new GraphFacts.Building(id, 1, percent, damage, missing, Map.of(), 0, null, unknown);
+        return new GraphFacts.Building(id, 1, percent, damage, missing, Map.of(), 0, null, unknown, true);
+    }
+
+    static GraphFacts.Building building(String id, int percent, Map<String, Integer> missing, boolean lotReady) {
+        return new GraphFacts.Building(id, 1, percent, 0, missing, Map.of(), 0, null, false, lotReady);
+    }
+
+    static GraphFacts.Building damagedPlan(String id, int percent, int wrong) {
+        return new GraphFacts.Building(id, 1, percent, 0, Map.of(), Map.of(), wrong, null, false, true);
     }
 
     static GraphPlan plan(GraphWorld world, GraphFacts facts) {

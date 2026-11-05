@@ -136,12 +136,12 @@ class WorldAreaInputsTests {
         base.put(
                 "hut",
                 new GraphFacts.Building(
-                        "hut", 1, 100, 0, Map.of(), Map.of(), 0, new GraphFacts.Position(0, 64, 0), false));
+                        "hut", 1, 100, 0, Map.of(), Map.of(), 0, new GraphFacts.Position(0, 64, 0), false, true));
         base.put(
                 "mine",
                 new GraphFacts.Building(
-                        "mine", 1, 100, 0, Map.of(), Map.of(), 0, new GraphFacts.Position(8, 64, 0), false));
-        base.put("fence", new GraphFacts.Building("fence", 0, 0, 0, Map.of(), Map.of(), 0, null, false));
+                        "mine", 1, 0, 0, Map.of(), Map.of(), 0, new GraphFacts.Position(8, 64, 0), true, true));
+        base.put("fence", new GraphFacts.Building("fence", 0, 0, 0, Map.of(), Map.of(), 0, null, false, true));
 
         Map<String, GraphFacts.Building> facts =
                 WorldAreaInputs.buildings(base, new RepairAudit.Report(20, 5, false, List.of(), 0));
@@ -155,12 +155,58 @@ class WorldAreaInputsTests {
     }
 
     @Test
+    void buildings_CompleteAudited_IsKnownNotUnknown() {
+        Map<String, GraphFacts.Building> base = new LinkedHashMap<>();
+        base.put(
+                "mine",
+                new GraphFacts.Building(
+                        "mine", 1, 100, 0, Map.of(), Map.of(), 0, new GraphFacts.Position(8, 64, 0), false, true));
+
+        Map<String, GraphFacts.Building> facts = WorldAreaInputs.buildings(base, null);
+
+        assertTrue(
+                !facts.get("mine").unknown(),
+                "Аудит 100% без незагруженных чанков — известная готовая постройка: иначе этап не закрывается");
+        assertEquals(100, facts.get("mine").auditPercent(), "Процент готовой постройки остаётся 100");
+    }
+
+    @Test
+    void buildings_WrongHeight_MissingAndExtraKept() {
+        Map<String, GraphFacts.Building> base = new LinkedHashMap<>();
+        base.put(
+                "hut",
+                new GraphFacts.Building(
+                        "hut",
+                        1,
+                        75,
+                        5,
+                        Map.of("minecraft:dirt", 3),
+                        Map.of("minecraft:stone", 2),
+                        1,
+                        new GraphFacts.Position(0, 64, 0),
+                        false,
+                        true));
+
+        Map<String, GraphFacts.Building> facts = WorldAreaInputs.buildings(base, null);
+
+        assertEquals(
+                Map.of("minecraft:dirt", 3),
+                facts.get("hut").missing(),
+                "Недостача на единой высоте остаётся фактом: по ней ставится стройка");
+        assertEquals(
+                Map.of("minecraft:stone", 2),
+                facts.get("hut").extra(),
+                "Блоки не на единой высоте остаются extra: по ним ставится снос/восстановление");
+        assertEquals(1, facts.get("hut").wrong(), "Чужая клетка плана не теряется при сборке факта");
+    }
+
+    @Test
     void buildings_UnknownAudit_IsNotReady() {
         Map<String, GraphFacts.Building> base = new LinkedHashMap<>();
         base.put(
                 "hut",
                 new GraphFacts.Building(
-                        "hut", 1, 100, 0, Map.of(), Map.of(), 0, new GraphFacts.Position(0, 64, 0), false));
+                        "hut", 1, 100, 0, Map.of(), Map.of(), 0, new GraphFacts.Position(0, 64, 0), false, true));
 
         Map<String, GraphFacts.Building> facts =
                 WorldAreaInputs.buildings(base, new RepairAudit.Report(20, 5, false, List.of(), 2));

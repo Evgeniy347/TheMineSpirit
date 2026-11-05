@@ -68,6 +68,7 @@ final class WorldAreaInputs {
                 .forEach(strays::add));
         List<FloatingBlocks.Finding> floating = town.map(plan -> FloatingScanCycle.find(level, site, plan.region()))
                 .orElse(List.of());
+        Map<String, Boolean> lots = town.map(plan -> PlotLots.of(found, plan)).orElse(Map.of());
         GraphSiteFacts.Terrain terrain = terrain(
                 List.copyOf(found.pits().keySet()),
                 found.pits(),
@@ -82,7 +83,7 @@ final class WorldAreaInputs {
                         floatingCounts(floating),
                         found.natural()),
                 found.unknown() > 0);
-        return new GraphWorldFacts(strays, terrain, buildings);
+        return new GraphWorldFacts(strays, terrain, PlotLots.ready(buildings, lots));
     }
 
     static List<GraphSiteFacts.Stray> strays(SettlementScan.Strays found, List<Placed> placed) {
@@ -203,8 +204,9 @@ final class WorldAreaInputs {
         Map<String, GraphFacts.Building> facts = new LinkedHashMap<>();
         base.forEach((id, building) -> {
             boolean audited = house != null && "hut".equals(id);
-            boolean unknown = audited ? house.unknown() > 0 : building.level() > 0 && building.auditPercent() == 100;
-            int damage = audited && !unknown ? house.missing() : 0;
+            boolean unknown = audited ? house.unknown() > 0 : building.unknown();
+            BuildingAuditInputs.Audit audit = audited && !unknown ? BuildingAudit.report(house) : null;
+            int damage = audited && !unknown ? house.missing() : building.damage();
             int percent = audited && !unknown ? percent(house) : unknown ? 0 : building.auditPercent();
             facts.put(
                     id,
@@ -213,11 +215,12 @@ final class WorldAreaInputs {
                             building.level(),
                             percent,
                             damage,
-                            Map.of(),
-                            Map.of(),
-                            0,
+                            audit == null ? building.missing() : audit.missing(),
+                            audit == null ? building.extra() : audit.extra(),
+                            audit == null ? building.wrong() : audit.wrong(),
                             building.position(),
-                            unknown));
+                            unknown,
+                            building.lotReady()));
         });
         return facts;
     }

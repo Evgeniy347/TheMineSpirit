@@ -38,7 +38,6 @@ import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.SiteLevels;
 import com.theminespirit.core.town.StageSite;
-import com.theminespirit.core.town.StageSites;
 import com.theminespirit.core.town.StageWork;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownSnapshot;
@@ -671,16 +670,12 @@ public final class FirstStepsRunner {
         BlockCoord center = SettlementPlot.center(homes);
         TownPlan town = TownSurvey.town(level, service, store, center, now);
         IntBinaryOperator feet = (x, z) -> GroundProbe.feet(level, x, z, center.y());
-        Optional<StageSite> draft =
-                StageSites.find(town, 1, center.y(), DataTables.INSTANCE.town().current());
+        Optional<StageSite> draft = PlotHeights.finalSite(town, center);
         if (draft.isEmpty()) {
             if (now % PLAN_WARN_EVERY != 0) {
                 return Optional.empty();
             }
-            LOGGER.warn(
-                    "[plot] в плане у {} нет мест этапа 1 (не поместилось {}): первые шаги ждут другого места дома",
-                    center,
-                    town.unplaced());
+            LOGGER.warn("[plot] нет финального этапа у {}: не поместилось {}", center, town.unplaced());
             return Optional.empty();
         }
         Optional<SettlementPlot> stored = store.plot();
@@ -689,7 +684,10 @@ public final class FirstStepsRunner {
             return Optional.of(checkedWood(level, service, store, kept, now));
         }
         String wood = SettlementWood.survey(level, center, service.stock().available());
-        return Optional.of(PlotHeights.surveyed(service, store, draft.orElseThrow(), homes.size(), wood, feet, now));
+        StageSite survey = draft.orElseThrow();
+        int above = PlotHeights.waterAbove(level, survey.level());
+        return Optional.of(PlotHeights.surveyed(
+                service, store, new PlotHeights.Draft(survey.level(), center, homes.size(), wood, above), feet, now));
     }
 
     private static SettlementPlot checkedWood(

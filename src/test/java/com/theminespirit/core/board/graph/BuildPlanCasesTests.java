@@ -124,6 +124,52 @@ class BuildPlanCasesTests {
     }
 
     @Test
+    void plan_LotNotLeveled_NoBuildUntilLotReady() {
+        GraphWorld world = GraphWorld.settled().with("dirt", 64);
+        world.buildings.put("hut", Built.PLANNED);
+        world.buildings.put("fence", Built.PLANNED);
+        GraphFacts facts = PlanCaseFacts.facts(
+                Map.of(
+                        "hut", PlanCaseFacts.building("hut", 0, Map.of(), false),
+                        "fence", PlanCaseFacts.building("fence", 0, Map.of(), true)),
+                List.of(),
+                new GraphSiteFacts.Terrain(
+                        1, 0, 3, 1, 0, Map.of("minecraft:dirt", 4), Map.of("minecraft:dirt", 2), Map.of()));
+
+        GraphPlan plan = PlanCaseFacts.plan(world, facts);
+
+        assertFalse(
+                PlanCaseFacts.posted(plan, "building:hut"),
+                "Стройка на невыровненном лоте ждёт расчистки площадки: " + plan.tasks());
+        assertTrue(
+                PlanCaseFacts.posted(plan, "event:level_lot:level_lot"),
+                "Насыпь на лоте срезается до стройки: " + plan.tasks());
+        assertTrue(
+                PlanCaseFacts.posted(plan, "event:backfill:backfill"),
+                "Яма на лоте засыпается до стройки: " + plan.tasks());
+        assertTrue(
+                PlanCaseFacts.posted(plan, "building:fence"),
+                "Готовый лот не ждёт чужой: постройка на выровненной площадке строится: " + plan.tasks());
+    }
+
+    @Test
+    void plan_DamagedPlanCells_PostsRepair() {
+        GraphWorld world = GraphWorld.settled();
+        world.buildings.put("streets", Built.BUILT);
+        GraphFacts facts = PlanCaseFacts.facts(
+                Map.of("streets", PlanCaseFacts.damagedPlan("streets", 100, 2)),
+                List.of(),
+                GraphSiteFacts.Terrain.empty());
+
+        GraphPlan plan = PlanCaseFacts.plan(world, facts);
+
+        assertTrue(
+                PlanCaseFacts.posted(plan, "event:repair_streets:repair:streets"),
+                "Перекопанные клетки плана (улицы) — факт повреждения, по нему ставится ремонт по плану: "
+                        + plan.tasks());
+    }
+
+    @Test
     void plan_StrayBesidePlannedHouse_DemolishesOnlyStray() {
         GraphWorld world = GraphWorld.settled();
         GraphFacts facts = PlanCaseFacts.facts(
