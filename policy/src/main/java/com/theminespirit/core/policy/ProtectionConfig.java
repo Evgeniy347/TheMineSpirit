@@ -3,7 +3,6 @@ package com.theminespirit.core.policy;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.observation.IdFilter;
-import com.theminespirit.core.reload.DataTables;
 import java.util.List;
 import java.util.Set;
 
@@ -23,10 +22,6 @@ public final class ProtectionConfig {
             "straysInsideFenceOnly");
 
     private ProtectionConfig() {}
-
-    public static BlockProtection load() {
-        return DataTables.INSTANCE.protection().current();
-    }
 
     public static BlockProtection readClasspath() {
         return parse(JsonResource.readClasspath(RESOURCE), RESOURCE);

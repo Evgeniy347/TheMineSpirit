@@ -1,7 +1,6 @@
 package com.theminespirit.core.policy;
 
 import com.theminespirit.core.town.PlanBuilding;
-import com.theminespirit.core.town.PlanBuildings;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -87,9 +86,7 @@ public final class SettlementBreak {
                             + "): его не добывают и не копают, снимают только сносом по заданию "
                             + "(observe14: дух рубил стены хижины ради брёвен)");
         }
-        if (place == Place.PLAN
-                && intent == Intent.DEMOLISH
-                && PlanBuildings.foreign(facts.ownBuilding(), facts.planBuilding())) {
+        if (place == Place.PLAN && intent == Intent.DEMOLISH && foreign(facts.ownBuilding(), facts.planBuilding())) {
             return new BlockProtection.Refused(
                     PolicyId.PROTECTED_BLOCKS,
                     "блок '" + facts.blockId() + "' принадлежит постройке " + facts.planBuilding()
@@ -120,6 +117,12 @@ public final class SettlementBreak {
                 neighbours.get(),
                 new BlockProtection.Placement(
                         facts.origin() == Origin.PLAYER, facts.inProtectedZone(), facts.unprotectArea()));
+    }
+
+    private static boolean foreign(PlanBuilding own, PlanBuilding cell) {
+        Objects.requireNonNull(own, "Своя постройка не названа: без неё не отличить чужую клетку");
+        Objects.requireNonNull(cell, "Постройка клетки не названа: без неё не отличить чужую клетку");
+        return cell != PlanBuilding.NONE && cell != own;
     }
 
     public static Check of(Origin origin, Place place) {

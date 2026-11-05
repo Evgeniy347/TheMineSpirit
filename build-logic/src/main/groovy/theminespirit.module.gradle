@@ -1,0 +1,37 @@
+plugins {
+    id 'theminespirit.java-conventions'
+}
+
+dependencies {
+    api project(':api')
+}
+
+def moduleTestThreads =
+        (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}")
+
+def moduleTests = file('src/test/java')
+
+tasks.named('test', Test) {
+    onlyIf { moduleTests.exists() }
+    failOnNoDiscoveredTests = moduleTests.exists()
+    workingDir = rootProject.projectDir
+    useJUnitPlatform {
+        excludeTags 'slow', 'mutation', 'export'
+    }
+    maxParallelForks = 1
+    systemProperty 'junit.jupiter.execution.parallel.enabled', 'true'
+    systemProperty 'junit.jupiter.execution.parallel.mode.default', 'same_thread'
+    systemProperty 'junit.jupiter.execution.parallel.mode.classes.default', 'concurrent'
+    systemProperty 'junit.jupiter.execution.parallel.config.strategy', 'fixed'
+    systemProperty 'junit.jupiter.execution.parallel.config.fixed.parallelism', "${moduleTestThreads}"
+    jvmArgs '-XX:+UseSerialGC', "-XX:ActiveProcessorCount=${Math.max(2, moduleTestThreads as int)}"
+    maxHeapSize = '512m'
+    systemProperty 'theminespirit.modId', 'theminespirit'
+    systemProperty 'jqwik.tries.default', '200'
+    systemProperty 'jqwik.database', '.jqwik-database'
+    systemProperty 'theminespirit.updateSnapshots',
+            System.getProperty('theminespirit.updateSnapshots', System.getenv('THEMINESPIRIT_UPDATE_SNAPSHOTS') ?: 'false')
+    classpath += files(rootProject.file('src/main/resources'))
+    reports.html.outputLocation = rootProject.file("TestResults/${project.name}/html")
+    reports.junitXml.outputLocation = rootProject.file("TestResults/${project.name}/xml")
+}

@@ -109,7 +109,7 @@ class ProtectionConfigTests {
 
     @Test
     void load_ShippedFile_IsValid() {
-        BlockProtection protection = ProtectionConfig.load();
+        BlockProtection protection = ProtectionConfig.readClasspath();
 
         assertEquals(
                 6, protection.buildingThreshold(), "Поставляемый protection.json читается без ошибок и несёт порог 6");

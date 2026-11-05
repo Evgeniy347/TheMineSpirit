@@ -63,8 +63,18 @@ base {
 }
 
 sourceSets.main.output.classesDirs.from(provider { project(':api').sourceSets.main.output.classesDirs })
+sourceSets.main.output.classesDirs.from(provider { project(':policy').sourceSets.main.output.classesDirs })
+sourceSets.main.output.classesDirs.from(provider { project(':mech:farming').sourceSets.main.output.classesDirs })
+sourceSets.main.output.classesDirs.from(provider { project(':mech:forestry').sourceSets.main.output.classesDirs })
+sourceSets.main.output.classesDirs.from(provider { project(':mech:crafting').sourceSets.main.output.classesDirs })
+sourceSets.main.output.classesDirs.from(provider { project(':mech:husbandry').sourceSets.main.output.classesDirs })
 tasks.named('classes') {
     dependsOn ':api:classes'
+    dependsOn ':policy:classes'
+    dependsOn ':mech:farming:classes'
+    dependsOn ':mech:forestry:classes'
+    dependsOn ':mech:crafting:classes'
+    dependsOn ':mech:husbandry:classes'
 }
 
 neoForge {
@@ -119,6 +129,11 @@ configurations {
 
 dependencies {
     implementation project(':api')
+    implementation project(':policy')
+    implementation project(':mech:farming')
+    implementation project(':mech:forestry')
+    implementation project(':mech:crafting')
+    implementation project(':mech:husbandry')
     implementation "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
     additionalRuntimeClasspath "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
     jarJar("com.fasterxml.jackson.core:jackson-databind:${jackson_version}") {
@@ -183,6 +198,11 @@ publishing {
 def unitTestThreads = (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}") as int
 tasks.named('test', Test) {
     dependsOn ':api:test'
+    dependsOn ':policy:test'
+    dependsOn ':mech:farming:test'
+    dependsOn ':mech:forestry:test'
+    dependsOn ':mech:crafting:test'
+    dependsOn ':mech:husbandry:test'
     useJUnitPlatform {
         excludeTags 'slow', 'mutation', 'export'
     }
@@ -201,6 +221,21 @@ tasks.named('test', Test) {
     failOnNoDiscoveredTests = true
     reports.html.outputLocation = file('TestResults/unit/html')
     reports.junitXml.outputLocation = file('TestResults/unit/xml')
+}
+
+tasks.named('staticAnalysisFast') {
+    dependsOn ':policy:staticAnalysisFast'
+    dependsOn ':mech:farming:staticAnalysisFast'
+    dependsOn ':mech:forestry:staticAnalysisFast'
+    dependsOn ':mech:crafting:staticAnalysisFast'
+    dependsOn ':mech:husbandry:staticAnalysisFast'
+}
+tasks.named('staticAnalysis') {
+    dependsOn ':policy:staticAnalysis'
+    dependsOn ':mech:farming:staticAnalysis'
+    dependsOn ':mech:forestry:staticAnalysis'
+    dependsOn ':mech:crafting:staticAnalysis'
+    dependsOn ':mech:husbandry:staticAnalysis'
 }
 
 tasks.register('slowTest', Test) {

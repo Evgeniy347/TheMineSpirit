@@ -23,7 +23,7 @@ class UnprotectAreasTests {
 
     @BeforeAll
     void loadProtection() {
-        protection = ProtectionConfig.load();
+        protection = ProtectionConfig.readClasspath();
     }
 
     private static UnprotectArea area(String id, BlockCoord min, BlockCoord max, long expiresAt) {
@@ -89,13 +89,13 @@ class UnprotectAreasTests {
     void maxUnprotectVolume_ShippedValue_Is4096() {
         assertEquals(
                 4096,
-                ProtectionConfig.load().maxUnprotectVolume(),
+                ProtectionConfig.readClasspath().maxUnprotectVolume(),
                 "Предел объёма разрешённой области берётся из protection.json → maxUnprotectVolume");
     }
 
     @Test
     void add_AreaBiggerThanLimit_RefusesWithNumbers() {
-        int limit = ProtectionConfig.load().maxUnprotectVolume();
+        int limit = ProtectionConfig.readClasspath().maxUnprotectVolume();
         UnprotectAreas areas = new UnprotectAreas();
         UnprotectArea tooBig = area("a", new BlockCoord(0, 0, 0), new BlockCoord(0, limit, 0), 0);
 
@@ -113,7 +113,7 @@ class UnprotectAreasTests {
 
     @Test
     void add_AreaAtTheLimit_IsAccepted() {
-        int limit = ProtectionConfig.load().maxUnprotectVolume();
+        int limit = ProtectionConfig.readClasspath().maxUnprotectVolume();
         UnprotectAreas areas = new UnprotectAreas();
         UnprotectArea atLimit = area("a", new BlockCoord(0, 0, 0), new BlockCoord(0, limit - 1, 0), 0);
 

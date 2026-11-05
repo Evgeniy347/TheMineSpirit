@@ -25,7 +25,7 @@ class BlockProtectionTests {
 
     @BeforeAll
     void loadProtection() {
-        protection = ProtectionConfig.load();
+        protection = ProtectionConfig.readClasspath();
     }
 
     static List<String> around(int artificial, String artificialId, String filler) {

@@ -25,7 +25,7 @@ class SettlementBreakProtectionTests {
 
     @BeforeAll
     void loadProtection() {
-        protection = ProtectionConfig.load();
+        protection = ProtectionConfig.readClasspath();
     }
 
     @Test
