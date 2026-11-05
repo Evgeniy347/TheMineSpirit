@@ -36,7 +36,11 @@ class MechanicsModuleGuardTests {
     }
 
     private static final List<Module> DECLARED_MODULES = List.of(
-            new Module(":policy", List.of("core.policy"), Path.of("policy/src/main/java"), Path.of("policy/src/test/java")),
+            new Module(
+                    ":policy",
+                    List.of("core.policy"),
+                    Path.of("policy/src/main/java"),
+                    Path.of("policy/src/test/java")),
             new Module(
                     ":mech:mining",
                     List.of("core.mining"),
@@ -111,7 +115,8 @@ class MechanicsModuleGuardTests {
         for (Module module : modules()) {
             boolean found = false;
             for (Path packageDir : module.testPackages()) {
-                if (Files.isDirectory(packageDir) && !SourceFiles.javaUnder(packageDir).isEmpty()) {
+                if (Files.isDirectory(packageDir)
+                        && !SourceFiles.javaUnder(packageDir).isEmpty()) {
                     found = true;
                 }
             }
@@ -136,8 +141,7 @@ class MechanicsModuleGuardTests {
                 if (!Files.isDirectory(packageDir)) {
                     continue;
                 }
-                violations.addAll(
-                        violations(SourceFiles.javaUnder(packageDir), apiClasses, module.packageNames()));
+                violations.addAll(violations(SourceFiles.javaUnder(packageDir), apiClasses, module.packageNames()));
             }
         }
 
@@ -159,8 +163,7 @@ class MechanicsModuleGuardTests {
                 if (!Files.isDirectory(packageDir)) {
                     continue;
                 }
-                violations.addAll(
-                        violations(SourceFiles.javaUnder(packageDir), apiClasses, module.packageNames()));
+                violations.addAll(violations(SourceFiles.javaUnder(packageDir), apiClasses, module.packageNames()));
             }
         }
 
