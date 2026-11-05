@@ -73,6 +73,16 @@ public final class RescuePlans {
         return NODE + "@" + since;
     }
 
+    public static String claimNote(UUID helper, UUID rescuee, String helperName, String rescueeName) {
+        Objects.requireNonNull(helper, "Помощник не может быть null: задание выдаётся конкретному духу");
+        Objects.requireNonNull(rescuee, "Спасаемый не может быть null: по нему отличают самоспасение");
+        Objects.requireNonNull(helperName, "Имя помощника не может быть null: без него журнал нем");
+        Objects.requireNonNull(rescueeName, "Имя спасаемого не может быть null: без него журнал нем");
+        return helper.equals(rescuee)
+                ? rescueeName + " спасает себя"
+                : helperName + " назначен помощником " + rescueeName;
+    }
+
     public static Optional<UUID> rescuee(String ticketId) {
         Objects.requireNonNull(ticketId, "id задания спасения не может быть null: по нему находят спасённого");
         if (!ticketId.startsWith(ID_PREFIX)) {
@@ -125,11 +135,18 @@ public final class RescuePlans {
             return Optional.of(withGoal(selfPlan(rescue), goal));
         }
         BlockCoord trapped = target.target();
+        return Optional.of(helper(trapped, goal));
+    }
+
+    public static TaskNode helper(BlockCoord trapped, @Nullable BlockCoord goal) {
+        Objects.requireNonNull(trapped, "Цель спасения не может быть null: помощнику нужно к кому идти");
         BlockCoord from = new BlockCoord(trapped.x() - 1, trapped.y(), trapped.z() - 1);
         BlockCoord to = new BlockCoord(trapped.x() + 1, trapped.y() + 1, trapped.z() + 1);
         List<TaskNode> steps = new ArrayList<>(List.of(
                 new FallbackNode(List.of(
-                        gotoPoint(trapped), new ScriptCall(WAIT, Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))),
+                        gotoPoint(trapped),
+                        digOut(trapped),
+                        new ScriptCall(WAIT, Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))),
                 new ScriptCall(
                         CLEAR_AREA,
                         Map.of(
@@ -145,7 +162,7 @@ public final class RescuePlans {
             steps.add(digOut(goal));
             steps.add(gotoPoint(goal));
         }
-        return Optional.of(new SequenceNode(List.copyOf(steps)));
+        return new SequenceNode(List.copyOf(steps));
     }
 
     private static TaskNode withGoal(TaskNode escape, @Nullable BlockCoord goal) {

@@ -5,9 +5,7 @@ import com.theminespirit.core.movement.PitEscape;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
@@ -24,9 +22,6 @@ import org.jspecify.annotations.Nullable;
 final class RescueTicket {
     private static final String GOTO = "goto";
     private static final String DIG_OUT = "dig_out";
-    private static final String CLEAR_AREA = "clear_area";
-    private static final String WAIT = "wait";
-    private static final int HELPER_RADIUS = 1;
 
     record Escape(boolean self, @Nullable TaskNode plan, String why) {
         Escape {
@@ -74,33 +69,6 @@ final class RescueTicket {
         }
         return new Escape(
                 true, new FallbackNode(List.of(digOut(goal), gotoPoint(home))), "под землёй, копает на поверхность");
-    }
-
-    static TaskNode helper(SpiritEntity rescuee, BlockCoord home) {
-        BlockPos feet = rescuee.blockPosition();
-        BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-        return new SequenceNode(List.of(
-                new FallbackNode(List.of(
-                        gotoPoint(at),
-                        digOut(at),
-                        new ScriptCall(WAIT, Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))),
-                new ScriptCall(
-                        CLEAR_AREA,
-                        Map.of(
-                                "x1",
-                                at.x() - HELPER_RADIUS,
-                                "y1",
-                                at.y(),
-                                "z1",
-                                at.z() - HELPER_RADIUS,
-                                "x2",
-                                at.x() + HELPER_RADIUS,
-                                "y2",
-                                at.y() + 1,
-                                "z2",
-                                at.z() + HELPER_RADIUS)),
-                digOut(home),
-                gotoPoint(home)));
     }
 
     private static String refusal(Optional<PitEscape.Exit> pit, boolean open, boolean noPath) {

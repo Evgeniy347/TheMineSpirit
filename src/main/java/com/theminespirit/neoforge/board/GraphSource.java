@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.graph.GraphCadence;
 import com.theminespirit.core.board.graph.GraphNotes;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphPlanner;
@@ -29,14 +30,13 @@ import org.slf4j.Logger;
 public final class GraphSource {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final double HOSTILE_RADIUS = 16;
-    private static final long GRAPH_INTERVAL_TICKS = 600;
     private static final long DEEP_INTERVAL_TICKS = 1200;
 
     final GraphDecisionNote decisionLog = new GraphDecisionNote();
     private final GraphNotes notes = new GraphNotes();
     private final PetWork pets = new PetWork();
+    private final GraphCadence cadence = new GraphCadence();
     private String lastBuildings = "";
-    private long lastCycle = -1;
     private long lastDeep = -1;
     private Set<String> lastLive = Set.of();
 
@@ -52,7 +52,8 @@ public final class GraphSource {
             SupplyGraph graph,
             GraphTickets.Result result,
             long now,
-            boolean deep) {}
+            boolean deep,
+            Set<String> signals) {}
 
     private Half pending;
 
@@ -66,7 +67,8 @@ public final class GraphSource {
         if (pending != null) {
             return finish(pending);
         }
-        if (lastCycle >= 0 && now >= lastCycle && now - lastCycle < GRAPH_INTERVAL_TICKS) {
+        Set<String> signals = GraphSignals.of(events, spirits, service, now);
+        if (!cadence.due(now, signals)) {
             return live();
         }
         SupplyGraph graph = DataTables.INSTANCE.graph().current();
@@ -88,7 +90,8 @@ public final class GraphSource {
         }
         GraphPlan plan = GraphPlanner.plan(graph, state);
         GraphTickets.Result result = GraphTickets.of(graph, state, plan);
-        pending = new Half(level, service, spirits, stock, stageScan, around, state, plan, graph, result, now, deep);
+        pending = new Half(
+                level, service, spirits, stock, stageScan, around, state, plan, graph, result, now, deep, signals);
         return live();
     }
 
@@ -146,14 +149,14 @@ public final class GraphSource {
             }
         }
         tellStrategist(half.level(), half.graph(), half.state(), half.plan(), half.now());
+        cadence.finished(half.now(), half.signals());
         lastLive = half.result().live();
         pending = null;
         return live();
     }
 
     private Set<String> live() {
-        Set<String> cached = lastLive;
-        return cached == null ? Set.of() : cached;
+        return lastLive;
     }
 
     public static Set<String> events(
