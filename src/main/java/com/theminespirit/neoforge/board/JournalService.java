@@ -83,6 +83,10 @@ public final class JournalService {
         return journal.last(limit);
     }
 
+    public List<BoardLogEntry> newer(int limit, long sinceTick) {
+        return journal.newer(limit, sinceTick);
+    }
+
     public Optional<BoardLogEntry> findStatus(String ticketId, int maxLines) {
         return journal.findStatus(ticketId, maxLines);
     }

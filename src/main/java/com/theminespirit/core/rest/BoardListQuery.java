@@ -31,9 +31,10 @@ public record BoardListQuery(
     private static final String ASSIGNEE = "assignee";
     private static final String CASE = "case";
     private static final String SINCE = "since";
+    private static final String SINCE_TICK = "sinceTick";
     private static final String UPDATED_AFTER = "updated_after";
     private static final List<String> FIELDS =
-            List.of(LIMIT, OFFSET, CURSOR, STATUS, GROUP, ASSIGNEE, CASE, SINCE, UPDATED_AFTER);
+            List.of(LIMIT, OFFSET, CURSOR, STATUS, GROUP, ASSIGNEE, CASE, SINCE, SINCE_TICK, UPDATED_AFTER);
 
     public BoardListQuery {
         if (limit < 1 || limit > MAX_LIMIT) {
@@ -77,7 +78,8 @@ public record BoardListQuery(
         BoardTileGroup group = enumValue(query, GROUP, BoardTileGroup.class);
         String assignee = text(query.get(ASSIGNEE));
         String boardCase = caseValue(query.get(CASE));
-        long since = Math.max(longValue(query, SINCE), longValue(query, UPDATED_AFTER));
+        long since = Math.max(
+                longValue(query, SINCE), Math.max(longValue(query, SINCE_TICK), longValue(query, UPDATED_AFTER)));
         return new BoardListQuery(limit, offset, status, group, assignee, boardCase, since);
     }
 

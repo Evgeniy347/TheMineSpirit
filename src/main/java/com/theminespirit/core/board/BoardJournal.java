@@ -17,6 +17,7 @@ import org.jspecify.annotations.Nullable;
 public final class BoardJournal {
     public static final int FIND_LINES = 65_536;
     private static final int TAIL_CHUNK = 64 * 1024;
+    private static final int NEWER_SCAN_LINES = 4096;
 
     private final Path path;
     private final Deque<String> pending = new ArrayDeque<>();
@@ -140,6 +141,32 @@ public final class BoardJournal {
                 continue;
             }
             entries.add(BoardLog.parse(line, index + 1));
+        }
+        return List.copyOf(entries);
+    }
+
+    public List<BoardLogEntry> newer(int limit, long sinceTick) {
+        if (limit < 1) {
+            throw new IllegalArgumentException("limit журнала " + limit + " меньше 1: пустой ответ не отдаётся");
+        }
+        if (sinceTick < 0) {
+            throw new IllegalArgumentException("sinceTick " + sinceTick + " отрицателен: время идёт вперёд");
+        }
+        if (!Files.exists(path)) {
+            return List.of();
+        }
+        List<String> lines = tailLines(Math.min(NEWER_SCAN_LINES, Math.max(512, limit * 8)));
+        List<BoardLogEntry> entries = new ArrayList<>(limit);
+        for (int index = lines.size() - 1; index >= 0 && entries.size() < limit; index--) {
+            String line = lines.get(index);
+            if (line.isBlank()) {
+                continue;
+            }
+            BoardLogEntry entry = BoardLog.parse(line, index + 1);
+            if (entry.tick() <= sinceTick) {
+                break;
+            }
+            entries.add(entry);
         }
         return List.copyOf(entries);
     }

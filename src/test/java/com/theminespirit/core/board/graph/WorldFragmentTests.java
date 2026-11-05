@@ -3,6 +3,7 @@ package com.theminespirit.core.board.graph;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.BoardCase;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -54,6 +55,35 @@ class WorldFragmentTests {
                     task.base() >= 50 && task.base() <= 100,
                     "Стартовый вес ремонта разумен: " + building + " = " + task.base());
         }
+    }
+
+    @Test
+    void clearFloating_HangingWorld_PostsTicketToCleanupAction() {
+        SupplyGraph graph = SupplyGraph.loadDefault();
+        GraphState state = new GraphState(
+                Map.of(),
+                1,
+                Map.of("spirit-1", Map.of()),
+                Map.of(),
+                Map.of(),
+                60,
+                Set.of(GraphWorldEvents.CLEAR_FLOATING),
+                Set.of());
+
+        GraphTickets.Result result = GraphTickets.of(graph, state, GraphPlanner.plan(graph, state));
+        GraphTickets.Ticket ticket = result.post().stream()
+                .filter(found -> GraphWorldEvents.CLEAR_FLOATING.equals(found.node()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Висящее не превратилось в задание уборки: "
+                        + result.post().stream().map(GraphTickets.Ticket::id).toList()));
+
+        assertEquals(
+                BoardCase.CLEAR_GROUNDS,
+                ticket.task().boardCase(),
+                "Задание clear_floating исполняется кейсом расчистки: иначе оно не находит исполнителя");
+        assertTrue(
+                ticket.id().startsWith("graph:event:clear_floating:"),
+                "Билет уборки висящего — событие графа clear_floating: " + ticket.id());
     }
 
     @Test

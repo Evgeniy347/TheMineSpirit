@@ -26,12 +26,12 @@ public final class BoardRoutes {
 
     private RestResponse list(RestRequest request, PathParams ignoredParams) {
         BoardListQuery query = BoardListQuery.parse(request.query());
-        return RestResponse.ok(BoardJson.listJson(gateway.list(query), gateway.counts()));
+        return RestResponse.ok(BoardJson.listJson(gateway.list(query), gateway.counts(), query.since()));
     }
 
     private RestResponse log(RestRequest request, PathParams ignoredParams) {
         BoardLogQuery query = BoardLogQuery.parse(request.query());
-        return RestResponse.ok(BoardJson.logJson(gateway.log(query.limit())));
+        return RestResponse.ok(BoardJson.logJson(gateway.log(query.limit(), query.sinceTick()), query.sinceTick()));
     }
 
     private RestResponse create(RestRequest request, PathParams ignoredParams) {
