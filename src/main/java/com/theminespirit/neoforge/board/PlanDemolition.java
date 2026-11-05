@@ -53,7 +53,14 @@ final class PlanDemolition {
 
     private PlanDemolition() {}
 
-    static void tick(ServerLevel level, BoardService service, StageSite site, TownPlan town, long now, GraphPost post) {
+    static void tick(
+            ServerLevel level,
+            BoardService service,
+            StageSite site,
+            TownPlan town,
+            long now,
+            GraphPost post,
+            String cause) {
         if (!service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1)) {
             return;
         }
@@ -104,23 +111,13 @@ final class PlanDemolition {
             }
             return;
         }
-        if (!DemolitionTickets.submit(post, site, blocks, id, placement)) {
+        if (!DemolitionTickets.submit(post, site, blocks, id, placement, cause)) {
             return;
         }
         RETRIES.submitted(id, now, COOLDOWN);
         DemolitionHistory.supersede(level, service, id);
         if (CHANGES.changed("tidy:" + world, id)) {
-            LOGGER.info(
-                    "[tidy] {}: план уборки пересчитан в тик {} — в уборку {} из {}, первые {}; прошлый {}; "
-                            + "недостижимых {}; {}",
-                    id,
-                    now,
-                    stray.size(),
-                    findings.size(),
-                    stray.stream().limit(SHOWN).toList(),
-                    DemolitionHistory.previous(service),
-                    collected.unreachable(),
-                    collected.notes());
+            DemolitionTickets.logTidy(id, now, cause, stray, findings, collected, service);
         }
         service.journal()
                 .recordEntry(BoardLog.note(
@@ -130,6 +127,10 @@ final class PlanDemolition {
                         List.of("blocks=" + stray.size(), "first=" + stray.get(0)),
                         null,
                         ConfigStamp.current()));
+    }
+
+    static int shown() {
+        return SHOWN;
     }
 
     private static boolean waiting(String world, String id, Collected collected, long now) {

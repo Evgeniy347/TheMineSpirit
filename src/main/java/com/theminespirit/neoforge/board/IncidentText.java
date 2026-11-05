@@ -15,6 +15,6 @@ final class IncidentText {
     static String of(SpiritEntity spirit, BoardTicket ticket, @Nullable TicketTarget target, String reason) {
         String aim = IncidentAim.describe(ticket, target, WorkReserveHub.ownedBy(spirit));
         String what = ticket.id() + " (" + ticket.boardCase() + ", цель " + aim + "): " + reason;
-        return spirit.level() instanceof ServerLevel level ? IncidentSnapshots.record(level, spirit, what) : what;
+        return spirit.level() instanceof ServerLevel level ? IncidentSnapshots.brief(level, spirit, what) : what;
     }
 }

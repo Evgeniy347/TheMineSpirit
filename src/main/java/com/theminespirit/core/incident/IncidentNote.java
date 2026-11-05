@@ -38,12 +38,24 @@ public record IncidentNote(String spirit, String what, BlockCoord at, String tas
     }
 
     public String line() {
-        return "дух " + spirit + " в (" + at.x() + ", " + at.y() + ", " + at.z() + "): " + what + "; задача " + task
-                + "; инвентарь " + new TreeMap<>(inventory);
+        return head() + what + "; задача " + task + "; инвентарь " + new TreeMap<>(inventory);
     }
 
     public String line(Path snapshot) {
         Objects.requireNonNull(snapshot, "Путь снимка не может быть null: инцидент без него не восстановить");
         return line() + "; снимок " + snapshot;
+    }
+
+    public String brief() {
+        return head() + "задача " + task + "; инвентарь " + new TreeMap<>(inventory);
+    }
+
+    public String brief(Path snapshot) {
+        Objects.requireNonNull(snapshot, "Путь снимка не может быть null: инцидент без него не восстановить");
+        return brief() + "; снимок " + snapshot;
+    }
+
+    private String head() {
+        return "дух " + spirit + " в (" + at.x() + ", " + at.y() + ", " + at.z() + "): ";
     }
 }
