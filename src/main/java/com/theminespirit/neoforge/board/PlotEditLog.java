@@ -2,14 +2,12 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardTicket;
-import com.theminespirit.core.board.PlotEditWho;
+import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.PlotPlanBlocks.Plan;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
@@ -48,13 +46,23 @@ public final class PlotEditLog {
             return;
         }
         LOGGER.info(
-                "[plot-edit] «{}»: сломан блок плана {} в ({}, {}, {}) — {}; клетку вернёт ремонт",
+                "[plot-edit] «{}»: сломан блок плана {} в ({}, {}, {}) — {}; задание {}; клетку вернёт ремонт",
                 area(site, cell),
                 expected,
                 cell.x(),
                 cell.y(),
                 cell.z(),
-                who(level, breaker));
+                who(breaker),
+                task(breaker));
+    }
+
+    static String task(@Nullable Entity breaker) {
+        if (!(breaker instanceof SpiritEntity spirit) || !(spirit.level() instanceof ServerLevel server)) {
+            return "—";
+        }
+        return BoardRegistry.peek(server)
+                .map(service -> BoardLog.culprit(service.board().assignedTo(spirit.getUUID())))
+                .orElse("—");
     }
 
     private static Plan plan(StageSite site) {
@@ -88,29 +96,16 @@ public final class PlotEditLog {
         return StageRepair.label(BoardCase.BUILD_FENCE);
     }
 
-    private static String who(ServerLevel level, @Nullable Entity breaker) {
+    private static String who(@Nullable Entity breaker) {
         if (breaker instanceof Player player) {
             return "игрок " + player.getGameProfile().getName();
         }
         if (breaker instanceof SpiritEntity spirit) {
-            return "дух " + spirit.getName().getString() + " (" + spirit.getUUID() + ")" + culprit(level, spirit);
+            return "дух " + spirit.getName().getString() + " (" + spirit.getUUID() + ")";
         }
         if (breaker == null) {
             return "взрыв или мир";
         }
         return breaker.getType().toString() + " " + breaker.getUUID();
-    }
-
-    private static String culprit(ServerLevel level, SpiritEntity spirit) {
-        List<String> tickets = BoardRegistry.peek(level)
-                .map(service -> service.board().assignedTo(spirit.getUUID()).stream()
-                        .map(BoardTicket::id)
-                        .toList())
-                .orElse(List.of());
-        return culprit(tickets, spirit.currentTaskScript().orElse(null));
-    }
-
-    static String culprit(List<String> tickets, @Nullable String script) {
-        return PlotEditWho.culprit(tickets, script);
     }
 }
