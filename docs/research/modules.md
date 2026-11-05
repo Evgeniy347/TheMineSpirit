@@ -90,14 +90,14 @@
 |---|---|---|---|---|
 | `:api` | `core.observation`, `perception`, `task`, `plan`, `engine`, `base` + словари/контракты | 107 | 400 | — (чистая Java, Jackson) |
 | `:board` | `core.board`, `core.board.graph` | 231 | 1618 | api |
-| `:tactics` | `core.tactics`, `intellect`, `coordinator`, `planner` | 247 | 998 | api, board |
+| `:tactics` | `core.tactics`, `intellect`, `coordinator`, `planner` | 247 | 998 | api, board, policy |
 | `:policy` | `core.policy` | 33 | 191 | api |
 | `:content` | `core.reload` + `core.script` (каталог и таблицы) | 121 | 482 | api, board, mechanics |
 | `:rest` | `core.rest` | 71 | 248 | api, board |
 | `:ui` | `core.ui` | 36 | 116 | api, rest |
-| `:mech:forestry` | `core.forestry` + скрипты `neoforge` | 19+ | 96 | api, engine |
-| `:mech:mining` | `core.mining` | 62 | 317 | api, content(параметры) |
-| `:mech:building` | `core.building` | 77 | 335 | api, content |
+| `:mech:forestry` | `core.forestry` + скрипты `neoforge` | 19+ | 96 | api |
+| `:mech:mining` | `core.mining` | 62 | 317 | api |
+| `:mech:building` | `core.building` | 77 | 335 | api |
 | `:mech:farming` | `core.farming` | 17 | 88 | api |
 | `:mech:husbandry` | `core.husbandry` | 14 | 28 | api |
 | `:mech:inventory` | `core.inventory` | 34 | 222 | api |
