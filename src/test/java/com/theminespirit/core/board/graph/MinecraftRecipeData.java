@@ -66,20 +66,42 @@ final class MinecraftRecipeData {
         }
         Path artifacts = Path.of(System.getProperty("user.home"), ".gradle", "caches", "neoformruntime", "artifacts");
         if (Files.isDirectory(artifacts)) {
-            try (Stream<Path> files = Files.list(artifacts)) {
-                return files.filter(path -> {
-                            String name = path.getFileName().toString();
-                            return name.startsWith("minecraft_") && name.endsWith("_client.jar");
-                        })
-                        .max(Comparator.comparingLong(path -> path.toFile().lastModified()))
-                        .orElseThrow(() -> new IllegalStateException("Клиентский jar Minecraft не найден в " + artifacts
-                                + ": задайте путь через -Dtheminespirit.minecraft.client"));
-            } catch (IOException error) {
-                throw new UncheckedIOException("Не прочитать кэш Minecraft в " + artifacts, error);
-            }
+            return selectJar(artifacts, pinnedVersion());
         }
         throw new IllegalStateException(
                 "Кэш Minecraft не найден: задайте путь к клиентскому jar через " + "-Dtheminespirit.minecraft.client");
+    }
+
+    static Path selectJar(Path artifacts, String version) {
+        Path jar = artifacts.resolve("minecraft_" + version + "_client.jar");
+        if (Files.isRegularFile(jar)) {
+            return jar;
+        }
+        throw new IllegalStateException("Клиентский jar Minecraft " + version + " не найден: " + jar
+                + ". Нужен jar закреплённой версии из gradle.properties: самый свежий по времени может быть "
+                + "другой версией с другими рецептами");
+    }
+
+    static String pinnedVersion() {
+        String property = System.getProperty("theminespirit.minecraft.version");
+        if (property != null && !property.isBlank()) {
+            return property;
+        }
+        Path properties = Path.of("gradle.properties");
+        try {
+            for (String line : Files.readAllLines(properties, StandardCharsets.UTF_8)) {
+                if (line.startsWith("minecraft_version=")) {
+                    String value = line.substring("minecraft_version=".length()).trim();
+                    if (!value.isEmpty()) {
+                        return value;
+                    }
+                }
+            }
+        } catch (IOException error) {
+            throw new UncheckedIOException("Не прочитать закреплённую версию Minecraft из " + properties, error);
+        }
+        throw new IllegalStateException("В " + properties
+                + " нет minecraft_version: версия Minecraft берётся только из закреплённой настройки проекта");
     }
 
     private static Map<String, String> fromDirectory(Path root) throws IOException {
