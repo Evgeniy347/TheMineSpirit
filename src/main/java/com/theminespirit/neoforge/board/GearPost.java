@@ -1,6 +1,9 @@
 package com.theminespirit.neoforge.board;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.graph.ActivityPlans;
 import com.theminespirit.core.board.graph.GearInputs;
 import com.theminespirit.core.board.graph.GearRules;
@@ -8,39 +11,47 @@ import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.Map;
 import java.util.Optional;
+import org.slf4j.Logger;
 
 final class GearPost {
-    private static final String EQUIP = "gear_equip_best";
-    private static final String ARMOR = "gear_craft_armor";
-    private static final String CRAFT = "craft_tool:";
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private GearPost() {}
 
-    static boolean event(GraphPost post, GraphTickets.Ticket ticket) {
-        String node = ticket.node();
-        if (EQUIP.equals(node)) {
-            return equip(post);
-        }
-        if (ARMOR.equals(node)) {
-            return craftArmor(post);
-        }
-        if (ticket.task().id().startsWith(CRAFT)) {
-            return craftTool(post, ticket.task().id().substring(CRAFT.length()));
-        }
-        return false;
+    static boolean handles(String node) {
+        return GearInputs.handlesTask(node);
     }
 
-    private static boolean equip(GraphPost post) {
+    static boolean event(GraphPost post, GraphTickets.Ticket ticket) {
+        String node = ticket.node();
+        if (!handles(node)) {
+            return false;
+        }
+        if (GearInputs.EQUIP_TASK.equals(node)) {
+            return equip(post, ticket);
+        }
+        if (GearInputs.ARMOR_TASK.equals(node)) {
+            return craftArmor(post, ticket);
+        }
+        return craftTool(post, ticket, node.substring(GearInputs.TOOL_TASK.length()));
+    }
+
+    private static boolean equip(GraphPost post, GraphTickets.Ticket ticket) {
         GearInputs.Settings settings = GearInputs.settings();
         for (SpiritEntity spirit : post.spirits) {
             GraphFacts.Spirit fact = post.facts.spirits().get(spirit.getUUID().toString());
-            if (fact == null || busy(post, spirit)) {
+            if (fact == null) {
                 continue;
             }
             Optional<GearRules.Upgrade> upgrade = GearRules.equipUpgrade(fact, post.facts.chests(), settings);
             if (upgrade.isEmpty()) {
                 continue;
+            }
+            if (busy(post, spirit)) {
+                post.waiting().add(ticket.id());
+                return false;
             }
             GearRules.Upgrade known = upgrade.orElseThrow();
             BlockCoord chest = StorePost.at(known.chest());
@@ -50,17 +61,21 @@ final class GearPost {
         return false;
     }
 
-    private static boolean craftArmor(GraphPost post) {
+    private static boolean craftArmor(GraphPost post, GraphTickets.Ticket ticket) {
         GearInputs.Settings settings = GearInputs.settings();
         int stage = post.scan.stage().stage();
         for (SpiritEntity spirit : post.spirits) {
             GraphFacts.Spirit fact = post.facts.spirits().get(spirit.getUUID().toString());
-            if (fact == null || busy(post, spirit)) {
+            if (fact == null) {
                 continue;
             }
             Optional<String> item = GearRules.missingArmor(fact, stage, settings);
             if (item.isEmpty()) {
                 continue;
+            }
+            if (busy(post, spirit)) {
+                post.waiting().add(ticket.id());
+                return false;
             }
             ActivityPlans.Plan plan = ActivityPlans.craft(post.craftPoint(), item.orElseThrow(), 1);
             return post.launchActivity(spirit, BoardCase.ACTIVITY_CRAFT, plan);
@@ -68,17 +83,32 @@ final class GearPost {
         return false;
     }
 
-    private static boolean craftTool(GraphPost post, String kind) {
+    private static boolean craftTool(GraphPost post, GraphTickets.Ticket ticket, String kind) {
         GearInputs.Settings settings = GearInputs.settings();
         int stage = post.scan.stage().stage();
         for (SpiritEntity spirit : post.spirits) {
             GraphFacts.Spirit fact = post.facts.spirits().get(spirit.getUUID().toString());
-            if (fact == null || busy(post, spirit) || !GearRules.needsTool(fact, kind, stage, settings)) {
+            if (fact == null || !GearRules.needsTool(fact, kind, stage, settings)) {
                 continue;
             }
             String item = GearRules.craftToolItem(fact, kind, stage, settings);
-            ActivityPlans.Plan plan = ActivityPlans.craft(post.craftPoint(), item, 1);
-            return post.launchActivity(spirit, BoardCase.ACTIVITY_CRAFT, plan);
+            BoardCase boardCase = ToolSet.caseFor(item).orElse(BoardCase.GATHER_MATERIALS);
+            TicketTarget target = TicketTarget.at(post.craftPoint())
+                    .withCraft(item, 1)
+                    .withCount(1)
+                    .withToolCount(1)
+                    .withWood(post.scan.wood());
+            post.submit(
+                    post.ticket(
+                            ticket.id(),
+                            boardCase,
+                            Optional.of(spirit.getUUID()),
+                            ticket.task().priority(),
+                            ticket.id(),
+                            Map.of()),
+                    target);
+            LOGGER.info("[снаряжение] нужна {} {}: нет — крафчу {}", kind, spirit.displayName(), item);
+            return true;
         }
         return false;
     }

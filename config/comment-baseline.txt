@@ -160,3 +160,5 @@ src/main/java/com/theminespirit/gametest/ShelterBuildGameTests.java	запас �
 src/main/java/com/theminespirit/gametest/WarehouseGameTests.java	[флак] 176 блоков склада дух ставит по одному за тик с подходом к каждой клетке; запас двойной,
 src/main/java/com/theminespirit/gametest/WarehouseGameTests.java	иначе тест меряет скорость стройки, а не её результат.
 src/main/java/com/theminespirit/gametest/Observe9ScenesGameTests.java	[флак] шаг наблюдения 9 ждёт 900 тиков тактики, а не мгновенного события: бюджет двойной.
+src/main/java/com/theminespirit/gametest/BoardGameTests.java	[флак] замер ~300 тиков: подход, добыча материалов и крафт; бюджет 800 ≈ 2×
+src/main/java/com/theminespirit/gametest/FarmScenesGameTests.java	[флак] замер ~2500 тиков: 132 клетки грядки (пахота, посев, вода); бюджет 4000 ≈ 1,6×

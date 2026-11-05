@@ -22,7 +22,10 @@ public final class DigFacts {
     private DigFacts() {}
 
     public static @Nullable String trap(Cause cause) {
-        return cause == Cause.OPEN ? null : cause.name().toLowerCase(Locale.ROOT);
+        if (cause == Cause.OPEN || cause == Cause.WALL) {
+            return null;
+        }
+        return cause.name().toLowerCase(Locale.ROOT);
     }
 
     public static String node(@Nullable String cause) {

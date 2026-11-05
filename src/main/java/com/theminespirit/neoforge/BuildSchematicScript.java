@@ -523,14 +523,14 @@ final class BuildSchematicScript implements ScriptInstance {
     }
 
     private ScriptStatus moveTowards(List<BlockCoord> cells, ReachPlanner.World base, boolean outsideOnly) {
-        Set<BlockCoord> occupied = new HashSet<>(site.schemeCells());
+        Set<BlockCoord> occupied = SchematicWalkways.free(site.primaries(), site.schemeCells());
         Optional<Set<BlockCoord>> reachable = site.walkable(feet(), WALK_MARGIN);
         boolean walkKnown = site.networkBox(WALK_MARGIN).contains(feet()) && reachable.isPresent();
         ReachPlanner.World world = walkKnown ? BuildStandPath.walkableOnly(base, reachable.orElseThrow()) : base;
         Optional<BlockCoord> stand = BuildStandPath.choose(cells, world, excludedStands, occupied, outsideOnly, feet());
         if (stand.isEmpty()) {
-            occupied = new HashSet<>(site.standBlockers());
-            stand = BuildStandPath.choose(cells, world, excludedStands, occupied, outsideOnly, feet());
+            Set<BlockCoord> blockers = SchematicWalkways.free(site.primaries(), site.standBlockers());
+            stand = BuildStandPath.choose(cells, world, excludedStands, blockers, outsideOnly, feet());
         }
         if (stand.isEmpty() && !standsRetried && !excludedStands.isEmpty()) {
             standsRetried = true;

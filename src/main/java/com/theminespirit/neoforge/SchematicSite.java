@@ -215,9 +215,7 @@ final class SchematicSite {
         }
         List<BlockCoord> cells = new ArrayList<>(unique);
         for (Schematic.PlacedEntry entry : entries) {
-            if (entry.optional()
-                    || SchematicActions.isActionPlaced(entry.block())
-                    || SchematicActions.isFluidPlaced(entry.block())) {
+            if (entry.optional() || SchematicActions.isActionPlaced(entry.block())) {
                 continue;
             }
             BlockState current = level.getBlockState(toPos(entry.pos()));

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,27 @@ class ToolGateTests {
                         .collect(Collectors.toSet()),
                 "Кирку требуют расчистка, шахта и добыча оставшейся руды — таблица ToolGate; новый кейс с камнем добавляется в неё, иначе "
                         + "дух возьмёт его без кирки и будет копать руками без дропа");
+    }
+
+    @Test
+    void allows_HoeModifier_RequiresHoe() {
+        BoardTicket ticket = new BoardTicket(
+                "graph:building:wheat_field",
+                BoardCase.BUILD_PLACED,
+                Optional.empty(),
+                60,
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of(),
+                List.of(ToolGate.TOOL_MODIFIER + "hoe"));
+        assertTrue(
+                ToolGate.allows(ticket, List.of("minecraft:wooden_hoe")),
+                "Грядка требует тяпку: дух с тяпкой получает задание пахоты");
+        assertFalse(
+                ToolGate.allows(ticket, List.of("minecraft:stone_pickaxe")),
+                "Кирка не заменяет тяпку: без неё грядка не пашется, задание ждёт инструмент, а не падает в воздух");
     }
 
     @Test

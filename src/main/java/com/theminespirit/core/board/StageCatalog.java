@@ -2,6 +2,7 @@ package com.theminespirit.core.board;
 
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.building.DemoBuildings;
+import com.theminespirit.core.building.SchematicGround;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.TownPlan;
@@ -39,7 +40,17 @@ public final class StageCatalog {
     public static Optional<BlockCoord> origin(String planId, TownPlan plan, int levelY) {
         Objects.requireNonNull(planId, "id постройки плана не может быть null: по нему ищут участок");
         Objects.requireNonNull(plan, "План поселения не может быть null: постройка встаёт в свой слот");
-        return plan.placement(planId).map(place -> new BlockCoord(place.x(), levelY, place.z()));
+        int y = originY(planId, levelY);
+        return plan.placement(planId).map(place -> new BlockCoord(place.x(), y, place.z()));
+    }
+
+    public static int originY(String planId, int levelY) {
+        Objects.requireNonNull(planId, "id постройки плана не может быть null: по нему ищут участок");
+        boolean ground = entry(planId)
+                .flatMap(found -> DataTables.INSTANCE.presets().current().byId(found.scheme()))
+                .map(preset -> SchematicGround.groundLayer(preset.schematic()))
+                .orElse(false);
+        return ground ? levelY - 1 : levelY;
     }
 
     public static boolean placed(String planId) {

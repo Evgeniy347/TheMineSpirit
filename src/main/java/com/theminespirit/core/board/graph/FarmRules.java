@@ -7,6 +7,8 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public final class FarmRules {
+    private static final Set<String> EVENT_TASKS = Set.of("harvest_crop", "plant_crop", "feed_animals");
+
     public record Crops(int ready, int dry, int empty) {
         public Crops {
             if (ready < 0 || dry < 0 || empty < 0) {
@@ -17,6 +19,10 @@ public final class FarmRules {
     }
 
     private FarmRules() {}
+
+    public static boolean handlesEvent(String taskId) {
+        return EVENT_TASKS.contains(taskId);
+    }
 
     public static Map<String, Integer> herdCounts(Map<String, Integer> species) {
         Map<String, Integer> herds = new LinkedHashMap<>();

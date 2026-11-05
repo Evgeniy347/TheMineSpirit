@@ -7,7 +7,6 @@ import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.BlockStates;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,7 +27,6 @@ final class FarmStray {
 
     static List<BlockCoord> cells(ServerLevel level, StageSite site, TownPlan plan) {
         BlockCoord anchor = site.anchor();
-        PlacedBlocksData placed = PlacedBlocksData.get(level);
         Map<String, BlockCoord> found = new LinkedHashMap<>();
         for (int dx = -RADIUS; dx <= RADIUS; dx++) {
             for (int dz = -RADIUS; dz <= RADIUS; dz++) {
@@ -39,7 +37,7 @@ final class FarmStray {
                 }
                 for (int dy = -BELOW; dy <= ABOVE; dy++) {
                     BlockPos pos = new BlockPos(x, anchor.y() + dy, z);
-                    if (!level.isLoaded(pos) || placed.isMarked(pos)) {
+                    if (!level.isLoaded(pos)) {
                         continue;
                     }
                     BlockState state = level.getBlockState(pos);

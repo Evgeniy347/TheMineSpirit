@@ -58,6 +58,11 @@ public final class SchematicActions {
         return FARMLAND.equals(SchematicBlocks.path(blockId));
     }
 
+    public static boolean isWalkway(String blockId) {
+        Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, обход ли это");
+        return DIRT_PATH.equals(SchematicBlocks.path(blockId));
+    }
+
     public static boolean isFluidPlaced(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, льётся ли он ведром");
         return WATER.equals(SchematicBlocks.path(blockId));

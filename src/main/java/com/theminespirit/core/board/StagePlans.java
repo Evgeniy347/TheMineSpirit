@@ -73,6 +73,9 @@ public final class StagePlans {
         }
         BlockCoord origin = target.target();
         List<TaskNode> steps = new ArrayList<>();
+        if (target.leveling() != null) {
+            steps.add(LevelRepair.plan(target));
+        }
         steps.add(PlanSteps.gotoPoint(origin));
         DataTables.INSTANCE
                 .presets()

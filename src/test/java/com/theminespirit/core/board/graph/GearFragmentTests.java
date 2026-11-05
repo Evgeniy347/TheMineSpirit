@@ -58,6 +58,30 @@ class GearFragmentTests {
     }
 
     @Test
+    void plan_SpiritWithoutHoe_GetsHoeCraft() {
+        GraphWorld world = GraphWorld.settled().tools("spirit-1", -1);
+
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("craft_wooden_hoe@spirit-1").isPresent(),
+                "Дух без тяпки получает её крафт по графу: без узла craft_tool:hoe пашню нечем делать — "
+                        + taskIds(plan));
+    }
+
+    @Test
+    void plan_SpiritWithoutPickaxe_GetsPickaxeCraft() {
+        GraphWorld world = GraphWorld.settled().tools("spirit-1", -1);
+
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.task("craft_wooden_pickaxe@spirit-1").isPresent(),
+                "Дух без кирки получает её крафт по графу: иначе шахта ждёт инструмент, которого никто не делает — "
+                        + taskIds(plan));
+    }
+
+    @Test
     void planner_GearInputs_AddUnimplementedStubs() {
         GraphFacts facts = facts(
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
