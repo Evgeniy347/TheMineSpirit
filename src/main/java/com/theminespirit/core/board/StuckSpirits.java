@@ -14,7 +14,11 @@ public final class StuckSpirits {
     public static final int AREA_RADIUS = 4;
     private static final int MAX_CHANGES = 64;
 
-    public record Stuck(@Nullable BlockCoord at, long since) {
+    public record Stuck(@Nullable BlockCoord at, long since, boolean noPath) {
+        public Stuck(@Nullable BlockCoord at, long since) {
+            this(at, since, false);
+        }
+
         public Stuck {
             if (since < 0) {
                 throw new IllegalArgumentException(
@@ -55,7 +59,7 @@ public final class StuckSpirits {
             return;
         }
         if (known.at() == null) {
-            stuck.put(spirit, new Stuck(at, known.since()));
+            stuck.put(spirit, new Stuck(at, known.since(), known.noPath()));
         }
     }
 
@@ -75,8 +79,13 @@ public final class StuckSpirits {
         if (now < 0) {
             throw new IllegalArgumentException("Тик " + now + " отрицателен: застревание не ставится в прошлое");
         }
-        if (stuck.putIfAbsent(spirit, new Stuck(seen.get(spirit), now)) == null) {
+        if (stuck.putIfAbsent(spirit, new Stuck(seen.get(spirit), now, StuckCause.noPath(reason))) == null) {
             note(spirit, seen.get(spirit), now, true, reason);
+            return;
+        }
+        Stuck known = stuck.get(spirit);
+        if (StuckCause.noPath(reason) && !known.noPath()) {
+            stuck.put(spirit, new Stuck(known.at(), known.since(), true));
         }
     }
 
@@ -90,7 +99,7 @@ public final class StuckSpirits {
         if (known == null) {
             return Optional.empty();
         }
-        if (now > known.since() && now - known.since() >= BoardTuning.STUCK_TTL_TICKS) {
+        if (now > known.since() && !known.noPath() && now - known.since() >= BoardTuning.STUCK_TTL_TICKS) {
             stuck.remove(spirit);
             note(
                     spirit,
@@ -137,7 +146,7 @@ public final class StuckSpirits {
         List<BoardState.Stuck> states = new ArrayList<>();
         for (Map.Entry<UUID, Stuck> entry : stuck.entrySet()) {
             Stuck state = entry.getValue();
-            states.add(new BoardState.Stuck(entry.getKey(), state.at(), state.since()));
+            states.add(new BoardState.Stuck(entry.getKey(), state.at(), state.since(), state.noPath()));
         }
         return List.copyOf(states);
     }
@@ -146,7 +155,7 @@ public final class StuckSpirits {
         seen.clear();
         stuck.clear();
         for (BoardState.Stuck state : states) {
-            stuck.put(state.spirit(), new Stuck(state.at(), state.since()));
+            stuck.put(state.spirit(), new Stuck(state.at(), state.since(), state.noPath()));
             if (state.at() != null) {
                 seen.put(state.spirit(), state.at());
             }
@@ -162,7 +171,7 @@ public final class StuckSpirits {
         rebasePending = false;
         for (Map.Entry<UUID, Stuck> entry : new LinkedHashMap<>(stuck).entrySet()) {
             Stuck state = entry.getValue();
-            stuck.put(entry.getKey(), new Stuck(state.at(), now));
+            stuck.put(entry.getKey(), new Stuck(state.at(), now, state.noPath()));
         }
     }
 

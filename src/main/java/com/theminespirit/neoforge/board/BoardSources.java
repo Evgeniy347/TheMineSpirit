@@ -9,6 +9,7 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphDecisions;
 import com.theminespirit.core.board.graph.GraphFailureMemory;
+import com.theminespirit.core.board.graph.GraphNotes;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +27,7 @@ public final class BoardSources {
     private final GraphSource graph = new GraphSource();
     private final SourceFailureLog failures = new SourceFailureLog(BoardTuning.logSummaryTicks());
     private final GraphFailureMemory graphFailures = new GraphFailureMemory();
+    private final GraphNotes notes = new GraphNotes();
     private final SourceGuard guard = new SourceGuard(this::report);
     private long roundNow;
 
@@ -45,6 +47,10 @@ public final class BoardSources {
 
     public GraphFailureMemory graphFailures() {
         return graphFailures;
+    }
+
+    public boolean due(String key, String text, long now) {
+        return notes.due(key, text, now);
     }
 
     public @Nullable String supplyOf(BoardTicket ticket, Map<String, TicketTarget> targets) {
