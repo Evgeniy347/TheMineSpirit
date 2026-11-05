@@ -867,7 +867,7 @@ def test_stage_two_worlds():
 
 
 def test_failure_memory():
-    """Память неудач в Python: штраф узла и удлинение дальней дороги (GraphFailureMemoryTests/GraphChoiceTests)."""
+    """Память неудач в Python: цель отдельно, узел по разным целям (GraphFailureMemoryTests)."""
     base = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
 
     def dusk(**choice):
@@ -881,36 +881,75 @@ def test_failure_memory():
         world.distances["more:dusk_soon"] = 40
         return world
 
-    calm = dusk()
-    calm_priority = next(t["priority"] for t in calm.plan()["tasks"]
-                         if t["id"] == "more_return_before_night")
-    failed = dusk()
-    failed.with_facts({"feedback": {"failures": [{"node": "more_return_before_night", "target": "0,64,0",
-                                                  "count": 1, "cause": "NO_PATH", "lastTick": 100}]}})
-    failed_priority = next(t["priority"] for t in failed.plan()["tasks"]
-                           if t["id"] == "more_return_before_night")
-    assert failed_priority < calm_priority, \
-        "Python: провал узла снижает вес, а не выбирает ту же работу снова: %s/%s" % (
-            failed_priority, calm_priority)
+    def failures(world, entries):
+        world.with_facts({"feedback": {"failures": [
+            {"node": "more_return_before_night", "target": target, "count": count,
+             "cause": cause, "lastTick": 100}
+            for target, count, cause in entries]}})
+        return world
 
-    far = dusk(farTrip=5.0)
-    far.with_facts({"feedback": {"failures": [{"node": "more_return_before_night", "target": "0,64,0",
-                                               "count": 1, "cause": "NO_PATH", "lastTick": 100}]}})
-    far_ticks = next(t["ticks"] for t in far.plan()["tasks"]
-                     if t["id"] == "more_return_before_night")
-    assert far_ticks == 2200, "Python: провал дальней дороги удлиняет её по farTrip: " + str(far_ticks)
+    def priority_of(world):
+        return next(t["priority"] for t in world.plan()["tasks"]
+                    if t["id"] == "more_return_before_night")
+
+    calm = dusk()
+    calm_priority = priority_of(calm)
+    one = failures(dusk(), [("0,64,0", 5, "NO_PATH")])
+    assert priority_of(one) == calm_priority, \
+        "Python: один недоступный ствол не штрафует рубку везде: %s/%s" % (
+            priority_of(one), calm_priority)
+
+    many = failures(dusk(), [("0,64,0", 3, "NO_PATH"), ("8,64,8", 3, "NOT_REACHED")])
+    assert priority_of(many) < calm_priority, \
+        "Python: провал разных целей снижает вес узла: %s/%s" % (priority_of(many), calm_priority)
+
+    faded = dusk()
+    faded.with_facts({"feedback": {"failures": [
+        {"node": "more_return_before_night", "target": target, "count": 1, "weight": 0.1,
+         "cause": "NO_PATH", "lastTick": 100}
+        for target in ("0,64,0", "8,64,8")]}})
+    assert priority_of(many) < priority_of(faded) <= calm_priority, \
+        "Python: затухший штраф слабее свежего и не превышает спокойный вес: %s/%s/%s" % (
+            priority_of(many), priority_of(faded), calm_priority)
+
+    chunk = failures(dusk(), [("0,64,0", 5, "CHUNK")])
+    assert priority_of(chunk) == calm_priority, \
+        "Python: незагруженный чанк не штрафует узел: %s/%s" % (priority_of(chunk), calm_priority)
+    material = failures(dusk(), [("0,64,0", 5, "NO_MATERIAL")])
+    assert priority_of(material) == calm_priority, \
+        "Python: нет материала — нехватка снабжения, а не штраф узла: %s/%s" % (
+            priority_of(material), calm_priority)
+    other = failures(dusk(), [("0,64,0", 2, "OTHER")])
+    assert calm_priority > priority_of(other) > priority_of(many), \
+        "Python: прочий провал штрафует мягче доказанной недостижимости: %s/%s/%s" % (
+            priority_of(other), priority_of(many), calm_priority)
+
+    calm_ticks = next(t["ticks"] for t in calm.plan()["tasks"]
+                      if t["id"] == "more_return_before_night")
+    far_one = failures(dusk(farTrip=5.0), [("0,64,0", 1, "NO_PATH")])
+    far_one_ticks = next(t["ticks"] for t in far_one.plan()["tasks"]
+                         if t["id"] == "more_return_before_night")
+    assert far_one_ticks == calm_ticks, \
+        "Python: одна недоступная цель не удлиняет дорогу всему узлу: %s/%s" % (
+            far_one_ticks, calm_ticks)
+    far_many = failures(dusk(farTrip=5.0), [("0,64,0", 1, "NO_PATH"), ("8,64,8", 1, "NO_PATH")])
+    far_many_ticks = next(t["ticks"] for t in far_many.plan()["tasks"]
+                          if t["id"] == "more_return_before_night")
+    assert far_many_ticks == 2200, \
+        "Python: провал разных целей удлиняет дорогу по farTrip: " + str(far_many_ticks)
 
     life = sim_gpu.World.settled(base).event("life_threat")
     calm_life = next(t["priority"] for t in life.plan()["tasks"]
                      if t["id"] == "event:life_threat:defend")
     life_failed = life.copy()
     life_failed.with_facts({"feedback": {"failures": [
-        {"node": "event:life_threat:defend", "target": "0,64,0", "count": 3, "cause": "NO_PATH", "lastTick": 100}]}})
+        {"node": "event:life_threat:defend", "target": "0,64,0", "count": 3,
+         "cause": "NO_PATH", "lastTick": 100}]}})
     failed_life = next(t["priority"] for t in life_failed.plan()["tasks"]
                        if t["id"] == "event:life_threat:defend")
     assert failed_life == calm_life, \
         "Python: защита жизни не штрафуется памятью неудач: %s/%s" % (failed_life, calm_life)
-    print("OK: память неудач штрафует узел и дальнюю дорогу в Python")
+    print("OK: память неудач штрафует цель отдельно, узел — по разным целям в Python")
 
 
 def test_choice_mechanics():

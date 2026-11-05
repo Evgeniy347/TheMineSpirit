@@ -3,12 +3,15 @@ package com.theminespirit.core.board.graph;
 import com.theminespirit.core.board.BoardCase;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import org.jspecify.annotations.Nullable;
 
 final class GraphChoiceRules {
     private static final String BUILDING = "building:";
     private static final String EVENT = "event:";
     private static final char AT = '@';
+    private static final double FAILURE_CAP = 3.0;
 
     private final SupplyGraph graph;
     private final GraphState state;
@@ -95,34 +98,52 @@ final class GraphChoiceRules {
                 factor *= tuning.pileup();
             }
         }
-        int failures = failures(key);
-        if (failures > 0) {
-            factor *= Math.pow(tuning.failureBackoff(), Math.min(failures, 3));
+        FailureStats failures = failures(key);
+        if (failures.penalty() > 0) {
+            factor *= Math.pow(tuning.failureBackoff(), Math.min(failures.penalty(), FAILURE_CAP));
         }
         return value * factor + bonus;
     }
 
     int travelTicks(String key) {
         int raw = travel(key);
-        if (!state.world().contains(MoreRules.BAD_TRIP_CONDITIONS) && failures(key) == 0) {
+        if (!state.world().contains(MoreRules.BAD_TRIP_CONDITIONS)
+                && !failures(key).nodePenalized()) {
             return raw;
         }
         return (int) Math.round(raw * graph.costs().choice().farTrip());
     }
 
-    private int failures(String key) {
+    private FailureStats failures(String key) {
         String base = baseKey(key);
         if (life(base)) {
-            return 0;
+            return new FailureStats(0.0, false);
         }
-        int total = 0;
+        double unreachable = 0.0;
+        double soft = 0.0;
+        Set<String> targets = new TreeSet<>();
         for (GraphFeedback.Failure failure : state.facts().feedback().failures()) {
-            if (failure.node().equals(key) || failure.node().equals(base)) {
-                total += failure.count();
+            if (!failure.node().equals(key) && !failure.node().equals(base)) {
+                continue;
+            }
+            if (failure.weight() <= 0) {
+                continue;
+            }
+            if (GraphFailureMemory.unreachable(failure.cause())) {
+                unreachable += failure.weight();
+                targets.add(failure.target());
+            } else if (failure.cause() == GraphFeedback.Cause.OTHER) {
+                soft += failure.weight();
             }
         }
-        return total;
+        GraphChoice tuning = graph.costs().choice();
+        boolean penalized = targets.size() >= Math.ceil(tuning.failureTargets());
+        double penalty = penalized ? Math.min(unreachable, FAILURE_CAP) : 0.0;
+        penalty += Math.min(soft * tuning.failureSoft(), FAILURE_CAP);
+        return new FailureStats(penalty, penalized);
     }
+
+    private record FailureStats(double penalty, boolean nodePenalized) {}
 
     private static boolean life(String base) {
         return "rescue_spirit".equals(base) || base.startsWith(EVENT + "life_");

@@ -7,7 +7,6 @@ import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
-import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardReserve;
 import com.theminespirit.core.board.BoardState;
@@ -725,6 +724,7 @@ public final class BoardService {
         SettleNotes.note(spirit, ticket, success, supplyClosed, spirit.level().getGameTime());
         String why = verdict != null ? verdict : spirit.taskFailureReason().orElse("причина не записана");
         if (success) {
+            sources.graphSuccess(ticket, targets.get(ticket.id()), board.now());
             PlanCompletion.complete(board, ticket, targets.get(ticket.id()));
             if (ticket.boardCase() == BoardCase.TRANSFER_ITEM) {
                 TransferNote.delivered(spirit, ticket, targets.get(ticket.id()));
@@ -742,9 +742,7 @@ public final class BoardService {
             sources.graphFailure(ticket, targets.get(ticket.id()), failure, board.now());
             board.fail(ticket.id(), stock, failure);
             incidents.failed(spirit, ticket, targets.get(ticket.id()), why, board.now());
-            for (BoardLogEntry entry : board.drainDetachments()) {
-                journal.recordEntry(entry);
-            }
+            board.drainDetachments().forEach(journal::recordEntry);
             flushBlockNotes();
             if (ticket.boardCase() == BoardCase.CAPTURE_ANIMAL) {
                 captureFailed(ticket.id());

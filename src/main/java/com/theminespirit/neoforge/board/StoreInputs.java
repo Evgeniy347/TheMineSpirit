@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphFactsUpdates;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.board.graph.GraphState;
@@ -47,16 +48,8 @@ final class StoreInputs {
         });
 
         Map<String, GraphFacts.Station> stations = stationContents(level, facts.stations());
-        GraphFacts known = new GraphFacts(
-                facts.spirits(),
-                facts.threats(),
-                facts.chests(),
-                facts.resources(),
-                stations,
-                facts.buildings(),
-                facts.strays(),
-                facts.terrain(),
-                new GraphSiteFacts.StageReqs(minimum, real));
+        GraphFacts known = GraphFactsUpdates.withStageReqs(
+                GraphFactsUpdates.withStations(facts, stations), new GraphSiteFacts.StageReqs(minimum, real));
         boolean storageFull = state.storageFreePercent() < graph.storage().minFreePercent();
         int mixed = StoreRules.mixedChests(facts.chests(), config.maxItemTypesPerChest());
         boolean carried = facts.spirits().values().stream()

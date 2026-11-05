@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.inventory.JsonResource;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -11,37 +12,136 @@ class GraphChoiceFeedbackTests {
     private static final SupplyGraph GRAPH = SupplyGraph.loadDefault();
 
     @Test
-    void failureBackoff_RepeatedFailure_LowersTaskWeight() {
+    void failureBackoff_ManyDistinctTargets_LowerTaskWeight() {
         GraphPlan neutral = GraphPlanner.plan(GRAPH, dusk().state());
-        GraphPlan penalized = GraphPlanner.plan(GRAPH, failed(dusk(), 1).state());
+        GraphPlan penalized = GraphPlanner.plan(GRAPH, failedMany(dusk(), 1, 2).state());
 
         assertTrue(
                 penalized.priority("more_return_before_night") < neutral.priority("more_return_before_night"),
-                "Провал узла снижает его вес на время окна, а не выбирает ту же работу снова: "
+                "Провал разных целей снижает вес узла, а не выбирает ту же работу снова: "
                         + penalized.priority("more_return_before_night") + " против "
                         + neutral.priority("more_return_before_night"));
     }
 
     @Test
     void failureBackoff_ManyFailures_CapThePenalty() {
-        GraphPlan one = GraphPlanner.plan(GRAPH, failed(dusk(), 1).state());
-        GraphPlan capped = GraphPlanner.plan(GRAPH, failed(dusk(), 9).state());
+        GraphPlan two = GraphPlanner.plan(GRAPH, failedMany(dusk(), 1, 2).state());
+        GraphPlan capped = GraphPlanner.plan(GRAPH, failedMany(dusk(), 9, 4).state());
 
         assertTrue(
-                capped.priority("more_return_before_night") < one.priority("more_return_before_night"),
-                "Девять провалов весят меньше одного: " + capped.priority("more_return_before_night") + " против "
-                        + one.priority("more_return_before_night"));
+                capped.priority("more_return_before_night") < two.priority("more_return_before_night"),
+                "Много провалов разных целей весит меньше двух: " + capped.priority("more_return_before_night")
+                        + " против " + two.priority("more_return_before_night"));
     }
 
     @Test
-    void avoidFarTrip_RecentFailure_SeasonsTravelLikeBadWeather() {
-        GraphPlan plan =
-                GraphPlanner.plan(tuned("{\"farTrip\": 5}"), failed(dusk(), 1).state());
+    void avoidFarTrip_OneUnreachableTarget_KeepsTravel() {
+        SupplyGraph tuned = tuned("{\"farTrip\": 5}");
+        GraphWorld calmWorld = dusk();
+        int calm = new GraphChoiceRules(tuned, calmWorld.state()).travelTicks("more_return_before_night");
+        int one = new GraphChoiceRules(tuned, failed(dusk(), 1).state()).travelTicks("more_return_before_night");
+        int many =
+                new GraphChoiceRules(tuned, failedMany(dusk(), 1, 2).state()).travelTicks("more_return_before_night");
+
+        assertEquals(calm, one, "Одна недоступная цель удлиняет только свой поход, а не дорогу всему узлу");
+        assertTrue(
+                many > calm,
+                "Провал разных целей — узел плох: дорога удлиняется по avoid_far_trip: " + many + " против " + calm);
+    }
+
+    @Test
+    void failureBackoff_OtherCause_SoftPenalty() {
+        GraphWorld world = GraphWorld.settled();
+        double calm = new GraphChoiceRules(GRAPH, world.state()).value("more_return_before_night", 1.0, false);
+        double other = new GraphChoiceRules(
+                        GRAPH,
+                        failedCause(world, "more_return_before_night", "0,64,0", 2, GraphFeedback.Cause.OTHER)
+                                .state())
+                .value("more_return_before_night", 1.0, false);
+        double unreachable = new GraphChoiceRules(
+                        GRAPH, failedMany(dusk(), 1, 2).state())
+                .value("more_return_before_night", 1.0, false);
+
+        assertTrue(other < calm, "Прочий провал даёт мягкий штраф, а не полное прощение: " + other + "/" + calm);
+        assertTrue(
+                other > unreachable,
+                "Прочий провал мягче доказанной недостижимости двух целей: " + other + " против " + unreachable);
+    }
+
+    @Test
+    void failureBackoff_OneUnreachableTarget_DoesNotPenalizeWholeNode() {
+        GraphWorld world = GraphWorld.settled();
+        double calm = new GraphChoiceRules(GRAPH, world.state()).value("more_return_before_night", 1.0, false);
+        double penalized = new GraphChoiceRules(
+                        GRAPH,
+                        failedCause(world, "more_return_before_night", "0,64,0", 5, GraphFeedback.Cause.NO_PATH)
+                                .state())
+                .value("more_return_before_night", 1.0, false);
 
         assertEquals(
-                2200,
-                plan.task("more_return_before_night").orElseThrow().ticks(),
-                "Провал дальней дороги удлиняет её по правилу avoid_far_trip: та же цель не выбирается снова");
+                calm,
+                penalized,
+                1e-9,
+                "Один недоступный ствол не штрафует рубку везде: пока плоха одна цель, узел сохраняет вес и "
+                        + "переходит к другой цели: " + penalized + " против " + calm);
+    }
+
+    @Test
+    void failureBackoff_ChunkFailure_NoPenalty() {
+        GraphWorld world = GraphWorld.settled();
+        double calm = new GraphChoiceRules(GRAPH, world.state()).value("more_return_before_night", 1.0, false);
+        double penalized = new GraphChoiceRules(
+                        GRAPH,
+                        failedCause(world, "more_return_before_night", "0,64,0", 5, GraphFeedback.Cause.CHUNK)
+                                .state())
+                .value("more_return_before_night", 1.0, false);
+
+        assertEquals(
+                calm,
+                penalized,
+                1e-9,
+                "Незагруженный чанк — не провал узла: чанк подгружается, и задание повторяется: " + penalized
+                        + " против " + calm);
+    }
+
+    @Test
+    void failureBackoff_NoMaterial_NoNodePenalty() {
+        GraphWorld world = GraphWorld.settled();
+        double calm = new GraphChoiceRules(GRAPH, world.state()).value("more_return_before_night", 1.0, false);
+        double penalized = new GraphChoiceRules(
+                        GRAPH,
+                        failedCause(world, "more_return_before_night", "0,64,0", 5, GraphFeedback.Cause.NO_MATERIAL)
+                                .state())
+                .value("more_return_before_night", 1.0, false);
+
+        assertEquals(
+                calm,
+                penalized,
+                1e-9,
+                "Нет материала — вопрос снабжения, а не узла: штраф узла гнал бы работу прочь вместо добычи "
+                        + "входа: " + penalized + " против " + calm);
+    }
+
+    @Test
+    void failureBackoff_NoMaterial_KeepsSupplyInputWork() {
+        GraphWorld world = GraphWorld.settled();
+        world.with("jungle_log", 0);
+        double calm = new GraphChoiceRules(GRAPH, world.state()).value("craft_jungle_planks", 1.0, false);
+        double failed = new GraphChoiceRules(
+                        GRAPH,
+                        failedCause(world, "craft_jungle_planks", "0,64,0", 5, GraphFeedback.Cause.NO_MATERIAL)
+                                .state())
+                .value("craft_jungle_planks", 1.0, false);
+
+        assertEquals(
+                calm,
+                failed,
+                1e-9,
+                "Нет материала — нехватка на входе снабжения, а не провал узла: " + failed + " против " + calm);
+        assertTrue(
+                AllocationCases.tickets(world).post().stream()
+                        .anyMatch(ticket -> "jungle_log".equals(ticket.task().makes())),
+                "Нехватка входа остаётся работой снабжения: граф добывает вход, а не прячет узел");
     }
 
     @Test
@@ -98,8 +198,7 @@ class GraphChoiceFeedbackTests {
     void failureBackoff_OrdinaryNode_StillPenalized() {
         GraphWorld world = GraphWorld.settled();
         double calm = new GraphChoiceRules(GRAPH, world.state()).value("more_return_before_night", 1.0, false);
-        double penalized = new GraphChoiceRules(
-                        GRAPH, failedNode(world, "more_return_before_night", 3).state())
+        double penalized = new GraphChoiceRules(GRAPH, failedMany(world, 3, 2).state())
                 .value("more_return_before_night", 1.0, false);
 
         assertTrue(
@@ -108,8 +207,22 @@ class GraphChoiceFeedbackTests {
     }
 
     private static GraphWorld failed(GraphWorld world, int count) {
-        GraphFeedback.Failure failure = new GraphFeedback.Failure(
-                "more_return_before_night", "0,64,0", count, GraphFeedback.Cause.NO_PATH, 100);
+        return failedMany(world, count, 1);
+    }
+
+    private static GraphWorld failedMany(GraphWorld world, int count, int targets) {
+        List<GraphFeedback.Failure> failures = new ArrayList<>();
+        for (int index = 0; index < targets; index++) {
+            failures.add(new GraphFeedback.Failure(
+                    "more_return_before_night", index + ",64,0", count, GraphFeedback.Cause.NO_PATH, 100));
+        }
+        return world.facts(world.facts.withFeedback(
+                new GraphFeedback(GraphFeedback.Clock.unknown(), GraphFeedback.Player.none(), failures)));
+    }
+
+    private static GraphWorld failedCause(
+            GraphWorld world, String node, String target, int count, GraphFeedback.Cause cause) {
+        GraphFeedback.Failure failure = new GraphFeedback.Failure(node, target, count, cause, 100);
         return world.facts(world.facts.withFeedback(
                 new GraphFeedback(GraphFeedback.Clock.unknown(), GraphFeedback.Player.none(), List.of(failure))));
     }
