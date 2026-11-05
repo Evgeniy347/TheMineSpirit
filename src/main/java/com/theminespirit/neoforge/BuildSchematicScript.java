@@ -16,9 +16,9 @@ import com.theminespirit.core.building.ReachPlanner;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
+import com.theminespirit.core.building.SchematicWood;
 import com.theminespirit.core.building.SchemeFilter;
 import com.theminespirit.core.building.SpiritReach;
-import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.engine.ConditionRegistry;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptInstance;
@@ -133,7 +133,7 @@ final class BuildSchematicScript implements ScriptInstance {
                 SchemeFilter.only(
                         params.wood() == null
                                 ? SchematicResources.load(params.file())
-                                : WoodSpecies.swap(SchematicResources.load(params.file()), params.wood()),
+                                : SchematicWood.swap(SchematicResources.load(params.file()), params.wood()),
                         params.only()),
                 params.file(),
                 new BlockCoord(params.x(), params.y(), params.z()),

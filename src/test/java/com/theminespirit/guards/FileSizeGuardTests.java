@@ -80,7 +80,7 @@ class FileSizeGuardTests {
 
     private static Map<String, Integer> sizes() {
         Map<String, Integer> all = new TreeMap<>();
-        for (Path root : List.of(SourceFiles.MAIN, SourceFiles.TEST)) {
+        for (Path root : SourceFiles.sourceRoots()) {
             SourceFiles.javaUnder(root)
                     .forEach((file, text) -> all.put(
                             SourceFiles.logical(file), (int) text.lines().count()));

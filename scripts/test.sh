@@ -658,6 +658,20 @@ analyze_unit() {
     case "$errors" in ''|*[!0-9]*) errors=0 ;; esac
     [ "${#report[@]}" -gt 1 ] && failed_names=("${report[@]:1}")
 
+    local api_report=()
+    if [ -d TestResults/api/xml ]; then
+        mapfile -t api_report < <(parse_unit_reports TestResults/api/xml)
+        local api_total=0 api_failures=0 api_errors=0
+        read -r api_total api_failures api_errors <<<"${api_report[0]:-}"
+        case "$api_total" in ''|*[!0-9]*) api_total=0 ;; esac
+        case "$api_failures" in ''|*[!0-9]*) api_failures=0 ;; esac
+        case "$api_errors" in ''|*[!0-9]*) api_errors=0 ;; esac
+        total=$((total + api_total))
+        failures=$((failures + api_failures))
+        errors=$((errors + api_errors))
+        [ "${#api_report[@]}" -gt 1 ] && failed_names+=("${api_report[@]:1}")
+    fi
+
     if [ "$failures" -eq 0 ] && [ "$errors" -eq 0 ] && [ "$total" -gt 0 ]; then
         if [ "$gradle_code" -ne 0 ]; then
             echo "FAIL static: $total тестов зелёные, но сборка упала (код gradle $gradle_code)"
@@ -747,21 +761,25 @@ start_heartbeat
 
 if [ "$MODE" = "unit" ]; then
     rm -f TestResults/unit/xml/TEST-*.xml TestResults/unit/test-cost.csv
+    rm -f TestResults/api/xml/TEST-*.xml
     start_monitor "unit"
 
     UNIT_EXTRA=()
+    UNIT_EXCLUDE=()
     if [ ${#UNIT_TESTS[@]} -eq 0 ]; then
         if [ "$UNIT_FAST_ANALYZERS" = 1 ]; then
             UNIT_EXTRA=(staticAnalysisFast --continue)
         else
             UNIT_EXTRA=(staticAnalysis --continue)
         fi
+    else
+        UNIT_EXCLUDE=(-x :api:test)
     fi
 
     if command -v setsid >/dev/null 2>&1; then
-        setsid "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
+        setsid "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXCLUDE[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
     else
-        "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
+        "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXCLUDE[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
     fi
     GRADLE_PID=$!
     echo "$GRADLE_PID" >"$LOG_FILE.gradlepid"

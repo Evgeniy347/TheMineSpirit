@@ -36,8 +36,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT_PACKAGE = "com.theminespirit"
-DEFAULT_MAIN = "src/main/java"
-DEFAULT_TEST = "src/test/java"
+DEFAULT_MAIN = "src/main/java,api/src/main/java"
+DEFAULT_TEST = "src/test/java,api/src/test/java"
 
 PACKAGE_RE = re.compile(r"^\s*package\s+([\w.]+)\s*;", re.MULTILINE)
 IMPORT_RE = re.compile(r"^\s*import\s+(static\s+)?([\w.*]+)\s*;", re.MULTILINE)
@@ -220,8 +220,18 @@ def file_counts(files: list[SourceFile], depth: int) -> dict[str, int]:
     return counts
 
 
+def scan_roots(value: str, count_tests: bool = False) -> list[SourceFile]:
+    """Несколько корней через запятую: после переезда исходники живут и в модулях."""
+    files: list[SourceFile] = []
+    for part in value.split(","):
+        part = part.strip()
+        if part:
+            files.extend(scan(Path(part), count_tests=count_tests))
+    return files
+
+
 def load(args: argparse.Namespace) -> tuple[list[SourceFile], dict[tuple[str, str], int], list[str]]:
-    files = scan(Path(args.main))
+    files = scan_roots(args.main)
     edges, warnings = build_edges(files)
     return files, edges, warnings
 
@@ -308,7 +318,7 @@ def cmd_neoforge(args: argparse.Namespace) -> int:
 
 
 def cmd_tests(args: argparse.Namespace) -> int:
-    files = scan(Path(args.test), count_tests=True)
+    files = scan_roots(args.test, count_tests=True)
     by_pkg: dict[str, tuple[int, int]] = defaultdict(lambda: (0, 0))
     for sf in files:
         key = group(sf.package, args.depth)
@@ -468,8 +478,8 @@ def main(argv: list[str] | None = None) -> int:
         "summary", "cycles", "mutual", "backrefs", "evidence", "neoforge", "tests", "matrix", "json",
         "selftest"])
     parser.add_argument("--depth", type=int, default=2, help="глубина пакета от com.theminespirit (2 = core.board)")
-    parser.add_argument("--main", default=DEFAULT_MAIN, help="корень main-исходников")
-    parser.add_argument("--test", default=DEFAULT_TEST, help="корень тестовых исходников")
+    parser.add_argument("--main", default=DEFAULT_MAIN, help="корни main-исходников через запятую")
+    parser.add_argument("--test", default=DEFAULT_TEST, help="корни тестовых исходников через запятую")
     parser.add_argument("--into", action="append", default=[], help="целевые пакеты для backrefs (можно повторять)")
     parser.add_argument("--from", dest="src", default="", help="источник ребра для evidence")
     parser.add_argument("--to", dest="dst", default="", help="цель ребра для evidence")

@@ -214,7 +214,7 @@ class DeadCodeGuardTests {
     private static Set<String> testMethodNames() {
         Set<String> names = new HashSet<>();
         Matcher matcher;
-        for (Map<Path, String> sources : List.of(SourceFiles.javaUnder(SourceFiles.TEST), gameTests())) {
+        for (Map<Path, String> sources : List.of(SourceFiles.allTests(), gameTests())) {
             for (String source : sources.values()) {
                 matcher = TEST_METHOD.matcher(strip(source));
                 while (matcher.find()) {
@@ -227,7 +227,7 @@ class DeadCodeGuardTests {
 
     private static Map<Path, String> gameTests() {
         Map<Path, String> sources = new TreeMap<>();
-        SourceFiles.javaUnder(SourceFiles.MAIN).forEach((file, text) -> {
+        SourceFiles.allMain().forEach((file, text) -> {
             if (file.startsWith(SourceFiles.GAME_TESTS)) {
                 sources.put(file, text);
             }
@@ -237,7 +237,7 @@ class DeadCodeGuardTests {
 
     private static Map<Path, String> production() {
         Map<Path, String> sources = new TreeMap<>();
-        SourceFiles.javaUnder(SourceFiles.MAIN).forEach((file, text) -> {
+        SourceFiles.allMain().forEach((file, text) -> {
             if (!file.startsWith(SourceFiles.GAME_TESTS)) {
                 sources.put(file, text);
             }

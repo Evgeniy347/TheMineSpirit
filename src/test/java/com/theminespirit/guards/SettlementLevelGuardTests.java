@@ -11,7 +11,6 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class SettlementLevelGuardTests {
-    private static final Path MAIN = SourceFiles.MAIN;
     private static final Path LEVEL = Path.of("com/theminespirit/core/board/SettlementLevel.java");
     private static final Path HEIGHT = Path.of("com/theminespirit/core/board/PlotHeight.java");
     private static final Path PLOT = Path.of("com/theminespirit/core/board/SettlementPlot.java");
@@ -32,7 +31,7 @@ class SettlementLevelGuardTests {
 
     @Test
     void settlementLevel_HeightOutsideLevel_IsReported() {
-        Map<Path, String> sources = SourceFiles.javaUnder(MAIN);
+        Map<Path, String> sources = SourceFiles.allMain();
 
         assertEquals(
                 List.of(),
@@ -130,7 +129,7 @@ class SettlementLevelGuardTests {
     @Test
     void settlementLevel_MissingFile_IsReported() {
         assertTrue(
-                SourceFiles.javaUnder(MAIN).keySet().stream().anyMatch(path -> path.endsWith(LEVEL)),
+                SourceFiles.allMain().keySet().stream().anyMatch(path -> path.endsWith(LEVEL)),
                 "Нет SettlementLevel — единственного места выбора высоты поселения");
     }
 }

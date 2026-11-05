@@ -2,8 +2,9 @@ package com.theminespirit.core.base;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
-import com.theminespirit.core.reload.DataTables;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public record RespawnRules(int delayTicks) {
     public static final String RESOURCE = "data/theminespirit/base/respawn.json";
@@ -11,6 +12,7 @@ public record RespawnRules(int delayTicks) {
 
     private static final String DELAY_TICKS = "delayTicks";
     private static final Set<String> FIELDS = Set.of(DELAY_TICKS);
+    private static volatile Supplier<RespawnRules> source = RespawnRules::defaults;
 
     public RespawnRules {
         if (delayTicks <= 0) {
@@ -28,7 +30,12 @@ public record RespawnRules(int delayTicks) {
     }
 
     public static RespawnRules loadDefault() {
-        return DataTables.INSTANCE.respawn().current();
+        return source.get();
+    }
+
+    public static void useSource(Supplier<RespawnRules> supplier) {
+        source = Objects.requireNonNull(
+                supplier, "Источник правил возрождения не может быть null: без него загрузка таблицы не видна");
     }
 
     public static RespawnRules parse(String json, String origin) {
