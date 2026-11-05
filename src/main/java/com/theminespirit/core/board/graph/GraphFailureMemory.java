@@ -111,18 +111,6 @@ public final class GraphFailureMemory {
         return Set.copyOf(targets);
     }
 
-    public int count(String node, long now) {
-        Objects.requireNonNull(node, "Узел памяти не может быть null: счёт адресный");
-        requireTick(now, "чтения памяти");
-        int total = 0;
-        for (Entry entry : entries.values()) {
-            if (entry.node().equals(node)) {
-                total += entry.count();
-            }
-        }
-        return total;
-    }
-
     public boolean isEmpty() {
         return entries.isEmpty();
     }

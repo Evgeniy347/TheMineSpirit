@@ -77,6 +77,7 @@ class GraphRepairPlannerTests {
                 Map.of("hut", new GraphFacts.Building("hut", 1, percent, 3, missing, Map.of(), 0, null, false, true)),
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
-                new GraphSiteFacts.StageReqs(Map.of("hut", 1), Map.of()));
+                new GraphSiteFacts.StageReqs(Map.of("hut", 1), Map.of()),
+                GraphFeedback.none());
     }
 }

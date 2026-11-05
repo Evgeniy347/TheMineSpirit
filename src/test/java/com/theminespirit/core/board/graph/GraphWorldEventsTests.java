@@ -126,6 +126,7 @@ class GraphWorldEventsTests {
                 buildings,
                 strays,
                 terrain,
-                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
+                GraphFeedback.none());
     }
 }

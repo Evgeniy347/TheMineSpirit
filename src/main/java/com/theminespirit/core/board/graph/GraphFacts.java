@@ -233,29 +233,6 @@ public record GraphFacts(
         Objects.requireNonNull(feedback, "Обратная связь мира не может быть null: без неё — feedback.none()");
     }
 
-    public GraphFacts(
-            Map<String, Spirit> spirits,
-            List<Threat> threats,
-            List<Chest> chests,
-            List<Resource> resources,
-            Map<String, Station> stations,
-            Map<String, Building> buildings,
-            List<Stray> strays,
-            Terrain terrain,
-            StageReqs stageReqs) {
-        this(
-                spirits,
-                threats,
-                chests,
-                resources,
-                stations,
-                buildings,
-                strays,
-                terrain,
-                stageReqs,
-                GraphFeedback.none());
-    }
-
     public static GraphFacts empty() {
         return new GraphFacts(
                 Map.of(),

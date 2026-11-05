@@ -874,6 +874,7 @@ class Planner:
         self.chances = set()
         self.advice = []
         self._sourced = {}
+        self._failure_index = None
 
     @staticmethod
     def threshold(item, state):
@@ -1415,26 +1416,42 @@ class Planner:
             factor *= tuning.failureBackoff ** min(penalty, 3.0)
         return value * factor + bonus
 
+    def failure_index(self):
+        """Агрегат памяти неудач на один прогон плана: сумма по узлу считается один раз (GraphChoiceRules)."""
+        if self._failure_index is not None:
+            return self._failure_index
+        index = {}
+        for failure in self.state.failures:
+            weight = float(failure.get("weight", failure.get("count", 0)))
+            if weight <= 0:
+                continue
+            node = failure.get("node")
+            entry = index.get(node)
+            if entry is None:
+                entry = [0.0, 0.0, set()]
+                index[node] = entry
+            cause = failure.get("cause", "OTHER")
+            if cause in ("NO_PATH", "NOT_REACHED"):
+                entry[0] += weight
+                entry[2].add(failure.get("target", ""))
+            elif cause == "OTHER":
+                entry[1] += weight
+        self._failure_index = index
+        return index
+
     def failure_stats(self, key):
         """Память неудач: цель отдельно, узел — только когда провалились разные цели (GraphChoiceRules)."""
         base = key.split(AT, 1)[0]
         if base == "rescue_spirit" or base.startswith(EVENT + "life_"):
             return False, 0.0
-        unreachable = 0.0
-        soft = 0.0
-        targets = set()
-        for failure in self.state.failures:
-            if failure.get("node") not in (key, base):
-                continue
-            weight = float(failure.get("weight", failure.get("count", 0)))
-            if weight <= 0:
-                continue
-            cause = failure.get("cause", "OTHER")
-            if cause in ("NO_PATH", "NOT_REACHED"):
-                unreachable += weight
-                targets.add(failure.get("target", ""))
-            elif cause == "OTHER":
-                soft += weight
+        index = self.failure_index()
+        unreachable, soft, node_targets = index.get(base, (0.0, 0.0, set()))
+        targets = set(node_targets)
+        if key != base:
+            key_unreachable, key_soft, key_targets = index.get(key, (0.0, 0.0, set()))
+            unreachable += key_unreachable
+            soft += key_soft
+            targets |= set(key_targets)
         tuning = self.graph.costs.choice
         penalized = len(targets) >= math.ceil(tuning.failureTargets)
         penalty = min(unreachable, 3.0) if penalized else 0.0

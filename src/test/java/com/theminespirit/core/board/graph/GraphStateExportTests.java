@@ -36,7 +36,8 @@ class GraphStateExportTests {
                 Map.of("hut", new GraphFacts.Building("hut", 1, 100, 0, Map.of(), Map.of(), 0, null, false, true)),
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
-                new GraphSiteFacts.StageReqs(Map.of("hut", 1), Map.of("hut", 1)));
+                new GraphSiteFacts.StageReqs(Map.of("hut", 1), Map.of("hut", 1)),
+                GraphFeedback.none());
         GraphState state = GraphWorld.empty().state().withFacts(facts).withOrders(Map.of("coal", 3));
 
         String json = new ObjectMapper().writeValueAsString(GraphExportTests.state(state));
