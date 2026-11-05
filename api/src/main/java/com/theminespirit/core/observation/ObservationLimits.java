@@ -2,8 +2,9 @@ package com.theminespirit.core.observation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
-import com.theminespirit.core.reload.DataTables;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public record ObservationLimits(int maxGroundItems, int maxContainers, int maxContainerItems, int maxOpenBlocks) {
     public static final String RESOURCE = "data/theminespirit/observation/observation.json";
@@ -16,6 +17,7 @@ public record ObservationLimits(int maxGroundItems, int maxContainers, int maxCo
             Set.of(MAX_GROUND_ITEMS, MAX_CONTAINERS, MAX_CONTAINER_ITEMS, MAX_OPEN_BLOCKS);
     private static final int MAX_PER_FIELD = 512;
     private static final ObservationLimits DEFAULTS = new ObservationLimits(16, 8, 27, 24);
+    private static volatile Supplier<ObservationLimits> source = ObservationLimits::defaults;
 
     public ObservationLimits {
         requirePositive(MAX_GROUND_ITEMS, maxGroundItems);
@@ -36,7 +38,12 @@ public record ObservationLimits(int maxGroundItems, int maxContainers, int maxCo
     }
 
     public static ObservationLimits loadDefault() {
-        return DataTables.INSTANCE.observation().current();
+        return source.get();
+    }
+
+    public static void useSource(Supplier<ObservationLimits> supplier) {
+        source = Objects.requireNonNull(
+                supplier, "Источник пределов наблюдения не может быть null: без него загрузка таблицы не видна");
     }
 
     public static ObservationLimits load() {

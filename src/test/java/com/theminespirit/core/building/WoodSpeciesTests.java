@@ -74,7 +74,7 @@ class WoodSpeciesTests {
                         new Schematic.Entry(0, 0, 0, "minecraft:cobblestone"),
                         new Schematic.Entry(0, 1, 0, "minecraft:oak_fence")));
 
-        Schematic swapped = WoodSpecies.swap(schematic, "acacia");
+        Schematic swapped = SchematicWood.swap(schematic, "acacia");
 
         assertEquals(
                 List.of("minecraft:cobblestone", "minecraft:acacia_fence"),

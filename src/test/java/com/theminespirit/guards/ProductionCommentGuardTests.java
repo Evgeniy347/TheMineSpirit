@@ -45,7 +45,6 @@ class ProductionCommentGuardTests {
                 .map(entry -> entry.getValue() + "× " + entry.getKey())
                 .sorted()
                 .toList();
-
         assertEquals(
                 List.of(),
                 offenders,
@@ -84,7 +83,6 @@ class ProductionCommentGuardTests {
                     private int value;
                 }
                 """;
-
         assertEquals(
                 List.of("2 LINE", "3 BLOCK", "4 JAVADOC"),
                 findings(scan(sample, Language.JAVA)).stream()
@@ -197,6 +195,8 @@ class ProductionCommentGuardTests {
         List<String> scanned = List.of(
                 "src/main/java/com/theminespirit/TheMineSpirit.java",
                 "src/test/java/com/theminespirit/guards/SampleTests.java",
+                "api/src/main/java/com/theminespirit/core/board/BoardCase.java",
+                "api/src/test/java/com/theminespirit/core/board/BoardCaseTests.java",
                 "build.gradle",
                 "settings.gradle.kts",
                 "scripts/test.sh",
@@ -333,7 +333,7 @@ class ProductionCommentGuardTests {
         }
         String name = path.getFileName().toString();
         if (name.endsWith(".java")) {
-            return normalized.startsWith("src/main/java/") || normalized.startsWith("src/test/java/");
+            return SourceFiles.isSourcePath(normalized);
         }
         if (name.endsWith(".gradle") || name.endsWith(".kts")) {
             return true;

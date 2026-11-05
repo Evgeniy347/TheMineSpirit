@@ -20,7 +20,7 @@ class LimitAssertionGuardTests {
     @Test
     void testSources_CurrentTests_HaveNoLiteralVersusLiteralAssertions() {
         List<String> offenders = new ArrayList<>();
-        SourceFiles.javaUnder(SourceFiles.TEST).forEach((file, text) -> {
+        SourceFiles.allTests().forEach((file, text) -> {
             for (Finding finding : findings(text)) {
                 offenders.add(file + ":" + finding.line() + " " + finding.call());
             }

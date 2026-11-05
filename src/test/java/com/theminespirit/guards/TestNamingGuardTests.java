@@ -20,7 +20,7 @@ class TestNamingGuardTests {
     @Test
     void testMethods_AllTestSources_FollowSubjectConditionExpectedPattern() {
         List<String> offenders = new ArrayList<>();
-        collectBadNames(SourceFiles.javaUnder(SourceFiles.TEST), offenders);
+        collectBadNames(SourceFiles.allTests(), offenders);
         collectBadNames(SourceFiles.javaUnder(SourceFiles.GAME_TESTS), offenders);
 
         assertEquals(

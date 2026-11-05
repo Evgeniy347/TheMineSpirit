@@ -19,7 +19,7 @@ class TaskReferenceCommentGuardTests {
     @Test
     void productionSources_Comments_DoNotReferenceTaskFiles() {
         List<String> offenders = new ArrayList<>();
-        collect(SourceFiles.javaUnder(SourceFiles.MAIN), offenders);
+        collect(SourceFiles.allMain(), offenders);
 
         assertEquals(
                 List.of(),

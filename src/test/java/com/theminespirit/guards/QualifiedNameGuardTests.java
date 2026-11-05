@@ -19,8 +19,8 @@ class QualifiedNameGuardTests {
     @Test
     void sources_Scanned_UseImportsInsteadOfQualifiedNames() {
         List<String> offenders = new ArrayList<>();
-        collect(SourceFiles.javaUnder(SourceFiles.MAIN), offenders);
-        collect(SourceFiles.javaUnder(SourceFiles.TEST), offenders);
+        collect(SourceFiles.allMain(), offenders);
+        collect(SourceFiles.allTests(), offenders);
 
         assertEquals(
                 List.of(),

@@ -22,13 +22,24 @@ class SourceFilesTests {
 
     @Test
     void path_TestSource_ResolvesUnderTest() {
-        Path file = SourceFiles.path("core/board/BoardCaseTests.java");
+        Path file = SourceFiles.path("guards/SourceFilesTests.java");
 
         assertEquals(
-                SourceFiles.TEST.resolve("com/theminespirit/core/board/BoardCaseTests.java"),
+                SourceFiles.TEST.resolve("com/theminespirit/guards/SourceFilesTests.java"),
                 file,
                 "логический путь теста обязан разворачиваться в TEST, а не в MAIN");
         assertTrue(Files.isRegularFile(file), "логический путь теста обязан вести к файлу: " + file);
+    }
+
+    @Test
+    void path_ApiSource_ResolvesUnderApi() {
+        Path file = SourceFiles.path("core/observation/BlockCoord.java");
+
+        assertEquals(
+                SourceFiles.API.resolve("com/theminespirit/core/observation/BlockCoord.java"),
+                file,
+                "логический путь модуля :api обязан разворачиваться в API: модуль не зависит от корня");
+        assertTrue(Files.isRegularFile(file), "логический путь :api обязан вести к файлу: " + file);
     }
 
     @Test
@@ -57,7 +68,8 @@ class SourceFilesTests {
     @Test
     void logical_MainAndTest_RoundTrip() {
         String main = "core/board/Board.java";
-        String test = "core/board/BoardCaseTests.java";
+        String test = "guards/SourceFilesTests.java";
+        String api = "core/observation/BlockCoord.java";
 
         assertEquals(
                 main, SourceFiles.logical(SourceFiles.path(main)), "логический путь main обязан пережить оба перевода");
@@ -65,6 +77,10 @@ class SourceFilesTests {
                 test,
                 SourceFiles.logical(SourceFiles.path(test)),
                 "логический путь теста обязан пережить оба перевода");
+        assertEquals(
+                api,
+                SourceFiles.logical(SourceFiles.path(api)),
+                "логический путь :api обязан пережить оба перевода: модуль виден сторожу как часть проекта");
     }
 
     @Test

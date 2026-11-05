@@ -8,6 +8,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.SortedMap;
@@ -20,6 +21,8 @@ import java.util.stream.Stream;
 public final class SourceFiles {
     public static final Path MAIN = Path.of(layout().getProperty("main"));
     public static final Path TEST = Path.of(layout().getProperty("test"));
+    public static final Path API = Path.of(layout().getProperty("api"));
+    public static final Path API_TEST = Path.of(layout().getProperty("api_test"));
     public static final Path RESOURCES = Path.of(layout().getProperty("resources"));
     public static final Path TEST_RESOURCES = Path.of(layout().getProperty("test_resources"));
     public static final Path TEMPLATES = Path.of(layout().getProperty("templates"));
@@ -29,6 +32,8 @@ public final class SourceFiles {
     private static final String PACKAGE_ROOT = layout().getProperty("package_root");
     private static final Path MAIN_PACKAGE = MAIN.resolve(PACKAGE_ROOT);
     private static final Path TEST_PACKAGE = TEST.resolve(PACKAGE_ROOT);
+    private static final Path API_PACKAGE = API.resolve(PACKAGE_ROOT);
+    private static final Path API_TEST_PACKAGE = API_TEST.resolve(PACKAGE_ROOT);
 
     private static final Map<Path, Map<Path, String>> CACHE = new ConcurrentHashMap<>();
     private static final Pattern TEXT_BLOCK = Pattern.compile("\"\"\"[ \\t]*\\n(?s:.*?)(?<!\\\\)\"\"\"");
@@ -49,6 +54,8 @@ public final class SourceFiles {
         require(properties, "package_root");
         require(properties, "main");
         require(properties, "test");
+        require(properties, "api");
+        require(properties, "api_test");
         require(properties, "resources");
         require(properties, "test_resources");
         require(properties, "templates");
@@ -67,16 +74,75 @@ public final class SourceFiles {
 
     public static Path path(String logical) {
         String normalized = logical.replace('\\', '/');
-        Path main = MAIN_PACKAGE.resolve(normalized).normalize();
-        if (Files.exists(main)) {
-            return main;
+        for (Path root : new Path[] {MAIN_PACKAGE, TEST_PACKAGE, API_PACKAGE, API_TEST_PACKAGE}) {
+            Path candidate = root.resolve(normalized).normalize();
+            if (Files.exists(candidate)) {
+                return candidate;
+            }
         }
-        Path test = TEST_PACKAGE.resolve(normalized).normalize();
-        if (Files.exists(test)) {
-            return test;
+        throw new IllegalArgumentException("Логический путь " + normalized + " не найден ни в "
+                + roots(MAIN_PACKAGE, TEST_PACKAGE, API_PACKAGE, API_TEST_PACKAGE));
+    }
+
+    private static String roots(Path... roots) {
+        StringBuilder text = new StringBuilder();
+        for (Path root : roots) {
+            if (text.length() > 0) {
+                text.append(", ни в ");
+            }
+            text.append(display(root));
         }
-        throw new IllegalArgumentException("Логический путь " + normalized + " не найден ни в " + display(MAIN_PACKAGE)
-                + ", ни в " + display(TEST_PACKAGE));
+        return text.toString();
+    }
+
+    public static List<Path> mainPackages() {
+        return List.of(MAIN_PACKAGE, API_PACKAGE);
+    }
+
+    public static List<Path> testPackages() {
+        return List.of(TEST_PACKAGE, API_TEST_PACKAGE);
+    }
+
+    public static Path apiPackage() {
+        return API_PACKAGE;
+    }
+
+    public static Path apiTestPackage() {
+        return API_TEST_PACKAGE;
+    }
+
+    public static Map<Path, String> allMain() {
+        Map<Path, String> sources = new TreeMap<>();
+        for (Path root : mainPackages()) {
+            if (Files.isDirectory(root)) {
+                sources.putAll(javaUnder(root));
+            }
+        }
+        return Collections.unmodifiableMap(sources);
+    }
+
+    public static Map<Path, String> allTests() {
+        Map<Path, String> sources = new TreeMap<>();
+        for (Path root : testPackages()) {
+            if (Files.isDirectory(root)) {
+                sources.putAll(javaUnder(root));
+            }
+        }
+        return Collections.unmodifiableMap(sources);
+    }
+
+    public static List<Path> sourceRoots() {
+        return List.of(MAIN, TEST, API, API_TEST);
+    }
+
+    public static boolean isSourcePath(String relativePath) {
+        String normalized = relativePath.replace('\\', '/');
+        for (Path root : sourceRoots()) {
+            if (normalized.startsWith(root.toString().replace('\\', '/') + "/")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String display(Path path) {
@@ -85,7 +151,7 @@ public final class SourceFiles {
 
     public static String logical(Path file) {
         Path normalized = file.normalize();
-        for (Path root : new Path[] {MAIN_PACKAGE, TEST_PACKAGE}) {
+        for (Path root : new Path[] {MAIN_PACKAGE, TEST_PACKAGE, API_PACKAGE, API_TEST_PACKAGE}) {
             if (normalized.startsWith(root)) {
                 return root.relativize(normalized).toString().replace('\\', '/');
             }

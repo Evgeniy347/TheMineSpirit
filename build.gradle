@@ -62,6 +62,11 @@ base {
     archivesName = mod_id
 }
 
+sourceSets.main.output.classesDirs.from(provider { project(':api').sourceSets.main.output.classesDirs })
+tasks.named('classes') {
+    dependsOn ':api:classes'
+}
+
 neoForge {
     runs {
         client {
@@ -113,6 +118,7 @@ configurations {
 }
 
 dependencies {
+    implementation project(':api')
     implementation "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
     additionalRuntimeClasspath "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
     jarJar("com.fasterxml.jackson.core:jackson-databind:${jackson_version}") {
@@ -176,6 +182,7 @@ publishing {
 
 def unitTestThreads = (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}") as int
 tasks.named('test', Test) {
+    dependsOn ':api:test'
     useJUnitPlatform {
         excludeTags 'slow', 'mutation', 'export'
     }
