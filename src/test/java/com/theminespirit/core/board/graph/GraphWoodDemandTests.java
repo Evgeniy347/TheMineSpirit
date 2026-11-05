@@ -59,6 +59,12 @@ class GraphWoodDemandTests {
         GraphWorld world = world().with("cobblestone", 0).with("dirt", 0);
         GraphTickets.Result result = demands(world);
 
+        assertEquals(
+                1,
+                result.post().stream()
+                        .filter(ticket -> "jungle_log".equals(ticket.task().makes()))
+                        .count(),
+                "Сквозь доску на 64 бревна идёт одна заявка: иначе рубку берут четверо из пяти: " + result.post());
         Board board = new Board(() -> 0);
         Set<String> wood = new HashSet<>();
         for (GraphTickets.Ticket ticket : result.post()) {
