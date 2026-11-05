@@ -46,7 +46,8 @@ final class GraphCaseFixtures {
                 Map.of(),
                 List.of(),
                 terrain,
-                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
+                GraphFeedback.none());
     }
 
     static List<String> ids(GraphPlan plan) {

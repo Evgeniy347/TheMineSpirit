@@ -1,10 +1,11 @@
 package com.theminespirit.core.board.graph;
 
 import com.theminespirit.core.board.BoardCase;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import org.jspecify.annotations.Nullable;
 
 final class GraphChoiceRules {
@@ -16,6 +17,7 @@ final class GraphChoiceRules {
     private final SupplyGraph graph;
     private final GraphState state;
     private final GraphReach reach;
+    private @Nullable Map<String, FailureAggregate> failureIndex;
 
     GraphChoiceRules(SupplyGraph graph, GraphState state) {
         this(graph, state, new GraphReach(graph, state));
@@ -119,28 +121,56 @@ final class GraphChoiceRules {
         if (life(base)) {
             return new FailureStats(0.0, false);
         }
-        double unreachable = 0.0;
-        double soft = 0.0;
-        Set<String> targets = new TreeSet<>();
-        for (GraphFeedback.Failure failure : state.facts().feedback().failures()) {
-            if (!failure.node().equals(key) && !failure.node().equals(base)) {
-                continue;
-            }
-            if (failure.weight() <= 0) {
-                continue;
-            }
-            if (GraphFailureMemory.unreachable(failure.cause())) {
-                unreachable += failure.weight();
-                targets.add(failure.target());
-            } else if (failure.cause() == GraphFeedback.Cause.OTHER) {
-                soft += failure.weight();
-            }
+        FailureAggregate aggregate = index().getOrDefault(base, FailureAggregate.EMPTY);
+        if (!key.equals(base)) {
+            aggregate = aggregate.merge(index().getOrDefault(key, FailureAggregate.EMPTY));
         }
         GraphChoice tuning = graph.costs().choice();
-        boolean penalized = targets.size() >= Math.ceil(tuning.failureTargets());
-        double penalty = penalized ? Math.min(unreachable, FAILURE_CAP) : 0.0;
-        penalty += Math.min(soft * tuning.failureSoft(), FAILURE_CAP);
+        boolean penalized = aggregate.targets().size() >= Math.ceil(tuning.failureTargets());
+        double penalty = penalized ? Math.min(aggregate.unreachable(), FAILURE_CAP) : 0.0;
+        penalty += Math.min(aggregate.soft() * tuning.failureSoft(), FAILURE_CAP);
         return new FailureStats(penalty, penalized);
+    }
+
+    private Map<String, FailureAggregate> index() {
+        Map<String, FailureAggregate> known = failureIndex;
+        if (known == null) {
+            Map<String, FailureAggregate> built = new HashMap<>();
+            for (GraphFeedback.Failure failure : state.facts().feedback().failures()) {
+                if (failure.weight() <= 0) {
+                    continue;
+                }
+                FailureAggregate aggregate = built.getOrDefault(failure.node(), FailureAggregate.EMPTY);
+                if (GraphFailureMemory.unreachable(failure.cause())) {
+                    built.put(failure.node(), aggregate.unreachable(failure.weight(), failure.target()));
+                } else if (failure.cause() == GraphFeedback.Cause.OTHER) {
+                    built.put(failure.node(), aggregate.soft(failure.weight()));
+                }
+            }
+            known = built;
+            failureIndex = known;
+        }
+        return known;
+    }
+
+    private record FailureAggregate(double unreachable, double soft, Set<String> targets) {
+        static final FailureAggregate EMPTY = new FailureAggregate(0.0, 0.0, Set.of());
+
+        FailureAggregate unreachable(double weight, String target) {
+            Set<String> next = new HashSet<>(targets);
+            next.add(target);
+            return new FailureAggregate(unreachable + weight, soft, Set.copyOf(next));
+        }
+
+        FailureAggregate soft(double weight) {
+            return new FailureAggregate(unreachable, soft + weight, targets);
+        }
+
+        FailureAggregate merge(FailureAggregate other) {
+            Set<String> next = new HashSet<>(targets);
+            next.addAll(other.targets);
+            return new FailureAggregate(unreachable + other.unreachable, soft + other.soft, Set.copyOf(next));
+        }
     }
 
     private record FailureStats(double penalty, boolean nodePenalized) {}

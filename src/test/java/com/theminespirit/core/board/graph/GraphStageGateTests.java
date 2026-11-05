@@ -103,6 +103,7 @@ class GraphStageGateTests {
                 Map.of("hut", building),
                 strays,
                 terrain,
-                new GraphSiteFacts.StageReqs(Map.of("hut", 1), Map.of()));
+                new GraphSiteFacts.StageReqs(Map.of("hut", 1), Map.of()),
+                GraphFeedback.none());
     }
 }

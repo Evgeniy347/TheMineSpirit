@@ -134,6 +134,7 @@ class GearFragmentTests {
                 new LinkedHashMap<>(),
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
-                reqs);
+                reqs,
+                GraphFeedback.none());
     }
 }

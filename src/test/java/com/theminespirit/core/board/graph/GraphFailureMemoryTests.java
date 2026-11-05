@@ -31,7 +31,14 @@ class GraphFailureMemoryTests {
         memory.note("make:dirt", "-82,67,-87", "маршрут не найден", 100);
 
         assertEquals(2, memory.facts(100).size(), "Цель — часть ключа памяти: разные цели не смешиваются");
-        assertEquals(2, memory.count("make:dirt", 100), "Штраф узла видит провалы всех его целей");
+        assertEquals(
+                2.0,
+                memory.facts(100).stream()
+                        .filter(failure -> "make:dirt".equals(failure.node()))
+                        .mapToDouble(GraphFeedback.Failure::weight)
+                        .sum(),
+                1e-9,
+                "Штраф узла видит все его цели: затухающие веса складываются, а не обрываются счётчиком");
     }
 
     @Test

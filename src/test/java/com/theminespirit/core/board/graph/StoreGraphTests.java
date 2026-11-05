@@ -234,7 +234,8 @@ class StoreGraphTests {
                             new GraphFacts.Building("furnace", 1, 100, 0, Map.of(), Map.of(), 0, null, false, true)),
                     List.of(),
                     GraphSiteFacts.Terrain.empty(),
-                    stageReqs);
+                    stageReqs,
+                    GraphFeedback.none());
         }
     }
 }

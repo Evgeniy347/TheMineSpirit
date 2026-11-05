@@ -38,7 +38,8 @@ class WorldReportTests {
                         "stray:fence", "fence", new GraphFacts.Position(1, 64, 1), null, Map.of("oak_fence", 3))),
                 new GraphSiteFacts.Terrain(
                         2, 4, 3, 5, 1, Map.of("minecraft:dirt", 2), Map.of("minecraft:dirt", 2), Map.of(), false, 9),
-                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
+                GraphFeedback.none());
 
         WorldReport report = WorldReport.of(facts);
 

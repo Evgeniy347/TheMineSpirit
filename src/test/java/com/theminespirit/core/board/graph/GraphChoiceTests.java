@@ -287,6 +287,7 @@ class GraphChoiceTests {
                 Map.of(),
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
-                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
+                GraphFeedback.none());
     }
 }

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphFeedback;
 import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphState.Built;
@@ -38,7 +39,8 @@ class More6InputsTests {
                 Map.of(),
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
-                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
+                GraphFeedback.none());
 
         assertEquals(
                 Map.of("oak_log", 7, "coal", 2),
@@ -74,7 +76,8 @@ class More6InputsTests {
                         "field_carrot", building("field_carrot", null)),
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
-                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
+                GraphFeedback.none());
         GraphState state = state(
                 facts,
                 Map.of(),
@@ -104,7 +107,8 @@ class More6InputsTests {
                 Map.of(),
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
-                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
+                GraphFeedback.none());
         GraphState state =
                 state(facts, Map.of(), Map.of(), Map.of("furnace", Built.BUILT, "crafting_table", Built.PLANNED));
 
@@ -128,7 +132,8 @@ class More6InputsTests {
                 Map.of(),
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
-                new GraphSiteFacts.StageReqs(Map.of(), Map.of()));
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
+                GraphFeedback.none());
 
         assertEquals(
                 List.of("blank", "free"),
