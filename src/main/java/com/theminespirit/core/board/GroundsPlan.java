@@ -85,6 +85,9 @@ public final class GroundsPlan {
         if ((!single || quarter == 1) && !cuts.isEmpty() && target.work() != null) {
             steps.addAll(chestSteps(target));
         }
+        if (!cuts.isEmpty()) {
+            steps.add(GatherPlans.shovel());
+        }
         for (int index = 0; index < cuts.size(); index++) {
             if (!single || cutPart.get(index) == quarter) {
                 steps.add(retried(new ScriptCall(CLEAR_AREA, boxParams(cuts.get(index), Map.of()))));

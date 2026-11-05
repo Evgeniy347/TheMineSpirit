@@ -13,6 +13,7 @@ public final class ChopStands {
     private static final int NEAR_RADIUS = 1;
     private static final int STAND_HEIGHT = 2;
     private static final int DROP_DEPTH = 3;
+    private static final int STAND_SCAN_DEPTH = 64;
     private static final double EYE_HEIGHT = 1.5;
     private static final double MAX_LOG_DISTANCE = 4.0;
 
@@ -32,7 +33,36 @@ public final class ChopStands {
         if (!near.isEmpty()) {
             return near;
         }
-        return collect(tree, view, FAR_RADIUS, -DROP_DEPTH, STAND_HEIGHT - 1);
+        List<BlockCoord> far = collect(tree, view, FAR_RADIUS, -DROP_DEPTH, STAND_HEIGHT - 1);
+        if (!far.isEmpty()) {
+            return far;
+        }
+        return groundBelow(tree, view);
+    }
+
+    private static List<BlockCoord> groundBelow(Tree tree, View view) {
+        Set<BlockCoord> logs = Set.copyOf(tree.logs());
+        int baseY = tree.base().y();
+        int floor = Math.max(-64, baseY - STAND_SCAN_DEPTH);
+        List<BlockCoord> stands = new ArrayList<>();
+        for (BlockCoord log : tree.logs()) {
+            if (log.y() != baseY) {
+                continue;
+            }
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    for (int y = baseY - 1; y >= floor; y--) {
+                        BlockCoord feet = new BlockCoord(log.x() + dx, y, log.z() + dz);
+                        if (logs.contains(feet) || !view.standable(feet)) {
+                            continue;
+                        }
+                        stands.add(feet);
+                        break;
+                    }
+                }
+            }
+        }
+        return List.copyOf(new LinkedHashSet<>(stands));
     }
 
     private static List<BlockCoord> collect(Tree tree, View view, int radius, int minDy, int maxDy) {

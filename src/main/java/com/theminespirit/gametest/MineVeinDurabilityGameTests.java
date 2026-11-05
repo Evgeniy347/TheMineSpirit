@@ -2,6 +2,7 @@ package com.theminespirit.gametest;
 
 import static com.theminespirit.gametest.MineSceneSupport.SETTLE_TICKS;
 import static com.theminespirit.gametest.MineSceneSupport.SPIRIT_START;
+import static com.theminespirit.gametest.MineSceneSupport.gatherCall;
 import static com.theminespirit.gametest.MineSceneSupport.mineCall;
 import static com.theminespirit.gametest.MineSceneSupport.spawnWith;
 
@@ -35,6 +36,21 @@ final class MineVeinDurabilityGameTests {
         helper.setBlock(new BlockPos(4, 2, 4), Blocks.IRON_ORE);
         SpiritRun run = SpiritRun.launch(helper, spirit, mineCall("iron", 1), SETTLE_TICKS);
 
+        SpiritEntity spare = spawnWith(helper, new BlockPos(6, 1, 6), Items.IRON_PICKAXE);
+        ItemStack wornPick = spare.getInventory().getItem(0);
+        wornPick.setDamageValue(wornPick.getMaxDamage() - 1);
+        spare.getInventory().setItem(1, new ItemStack(Items.STONE_PICKAXE));
+        helper.setBlock(new BlockPos(7, 2, 6), Blocks.IRON_ORE);
+        SpiritRun spareRun = SpiritRun.launch(helper, spare, mineCall("iron", 1), SETTLE_TICKS);
+
+        helper.setBlock(new BlockPos(2, 1, 7), Blocks.DIRT);
+        helper.setBlock(new BlockPos(3, 1, 7), Blocks.DIRT);
+        helper.setBlock(new BlockPos(2, 1, 8), Blocks.DIRT);
+        SpiritEntity digger = spawnWith(helper, new BlockPos(3, 1, 6), Items.WOODEN_SHOVEL);
+        ItemStack wornShovel = digger.getInventory().getItem(0);
+        wornShovel.setDamageValue(wornShovel.getMaxDamage() - 1);
+        SpiritRun digRun = SpiritRun.launch(helper, digger, gatherCall("dirt", 2), SETTLE_TICKS);
+
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(
@@ -51,6 +67,26 @@ final class MineVeinDurabilityGameTests {
                     chest instanceof Container container
                             && GameTestFixtures.countInInventory(container, Items.DIRT) > 0,
                     "лишняя земля обязана уехать в сундук: иначе дух не освободил место и бросил задачу");
+            spareRun.assertStarted();
+            helper.assertTrue(
+                    spare.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "кирка сломалась посреди жилы — запасная кирка дорубает работу, статус "
+                            + spare.taskStatus().orElse(null) + ", причина: "
+                            + spare.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spare.getInventory(), Items.RAW_IRON) == 1,
+                    "работа не брошена: руда добыта запасной киркой, фактически "
+                            + GameTestFixtures.countInInventory(spare.getInventory(), Items.RAW_IRON));
+            digRun.assertStarted();
+            helper.assertTrue(
+                    digger.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "лопата сломалась — землю продолжают руками, статус "
+                            + digger.taskStatus().orElse(null) + ", причина: "
+                            + digger.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(digger.getInventory(), Items.DIRT) >= 2,
+                    "работа не брошена: земля добыта руками, фактически "
+                            + GameTestFixtures.countInInventory(digger.getInventory(), Items.DIRT));
             GameTestFixtures.finish(helper);
         });
     }

@@ -100,7 +100,7 @@ class GraphAllocationGroupATests {
     }
 
     @Test
-    void case05_NoTool_RefusedWhileToolHolderExists() {
+    void case05_NoTool_GivenToBareHandsWhenToolHolderBusy() {
         GraphWorld world = community(2);
         world.tools("spirit-1", 1);
         world.tools("spirit-2", -1);
@@ -112,11 +112,11 @@ class GraphAllocationGroupATests {
         List<DispatchRound.Candidate> spirits = candidates(world);
 
         assertTrue(
-                round.refusal(ticket, spirits.get(1)).orElse("").contains("нет инструмента _axe"),
-                "Дух без топора не берёт рубку: причина называет инструмент");
+                round.refusal(ticket, spirits.get(1)).isEmpty(),
+                "Дух без топора тоже берёт рубку и рубит руками: инструмент — предпочтение, не запрет (владелец 05.11)");
         assertTrue(
                 round.refusal(ticket, spirits.get(0)).isEmpty(),
-                "Дух с топором берёт рубку: иначе работа висит на доске");
+                "Дух с топором берёт рубку быстрее: топор остаётся предпочтением");
     }
 
     @Test

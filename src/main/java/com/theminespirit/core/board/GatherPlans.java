@@ -24,6 +24,10 @@ final class GatherPlans {
     private static final String SPECIES = "species";
     private static final String RADIUS = "radius";
     private static final String MINECRAFT = "minecraft:";
+    private static final String AXE = "*_axe";
+    private static final String CONTAINER = "container";
+    private static final String WAIT = "wait";
+    private static final String TICKS = "ticks";
 
     private GatherPlans() {}
 
@@ -54,21 +58,7 @@ final class GatherPlans {
         }
         int trees = Math.min(CatalogLimits.COUNT_MAX, (batch + LOGS_PER_TREE - 1) / LOGS_PER_TREE);
         ScriptCall acquire = new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, batch, "fresh", true));
-        return Optional.of(sequence(
-                TicketPlans.gotoTarget(target),
-                new FallbackNode(List.of(
-                        new ScriptCall(
-                                "chop_tree",
-                                Map.of(
-                                        SPECIES,
-                                        tree.get().id(),
-                                        COUNT,
-                                        trees,
-                                        RADIUS,
-                                        BoardTuning.chopRadius(),
-                                        "replant",
-                                        true)),
-                        acquire))));
+        return Optional.of(chopping(target, tree.get(), trees, acquire));
     }
 
     private static Optional<TaskNode> saplingPlan(String item, int batch) {
@@ -80,6 +70,7 @@ final class GatherPlans {
         int trees = Math.min(CatalogLimits.COUNT_MAX, Math.max(1, (batch + 1) / 2));
         int leaves = Math.max(16, batch * LEAVES_PER_SAPLING);
         List<TaskNode> steps = new ArrayList<>();
+        steps.add(takeAxe());
         steps.add(new ScriptCall(
                 "chop_tree",
                 Map.of(SPECIES, species.id(), COUNT, trees, RADIUS, BoardTuning.chopRadius(), "replant", false)));
@@ -115,21 +106,15 @@ final class GatherPlans {
         int logs = Math.max(1, (batch + PLANKS_PER_LOG - 1) / PLANKS_PER_LOG);
         int trees = Math.min(CatalogLimits.COUNT_MAX, Math.max(1, (logs + LOGS_PER_TREE - 1) / LOGS_PER_TREE));
         ScriptCall acquire = new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, batch, "fresh", true));
-        return Optional.of(sequence(
-                TicketPlans.gotoTarget(target),
-                new FallbackNode(List.of(
-                        new ScriptCall(
-                                "chop_tree",
-                                Map.of(
-                                        SPECIES,
-                                        tree.get().id(),
-                                        COUNT,
-                                        trees,
-                                        RADIUS,
-                                        BoardTuning.chopRadius(),
-                                        "replant",
-                                        true)),
-                        acquire))));
+        return Optional.of(chopping(target, tree.get(), trees, acquire));
+    }
+
+    private static TaskNode chopping(TicketTarget target, TreeSpecies tree, int trees, TaskNode withoutTrees) {
+        TaskNode chop = new ScriptCall(
+                "chop_tree",
+                Map.of(SPECIES, tree.id(), COUNT, trees, RADIUS, BoardTuning.chopRadius(), "replant", true));
+        return sequence(
+                TicketPlans.gotoTarget(target), new FallbackNode(List.of(sequence(takeAxe(), chop), withoutTrees)));
     }
 
     private static Optional<TaskNode> pathPlan(TicketTarget target, String item, int batch) {
@@ -151,7 +136,7 @@ final class GatherPlans {
         }
         return Optional.of(sequence(
                 TicketPlans.gotoTarget(target),
-                new ScriptCall(ACQUIRE, Map.of(ITEM, ToolSet.itemId(BoardCase.CRAFT_WOODEN_AXE), COUNT, 1)),
+                axe(),
                 new ScriptCall(
                         "strip_log",
                         Map.of(SPECIES, stripped.get().id(), COUNT, batch, RADIUS, BoardTuning.chopRadius())),
@@ -184,6 +169,32 @@ final class GatherPlans {
 
     private static String pathOf(String item) {
         return item.startsWith(MINECRAFT) ? item.substring(MINECRAFT.length()) : item;
+    }
+
+    private static TaskNode takeAxe() {
+        return new FallbackNode(List.of(
+                new ScriptCall(
+                        "withdraw",
+                        Map.of(CONTAINER, "auto", ITEM, AXE, COUNT, 1, RADIUS, CatalogLimits.CONTAINER_RADIUS_DEFAULT)),
+                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
+    }
+
+    private static TaskNode axe() {
+        return tool(AXE, "wooden_axe");
+    }
+
+    static TaskNode pickaxe() {
+        return tool("*_pickaxe", "wooden_pickaxe");
+    }
+
+    static TaskNode shovel() {
+        return tool("*_shovel", "wooden_shovel");
+    }
+
+    private static TaskNode tool(String kind, String wooden) {
+        return new FallbackNode(List.of(
+                new ScriptCall(ACQUIRE, Map.of(ITEM, kind, COUNT, 1)),
+                new ScriptCall(ACQUIRE, Map.of(ITEM, wooden, COUNT, 1))));
     }
 
     private static TaskNode sequence(TaskNode... steps) {

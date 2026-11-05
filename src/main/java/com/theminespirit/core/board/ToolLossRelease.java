@@ -20,7 +20,7 @@ public final class ToolLossRelease {
     private ToolLossRelease() {}
 
     public static List<Released> apply(Board board, UUID holder, Collection<String> items, boolean walledIn) {
-        return apply(board, holder, items, walledIn, ticket -> null);
+        return apply(board, holder, items, walledIn, ticket -> null, List.of());
     }
 
     public static List<Released> apply(
@@ -29,12 +29,26 @@ public final class ToolLossRelease {
             Collection<String> items,
             boolean walledIn,
             Function<BoardTicket, @Nullable String> supplyOf) {
+        return apply(board, holder, items, walledIn, supplyOf, List.of());
+    }
+
+    public static List<Released> apply(
+            Board board,
+            UUID holder,
+            Collection<String> items,
+            boolean walledIn,
+            Function<BoardTicket, @Nullable String> supplyOf,
+            Collection<String> stockTools) {
         Objects.requireNonNull(board, "Доска не может быть null: задания держателя снимаются с неё");
         Objects.requireNonNull(holder, "Держатель не может быть null: снимаются задания конкретного духа");
         Objects.requireNonNull(items, "Инвентарь не может быть null: пустой — пустой набор");
+        Objects.requireNonNull(stockTools, "Инструменты склада не могут быть null: пустой склад задают пустым набором");
         Objects.requireNonNull(supplyOf, "Поставка задания не может быть null: без неё не видно, нужен ли топор");
         List<Released> released = new ArrayList<>();
         for (BoardTicket ticket : board.assignedTo(holder)) {
+            if (ToolGate.allowsFromStock(ticket, stockTools)) {
+                continue;
+            }
             if (ToolGate.keep(ticket, items, walledIn, supplyOf.apply(ticket)) instanceof ToolGate.Release release
                     && board.release(ticket.id())) {
                 released.add(new Released(ticket.id(), ticket.boardCase(), release.reason()));

@@ -111,6 +111,13 @@ public final class ToolGate {
                 .orElse(true);
     }
 
+    public static boolean allowsFromStock(BoardTicket ticket, Collection<String> stock) {
+        Objects.requireNonNull(ticket, "Задание не может быть null: по нему решают, нужен ли топор со склада");
+        Objects.requireNonNull(stock, "Склад не может быть null: пустой склад задают пустым набором");
+        return required(ticket).filter(AXE::equals).isPresent()
+                && stock.stream().anyMatch(item -> item.endsWith(AXE));
+    }
+
     public static boolean allows(BoardCase boardCase, Collection<String> items) {
         return allows(boardCase, items, null);
     }
@@ -140,6 +147,8 @@ public final class ToolGate {
 
     public static Verdict keep(
             BoardTicket ticket, Collection<String> items, boolean walledIn, @Nullable String supplyItem) {
+        Objects.requireNonNull(ticket, "Задание не может быть null: проверяется его инструмент");
+        Objects.requireNonNull(items, "Инвентарь не может быть null: пустой — пустой набор");
         Optional<String> declared = required(ticket);
         Optional<String> tool = declared.isPresent() ? declared : required(ticket.boardCase(), supplyItem);
         if (tool.isEmpty()) {
@@ -153,12 +162,13 @@ public final class ToolGate {
             return new Release("дух замурован и " + missing + " нет: задание " + ticket.boardCase()
                     + " возвращено доске, дух выбирается руками, инструмент — первым делом после выхода");
         }
-        return new Release(missing + " нет: задание " + ticket.boardCase()
-                + " возвращено доске и ждёт инструмент, руками не работаем — сначала добыть, сделать или починить");
+        return new Keep();
     }
 
     public static Verdict keep(
             BoardCase boardCase, Collection<String> items, boolean walledIn, @Nullable String supplyItem) {
+        Objects.requireNonNull(boardCase, "Кейс не может быть null: по нему выбран инструмент");
+        Objects.requireNonNull(items, "Инвентарь не может быть null: пустой — пустой набор");
         if (allows(boardCase, items, supplyItem)) {
             return new Keep();
         }
@@ -167,7 +177,6 @@ public final class ToolGate {
             return new Release("дух замурован и " + tool + " нет: задание " + boardCase
                     + " возвращено доске, дух выбирается руками, инструмент — первым делом после выхода");
         }
-        return new Release(tool + " нет: задание " + boardCase
-                + " возвращено доске и ждёт инструмент, руками не работаем — сначала добыть, сделать или починить");
+        return new Keep();
     }
 }

@@ -5,7 +5,8 @@
 ```json
 {"bots":[{"id":"6f1c2d3e-0000-4000-8000-000000000001","name":"spirit","state":"idle","position":[10,64,-3],
   "dimension":"minecraft:overworld","current_task":null,"activity":null,"script":null,"board_task":null,
-  "tick":123456,"position_tick":123400,"state_since_tick":123400,"food":1.0}]}
+  "tick":123456,"position_tick":123400,"state_since_tick":123400,"food":1.0,
+  "inventory":{"minecraft:oak_log":5,"minecraft:wooden_axe":1}}]}
 ```
 
 `GET /v1/bots/{id}` возвращает один такой объект без обёртки `bots`.
@@ -18,6 +19,7 @@
 | `script` | исполняемый сейчас скрипт; скрипт не идёт — `null` |
 | `board_task` | задание доски духа: `id`, `case`, `status`; задания нет — `null` |
 | `state_since_tick` | тик, с которого не менялись `state`, `activity` и `script`: по нему видно, сколько дух стоит в одном состоянии |
+| `inventory` | предметы в инвентаре и в руке духа: `id → количество`; занятая рука входит один раз, копия в руке не удваивает |
 
 ### GET /v1/spirits/{id}/decisions
 

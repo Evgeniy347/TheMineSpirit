@@ -20,10 +20,22 @@ public final class DispatchRound {
             List<String> items,
             EatNeed eat,
             SpiritView view,
-            boolean wet) {
+            boolean wet,
+            List<String> stockTools) {
         public Candidate(
                 UUID id, String name, @Nullable String busyWith, List<String> items, EatNeed eat, SpiritView view) {
-            this(id, name, busyWith, items, eat, view, false);
+            this(id, name, busyWith, items, eat, view, false, List.of());
+        }
+
+        public Candidate(
+                UUID id,
+                String name,
+                @Nullable String busyWith,
+                List<String> items,
+                EatNeed eat,
+                SpiritView view,
+                boolean wet) {
+            this(id, name, busyWith, items, eat, view, wet, List.of());
         }
 
         public Candidate {
@@ -32,6 +44,8 @@ public final class DispatchRound {
             items = List.copyOf(items);
             Objects.requireNonNull(eat, "Сытость духа выдачи не может быть null: по ней решают еду");
             Objects.requireNonNull(view, "Состояние духа выдачи не может быть null: по нему решают применимость");
+            stockTools = List.copyOf(Objects.requireNonNull(
+                    stockTools, "Инструменты склада не могут быть null: пустой склад задают пустым списком"));
         }
     }
 
@@ -140,9 +154,6 @@ public final class DispatchRound {
             return Optional.of("на паузе кейса " + ticket.boardCase() + " после "
                     + board.consecutiveFailures(spirit.id(), ticket.boardCase()) + " провалов");
         }
-        if (!ToolGate.allows(ticket, spirit.items())) {
-            return Optional.of("нет инструмента " + ToolGate.required(ticket).orElse("?"));
-        }
         if (!ToolGate.carries(ticket, spirit.items())) {
             return Optional.of("нет запаса " + ToolGate.carry(ticket).orElse("?")
                     + " в инвентаре: сначала взять со склада или скрафтить");
@@ -174,11 +185,20 @@ public final class DispatchRound {
 
     public Optional<Candidate> choose(BoardTicket ticket, List<Candidate> preference, @Nullable String supplyItem) {
         for (Candidate spirit : preference) {
-            if (fits(ticket, spirit, supplyItem)) {
+            if (tooled(ticket, spirit) && fits(ticket, spirit, supplyItem)) {
+                return Optional.of(spirit);
+            }
+        }
+        for (Candidate spirit : preference) {
+            if (!tooled(ticket, spirit) && fits(ticket, spirit, supplyItem)) {
                 return Optional.of(spirit);
             }
         }
         return Optional.empty();
+    }
+
+    private static boolean tooled(BoardTicket ticket, Candidate spirit) {
+        return ToolGate.allows(ticket, spirit.items()) || ToolGate.allowsFromStock(ticket, spirit.stockTools());
     }
 
     public void take(UUID spirit) {

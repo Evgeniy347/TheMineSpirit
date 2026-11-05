@@ -14,6 +14,10 @@ public final class TreeShape {
     private TreeShape() {}
 
     public static TreeDetection detect(BlockCoord start, TreeView view) {
+        return detect(start, view, false);
+    }
+
+    public static TreeDetection detect(BlockCoord start, TreeView view, boolean allowNoSoil) {
         if (!view.isLog(start)) {
             throw new IllegalArgumentException("Разбор дерева начинается с бревна, а " + start
                     + " бревном не является: поиск обязан подать координату из найденных брёвен");
@@ -55,7 +59,7 @@ public final class TreeShape {
             return new NotATree(NotATree.Reason.NOT_A_TRUNK, Set.copyOf(logs));
         }
         BlockCoord base = base(logs);
-        if (!view.isSoil(new BlockCoord(base.x(), base.y() - 1, base.z()))) {
+        if (!allowNoSoil && !view.isSoil(new BlockCoord(base.x(), base.y() - 1, base.z()))) {
             return new NotATree(NotATree.Reason.NO_SOIL, Set.copyOf(logs));
         }
         if (leaves.size() < ChopTuning.MIN_NATURAL_LEAVES) {

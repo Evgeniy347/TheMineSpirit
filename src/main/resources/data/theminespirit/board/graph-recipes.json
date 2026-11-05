@@ -23,7 +23,7 @@
     "acacia_hanging_sign" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 2
+      "stage" : 1
     },
     "acacia_pressure_plate" : {
       "xmin" : 0,
@@ -48,17 +48,7 @@
     "amethyst_block" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "amethyst_shard" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "ancient_debris" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "andesite_slab" : {
       "xmin" : 0,
@@ -75,16 +65,6 @@
       "base" : 20,
       "stage" : 2
     },
-    "apple" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "armadillo_scute" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "armor_stand" : {
       "xmin" : 0,
       "base" : 20,
@@ -95,20 +75,10 @@
       "base" : 20,
       "stage" : 1
     },
-    "bamboo" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "bamboo_block" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "bamboo_button" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "bamboo_chest_raft" : {
       "xmin" : 0,
@@ -118,7 +88,7 @@
     "bamboo_door" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "bamboo_fence" : {
       "xmin" : 0,
@@ -138,32 +108,32 @@
     "bamboo_mosaic" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "bamboo_mosaic_slab" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "bamboo_mosaic_stairs" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "bamboo_planks" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "bamboo_pressure_plate" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "bamboo_raft" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "bamboo_sign" : {
       "xmin" : 0,
@@ -173,32 +143,22 @@
     "bamboo_slab" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "bamboo_stairs" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "bamboo_trapdoor" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "basalt" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "beacon" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 3
-    },
-    "beetroot_soup" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
     },
     "birch_boat" : {
       "xmin" : 0,
@@ -223,7 +183,7 @@
     "birch_hanging_sign" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 2
+      "stage" : 1
     },
     "birch_pressure_plate" : {
       "xmin" : 0,
@@ -300,11 +260,6 @@
       "base" : 20,
       "stage" : 1
     },
-    "blaze_powder" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 3
-    },
     "blue_banner" : {
       "xmin" : 0,
       "base" : 20,
@@ -333,12 +288,7 @@
     "blue_ice" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "blue_orchid" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "blue_stained_glass" : {
       "xmin" : 0,
@@ -358,27 +308,12 @@
     "bolt_armor_trim_smithing_template" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "bone_block" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 2
-    },
-    "bowl" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "bread" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 2
-    },
-    "breeze_rod" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
     },
     "brewing_stand" : {
       "xmin" : 0,
@@ -415,11 +350,6 @@
       "base" : 20,
       "stage" : 1
     },
-    "brown_mushroom" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "brown_stained_glass" : {
       "xmin" : 0,
       "base" : 20,
@@ -435,27 +365,12 @@
       "base" : 20,
       "stage" : 1
     },
-    "brush" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "cake" : {
+    "calibrated_sculk_sensor" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 2
     },
-    "calibrated_sculk_sensor" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "carrot_on_a_stick" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "carved_pumpkin" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -508,7 +423,7 @@
     "cherry_hanging_sign" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 2
+      "stage" : 1
     },
     "cherry_pressure_plate" : {
       "xmin" : 0,
@@ -530,11 +445,6 @@
       "base" : 20,
       "stage" : 1
     },
-    "chicken" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "chiseled_bookshelf" : {
       "xmin" : 0,
       "base" : 20,
@@ -543,7 +453,7 @@
     "chiseled_copper" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "chiseled_deepslate" : {
       "xmin" : 0,
@@ -578,17 +488,12 @@
     "chiseled_tuff" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "chiseled_tuff_bricks" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "chorus_fruit" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "clay" : {
       "xmin" : 0,
@@ -601,11 +506,6 @@
       "stage" : 3
     },
     "coal_block" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "coal_ore" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -635,11 +535,6 @@
       "base" : 20,
       "stage" : 2
     },
-    "cod" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "comparator" : {
       "xmin" : 0,
       "base" : 20,
@@ -653,7 +548,7 @@
     "conduit" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "cooked_beef" : {
       "xmin" : 0,
@@ -690,42 +585,17 @@
       "base" : 20,
       "stage" : 1
     },
-    "cookie" : {
+    "copper_bulb" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 2
     },
-    "copper_block" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "copper_bulb" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "copper_door" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "copper_grate" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "copper_ingot" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "copper_ore" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "copper_trapdoor" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -765,20 +635,15 @@
       "base" : 20,
       "stage" : 3
     },
-    "creeper_head" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "crimson_button" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "crimson_door" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "crimson_fence" : {
       "xmin" : 0,
@@ -798,17 +663,17 @@
     "crimson_hyphae" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "crimson_planks" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "crimson_pressure_plate" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "crimson_sign" : {
       "xmin" : 0,
@@ -818,47 +683,32 @@
     "crimson_slab" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "crimson_stairs" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "crimson_stem" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "crimson_trapdoor" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "crossbow" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "crying_obsidian" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "cut_copper" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "cut_copper_slab" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "cut_copper_stairs" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "cut_red_sandstone" : {
       "xmin" : 0,
@@ -943,7 +793,7 @@
     "dark_oak_hanging_sign" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 2
+      "stage" : 1
     },
     "dark_oak_sign" : {
       "xmin" : 0,
@@ -1005,27 +855,12 @@
       "base" : 20,
       "stage" : 1
     },
-    "deepslate_emerald_ore" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "deepslate_gold_ore" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
     },
     "deepslate_iron_ore" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "deepslate_lapis_ore" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "deepslate_redstone_ore" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -1038,7 +873,7 @@
     "detector_rail" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "diamond_block" : {
       "xmin" : 0,
@@ -1090,11 +925,6 @@
       "base" : 20,
       "stage" : 1
     },
-    "disc_fragment_5" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "dispenser" : {
       "xmin" : 0,
       "base" : 20,
@@ -1113,7 +943,7 @@
     "dripstone_block" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "dropper" : {
       "xmin" : 0,
@@ -1125,30 +955,10 @@
       "base" : 20,
       "stage" : 3
     },
-    "echo_shard" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "emerald" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "emerald_block" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "emerald_ore" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "enchanted_golden_apple" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "end_crystal" : {
       "xmin" : 0,
@@ -1160,90 +970,60 @@
       "base" : 20,
       "stage" : 1
     },
-    "end_stone" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "end_stone_brick_slab" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 4
     },
     "end_stone_brick_stairs" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 4
     },
     "end_stone_brick_wall" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 4
     },
     "end_stone_bricks" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 4
     },
     "ender_chest" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 3
     },
-    "ender_eye" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 3
-    },
-    "ender_pearl" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "exposed_chiseled_copper" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "exposed_copper" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "exposed_copper_bulb" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 3
-    },
-    "exposed_copper_door" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "exposed_copper_grate" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "exposed_copper_trapdoor" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "exposed_cut_copper" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "exposed_cut_copper_slab" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "exposed_cut_copper_stairs" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "eye_armor_trim_smithing_template" : {
       "xmin" : 0,
@@ -1253,7 +1033,7 @@
     "fermented_spider_eye" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 3
+      "stage" : 1
     },
     "fire_charge" : {
       "xmin" : 0,
@@ -1290,21 +1070,6 @@
       "base" : 20,
       "stage" : 1
     },
-    "ghast_tear" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "glistering_melon_slice" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "glow_ink_sac" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "glow_item_frame" : {
       "xmin" : 0,
       "base" : 20,
@@ -1313,12 +1078,7 @@
     "glowstone" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "glowstone_dust" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "gold_block" : {
       "xmin" : 0,
@@ -1338,7 +1098,7 @@
     "golden_apple" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 3
+      "stage" : 1
     },
     "golden_axe" : {
       "xmin" : 0,
@@ -1349,11 +1109,6 @@
       "xmin" : 0,
       "base" : 20,
       "stage" : 3
-    },
-    "golden_carrot" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
     },
     "golden_chestplate" : {
       "xmin" : 0,
@@ -1366,11 +1121,6 @@
       "stage" : 3
     },
     "golden_hoe" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "golden_horse_armor" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -1495,16 +1245,6 @@
       "base" : 20,
       "stage" : 1
     },
-    "heart_of_the_sea" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "heavy_core" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "heavy_weighted_pressure_plate" : {
       "xmin" : 0,
       "base" : 20,
@@ -1515,32 +1255,17 @@
       "base" : 20,
       "stage" : 3
     },
-    "honey_bottle" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 3
-    },
     "honeycomb_block" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 2
     },
-    "hopper" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "hopper_minecart" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "host_armor_trim_smithing_template" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "ice" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -1569,11 +1294,6 @@
       "xmin" : 0,
       "base" : 20,
       "stage" : 2
-    },
-    "iron_horse_armor" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
     },
     "iron_leggings" : {
       "xmin" : 0,
@@ -1628,7 +1348,7 @@
     "jungle_hanging_sign" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 2
+      "stage" : 1
     },
     "jungle_pressure_plate" : {
       "xmin" : 0,
@@ -1641,11 +1361,6 @@
       "stage" : 1
     },
     "jungle_wood" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "kelp" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -1689,11 +1404,6 @@
       "xmin" : 0,
       "base" : 20,
       "stage" : 2
-    },
-    "lever" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
     },
     "light_blue_banner" : {
       "xmin" : 0,
@@ -1780,16 +1490,6 @@
       "base" : 20,
       "stage" : 1
     },
-    "lilac" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "lily_of_the_valley" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "lime_banner" : {
       "xmin" : 0,
       "base" : 20,
@@ -1833,12 +1533,12 @@
     "lodestone" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "mace" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 4
     },
     "magenta_banner" : {
       "xmin" : 0,
@@ -1885,11 +1585,6 @@
       "base" : 20,
       "stage" : 3
     },
-    "magma_cream" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 3
-    },
     "mangrove_boat" : {
       "xmin" : 0,
       "base" : 20,
@@ -1913,14 +1608,9 @@
     "mangrove_hanging_sign" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 2
-    },
-    "mangrove_pressure_plate" : {
-      "xmin" : 0,
-      "base" : 20,
       "stage" : 1
     },
-    "mangrove_roots" : {
+    "mangrove_pressure_plate" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -1950,25 +1640,15 @@
       "base" : 20,
       "stage" : 2
     },
-    "minecart" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 2
-    },
     "mojang_banner_pattern" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 3
     },
-    "moss_block" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "moss_carpet" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "mossy_cobblestone" : {
       "xmin" : 0,
@@ -2010,11 +1690,6 @@
       "base" : 20,
       "stage" : 2
     },
-    "mud" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "mud_brick_slab" : {
       "xmin" : 0,
       "base" : 20,
@@ -2038,7 +1713,7 @@
     "muddy_mangrove_roots" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "mushroom_stew" : {
       "xmin" : 0,
@@ -2048,12 +1723,7 @@
     "music_disc_5" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "nautilus_shell" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 4
     },
     "nether_brick" : {
       "xmin" : 0,
@@ -2090,16 +1760,6 @@
       "base" : 20,
       "stage" : 1
     },
-    "nether_quartz_ore" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "nether_star" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "nether_wart_block" : {
       "xmin" : 0,
       "base" : 20,
@@ -2108,72 +1768,57 @@
     "netherite_axe" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "netherite_block" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 4
     },
     "netherite_boots" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "netherite_chestplate" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "netherite_helmet" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "netherite_hoe" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "netherite_ingot" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "netherite_leggings" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "netherite_pickaxe" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "netherite_scrap" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "netherite_shovel" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "netherite_sword" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "netherite_upgrade_smithing_template" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 3
-    },
-    "netherrack" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
     },
     "note_block" : {
       "xmin" : 0,
@@ -2198,7 +1843,7 @@
     "oak_hanging_sign" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 2
+      "stage" : 1
     },
     "oak_wood" : {
       "xmin" : 0,
@@ -2250,60 +1895,40 @@
       "base" : 20,
       "stage" : 1
     },
-    "orange_tulip" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "oxidized_chiseled_copper" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "oxidized_copper" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "oxidized_copper_bulb" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 3
-    },
-    "oxidized_copper_door" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "oxidized_copper_grate" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "oxidized_copper_trapdoor" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "oxidized_cut_copper" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "oxidized_cut_copper_slab" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "oxidized_cut_copper_stairs" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "packed_ice" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "packed_mud" : {
       "xmin" : 0,
@@ -2311,11 +1936,6 @@
       "stage" : 2
     },
     "painting" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "peony" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -2345,11 +1965,6 @@
       "base" : 20,
       "stage" : 1
     },
-    "pink_petals" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "pink_stained_glass" : {
       "xmin" : 0,
       "base" : 20,
@@ -2370,21 +1985,6 @@
       "base" : 20,
       "stage" : 1
     },
-    "piston" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "pitcher_plant" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "pointed_dripstone" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "polished_andesite_slab" : {
       "xmin" : 0,
       "base" : 20,
@@ -2398,7 +1998,7 @@
     "polished_basalt" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "polished_blackstone" : {
       "xmin" : 0,
@@ -2498,22 +2098,22 @@
     "polished_tuff" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "polished_tuff_slab" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "polished_tuff_stairs" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "polished_tuff_wall" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "popped_chorus_fruit" : {
       "xmin" : 0,
@@ -2528,52 +2128,37 @@
     "prismarine" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "prismarine_brick_slab" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "prismarine_brick_stairs" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "prismarine_bricks" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "prismarine_crystals" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "prismarine_shard" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "prismarine_slab" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "prismarine_stairs" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "prismarine_wall" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "pumpkin_pie" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 2
+      "stage" : 3
     },
     "pumpkin_seeds" : {
       "xmin" : 0,
@@ -2665,22 +2250,7 @@
       "base" : 20,
       "stage" : 1
     },
-    "rabbit" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "rabbit_hide" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "rabbit_stew" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "rail" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -2690,15 +2260,10 @@
       "base" : 20,
       "stage" : 1
     },
-    "raw_copper" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "raw_copper_block" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "raw_gold" : {
       "xmin" : 0,
@@ -2736,11 +2301,6 @@
       "stage" : 2
     },
     "red_glazed_terracotta" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "red_mushroom" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -2820,15 +2380,10 @@
       "base" : 20,
       "stage" : 1
     },
-    "repeater" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "respawn_anchor" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "rib_armor_trim_smithing_template" : {
       "xmin" : 0,
@@ -2836,11 +2391,6 @@
       "stage" : 3
     },
     "rose_bush" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "salmon" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -2870,20 +2420,10 @@
       "base" : 20,
       "stage" : 2
     },
-    "sculk_sensor" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "sea_lantern" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "sea_pickle" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "sentry_armor_trim_smithing_template" : {
       "xmin" : 0,
@@ -2895,17 +2435,7 @@
       "base" : 20,
       "stage" : 1
     },
-    "shears" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 2
-    },
     "shulker_box" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "shulker_shell" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -2920,15 +2450,10 @@
       "base" : 20,
       "stage" : 3
     },
-    "slime_ball" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "slime_block" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "smooth_basalt" : {
       "xmin" : 0,
@@ -2993,17 +2518,7 @@
     "snow" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "snow_block" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "snowball" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "soul_campfire" : {
       "xmin" : 0,
@@ -3011,11 +2526,6 @@
       "stage" : 1
     },
     "soul_lantern" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "soul_sand" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -3034,11 +2544,6 @@
       "xmin" : 0,
       "base" : 20,
       "stage" : 2
-    },
-    "spider_eye" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
     },
     "spire_armor_trim_smithing_template" : {
       "xmin" : 0,
@@ -3073,7 +2578,7 @@
     "spruce_hanging_sign" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 2
+      "stage" : 1
     },
     "spruce_sign" : {
       "xmin" : 0,
@@ -3093,19 +2598,9 @@
     "sticky_piston" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "stone_brick_wall" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "stone_button" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "stone_pressure_plate" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -3120,32 +2615,12 @@
       "base" : 20,
       "stage" : 1
     },
-    "stripped_acacia_log" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "stripped_acacia_wood" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
     },
-    "stripped_bamboo_block" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "stripped_birch_log" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "stripped_birch_wood" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "stripped_cherry_log" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -3158,24 +2633,9 @@
     "stripped_crimson_hyphae" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "stripped_crimson_stem" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "stripped_dark_oak_log" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "stripped_dark_oak_wood" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "stripped_jungle_log" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -3185,27 +2645,12 @@
       "base" : 20,
       "stage" : 1
     },
-    "stripped_mangrove_log" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "stripped_mangrove_wood" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
     },
-    "stripped_oak_log" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "stripped_oak_wood" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "stripped_spruce_log" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -3218,17 +2663,7 @@
     "stripped_warped_hyphae" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "stripped_warped_stem" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "sunflower" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "target" : {
       "xmin" : 0,
@@ -3248,7 +2683,7 @@
     "tinted_glass" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 3
+      "stage" : 2
     },
     "tnt" : {
       "xmin" : 0,
@@ -3256,11 +2691,6 @@
       "stage" : 1
     },
     "tnt_minecart" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "torchflower" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -3275,62 +2705,47 @@
       "base" : 20,
       "stage" : 1
     },
-    "tuff" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
     "tuff_brick_slab" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "tuff_brick_stairs" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "tuff_brick_wall" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "tuff_bricks" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "tuff_slab" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "tuff_stairs" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "tuff_wall" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "turtle_helmet" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "turtle_scute" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "vex_armor_trim_smithing_template" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "vine" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -3343,12 +2758,12 @@
     "warped_button" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "warped_door" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "warped_fence" : {
       "xmin" : 0,
@@ -3356,11 +2771,6 @@
       "stage" : 1
     },
     "warped_fence_gate" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "warped_fungus" : {
       "xmin" : 0,
       "base" : 20,
       "stage" : 1
@@ -3378,17 +2788,17 @@
     "warped_hyphae" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "warped_planks" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "warped_pressure_plate" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "warped_sign" : {
       "xmin" : 0,
@@ -3398,67 +2808,62 @@
     "warped_slab" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "warped_stairs" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "warped_stem" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "warped_trapdoor" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 3
     },
     "waxed_chiseled_copper" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "waxed_copper_block" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "waxed_copper_bulb" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "waxed_copper_door" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "waxed_copper_grate" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "waxed_copper_trapdoor" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "waxed_cut_copper" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "waxed_cut_copper_slab" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "waxed_cut_copper_stairs" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "waxed_exposed_chiseled_copper" : {
       "xmin" : 0,
@@ -3603,52 +3008,32 @@
     "weathered_chiseled_copper" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "weathered_copper" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "weathered_copper_bulb" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 3
-    },
-    "weathered_copper_door" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "weathered_copper_grate" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "weathered_copper_trapdoor" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "weathered_cut_copper" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "weathered_cut_copper_slab" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "weathered_cut_copper_stairs" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "wet_sponge" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "white_banner" : {
       "xmin" : 0,
@@ -3698,22 +3083,12 @@
     "wind_charge" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
-    },
-    "wither_rose" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
-    },
-    "wither_skeleton_skull" : {
-      "xmin" : 0,
-      "base" : 20,
-      "stage" : 1
+      "stage" : 4
     },
     "wolf_armor" : {
       "xmin" : 0,
       "base" : 20,
-      "stage" : 1
+      "stage" : 2
     },
     "writable_book" : {
       "xmin" : 0,
@@ -4830,15 +4205,6 @@
     "weight" : 1.0,
     "consumes" : {
       "bone" : 1
-    }
-  }, {
-    "id" : "auto_bone_meal_from_bone_block",
-    "case" : "GATHER_MATERIALS",
-    "makes" : "bone_meal",
-    "yield" : 9,
-    "weight" : 0.1,
-    "consumes" : {
-      "bone_block" : 1
     }
   }, {
     "id" : "auto_book",
@@ -7695,17 +7061,6 @@
     "consumes" : {
       "#coals" : 1,
       "deepslate_emerald_ore" : 1
-    },
-    "building" : "blast_furnace"
-  }, {
-    "id" : "auto_emerald_from_blasting_emerald_ore",
-    "case" : "GATHER_MATERIALS",
-    "makes" : "emerald",
-    "yield" : 1,
-    "weight" : 1.0,
-    "consumes" : {
-      "#coals" : 1,
-      "emerald_ore" : 1
     },
     "building" : "blast_furnace"
   }, {

@@ -33,20 +33,60 @@ public final class StageSites {
                 .allMatch(id -> plan.placement(id).isPresent());
     }
 
+    public static Optional<ColumnMask> levelArea(TownPlan plan, int stage, TownRules rules) {
+        Objects.requireNonNull(plan, "План не может быть null: площадь этапа берётся из него");
+        Objects.requireNonNull(rules, "Правила плана не могут быть null: поле ограды этапа — данные");
+        return complete(plan) ? layout(plan, stage, rules).map(Layout::level) : Optional.empty();
+    }
+
     public static StageSite of(TownPlan plan, int stage, int levelY, TownRules rules) {
         Objects.requireNonNull(plan, "План не может быть null: этап берёт места из него");
         Objects.requireNonNull(rules, "Правила плана не могут быть null: поле ограды этапа — данные");
+        Layout layout = layout(plan, stage, rules)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "У этапа " + stage + " нет ни одной площадки под выравнивание: план без построек этапа"));
         BlockCoord anchor =
-                new BlockCoord(plan.anchor().x(), levelY, plan.anchor().z());
+                new BlockCoord(layout.anchor().x(), levelY, layout.anchor().z());
         List<Placement> own = plan.ofStage(stage);
-        List<OrchardPlot> extraOrchards = extraOrchards(own, levelY);
-        ColumnMask pads = own.stream()
+        Placement mine = need(plan, MINE, stage);
+        Placement orchard = need(plan, ORCHARD, stage);
+        return new StageSite(
+                stage,
+                anchor,
+                need(plan, HUT, stage),
+                need(plan, YARD, stage),
+                mine,
+                minePlot(mine, levelY),
+                orchard,
+                orchardSaplings(orchard, levelY),
+                extraOrchards(own, levelY),
+                layout.level(),
+                layout.streets(),
+                layout.enclosure(),
+                layout.fenceStrip(),
+                layout.ring());
+    }
+
+    private record Layout(
+            BlockCoord anchor,
+            ColumnMask level,
+            ColumnMask streets,
+            ColumnMask enclosure,
+            ColumnMask fenceStrip,
+            FenceLine ring) {}
+
+    private static Optional<Layout> layout(TownPlan plan, int stage, TownRules rules) {
+        List<Placement> own = plan.ofStage(stage);
+        Optional<ColumnMask> pads = own.stream()
                 .filter(place ->
                         rules.template(place.id()).map(TownEntry::level).orElse(false))
                 .map(Placement::mask)
-                .reduce(ColumnMask::union)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "У этапа " + stage + " нет ни одной площадки под выравнивание: план без построек этапа"));
+                .reduce(ColumnMask::union);
+        if (pads.isEmpty()) {
+            return Optional.empty();
+        }
+        ColumnMask pad = pads.orElseThrow();
+        BlockCoord anchor = new BlockCoord(plan.anchor().x(), 0, plan.anchor().z());
         ColumnMask streets = plan.streets()
                 .main()
                 .union(plan.streets().side())
@@ -61,25 +101,9 @@ public final class StageSites {
         FenceLine ring = FenceGates.around(enclosure, plan.streets());
         ColumnMask fenceStrip =
                 FenceStrip.of(ring, rules.spacing().fenceStrip()).intersect(plan.region());
-        ColumnMask between = streets.intersect(box(pads, 0));
-        ColumnMask level = pads.union(between).union(fenceStrip).intersect(plan.region());
-        Placement mine = need(plan, MINE, stage);
-        Placement orchard = need(plan, ORCHARD, stage);
-        return new StageSite(
-                stage,
-                anchor,
-                need(plan, HUT, stage),
-                need(plan, YARD, stage),
-                mine,
-                minePlot(mine, levelY),
-                orchard,
-                orchardSaplings(orchard, levelY),
-                extraOrchards,
-                level,
-                streets,
-                enclosure,
-                fenceStrip,
-                ring);
+        ColumnMask between = streets.intersect(box(pad, 0));
+        ColumnMask level = pad.union(between).union(fenceStrip).intersect(plan.region());
+        return Optional.of(new Layout(anchor, level, streets, enclosure, fenceStrip, ring));
     }
 
     private static List<OrchardPlot> extraOrchards(List<Placement> own, int levelY) {

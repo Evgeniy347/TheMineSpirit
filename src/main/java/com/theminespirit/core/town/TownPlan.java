@@ -41,4 +41,9 @@ public record TownPlan(
     public boolean onPlot(int x, int z) {
         return region.contains(x, z);
     }
+
+    public TownPlan atLevel(int level) {
+        return new TownPlan(
+                new BlockCoord(anchor.x(), level, anchor.z()), region, streets, placements, fence, unplaced);
+    }
 }

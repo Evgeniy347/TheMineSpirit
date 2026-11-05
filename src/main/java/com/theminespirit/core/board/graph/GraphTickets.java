@@ -48,8 +48,9 @@ public final class GraphTickets {
         Objects.requireNonNull(graph, "Граф не может быть null: по нему считают число добычи");
         Objects.requireNonNull(state, "Состояние не может быть null: по нему считают нехватку");
         Objects.requireNonNull(plan, "Расчёт графа не может быть null: из него ставятся задания доски");
-        List<Ticket> post = new ArrayList<>();
+        List<Ticket> posted = new ArrayList<>();
         Set<String> live = new LinkedHashSet<>();
+        Set<String> seen = new LinkedHashSet<>();
         List<GraphPlan.Task> unimplemented = new ArrayList<>();
         Map<String, Integer> demand = buildingDemand(graph, plan);
         for (GraphPlan.Task task : plan.tasks()) {
@@ -64,15 +65,43 @@ public final class GraphTickets {
             if (!task.feasible()) {
                 continue;
             }
+            if (!seen.add(id(task))) {
+                continue;
+            }
             Kind kind = kind(task);
             String node = kind == Kind.WAY ? wayId(task) : task.makes();
             int count = kind == Kind.WAY ? count(graph, state, task, demand) : 1;
-            post.add(new Ticket(id(task), kind, node, task, count));
+            posted.add(new Ticket(id(task), kind, node, task, count));
         }
+        List<Ticket> post = consolidate(posted);
         post.sort(Comparator.comparingInt((Ticket ticket) -> ticket.task().priority())
                 .reversed()
                 .thenComparing(Ticket::id));
         return new Result(post, live, unimplemented);
+    }
+
+    private static List<Ticket> consolidate(List<Ticket> tickets) {
+        Map<String, Ticket> best = new LinkedHashMap<>();
+        for (Ticket ticket : tickets) {
+            String key = ticket.task().spirit().isEmpty()
+                    ? ticket.kind() + ":" + ticket.task().makes()
+                    : "id:" + ticket.id();
+            Ticket before = best.get(key);
+            if (before == null || stronger(ticket, before)) {
+                best.put(key, ticket);
+            }
+        }
+        return new ArrayList<>(best.values());
+    }
+
+    private static boolean stronger(Ticket candidate, Ticket current) {
+        if (candidate.task().priority() != current.task().priority()) {
+            return candidate.task().priority() > current.task().priority();
+        }
+        if (candidate.count() != current.count()) {
+            return candidate.count() > current.count();
+        }
+        return candidate.id().compareTo(current.id()) < 0;
     }
 
     private static boolean early(SupplyGraph graph, GraphState state, GraphPlan.Task task) {

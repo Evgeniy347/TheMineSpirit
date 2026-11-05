@@ -1,26 +1,38 @@
 package com.theminespirit.core.board.graph;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 final class ChestTools {
     private static final String NAMESPACE = "minecraft:";
 
     private ChestTools() {}
 
-    static boolean covers(SupplyGraph graph, GraphState state, String kind, int target) {
-        if (target < 0) {
-            return false;
-        }
-        int lacking = 0;
-        for (String spirit : state.kits().keySet()) {
-            if (state.tier(spirit, kind) < target) {
-                lacking++;
+    static Set<String> covered(SupplyGraph graph, GraphState state) {
+        Set<String> covered = new HashSet<>();
+        for (String kind : graph.kit().kinds()) {
+            int target = graph.rank(graph.kit().tier(kind, state.stage()));
+            int have = count(graph, state, kind, target);
+            if (have <= 0) {
+                continue;
+            }
+            List<String> lacking = state.kits().keySet().stream()
+                    .filter(spirit -> state.tier(spirit, kind) < target)
+                    .sorted()
+                    .toList();
+            for (int index = 0; index < Math.min(have, lacking.size()); index++) {
+                covered.add(kind + "@" + lacking.get(index));
             }
         }
-        return lacking > 0 && count(graph, state, kind, target) >= lacking;
+        return Set.copyOf(covered);
     }
 
     private static int count(SupplyGraph graph, GraphState state, String kind, int target) {
+        if (target < 0) {
+            return 0;
+        }
         int count = 0;
         for (GraphFacts.Chest chest : state.facts().chests()) {
             for (Map.Entry<String, Integer> item : chest.contents().entrySet()) {
