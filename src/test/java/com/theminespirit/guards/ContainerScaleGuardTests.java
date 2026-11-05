@@ -9,7 +9,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class ContainerScaleGuardTests {
-    private static final Path INVENTORY_ADAPTER = Path.of("src/main/java/com/theminespirit/neoforge/inventory");
+    private static final Path INVENTORY_ADAPTER = SourceFiles.path("neoforge/inventory");
 
     @Test
     void inventoryAdapter_NoEntityScans_KeepsTickBudget() {

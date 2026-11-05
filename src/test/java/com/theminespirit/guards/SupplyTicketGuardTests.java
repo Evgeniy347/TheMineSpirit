@@ -10,7 +10,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class SupplyTicketGuardTests {
-    private static final Path BOARD = Path.of("src/main/java/com/theminespirit/neoforge/board");
+    private static final Path BOARD = SourceFiles.path("neoforge/board");
     private static final Path SUPPLY_TICKETS = BOARD.resolve("SupplyTickets.java");
     private static final String WITHOUT_DEPOSIT = "SupplyGate.needsDepositPoint(boardCase)";
     private static final String BRANCH_START = "StorageFinder.depositPoint(";

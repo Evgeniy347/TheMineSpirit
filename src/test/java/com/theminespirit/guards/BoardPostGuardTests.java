@@ -14,9 +14,9 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class BoardPostGuardTests {
-    private static final Path BOARD = Path.of("src/main/java/com/theminespirit/neoforge/board");
-    private static final Path REST = Path.of("src/main/java/com/theminespirit/neoforge/rest");
-    private static final Path INTELLECT = Path.of("src/main/java/com/theminespirit/neoforge/intellect");
+    private static final Path BOARD = SourceFiles.path("neoforge/board");
+    private static final Path REST = SourceFiles.path("neoforge/rest");
+    private static final Path INTELLECT = SourceFiles.path("neoforge/intellect");
 
     private static final List<String> OFFENCES = List.of(
             "service.submit(",

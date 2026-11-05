@@ -33,8 +33,8 @@ class FileSizeGuardTests {
     @Test
     void oversized_NewFileOverLimit_IsReported() {
         assertEquals(
-                List.of("src/main/java/com/theminespirit/Long.java (301): новый файл длиннее " + LIMIT + " строк"),
-                problems(Map.of("src/main/java/com/theminespirit/Long.java", 301), Map.of()),
+                List.of("Long.java (301): новый файл длиннее " + LIMIT + " строк"),
+                problems(Map.of("Long.java", 301), Map.of()),
                 "Сторож ослеп: новый файл длиной 301 строка обязан попасть в нарушители");
     }
 
@@ -42,7 +42,7 @@ class FileSizeGuardTests {
     void oversized_FileAtLimit_IsAccepted() {
         assertEquals(
                 List.of(),
-                problems(Map.of("src/main/java/com/theminespirit/Ok.java", LIMIT), Map.of()),
+                problems(Map.of("Ok.java", LIMIT), Map.of()),
                 "Сторож ложно срабатывает: файл ровно в предел " + LIMIT + " строк допустим");
     }
 
@@ -82,8 +82,8 @@ class FileSizeGuardTests {
         Map<String, Integer> all = new TreeMap<>();
         for (Path root : List.of(SourceFiles.MAIN, SourceFiles.TEST)) {
             SourceFiles.javaUnder(root)
-                    .forEach((file, text) -> all.put(file.toString().replace('\\', '/'), (int)
-                            text.lines().count()));
+                    .forEach((file, text) -> all.put(
+                            SourceFiles.logical(file), (int) text.lines().count()));
         }
         return all;
     }

@@ -11,7 +11,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class SettlementLevelGuardTests {
-    private static final Path MAIN = Path.of("src/main/java");
+    private static final Path MAIN = SourceFiles.MAIN;
     private static final Path LEVEL = Path.of("com/theminespirit/core/board/SettlementLevel.java");
     private static final Path HEIGHT = Path.of("com/theminespirit/core/board/PlotHeight.java");
     private static final Path PLOT = Path.of("com/theminespirit/core/board/SettlementPlot.java");

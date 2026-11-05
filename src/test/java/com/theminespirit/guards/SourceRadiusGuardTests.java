@@ -8,7 +8,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class SourceRadiusGuardTests {
-    private static final Path NEOFORGE = Path.of("src/main/java/com/theminespirit/neoforge");
+    private static final Path NEOFORGE = SourceFiles.path("neoforge");
     private static final String LIMITER = "ChopTuning.gatherDistance";
 
     @Test

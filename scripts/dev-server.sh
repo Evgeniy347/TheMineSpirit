@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$SCRIPT_DIR/.." && pwd)"
+. "$REPO/scripts/module-paths.sh"
 BASE="${LIVE_DEV_BASE:-$(dirname "$REPO")/.live-server}"
 RUN_ROOT="$REPO/run-live"
 SSH="${LIVE_DEV_SSH:-domovoy@192.168.0.147}"
@@ -364,7 +365,7 @@ start_copy() {
         die "assemble упал: копия не поднята"
     fi
     local jar
-    jar="$(ls -1t "$REPO"/build/libs/theminespirit-*.jar 2>/dev/null | grep -vE -- '-(sources|javadoc)\.jar$' | head -n 1 || true)"
+    jar="$(ls -1t "$REPO/$MOD_JAR_DIR"/theminespirit-*.jar 2>/dev/null | grep -vE -- '-(sources|javadoc)\.jar$' | head -n 1 || true)"
     [ -n "$jar" ] || die "нет собранного мода: ./gradlew assemble"
     say "сборка: $(basename "$jar")"
     mkdir -p "$dir/logs" "$dir/mods"

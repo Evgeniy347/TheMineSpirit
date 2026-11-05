@@ -297,7 +297,7 @@ class ProductionCommentGuardTests {
     }
 
     private static String key(String file, String body) {
-        return file + "\t" + body;
+        return SourceFiles.logical(Path.of(file)) + "\t" + body;
     }
 
     private static Map<String, String> codeSources() {
