@@ -106,6 +106,41 @@ class PathSurfaceTests {
     }
 
     @Test
+    void cocoa_LogColumn_KeepsTwoTallStackWithoutCollision() {
+        Schematic cocoa = schematic("cocoa_1");
+        List<Schematic.PlacedEntry> logs = cocoa.entries(FEET, BuildRotation.NONE).stream()
+                .filter(entry -> "jungle_log".equals(SchematicBlocks.path(entry.block())))
+                .toList();
+
+        assertFalse(logs.isEmpty(), "В схеме какао есть столбы: иначе тест не проверяет высоту стопки");
+        for (int x = 2; x <= 6; x += 4) {
+            for (int z = 2; z <= 6; z += 4) {
+                int columnX = FEET.x() + x;
+                int columnZ = FEET.z() + z;
+                List<Integer> heights = logs.stream()
+                        .filter(entry ->
+                                entry.pos().x() == columnX && entry.pos().z() == columnZ)
+                        .map(entry -> entry.pos().y())
+                        .sorted()
+                        .toList();
+                assertEquals(
+                        List.of(FEET.y(), FEET.y() + 1),
+                        heights,
+                        "Столб какао — два блока над землёй: столбец предметов не сдвигается вниз, иначе два "
+                                + "бревна сойдутся в одной клетке. Высоты: " + heights);
+            }
+        }
+        long unique = cocoa.entries(FEET, BuildRotation.NONE).stream()
+                .map(Schematic.PlacedEntry::pos)
+                .distinct()
+                .count();
+        assertEquals(
+                cocoa.entries(FEET, BuildRotation.NONE).size(),
+                unique,
+                "Две клетки схемы не имеют права встать в одну: иначе часть постройки молча теряется");
+    }
+
+    @Test
     void walkwayPlaced_PathOneBelowCell_CountsWhenCellIsPassable() {
         assertTrue(
                 SchematicGround.walkwayPlaced("minecraft:dirt_path", "minecraft:air", "minecraft:dirt_path", true),
