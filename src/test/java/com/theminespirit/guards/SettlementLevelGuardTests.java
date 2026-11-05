@@ -23,7 +23,12 @@ class SettlementLevelGuardTests {
             "PlotHeight.recheck(",
             "SettlementPlot.survey(",
             "StageSites.find(",
-            "StageSites.of(");
+            "StageSites.of(",
+            "GroundProbe.feet(",
+            "GroundProbe.top(",
+            "GroundProbe.waterTop(",
+            "plan.anchor().y()",
+            "town.anchor().y()");
 
     @Test
     void settlementLevel_HeightOutsideLevel_IsReported() {
@@ -58,6 +63,36 @@ class SettlementLevelGuardTests {
                 "Сторож ложно срабатывает: чтение готовой высоты из SettlementLevel — законно");
     }
 
+    @Test
+    void patternSource_GroundProbeForBuildingHeight_IsReported() {
+        String bad = "final class FirstStepsRunner { void plot() { int y = GroundProbe.feet(level, x, z, 64); } }";
+
+        assertEquals(
+                List.of("FirstStepsRunner.java: высота поселения посчитана мимо SettlementLevel"),
+                violations(Map.of(Path.of("com/theminespirit/neoforge/board/FirstStepsRunner.java"), bad)),
+                "Сторож ослеп: чтение рельефа под высоту постройки мимо SettlementLevel обязано ловиться");
+    }
+
+    @Test
+    void patternSource_GroundProbeForStand_IsAccepted() {
+        String stand = "final class GraphTargets { void spot() { int y = GroundProbe.feet(level, x, z, -1); } }";
+
+        assertEquals(
+                List.of(),
+                violations(Map.of(Path.of("com/theminespirit/neoforge/board/GraphTargets.java"), stand)),
+                "Сторож ложно срабатывает: стоянке и подходу рельеф читать можно");
+    }
+
+    @Test
+    void patternSource_PlanAnchorHeight_IsReported() {
+        String bad = "final class TownSurvey { void town(TownPlan plan) { int y = plan.anchor().y(); } }";
+
+        assertEquals(
+                List.of("TownSurvey.java: высота поселения посчитана мимо SettlementLevel"),
+                violations(Map.of(Path.of("com/theminespirit/neoforge/board/TownSurvey.java"), bad)),
+                "Сторож ослеп: высота плана (медиана домов) снова стала вторым источником высоты поселения");
+    }
+
     private static List<String> violations(Map<Path, String> sources) {
         List<String> found = new ArrayList<>();
         sources.forEach((path, text) -> {
@@ -79,6 +114,12 @@ class SettlementLevelGuardTests {
                 || "PlotHeight.java".equals(name)
                 || "SettlementPlot.java".equals(name)
                 || "SettlementPlotStore.java".equals(name)
+                || "SettlementGround.java".equals(name)
+                || "GroundProbe.java".equals(name)
+                || "RouteWorks.java".equals(name)
+                || "GraphTargets.java".equals(name)
+                || "BiomeSpots.java".equals(name)
+                || "GotoScript.java".equals(name)
                 || "TownFixtures.java".equals(name)
                 || path.equals(LEVEL)
                 || path.equals(HEIGHT)

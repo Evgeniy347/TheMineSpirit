@@ -99,7 +99,7 @@ public final class StageBuilds {
         List<List<WallPiece>> partLists = fencePartLists(site, count);
         int levelY = SiteLevels.level(site);
         int fenceY = SiteLevels.fenceY(site);
-        IntBinaryOperator tops = (x, z) -> GroundProbe.top(level, x, z, fenceY);
+        IntBinaryOperator tops = SettlementGround.tops(level, fenceY);
         Set<ColumnMask.Cell> ready = new HashSet<>(SiteLevels.readyPosts(site, tops));
         for (ColumnMask.Cell post : ring.posts()) {
             if (SiteLevels.fenceReady(site, post, tops, fenceAtLevel(level, post, fenceY))) {

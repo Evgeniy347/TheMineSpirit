@@ -65,7 +65,7 @@ final class StagePlacePost {
                     PlotLeveling plan = PlotLeveling.plan(
                             new BlockCoord(place.x(), levelY, place.z()),
                             place.mask(),
-                            (x, z) -> GroundProbe.top(post.level, x, z, levelY));
+                            SettlementGround.tops(post.level, levelY));
                     return target.withLeveling(plan);
                 })
                 .orElse(target);

@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
 final class GraphWorld {
     static final SupplyGraph GRAPH = SupplyGraph.loadDefault();
@@ -71,6 +72,57 @@ final class GraphWorld {
 
     GraphWorld facts(GraphFacts value) {
         facts = value;
+        return this;
+    }
+
+    GraphWorld lotReady(String building, boolean ready) {
+        return building(
+                building,
+                before -> new GraphFacts.Building(
+                        before.id(),
+                        before.level(),
+                        before.auditPercent(),
+                        before.damage(),
+                        before.missing(),
+                        before.extra(),
+                        before.wrong(),
+                        before.position(),
+                        before.unknown(),
+                        ready));
+    }
+
+    GraphWorld wrong(String building, int wrong) {
+        return building(
+                building,
+                before -> new GraphFacts.Building(
+                        before.id(),
+                        before.level(),
+                        before.auditPercent(),
+                        before.damage(),
+                        before.missing(),
+                        before.extra(),
+                        wrong,
+                        before.position(),
+                        before.unknown(),
+                        before.lotReady()));
+    }
+
+    private GraphWorld building(String id, UnaryOperator<GraphFacts.Building> change) {
+        GraphFacts.Building before = facts.buildings()
+                .getOrDefault(id, new GraphFacts.Building(id, 0, 0, 0, Map.of(), Map.of(), 0, null, false, true));
+        Map<String, GraphFacts.Building> next = new LinkedHashMap<>(facts.buildings());
+        next.put(id, change.apply(before));
+        facts = new GraphFacts(
+                facts.spirits(),
+                facts.threats(),
+                facts.chests(),
+                facts.resources(),
+                facts.stations(),
+                next,
+                facts.strays(),
+                facts.terrain(),
+                facts.stageReqs(),
+                facts.feedback());
         return this;
     }
 

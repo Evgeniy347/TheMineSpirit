@@ -67,4 +67,20 @@ final class GraphMutations {
         }
         return all;
     }
+
+    static List<Mutation> facts() {
+        List<Mutation> all = new ArrayList<>();
+        for (String building : GraphWorld.GRAPH.buildings().keySet()) {
+            all.add(new Mutation(
+                    building + ".lotReady=false", world -> world.copy().lotReady(building, false)));
+            all.add(new Mutation(building + ".wrong=1", world -> world.copy().wrong(building, 1)));
+        }
+        return all;
+    }
+
+    static List<Mutation> exported() {
+        List<Mutation> all = new ArrayList<>(single());
+        all.addAll(facts());
+        return all;
+    }
 }

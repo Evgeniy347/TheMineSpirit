@@ -11,11 +11,11 @@ import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.GroundsPlan;
 import com.theminespirit.core.board.MaterialSource;
-import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.SchematicMaterials;
 import com.theminespirit.core.board.SettlementFacts;
+import com.theminespirit.core.board.SettlementLevel;
 import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.StockNeed;
@@ -36,7 +36,7 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.town.SiteLevels;
+import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
 import com.theminespirit.core.town.TownPlan;
@@ -96,7 +96,6 @@ public final class FirstStepsRunner {
     private static final String MINECRAFT = "minecraft:";
     private static final long PLAN_WARN_EVERY = 600;
     private static final int EXPAND_DEPTH = 4;
-    private static final int LEVELING_SHOWN = 6;
 
     private FirstStepsRunner() {}
 
@@ -187,7 +186,7 @@ public final class FirstStepsRunner {
                 level, post.service, caseValue, stage, post.stock.available(), post.scan.wood(), post.now);
         TicketTarget target = targetFor(level, caseValue, stage, wood);
         if (caseValue == BoardCase.CLEAR_GROUNDS) {
-            target = target.withLeveling(leveling(level, stage));
+            target = target.withLeveling(SettlementGround.leveling(level, stage));
         }
         Map<String, Integer> need = need(level, post.stock, new OpenStep(caseValue, target, Map.of(), wood), blocked);
         if (StageSettle.AUDIT_STEPS.contains(caseValue)
@@ -339,44 +338,6 @@ public final class FirstStepsRunner {
 
     static String partId(BoardCase caseValue, int part) {
         return StageReopen.partId(caseValue, part);
-    }
-
-    private static PlotLeveling leveling(ServerLevel level, StageSite site) {
-        IntBinaryOperator tops =
-                (x, z) -> GroundProbe.top(level, x, z, site.anchor().y() + 1);
-        PlotLeveling plan = SiteLevels.leveling(site, tops, PlotPlanBlocks.of(site)::planned);
-        if (!plan.cut().isEmpty()) {
-            LOGGER.info(
-                    "Расчистка на y={}: лишнего выше уровня {} ящиков, подсыпки нет",
-                    site.anchor().y(),
-                    plan.cut().size());
-            if (plan.cut().size() <= LEVELING_SHOWN) {
-                LOGGER.info("[plot] срезка выше уровня: {}", plan.cut());
-            }
-        }
-        return plan;
-    }
-
-    private static int descentEnd(StageSite site) {
-        try {
-            return MineDescentBottom.standOf(site.mineEntrance())
-                    .map(BlockCoord::z)
-                    .orElse(Integer.MAX_VALUE);
-        } catch (IllegalStateException | IllegalArgumentException unbuildable) {
-            return Integer.MAX_VALUE;
-        }
-    }
-
-    private static IntBinaryOperator plotFeet(ServerLevel level, StageSite site) {
-        int passageEnd = descentEnd(site);
-        BlockCoord anchor = site.anchor();
-        return (x, z) -> {
-            if (site.minePassage(x, z) && z <= passageEnd) {
-                return anchor.y();
-            }
-            int feet = GroundProbe.feet(level, x, z, anchor.y());
-            return site.mineColumn(x, z) ? Math.min(feet, anchor.y()) : feet;
-        };
     }
 
     static void expand(MaterialSource source, String item, int count, Map<String, Integer> raw, int depth) {
@@ -544,7 +505,8 @@ public final class FirstStepsRunner {
         Set<BoardCase> done = journalSteps(service, false, level, stage);
         Set<BoardCase> blocked = journalSteps(service, true, level, stage);
         boolean journal = world == PlanWorld.JOURNAL;
-        boolean plotLevel = journal || PlotLeveling.isLevel(stage.anchor(), stage.level(), plotFeet(level, stage));
+        boolean plotLevel =
+                journal || PlotLeveling.isLevel(stage.anchor(), stage.level(), SettlementGround.plotFeet(level, stage));
         boolean mineEntrance = built(level, done, BoardCase.BUILD_MINE, site, journal);
         boolean lighting = built(level, done, BoardCase.LIGHTING, site, journal);
         boolean fence = built(level, done, BoardCase.BUILD_FENCE, site, journal);
@@ -669,8 +631,7 @@ public final class FirstStepsRunner {
         SettlementPlotStore store = SettlementPlotStore.get(level);
         BlockCoord center = SettlementPlot.center(homes);
         TownPlan town = TownSurvey.town(level, service, store, center, now);
-        IntBinaryOperator feet = (x, z) -> GroundProbe.feet(level, x, z, center.y());
-        Optional<StageSite> draft = PlotHeights.finalSite(town, center);
+        Optional<ColumnMask> draft = SettlementLevel.finalArea(town);
         if (draft.isEmpty()) {
             if (now % PLAN_WARN_EVERY != 0) {
                 return Optional.empty();
@@ -678,16 +639,21 @@ public final class FirstStepsRunner {
             LOGGER.warn("[plot] нет финального этапа у {}: не поместилось {}", center, town.unplaced());
             return Optional.empty();
         }
+        ColumnMask area = draft.orElseThrow();
+        IntBinaryOperator feet = SettlementGround.feet(level, center.y());
         Optional<SettlementPlot> stored = store.plot();
         if (stored.isPresent() && stored.orElseThrow().covers(center)) {
-            SettlementPlot kept = PlotHeights.rechecked(service, store, stored.orElseThrow(), feet, now);
+            SettlementPlot kept = stored.orElseThrow();
+            if (!store.levelMarked()) {
+                kept = PlotHeights.remeasured(service, store, level, kept, area, feet, now);
+            }
+            kept = PlotHeights.markLeveled(service, store, kept);
             return Optional.of(checkedWood(level, service, store, kept, now));
         }
         String wood = SettlementWood.survey(level, center, service.stock().available());
-        StageSite survey = draft.orElseThrow();
-        int above = PlotHeights.waterAbove(level, survey.level());
+        int above = SettlementGround.waterAbove(level, area);
         return Optional.of(PlotHeights.surveyed(
-                service, store, new PlotHeights.Draft(survey.level(), center, homes.size(), wood, above), feet, now));
+                service, store, new PlotHeights.Draft(area, center, homes.size(), wood, above), feet, now));
     }
 
     private static SettlementPlot checkedWood(
