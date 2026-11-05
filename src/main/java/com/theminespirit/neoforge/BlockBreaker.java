@@ -41,6 +41,8 @@ public final class BlockBreaker {
     public enum Intent {
         BREAK,
         HARVEST,
+        CHOP,
+        CHOP_HARVEST,
         DEMOLISH
     }
 
@@ -117,7 +119,7 @@ public final class BlockBreaker {
     }
 
     public Begin beginChop(BlockPos target, boolean tended) {
-        return begin(target, tended ? Intent.HARVEST : Intent.BREAK, false, true);
+        return begin(target, tended ? Intent.CHOP_HARVEST : Intent.CHOP, false, true);
     }
 
     private static Intent intent(boolean tended, boolean demolish) {
@@ -144,28 +146,26 @@ public final class BlockBreaker {
         if (hardness < 0) {
             return new Refused(
                     RefuseReason.UNBREAKABLE,
-                    "блок " + blockId(targetState) + " в " + target.toShortString() + " неразрушим: твёрдость "
-                            + hardness);
+                    "блок " + blockId(targetState) + " в " + target.toShortString() + " неразрушим: " + hardness);
         }
         if (reachLimited) {
             double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(target));
             if (distance > REACH) {
                 return new Refused(
                         RefuseReason.OUT_OF_REACH,
-                        "блок в " + target.toShortString() + " дальше " + REACH + " от глаз духа (" + distance
-                                + "): сначала подойти");
+                        "блок " + target.toShortString() + " дальше " + REACH + " от глаз (" + distance + "): подойти");
             }
         }
-        if (BreakSight.visible(spirit, target, leavesPass) != Visibility.CLEAR) {
+        boolean chop = intent == Intent.CHOP || intent == Intent.CHOP_HARVEST;
+        if (!chop && BreakSight.visible(spirit, target, leavesPass) != Visibility.CLEAR) {
             return new Refused(
                     RefuseReason.NO_SIGHT,
-                    "блок в " + target.toShortString()
-                            + " не виден из глаз духа: сначала подойти или убрать мешающий блок");
+                    "блок " + target.toShortString() + " не виден из глаз: подойти или убрать мешающий блок");
         }
         BlockProtection.Decision decision = switch (intent) {
-            case HARVEST -> spirit.protectionGate().checkHarvest(target, targetState);
+            case HARVEST, CHOP_HARVEST -> spirit.protectionGate().checkHarvest(target, targetState);
             case DEMOLISH -> spirit.protectionGate().checkDemolish(target, targetState);
-            case BREAK -> spirit.protectionGate().checkBreakOrEscape(target, targetState, escaping);
+            case BREAK, CHOP -> spirit.protectionGate().checkBreakOrEscape(target, targetState, escaping);
         };
         if (decision instanceof BlockProtection.Refused refused) {
             return new Protected(refused.policy(), refused.reason());

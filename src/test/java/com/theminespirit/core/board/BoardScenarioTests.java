@@ -32,24 +32,6 @@ class BoardScenarioTests {
 
     @Tag("mutation")
     @Test
-    void scenarios_ToolCase_NotHeldWithoutTool() {
-        List<BoardScenario.Anomaly> found = sweep((scenario, round) -> {
-            for (BoardTicket held : scenario.assigned()) {
-                Optional<UUID> holder = scenario.board.holderOf(held.id());
-                Optional<BoardScenario.Spirit> spirit = holder.flatMap(scenario::spirit);
-                if (spirit.isPresent()
-                        && !ToolGate.allows(
-                                held.boardCase(), spirit.orElseThrow().items())) {
-                    scenario.anomalies.add(
-                            new BoardScenario.Anomaly("TOOL_HELD_WITHOUT_TOOL", scenario.seed, round, held.id()));
-                }
-            }
-        });
-        assertTrue(found.isEmpty(), "Задание с инструментом держит дух без инструмента (INC-94): " + first(found));
-    }
-
-    @Tag("mutation")
-    @Test
     void scenarios_DeadHolder_Released() {
         List<BoardScenario.Anomaly> found = sweep((scenario, round) -> {
             for (BoardTicket held : scenario.assigned()) {

@@ -77,6 +77,24 @@ class ChopStandsTests {
                 "Дальняя стоянка остаётся в пределах досягаемости рубки, иначе дух не достанет ствол");
     }
 
+    @Test
+    void stands_HangingTopWithoutTrunk_FindsGroundBelow() {
+        List<BlockCoord> logs = List.of(new BlockCoord(0, 6, 0), new BlockCoord(0, 7, 0), new BlockCoord(0, 8, 0));
+        Tree hanging = new Tree(new BlockCoord(0, 6, 0), logs);
+
+        List<BlockCoord> stands = ChopStands.stands(hanging, feet -> feet.y() == 1);
+
+        assertFalse(
+                stands.isEmpty(),
+                "Висящая верхушка без ствола рубится со стоянки на земле под ней, а не требует столба/лестницы");
+        assertTrue(
+                stands.stream().allMatch(feet -> feet.y() == 1),
+                "Стоянка у висящей верхушки — земля, а не воздух рядом с брёвнами: " + stands);
+        assertTrue(
+                stands.contains(new BlockCoord(0, 1, 0)),
+                "Дух встаёт под самой верхушкой (или вплотную к колонне), чтобы дорубить её снизу: " + stands);
+    }
+
     private static Tree trunk(int baseY, int count) {
         List<BlockCoord> logs = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {

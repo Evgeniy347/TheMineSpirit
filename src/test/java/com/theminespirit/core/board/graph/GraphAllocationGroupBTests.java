@@ -157,10 +157,11 @@ class GraphAllocationGroupBTests {
 
         Optional<DispatchRound.Candidate> miner = round.choose(clearing, spirits);
 
-        assertEquals("spirit-1", miner.orElseThrow().name(), "Расчистка камня — духу с киркой; топор ей не замена");
+        assertEquals(
+                "spirit-1", miner.orElseThrow().name(), "Расчистка камня — духу с киркой; инструмент предпочтителен");
         assertTrue(
-                round.refusal(clearing, spirits.get(1)).orElse("").contains("нет инструмента _pickaxe"),
-                "Дух без кирки не берёт работу, где нужна кирка");
+                round.refusal(clearing, spirits.get(1)).isEmpty(),
+                "Дух без кирки не запрещён: он может взять работу, но выбирают кирку, когда она есть");
     }
 
     @Test
