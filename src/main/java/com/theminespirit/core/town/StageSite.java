@@ -165,6 +165,34 @@ public record StageSite(
                 || mine.covers(x, z);
     }
 
+    public PlanBuilding planBuilding(int x, int y, int z) {
+        boolean insideHeight = y >= anchor.y() - 1 && y <= anchor.y() + BUILDING_HEIGHT;
+        if (insideHeight) {
+            if (hut.covers(x, z)) {
+                return PlanBuilding.HOUSE;
+            }
+            if (yard.covers(x, z)) {
+                return PlanBuilding.YARD;
+            }
+            if (orchard.covers(x, z) || extraOrchardCell(x, z)) {
+                return PlanBuilding.ORCHARD;
+            }
+        }
+        if (minePlan(x, z)) {
+            return PlanBuilding.MINE;
+        }
+        if (ringPost(x, z)) {
+            return PlanBuilding.FENCE;
+        }
+        if (insideHeight && fenceStrip.contains(x, z)) {
+            return PlanBuilding.FENCE;
+        }
+        if (streets.contains(x, z)) {
+            return PlanBuilding.STREET;
+        }
+        return PlanBuilding.NONE;
+    }
+
     private boolean minePlan(int x, int z) {
         if (mineColumn(x, z) || mine.covers(x, z)) {
             return true;

@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.StageSite;
@@ -45,13 +46,23 @@ public final class PlotEditLog {
             return;
         }
         LOGGER.info(
-                "[plot-edit] «{}»: сломан блок плана {} в ({}, {}, {}) — {}; клетку вернёт ремонт",
+                "[plot-edit] «{}»: сломан блок плана {} в ({}, {}, {}) — {}; задание {}; клетку вернёт ремонт",
                 area(site, cell),
                 expected,
                 cell.x(),
                 cell.y(),
                 cell.z(),
-                who(breaker));
+                who(breaker),
+                task(breaker));
+    }
+
+    static String task(@Nullable Entity breaker) {
+        if (!(breaker instanceof SpiritEntity spirit) || !(spirit.level() instanceof ServerLevel server)) {
+            return "—";
+        }
+        return BoardRegistry.peek(server)
+                .map(service -> BoardLog.culprit(service.board().assignedTo(spirit.getUUID())))
+                .orElse("—");
     }
 
     private static Plan plan(StageSite site) {
