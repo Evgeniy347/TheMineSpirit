@@ -39,7 +39,7 @@ src/main/java/com/theminespirit/neoforge/SpiritScripts.java	384
 src/main/java/com/theminespirit/neoforge/WorldScanner.java	306
 src/main/java/com/theminespirit/neoforge/board/BoardService.java	1013
 src/main/java/com/theminespirit/neoforge/board/FirstStepsRunner.java	686
-src/main/java/com/theminespirit/neoforge/board/GraphPost.java	303
+src/main/java/com/theminespirit/neoforge/board/GraphPost.java	313
 src/main/java/com/theminespirit/neoforge/board/TransferWatch.java	569
 src/main/java/com/theminespirit/neoforge/crafting/CraftScript.java	383
 src/main/java/com/theminespirit/neoforge/crafting/SmeltScript.java	308

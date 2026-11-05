@@ -105,7 +105,7 @@ final class GraphEventPost {
                             id,
                             BoardCase.ACTIVITY_RETREAT,
                             Optional.of(spirit.getUUID()),
-                            ticket.task().priority(),
+                            Math.min(100, Math.max(1, ticket.task().priority())),
                             ticket.id(),
                             Map.of()),
                     TicketTarget.at(post.scan.home()).withPlan(new ScriptCall("retreat", Map.of())));

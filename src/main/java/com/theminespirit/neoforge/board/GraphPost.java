@@ -236,7 +236,17 @@ final class GraphPost {
             String cause,
             Map<String, Integer> required,
             List<String> modifiers) {
-        return new BoardTicket(id, boardCase, assignee, priority, now, 1, cause, List.of(), required, modifiers);
+        return new BoardTicket(
+                id,
+                boardCase,
+                assignee,
+                Math.min(100, Math.max(0, priority)),
+                now,
+                1,
+                cause,
+                List.of(),
+                required,
+                modifiers);
     }
 
     BoardTicket leveled(BoardTicket base, int level, List<String> dependsOn) {

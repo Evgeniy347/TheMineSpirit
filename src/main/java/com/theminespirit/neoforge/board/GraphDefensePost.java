@@ -58,7 +58,7 @@ final class GraphDefensePost {
                             id,
                             BoardCase.ACTIVITY_DEFEND,
                             Optional.of(defender.getUUID()),
-                            ticket.task().priority(),
+                            priority(ticket),
                             ticket.id(),
                             Map.of()),
                     TicketTarget.at(position(order.target().get()))
@@ -69,7 +69,60 @@ final class GraphDefensePost {
                                             target(post, ticket, order.target().get())))));
             posted = true;
         }
+        if (!posted) {
+            posted = fallback(post, ticket);
+        }
         return posted;
+    }
+
+    private static boolean fallback(GraphPost post, GraphTickets.Ticket ticket) {
+        GraphFacts.Threat threat = post.facts.threats().stream().findFirst().orElse(null);
+        SpiritEntity defender = null;
+        if (threat != null) {
+            for (SpiritEntity spirit : post.spirits) {
+                if (spirit.isRemoved()) {
+                    continue;
+                }
+                if (defender == null
+                        || spirit.distanceToSqr(
+                                        threat.position().x(),
+                                        threat.position().y(),
+                                        threat.position().z())
+                                < defender.distanceToSqr(
+                                        threat.position().x(),
+                                        threat.position().y(),
+                                        threat.position().z())) {
+                    defender = spirit;
+                }
+            }
+        }
+        if (defender == null) {
+            return false;
+        }
+        String id = ticket.id() + ":" + defender.getUUID();
+        if (post.open(id) || post.done(id)) {
+            return true;
+        }
+        BlockCoord target = threat == null
+                ? post.scan.home()
+                : new BlockCoord(
+                        threat.position().x(),
+                        threat.position().y(),
+                        threat.position().z());
+        post.submit(
+                post.ticket(
+                        id,
+                        BoardCase.ACTIVITY_DEFEND,
+                        Optional.of(defender.getUUID()),
+                        priority(ticket),
+                        ticket.id(),
+                        Map.of()),
+                TicketTarget.at(target).withPlan(new ScriptCall("defend", Map.of("target", "hostile"))));
+        return true;
+    }
+
+    static int priority(GraphTickets.Ticket ticket) {
+        return Math.min(100, Math.max(1, ticket.task().priority()));
     }
 
     private static SpiritEntity defender(GraphPost post, UUID id) {

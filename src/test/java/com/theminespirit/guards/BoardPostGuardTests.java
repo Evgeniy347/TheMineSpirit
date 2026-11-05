@@ -82,6 +82,16 @@ class BoardPostGuardTests {
     }
 
     @Test
+    void graphPostTicket_PriorityOutsideBoardRange_Clamped() {
+        String source = SourceFiles.javaUnder(BOARD).get(BOARD.resolve("GraphPost.java"));
+
+        assertTrue(
+                source.contains("Math.min(100, Math.max(0, priority))"),
+                "Билет графа с весом события выше 100 обязан зажиматься к диапазону BoardTicket: иначе источник "
+                        + "доски падает с IllegalArgumentException и задача (оборона/еда) не ставится");
+    }
+
+    @Test
     void tasksAndDefenseOrders_OutsideGraph_StartNothing() {
         Map<Path, String> sources = new LinkedHashMap<>(SourceFiles.javaUnder(INTELLECT));
         sources.putAll(SourceFiles.javaUnder(BOARD));
