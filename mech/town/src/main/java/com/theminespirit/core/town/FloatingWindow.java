@@ -1,6 +1,5 @@
 package com.theminespirit.core.town;
 
-import com.theminespirit.core.board.SettlementPlot;
 import java.util.Objects;
 
 public final class FloatingWindow {

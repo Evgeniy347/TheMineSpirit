@@ -1,6 +1,5 @@
 package com.theminespirit.core.town;
 
-import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Comparator;

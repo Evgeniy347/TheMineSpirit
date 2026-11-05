@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSite;
 import java.util.Objects;
 import java.util.Optional;

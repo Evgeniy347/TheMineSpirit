@@ -1,8 +1,7 @@
 package com.theminespirit.core.town;
 
-import com.theminespirit.core.board.PlotCells;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.policy.BlockProtection;
+import com.theminespirit.core.policy.StrayRules;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -72,7 +71,7 @@ public final class SettlementScan {
 
     private SettlementScan() {}
 
-    public static Strays scan(List<ColumnMask.Cell> columns, int level, BlockProtection rules, World world) {
+    public static Strays scan(List<ColumnMask.Cell> columns, int level, StrayRules rules, World world) {
         Objects.requireNonNull(columns, "Колонки участка не могут быть null: сканировать нечего");
         Objects.requireNonNull(rules, "Правила лишнего не могут быть null: без них не отличить мусор");
         Objects.requireNonNull(world, "Мир не может быть null: без него блоки не прочитать");
@@ -130,7 +129,7 @@ public final class SettlementScan {
     }
 
     private static int naturalBlocks(
-            World world, BlockProtection rules, int x, int z, int from, int surface, @Nullable List<BlockCoord> work) {
+            World world, StrayRules rules, int x, int z, int from, int surface, @Nullable List<BlockCoord> work) {
         int found = 0;
         for (int y = from; y <= surface; y++) {
             if (world.open(x, y, z) || world.planned(x, y, z)) {

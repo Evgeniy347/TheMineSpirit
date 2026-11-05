@@ -1,10 +1,14 @@
 package com.theminespirit.core.building;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.reload.TableSlot;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public record SpiritReach(int horizontal, int up, int down) {
+    private static final TableSlot<SpiritReach> SOURCE =
+            new TableSlot<>(() -> BuildData.load().reach());
+
     public SpiritReach {
         if (horizontal < 1 || up < 0 || down < 0) {
             throw new IllegalArgumentException("Досягаемость " + horizontal + "/" + up + "/" + down
@@ -13,7 +17,11 @@ public record SpiritReach(int horizontal, int up, int down) {
     }
 
     public static SpiritReach current() {
-        return DataTables.INSTANCE.building().current().reach();
+        return SOURCE.current();
+    }
+
+    public static void useSource(Supplier<SpiritReach> supplier) {
+        SOURCE.use(supplier);
     }
 
     public static boolean forbiddenStand(BlockCoord stand, BlockCoord cell) {

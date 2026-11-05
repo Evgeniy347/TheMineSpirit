@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.observation.BlockBox;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.SectionSlice;
@@ -9,6 +8,7 @@ import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.FloatingSweep;
 import com.theminespirit.core.town.FloatingWindow;
+import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.BlockStates;

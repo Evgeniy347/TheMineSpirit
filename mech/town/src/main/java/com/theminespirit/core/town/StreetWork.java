@@ -1,7 +1,5 @@
 package com.theminespirit.core.town;
 
-import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.building.DemoBuildings;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.observation.BlockCoord;
@@ -12,17 +10,12 @@ import java.util.Objects;
 public final class StreetWork {
     private StreetWork() {}
 
-    public static int level(StageRules rules, int stage) {
-        Objects.requireNonNull(rules, "Правила этапов не могут быть null: уровень плиток улиц — данные этапа");
-        if (stage < 1 || stage > rules.stages().size()) {
-            throw new IllegalArgumentException("Этапа " + stage + " нет в stages.json: уровень плиток улиц не узнать");
+    public static int level(int stageLevel) {
+        if (stageLevel < 1) {
+            throw new IllegalArgumentException(
+                    "Уровень плиток улиц " + stageLevel + " меньше 1: этап без BUILD_STREETS не может класть улицу");
         }
-        Integer level = rules.stages().get(stage - 1).buildings().get(BoardCase.BUILD_STREETS);
-        if (level == null) {
-            throw new IllegalStateException("stages.json: у этапа " + stage
-                    + " нет BUILD_STREETS — улицам этапа не из чего выбрать материал плиток");
-        }
-        return level;
+        return stageLevel;
     }
 
     public static List<SchemeBuild> of(

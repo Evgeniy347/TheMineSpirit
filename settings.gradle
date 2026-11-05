@@ -21,3 +21,5 @@ includeBuild('build-logic')
 include ':api'
 include ':board'
 include ':mod'
+include ':mech:building'
+include ':mech:town'

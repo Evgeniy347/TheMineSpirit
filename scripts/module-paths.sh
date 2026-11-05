@@ -21,9 +21,16 @@ MOD_TEMPLATES_DIR="$(module_layout_value templates)"
 MOD_GENERATED_DIR="$(module_layout_value generated_resources)"
 MOD_GAME_TESTS_DIR="$MOD_MAIN_DIR/$(module_layout_value gametests)"
 MOD_JAR_DIR="${THEMINESPIRIT_JAR_DIR:-$(module_layout_value jar_dir)}"
+MOD_API_MAIN_DIR="$(module_layout_value api)"
+MOD_API_TEST_DIR="$(module_layout_value api_test)"
+MOD_MECH_BUILDING_DIR="$(module_layout_value mech_building)"
+MOD_MECH_BUILDING_TEST_DIR="$(module_layout_value mech_building_test)"
+MOD_MECH_TOWN_DIR="$(module_layout_value mech_town)"
+MOD_MECH_TOWN_TEST_DIR="$(module_layout_value mech_town_test)"
 
 for name in MOD_PACKAGE_ROOT MOD_MAIN_DIR MOD_TEST_DIR MOD_RESOURCES_DIR MOD_TEST_RESOURCES_DIR \
-        MOD_TEMPLATES_DIR MOD_GENERATED_DIR MOD_GAME_TESTS_DIR MOD_JAR_DIR; do
+        MOD_TEMPLATES_DIR MOD_GENERATED_DIR MOD_GAME_TESTS_DIR MOD_JAR_DIR MOD_API_MAIN_DIR MOD_API_TEST_DIR \
+        MOD_MECH_BUILDING_DIR MOD_MECH_BUILDING_TEST_DIR MOD_MECH_TOWN_DIR MOD_MECH_TOWN_TEST_DIR; do
     if [ -z "${!name}" ]; then
         echo "ОШИБКА: в $MODULE_LAYOUT_FILE нет значения для $name" >&2
         return 1 2>/dev/null || exit 1

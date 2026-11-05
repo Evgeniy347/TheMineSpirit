@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.PlotLeveling;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

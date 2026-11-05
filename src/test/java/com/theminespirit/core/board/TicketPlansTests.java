@@ -23,6 +23,7 @@ import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.ScriptSpec;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
 import com.theminespirit.core.town.TownFixtures;

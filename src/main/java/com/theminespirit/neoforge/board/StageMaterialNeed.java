@@ -2,10 +2,10 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BuildGap;
-import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.town.PlotLeveling;
 import java.util.Map;
 import net.minecraft.server.level.ServerLevel;
 

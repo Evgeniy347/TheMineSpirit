@@ -3,8 +3,8 @@ package com.theminespirit.core.board.route;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.PlotLeveling;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

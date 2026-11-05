@@ -11,12 +11,10 @@ import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.GroundsPlan;
 import com.theminespirit.core.board.MaterialSource;
-import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.SchematicMaterials;
 import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.SettlementLevel;
-import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
@@ -37,6 +35,8 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.PlotLeveling;
+import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
 import com.theminespirit.core.town.TownPlan;
@@ -672,7 +672,7 @@ public final class FirstStepsRunner {
                 "[plot] порода плана {} → {}: запас брёвен меньше 16 — решает биом (INC-62)",
                 plot.wood(),
                 fixed.wood());
-        service.journal().recordEntry(fixed.journalEntry(now, ConfigStamp.current()));
+        service.journal().recordEntry(SettlementLevel.journalEntry(fixed, now, ConfigStamp.current()));
         return fixed;
     }
 

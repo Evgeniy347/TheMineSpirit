@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownFixtures;
 import java.util.ArrayList;

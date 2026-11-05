@@ -1,10 +1,10 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.route.RouteDigging;
 import com.theminespirit.core.board.route.RoutePath;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.PlotLeveling;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;

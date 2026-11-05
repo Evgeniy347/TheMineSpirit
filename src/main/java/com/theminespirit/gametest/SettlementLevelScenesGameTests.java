@@ -1,10 +1,10 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.FenceLine;
+import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownStreets;
 import com.theminespirit.neoforge.board.SettlementPlotStore;

@@ -5,10 +5,10 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.LevelingRules;
 import com.theminespirit.core.board.SettlementLevel;
-import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.SettlementPlot;
 import java.util.List;
 import java.util.function.IntBinaryOperator;
 import net.minecraft.server.level.ServerLevel;
@@ -39,7 +39,8 @@ final class PlotHeights {
                 before,
                 after);
         service.journal()
-                .recordEntry(next.journalEntry(
+                .recordEntry(SettlementLevel.journalEntry(
+                        next,
                         now,
                         ConfigStamp.current(),
                         List.of("высота по SettlementLevel v1: " + before + " → " + after)));
@@ -66,7 +67,7 @@ final class PlotHeights {
                 plot.anchor().z(),
                 homes,
                 wood);
-        service.journal().recordEntry(plot.journalEntry(now, ConfigStamp.current(), List.of(note)));
+        service.journal().recordEntry(SettlementLevel.journalEntry(plot, now, ConfigStamp.current(), List.of(note)));
         return plot;
     }
 

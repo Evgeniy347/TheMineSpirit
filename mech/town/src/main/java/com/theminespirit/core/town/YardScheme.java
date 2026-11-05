@@ -4,7 +4,6 @@ import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.reload.DataTables;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -30,7 +29,7 @@ public final class YardScheme {
     }
 
     public static List<List<BlockCoord>> slots(StageSite site) {
-        return slots(DataTables.INSTANCE.presets().current(), site);
+        return slots(PresetLibrary.current(), site);
     }
 
     public static List<List<BlockCoord>> slots(PresetLibrary presets, StageSite site) {
@@ -61,7 +60,7 @@ public final class YardScheme {
                     new SchemeBuild(YARD, origin(site), BuildRotation.NONE, TABLE),
                     new SchemeBuild(YARD, origin(site), BuildRotation.NONE, CHEST));
         }
-        PresetLibrary presets = DataTables.INSTANCE.presets().current();
+        PresetLibrary presets = PresetLibrary.current();
         List<List<BlockCoord>> slots = slots(presets, site);
         BlockCoord left;
         if (slot <= slots.size()) {
@@ -130,8 +129,7 @@ public final class YardScheme {
 
     public static List<SchemeBuild> lighting(StageSite site, int stage) {
         String scheme = lightScheme(stage);
-        Schematic.Entry base =
-                scheme(DataTables.INSTANCE.presets().current(), scheme).blocks().get(0);
+        Schematic.Entry base = scheme(PresetLibrary.current(), scheme).blocks().get(0);
         List<SchemeBuild> builds = new ArrayList<>();
         if (stage < 2) {
             builds.add(new SchemeBuild(YARD, origin(site), BuildRotation.NONE, TORCH));

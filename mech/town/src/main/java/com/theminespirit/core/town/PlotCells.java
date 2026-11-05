@@ -1,4 +1,4 @@
-package com.theminespirit.core.board;
+package com.theminespirit.core.town;
 
 import java.util.Objects;
 import java.util.Optional;

@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolGate;
@@ -9,6 +8,7 @@ import com.theminespirit.core.building.SchematicGround;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.PlotLeveling;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

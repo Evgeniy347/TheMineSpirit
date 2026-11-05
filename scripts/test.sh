@@ -671,6 +671,20 @@ analyze_unit() {
         errors=$((errors + api_errors))
         [ "${#api_report[@]}" -gt 1 ] && failed_names+=("${api_report[@]:1}")
     fi
+    local mech_report=() mech_dir mech_total mech_failures mech_errors
+    for mech_dir in TestResults/mech/building/xml TestResults/mech/town/xml; do
+        [ -d "$mech_dir" ] || continue
+        mapfile -t mech_report < <(parse_unit_reports "$mech_dir")
+        mech_total=0 mech_failures=0 mech_errors=0
+        read -r mech_total mech_failures mech_errors <<<"${mech_report[0]:-}"
+        case "$mech_total" in ''|*[!0-9]*) mech_total=0 ;; esac
+        case "$mech_failures" in ''|*[!0-9]*) mech_failures=0 ;; esac
+        case "$mech_errors" in ''|*[!0-9]*) mech_errors=0 ;; esac
+        total=$((total + mech_total))
+        failures=$((failures + mech_failures))
+        errors=$((errors + mech_errors))
+        [ "${#mech_report[@]}" -gt 1 ] && failed_names+=("${mech_report[@]:1}")
+    done
 
     if [ "$failures" -eq 0 ] && [ "$errors" -eq 0 ] && [ "$total" -gt 0 ]; then
         if [ "$gradle_code" -ne 0 ]; then
@@ -762,6 +776,7 @@ start_heartbeat
 if [ "$MODE" = "unit" ]; then
     rm -f TestResults/unit/xml/TEST-*.xml TestResults/unit/test-cost.csv
     rm -f TestResults/api/xml/TEST-*.xml
+    rm -f TestResults/mech/building/xml/TEST-*.xml TestResults/mech/town/xml/TEST-*.xml
     start_monitor "unit"
 
     UNIT_EXTRA=()
@@ -773,7 +788,7 @@ if [ "$MODE" = "unit" ]; then
             UNIT_EXTRA=(staticAnalysis --continue)
         fi
     else
-        UNIT_EXCLUDE=(-x :api:test)
+        UNIT_EXCLUDE=(-x :api:test -x :mech:building:test -x :mech:town:test)
     fi
 
     if command -v setsid >/dev/null 2>&1; then
@@ -848,7 +863,7 @@ else
 
     SHARD_EXCLUDES=()
     if [ "$GAMETEST_SHARDS" -gt 1 ]; then
-        "$GRADLEW" createMinecraftArtifacts classes \
+        "$GRADLEW" createMinecraftArtifacts classes jar \
             writeGameTestServerLegacyClasspath prepareGameTestServerRun \
             >"$LOG_FILE.preflight" 2>&1 &
         PRE_PID=$!
@@ -867,6 +882,7 @@ else
         rm -f "$LOG_FILE.preflight"
         SHARD_EXCLUDES=(-x createMinecraftArtifacts -x compileJava -x generateModMetadata
             -x processResources -x classes -x downloadAssets
+            -x jar -x :api:jar -x :mech:building:jar -x :mech:town:jar
             -x writeGameTestServerLegacyClasspath -x prepareGameTestServerRun)
     fi
 

@@ -1,7 +1,6 @@
-package com.theminespirit.core.board;
+package com.theminespirit.core.town;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.town.ColumnMask;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;

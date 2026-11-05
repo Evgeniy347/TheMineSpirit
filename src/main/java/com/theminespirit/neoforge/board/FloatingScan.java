@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.forestry.TreeGroup;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.StandSpots;
@@ -10,6 +9,7 @@ import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.FloatingWindow;
+import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StrayRule;
 import com.theminespirit.core.town.TreeSupport;

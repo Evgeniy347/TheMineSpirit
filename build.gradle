@@ -62,9 +62,12 @@ base {
     archivesName = mod_id
 }
 
-sourceSets.main.output.classesDirs.from(provider { project(':api').sourceSets.main.output.classesDirs })
+sourceSets.main.output.classesDirs.from(
+        provider { project(':api').sourceSets.main.output.classesDirs },
+        provider { project(':mech:building').sourceSets.main.output.classesDirs },
+        provider { project(':mech:town').sourceSets.main.output.classesDirs })
 tasks.named('classes') {
-    dependsOn ':api:classes'
+    dependsOn ':api:classes', ':mech:building:classes', ':mech:town:classes'
 }
 
 neoForge {
@@ -119,6 +122,8 @@ configurations {
 
 dependencies {
     implementation project(':api')
+    implementation project(':mech:building')
+    implementation project(':mech:town')
     implementation "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
     additionalRuntimeClasspath "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
     jarJar("com.fasterxml.jackson.core:jackson-databind:${jackson_version}") {
@@ -182,7 +187,7 @@ publishing {
 
 def unitTestThreads = (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}") as int
 tasks.named('test', Test) {
-    dependsOn ':api:test'
+    dependsOn ':api:test', ':mech:building:test', ':mech:town:test'
     useJUnitPlatform {
         excludeTags 'slow', 'mutation', 'export'
     }
@@ -305,6 +310,10 @@ tasks.withType(Test).configureEach {
 
 tasks.named('check') {
     dependsOn tasks.named('test')
+}
+
+tasks.named('staticAnalysisFast') {
+    dependsOn ':mech:building:staticAnalysisFast', ':mech:town:staticAnalysisFast'
 }
 
 tasks.named('test') {

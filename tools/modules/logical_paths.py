@@ -15,13 +15,21 @@ import argparse
 import sys
 from pathlib import Path
 
-MAIN = "src/main/java/com/theminespirit/"
-TEST = "src/test/java/com/theminespirit/"
+PREFIXES = (
+    "src/main/java/com/theminespirit/",
+    "src/test/java/com/theminespirit/",
+    "api/src/main/java/com/theminespirit/",
+    "api/src/test/java/com/theminespirit/",
+    "mech/building/src/main/java/com/theminespirit/",
+    "mech/building/src/test/java/com/theminespirit/",
+    "mech/town/src/main/java/com/theminespirit/",
+    "mech/town/src/test/java/com/theminespirit/",
+)
 DEFAULT_FILES = ("config/filesize-baseline.txt", "config/comment-baseline.txt")
 
 
 def logical(path: str) -> str:
-    for prefix in (MAIN, TEST):
+    for prefix in PREFIXES:
         if path.startswith(prefix):
             return path[len(prefix):]
     return path

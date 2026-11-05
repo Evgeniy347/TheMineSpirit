@@ -2,6 +2,7 @@ package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.theminespirit.core.town.PlotLeveling;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

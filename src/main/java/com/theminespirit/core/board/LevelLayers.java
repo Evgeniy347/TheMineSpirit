@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.town.PlotLeveling;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;

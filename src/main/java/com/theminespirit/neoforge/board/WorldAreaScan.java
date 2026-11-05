@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.PlotCells;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.Placement;
+import com.theminespirit.core.town.PlotCells;
 import com.theminespirit.core.town.SettlementScan;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownPlan;
