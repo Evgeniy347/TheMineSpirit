@@ -74,6 +74,62 @@ final class GraphWorld {
         return this;
     }
 
+    GraphWorld rescued() {
+        Map<String, GraphFacts.Spirit> known = new LinkedHashMap<>(facts.spirits());
+        for (Map.Entry<String, GraphFacts.Spirit> entry : known.entrySet()) {
+            GraphFacts.Spirit spirit = entry.getValue();
+            if (spirit.stuck()) {
+                known.put(
+                        entry.getKey(),
+                        new GraphFacts.Spirit(
+                                spirit.id(),
+                                spirit.position(),
+                                spirit.health(),
+                                spirit.food(),
+                                spirit.air(),
+                                spirit.inWater(),
+                                spirit.trapped(),
+                                false,
+                                spirit.activity(),
+                                spirit.inventory(),
+                                spirit.armor(),
+                                spirit.tools(),
+                                spirit.trap()));
+                break;
+            }
+        }
+        facts = facts.withSpirits(known);
+        return this;
+    }
+
+    GraphWorld freed() {
+        Map<String, GraphFacts.Spirit> known = new LinkedHashMap<>(facts.spirits());
+        for (Map.Entry<String, GraphFacts.Spirit> entry : known.entrySet()) {
+            GraphFacts.Spirit spirit = entry.getValue();
+            if (spirit.trapped()) {
+                known.put(
+                        entry.getKey(),
+                        new GraphFacts.Spirit(
+                                spirit.id(),
+                                spirit.position(),
+                                spirit.health(),
+                                spirit.food(),
+                                spirit.air(),
+                                spirit.inWater(),
+                                false,
+                                spirit.stuck(),
+                                spirit.activity(),
+                                spirit.inventory(),
+                                spirit.armor(),
+                                spirit.tools(),
+                                null));
+                break;
+            }
+        }
+        facts = facts.withSpirits(known);
+        return this;
+    }
+
     GraphWorld built(String building, Built state) {
         buildings.put(building, state);
         return this;
