@@ -1,7 +1,6 @@
 package com.theminespirit.core.board.graph;
 
 import com.theminespirit.core.board.BoardCase;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
@@ -13,12 +12,16 @@ final class GraphChoiceRules {
 
     private final SupplyGraph graph;
     private final GraphState state;
-    private final Map<String, SupplyGraph.Way> ways = new LinkedHashMap<>();
+    private final GraphReach reach;
 
     GraphChoiceRules(SupplyGraph graph, GraphState state) {
+        this(graph, state, new GraphReach(graph, state));
+    }
+
+    GraphChoiceRules(SupplyGraph graph, GraphState state, GraphReach reach) {
         this.graph = graph;
         this.state = state;
-        graph.ways().forEach(way -> ways.putIfAbsent(way.id(), way));
+        this.reach = reach;
     }
 
     static List<Map.Entry<String, Double>> ordered(Map<String, Double> scores) {
@@ -35,7 +38,7 @@ final class GraphChoiceRules {
             return key;
         }
         int at = key.indexOf(AT);
-        SupplyGraph.Way way = ways.get(at < 0 ? key : key.substring(0, at));
+        SupplyGraph.Way way = reach.find(at < 0 ? key : key.substring(0, at));
         return way == null ? key : way.makes();
     }
 
@@ -141,15 +144,15 @@ final class GraphChoiceRules {
     private SupplyGraph.@Nullable Way way(String key) {
         if (key.startsWith(EVENT)) {
             String[] parts = key.split(":", 3);
-            return parts.length == 3 ? ways.get(parts[2]) : null;
+            return parts.length == 3 ? reach.find(parts[2]) : null;
         }
         int at = key.indexOf(AT);
-        return ways.get(at < 0 ? key : key.substring(0, at));
+        return reach.find(at < 0 ? key : key.substring(0, at));
     }
 
     private int travel(String key) {
         int at = key.indexOf(AT);
-        SupplyGraph.Way way = ways.get(at < 0 ? key : key.substring(0, at));
+        SupplyGraph.Way way = reach.find(at < 0 ? key : key.substring(0, at));
         String resource = way == null ? null : way.world();
         return resource == null ? 0 : graph.costs().travel(state.distances().getOrDefault(resource, 0));
     }

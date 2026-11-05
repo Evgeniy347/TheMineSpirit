@@ -36,7 +36,7 @@ public final class GraphPlanner {
         this.graph = Objects.requireNonNull(graph, "Граф не может быть null: без него не из чего выводить задания");
         this.state = Objects.requireNonNull(state, "Состояние не может быть null: задания выводятся из нехваток");
         this.reach = new GraphReach(graph, state);
-        this.choices = new GraphChoiceRules(graph, state);
+        this.choices = new GraphChoiceRules(graph, state, reach);
     }
 
     public static GraphPlan plan(SupplyGraph graph, GraphState state) {

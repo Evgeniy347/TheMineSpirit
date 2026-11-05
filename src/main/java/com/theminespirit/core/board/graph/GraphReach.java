@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 final class GraphReach {
     private final SupplyGraph graph;
@@ -28,6 +29,10 @@ final class GraphReach {
 
     Optional<SupplyGraph.Way> way(String id) {
         return Optional.ofNullable(ways.get(id));
+    }
+
+    SupplyGraph.@Nullable Way find(String id) {
+        return ways.get(id);
     }
 
     boolean available(SupplyGraph.Way way) {
