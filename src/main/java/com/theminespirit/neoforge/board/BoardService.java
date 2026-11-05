@@ -48,6 +48,7 @@ import com.theminespirit.core.town.StageWork;
 import com.theminespirit.neoforge.IncidentSnapshots;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
+import com.theminespirit.neoforge.defense.DefenseService;
 import com.theminespirit.neoforge.inventory.SpiritSupplies;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import com.theminespirit.neoforge.net.BuildFingerprint;
@@ -96,6 +97,7 @@ public final class BoardService {
     private final Map<UUID, String> orphans = new HashMap<>();
     private final CrafterMemory crafters = new CrafterMemory();
     private final TransferWait transferWait = new TransferWait();
+    private final DefenseService defense = new DefenseService();
     private StockView stock = new StockView(Map.of());
     private Set<String> liveCauses = Set.of();
     private long lastRebuild = -1;
@@ -282,6 +284,10 @@ public final class BoardService {
 
     public JournalService journal() {
         return journal;
+    }
+
+    public DefenseService defense() {
+        return defense;
     }
 
     public CraterProfiles craters() {

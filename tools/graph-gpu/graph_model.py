@@ -853,6 +853,9 @@ def buildings_first(graph, tasks, ready):
     return result
 
 
+NIGHT_LEASH_RADIUS = 32
+
+
 class Planner:
     def __init__(self, graph, state):
         if graph is None or state is None:
@@ -898,6 +901,8 @@ class Planner:
         state = self.state
         if way.world is not None and way.world not in state.world:
             return False
+        if self.far_at_night(way):
+            return False
         for item_id in way.consumes:
             item = self.graph.items.get(item_id)
             if item is not None and item.stage > state.stage:
@@ -909,6 +914,14 @@ class Planner:
             return True
         planned = (not building.optional) or state.built(building.id) != ABSENT
         return building.stage <= state.stage and planned
+
+    def far_at_night(self, way):
+        if way.world is None or str(way.world).startswith("more:"):
+            return False
+        night = "night" in self.state.events or "more:dusk_soon" in self.state.world
+        if not night:
+            return False
+        return int(self.state.distances.get(way.world, 0)) > NIGHT_LEASH_RADIUS
 
     def sourced(self, node):
         if node in self._sourced:

@@ -82,6 +82,36 @@ class BoardPostGuardTests {
     }
 
     @Test
+    void tasksAndDefenseOrders_OutsideGraph_StartNothing() {
+        Map<Path, String> sources = new LinkedHashMap<>(SourceFiles.javaUnder(INTELLECT));
+        sources.putAll(SourceFiles.javaUnder(BOARD));
+        sources.putAll(SourceFiles.javaUnder(Path.of("src/main/java/com/theminespirit/neoforge/coordinator")));
+        sources.putAll(SourceFiles.javaUnder(Path.of("src/main/java/com/theminespirit/neoforge/defense")));
+        List<String> found = new ArrayList<>();
+        for (Map.Entry<Path, String> source : sources.entrySet()) {
+            String text = SourceFiles.withoutTextBlocks(source.getValue());
+            for (String pattern : List.of(
+                    "new TaskStarter(",
+                    "starter.start(",
+                    "DefenseIssuedOrder",
+                    "defense.tick(",
+                    "expeditions.update(")) {
+                if (text.contains(pattern)) {
+                    found.add(source.getKey().getFileName() + ": " + pattern);
+                }
+            }
+        }
+
+        assertEquals(
+                List.of(),
+                found,
+                "Задачи и приказы обороны стартуют мимо графа: контроллер/координатор сам выбирает работу или "
+                        + "накладывает приказ поверх билета. Цена: вес и этап не участвуют, граф спорит с самим "
+                        + "собой. Как надо: факт — во вход графа, билет ставит GraphPost, исполнитель работает по "
+                        + "билету. Нарушители");
+    }
+
+    @Test
     void demolition_IsExecutedByGraphNode_NotByScheduler() {
         Map<Path, String> board = SourceFiles.javaUnder(BOARD);
         String post = board.get(BOARD.resolve("GraphEventPost.java"));

@@ -31,12 +31,6 @@ final class DeadCodeExemptions {
                     "src/main/java/com/theminespirit/neoforge/crafting/RecipeKnowledge.java|method|RecipeKnowledge#indexBuilds",
                     "Заготовка под открытую задачу: todo.md → «Кузнечество»"),
             new Exemption(
-                    "src/main/java/com/theminespirit/neoforge/intellect/SettlementIntellect.java|method|SettlementIntellect#taskFailures",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exemption(
-                    "src/main/java/com/theminespirit/neoforge/intellect/SettlementIntellect.java|method|SettlementIntellect#taskStarts",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exemption(
                     "src/main/java/com/theminespirit/neoforge/tactics/TacticsService.java|method|TacticsService#lastOutcome",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
             new Exemption(
@@ -84,9 +78,6 @@ final class DeadCodeExemptions {
             new Exemption(
                     "src/main/java/com/theminespirit/core/husbandry/PenBounds.java|method|PenBounds#escapedOf",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
-            new Exemption(
-                    "src/main/java/com/theminespirit/core/intellect/ActivityCatalog.java|method|ActivityCatalog#forChild",
-                    "Заготовка под открытую задачу: todo.md → «Дети»"),
             new Exemption(
                     "src/main/java/com/theminespirit/core/intellect/Forage.java|method|Forage#hasWater",
                     "Заготовка под открытую задачу: todo.md → «Рыболовство»"),
@@ -174,6 +165,30 @@ final class DeadCodeExemptions {
             new Exemption(
                     "src/main/java/com/theminespirit/core/mining/MineTunnel.java|field|MineTunnel#MAX_STEPS",
                     "Бюджет прохода шахты — доменное число: вход проверки кейса observe10; в игре передаётся из настроек"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/coordinator/CoordinatorState.java|method|CoordinatorState#workers",
+                    "Запрос работников — публичное чтение снимка поселения, проверяется свойствами; игра берёт defenders()"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/intellect/FoodNorm.java|method|FoodNorm#perSoul",
+                    "Норма еды на душу — публичная чистая функция, проверяется свойствами; в игре зовут demand()"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/inventory/InventoryFill.java|method|InventoryFill#extraFraction",
+                    "Доля лишнего в инвентаре — публичный запрос домена, проверяется нормами"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/inventory/InventoryFill.java|method|InventoryFill#occupiedFraction",
+                    "Доля занятых ячеек — публичный запрос домена, проверяется нормами"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/processing/ProcessingStock.java|method|ProcessingStock#hasLogs",
+                    "Признак запаса переработки — публичный запрос домена, проверяется таблицами"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/processing/ProcessingStock.java|method|ProcessingStock#hasPlanks",
+                    "Признак запаса переработки — публичный запрос домена, проверяется таблицами"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/processing/ProcessingStock.java|method|ProcessingStock#hasRawFood",
+                    "Признак запаса переработки — публичный запрос домена, проверяется таблицами"),
+            new Exemption(
+                    "src/main/java/com/theminespirit/core/processing/ProcessingStock.java|method|ProcessingStock#plankProduct",
+                    "Выбор породы досок — публичный запрос домена, проверяется таблицами"),
             new Exemption(
                     "src/main/java/com/theminespirit/core/board/PriorityContext.java|method|PriorityContext#none",
                     "Пустой контекст приоритетов — публичная заготовка домена: в игре создаётся прямым конструктором, "

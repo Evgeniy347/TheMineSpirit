@@ -403,10 +403,11 @@ class DeadCodeGuardTests {
                             || declarationOffsets.contains(token.offset())) {
                         continue;
                     }
-                    for (Declaration candidate : byName.getOrDefault(token.text(), List.of())) {
-                        if (isType(candidate)) {
-                            edge(edges, type, candidate);
-                        }
+                    List<Declaration> candidates = byName.getOrDefault(token.text(), List.of()).stream()
+                            .filter(DeadCodeGuardTests::isType)
+                            .toList();
+                    for (Declaration candidate : resolveType(type, candidates)) {
+                        edge(edges, type, candidate);
                     }
                 }
                 for (String imported : file.importedTypes()) {
@@ -441,6 +442,28 @@ class DeadCodeGuardTests {
             }
         }
         return live;
+    }
+
+    private static List<Declaration> resolveType(Declaration type, List<Declaration> candidates) {
+        if (candidates.size() <= 1) {
+            return candidates;
+        }
+        List<Declaration> nested = candidates.stream()
+                .filter(candidate -> candidate.owner().equals(type.name()))
+                .toList();
+        if (!nested.isEmpty()) {
+            return nested;
+        }
+        String directory = directoryOf(type.file());
+        List<Declaration> sameDirectory = candidates.stream()
+                .filter(candidate -> directory.equals(directoryOf(candidate.file())))
+                .toList();
+        return sameDirectory.isEmpty() ? candidates : sameDirectory;
+    }
+
+    private static String directoryOf(String file) {
+        int slash = file.lastIndexOf('/');
+        return slash < 0 ? "" : file.substring(0, slash);
     }
 
     private static Map<String, Integer> references(

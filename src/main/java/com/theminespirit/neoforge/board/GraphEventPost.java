@@ -2,10 +2,13 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.terminal.CraftOrders;
+import java.util.Comparator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -23,8 +26,14 @@ final class GraphEventPost {
         if (GraphMorePost.handles(ticket)) {
             return GraphMorePost.post(post, ticket, ticket.task());
         }
-        if (life(ticket)) {
+        if (More4Post.post(post, ticket)) {
             return true;
+        }
+        if (life(post, ticket)) {
+            return true;
+        }
+        if ("expedition".equals(ticket.node())) {
+            return GraphExpeditionPost.post(post, ticket);
         }
         if (FarmPost.event(post, ticket)) {
             return true;
@@ -66,8 +75,43 @@ final class GraphEventPost {
         return MorePost.event(post, ticket) || (COLLECT.contains(ticket.node()) && collect(post, ticket));
     }
 
-    private static boolean life(GraphTickets.Ticket ticket) {
-        return ticket.id().startsWith(GraphTickets.PREFIX + "event:life_");
+    private static boolean life(GraphPost post, GraphTickets.Ticket ticket) {
+        if (!ticket.id().startsWith(GraphTickets.PREFIX + "event:life_")) {
+            return false;
+        }
+        if (ticket.task().boardCase() == BoardCase.ACTIVITY_DEFEND) {
+            return GraphDefensePost.post(post, ticket);
+        }
+        return ticket.node().contains("retreat") && retreat(post, ticket);
+    }
+
+    private static boolean retreat(GraphPost post, GraphTickets.Ticket ticket) {
+        GraphFacts.Spirit weakest = post.facts.spirits().values().stream()
+                .min(Comparator.comparingDouble(GraphFacts.Spirit::health))
+                .orElse(null);
+        if (weakest == null) {
+            return false;
+        }
+        for (var spirit : post.spirits) {
+            if (spirit.isRemoved() || !spirit.getUUID().toString().equals(weakest.id())) {
+                continue;
+            }
+            String id = ticket.id() + ":" + spirit.getUUID();
+            if (post.open(id) || post.done(id)) {
+                return true;
+            }
+            post.submit(
+                    post.ticket(
+                            id,
+                            BoardCase.ACTIVITY_RETREAT,
+                            Optional.of(spirit.getUUID()),
+                            ticket.task().priority(),
+                            ticket.id(),
+                            Map.of()),
+                    TicketTarget.at(post.scan.home()).withPlan(new ScriptCall("retreat", Map.of())));
+            return true;
+        }
+        return false;
     }
 
     private static boolean hungry(GraphPost post, GraphTickets.Ticket ticket) {

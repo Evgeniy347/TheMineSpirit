@@ -1,16 +1,13 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.coordinator.SettlementGroups;
-import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.intellect.defense.DefenderOrder;
 import com.theminespirit.core.intellect.defense.DefensePlan;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.PolicyVerdict;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
-import com.theminespirit.neoforge.coordinator.SpiritCoordinator;
+import com.theminespirit.neoforge.board.BoardRegistry;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -43,11 +40,6 @@ public final class DefenseGameTests {
         return spirit;
     }
 
-    private static SpiritCoordinator coordinatorOf(GameTestHelper helper, SpiritEntity spirit) {
-        SettlementKey key = SettlementGroups.keyOf(spirit.home(), spirit.getUUID());
-        return CoordinatorRegistry.get(helper.getLevel(), key);
-    }
-
     private static Optional<DefenderOrder> orderOf(DefensePlan plan, SpiritEntity spirit) {
         return plan.orders().stream()
                 .filter(order -> order.defender().equals(spirit.getUUID()))
@@ -69,7 +61,7 @@ public final class DefenseGameTests {
         return facts.toString();
     }
 
-    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true)
+    @SceneStep(template = "arena", timeoutTicks = 400, coordinator = true, board = true)
     public static void creeper_StrikeAndRetreat_ArmoredEngagesNakedHolds(GameTestHelper helper) {
         TacticsScene.prepare(helper);
         BlockCoord home = homeOf(helper, new BlockPos(5, 1, 5));
@@ -120,7 +112,7 @@ public final class DefenseGameTests {
                     creeper.equals(armored.getTarget()),
                     "Мечник в железной броне идёт на крипера первым: иначе «ударь и беги» делает слабый и " + "гибнет; "
                             + duel);
-            if (nakedOrderedOffCreeper(helper, armored, naked, creeper)) {
+            if (nakedOrderedOffCreeper(helper, naked, creeper)) {
                 nakedHolds[0] = true;
             }
             helper.assertTrue(
@@ -156,9 +148,8 @@ public final class DefenseGameTests {
         }
     }
 
-    private static boolean nakedOrderedOffCreeper(
-            GameTestHelper helper, SpiritEntity armored, SpiritEntity naked, Creeper creeper) {
-        DefensePlan duelPlan = coordinatorOf(helper, armored).defense().lastPlan();
+    private static boolean nakedOrderedOffCreeper(GameTestHelper helper, SpiritEntity naked, Creeper creeper) {
+        DefensePlan duelPlan = BoardRegistry.get(helper.getLevel()).defense().lastPlan();
         return orderOf(duelPlan, naked)
                 .map(order -> order.target().isEmpty()
                         || !order.target().get().id().equals(creeper.getUUID().toString()))

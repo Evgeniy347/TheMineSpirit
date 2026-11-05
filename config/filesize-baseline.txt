@@ -34,14 +34,13 @@ src/main/java/com/theminespirit/neoforge/HarvestSession.java	730
 src/main/java/com/theminespirit/neoforge/MineBuildScript.java	518
 src/main/java/com/theminespirit/neoforge/SafeMineSession.java	504
 src/main/java/com/theminespirit/neoforge/SchematicSite.java	364
-src/main/java/com/theminespirit/neoforge/SpiritEntity.java	754
+src/main/java/com/theminespirit/neoforge/SpiritEntity.java	749
 src/main/java/com/theminespirit/neoforge/SpiritScripts.java	384
 src/main/java/com/theminespirit/neoforge/WorldScanner.java	306
-src/main/java/com/theminespirit/neoforge/board/BoardService.java	1007
+src/main/java/com/theminespirit/neoforge/board/BoardService.java	1013
 src/main/java/com/theminespirit/neoforge/board/FirstStepsRunner.java	686
 src/main/java/com/theminespirit/neoforge/board/GraphPost.java	303
 src/main/java/com/theminespirit/neoforge/board/TransferWatch.java	569
-src/main/java/com/theminespirit/neoforge/coordinator/SpiritCoordinator.java	372
 src/main/java/com/theminespirit/neoforge/crafting/CraftScript.java	383
 src/main/java/com/theminespirit/neoforge/crafting/SmeltScript.java	308
 src/main/java/com/theminespirit/neoforge/demo/DemoSession.java	431
@@ -79,7 +78,7 @@ src/test/java/com/theminespirit/core/tactics/FactorTests.java	422
 src/test/java/com/theminespirit/core/tactics/TacticsConfigTests.java	370
 src/test/java/com/theminespirit/core/task/TaskReconcilerTests.java	368
 src/test/java/com/theminespirit/core/task/TaskRegistryTests.java	312
-src/test/java/com/theminespirit/guards/DeadCodeGuardTests.java	1045
+src/test/java/com/theminespirit/guards/DeadCodeGuardTests.java	1068
 src/test/java/com/theminespirit/guards/DependencyVersionGuardTests.java	364
 src/test/java/com/theminespirit/guards/GameTestIsolationGuardTests.java	352
 src/test/java/com/theminespirit/guards/GameTestTimeoutGuardTests.java	484

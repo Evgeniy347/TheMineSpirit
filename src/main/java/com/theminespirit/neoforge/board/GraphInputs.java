@@ -22,7 +22,9 @@ import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.route.RouteMarker;
 import com.theminespirit.core.board.route.RoutePlan;
+import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.StockCatalog;
+import com.theminespirit.core.night.NightLeash;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairCalculator;
@@ -32,9 +34,11 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
@@ -54,6 +58,10 @@ final class GraphInputs {
         Map<String, Built> buildings = buildings(level, service, service.board().ledger(), scan, graph);
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
         LifeInputs.Input life = LifeInputs.of(level, spirits, around.events());
+        Set<String> events = new LinkedHashSet<>(life.events());
+        if (expeditionReady(stock, level)) {
+            events.add("expedition_ready");
+        }
         GraphFacts facts = DigInputs.apply(
                 level,
                 spirits,
@@ -77,7 +85,7 @@ final class GraphInputs {
                         buildings,
                         materials(level, service, stock, scan, graph, buildings, facts),
                         ChestSpaceWatch.space(level).freePercent(),
-                        life.events(),
+                        events,
                         around.world(),
                         around.distances(),
                         GraphFactInputs.stationCounts(graph, buildings))
@@ -103,6 +111,18 @@ final class GraphInputs {
         GraphState more5 = More5World.apply(more4, level, graph, scan, around);
         GraphState more7 = More7Inputs.apply(more5, level, graph, scan);
         return More6Inputs.apply(more7, level, around, scan);
+    }
+
+    private static boolean expeditionReady(StockView stock, ServerLevel level) {
+        IntellectTuning tuning = IntellectTuning.loadDefault();
+        double day = Math.floorMod(level.getDayTime(), 24000L) / 24000.0;
+        if (level.isNight() || NightLeash.withDefaultRules().isEvening(day)) {
+            return false;
+        }
+        int ore = stock.available().getOrDefault("cobblestone", 0)
+                + stock.available().getOrDefault("raw_iron", 0);
+        int iron = stock.available().getOrDefault("iron_ingot", 0);
+        return ore < tuning.oreTarget() || iron < tuning.ironTarget();
     }
 
     static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {
