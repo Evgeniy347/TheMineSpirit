@@ -46,6 +46,7 @@
 | [graph-ideas-tables.md](graph-ideas-tables.md) | Полные таблицы идей к расширению графа | свой код, данные |
 | [graph-ideas-nodes.json](graph-ideas-nodes.json) | Черновик узлов-кандидатов в формате graph.json, не подключён к моду | свой код |
 | [graph-inputs-migration.md](graph-inputs-migration.md) | Пофайловый переход «всё через граф» и критерий приёмки шага | свой код |
+| [modules.md](modules.md) | Разбивка на Gradle-модули: граф пакетов, циклы, границы, тесты, план | свой код |
 
 ## Самое ценное по областям
 
