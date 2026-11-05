@@ -89,6 +89,23 @@ class PathSurfaceTests {
     }
 
     @Test
+    void wheatField_SproutsOnSunkGround_StayOneAboveSurface() {
+        Schematic field = schematic("wheat_field_1");
+        List<Schematic.PlacedEntry> sprouts = field.entries(FEET, BuildRotation.NONE).stream()
+                .filter(entry -> "wheat".equals(SchematicBlocks.path(entry.block())))
+                .toList();
+
+        assertFalse(sprouts.isEmpty(), "В схеме грядки есть посев: иначе тест не проверяет его высоту");
+        for (Schematic.PlacedEntry sprout : sprouts) {
+            assertEquals(
+                    FEET.y(),
+                    sprout.pos().y(),
+                    "Посев стоит на поверхности (якорь " + FEET + " — клетка под ногами), а не двумя блоками "
+                            + "над землёй: " + sprout.pos());
+        }
+    }
+
+    @Test
     void walkwayPlaced_PathOneBelowCell_CountsWhenCellIsPassable() {
         assertTrue(
                 SchematicGround.walkwayPlaced("minecraft:dirt_path", "minecraft:air", "minecraft:dirt_path", true),

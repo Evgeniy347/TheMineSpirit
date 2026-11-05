@@ -257,11 +257,14 @@ public record Schematic(
         Objects.requireNonNull(origin, "Якорь схемы не может быть null: без него неизвестно, где очищать");
         Objects.requireNonNull(rotation, "Поворот схемы не может быть null: без него очистится не та клетка");
         Set<BlockCoord> cells = new LinkedHashSet<>();
+        boolean grounded = SchematicGround.groundLayer(this);
+        Set<Long> groundColumns = grounded ? groundColumns(rotation) : Set.of();
         for (Cell cell : air) {
             BuildRotation.Cell rotated = rotation.rotate(cell.dx(), cell.dz(), sizeX, sizeZ);
-            cells.add(new BlockCoord(origin.x() + rotated.x(), origin.y() + cell.dy(), origin.z() + rotated.z()));
+            int dy = groundColumns.contains(key(rotated.x(), rotated.z())) ? cell.dy() - 1 : cell.dy();
+            cells.add(new BlockCoord(origin.x() + rotated.x(), origin.y() + dy, origin.z() + rotated.z()));
         }
-        if (SchematicGround.groundLayer(this)) {
+        if (grounded) {
             Set<BlockCoord> occupied = new HashSet<>();
             for (PlacedEntry entry : entries(origin, rotation)) {
                 occupied.add(entry.pos());
@@ -271,8 +274,7 @@ public record Schematic(
                     continue;
                 }
                 BuildRotation.Cell rotated = rotation.rotate(entry.dx(), entry.dz(), sizeX, sizeZ);
-                BlockCoord cell =
-                        new BlockCoord(origin.x() + rotated.x(), origin.y() + entry.dy(), origin.z() + rotated.z());
+                BlockCoord cell = new BlockCoord(origin.x() + rotated.x(), origin.y(), origin.z() + rotated.z());
                 if (!occupied.contains(cell)) {
                     cells.add(cell);
                 }
@@ -290,9 +292,10 @@ public record Schematic(
         Objects.requireNonNull(rotation, "Поворот схемы не может быть null: без него блок встанет не туда");
         List<PlacedEntry> placed = new ArrayList<>(blocks.size());
         boolean grounded = SchematicGround.groundLayer(this);
+        Set<Long> groundColumns = grounded ? groundColumns(rotation) : Set.of();
         for (Entry entry : blocks) {
             BuildRotation.Cell cell = rotation.rotate(entry.dx(), entry.dz(), sizeX, sizeZ);
-            int dy = grounded && entry.dy() == 0 && SchematicGround.inGround(entry.block()) ? -1 : entry.dy();
+            int dy = groundColumns.contains(key(cell.x(), cell.z())) ? entry.dy() - 1 : entry.dy();
             placed.add(new PlacedEntry(
                     new BlockCoord(origin.x() + cell.x(), origin.y() + dy, origin.z() + cell.z()),
                     entry.block(),
@@ -305,6 +308,22 @@ public record Schematic(
                 .thenComparingInt(e -> e.pos().x())
                 .thenComparingInt(e -> e.pos().z()));
         return List.copyOf(placed);
+    }
+
+    private Set<Long> groundColumns(BuildRotation rotation) {
+        Set<Long> columns = new HashSet<>();
+        for (Entry entry : blocks) {
+            if (entry.dy() != 0 || !SchematicGround.inGround(entry.block())) {
+                continue;
+            }
+            BuildRotation.Cell cell = rotation.rotate(entry.dx(), entry.dz(), sizeX, sizeZ);
+            columns.add(key(cell.x(), cell.z()));
+        }
+        return columns;
+    }
+
+    private static long key(int x, int z) {
+        return ((long) x << 32) ^ (z & 0xffffffffL);
     }
 
     private static int placementRank(String block) {
