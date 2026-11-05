@@ -7,16 +7,91 @@ import com.theminespirit.core.board.graph.GraphSiteFacts.Stray;
 import com.theminespirit.core.board.graph.GraphSiteFacts.Terrain;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 import java.util.function.UnaryOperator;
 
 final class GraphMutations {
     record Mutation(String name, UnaryOperator<GraphWorld> apply) {}
 
+    private static final List<Mutation> SINGLE = buildSingle();
+
     private GraphMutations() {}
+
+    static List<Mutation> single() {
+        return SINGLE;
+    }
+
+    static List<GraphWorld> simulationBases() {
+        return baselines().subList(1, 5);
+    }
+
+    static List<Mutation> curated() {
+        List<Mutation> all = new ArrayList<>();
+        int index = 0;
+        for (SupplyGraph.Item item : GraphWorld.GRAPH.items().values()) {
+            all.add(new Mutation(item.id() + "=0", world -> world.copy().with(item.id(), 0)));
+            if (index++ % 5 == 0) {
+                int count = item.xmin() * 4;
+                all.add(new Mutation(
+                        item.id() + "=" + count, world -> world.copy().with(item.id(), count)));
+            }
+        }
+        for (String building : GraphWorld.GRAPH.buildings().keySet()) {
+            for (Built built : Built.values()) {
+                all.add(new Mutation(
+                        building + "=" + built, world -> world.copy().built(building, built)));
+            }
+        }
+        for (String event : GraphWorld.GRAPH.events().keySet()) {
+            all.add(new Mutation("event=" + event, world -> world.copy().event(event)));
+        }
+        GraphWorld.GRAPH.ways().stream()
+                .map(SupplyGraph.Way::world)
+                .filter(Objects::nonNull)
+                .distinct()
+                .forEach(resource -> all.add(new Mutation("нет " + resource, world -> {
+                    GraphWorld copy = world.copy();
+                    copy.world.remove(resource);
+                    return copy;
+                })));
+        for (int tier = -1; tier <= 2; tier++) {
+            int chosen = tier;
+            all.add(new Mutation("tools=" + tier, world -> world.copy().tools("spirit-1", chosen)));
+        }
+        for (String sapling : GraphWorld.GRAPH.members("#saplings")) {
+            all.add(new Mutation(sapling + "=2", world -> world.copy().with(sapling, 2)));
+        }
+        for (int free : List.of(0, 19, 20, 100)) {
+            all.add(new Mutation("free=" + free, world -> {
+                GraphWorld copy = world.copy();
+                copy.storageFree = free;
+                return copy;
+            }));
+        }
+        return all;
+    }
+
+    static List<Mutation> sample(long seed, int count) {
+        List<Mutation> pool = new ArrayList<>(SINGLE);
+        Collections.shuffle(pool, new Random(seed));
+        return pool.subList(0, Math.min(count, pool.size()));
+    }
+
+    static List<Mutation> simulationSample(long seed, int count) {
+        List<Mutation> pool = new ArrayList<>();
+        for (Mutation mutation : SINGLE) {
+            if (!mutation.name().startsWith("нет ")) {
+                pool.add(mutation);
+            }
+        }
+        Collections.shuffle(pool, new Random(seed));
+        return pool.subList(0, Math.min(count, pool.size()));
+    }
 
     static List<GraphWorld> baselines() {
         GraphWorld empty = GraphWorld.empty();
@@ -103,7 +178,7 @@ final class GraphMutations {
         return world;
     }
 
-    static List<Mutation> single() {
+    private static List<Mutation> buildSingle() {
         List<Mutation> all = new ArrayList<>();
         for (SupplyGraph.Item item : GraphWorld.GRAPH.items().values()) {
             for (int count : List.of(0, Math.max(0, item.xmin() - 1), item.xmin() * 4, 10_000)) {

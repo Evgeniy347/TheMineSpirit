@@ -13,8 +13,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class BoardMatrixTests {
-    private static final Set<BoardCase> NEEDS_PICKAXE =
-            EnumSet.of(BoardCase.CLEAR_GROUNDS, BoardCase.BUILD_MINE, BoardCase.MINE_LEFT_ORE);
+    private static final Set<BoardCase> NEEDS_PICKAXE = EnumSet.of(
+            BoardCase.CLEAR_GROUNDS, BoardCase.BUILD_MINE, BoardCase.MINE_LEFT_ORE, BoardCase.DISMANTLE_SHELTER);
 
     static Stream<BoardCase> cases() {
         return Arrays.stream(BoardCase.values()).filter(boardCase -> !BoardActivities.isActivity(boardCase));

@@ -283,7 +283,7 @@ tasks.named('check') {
     dependsOn tasks.named('staticAnalysis')
 }
 
-def unitTestThreads = (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(4, Runtime.runtime.availableProcessors() - 2))}") as int
+def unitTestThreads = (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}") as int
 tasks.named('test', Test) {
     useJUnitPlatform {
         excludeTags 'slow', 'mutation', 'export'
@@ -325,13 +325,13 @@ tasks.register('slowTest', Test) {
 
 tasks.register('mutationTest', Test) {
     group = 'verification'
-    description = 'Мутационный перебор ситуаций доски и графа (тег mutation): запускается вручную, без бюджета времени'
+    description = 'Мутационный перебор ситуаций доски и графа (тег mutation): бюджет 10–20 минут, выборки с ротацией сида'
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
     useJUnitPlatform {
         includeTags 'mutation'
     }
-    maxParallelForks = 1
+    maxParallelForks = (System.getenv('THEMINESPIRIT_MUTATION_FORKS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}") as int
     maxHeapSize = '2g'
     systemProperty 'theminespirit.modId', project.mod_id
     failOnNoDiscoveredTests = true
