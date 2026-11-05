@@ -734,8 +734,6 @@ gametest_shard_share() {
         "$(printf '%s\n' "$line" | sed -E 's/.*осталось ([0-9]+).*/\1/')"
 }
 
-# Проверка итога: каждый шард обязан дойти до «All N required tests passed», иначе
-# его сцены молча не запускались (так пропали шарды 0 и 1: сборка упала, а итог был 7).
 analyze_gametest() {
     local log="$1" shards="${2:-1}" base="${3:-$1}" code="${4:-0}"
     local i shard_log shard_code
@@ -920,8 +918,6 @@ else
 
     SHARD_EXCLUDES=()
     if [ "$GAMETEST_SHARDS" -gt 1 ]; then
-        # Сборка общая на все шарды и делается один раз: шарды делят build/, и если каждый
-        # начнёт писать одни и те же jar-файлы, часть упадёт на «Unable to delete file».
         PRE_TASKS=(createMinecraftArtifacts classes jar
             writeGameTestServerLegacyClasspath prepareGameTestServerRun)
         while read -r module_path; do
