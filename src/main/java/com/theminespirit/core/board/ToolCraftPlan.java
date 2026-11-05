@@ -6,7 +6,6 @@ import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.CatalogLimits;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +36,7 @@ final class ToolCraftPlan {
     }
 
     private static List<TaskNode> materials(String item, int tools, @Nullable String wood) {
-        SupplyGraph graph = DataTables.INSTANCE.graph().current();
+        SupplyGraph graph = SupplyGraph.current();
         Optional<SupplyGraph.Way> recipe =
                 graph.producers(GraphNames.graphItem(item)).stream().findFirst();
         if (recipe.isEmpty()) {

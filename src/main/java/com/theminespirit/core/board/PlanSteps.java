@@ -10,7 +10,6 @@ import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.town.PlannedBlock;
@@ -233,9 +232,7 @@ final class PlanSteps {
     }
 
     static Map<String, Integer> materials(SchemeBuild build) {
-        Schematic schematic = DataTables.INSTANCE
-                .presets()
-                .current()
+        Schematic schematic = PresetLibrary.current()
                 .byId(build.scheme())
                 .orElseThrow(() -> new IllegalStateException(
                         "presets.json: нет схемы '" + build.scheme() + "' — постройку не по чему строить"))

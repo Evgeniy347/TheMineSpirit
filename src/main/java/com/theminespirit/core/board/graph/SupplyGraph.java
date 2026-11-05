@@ -3,6 +3,7 @@ package com.theminespirit.core.board.graph;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.reload.TableSlot;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
 public record SupplyGraph(
@@ -33,6 +35,7 @@ public record SupplyGraph(
         GraphCosts costs) {
     public static final String RESOURCE = "data/theminespirit/board/graph.json";
     public static final String RECIPES = "data/theminespirit/board/graph-recipes.json";
+    private static final TableSlot<SupplyGraph> SOURCE = new TableSlot<>(SupplyGraph::loadDefault);
     private static final String BASE = "base";
     private static final String STAGE = "stage";
     private static final String KIT = "kit";
@@ -117,6 +120,14 @@ public record SupplyGraph(
 
     public static SupplyGraph loadDefault() {
         return GraphFragments.load();
+    }
+
+    public static SupplyGraph current() {
+        return SOURCE.current();
+    }
+
+    public static void useSource(Supplier<SupplyGraph> supplier) {
+        SOURCE.use(supplier);
     }
 
     public static SupplyGraph merge(

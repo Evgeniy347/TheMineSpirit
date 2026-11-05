@@ -1,6 +1,5 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.reload.DataTables;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +74,7 @@ public final class BoardPriorities {
     }
 
     private static int delta(String modifier) {
-        Integer value = DataTables.INSTANCE.board().current().modifiers().get(modifier);
+        Integer value = BoardConfig.current().modifiers().get(modifier);
         if (value != null) {
             return value;
         }

@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
@@ -13,7 +14,6 @@ import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.town.StageSite;
@@ -585,9 +585,7 @@ public final class TicketPlans {
     private static TaskNode buildOrchard(TicketTarget target) {
         StageWork work = target.work();
         StageSite site = work == null ? null : work.site();
-        String scheme = DataTables.INSTANCE
-                .stages()
-                .current()
+        String scheme = StageRules.current()
                 .scheme(BoardCase.BUILD_ORCHARD, 1)
                 .orElseThrow(() -> new IllegalStateException(
                         "stages.json: нет схемы сада уровня 1 — постройке сада не по чему строиться"));
@@ -603,9 +601,7 @@ public final class TicketPlans {
     }
 
     private static Map<String, Integer> orchardMaterials(String scheme) {
-        Schematic schematic = DataTables.INSTANCE
-                .presets()
-                .current()
+        Schematic schematic = PresetLibrary.current()
                 .byId(scheme)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Нет схемы '" + scheme + "' для сада: проверьте presets.json и файл схемы"))

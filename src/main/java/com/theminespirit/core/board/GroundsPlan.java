@@ -5,7 +5,6 @@ import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.SiteLevels;
@@ -139,7 +138,7 @@ public final class GroundsPlan {
     private static List<TaskNode> fillSteps(
             PlotLeveling leveling, List<PlotLeveling.Box> pits, BlockCoord source, int y) {
         List<TaskNode> steps = new ArrayList<>();
-        int batch = Math.min(DataTables.INSTANCE.leveling().current().batch(), CatalogLimits.COUNT_MAX);
+        int batch = Math.min(LevelingRules.current().batch(), CatalogLimits.COUNT_MAX);
         if (PlotLeveling.DEFAULT_BLOCK.equals(leveling.block())) {
             for (List<PlotLeveling.Box> group : FillBatches.of(pits, batch)) {
                 steps.add(dirtFor(FillBatches.volume(group), source));

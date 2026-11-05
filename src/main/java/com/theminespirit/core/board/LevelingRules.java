@@ -2,10 +2,13 @@ package com.theminespirit.core.board;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.reload.TableSlot;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public record LevelingRules(int surplusPercent, int batch, int chestKeep, int tripMin) {
     public static final String RESOURCE = "data/theminespirit/board/leveling.json";
+    private static final TableSlot<LevelingRules> SOURCE = new TableSlot<>(LevelingRules::load);
     private static final Set<String> FIELDS = Set.of("surplusPercent", "batch", "chestKeep", "tripMin");
 
     public LevelingRules {
@@ -32,6 +35,14 @@ public record LevelingRules(int surplusPercent, int batch, int chestKeep, int tr
         } catch (IllegalArgumentException error) {
             throw new IllegalStateException("Файл '" + origin + "': " + error.getMessage(), error);
         }
+    }
+
+    public static LevelingRules current() {
+        return SOURCE.current();
+    }
+
+    public static void useSource(Supplier<LevelingRules> supplier) {
+        SOURCE.use(supplier);
     }
 
     public static LevelingRules load() {

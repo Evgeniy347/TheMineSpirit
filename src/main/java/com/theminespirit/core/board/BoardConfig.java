@@ -3,6 +3,7 @@ package com.theminespirit.core.board;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.reload.TableSlot;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
 public record BoardConfig(
@@ -24,6 +26,8 @@ public record BoardConfig(
         Map<String, Integer> wool,
         Map<String, Integer> hive) {
     public static final String RESOURCE = "data/theminespirit/board/board.json";
+
+    private static final TableSlot<BoardConfig> SOURCE = new TableSlot<>(BoardConfig::readFromClasspath);
 
     public BoardConfig {
         Objects.requireNonNull(
@@ -97,6 +101,14 @@ public record BoardConfig(
         Map<String, Integer> wool = integers(root.get("wool"), origin, "wool", WoolRules::woolKey, false);
         Map<String, Integer> hive = integers(root.get("hive"), origin, "hive", HiveRules::hiveKey, false);
         return new BoardConfig(priorities, modifiers, intervals, levels, herd, immovable, products, tools, wool, hive);
+    }
+
+    public static BoardConfig current() {
+        return SOURCE.current();
+    }
+
+    public static void useSource(Supplier<BoardConfig> supplier) {
+        SOURCE.use(supplier);
     }
 
     public static BoardConfig readFromClasspath() {

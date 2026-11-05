@@ -3,7 +3,6 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.building.DemoBuildings;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.TownPlan;
 import java.util.Map;
 import java.util.Objects;
@@ -73,8 +72,7 @@ public final class StageCatalog {
     }
 
     private static Optional<SupplyGraph.Building> graphBuilding(String planId) {
-        Map<String, SupplyGraph.Building> buildings =
-                DataTables.INSTANCE.graph().current().buildings();
+        Map<String, SupplyGraph.Building> buildings = SupplyGraph.current().buildings();
         SupplyGraph.Building exact = buildings.get(planId);
         if (exact != null) {
             return Optional.of(exact);
@@ -100,7 +98,7 @@ public final class StageCatalog {
         while (cut > 0) {
             candidate = candidate.substring(0, cut);
             if (DemoBuildings.byId(candidate).isPresent()
-                    || DataTables.INSTANCE.graph().current().buildings().containsKey(candidate)) {
+                    || SupplyGraph.current().buildings().containsKey(candidate)) {
                 return Optional.of(candidate);
             }
             cut = candidate.lastIndexOf('_');

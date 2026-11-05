@@ -1,6 +1,5 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.reload.DataTables;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -93,6 +92,6 @@ public final class SettlementStage {
     }
 
     private static StageRules rules() {
-        return DataTables.INSTANCE.stages().current();
+        return StageRules.current();
     }
 }

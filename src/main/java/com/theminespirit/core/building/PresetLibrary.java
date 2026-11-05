@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.LoadedContent;
+import com.theminespirit.core.reload.TableSlot;
+import com.theminespirit.core.reload.TableStatus;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -13,6 +15,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
 public final class PresetLibrary {
@@ -23,6 +26,7 @@ public final class PresetLibrary {
     private static final Set<String> ROOT_FIELDS = Set.of("version", PRESETS, "planned");
     private static final Set<String> PLANNED_FIELDS = Set.of("level", "name", "requires");
     private static final Set<String> ENTRANCE_SUFFIXES = Set.of("_door", "_fence_gate", "_trapdoor", "_gate");
+    private static final TableSlot<PresetLibrary> SOURCE = new TableSlot<>(PresetLibrary::loadDefault);
 
     private final List<Preset> presets;
     private final List<PlannedLevel> planned;
@@ -58,6 +62,25 @@ public final class PresetLibrary {
 
     public static PresetLibrary empty() {
         return new PresetLibrary(List.of(), List.of());
+    }
+
+    public static PresetLibrary current() {
+        return SOURCE.current();
+    }
+
+    public static void useSource(Supplier<PresetLibrary> supplier) {
+        SOURCE.use(supplier);
+    }
+
+    public static PresetLibrary loadDefault() {
+        String indexPath = SCHEMATICS_ROOT + INDEX_ID + ".json";
+        String indexJson = JsonResource.readClasspath(indexPath);
+        List<LoadedContent> contents = new ArrayList<>();
+        contents.add(new LoadedContent(indexJson, indexPath + " (мод)", TableStatus.Source.MOD));
+        for (String path : bodyPaths(indexJson, indexPath)) {
+            contents.add(new LoadedContent(JsonResource.readClasspath(path), path + " (мод)", TableStatus.Source.MOD));
+        }
+        return parse(contents);
     }
 
     public List<Preset> all() {
