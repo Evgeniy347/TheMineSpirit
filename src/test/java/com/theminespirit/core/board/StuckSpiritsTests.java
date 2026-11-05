@@ -82,6 +82,36 @@ class StuckSpiritsTests {
     }
 
     @Test
+    void of_NoPathMark_SurvivesTtlUntilMovement() {
+        StuckSpirits stuck = new StuckSpirits();
+        stuck.see(SPIRIT, AT, 100);
+        stuck.mark(SPIRIT, 140, "маршрут не найден: цель BlockCoord[x=-171, y=71, z=-489]");
+        long after = 140 + BoardTuning.STUCK_TTL_TICKS + 1;
+
+        assertTrue(
+                stuck.isStuck(SPIRIT, after),
+                "«Пути нет» — состояние на входе графа, а не провал на время: дух без пути домой остаётся "
+                        + "застрявшим, пока не сдвинулся или его не спасли (observe23 B)");
+        stuck.see(SPIRIT, new BlockCoord(AT.x() + StuckSpirits.AREA_RADIUS + 1, AT.y(), AT.z()), after + 1);
+        assertFalse(
+                stuck.isStuck(SPIRIT, after + 1),
+                "Сдвиг из области снимает факт «пути нет»: маршрут появился или духа вывели");
+    }
+
+    @Test
+    void mark_MovementThenNoPath_UpgradesToPersistentFact() {
+        StuckSpirits stuck = new StuckSpirits();
+        stuck.see(SPIRIT, AT, 100);
+        stuck.mark(SPIRIT, 140, "провал движения");
+        stuck.mark(SPIRIT, 160, "застрял: маршрут не найден");
+
+        assertTrue(
+                stuck.isStuck(SPIRIT, 140 + BoardTuning.STUCK_TTL_TICKS + 1),
+                "Поздний провал «маршрут не найден» делает метку фактом: иначе она истечёт и дух снова "
+                        + "получит работу вдали от дома (observe23 B)");
+    }
+
+    @Test
     void of_OldMark_ExpiresInsteadOfBlockingForever() {
         StuckSpirits stuck = new StuckSpirits();
         stuck.see(SPIRIT, AT, 100);
