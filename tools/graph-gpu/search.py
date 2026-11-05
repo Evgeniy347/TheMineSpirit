@@ -17,6 +17,7 @@
 """
 
 import argparse
+import fnmatch
 import json
 import math
 import os
@@ -284,7 +285,7 @@ def load_vector(path, params):
 
 def pin(vector, params, fixed):
     for index, name in enumerate(params):
-        if name in fixed:
+        if any(fnmatch.fnmatchcase(name, pattern) for pattern in fixed):
             vector[index] = 1.0
     return vector
 
@@ -307,13 +308,16 @@ def evolution(base_graph, builders, params, generations, population, seeds, limi
         for generation in range(generations):
             rotating = builders[1 + (seed + generation) % (len(builders) - 1)]
             builder = [builders[0], rotating]
+            focus = next((item for item in builders if item[0] == "live1"), None)
+            if focus is not None and focus[0] != rotating[0] and focus[0] != builders[0][0]:
+                builder.append(focus)
             vectors = [pin(mean.copy(), params, fixed)]
             for _ in range(population - 1):
                 vectors.append(pin(np.clip(mean + sigma * rng.randn(dimension), LOW, HIGH), params, fixed))
             scores, detail = evaluate_population(base_graph, vectors, builder, params, limit, device)
             order = np.argsort(scores)
             mean = pin(np.mean([vectors[index] for index in order[:mu]], axis=0), params, fixed)
-            baseline = base_by_name[builder[0][0]] + base_by_name[builder[1][0]]
+            baseline = sum(base_by_name[name] for name, _ in builder)
             normalized = scores[order[0]] / max(1, baseline)
             previous = best["normalized"] if best is not None else float("inf")
             if normalized < previous:

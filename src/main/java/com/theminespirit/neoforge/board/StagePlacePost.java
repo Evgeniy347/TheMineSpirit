@@ -42,7 +42,7 @@ final class StagePlacePost {
         if (!WoodSpecies.OAK.equals(post.scan.wood())) {
             target = target.withWood(post.scan.wood());
         }
-        List<String> modifiers = groundLayer(entry.scheme()) ? List.of(ToolGate.TOOL_MODIFIER + "hoe") : List.of();
+        List<String> modifiers = tilled(entry.scheme()) ? List.of(ToolGate.TOOL_MODIFIER + "hoe") : List.of();
         post.submit(
                 post.ticket(
                         ticket.id(),
@@ -77,6 +77,15 @@ final class StagePlacePost {
                 .current()
                 .byId(scheme)
                 .map(preset -> SchematicGround.groundLayer(preset.schematic()))
+                .orElse(false);
+    }
+
+    private static boolean tilled(String scheme) {
+        return DataTables.INSTANCE
+                .presets()
+                .current()
+                .byId(scheme)
+                .map(preset -> SchematicGround.tilled(preset.schematic()))
                 .orElse(false);
     }
 }

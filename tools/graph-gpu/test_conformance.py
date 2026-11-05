@@ -11,6 +11,7 @@ import json
 import os
 import sys
 import tempfile
+from collections import Counter
 
 import search
 import sim_gpu
@@ -795,6 +796,64 @@ def test_new_input_worlds():
     print("OK: грязный мир, провалы путей и грядка изображаются симуляцией")
 
 
+def test_live_stage_one():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    world = sim_gpu.live_stage_one(graph, os.path.join(EXPORT, "live1.json"))
+    start = {task["id"]: task for task in world.plan()["tasks"]}
+    assert "soil" in world.world, "Живой этап 1 берёт землю с карьера"
+    assert "dig_dirt" in start and start["dig_dirt"]["feasible"], \
+        "Карьер обязан давать землю: " + str(start.get("dig_dirt"))
+    assert "building:mine" in start and not start["building:mine"]["feasible"], \
+        "Шахта без кирки не выполняется, пока инструмент не скрафчен"
+    outcome = sim_gpu.run(world, limit=4000)
+    assert outcome["finished"] and outcome["stage"] == 2, \
+        "Живой этап 1 не закрылся: " + str(outcome["stuck"])
+    assert 1 in outcome["stage_ticks"], "Закрытие этапа 1 не отметилось: " + str(outcome["stage_ticks"])
+    assert set(outcome["stage_steps"]) == {1}, \
+        "Мир живой этап 1 должен останавливаться на этапе 2: " + str(outcome["stage_steps"])
+    steps = [task for stage, task, _priority in outcome["trail"] if stage == 1]
+    for task in ("building:mine", "building:streets", "building:orchard_oak", "building:wheat_field"):
+        assert task in steps, "Этап 1 закрыт без '" + task + "': " + str(steps)
+    pickaxe = next((index for index, task in enumerate(steps) if "pickaxe" in task), -1)
+    assert pickaxe >= 0 and steps.index("building:mine") > pickaxe, \
+        "Кирка должна появиться до шахты: " + str(steps)
+    assert steps.count("rescue_spirit") == 2, \
+        "Два застрявших духа дают ровно два спасения, а не цикл: " + str(Counter(steps))
+    assert steps.count("dig_dirt") >= 8, \
+        "Закрытая добыча земли переоткрывается, пока улицам нужна земля: " + str(Counter(steps))
+    assert any(task.startswith("event:demolish_stray") for task in steps), \
+        "Этап 1 обходит лишние постройки: " + str(steps)
+    assert any(task.startswith("event:clear_floating") for task in steps), \
+        "Этап 1 обходит висящее: " + str(steps)
+    assert len(steps) <= 200, "Этап 1 зациклился: " + str(len(steps)) + " заданий"
+    repeated = Counter(steps).most_common(1)[0][1]
+    assert repeated <= 60, "Одно задание повторяется без продвижения: " + str(repeated)
+    print("OK: живой этап 1 закрывается за " + str(len(steps)) + " заданий")
+
+
+def test_tool_condition_and_soil():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    bare = sim_gpu.World.settled(graph).with_item("cobblestone", 0).tools("spirit-1", -1)
+    tasks = {task["id"]: task for task in bare.plan()["tasks"]}
+    assert not tasks["mine_cobble"]["feasible"], "Без кирки булыжник не добывается"
+    assert any("pickaxe" in task for task in tasks), "Без кирки граф ставит её крафт: " + str(tasks)
+    armed = bare.copy().tools("spirit-1", 0)
+    armed_tasks = {task["id"]: task for task in armed.plan()["tasks"]}
+    assert armed_tasks["mine_cobble"]["feasible"], "С деревянной киркой булыжник добывается"
+    no_soil = sim_gpu.World.empty(graph)
+    no_soil.world.discard("soil")
+    no_soil.built("route_dirt", BUILT)
+    no_soil_tasks = {task["id"]: task for task in no_soil.plan()["tasks"]}
+    assert not no_soil_tasks.get("dig_dirt", {}).get("feasible", False), \
+        "Без источника soil карьер не выполняется"
+    assert not no_soil_tasks["dig_dirt_route"]["feasible"], "Путь с лопатой без лопаты не выполняется"
+    assert any("shovel" in task for task in no_soil_tasks), "Без лопаты граф ставит её крафт"
+    no_soil_armed = no_soil.copy().tools("spirit-1", 0)
+    route = {task["id"]: task for task in no_soil_armed.plan()["tasks"]}["dig_dirt_route"]
+    assert route["feasible"], "С деревянной лопатой земля берётся с пути"
+    print("OK: инструмент — условие пути, земля берётся с soil, без soil остаётся путь с лопатой")
+
+
 def test_stage_two_worlds():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     worlds = [("stage2-full", sim_gpu.baselines(graph)[3]),
@@ -981,6 +1040,8 @@ if __name__ == "__main__":
         test_input_effects()
         test_dead_inputs()
         test_new_input_worlds()
+        test_live_stage_one()
+        test_tool_condition_and_soil()
         test_stage_two_worlds()
         test_failure_memory()
         test_choice_mechanics()

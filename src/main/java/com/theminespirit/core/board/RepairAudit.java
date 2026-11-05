@@ -3,6 +3,7 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.building.BlockMatch;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicGround;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.repair.RepairData;
 import java.util.ArrayList;
@@ -91,7 +92,7 @@ public final class RepairAudit {
                 continue;
             }
             String found = id(world.blockAt(cell));
-            if (same(wanted, found) || soft.contains(wanted)) {
+            if (same(wanted, found) || soft.contains(wanted) || sunk(world, cell, wanted, found)) {
                 continue;
             }
             missing++;
@@ -173,6 +174,11 @@ public final class RepairAudit {
 
     private static boolean same(String wanted, String found) {
         return wanted.equals(found) || BlockMatch.matches(found, wanted);
+    }
+
+    private static boolean sunk(WorldView world, BlockCoord cell, String wanted, String found) {
+        return SchematicGround.walkwayPlaced(
+                wanted, found, id(world.blockAt(new BlockCoord(cell.x(), cell.y() - 1, cell.z()))), AIR.equals(found));
     }
 
     private static String id(String block) {

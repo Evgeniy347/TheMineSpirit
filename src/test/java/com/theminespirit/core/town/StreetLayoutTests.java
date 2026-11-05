@@ -80,10 +80,7 @@ class StreetLayoutTests {
             Schematic schematic = PRESETS.byId(tile.scheme()).orElseThrow().schematic();
             for (Schematic.PlacedEntry entry :
                     schematic.entries(new BlockCoord(tile.x(), 0, tile.z()), tile.rotation())) {
-                if (entry.pos().y() == 0) {
-                    covered.merge(
-                            new ColumnMask.Cell(entry.pos().x(), entry.pos().z()), 1, Integer::sum);
-                }
+                covered.merge(new ColumnMask.Cell(entry.pos().x(), entry.pos().z()), 1, Integer::sum);
             }
         }
         assertEquals(

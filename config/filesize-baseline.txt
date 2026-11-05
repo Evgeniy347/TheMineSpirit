@@ -5,7 +5,7 @@ src/main/java/com/theminespirit/core/board/graph/GraphPlanner.java	537
 src/main/java/com/theminespirit/core/board/graph/RecipeImport.java	555
 src/main/java/com/theminespirit/core/board/graph/SupplyGraph.java	377
 src/main/java/com/theminespirit/core/building/BuildPlanner.java	837
-src/main/java/com/theminespirit/core/building/Schematic.java	322
+src/main/java/com/theminespirit/core/building/Schematic.java	363
 src/main/java/com/theminespirit/core/building/SchematicBlocks.java	348
 src/main/java/com/theminespirit/core/building/SchematicLevelRules.java	322
 src/main/java/com/theminespirit/core/building/SchematicRules.java	614
@@ -33,7 +33,7 @@ src/main/java/com/theminespirit/neoforge/FillSession.java	616
 src/main/java/com/theminespirit/neoforge/HarvestSession.java	736
 src/main/java/com/theminespirit/neoforge/MineBuildScript.java	518
 src/main/java/com/theminespirit/neoforge/SafeMineSession.java	504
-src/main/java/com/theminespirit/neoforge/SchematicSite.java	353
+src/main/java/com/theminespirit/neoforge/SchematicSite.java	364
 src/main/java/com/theminespirit/neoforge/SpiritEntity.java	754
 src/main/java/com/theminespirit/neoforge/SpiritScripts.java	384
 src/main/java/com/theminespirit/neoforge/WorldScanner.java	306

@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 @Tag("export")
 class GraphExportTests {
     private static final Path OUT = Path.of("TestResults/graph-export/conformance.json");
+    private static final Path LIVE = Path.of("TestResults/graph-export/live1.json");
     private static final int CASES = 200;
 
     @Test
@@ -56,6 +57,15 @@ class GraphExportTests {
                 StandardCopyOption.REPLACE_EXISTING);
         new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValue(OUT.toFile(), cases);
         assertTrue(Files.size(OUT) > 0, "Контрольные случаи графа для Python-модели записаны в " + OUT);
+    }
+
+    @Test
+    void export_LiveStageOne_WriteStart() throws IOException {
+        Files.createDirectories(LIVE.getParent());
+        new ObjectMapper()
+                .enable(SerializationFeature.INDENT_OUTPUT)
+                .writeValue(LIVE.toFile(), state(GraphMutations.liveStageOne().state()));
+        assertTrue(Files.size(LIVE) > 0, "Живой этап 1 для Python-модели записан в " + LIVE);
     }
 
     static Map<String, Object> state(GraphState state) {

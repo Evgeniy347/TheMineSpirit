@@ -247,6 +247,13 @@ final class GraphSimulation {
             return;
         }
         world.stock.merge(task.makes(), way.yield(), Integer::sum);
+        if ("rescue".equals(task.makes())) {
+            world.rescued();
+        } else if ("dig_open".equals(task.makes())
+                || "bridge_open".equals(task.makes())
+                || "pillar_open".equals(task.makes())) {
+            world.freed();
+        }
         if (way.tool() != null) {
             String key = work.spirit() + ":" + way.tool();
             int rank = world.kits.getOrDefault(work.spirit(), Map.of()).getOrDefault(way.tool(), -1);

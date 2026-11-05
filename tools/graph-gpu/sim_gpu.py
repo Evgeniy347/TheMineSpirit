@@ -14,6 +14,7 @@
 import argparse
 import copy
 import heapq
+import json
 import math
 import os
 import sys
@@ -47,6 +48,7 @@ class World:
         self.stations = dict(stations or {})
         self.distances = dict(distances or {})
         self.facts = copy.deepcopy(facts or {})
+        self.stop_stage = LAST_STAGE + 1
 
     @classmethod
     def empty(cls, graph):
@@ -89,9 +91,11 @@ class World:
         return self
 
     def copy(self):
-        return World(self.graph, self.stock, self.kits, self.buildings, self.stage,
-                     self.storage_free, self.events, self.world, self.materials,
-                     self.stations, self.distances, self.facts)
+        copied = World(self.graph, self.stock, self.kits, self.buildings, self.stage,
+                       self.storage_free, self.events, self.world, self.materials,
+                       self.stations, self.distances, self.facts)
+        copied.stop_stage = self.stop_stage
+        return copied
 
     def with_facts(self, facts):
         self.facts = copy.deepcopy(facts)
@@ -538,6 +542,32 @@ def _dig_world(graph):
     return world
 
 
+def live_stage_one(graph, path=None):
+    """Живой этап 1 из выгрузки graphExport: состояние пишет Java (GraphMutations.liveStageOne)."""
+    if path is None:
+        path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            "TestResults", "graph-export", "live1.json")
+    with open(path, "r", encoding="utf-8") as handle:
+        state = json.load(handle)
+    world = World(
+        graph,
+        stock=state.get("stock"),
+        kits=state.get("kits"),
+        buildings=state.get("buildings"),
+        stage=int(state.get("stage", 1)),
+        storage_free=int(state.get("storageFreePercent", 60)),
+        events=state.get("events"),
+        world=state.get("world"),
+        materials=state.get("materials"),
+        stations=state.get("stations"),
+        distances=state.get("distances"),
+        facts=state.get("facts"),
+    )
+    world.stop_stage = 2
+    return world
+
+
 def input_builders():
     """Сборщики миров областей: (имя, graph -> World)."""
     return [
@@ -557,6 +587,7 @@ def input_builders():
         ("more7", _more7_world),
         ("more6", _more6_world),
         ("dig", _dig_world),
+        ("live1", lambda graph: live_stage_one(graph)),
     ]
 
 
@@ -839,10 +870,10 @@ def run_many(worlds, limit=4000, device="cuda", direct=True):
             if world.stage != stage_before:
                 state["stage_ticks"][stage_before] = now - state["stage_start"]
                 state["stage_start"] = now
-            if world.stage > LAST_STAGE:
+            if world.stage > LAST_STAGE or world.stage >= world.stop_stage:
                 state["finished"] = True
                 state["ticks"] = now
-                state["stage"] = LAST_STAGE
+                state["stage"] = min(world.stage, LAST_STAGE)
                 alive.discard(index)
         if not alive:
             break

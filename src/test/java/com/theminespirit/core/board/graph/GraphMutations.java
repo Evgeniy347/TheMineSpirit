@@ -1,8 +1,15 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.board.graph.GraphFacts.Position;
+import com.theminespirit.core.board.graph.GraphFacts.Spirit;
+import com.theminespirit.core.board.graph.GraphSiteFacts.StageReqs;
+import com.theminespirit.core.board.graph.GraphSiteFacts.Stray;
+import com.theminespirit.core.board.graph.GraphSiteFacts.Terrain;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.UnaryOperator;
 
@@ -23,6 +30,77 @@ final class GraphMutations {
             ten.tools("spirit-" + index, -1);
         }
         return List.of(empty, settled, crowded, second, ten);
+    }
+
+    static GraphWorld liveStageOne() {
+        GraphWorld world = GraphWorld.empty();
+        GraphWorld.GRAPH.buildings().keySet().forEach(id -> world.built(id, Built.ABSENT));
+        for (String id : List.of("crafting_table", "furnace", "chests", "clearing", "lighting", "fence", "hut")) {
+            world.built(id, Built.BUILT);
+        }
+        for (String id : List.of("mine", "streets", "orchard_oak", "wheat_field")) {
+            world.built(id, Built.PLANNED);
+        }
+        world.stage = 1;
+        for (int index = 1; index <= 4; index++) {
+            world.tools("spirit-" + index, -1);
+        }
+        world.stock.putAll(Map.of(
+                "oak_log",
+                26,
+                "oak_planks",
+                10,
+                "stick",
+                4,
+                "cobblestone",
+                20,
+                "coal",
+                6,
+                "torch",
+                0,
+                "dirt",
+                10,
+                "oak_sapling",
+                1,
+                "wheat_seeds",
+                8));
+        world.materials.put("streets", Map.of("dirt", 400));
+        world.materials.put("orchard_oak", Map.of("dirt", 18, "oak_sapling", 3, "torch", 3));
+        List<Stray> strays = new ArrayList<>();
+        for (int index = 0; index < 240; index++) {
+            strays.add(new Stray("stray-" + index, "wall", new Position(index, 64, 0), null, Map.of("wall", 1)));
+        }
+        Map<String, Spirit> spirits = new LinkedHashMap<>();
+        for (int index = 1; index <= 4; index++) {
+            spirits.put(
+                    "spirit-" + index,
+                    new Spirit(
+                            "spirit-" + index,
+                            new Position(index - 1, 64, 0),
+                            20.0f,
+                            20,
+                            300,
+                            false,
+                            false,
+                            index == 2 || index == 3,
+                            null,
+                            Map.of(),
+                            List.of(),
+                            List.of()));
+        }
+        world.facts = new GraphFacts(
+                spirits,
+                List.of(),
+                List.of(),
+                List.of(),
+                Map.of(),
+                Map.of(),
+                strays,
+                new Terrain(0, 180, 0, 0, 0, Map.of(), Map.of(), Map.of(), false, 3263),
+                new StageReqs(Map.of(), Map.of()),
+                GraphFeedback.none());
+        world.event("demolish_stray").event("clear_floating");
+        return world;
     }
 
     static List<Mutation> single() {
