@@ -32,6 +32,11 @@ public final class BoardLog {
 
     private BoardLog() {}
 
+    public static String culprit(List<BoardTicket> assigned) {
+        Objects.requireNonNull(assigned, "Назначенные задания не могут быть null: пусто — пустой список");
+        return assigned.isEmpty() ? "—" : assigned.get(0).id();
+    }
+
     public static BoardLogEntry placement(
             String spirit, String task, String block, BlockCoord pos, String reason, long tick, String hash) {
         return note(

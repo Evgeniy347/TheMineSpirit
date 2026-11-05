@@ -63,4 +63,38 @@ class BuildingWoodTests {
                 woods.rebuilt(HOUSE).with(HOUSE, birch).of(HOUSE).orElseThrow(),
                 "Перестройка снимает выбор: новая хижина выбирает породу заново");
     }
+
+    @Test
+    void fixed_StandingOakHouseWithJungleStock_KeepsOak() {
+        BuildingWood fresh = BuildingWood.choose(Map.of("jungle_planks", 113), Map.of(), "minecraft:jungle", RULES);
+        BuildingWood choice = BuildingWood.fixed(Map.of("oak", 97), fresh);
+        assertEquals(
+                "oak",
+                choice.species(),
+                "Порода готового дома не меняется от нового запаса: в observe23 дом 100/100 из дуба посреди "
+                        + "работы «переключился» на тропическую древесину и дух разобрал стену");
+        assertEquals(
+                "постройка уже стоит: порода закреплена, 97 блоков oak",
+                choice.reason(),
+                "Причина закрепления обязана называть число стоящих блоков: по ней видно, что породу взяли "
+                        + "из мира, а не из запаса");
+    }
+
+    @Test
+    void fixed_EmptyStanding_UsesFreshChoice() {
+        BuildingWood fresh = BuildingWood.choose(Map.of("birch_planks", 30), Map.of(), "minecraft:plains", RULES);
+        assertEquals(
+                "birch",
+                BuildingWood.fixed(Map.of(), fresh).species(),
+                "Новая постройка выбирает породу по запасу: закреплять нечего, пока в клетках ничего не стоит");
+    }
+
+    @Test
+    void fixed_StandingBlocksOfTwoSpecies_TakesMajority() {
+        BuildingWood fresh = BuildingWood.choose(Map.of("jungle_planks", 30), Map.of(), "minecraft:jungle", RULES);
+        assertEquals(
+                "spruce",
+                BuildingWood.fixed(Map.of("oak", 3, "spruce", 8), fresh).species(),
+                "Порода стоящей постройки — та, которой больше: одиночная доска чужой породы не перекрашивает дом");
+    }
 }
