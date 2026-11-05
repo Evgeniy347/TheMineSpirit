@@ -199,6 +199,9 @@ final class GraphPost {
         List<Integer> portions = GatherBatch.split(GatherBatch.round(count, output), output, helpers);
         for (int part = 0; part < portions.size(); part++) {
             String partId = part == 0 ? id : id + PART;
+            if (service.board().statusOf(partId).orElse(null) == BoardStatus.DONE) {
+                service.reopen(partId);
+            }
             submit(
                     ToolGate.withTool(
                             ticket(partId, BoardCase.GATHER_MATERIALS, Optional.empty(), priority, cause, Map.of()),

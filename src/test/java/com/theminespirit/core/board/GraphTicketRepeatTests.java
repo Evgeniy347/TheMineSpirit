@@ -40,6 +40,15 @@ class GraphTicketRepeatTests {
                 BoardStatus.PENDING,
                 board.statusOf("graph:dig_dirt").orElseThrow(),
                 "Новая добыча земли снова в очереди доски");
+        assertEquals(
+                BoardStatus.DONE,
+                board.statusOf("graph:dig_dirt:2").orElseThrow(),
+                "Вторая часть живой добычи земли тоже закрыта прошлым прогоном");
+        assertTrue(board.reopen("graph:dig_dirt:2"), "Вторая часть добычи открывается вместе с первой");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(ticket("graph:dig_dirt:2")),
+                "Иначе половина партии земли не выдаётся: первая часть собирает своё, вторая остаётся закрытой");
     }
 
     @Test
