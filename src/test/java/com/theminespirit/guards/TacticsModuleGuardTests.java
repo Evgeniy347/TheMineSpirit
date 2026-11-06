@@ -19,20 +19,8 @@ class TacticsModuleGuardTests {
     private static final List<String> OWN_PACKAGES =
             List.of("core.tactics", "core.intellect", "core.coordinator", "core.planner", "core.processing");
     private static final List<String> MODULE_PACKAGES = List.of("core.policy", "core.inventory", "core.night");
-    private static final List<String> TEST_MODULE_PACKAGES = List.of("core.board", "core.forestry");
-    private static final List<String> REMAINING_TESTS_IN_ROOT = List.of(
-            "core/planner/CorePlanner.java",
-            "core/planner/AcquireScriptTests.java",
-            "core/planner/BatchPlannerTests.java",
-            "core/planner/BrushResolveTests.java",
-            "core/planner/CharcoalFuelResolveTests.java",
-            "core/planner/CraftedSourceTests.java",
-            "core/planner/FallbackPlannerTests.java",
-            "core/planner/FirstToolsChainTests.java",
-            "core/planner/ResourceResolverProperties.java",
-            "core/planner/ResourceResolverStationTests.java",
-            "core/planner/ResourceResolverTests.java",
-            "core/planner/SupplyGatherLiveTicketTests.java");
+    private static final List<String> TEST_MODULE_PACKAGES =
+            List.of("core.board", "core.forestry", "core.reload", "core.script");
 
     @Test
     void tacticsSources_LiveInTacticsModule_NotInRoot() {
@@ -87,8 +75,7 @@ class TacticsModuleGuardTests {
             for (String own : OWN_PACKAGES) {
                 if (logical.startsWith(own.replace('.', '/') + "/")
                         && !file.normalize().startsWith(TEST)
-                        && !file.normalize().startsWith(SourceFiles.API_TEST)
-                        && !REMAINING_TESTS_IN_ROOT.contains(logical)) {
+                        && !file.normalize().startsWith(SourceFiles.API_TEST)) {
                     misplaced.add("вне :tactics: " + logical);
                 }
             }
@@ -97,8 +84,7 @@ class TacticsModuleGuardTests {
                 List.of(),
                 misplaced,
                 "Тесты тактики обязаны лежать в :tactics: иначе :tactics:test не проверяет модуль, а корень "
-                        + "гоняет чужие тесты на каждую правку. В корне до :content остаются только тесты "
-                        + "планировщика на встроенном каталоге скриптов (и помощник CorePlanner). Нарушители:");
+                        + "гоняет чужие тесты на каждую правку. Нарушители:");
     }
 
     @Test

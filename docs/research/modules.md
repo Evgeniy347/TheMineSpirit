@@ -90,9 +90,9 @@
 |---|---|---|---|---|
 | `:api` | `core.observation`, `perception`, `task`, `plan`, `engine`, `base` + словари/контракты | 107 | 400 | — (чистая Java, Jackson) |
 | `:board` | `core.board`, `core.board.graph` | 231 | 1618 | api |
-| `:tactics` | `core.tactics`, `intellect`, `coordinator`, `planner` | 247 | 998 | api, board, policy |
+| `:tactics` | `core.tactics`, `intellect`, `coordinator`, `planner`, `processing` | 247 | 998 | api, board, policy |
 | `:policy` | `core.policy` | 33 | 191 | api |
-| `:content` | `core.reload` + `core.script` (каталог и таблицы) | 121 | 482 | api, board, mechanics |
+| `:content` | `core.reload` + `core.script` (каталог и таблицы) | 121 | 482 | api, board, tactics, policy, механики |
 | `:rest` | `core.rest` | 71 | 248 | api, board |
 | `:ui` | `core.ui` | 36 | 116 | api, rest |
 | `:mech:forestry` | `core.forestry` + скрипты `neoforge` | 19+ | 96 | api |
@@ -104,7 +104,7 @@
 | `:mech:movement` | `core.movement`, `navigation`, `route` | 96 | 294 | api |
 | `:mech:town` | `core.town` | 52 | 173 | api, building |
 | `:mech:crafting` | `core.crafting` | 21 | 116 | api |
-| `:mech:small` | `core` мелочи (doors, hunger, sleep, pickup, repair, armor, experience, processing, fishing, social, night, alchemy, rest-факты) | 67 | 319 | api |
+| `:mech:small` | `core` мелочи (doors, hunger, sleep, pickup, repair, armor, experience, fishing, social, night, alchemy, rest-факты) | 67 | 319 | api |
 | `:mod` | `neoforge.*` (реестры, команды, клиент, адаптеры REST/графа/склада) + `TheMineSpirit` | 637 | 102 | все модули, NeoForge |
 | `:gametest` | `gametest` (179 @GameTest в 72 файлах) | 72 | 4 + GameTest | mod |
 | `:guards` | `guards` (тесты-сторожа) | — | 282 | все исходники |
