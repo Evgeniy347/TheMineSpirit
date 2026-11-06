@@ -13,8 +13,8 @@ module_layout_value() {
 }
 
 MOD_PACKAGE_ROOT="$(module_layout_value package_root)"
-MOD_MAIN_DIR="$(module_layout_value main)"
-MOD_TEST_DIR="$(module_layout_value test)"
+MOD_MAIN_DIR=""
+MOD_TEST_DIR="src/test/java"
 MOD_RESOURCES_DIR="$(module_layout_value resources)"
 MOD_TEST_RESOURCES_DIR="$(module_layout_value test_resources)"
 MOD_TEMPLATES_DIR="$(module_layout_value templates)"
@@ -37,6 +37,17 @@ settings_module_dirs() {
             printf '%s\n' "${id#:}" | tr ':' '/'
         done
 }
+
+# lib: корень main-исходников — sourceSet модуля :mod (соглашение build-logic),
+# а не отдельная строка layout.properties: иначе путь разъедется со settings.gradle.
+settings_module_dir() {
+    sed -nE "s/^[[:space:]]*include[[:space:]]+'(:[^']+)'.*/\1/p" "$MOD_SETTINGS_FILE" |
+        while IFS= read -r id; do
+            [ "$id" = "$1" ] && printf '%s\n' "${id#:}" | tr ':' '/'
+        done
+}
+
+MOD_MAIN_DIR="$(settings_module_dir ':mod')/src/main/java"
 
 module_roots_from_settings() {
     local source_set="$1" out="" dir

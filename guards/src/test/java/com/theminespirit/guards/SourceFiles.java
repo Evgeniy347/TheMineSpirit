@@ -20,10 +20,13 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public final class SourceFiles {
-    public static final Path MAIN = Path.of(layout().getProperty("main"));
-    public static final Path TEST = Path.of(layout().getProperty("test"));
-    public static final Path API = Path.of(layout().getProperty("api"));
-    public static final Path API_TEST = Path.of(layout().getProperty("api_test"));
+    // lib: корни исходников задаёт соглашение build-logic, а не карта путей: у каждого модуля
+    // src/main/java и src/test/java. Остаётся только назвать модули, которые это соглашение
+    // применяют, — их список уже в settings.gradle.
+    public static final Path MAIN = moduleDir(":mod").resolve("src/main/java");
+    public static final Path TEST = Path.of("src/test/java");
+    public static final Path API = moduleDir(":api").resolve("src/main/java");
+    public static final Path API_TEST = moduleDir(":api").resolve("src/test/java");
     public static final Path RESOURCES = Path.of(layout().getProperty("resources"));
     public static final Path TEST_RESOURCES = Path.of(layout().getProperty("test_resources"));
     public static final Path TEMPLATES = Path.of(layout().getProperty("templates"));
@@ -61,10 +64,6 @@ public final class SourceFiles {
             throw new UncheckedIOException("Сторож не смог прочитать карту путей " + layoutPath(), e);
         }
         require(properties, "package_root");
-        require(properties, "main");
-        require(properties, "test");
-        require(properties, "api");
-        require(properties, "api_test");
         require(properties, "resources");
         require(properties, "test_resources");
         require(properties, "templates");
@@ -72,6 +71,22 @@ public final class SourceFiles {
         require(properties, "jar_dir");
         require(properties, "gametests");
         return properties;
+    }
+
+    private static Path moduleDir(String id) {
+        try {
+            Path settings = Path.of("settings.gradle");
+            Matcher matcher = Pattern.compile("^\\s*include\\s+'(:[^']+)'", Pattern.MULTILINE)
+                    .matcher(Files.readString(settings));
+            while (matcher.find()) {
+                if (id.equals(matcher.group(1))) {
+                    return Path.of(id.substring(1).replace(':', '/'));
+                }
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Сторож не смог прочитать settings.gradle", e);
+        }
+        throw new IllegalStateException("В settings.gradle нет include '" + id + "': корень модуля не вывести");
     }
 
     private static void require(Properties properties, String key) {

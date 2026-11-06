@@ -28,7 +28,7 @@ tasks.named('assemble') {
 
 def unitTestThreads = (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}") as int
 tasks.named('test', Test) {
-    dependsOn ':api:test', ':board:test', ':tactics:test', ':content:test', ':policy:test'
+    dependsOn ':guards:test', ':api:test', ':board:test', ':tactics:test', ':content:test', ':policy:test'
     dependsOn ':rest:test', ':ui:test', ':mod:test', ':gametest:test'
     dependsOn ':mech:mining:test', ':mech:movement:test', ':mech:inventory:test'
     dependsOn ':mech:farming:test', ':mech:forestry:test', ':mech:crafting:test', ':mech:husbandry:test'
@@ -56,7 +56,7 @@ tasks.named('test', Test) {
 
 tasks.named('staticAnalysisFast') {
     dependsOn ':test-fixtures:staticAnalysisFast'
-    dependsOn ':api:staticAnalysisFast'
+    dependsOn ':guards:staticAnalysisFast', ':api:staticAnalysisFast'
     dependsOn ':board:staticAnalysisFast'
     dependsOn ':tactics:staticAnalysisFast'
     dependsOn ':content:staticAnalysisFast'
@@ -73,7 +73,7 @@ tasks.named('staticAnalysisFast') {
 }
 tasks.named('staticAnalysis') {
     dependsOn ':test-fixtures:staticAnalysis'
-    dependsOn ':api:staticAnalysis'
+    dependsOn ':guards:staticAnalysis', ':api:staticAnalysis'
     dependsOn ':board:staticAnalysis'
     dependsOn ':tactics:staticAnalysis'
     dependsOn ':content:staticAnalysis'
@@ -126,7 +126,7 @@ tasks.register('mutationTest', Test) {
 tasks.register('graphExport', Test) {
     group = 'verification'
     description = 'Выгрузка графа и контрольных случаев для Python-модели (tools/graph-gpu): TestResults/graph-export'
-    dependsOn ':board:graphExport', ':tactics:graphExport', ':content:graphExport', ':rest:graphExport'
+    dependsOn ':guards:graphExport', ':board:graphExport', ':tactics:graphExport', ':content:graphExport', ':rest:graphExport'
     dependsOn ':ui:graphExport', ':policy:graphExport'
     dependsOn ':mech:mining:graphExport', ':mech:movement:graphExport', ':mech:inventory:graphExport'
     dependsOn ':mech:farming:graphExport', ':mech:forestry:graphExport', ':mech:crafting:graphExport'
@@ -162,19 +162,24 @@ tasks.register('propertyTest', Test) {
     shouldRunAfter tasks.named('test')
 }
 
+def unitCostCsv = layout.projectDirectory.file('TestResults/unit/test-cost.csv')
 tasks.register('testCostReport', JavaExec) {
     group = 'verification'
     description = 'Топ-10 и МЕДЛЕННЫЙ по CPU из CSV стоимости тестов'
     mustRunAfter tasks.named('test')
+    // lib: при фильтре, который не задел тесты корня, CSV нет — отчёт не должен ронять прогон.
+    onlyIf { unitCostCsv.asFile.exists() }
     classpath = sourceSets.test.runtimeClasspath
     mainClass = 'com.theminespirit.testing.TestCostReporter'
     args 'TestResults/unit/test-cost.csv', 'src/test/resources/test-cost-thresholds.properties'
 }
 
+def slowCostCsv = layout.projectDirectory.file('TestResults/slow/test-cost.csv')
 tasks.register('slowTestCostReport', JavaExec) {
     group = 'verification'
     description = 'Топ-10 и МЕДЛЕННЫЙ по CPU из CSV медленного тира'
     mustRunAfter tasks.named('slowTest')
+    onlyIf { slowCostCsv.asFile.exists() }
     classpath = sourceSets.test.runtimeClasspath
     mainClass = 'com.theminespirit.testing.TestCostReporter'
     args 'TestResults/slow/test-cost.csv', 'src/test/resources/test-cost-thresholds.properties'
@@ -201,7 +206,7 @@ tasks.named('check') {
 }
 
 tasks.named('pmdMain') {
-    dependsOn ':api:pmdMain', ':board:pmdMain', ':tactics:pmdMain', ':content:pmdMain', ':test-fixtures:pmdMain', ':policy:pmdMain'
+    dependsOn ':guards:pmdMain', ':api:pmdMain', ':board:pmdMain', ':tactics:pmdMain', ':content:pmdMain', ':test-fixtures:pmdMain', ':policy:pmdMain'
     dependsOn ':rest:pmdMain', ':ui:pmdMain', ':mod:pmdMain', ':gametest:pmdMain'
     dependsOn ':mech:mining:pmdMain', ':mech:movement:pmdMain', ':mech:inventory:pmdMain'
     dependsOn ':mech:farming:pmdMain', ':mech:forestry:pmdMain', ':mech:crafting:pmdMain', ':mech:husbandry:pmdMain'
@@ -209,7 +214,7 @@ tasks.named('pmdMain') {
 }
 
 tasks.named('pmdTest') {
-    dependsOn ':api:pmdTest', ':board:pmdTest', ':tactics:pmdTest', ':content:pmdTest', ':test-fixtures:pmdTest', ':policy:pmdTest'
+    dependsOn ':guards:pmdTest', ':api:pmdTest', ':board:pmdTest', ':tactics:pmdTest', ':content:pmdTest', ':test-fixtures:pmdTest', ':policy:pmdTest'
     dependsOn ':rest:pmdTest', ':ui:pmdTest', ':mod:pmdTest', ':gametest:pmdTest'
     dependsOn ':mech:mining:pmdTest', ':mech:movement:pmdTest', ':mech:inventory:pmdTest'
     dependsOn ':mech:farming:pmdTest', ':mech:forestry:pmdTest', ':mech:crafting:pmdTest', ':mech:husbandry:pmdTest'
@@ -218,6 +223,19 @@ tasks.named('pmdTest') {
 
 tasks.named('test') {
     finalizedBy tasks.named('testCostReport')
+}
+
+// lib: тиры собираются по модулям: ./gradlew slowTest | mutationTest гоняет тир каждого модуля.
+// Пустой тир модуля без таких тестов не красный (сторож тира — failOnNoDiscoveredTests в модуле,
+// он включается, только если тег в исходниках реально есть).
+gradle.projectsEvaluated {
+    def tierModules = subprojects.findAll { it.plugins.hasPlugin('theminespirit.module') }
+    ['slowTest', 'mutationTest'].each { String tier ->
+        tasks.named(tier) {
+            dependsOn tierModules.collect { "${it.path}:${tier}" }
+            failOnNoDiscoveredTests = false
+        }
+    }
 }
 
 tasks.named('slowTest') {

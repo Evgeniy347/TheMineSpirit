@@ -1,3 +1,11 @@
 plugins {
     id 'theminespirit.module'
 }
+
+description = 'Политики безопасности: рефлексы, запреты, защищённые зоны — чистый Java'
+
+dependencies {
+    // lib: живой тест политик читает таблицы :content; боевой модуль остаётся чистым Java без :content.
+    testImplementation project(':content')
+    testImplementation project(':mech:town')
+}

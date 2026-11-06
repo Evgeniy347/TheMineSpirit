@@ -23,6 +23,13 @@ class ModuleLayoutGuardTests {
                 "Список корней модулей обязан быть в одном месте — settings.gradle: config/layout.properties "
                         + "снова завёл module_roots/module_test_roots. Как надо: новый модуль добавляется только "
                         + "через include в settings.gradle, остальные инструменты читают его список оттуда.");
+        for (String key : List.of("main=", "test=", "api=", "api_test=")) {
+            assertFalse(
+                    layout.lines().anyMatch(line -> line.startsWith(key)),
+                    "config/layout.properties снова дублирует " + key + ": корни исходников задаёт соглашение "
+                            + "build-logic (<модуль>/src/main/java), а модули — settings.gradle. Как надо: убери "
+                            + "ключ, путь выводится из include и sourceSet.");
+        }
         String paths = Files.readString(Path.of("scripts/module-paths.sh"));
         assertFalse(
                 paths.contains("module_layout_value module_roots"),

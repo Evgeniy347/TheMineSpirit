@@ -32,26 +32,22 @@ def settings_module_dirs(root: Path) -> list[str]:
 
 
 def layout_roots(root: Path) -> list[str]:
-    """Корни исходников: корень, api и модули (модули — из settings.gradle)."""
+    """Корни исходников по соглашению build-logic: <модуль>/src/{main,test}/<package_root>.
+
+    Модули — из settings.gradle; корневой src/test/java — агрегатор, он модулем не является.
+    """
     package_root = "com/theminespirit"
     lines = (root / "config/layout.properties").read_text(encoding="utf-8").splitlines()
-    values: dict[str, str] = {}
     for line in lines:
         text = line.strip()
-        if not text or text.startswith("#") or "=" not in text:
-            continue
-        key, value = text.split("=", 1)
-        values[key.strip()] = value.strip()
-    package_root = values.get("package_root", package_root)
+        if text.startswith("package_root="):
+            package_root = text.split("=", 1)[1].strip()
     extra = [
         f"{directory}/src/{source_set}/{package_root}"
-        for directory in settings_module_dirs(root)
+        for directory in [":api".replace(":", "")] + settings_module_dirs(root)
         for source_set in ("main", "test")
     ]
-    return [
-        f"{values.get('main', MAIN)}/{package_root}",
-        f"{values.get('test', TEST)}/{package_root}",
-    ] + extra
+    return [f"src/test/java/{package_root}"] + extra
 
 
 def logical(path: str, prefixes: list[str]) -> str:

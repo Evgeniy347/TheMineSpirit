@@ -20,6 +20,7 @@ rootProject.name = 'the-mine-spirit'
 includeBuild('build-logic')
 
 include ':api'
+include ':guards'
 include ':test-fixtures'
 include ':policy'
 include ':mech:farming'
@@ -41,3 +42,9 @@ include ':mech:building'
 include ':mech:town'
 
 def mechanicsModules = [':policy']
+// lib: модули, которые не являются механиками — доска, тактика, данные, адаптеры, точка входа.
+// Сторож MechanicsModuleRegistryGuardTests требует, чтобы каждый include был либо mech/*, либо механикой
+// из списка, либо инфраструктурой отсюда.
+def nonMechanicModules = [
+        ':api', ':test-fixtures', ':guards', ':board', ':tactics', ':content', ':rest', ':ui', ':mod', ':gametest'
+]
