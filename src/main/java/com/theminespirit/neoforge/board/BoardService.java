@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.AbsentOwners;
 import com.theminespirit.core.board.ActivityCadence;
+import com.theminespirit.core.board.ActivityQueue;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
@@ -74,8 +75,10 @@ public final class BoardService {
     private static final long EARLY_DISPATCH_TICKS = 1;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String DIG_OUT = "dig_out";
+    private static final long ACTIVITY_WAIT_TICKS = 1200;
     public final BoardSources sources;
     final ActivityCards cards = new ActivityCards();
+    private final ActivityQueue activities = new ActivityQueue();
     private final Board board;
     private final HerdCycles animals;
     private final StockReader stockReader;
@@ -448,6 +451,59 @@ public final class BoardService {
         boolean start(SpiritEntity spirit, String script, TaskNode task, long tick);
     }
 
+    public boolean requestActivity(
+            List<SpiritEntity> spirits,
+            String key,
+            int priority,
+            BoardCase activity,
+            String script,
+            TaskNode task,
+            long now) {
+        SpiritEntity free = idleActivity(spirits);
+        if (free != null && launch(free, activity, script, task, starter(), now)) {
+            activities.remove(key);
+            return true;
+        }
+        if (activities.offer(key, activity, script, task, priority, now, ACTIVITY_WAIT_TICKS)) {
+            LOGGER.info("[board] занятие {} ждёт свободного духа (вес {})", key, priority);
+        }
+        return true;
+    }
+
+    private void startWaitingActivities(List<SpiritEntity> spirits, long now) {
+        for (ActivityQueue.Request request : activities.due(now)) {
+            SpiritEntity spirit = idleActivity(spirits);
+            if (spirit == null) {
+                return;
+            }
+            if (!launch(spirit, request.activity(), request.script(), request.task(), starter(), now)) {
+                continue;
+            }
+            activities.remove(request.key());
+            LOGGER.info("[board] отложенное занятие {} стартовало у {}", request.key(), spirit.displayName());
+        }
+    }
+
+    private @Nullable SpiritEntity idleActivity(List<SpiritEntity> spirits) {
+        for (SpiritEntity spirit : spirits) {
+            if (spirit.isRemoved() || !board.assignedTo(spirit.getUUID()).isEmpty()) {
+                continue;
+            }
+            if (!spirit.currentTaskScript().isPresent() || spirit.runsBackgroundTask()) {
+                return spirit;
+            }
+        }
+        return null;
+    }
+
+    private Launcher starter() {
+        return (member, name, task, tick) -> {
+            if (member.isRemoved()) return false;
+            JobLaunch.start(cards, member, name, task);
+            return true;
+        };
+    }
+
     public boolean launch(
             SpiritEntity spirit, BoardCase activity, String script, TaskNode task, Launcher launcher, long now) {
         Objects.requireNonNull(spirit, "Дух занятия не может быть null: занятие адресовано конкретному духу");
@@ -462,6 +518,7 @@ public final class BoardService {
 
     private void reconcileActivities(List<SpiritEntity> spirits, boolean census) {
         WaitRefresh.tick(board, spirits, targets, stock, crafters, board.now());
+        startWaitingActivities(spirits, board.now());
         if (!census) return;
     }
 

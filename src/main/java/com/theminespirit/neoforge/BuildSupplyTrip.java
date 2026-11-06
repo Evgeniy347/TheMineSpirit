@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildClutter;
+import com.theminespirit.core.building.BuildPhase;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SettlementChests;
@@ -44,6 +45,13 @@ final class BuildSupplyTrip {
 
     static List<ScriptCall> plan(SpiritEntity spirit, SchematicSite site, Predicate<Schematic.PlacedEntry> phase) {
         return fetch(spirit, site, need(spirit, site, phase));
+    }
+
+    static List<ScriptCall> plan(SpiritEntity spirit, SchematicSite site, int band, int bottomY) {
+        Predicate<Schematic.PlacedEntry> phase = entry -> band < 0
+                || (BuildPhase.rough(entry.block())
+                        && BuildPhase.band(entry.pos().y() - bottomY) >= band);
+        return plan(spirit, site, phase);
     }
 
     static List<ScriptCall> exact(SpiritEntity spirit, SchematicSite site, Map<Item, Integer> wanted) {

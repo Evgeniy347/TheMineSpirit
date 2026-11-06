@@ -1,35 +1,13 @@
 plugins {
-    id 'theminespirit.java-conventions'
+    id 'theminespirit.module'
 }
 
-def rootTest = rootProject.sourceSets.test
-def explicitlyRequested = gradle.startParameter.taskNames.any { name ->
-    name == 'board:test' || name == ':board:test' || name.startsWith('board:') || name.startsWith(':board:')
-}
-
-tasks.named('test', Test) {
-    onlyIf { explicitlyRequested }
-    workingDir = rootProject.projectDir
-    dependsOn rootProject.tasks.named('testClasses')
-    testClassesDirs = rootTest.output.classesDirs
-    classpath = rootTest.runtimeClasspath
-    useJUnitPlatform {
-        excludeTags 'slow', 'mutation', 'export'
-    }
-    filter {
-        includeTestsMatching 'com.theminespirit.core.board.*'
-    }
-    maxParallelForks = 1
-    systemProperty 'junit.jupiter.execution.parallel.enabled', 'true'
-    systemProperty 'junit.jupiter.execution.parallel.mode.default', 'same_thread'
-    systemProperty 'junit.jupiter.execution.parallel.mode.classes.default', 'concurrent'
-    systemProperty 'junit.jupiter.execution.parallel.config.strategy', 'fixed'
-    systemProperty 'junit.jupiter.execution.parallel.config.fixed.parallelism',
-            "${(System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}")}"
-    jvmArgs '-XX:+UseSerialGC'
-    maxHeapSize = '512m'
-    systemProperty 'theminespirit.modId', 'theminespirit'
-    systemProperty 'theminespirit.updateSnapshots',
-            System.getProperty('theminespirit.updateSnapshots', System.getenv('THEMINESPIRIT_UPDATE_SNAPSHOTS') ?: 'false')
-    failOnNoDiscoveredTests = true
+dependencies {
+    implementation project(':mech:building')
+    implementation project(':mech:town')
+    implementation project(':mech:movement')
+    implementation project(':mech:inventory')
+    implementation project(':mech:crafting')
+    implementation project(':mech:small')
+    testImplementation project(':mech:forestry')
 }

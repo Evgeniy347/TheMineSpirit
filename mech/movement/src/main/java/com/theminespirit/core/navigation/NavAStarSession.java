@@ -25,9 +25,11 @@ public final class NavAStarSession {
     private final int startX;
     private final int startY;
     private final int startZ;
+    private final int referenceY;
     private final LongSupplier clock;
     private final long started;
     private final Map<Long, NavNode> nodes = new HashMap<>();
+    private final Map<Long, Boolean> returnableCache = new HashMap<>();
     private final NavOpenSet open = new NavBinaryHeapOpenSet();
     private final NavNode[] bestSoFar = new NavNode[COEFFICIENTS.length];
     private final double[] bestHeuristicSoFar = new double[COEFFICIENTS.length];
@@ -55,6 +57,7 @@ public final class NavAStarSession {
         this.startX = startX;
         this.startY = startY;
         this.startZ = startZ;
+        this.referenceY = referenceFor(goal, startY);
         this.clock = Objects.requireNonNull(clock, "Часы поиска не могут быть null");
         this.started = clock.getAsLong();
         NavNode start = nodeAt(startX, startY, startZ);
@@ -140,6 +143,9 @@ public final class NavAStarSession {
             emptyChunks++;
             return;
         }
+        if (candidate.y < referenceY && !returnable(candidate.x, candidate.y, candidate.z)) {
+            return;
+        }
         NavNode neighbor = nodeAt(candidate.x, candidate.y, candidate.z);
         double tentative = current.cost + candidate.cost * favoring.factor(candidate.x, candidate.y, candidate.z);
         if (neighbor.cost - tentative <= MIN_IMPROVEMENT) {
@@ -184,6 +190,22 @@ public final class NavAStarSession {
             }
         }
         return null;
+    }
+
+    private boolean returnable(int x, int y, int z) {
+        long key = NavNode.key(x, y, z);
+        Boolean known = returnableCache.get(key);
+        if (known != null) {
+            return known;
+        }
+        boolean reachable = NavReversibility.canReturn(context.world(), x, y, z, referenceY);
+        returnableCache.put(key, reachable);
+        return reachable;
+    }
+
+    static int referenceFor(NavGoal goal, int startY) {
+        Integer goalY = goal.goalY();
+        return goalY == null ? startY : goalY;
     }
 
     private NavNode nodeAt(int x, int y, int z) {

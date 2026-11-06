@@ -443,6 +443,19 @@ class TicketPlansTests {
     }
 
     @Test
+    void plan_FillCrater_FillsWholePitDepthFromBottomUp() {
+        TaskNode plan = TicketPlans.plan(BoardCase.FILL_CRATER, target().withCraterBlocks(29));
+        ScriptCall fill = findCall(plan, "fill");
+
+        assertEquals(
+                32,
+                fill.params().get("y1"),
+                "Воронка глубиной 29 блоков засыпается с её дна (60 - 29 + 1 = 32), а не одной верхней клеткой: "
+                        + "верхний блок без опоры FillSession откладывает и задание падает «поставлено 0 из 27»");
+        assertEquals(60, fill.params().get("y2"), "Верх засыпки — уровень земли воронки");
+    }
+
+    @Test
     void plan_FillCrater_ClampsHugeEstimate() {
         TaskNode plan = TicketPlans.plan(BoardCase.FILL_CRATER, target().withCraterBlocks(10000));
         ScriptCall acquire = findCall(plan, "acquire");

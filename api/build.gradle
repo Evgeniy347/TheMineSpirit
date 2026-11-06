@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     api "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
+    testImplementation testFixtures(project(':test-fixtures'))
 }
 
 tasks.named('test', Test) {
@@ -23,7 +24,6 @@ tasks.named('test', Test) {
     systemProperty 'theminespirit.modId', 'theminespirit'
     systemProperty 'theminespirit.updateSnapshots',
             System.getProperty('theminespirit.updateSnapshots', System.getenv('THEMINESPIRIT_UPDATE_SNAPSHOTS') ?: 'false')
-    failOnNoDiscoveredTests = true
-    reports.html.outputLocation = rootProject.file('TestResults/api/html')
-    reports.junitXml.outputLocation = rootProject.file('TestResults/api/xml')
+    failOnNoDiscoveredTests = !project.hasProperty('theminespirit.filtered')
+    filter { setFailOnNoMatchingTests(!project.hasProperty('theminespirit.filtered')) }
 }

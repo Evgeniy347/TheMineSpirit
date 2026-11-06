@@ -62,9 +62,9 @@ class OrchardPathLiveTests {
                 "Дорожка не добывается как предмет из мира: её делают лопатой. План: " + plan);
         assertTrue(
                 calls.stream()
-                        .anyMatch(call -> "acquire".equals(call.script())
+                        .anyMatch(call -> "withdraw".equals(call.script())
                                 && String.valueOf(call.params().get("item")).endsWith("_shovel")),
-                "Перед топтанием нужна лопата: " + plan);
+                "Перед топтанием нужна лопата из сундука: " + plan);
     }
 
     @Test

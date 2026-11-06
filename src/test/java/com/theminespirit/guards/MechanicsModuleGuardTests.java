@@ -4,12 +4,15 @@ import static com.theminespirit.guards.MechanicsModuleImports.apiClasses;
 import static com.theminespirit.guards.MechanicsModuleImports.violations;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 class MechanicsModuleGuardTests {
@@ -27,80 +30,50 @@ class MechanicsModuleGuardTests {
         }
     }
 
-    private static final List<Module> DECLARED_MODULES = List.of(
-            new Module(
-                    ":policy",
-                    List.of("core.policy"),
-                    Path.of("policy/src/main/java"),
-                    Path.of("policy/src/test/java")),
-            new Module(
-                    ":mech:mining",
-                    List.of("core.mining"),
-                    Path.of("mech/mining/src/main/java"),
-                    Path.of("mech/mining/src/test/java")),
-            new Module(
-                    ":mech:movement",
-                    List.of("core.movement", "core.navigation", "core.route"),
-                    Path.of("mech/movement/src/main/java"),
-                    Path.of("mech/movement/src/test/java")),
-            new Module(
-                    ":mech:inventory",
-                    List.of("core.inventory"),
-                    Path.of("mech/inventory/src/main/java"),
-                    Path.of("mech/inventory/src/test/java")),
-            new Module(
-                    ":mech:farming",
-                    List.of("core.farming"),
-                    Path.of("mech/farming/src/main/java"),
-                    Path.of("mech/farming/src/test/java")),
-            new Module(
-                    ":mech:forestry",
-                    List.of("core.forestry"),
-                    Path.of("mech/forestry/src/main/java"),
-                    Path.of("mech/forestry/src/test/java")),
-            new Module(
-                    ":mech:crafting",
-                    List.of("core.crafting"),
-                    Path.of("mech/crafting/src/main/java"),
-                    Path.of("mech/crafting/src/test/java")),
-            new Module(
-                    ":mech:husbandry",
-                    List.of("core.husbandry"),
-                    Path.of("mech/husbandry/src/main/java"),
-                    Path.of("mech/husbandry/src/test/java")),
-            new Module(
-                    ":mech:small",
-                    List.of(
-                            "core.alchemy",
-                            "core.armor",
-                            "core.doors",
-                            "core.experience",
-                            "core.hunger",
-                            "core.night",
-                            "core.repair",
-                            "core.sleep",
-                            "core.social"),
-                    Path.of("mech/small/src/main/java"),
-                    Path.of("mech/small/src/test/java")),
-            new Module(
-                    ":mech:building",
-                    List.of("core.building"),
-                    Path.of("mech/building/src/main/java"),
-                    Path.of("mech/building/src/test/java")),
-            new Module(
-                    ":mech:town",
-                    List.of("core.town"),
-                    Path.of("mech/town/src/main/java"),
-                    Path.of("mech/town/src/test/java")));
+    private static final Set<String> NON_MECHANICS = Set.of(":board", ":test-fixtures");
+    private static final String MAIN_SUFFIX = "/src/main/java";
 
     private static final Map<String, List<String>> MODULE_DEPENDENCIES =
             Map.of(":mech:town", List.of("core.building"), ":mech:small", List.of("core.inventory"));
 
     private static List<Module> modules() {
-        List<Path> declared = SourceFiles.moduleMainRoots();
-        return DECLARED_MODULES.stream()
-                .filter(module -> declared.contains(module.mainRoot()))
-                .toList();
+        List<Module> modules = new ArrayList<>();
+        for (Path mainRoot : SourceFiles.moduleMainRoots()) {
+            String path = mainRoot.toString().replace('\\', '/');
+            if (!path.endsWith(MAIN_SUFFIX)) {
+                continue;
+            }
+            String id = ":"
+                    + path.substring(0, path.length() - MAIN_SUFFIX.length()).replace('/', ':');
+            if (NON_MECHANICS.contains(id) || !Files.isDirectory(mainRoot)) {
+                continue;
+            }
+            Path testRoot = mainRoot.getParent().getParent().resolve("test/java");
+            modules.add(new Module(id, packages(mainRoot), mainRoot, testRoot));
+        }
+        return List.copyOf(modules);
+    }
+
+    private static List<String> packages(Path mainRoot) {
+        Path packageRoot = mainRoot.resolve("com/theminespirit");
+        if (!Files.isDirectory(packageRoot)) {
+            return List.of();
+        }
+        List<String> packages = new ArrayList<>();
+        try (Stream<Path> files = Files.walk(packageRoot)) {
+            for (Path file :
+                    files.filter(path -> path.toString().endsWith(".java")).toList()) {
+                String relative =
+                        packageRoot.relativize(file.getParent()).toString().replace('\\', '/');
+                String name = relative.replace('/', '.');
+                if (!packages.contains(name)) {
+                    packages.add(name);
+                }
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Сторож не смог прочитать пакеты модуля в " + packageRoot, e);
+        }
+        return packages;
     }
 
     @Test

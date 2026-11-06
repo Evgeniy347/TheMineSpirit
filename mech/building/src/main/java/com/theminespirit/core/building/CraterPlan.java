@@ -42,15 +42,15 @@ public final class CraterPlan {
 
     private static void collectColumn(CraterSurface surface, int x, int z, List<BlockCoord> cells) {
         int level = surface.groundLevel(x, z);
-        if (!surface.isAir(x, level, z)) {
+        if (!surface.isFillable(x, level, z)) {
             return;
         }
         int floor = level;
-        while (floor > CatalogLimits.WORLD_Y_MIN && surface.isAir(x, floor - 1, z)) {
+        while (floor > CatalogLimits.WORLD_Y_MIN && surface.isFillable(x, floor - 1, z)) {
             floor--;
         }
         for (int y = floor; y <= level; y++) {
-            if (surface.isAir(x, y, z) && !surface.isProtected(x, y, z)) {
+            if (surface.isFillable(x, y, z) && !surface.isProtected(x, y, z)) {
                 cells.add(new BlockCoord(x, y, z));
             }
         }

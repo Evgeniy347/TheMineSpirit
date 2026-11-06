@@ -34,6 +34,7 @@ final class WorldAreaInputs {
 
     private static RepairAudit.@Nullable Report cachedHouse;
     private static @Nullable StageSite cachedHouseSite;
+    private static String cachedHouseWood = "";
     private static long cachedHouseAt = Long.MIN_VALUE;
 
     record Marks(Map<String, Integer> cut, Map<String, Integer> fill, Map<String, Integer> floating, int natural) {
@@ -226,16 +227,21 @@ final class WorldAreaInputs {
         return facts;
     }
 
-    static RepairAudit.@Nullable Report houseReport(ServerLevel level, StageSite site, long now) {
+    static RepairAudit.@Nullable Report houseReport(ServerLevel level, StageSite site, String wood, long now) {
         long interval = RepairData.loadDefault().auditIntervalTicks();
         RepairAudit.Report cached = cachedHouse;
-        if (cached != null && site.equals(cachedHouseSite) && now >= cachedHouseAt && now - cachedHouseAt < interval) {
+        if (cached != null
+                && site.equals(cachedHouseSite)
+                && wood.equals(cachedHouseWood)
+                && now >= cachedHouseAt
+                && now - cachedHouseAt < interval) {
             return cached;
         }
-        RepairAudit.Report report = RepairAuditWatch.houseReport(level, site, now);
+        RepairAudit.Report report = RepairAuditWatch.houseReport(level, site, wood, now);
         if (report != null) {
             cachedHouse = report;
             cachedHouseSite = site;
+            cachedHouseWood = wood;
             cachedHouseAt = now;
         }
         return report;

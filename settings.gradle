@@ -20,6 +20,7 @@ rootProject.name = 'the-mine-spirit'
 includeBuild('build-logic')
 
 include ':api'
+include ':test-fixtures'
 include ':policy'
 include ':mech:farming'
 include ':mech:forestry'

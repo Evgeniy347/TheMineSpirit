@@ -12,6 +12,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -21,6 +22,7 @@ public final class PathScenesGameTests {
     private static final int SETTLE_TICKS = 5;
     private static final BlockPos FLAT_ORIGIN = new BlockPos(1, 1, 1);
     private static final BlockPos LOW_ORIGIN = new BlockPos(2, 1, 2);
+    private static final BlockPos WEED_ORIGIN = new BlockPos(4, 2, 4);
 
     private PathScenesGameTests() {}
 
@@ -35,17 +37,25 @@ public final class PathScenesGameTests {
         helper.setBlock(LOW_ORIGIN.getX(), 0, LOW_ORIGIN.getZ(), Blocks.AIR);
         helper.setBlock(LOW_ORIGIN.getX(), -1, LOW_ORIGIN.getZ(), Blocks.DIRT);
         helper.setBlock(FLAT_ORIGIN.getX(), FLAT_ORIGIN.getY(), FLAT_ORIGIN.getZ(), Blocks.DIRT_PATH);
+        helper.setBlock(10, 1, 10, Blocks.CHEST);
+        ChestBlockEntity chest =
+                (ChestBlockEntity) helper.getLevel().getBlockEntity(helper.absolutePos(new BlockPos(10, 1, 10)));
+        chest.setItem(0, new ItemStack(Items.IRON_SHOVEL));
+        helper.setBlock(WEED_ORIGIN.getX(), WEED_ORIGIN.getY() - 1, WEED_ORIGIN.getZ(), Blocks.SHORT_GRASS);
 
         SpiritEntity flat = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(8, 1, 8));
         SpiritEntity low = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(7, 1, 7));
-        flat.getInventory().setItem(0, new ItemStack(Items.IRON_SHOVEL));
+        SpiritEntity weed = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(6, 1, 6));
         low.getInventory().setItem(0, new ItemStack(Items.IRON_SHOVEL));
+        weed.getInventory().setItem(0, new ItemStack(Items.IRON_SHOVEL));
         SpiritRun flatRun = SpiritRun.launch(helper, flat, build(helper, FLAT_ORIGIN), SETTLE_TICKS);
         SpiritRun lowRun = SpiritRun.launch(helper, low, build(helper, LOW_ORIGIN), SETTLE_TICKS);
+        SpiritRun weedRun = SpiritRun.launch(helper, weed, build(helper, WEED_ORIGIN), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             flatRun.assertStarted();
             lowRun.assertStarted();
+            weedRun.assertStarted();
             helper.assertTrue(
                     flat.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "тропа на ровной земле обязана встать целиком, статус "
@@ -70,9 +80,51 @@ public final class PathScenesGameTests {
             helper.assertTrue(
                     helper.getBlockState(LOW_ORIGIN).isAir(),
                     "клетка схемы над низкой колонкой остаётся воздухом: тропа не ставится блоком над землёй");
+            helper.assertTrue(
+                    weed.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "сорняк в клетке тропы снят и тропа легла ниже, статус "
+                            + weed.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + weed.taskFailureReason().orElse("нет"));
+            helper.assertTrue(helper.getBlockState(WEED_ORIGIN).isAir(), "клетка тропы очищена от травы");
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(WEED_ORIGIN.getX(), WEED_ORIGIN.getY() - 2, WEED_ORIGIN.getZ()))
+                            .is(Blocks.DIRT_PATH),
+                    "тропа лежит в верхнем блоке земли под клеткой схемы");
             helper.setBlock(LOW_ORIGIN.getX(), -1, LOW_ORIGIN.getZ(), Blocks.AIR);
             GameTestFixtures.finish(helper, 16);
         });
+    }
+
+    @GameTest(template = "arena", batch = "scene_path_tool", timeoutTicks = 400)
+    public static void pathScene_NoShovel_FailsAsMissingToolNotMaterial(GameTestHelper helper) {
+        flatGrass(helper);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(8, 1, 8));
+        SpiritRun run = SpiritRun.launch(helper, spirit, build(helper, FLAT_ORIGIN), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.FAILED,
+                    "без лопаты стройка тропы обязана честно провалиться, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи"));
+            String reason = spirit.taskFailureReason().orElse("");
+            helper.assertTrue(
+                    reason.contains("нужен инструмент"),
+                    "Причина — отсутствие лопаты, а не 'не хватило материала dirt_path': " + reason);
+            helper.assertTrue(
+                    !reason.contains("не хватило материала"),
+                    "Предмет dirt_path не добывают, поэтому и 'не хватило материала' быть не может: " + reason);
+            GameTestFixtures.finish(helper, 16);
+        });
+    }
+
+    private static void flatGrass(GameTestHelper helper) {
+        GameTestFixtures.reset(helper, 16);
+        for (int x = -1; x <= 12; x++) {
+            for (int z = -1; z <= 12; z++) {
+                helper.setBlock(x, 0, z, Blocks.GRASS_BLOCK);
+            }
+        }
     }
 
     private static ScriptCall build(GameTestHelper helper, BlockPos origin) {

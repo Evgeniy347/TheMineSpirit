@@ -107,6 +107,7 @@ final class PlanDemolition {
         }
         String previous = DemolitionHistory.previous(service, scope);
         if (!DemolitionTickets.submit(post, site, blocks, id, placement, cause)) {
+            RETRIES.submitted(id, now, COOLDOWN);
             return;
         }
         RETRIES.submitted(id, now, COOLDOWN);

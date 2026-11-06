@@ -57,9 +57,11 @@ class StreetWorkTests {
         for (int stage : new int[] {2, 3}) {
             Set<String> blocks = materials(stage);
             assertTrue(
-                    blocks.contains("minecraft:dirt_path") && blocks.contains("minecraft:gravel"),
-                    "этап " + stage + ": плитки улиц — тропа с гравийными краями, а не " + blocks);
-            assertFalse(blocks.contains("minecraft:dirt"), "этап " + stage + ": земляных плиток нет: " + blocks);
+                    blocks.contains("minecraft:dirt") && blocks.contains("minecraft:gravel"),
+                    "этап " + stage + ": покрытие улиц — тропа (в смете земля) с гравийными краями, а не " + blocks);
+            assertFalse(
+                    blocks.contains("minecraft:dirt_path"),
+                    "этап " + stage + ": dirt_path не предмет, тропу топчут на месте: " + blocks);
         }
     }
 

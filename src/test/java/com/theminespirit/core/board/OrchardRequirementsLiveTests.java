@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.building.BuildRotation;
@@ -75,9 +76,12 @@ class OrchardRequirementsLiveTests {
 
         assertEquals(
                 20,
-                requirements.get("dirt_path"),
-                "Требования задания обязаны совпадать с участком: дорожек 20, а не рецепт charcoal/stick. "
-                        + "Требования: " + requirements);
+                requirements.get("dirt"),
+                "Требования задания обязаны совпадать с участком: дорожек 20, а в смете они землёй "
+                        + "(предмета dirt_path нет). Требования: " + requirements);
+        assertFalse(
+                requirements.containsKey("dirt_path"),
+                "dirt_path не предмет: земля под тропой — обычный dirt. Требования: " + requirements);
         assertEquals(
                 4,
                 requirements.get("torch"),

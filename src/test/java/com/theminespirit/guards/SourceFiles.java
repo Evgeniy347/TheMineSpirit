@@ -8,7 +8,6 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -31,13 +30,15 @@ public final class SourceFiles {
     public static final Path GENERATED_RESOURCES = Path.of(layout().getProperty("generated_resources"));
     public static final Path GAME_TESTS = MAIN.resolve(layout().getProperty("gametests"));
 
+    private static final Path SETTINGS = Path.of("settings.gradle");
+    private static final Pattern INCLUDE = Pattern.compile("^\\s*include\\s+'(:[^']+)'", Pattern.MULTILINE);
     private static final String PACKAGE_ROOT = layout().getProperty("package_root");
     private static final Path MAIN_PACKAGE = MAIN.resolve(PACKAGE_ROOT);
     private static final Path TEST_PACKAGE = TEST.resolve(PACKAGE_ROOT);
     private static final Path API_PACKAGE = API.resolve(PACKAGE_ROOT);
     private static final Path API_TEST_PACKAGE = API_TEST.resolve(PACKAGE_ROOT);
-    private static final List<Path> MODULE_ROOTS = roots("module_roots");
-    private static final List<Path> MODULE_TEST_ROOTS = roots("module_test_roots");
+    private static final List<Path> MODULE_ROOTS = moduleRoots("src/main/java");
+    private static final List<Path> MODULE_TEST_ROOTS = moduleRoots("src/test/java");
     private static final List<Path> MODULE_PACKAGES =
             MODULE_ROOTS.stream().map(root -> root.resolve(PACKAGE_ROOT)).toList();
     private static final List<Path> MODULE_TEST_PACKAGES =
@@ -99,16 +100,23 @@ public final class SourceFiles {
         return all;
     }
 
-    private static List<Path> roots(String key) {
-        String value = layout().getProperty(key);
-        if (value == null || value.isBlank()) {
-            return List.of();
+    private static List<Path> moduleRoots(String sourceSet) {
+        String settings;
+        try {
+            settings = Files.readString(SETTINGS);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Сторож не смог прочитать список модулей " + SETTINGS, e);
         }
-        return Arrays.stream(value.split(","))
-                .map(String::trim)
-                .filter(text -> !text.isEmpty())
-                .map(Path::of)
-                .toList();
+        List<Path> roots = new ArrayList<>();
+        Matcher matcher = INCLUDE.matcher(settings);
+        while (matcher.find()) {
+            String id = matcher.group(1);
+            if (":api".equals(id) || ":mod".equals(id)) {
+                continue;
+            }
+            roots.add(Path.of(id.substring(1).replace(':', '/'), sourceSet));
+        }
+        return List.copyOf(roots);
     }
 
     private static String roots(Path... roots) {

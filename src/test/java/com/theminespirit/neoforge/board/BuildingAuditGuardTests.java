@@ -116,6 +116,22 @@ class BuildingAuditGuardTests {
     }
 
     @Test
+    void partiallyBuiltMine_DamageReported_EvenWhenLedgerSaysPlanned() {
+        GraphFacts.Building fact = BuildingAuditInputs.fact(
+                "mine",
+                0,
+                new GraphFacts.Position(1, 64, 2),
+                new BuildingAuditInputs.Audit(1512, 1125, Map.of("minecraft:cobblestone", 387), Map.of(), 0, 0),
+                false);
+
+        assertEquals(74, fact.auditPercent(), "шахта построена на 74%, это её аудит");
+        assertTrue(
+                fact.damage() > 0,
+                "начатая шахта повреждена на 387 клеток: без повреждения граф не ставит event:repair_mine, "
+                        + "и шахта 75→74% стоит без ремонта");
+    }
+
+    @Test
     void audit_Plus_SumsPartsAndUnknown() {
         BuildingAuditInputs.Audit sum = new BuildingAuditInputs.Audit(
                         10, 7, Map.of("minecraft:dirt", 3), Map.of("minecraft:stone", 1), 1, 0)
