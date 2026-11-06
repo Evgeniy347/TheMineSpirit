@@ -30,6 +30,11 @@ public final class NavGoalBlock implements NavGoal {
         return calculate(x - this.x, y - this.y, z - this.z, weight);
     }
 
+    @Override
+    public Integer goalY() {
+        return y;
+    }
+
     public static double calculate(double xDiff, int yDiff, double zDiff, double weight) {
         return NavGoalYLevel.calculate(0, yDiff) + NavGoalXZ.calculate(xDiff, zDiff, weight);
     }

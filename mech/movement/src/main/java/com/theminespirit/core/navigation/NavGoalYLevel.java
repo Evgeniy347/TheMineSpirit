@@ -18,6 +18,11 @@ public final class NavGoalYLevel implements NavGoal {
         return calculate(level, y);
     }
 
+    @Override
+    public Integer goalY() {
+        return level;
+    }
+
     public static double calculate(int goalY, int currentY) {
         if (currentY > goalY) {
             return NavActionCosts.fallNBlocksCost(2) / 2 * (currentY - goalY);

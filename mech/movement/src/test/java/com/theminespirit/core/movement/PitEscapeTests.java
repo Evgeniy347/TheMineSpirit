@@ -39,6 +39,17 @@ class PitEscapeTests {
     }
 
     @Test
+    void exit_TenDeepPit_RiseNineToRim() {
+        PitEscape.Exit exit = PitEscape.exit((dx, dz) -> Math.abs(dx) <= 1 && Math.abs(dz) <= 1 ? 60 : 70)
+                .orElseThrow();
+        assertEquals(
+                9,
+                exit.rise(),
+                "Дух на дне ямы 10 блоков поднимается столбом на 9 и шагает на край: самоспасение работает "
+                        + "без помощника (observe24 B1/B3)");
+    }
+
+    @Test
     void exit_StairsOfOneBlock_NotTrapped() {
         assertEquals(
                 Optional.empty(),

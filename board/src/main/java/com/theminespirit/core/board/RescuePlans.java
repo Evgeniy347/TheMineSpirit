@@ -48,21 +48,22 @@ public final class RescuePlans {
 
     private RescuePlans() {}
 
-    public static Assignment assign(UUID stuck, long since, @Nullable String selfRefusal, boolean helperAvailable) {
+    public static Assignment assign(UUID stuck, long since, @Nullable String selfRefusal, Optional<UUID> helper) {
         Objects.requireNonNull(stuck, "Застрявший дух не может быть null: спасение адресное");
+        Objects.requireNonNull(helper, "Помощник не может быть null: его отсутствие задаётся пустым");
         String cause = cause(since);
         if (selfRefusal == null) {
             return new Assignment(Mode.SELF, cause, Optional.of(stuck), "выходит сам: план выхода есть");
         }
-        if (helperAvailable) {
+        if (helper.isPresent()) {
             return new Assignment(
-                    Mode.HELPER,
-                    cause,
-                    Optional.empty(),
-                    "сам не выйдет (" + selfRefusal + "): назначается свободный помощник");
+                    Mode.HELPER, cause, helper, "сам не выйдет (" + selfRefusal + "): помощник с достижимым путём");
         }
         return new Assignment(
-                Mode.IMPOSSIBLE, cause, Optional.empty(), "невозможно: " + selfRefusal + ", свободного помощника нет");
+                Mode.IMPOSSIBLE,
+                cause,
+                Optional.empty(),
+                "невозможно: " + selfRefusal + ", помощника с достижимым путём нет");
     }
 
     public static String cause(long since) {
@@ -144,9 +145,7 @@ public final class RescuePlans {
         BlockCoord to = new BlockCoord(trapped.x() + 1, trapped.y() + 1, trapped.z() + 1);
         List<TaskNode> steps = new ArrayList<>(List.of(
                 new FallbackNode(List.of(
-                        gotoPoint(trapped),
-                        digOut(trapped),
-                        new ScriptCall(WAIT, Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))),
+                        gotoPoint(trapped), new ScriptCall(WAIT, Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN)))),
                 new ScriptCall(
                         CLEAR_AREA,
                         Map.of(
@@ -156,10 +155,7 @@ public final class RescuePlans {
                                 "x2", to.x(),
                                 "y2", to.y(),
                                 "z2", to.z()))));
-        if (goal == null) {
-            steps.add(gotoPoint(trapped));
-        } else {
-            steps.add(digOut(goal));
+        if (goal != null) {
             steps.add(gotoPoint(goal));
         }
         return new SequenceNode(List.copyOf(steps));

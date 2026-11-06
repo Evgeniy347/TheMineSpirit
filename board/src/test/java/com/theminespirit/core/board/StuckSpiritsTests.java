@@ -45,22 +45,41 @@ class StuckSpiritsTests {
     }
 
     @Test
-    void see_MovingBeyondArea_ReleasesWithMovementReason() {
+    void see_WanderingInsideDeepPit_KeepsMark() {
         StuckSpirits stuck = new StuckSpirits();
         stuck.see(SPIRIT, AT, 100);
         stuck.mark(SPIRIT, 140, "провал движения");
         stuck.drainChanges();
 
-        stuck.see(SPIRIT, new BlockCoord(AT.x() + StuckSpirits.AREA_RADIUS + 1, AT.y(), AT.z()), 220);
+        stuck.see(SPIRIT, new BlockCoord(AT.x() + 7, AT.y() - 2, AT.z() + 6), 220);
+        stuck.see(SPIRIT, new BlockCoord(AT.x() - 9, AT.y() - 4, AT.z() - 5), 240);
 
-        assertFalse(stuck.isStuck(SPIRIT, 220), "Дух вышел из области колебания — метка снимается по факту движения");
+        assertTrue(
+                stuck.isStuck(SPIRIT, 240),
+                "Блуждание по яме глубже порога — не выход: метка держится, иначе rescue закрывается без спасения "
+                        + "(observe24 B1)");
+        assertTrue(
+                stuck.drainChanges().isEmpty(),
+                "Сдвиг внутри ловушки не пишется как снятие метки: лог обязан показывать реальный выход");
+    }
+
+    @Test
+    void see_ReachedSurface_ReleasesWithEscapeReason() {
+        StuckSpirits stuck = new StuckSpirits();
+        stuck.see(SPIRIT, AT, 100);
+        stuck.mark(SPIRIT, 140, "провал движения");
+        stuck.drainChanges();
+
+        stuck.see(SPIRIT, new BlockCoord(AT.x() + 7, AT.y(), AT.z()), 220, true);
+
+        assertFalse(stuck.isStuck(SPIRIT, 220), "Выход на поверхность снимает метку: дух больше не в ловушке");
         List<StuckSpirits.Change> changes = stuck.drainChanges();
         assertEquals(1, changes.size(), "Снятие метки пишется в лог: " + changes);
         assertFalse(changes.get(0).marked(), "Запись говорит, что метка снята");
         assertEquals(220, changes.get(0).tick(), "Запись называет тик снятия");
         assertTrue(
-                changes.get(0).reason().startsWith("сдвинулся"),
-                "Причина снятия — движение духа, а не тайм-аут: "
+                changes.get(0).reason().startsWith("вышел на поверхность"),
+                "Причина снятия — выход на поверхность, а не сдвиг: "
                         + changes.get(0).reason());
     }
 
@@ -92,10 +111,10 @@ class StuckSpiritsTests {
                 stuck.isStuck(SPIRIT, after),
                 "«Пути нет» — состояние на входе графа, а не провал на время: дух без пути домой остаётся "
                         + "застрявшим, пока не сдвинулся или его не спасли (observe23 B)");
-        stuck.see(SPIRIT, new BlockCoord(AT.x() + StuckSpirits.AREA_RADIUS + 1, AT.y(), AT.z()), after + 1);
+        stuck.see(SPIRIT, new BlockCoord(AT.x() + 7, AT.y(), AT.z()), after + 1, true);
         assertFalse(
                 stuck.isStuck(SPIRIT, after + 1),
-                "Сдвиг из области снимает факт «пути нет»: маршрут появился или духа вывели");
+                "Выход на поверхность снимает факт «пути нет»: маршрут появился или духа вывели");
     }
 
     @Test
