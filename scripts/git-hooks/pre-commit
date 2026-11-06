@@ -2,7 +2,8 @@
 # Сторож зелёного коммита (docs/GIT.md → «Коммит»). Подключается scripts/install-git-hooks.sh.
 # Если в коммите (индекс, в том числе временный при `git commit -- <пути>`) есть изменения в src/, api/,
 # board/, tactics/, content/, rest/, ui/, test-fixtures/, mod/, build-logic/, config/, build.gradle, gradle.properties или
-# settings.gradle — прогоняет scripts/test.sh unit и при красном отклоняет коммит.
+# settings.gradle — прогоняет scripts/test.sh unit --changed и при красном отклоняет коммит.
+# --changed гоняет только затронутые модули (и :guards); полный unit — приёмка в финале/слиянии.
 # Коммиты только документов и скриптов, слияния — без прогона.
 WATCHED='^(src/|api/|policy/|mech/|board/|tactics/|content/|rest/|ui/|test-fixtures/|mod/|gametest/|build-logic/|config/|build\.gradle$|gradle\.properties$|settings\.gradle$)'
 
@@ -17,11 +18,11 @@ cd "$top" || exit 1
 # Тесты читают рабочее дерево, а не индекс: незастейдженные правки в наблюдаемых путях попадают в прогон.
 unstaged="$( { git diff --name-only; git ls-files --others --exclude-standard; } | grep -E "$WATCHED")"
 
-echo "pre-commit: в коммите есть изменения в src/ или сборке — прогоняю scripts/test.sh unit (зелёный нужен до коммита)…" >&2
+echo "pre-commit: в коммите есть изменения в src/ или сборке — прогоняю scripts/test.sh unit --changed (зелёный нужен до коммита)…" >&2
 
 # GIT_* из окружения хука не нужны сборке и могут увести её git-команды в чужой индекс.
 mkdir -p TestResults/logs
-env -u GIT_INDEX_FILE -u GIT_DIR -u GIT_WORK_TREE -u GIT_PREFIX bash scripts/test.sh unit --fast-analyzers >"TestResults/logs/pre-commit-latest.log" 2>&1
+env -u GIT_INDEX_FILE -u GIT_DIR -u GIT_WORK_TREE -u GIT_PREFIX bash scripts/test.sh unit --changed --fast-analyzers >"TestResults/logs/pre-commit-latest.log" 2>&1
 code=$?
 
 if [ -n "$unstaged" ]; then

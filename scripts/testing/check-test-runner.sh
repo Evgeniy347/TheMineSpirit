@@ -122,7 +122,7 @@ export FAKE_ARGS_FILE="$work/static-args"
 out=$(bash scripts/test.sh unit 2>&1)
 code=$?
 [ "$code" = 1 ] && echo "$out" | grep -q "FAIL static: 3 тестов зелёные"     && echo "$out" | grep -q "spotlessJavaCheck"     && grep -q "staticAnalysis --continue" "$work/static-args"     && ok "unit-static-fail: полный прогон гоняет staticAnalysis, красный анализатор при зелёных тестах — код=1"     || fail "unit-static-fail: код=$code, аргументы: $(cat "$work/static-args" 2>/dev/null), вывод: $out"
-out=$(bash scripts/test.sh unit --tests 'com.example.*' 2>&1)
+out=$(bash scripts/test.sh unit --tests '*TestCostReporterTests*' 2>&1)
 grep -q "staticAnalysis" "$work/static-args"     && fail "unit-static-fail: прогон с --tests не должен гонять staticAnalysis: $(cat "$work/static-args")"     || ok "unit-static-fail: прогон с --tests идёт без анализаторов"
 out=$(bash scripts/test.sh unit --fast-analyzers 2>&1)
 grep -q "staticAnalysisFast --continue" "$work/static-args" \
@@ -388,10 +388,83 @@ code=$?
     && ok "gametest-filter: имя пачки уходит в gradle системным свойством" \
     || fail "gametest-filter: код=$code, args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
 
-out=$(ARGS_FILE="$argsfile" bash scripts/test.sh unit --tests 'com.example.SomeTests' 2>&1)
+out=$(ARGS_FILE="$argsfile" bash scripts/test.sh unit --tests 'com.theminespirit.testing.TestCostReporterTests' 2>&1)
 grep -qx "test" "$argsfile" && grep -qx -- "--rerun" "$argsfile" \
     && ok "unit-rerun: gradle test идёт с --rerun" \
     || fail "unit-rerun: args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
+
+cat >"$work/bin/module-record" <<'FAKE'
+#!/usr/bin/env bash
+printf '%s\n' "$@" >"${ARGS_FILE:?}"
+suite() {
+    local dir="$1" name="$2"
+    mkdir -p "TestResults/$dir/xml"
+    printf '<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="%s" tests="2" failures="0" errors="0">\n<testcase name="a" classname="%s"/>\n<testcase name="b" classname="%s"/>\n</testsuite>\n' \
+        "$name" "$name" "$name" >"TestResults/$dir/xml/TEST-$name.xml"
+}
+for a in "$@"; do
+    case "$a" in
+        :board:test) suite board com.example.Board ;;
+        :guards:test) suite guards com.example.Guards ;;
+        test) suite unit com.example.Root ;;
+    esac
+done
+echo "BUILD SUCCESSFUL"
+exit 0
+FAKE
+chmod +x "$work/bin/module-record"
+export THEMINESPIRIT_GRADLEW="$work/bin/module-record"
+module_args="$work/module-args.txt"
+
+out=$(ARGS_FILE="$module_args" bash scripts/test.sh unit --module board 2>&1)
+code=$?
+[ "$code" = 0 ] && grep -qx ":board:test" "$module_args" \
+    && ! grep -qx ":guards:test" "$module_args" && ! grep -q "staticAnalysis" "$module_args" \
+    && echo "$out" | grep -q "OK unit: 2 тестов" \
+    && ok "unit-module: только :board:test, без чужих модулей и анализаторов" \
+    || fail "unit-module: код=$code, args=$(tr '\n' ' ' <"$module_args" 2>/dev/null), вывод: $out"
+
+out=$(ARGS_FILE="$module_args" bash scripts/test.sh unit --module board --fast-analyzers 2>&1)
+code=$?
+[ "$code" = 0 ] && grep -qx ":board:staticAnalysisFast" "$module_args" \
+    && ! grep -qx ":guards:staticAnalysisFast" "$module_args" \
+    && ok "unit-module-fast: анализаторы только у выбранного модуля" \
+    || fail "unit-module-fast: код=$code, args=$(tr '\n' ' ' <"$module_args" 2>/dev/null)"
+
+out=$(ARGS_FILE="$module_args" bash scripts/test.sh unit --module mech:farming 2>&1)
+code=$?
+[ "$code" = 0 ] && grep -qx ":mech:farming:test" "$module_args" && echo "$out" | grep -q "тестов нет" \
+    && ok "unit-module-empty: модуль без тестов — зелёный, без BUILD ERROR" \
+    || fail "unit-module-empty: код=$code, args=$(tr '\n' ' ' <"$module_args" 2>/dev/null), вывод: $out"
+
+out=$(ARGS_FILE="$module_args" bash scripts/test.sh unit --module nope 2>&1)
+code=$?
+[ "$code" = 2 ] && echo "$out" | grep -q "нет модуля" \
+    && ok "unit-module-invalid: неизвестный модуль — код 2" \
+    || fail "unit-module-invalid: код=$code, вывод: $out"
+
+out=$(ARGS_FILE="$module_args" bash scripts/test.sh unit --tests "*BoardModuleGuardTests*" 2>&1)
+code=$?
+[ "$code" = 0 ] && grep -qx ":guards:test" "$module_args" && ! grep -qx ":board:test" "$module_args" \
+    && ok "unit-tests-resolve: фильтр нашёл :guards и не собрал :board" \
+    || fail "unit-tests-resolve: код=$code, args=$(tr '\n' ' ' <"$module_args" 2>/dev/null), вывод: $out"
+
+out=$(ARGS_FILE="$module_args" bash scripts/test.sh unit --tests "*NoSuchTestName*" 2>&1)
+code=$?
+[ "$code" = 1 ] && echo "$out" | grep -q "не совпал" \
+    && ok "unit-tests-nomatch: фильтр без совпадений — красный до сборки" \
+    || fail "unit-tests-nomatch: код=$code, вывод: $out"
+
+changed_probe="board/src/test/java/com/theminespirit/ChangedRunnerProbe.java"
+mkdir -p "$(dirname "$changed_probe")"
+printf 'package com.theminespirit;\n' >"$changed_probe"
+out=$(ARGS_FILE="$module_args" bash scripts/test.sh unit --changed 2>&1)
+code=$?
+rm -f "$changed_probe"
+[ "$code" = 0 ] && grep -qx ":board:test" "$module_args" && grep -qx ":guards:test" "$module_args" \
+    && ok "unit-changed: правка в :board дала :board:test и :guards:test" \
+    || fail "unit-changed: код=$code, args=$(tr '\n' ' ' <"$module_args" 2>/dev/null), вывод: $out"
+export THEMINESPIRIT_GRADLEW="$work/bin/args-record"
 
 out=$(ARGS_FILE="$argsfile" bash scripts/test.sh gametest combat_a combat_b 2>&1)
 code=$?
