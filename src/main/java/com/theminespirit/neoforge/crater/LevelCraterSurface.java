@@ -53,6 +53,12 @@ final class LevelCraterSurface implements CraterSurface {
     }
 
     @Override
+    public boolean isFluid(int x, int y, int z) {
+        blockReads++;
+        return !level.getBlockState(new BlockPos(x, y, z)).getFluidState().isEmpty();
+    }
+
+    @Override
     public boolean isProtected(int x, int y, int z) {
         return spirit.protectionGate().checkPlace(new BlockPos(x, y, z)) instanceof BlockProtection.Refused;
     }

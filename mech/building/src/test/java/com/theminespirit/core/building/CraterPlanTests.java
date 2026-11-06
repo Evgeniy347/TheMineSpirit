@@ -62,24 +62,22 @@ class CraterPlanTests {
     }
 
     @Test
-    void plan_WaterOrLavaInHole_NotFilled() {
+    void plan_WaterInHole_CoveredByBottomLayer() {
         TestCraterSurface surface = flatSurface(0, 64);
         surface.hole(CENTER.x(), CENTER.z(), 4);
         BlockCoord water = new BlockCoord(CENTER.x(), 61, CENTER.z());
-        surface.solid(water);
+        surface.fluid(water);
 
         CraterPlan.Plan plan = CraterPlan.plan(surface);
 
-        assertTrue(
-                !plan.cells().contains(water),
-                "Воду в яме не засыпают: жидкость остаётся, иначе дух тратит блоки и заливает источник");
         assertEquals(
                 List.of(
+                        water,
                         new BlockCoord(CENTER.x(), 62, CENTER.z()),
                         new BlockCoord(CENTER.x(), 63, CENTER.z()),
                         new BlockCoord(CENTER.x(), 64, CENTER.z())),
                 plan.cells(),
-                "Над водой засыпают только воздух до уровня земли");
+                "Воду на дне перекрывают нижним слоем: пустая клетка остаётся открытой ямой");
     }
 
     @Test
