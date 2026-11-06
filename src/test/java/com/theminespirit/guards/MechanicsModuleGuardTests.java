@@ -30,7 +30,7 @@ class MechanicsModuleGuardTests {
         }
     }
 
-    private static final Set<String> NON_MECHANICS = Set.of(":board", ":test-fixtures", ":tactics");
+    private static final Set<String> NON_MECHANICS = Set.of(":board", ":test-fixtures", ":tactics", ":content");
     private static final String MAIN_SUFFIX = "/src/main/java";
 
     private static final Map<String, List<String>> MODULE_DEPENDENCIES =

@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.fishing.FishingData;
 import com.theminespirit.core.fishing.FishingSpots;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.BlockLocator;
 import com.theminespirit.neoforge.FishingWorkPointPicker;
 import java.util.List;
@@ -35,7 +36,7 @@ final class FishingSite {
     }
 
     static Optional<BlockCoord> workPoint(ServerLevel level, BlockCoord home) {
-        FishingData data = FishingData.loadDefault();
+        FishingData data = DataTables.INSTANCE.fishing().current();
         return FishingWorkPointPicker.pick(level, home, data, WORK_POINT_RADIUS, List.of(), WORK_POINT_AVOID)
                 .map(FishingSpots.Spot::stand);
     }

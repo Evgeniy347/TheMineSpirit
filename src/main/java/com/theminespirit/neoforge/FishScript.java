@@ -68,7 +68,7 @@ public final class FishScript implements ScriptInstance {
         this.spirit = spirit;
         this.params = params;
         this.level = (ServerLevel) spirit.level();
-        this.data = FishingData.loadDefault();
+        this.data = DataTables.INSTANCE.fishing().current();
         this.approach = new Approach(spirit);
         BlockPos feet = spirit.blockPosition();
         this.origin = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());

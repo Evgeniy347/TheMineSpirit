@@ -2,7 +2,6 @@ package com.theminespirit.core.fishing;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
-import com.theminespirit.core.reload.DataTables;
 import java.util.Set;
 
 public record FishingData(int minWidth, int minDepth, int workWidth, int workDepth, int bucketCount, int smokerFish) {
@@ -72,10 +71,6 @@ public record FishingData(int minWidth, int minDepth, int workWidth, int workDep
 
     public static FishingData defaults() {
         return DEFAULTS;
-    }
-
-    public static FishingData loadDefault() {
-        return DataTables.INSTANCE.fishing().current();
     }
 
     public static FishingData load() {

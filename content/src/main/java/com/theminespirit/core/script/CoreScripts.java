@@ -2,7 +2,6 @@ package com.theminespirit.core.script;
 
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.farming.CropKind;
-import com.theminespirit.core.fishing.FishingData;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.mining.DescentData;
@@ -13,6 +12,7 @@ import com.theminespirit.core.mining.PickaxeTiers;
 import com.theminespirit.core.mining.SafeMineMode;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.perception.MemoryType;
+import com.theminespirit.core.reload.DataTables;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -1372,7 +1372,7 @@ public final class CoreScripts {
     }
 
     private static String waterAreaText() {
-        FishingData data = FishingData.loadDefault();
+        var data = DataTables.INSTANCE.fishing().current();
         return data.minWidth() + "x" + data.minWidth() + " глубиной " + data.minDepth();
     }
 }
