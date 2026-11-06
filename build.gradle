@@ -68,6 +68,7 @@ sourceSets.main.output.classesDirs.from(provider { project(':mech:farming').sour
 sourceSets.main.output.classesDirs.from(provider { project(':mech:forestry').sourceSets.main.output.classesDirs })
 sourceSets.main.output.classesDirs.from(provider { project(':mech:crafting').sourceSets.main.output.classesDirs })
 sourceSets.main.output.classesDirs.from(provider { project(':mech:husbandry').sourceSets.main.output.classesDirs })
+sourceSets.main.output.classesDirs.from(provider { project(':mech:small').sourceSets.main.output.classesDirs })
 tasks.named('classes') {
     dependsOn ':api:classes'
     dependsOn ':policy:classes'
@@ -75,6 +76,7 @@ tasks.named('classes') {
     dependsOn ':mech:forestry:classes'
     dependsOn ':mech:crafting:classes'
     dependsOn ':mech:husbandry:classes'
+    dependsOn ':mech:small:classes'
 }
 
 neoForge {
@@ -134,6 +136,7 @@ dependencies {
     implementation project(':mech:forestry')
     implementation project(':mech:crafting')
     implementation project(':mech:husbandry')
+    implementation project(':mech:small')
     implementation "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
     additionalRuntimeClasspath "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
     jarJar("com.fasterxml.jackson.core:jackson-databind:${jackson_version}") {

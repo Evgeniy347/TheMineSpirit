@@ -8,6 +8,7 @@ import com.theminespirit.core.board.LevelingRules;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.building.PresetLibrary;
+import com.theminespirit.core.hunger.HungerRules;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.observation.ObservationLimits;
 import com.theminespirit.core.repair.RepairData;
@@ -29,5 +30,6 @@ final class DataTableBindings {
         PresetLibrary.useSource(() -> tables.presets().current());
         TownRules.useSource(() -> tables.town().current());
         RepairData.useSource(() -> tables.repair().current());
+        HungerRules.useSource(() -> tables.hunger().current());
     }
 }

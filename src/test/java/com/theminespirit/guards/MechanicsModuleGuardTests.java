@@ -20,38 +20,59 @@ class MechanicsModuleGuardTests {
     private static final Pattern PACKAGE = Pattern.compile("^\\s*package\\s+([\\w.]+)\\s*;", Pattern.MULTILINE);
     private static final List<String> ALLOWED_PREFIXES = List.of("java.", "com.fasterxml.", "org.jspecify.");
 
-    private record Module(String id, String packageName, Path mainRoot, Path testRoot) {
-        Path mainPackage() {
-            return mainRoot.resolve("com/theminespirit/" + packageName.replace('.', '/'));
+    private record Module(String id, List<String> packageNames, Path mainRoot, Path testRoot) {
+        List<Path> mainPackages() {
+            return packageNames.stream()
+                    .map(packageName -> mainRoot.resolve("com/theminespirit/" + packageName.replace('.', '/')))
+                    .toList();
         }
 
-        Path testPackage() {
-            return testRoot.resolve("com/theminespirit/" + packageName.replace('.', '/'));
+        List<Path> testPackages() {
+            return packageNames.stream()
+                    .map(packageName -> testRoot.resolve("com/theminespirit/" + packageName.replace('.', '/')))
+                    .toList();
         }
     }
 
     private static final List<Module> DECLARED_MODULES = List.of(
-            new Module(":policy", "core.policy", Path.of("policy/src/main/java"), Path.of("policy/src/test/java")),
+            new Module(
+                    ":policy",
+                    List.of("core.policy"),
+                    Path.of("policy/src/main/java"),
+                    Path.of("policy/src/test/java")),
             new Module(
                     ":mech:farming",
-                    "core.farming",
+                    List.of("core.farming"),
                     Path.of("mech/farming/src/main/java"),
                     Path.of("mech/farming/src/test/java")),
             new Module(
                     ":mech:forestry",
-                    "core.forestry",
+                    List.of("core.forestry"),
                     Path.of("mech/forestry/src/main/java"),
                     Path.of("mech/forestry/src/test/java")),
             new Module(
                     ":mech:crafting",
-                    "core.crafting",
+                    List.of("core.crafting"),
                     Path.of("mech/crafting/src/main/java"),
                     Path.of("mech/crafting/src/test/java")),
             new Module(
                     ":mech:husbandry",
-                    "core.husbandry",
+                    List.of("core.husbandry"),
                     Path.of("mech/husbandry/src/main/java"),
-                    Path.of("mech/husbandry/src/test/java")));
+                    Path.of("mech/husbandry/src/test/java")),
+            new Module(
+                    ":mech:small",
+                    List.of(
+                            "core.alchemy",
+                            "core.armor",
+                            "core.doors",
+                            "core.experience",
+                            "core.hunger",
+                            "core.night",
+                            "core.repair",
+                            "core.sleep"),
+                    Path.of("mech/small/src/main/java"),
+                    Path.of("mech/small/src/test/java")));
 
     private static List<Module> modules() {
         List<Path> declared = SourceFiles.moduleMainRoots();
@@ -64,14 +85,15 @@ class MechanicsModuleGuardTests {
     void moduleSources_LiveInTheirOwnSourceSet_NotInRoot() {
         List<String> missing = new ArrayList<>();
         for (Module module : modules()) {
-            Path packageDir = module.mainPackage();
-            if (!Files.isDirectory(packageDir)) {
-                missing.add(module.id() + ": нет каталога " + packageDir);
-                continue;
-            }
-            for (Path file : SourceFiles.javaUnder(packageDir).keySet()) {
-                if (!file.normalize().startsWith(module.mainRoot())) {
-                    missing.add(module.id() + ": " + SourceFiles.logical(file));
+            for (Path packageDir : module.mainPackages()) {
+                if (!Files.isDirectory(packageDir)) {
+                    missing.add(module.id() + ": нет каталога " + packageDir);
+                    continue;
+                }
+                for (Path file : SourceFiles.javaUnder(packageDir).keySet()) {
+                    if (!file.normalize().startsWith(module.mainRoot())) {
+                        missing.add(module.id() + ": " + SourceFiles.logical(file));
+                    }
                 }
             }
         }
@@ -88,10 +110,11 @@ class MechanicsModuleGuardTests {
     void moduleTests_DeclaredModules_HaveTheirOwnTests() {
         List<String> missing = new ArrayList<>();
         for (Module module : modules()) {
-            Path packageDir = module.testPackage();
-            if (!Files.isDirectory(packageDir)
-                    || SourceFiles.javaUnder(packageDir).isEmpty()) {
-                missing.add(module.id() + ": нет тестов в " + packageDir);
+            for (Path packageDir : module.testPackages()) {
+                if (!Files.isDirectory(packageDir)
+                        || SourceFiles.javaUnder(packageDir).isEmpty()) {
+                    missing.add(module.id() + ": нет тестов в " + packageDir);
+                }
             }
         }
 
@@ -107,11 +130,12 @@ class MechanicsModuleGuardTests {
         Set<String> apiClasses = apiClasses(SourceFiles.javaUnder(SourceFiles.apiPackage()));
         List<String> violations = new ArrayList<>();
         for (Module module : modules()) {
-            Path packageDir = module.mainPackage();
-            if (!Files.isDirectory(packageDir)) {
-                continue;
+            for (Path packageDir : module.mainPackages()) {
+                if (!Files.isDirectory(packageDir)) {
+                    continue;
+                }
+                violations.addAll(violations(SourceFiles.javaUnder(packageDir), apiClasses, module.packageNames()));
             }
-            violations.addAll(violations(SourceFiles.javaUnder(packageDir), apiClasses, module.packageName()));
         }
 
         assertEquals(
@@ -140,12 +164,21 @@ class MechanicsModuleGuardTests {
 
         assertEquals(
                 List.of("core/policy/Example.java: com.theminespirit.core.reload.DataTables"),
-                violations(sample, apiClasses, "core.policy"),
+                violations(sample, apiClasses, List.of("core.policy")),
                 "Сторож ослеп: импорт класса корня обязан попадать в нарушители");
         assertEquals(
                 List.of(),
-                violations(neighbor, apiClasses, "core.policy"),
+                violations(neighbor, apiClasses, List.of("core.policy")),
                 "Сторож ложно срабатывает: импорт класса :api допустим");
+        Map<Path, String> sibling = Map.of(Path.of("mech/small/src/main/java/core/night/Night.java"), """
+                package com.theminespirit.core.night;
+                import com.theminespirit.core.doors.DoorTuning;
+                class Night {}
+                """);
+        assertEquals(
+                List.of(),
+                violations(sibling, apiClasses, List.of("core.doors", "core.night")),
+                "Сторож ложно срабатывает: пакеты одного модуля (:mech:small) вправе знать друг друга");
     }
 
     private static Set<String> apiClasses(Map<Path, String> sources) {
@@ -158,7 +191,8 @@ class MechanicsModuleGuardTests {
         return classes;
     }
 
-    private static List<String> violations(Map<Path, String> sources, Set<String> apiClasses, String ownPackage) {
+    private static List<String> violations(
+            Map<Path, String> sources, Set<String> apiClasses, List<String> ownPackages) {
         List<String> found = new ArrayList<>();
         sources.forEach((file, text) -> {
             Matcher matcher = IMPORT.matcher(text);
@@ -167,7 +201,7 @@ class MechanicsModuleGuardTests {
                 if (name.endsWith(".*")) {
                     name = name.substring(0, name.length() - 2);
                 }
-                if (allowed(name, apiClasses, ownPackage)) {
+                if (allowed(name, apiClasses, ownPackages)) {
                     continue;
                 }
                 found.add(SourceFiles.logical(file) + ": " + name);
@@ -176,15 +210,17 @@ class MechanicsModuleGuardTests {
         return found;
     }
 
-    private static boolean allowed(String name, Set<String> apiClasses, String ownPackage) {
+    private static boolean allowed(String name, Set<String> apiClasses, List<String> ownPackages) {
         for (String prefix : ALLOWED_PREFIXES) {
             if (name.startsWith(prefix)) {
                 return true;
             }
         }
-        String own = "com.theminespirit." + ownPackage;
-        if (name.equals(own) || name.startsWith(own + ".")) {
-            return true;
+        for (String ownPackage : ownPackages) {
+            String own = "com.theminespirit." + ownPackage;
+            if (name.equals(own) || name.startsWith(own + ".")) {
+                return true;
+            }
         }
         for (String apiClass : apiClasses) {
             if (name.equals(apiClass) || name.startsWith(apiClass + ".")) {
