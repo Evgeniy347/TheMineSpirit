@@ -69,7 +69,11 @@ def searchable(way):
 
 
 def event_category(name):
-    """Полосы новых областей: жизнь, склад, ферма, снаряжение, more2/more3."""
+    """Полосы новых областей: жизнь, склад, ферма, снаряжение, more2/more3, ночь, поход."""
+    if name == "night":
+        return "event:night"
+    if name == "expedition_ready":
+        return "event:more7"
     if name.startswith("life_"):
         return "event:life"
     if name in STORE_EVENTS:

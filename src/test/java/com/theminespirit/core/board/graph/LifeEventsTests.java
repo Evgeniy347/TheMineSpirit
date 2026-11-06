@@ -59,6 +59,18 @@ class LifeEventsTests {
                 "Спокойный дух не поднимает события жизни");
     }
 
+    @Test
+    void domainEvents_ThreatsInFacts_DeriveLifeBand() {
+        GraphFacts facts = GraphFacts.empty().withThreats(List.of(threat(GraphFacts.TargetKind.SPIRIT, true)));
+
+        Set<String> events = GraphDomainEvents.of(facts, 1);
+
+        assertTrue(
+                events.contains("life_threat") && events.contains("life_threat_spirit"),
+                "События жизни поднимаются из фактов угроз и без отдельной подачи входа: " + events);
+        assertFalse(events.contains("life_threat_player"), "Игрок не цель — защита игрока не поднимается: " + events);
+    }
+
     private static GraphFacts.Threat threat(GraphFacts.TargetKind kind, boolean targetingSelf) {
         return new GraphFacts.Threat(
                 "threat-1",
