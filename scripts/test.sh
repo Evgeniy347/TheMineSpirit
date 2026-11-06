@@ -1020,7 +1020,7 @@ if [ "$MODE" = "unit" ]; then
         if [ "$UNIT_FAST_ANALYZERS" = 1 ] && [ ${#UNIT_TESTS[@]} -eq 0 ]; then
             for unit_module in "${UNIT_MODULES[@]}"; do
                 if [ "$unit_module" = ":root" ]; then
-                    UNIT_EXTRA+=(staticAnalysisFast)
+                    UNIT_EXTRA+=(spotlessCheck checkstyleMain checkstyleTest)
                 else
                     UNIT_EXTRA+=("$unit_module:staticAnalysisFast")
                 fi

@@ -9,13 +9,14 @@ git clone -q --no-hardlinks "$src" "$clone" || exit 2
 cp "$src"/scripts/git-hooks/* "$clone/scripts/git-hooks/"
 cd "$clone" || exit 2
 git config core.hooksPath scripts/git-hooks
+git config core.autocrlf input
 git config user.name check
 git config user.email check@example.invalid
 probe="src/test/java/com/theminespirit/ProbeTests.java"
 mkdir -p "$(dirname "$probe")"
 
 write_probe() {
-    printf 'package com.theminespirit;\nimport org.junit.jupiter.api.Test;\nimport static org.junit.jupiter.api.Assertions.%s;\nclass ProbeTests {\n    @Test void probe_Always_Result() { %s }\n}\n' \
+    printf 'package com.theminespirit;\n\nimport static org.junit.jupiter.api.Assertions.%s;\n\nimport org.junit.jupiter.api.Test;\n\nclass ProbeTests {\n    @Test\n    void probe_Always_Result() {\n        %s\n    }\n}\n' \
         "$1" "$2" >"$probe"
 }
 
@@ -49,6 +50,7 @@ check partial_commit_red_rejected 1 да git commit -m "test: красный з�
 write_probe assertTrue 'assertTrue(true, "зелёный тест-зонд");'
 
 printf 'package com.theminespirit;
+
 class Unstaged {}
 ' >src/test/java/com/theminespirit/Unstaged.java
 git add src/test/java/com/theminespirit/Unstaged.java
