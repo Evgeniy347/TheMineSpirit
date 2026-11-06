@@ -193,8 +193,38 @@ class DispatchRoundTests {
         String why = round.why(waiting, spirits);
 
         assertEquals(
-                "spirit-1 — на паузе кейса GATHER_MATERIALS после 1 провалов; spirit-2 — занят: chop_tree",
+                "ждёт духа: spirit-1 — на паузе кейса GATHER_MATERIALS после 1 провалов; ещё занято 1",
                 why,
-                "Причина ожидания по каждому духу: пауза кейса с числом провалов и текущее занятие");
+                "Причина ожидания называет конкретную помеху (пауза кейса с числом провалов) и число занятых, "
+                        + "а не дамп всех занятых духов: такой waitReason повторялся в каждой строке доски");
+    }
+
+    @Test
+    void why_AllBusy_SummarizesJobsInsteadOfDump() {
+        BoardTicket waiting = ticket("waiting", Optional.empty());
+        List<DispatchRound.Candidate> spirits = List.of(
+                new DispatchRound.Candidate(new UUID(0, 1), "spirit-1", "chop_tree", List.of(), FED, SpiritView.free()),
+                new DispatchRound.Candidate(
+                        new UUID(0, 2), "spirit-2", "build_schematic", List.of(), FED, SpiritView.free()),
+                new DispatchRound.Candidate(
+                        new UUID(0, 3), "spirit-3", "build_schematic", List.of(), FED, SpiritView.free()));
+        DispatchRound round = new DispatchRound(board(List.of(waiting)), 0);
+
+        assertEquals(
+                "ждёт свободного духа: заняты 3 (chop_tree, build_schematic)",
+                round.why(waiting, spirits),
+                "Когда заняты все, причина конкретной задачи — «нет свободного духа» и чем заняты, без имён "
+                        + "каждого духа: доска из 100 PENDING не должна повторять один и тот же дамп");
+    }
+
+    @Test
+    void why_NoSpirits_NamesEmptySettlement() {
+        BoardTicket waiting = ticket("waiting", Optional.empty());
+        DispatchRound round = new DispatchRound(board(List.of(waiting)), 0);
+
+        assertEquals(
+                "нет духов",
+                round.why(waiting, List.of()),
+                "Пустое поселение — честная причина «нет духов», а не пустая строка");
     }
 }

@@ -114,6 +114,7 @@ public final class TacticsService {
     private boolean active;
     private boolean paused;
     private boolean forced;
+    private boolean held;
     private boolean hurtPending;
     private boolean returned;
     private int lastHurtTick = NEVER;
@@ -228,6 +229,7 @@ public final class TacticsService {
         }
         this.directive = directive;
         ownership.appliedBy(owner);
+        held = false;
         ordered = directive.mode();
         forcedTarget = null;
         setForcedRetreat(directive.retreat().orElse(RetreatMethod.NONE), directive.safePoint());
@@ -246,6 +248,7 @@ public final class TacticsService {
             return false;
         }
         directive = null;
+        held = false;
         ownership.cleared();
         forcedTarget = null;
         setForcedRetreat(RetreatMethod.NONE, Optional.empty());
@@ -258,6 +261,17 @@ public final class TacticsService {
 
     public Optional<CombatDirective> activeDirective() {
         return Optional.ofNullable(directive);
+    }
+
+    public void holdDirective() {
+        if (directive != null && !held) {
+            held = true;
+            release();
+        }
+    }
+
+    public boolean directiveHeld() {
+        return held;
     }
 
     public void setForcedTarget(LivingEntity target) {
@@ -378,6 +392,7 @@ public final class TacticsService {
         ward = stored.ward().map(UUID::fromString);
         memory = stored.memory().orElse(null);
         retreat = stored.retreat();
+        held = false;
         forced = true;
     }
 
@@ -542,6 +557,7 @@ public final class TacticsService {
             return;
         }
         if (outcome.decision() == TacticalOption.IGNORE
+                && !held
                 && returnTarget.isPresent()
                 && !returned
                 && spirit.level().getGameTime() >= returnBlockedUntil) {
