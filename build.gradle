@@ -347,13 +347,14 @@ tasks.register('slowTestCostReport', JavaExec) {
 
 tasks.withType(Test).configureEach {
     def executedTests = new java.util.concurrent.atomic.AtomicLong()
+    def filteredRun = project.hasProperty('theminespirit.filtered')
     afterSuite { descriptor, result ->
         if (descriptor.parent == null) {
             executedTests.set(result.testCount)
         }
     }
     doLast {
-        if (executedTests.get() == 0 && !project.hasProperty('theminespirit.filtered')) {
+        if (executedTests.get() == 0 && !filteredRun) {
             throw new GradleException("Тестовая задача '${name}' выполнила 0 тестов: проверьте фильтры " +
                     "(теги, --tests). Пустой тир не должен молча зеленеть (см. docs/TESTING.md).")
         }
