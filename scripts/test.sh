@@ -948,8 +948,8 @@ else
     if [ "$GAMETEST_SHARDS" -gt 1 ]; then
         now_s START_TIME
         start_monitor "prepare" "$GAMETEST_PREPARE_WARN" "$GAMETEST_PREPARE_STOP"
-        PRE_TASKS=(createMinecraftArtifacts classes jar
-            writeGameTestServerLegacyClasspath prepareGameTestServerRun)
+        PRE_TASKS=(:gametest:createMinecraftArtifacts :gametest:classes :gametest:jar
+            :gametest:writeGameTestServerLegacyClasspath :gametest:prepareGameTestServerRun)
         while read -r module_path; do
             [ -n "$module_path" ] && PRE_TASKS+=("$module_path:jar")
         done < <(sed -nE "s/^include +'(:[^.][^']*)'.*/\1/p" settings.gradle)
@@ -1008,15 +1008,15 @@ else
         [ "$GAMETEST_SHARDS" -gt 1 ] && CACHE_ARGS=(--project-cache-dir "$GAMETEST_WORKTREE/build/.gradle-gametest-shard-$shard")
         if [ "$USE_DIR_LOCK" = 1 ]; then
             if command -v setsid >/dev/null 2>&1; then
-                setsid "$GRADLEW" "${CACHE_ARGS[@]}" "${shard_args[@]}" "${SHARD_EXCLUDES[@]}" runGameTestServer >"$shard_log" 2>&1 &
+                setsid "$GRADLEW" "${CACHE_ARGS[@]}" "${shard_args[@]}" "${SHARD_EXCLUDES[@]}" :gametest:runGameTestServer >"$shard_log" 2>&1 &
             else
-                "$GRADLEW" "${CACHE_ARGS[@]}" "${shard_args[@]}" "${SHARD_EXCLUDES[@]}" runGameTestServer >"$shard_log" 2>&1 &
+                "$GRADLEW" "${CACHE_ARGS[@]}" "${shard_args[@]}" "${SHARD_EXCLUDES[@]}" :gametest:runGameTestServer >"$shard_log" 2>&1 &
             fi
         else
             flock -w "$GAMETEST_WAIT" -E 75 "$GAMETEST_LOCK" bash -c '
                 echo "$GAMETEST_TOKEN" >"$GAMETEST_LOCK.token"
                 "$@"' bash \
-                "$GRADLEW" "${shard_args[@]}" "${SHARD_EXCLUDES[@]}" runGameTestServer >"$shard_log" 2>&1 &
+                "$GRADLEW" "${shard_args[@]}" "${SHARD_EXCLUDES[@]}" :gametest:runGameTestServer >"$shard_log" 2>&1 &
         fi
         GRADLE_PIDS+=("$!")
         echo "$!" >>"$LOG_FILE.gradlepids"

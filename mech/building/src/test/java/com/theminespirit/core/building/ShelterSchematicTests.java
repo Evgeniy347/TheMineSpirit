@@ -14,7 +14,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class ShelterSchematicTests {
-    private static final Path FILE = Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT + "shelter.txt");
+    private static final Path FILE = Path.of("mod/src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT + "shelter.txt");
 
     private static SchematicDocument document() throws IOException {
         return SchematicTextParser.parse(Files.readString(FILE), FILE.toString());

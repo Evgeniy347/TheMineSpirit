@@ -33,5 +33,20 @@ tasks.named('test', Test) {
     systemProperty 'jqwik.database', '.jqwik-database'
     systemProperty 'theminespirit.updateSnapshots',
             System.getProperty('theminespirit.updateSnapshots', System.getenv('THEMINESPIRIT_UPDATE_SNAPSHOTS') ?: 'false')
-    classpath += files(rootProject.file('src/main/resources'), rootProject.file('src/test/resources'))
+    classpath += files(rootProject.file('mod/src/main/resources'), rootProject.file('src/test/resources'))
+}
+
+tasks.register('graphExport', Test) {
+    group = 'verification'
+    description = 'Выгрузка графа и контрольных случаев модуля для Python-модели (тег export)'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    classpath += files(rootProject.file('mod/src/main/resources'), rootProject.file('src/test/resources'))
+    useJUnitPlatform {
+        includeTags 'export'
+    }
+    maxParallelForks = 1
+    workingDir = rootProject.projectDir
+    systemProperty 'theminespirit.modId', 'theminespirit'
+    failOnNoDiscoveredTests = false
 }

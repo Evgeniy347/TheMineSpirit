@@ -384,7 +384,7 @@ argsfile="$work/gradle-args.txt"
 out=$(ARGS_FILE="$argsfile" bash scripts/test.sh gametest combat_target_spirit 2>&1)
 code=$?
 [ "$code" = 0 ] && grep -qx -- "-Dtheminespirit.gametest.filter=combat_target_spirit" "$argsfile" \
-    && grep -qx "runGameTestServer" "$argsfile" \
+    && grep -qx ":gametest:runGameTestServer" "$argsfile" \
     && ok "gametest-filter: имя пачки уходит в gradle системным свойством" \
     || fail "gametest-filter: код=$code, args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
 
@@ -714,7 +714,7 @@ cat >"$work/bin/slow-prepare" <<'FAKE'
 #!/usr/bin/env bash
 for a in "$@"; do
     case "$a" in
-        runGameTestServer)
+        :gametest:runGameTestServer|runGameTestServer)
             : >"${SHARD_MARK:?}"
             sleep "${SHARD_SLEEP:-30}"
             echo "All 1 required tests passed"

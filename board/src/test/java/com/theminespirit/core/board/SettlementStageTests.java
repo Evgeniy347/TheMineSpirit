@@ -160,7 +160,7 @@ class SettlementStageTests {
     @Test
     void rules_Classpath_HouseLevelSchemeOfItsStage() throws IOException {
         StageRules rules = StageRules.load();
-        Path root = Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
+        Path root = Path.of("mod/src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
 
         for (int level = 1; level <= 2; level++) {
             String scheme = rules.scheme(BoardCase.BUILD_HOUSE, level).orElseThrow();

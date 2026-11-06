@@ -327,7 +327,17 @@ write_debug_env() {
     local jars
     local classes
     local mod
-    jars="$(win_path "$REPO/build/classes/java/main")"
+    local module_root
+    local module_dir
+    classes="$(win_path "$REPO/$MOD_MAIN_DIR")"
+    for module_root in ${MOD_MODULE_MAIN_ROOTS//,/ }; do
+        module_dir="$(win_path "$REPO/$module_root")"
+        case ";$classes;" in
+            *";$module_dir;"*) continue ;;
+        esac
+        classes="$classes;$module_dir"
+    done
+    jars="$classes"
     for mod in "$dir"/mods/*.jar; do
         [ -f "$mod" ] || continue
         jars="$jars;$(win_path "$mod")"
@@ -339,7 +349,6 @@ write_debug_env() {
     if [ -n "$srg" ]; then
         jars="$jars;$(win_path "$srg")"
     fi
-    classes="$(win_path "$REPO/build/classes/java/main")"
     {
         printf "LIVE_DEBUG_HOST=127.0.0.1\n"
         printf "LIVE_DEBUG_PORT=%s\n" "$JDWP_PORT"

@@ -5,7 +5,7 @@
 | Уровень | Где | Что проверяет | Запуск |
 |---|---|---|---|
 | JUnit 5 + jqwik | `src/test/java` | чистая логика `core`, сторожа правил проекта | `scripts/test.sh unit [--tests …]` |
-| GameTest, общий набор | `src/main/java/.../gametest` | поведение в настоящем мире без ручных демо-аудитов | `scripts/test.sh gametest [пачка…]`, `--full` |
+| GameTest, общий набор | `gametest/src/main/java/.../gametest` | поведение в настоящем мире без ручных демо-аудитов | `scripts/test.sh gametest [пачка…]`, `--full` |
 | GameTest, демо-аудит постройки | там же | одна постройка в поворотах (`demo_audit_*`) | только явно: `scripts/test.sh gametest demo_audit_familyhouse` |
 
 - Демо-аудиты построек — ручные тесты: их нет ни в `gametest`, ни в `--full`, ни в приёмке `chkq.sh`.

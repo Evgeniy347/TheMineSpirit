@@ -121,7 +121,7 @@ curl -s -X DELETE $H/v1/tasks/t-1        # отмена, повтор безоп
 | `policy.protectedZones` | `[]` | до 64 строк «`minecraft:overworld x1 y1 z1 x2 y2 z2`»: в зоне дух не ломает и не ставит блоки; ошибка в строке останавливает загрузку конфига |
 
 Рабочая зона духа: `/spirit zone <духи> <x> <y> <z> <радиус>` ставит куб вокруг точки (цели вне него отвергаются, вышедший дальше 3 блоков возвращается), `/spirit zone <духи> clear` снимает.
-Списки защищённых и природных блоков и порог «здания» (6 искусственных блоков среди 26 соседей) — `src/main/resources/data/theminespirit/policy/protection.json`.
+Списки защищённых и природных блоков и порог «здания» (6 искусственных блоков среди 26 соседей) — `mod/src/main/resources/data/theminespirit/policy/protection.json`.
 
 ## Журнал решений тактики
 
@@ -181,13 +181,13 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 
 ```
 agents/strategist/                    ← агент-стратег духов (Python, стандартная библиотека), docs/STRATEGIST.md
-src/main/java/com/theminespirit/
-├── TheMineSpirit.java   ← точка входа @Mod
-├── core/                ← логика без Minecraft/NeoForge, тестируется JUnit
-└── gametest/            ← GameTest-классы
-src/main/resources/data/theminespirit/structure/  ← шаблоны структур для GameTest
-src/main/templates/META-INF/neoforge.mods.toml    ← метаданные мода (подставляются из gradle.properties)
-src/test/java/                                    ← JUnit-тесты
+mod/src/main/java/com/theminespirit/  ← TheMineSpirit.java, neoforge/, поддержка механик
+mod/src/main/resources/data/          ← данные мода, схемы, board/*.json
+mod/src/main/templates/               ← neoforge.mods.toml (подставляется из gradle.properties)
+gametest/src/main/java/…/gametest/    ← GameTest-классы
+api/ board/ tactics/ content/ rest/   ← Gradle-модули логики без Minecraft
+ui/ policy/ mech/*/                   ← и механики; зависит только от :api
+src/test/java/                        ← сторожа и тесты корня
 ```
 
 Версии Minecraft, NeoForge и зависимостей — в `gradle.properties`.

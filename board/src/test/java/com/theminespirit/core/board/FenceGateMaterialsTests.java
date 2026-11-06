@@ -17,7 +17,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class FenceGateMaterialsTests {
-    private static final Path ROOT = Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
+    private static final Path ROOT = Path.of("mod/src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
     private static final BlockCoord ANCHOR = new BlockCoord(100, 64, -40);
 
     @Test

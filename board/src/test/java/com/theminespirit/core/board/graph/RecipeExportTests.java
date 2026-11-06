@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 
 @Tag("export")
 class RecipeExportTests {
-    private static final Path OUT = Path.of("src/main/resources/" + SupplyGraph.RECIPES);
+    private static final Path OUT = Path.of("mod/src/main/resources/" + SupplyGraph.RECIPES);
     private static final int MAX_WAYS = 3;
 
     @Test

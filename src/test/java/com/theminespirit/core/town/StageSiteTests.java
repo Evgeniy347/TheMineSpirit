@@ -17,7 +17,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class StageSiteTests {
-    private static final Path ROOT = Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
+    private static final Path ROOT = Path.of("mod/src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
     private static final StageSite SITE = TownFixtures.flatSite();
 
     @Test

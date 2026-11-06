@@ -156,13 +156,28 @@ public final class LiveDebug {
         if (names.isEmpty()) {
             throw new ReflectiveFailure("укажите класс: hotswap com.theminespirit.neoforge.Example");
         }
-        Path root = Path.of(env("LIVE_DEBUG_CLASSES", "build/classes/java/main"));
+        List<Path> roots = new ArrayList<>();
+        for (String part : env("LIVE_DEBUG_CLASSES", "mod/build/classes/java/main").split(";")) {
+            if (!part.isBlank()) {
+                roots.add(Path.of(part.trim()));
+            }
+        }
         Map<ReferenceType, byte[]> changes = new LinkedHashMap<>();
         Map<String, byte[]> fresh = new LinkedHashMap<>();
         for (String name : names) {
-            Path base = root.resolve(name.replace('.', '/') + ".class");
-            if (!Files.isRegularFile(base)) {
-                throw new ReflectiveFailure("нет собранного класса " + base + " (сначала ./gradlew compileJava)");
+            String relative = name.replace('.', '/') + ".class";
+            Path base = null;
+            Path root = null;
+            for (Path candidate : roots) {
+                Path file = candidate.resolve(relative);
+                if (Files.isRegularFile(file)) {
+                    base = file;
+                    root = candidate;
+                    break;
+                }
+            }
+            if (base == null) {
+                throw new ReflectiveFailure("нет собранного класса " + relative + " (сначала ./gradlew compileJava)");
             }
             Path parent = base.getParent();
             String file = base.getFileName().toString();

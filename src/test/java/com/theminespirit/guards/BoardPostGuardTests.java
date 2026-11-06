@@ -97,8 +97,8 @@ class BoardPostGuardTests {
     void tasksAndDefenseOrders_OutsideGraph_StartNothing() {
         Map<Path, String> sources = new LinkedHashMap<>(SourceFiles.javaUnder(INTELLECT));
         sources.putAll(SourceFiles.javaUnder(BOARD));
-        sources.putAll(SourceFiles.javaUnder(Path.of("src/main/java/com/theminespirit/neoforge/coordinator")));
-        sources.putAll(SourceFiles.javaUnder(Path.of("src/main/java/com/theminespirit/neoforge/defense")));
+        sources.putAll(SourceFiles.javaUnder(Path.of("mod/src/main/java/com/theminespirit/neoforge/coordinator")));
+        sources.putAll(SourceFiles.javaUnder(Path.of("mod/src/main/java/com/theminespirit/neoforge/defense")));
         List<String> found = new ArrayList<>();
         for (Map.Entry<Path, String> source : sources.entrySet()) {
             String text = SourceFiles.withoutTextBlocks(source.getValue());

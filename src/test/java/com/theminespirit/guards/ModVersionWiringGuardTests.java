@@ -10,7 +10,7 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 class ModVersionWiringGuardTests {
-    private static final Path BUILD = Path.of("build.gradle");
+    private static final Path BUILD = Path.of("mod/build.gradle");
     private static final Path PROPERTIES = Path.of("gradle.properties");
     private static final Path TEMPLATE = SourceFiles.TEMPLATES.resolve("META-INF/neoforge.mods.toml");
 

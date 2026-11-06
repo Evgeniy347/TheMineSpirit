@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.rest.BoardListings;
 import com.theminespirit.core.rest.BoardTask;
 import java.util.List;
 import java.util.Map;
@@ -175,11 +176,11 @@ class BoardSnapshotTests {
 
         assertEquals(
                 BoardTileGroup.WAITING,
-                BoardSnapshot.groupOf(dependant, Set.of("before", "after")),
+                BoardListings.groupOf(dependant, Set.of("before", "after")),
                 "Задание, ждущее незавершённую зависимость, стоит в колонке ожидания с причиной");
         assertEquals(
                 BoardTileGroup.AVAILABLE,
-                BoardSnapshot.groupOf(dependant, Set.of("after")),
+                BoardListings.groupOf(dependant, Set.of("after")),
                 "После завершения зависимости задание без нехватки доступно");
     }
 
@@ -187,11 +188,11 @@ class BoardSnapshotTests {
     void groupOf_BlockedAndFailed_GoToWaiting() {
         assertEquals(
                 BoardTileGroup.WAITING,
-                BoardSnapshot.groupOf(task("x", 1, "BLOCKED", Map.of(), List.of(), 1), Set.of()),
+                BoardListings.groupOf(task("x", 1, "BLOCKED", Map.of(), List.of(), 1), Set.of()),
                 "Заблокированное задание стоит в колонке ожидания, а не среди завершённых");
         assertEquals(
                 BoardTileGroup.WAITING,
-                BoardSnapshot.groupOf(task("y", 1, "FAILED", Map.of(), List.of(), 1), Set.of()),
+                BoardListings.groupOf(task("y", 1, "FAILED", Map.of(), List.of(), 1), Set.of()),
                 "Проваленное задание ждёт повтора в колонке ожидания, а не среди завершённых");
     }
 
