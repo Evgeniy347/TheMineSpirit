@@ -1,5 +1,7 @@
 package com.theminespirit.neoforge.intellect;
 
+import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.intellect.DescentKit;
 import com.theminespirit.core.intellect.Expedition;
 import com.theminespirit.core.intellect.IntellectTuning;
@@ -22,16 +24,19 @@ import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import org.slf4j.Logger;
 
 public final class ExpeditionController {
     public static final double AGREE_RADIUS = 4.0;
 
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final String FOLLOW = "follow";
     private static final String RETURN_HOME = "return_home";
     private static final int PARTNER_RADIUS = 3;
     private static final Map<String, Object> MINE_PARAMS = Map.of("ore", "any", "count", 8, "radius", 16);
 
     private final Invitation invitation = new Invitation();
+    private StockView stock = new StockView(Map.of());
     private Launcher launcher;
     private Dispatch lastDispatch;
     private Expedition active;
@@ -58,6 +63,7 @@ public final class ExpeditionController {
         active = planned;
         expeditionId = UUID.randomUUID();
         dispatched = false;
+        refusal = null;
         invitation.open(planned.startedAt());
         lastRepeatTick = planned.startedAt();
     }
@@ -100,12 +106,13 @@ public final class ExpeditionController {
         return true;
     }
 
-    public void update(ServerLevel level, List<SpiritEntity> members, long now, Launcher tasks) {
-        if (level == null || members == null || tasks == null) {
+    public void update(ServerLevel level, List<SpiritEntity> members, StockView stock, long now, Launcher tasks) {
+        if (level == null || members == null || stock == null || tasks == null) {
             throw new IllegalArgumentException(
-                    "Поход без уровня, духов или исполнителя не ведётся: команда идёт конкретным составом");
+                    "Поход без уровня, духов, запасов или исполнителя не ведётся: команда идёт конкретным составом");
         }
         launcher = tasks;
+        this.stock = stock;
         monitorMission(members, now);
         if (active == null) {
             return;
@@ -158,7 +165,11 @@ public final class ExpeditionController {
         List<SpiritEntity> team = team(members, expedition);
         List<String> missing = missingKit(team);
         if (!missing.isEmpty()) {
-            refusal = "перед спуском в шахту нужен набор: " + String.join(", ", missing);
+            String reason = "перед спуском в шахту нужен набор: " + String.join(", ", missing);
+            if (!reason.equals(refusal)) {
+                LOGGER.info("[graph] экспедиция отложена: {}", reason);
+            }
+            refusal = reason;
             return false;
         }
         UUID leaderId = expedition.team().get(0);
@@ -198,6 +209,11 @@ public final class ExpeditionController {
         for (SpiritEntity spirit : team) {
             inventory.addAll(mapper.map(spirit.getInventory()));
         }
+        stock.available().forEach((item, count) -> {
+            for (int left = count; left > 0; left -= 64) {
+                inventory.add(new Stack(item, 0, Math.min(left, 64), 64));
+            }
+        });
         return DescentKit.missing(OutsideRules.loadDefault().mineKit(), inventory, InventoryTables.values());
     }
 

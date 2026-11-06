@@ -30,11 +30,15 @@ final class PendingEvict {
         int over = pending.size() - BoardTuning.maxPending();
         List<BoardTicket> unissued = pending.stream()
                 .filter(ticket -> !liveCauses.contains(ticket.cause()))
+                .filter(ticket -> !ticket.id().startsWith("repair:"))
                 .sorted(Comparator.comparingLong(BoardTicket::createdAt).thenComparing(BoardTicket::id))
                 .toList();
         int evicted = 0;
-        for (int index = 0; index < unissued.size() && index < over; index++) {
-            cancel.accept(unissued.get(index).id());
+        for (BoardTicket ticket : unissued) {
+            if (evicted >= over) {
+                return evicted;
+            }
+            cancel.accept(ticket.id());
             evicted++;
         }
         return evicted;
