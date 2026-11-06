@@ -11,13 +11,20 @@ import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.hunger.HungerRules;
 import com.theminespirit.core.husbandry.FeedTable;
+import com.theminespirit.core.intellect.IntellectTuning;
+import com.theminespirit.core.intellect.InventoryNormTable;
+import com.theminespirit.core.intellect.OutsideRules;
+import com.theminespirit.core.intellect.defense.DefenseProfile;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.WarehouseCategories;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentLevels;
 import com.theminespirit.core.mining.DropTable;
 import com.theminespirit.core.observation.ObservationLimits;
+import com.theminespirit.core.processing.ProcessingRules;
 import com.theminespirit.core.repair.RepairData;
+import com.theminespirit.core.tactics.TacticsConfig;
+import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;
 import com.theminespirit.core.town.TownRules;
 
 final class DataTableBindings {
@@ -43,5 +50,12 @@ final class DataTableBindings {
         DropTable.useSource(() -> tables.drops().current());
         WarehouseCategories.useSource(() -> tables.warehouseCategories().current());
         KitFor.useSource(() -> tables.kitFor().current());
+        TacticsConfig.useSource(() -> tables.tactics().current());
+        TacticsAdapterSettings.useSource(() -> tables.adapter().current());
+        IntellectTuning.useSource(() -> tables.intellect().current());
+        InventoryNormTable.useSource(() -> tables.inventoryNorm().current());
+        OutsideRules.useSource(() -> tables.outside().current());
+        DefenseProfile.useSource(() -> tables.priorities().current());
+        ProcessingRules.useSource(() -> tables.processing().current());
     }
 }

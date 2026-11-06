@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Сторож зелёного коммита (docs/GIT.md → «Коммит»). Подключается scripts/install-git-hooks.sh.
 # Если в коммите (индекс, в том числе временный при `git commit -- <пути>`) есть изменения в src/, api/,
-# board/, mod/, build-logic/, config/, build.gradle, gradle.properties или settings.gradle — прогоняет
+# board/, tactics/, mod/, build-logic/, config/, build.gradle, gradle.properties или settings.gradle — прогоняет
 # scripts/test.sh unit и при красном отклоняет коммит.
 # Коммиты только документов и скриптов, слияния — без прогона.
-WATCHED='^(src/|api/|policy/|mech/|board/|mod/|build-logic/|config/|build\.gradle$|gradle\.properties$|settings\.gradle$)'
+WATCHED='^(src/|api/|policy/|mech/|board/|tactics/|mod/|build-logic/|config/|build\.gradle$|gradle\.properties$|settings\.gradle$)'
 
 git rev-parse -q --verify MERGE_HEAD >/dev/null && exit 0
 

@@ -12,7 +12,7 @@ core/building/SchematicTextParser.java	655
 core/engine/TaskSnapshotCodec.java	549
 core/inventory/BaseKit.java	323
 core/planner/AcquireScript.java	321
-core/planner/ResourceResolver.java	321
+core/planner/ResourceResolver.java	305
 core/reload/DataTables.java	360
 core/rest/BoardTaskRequest.java	412
 core/script/CoreScripts.java	1378

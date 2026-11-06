@@ -57,7 +57,7 @@ class FirstToolsChainTests {
 
     @Test
     void resolve_EmptyInventoryToWoodenPickaxe_PlanIsMinimalAndTableComesFirst() {
-        TaskNode plan = ResourceResolver.resolve("wooden_pickaxe", 1, WORLD);
+        TaskNode plan = CorePlanner.resolve("wooden_pickaxe", 1, WORLD);
 
         List<ScriptCall> calls = flatten(plan);
         assertEquals(
@@ -83,7 +83,7 @@ class FirstToolsChainTests {
     @ParameterizedTest
     @ValueSource(strings = {"wooden_pickaxe", "wooden_axe", "wooden_shovel"})
     void resolve_EmptyInventoryToWoodenTools_TablePrecedesEveryTool(String tool) {
-        TaskNode plan = ResourceResolver.resolve(tool, 1, WORLD);
+        TaskNode plan = CorePlanner.resolve(tool, 1, WORLD);
 
         List<ScriptCall> calls = flatten(plan);
         assertTrue(
@@ -102,7 +102,7 @@ class FirstToolsChainTests {
 
     @Test
     void resolve_EmptyInventoryToStonePickaxe_WoodenPickaxePrecedesCobblestone() {
-        TaskNode plan = ResourceResolver.resolve("stone_pickaxe", 1, WORLD);
+        TaskNode plan = CorePlanner.resolve("stone_pickaxe", 1, WORLD);
 
         List<ScriptCall> calls = flatten(plan);
         int woodenPickaxe = indexOf(calls, "craft", "wooden_pickaxe");
@@ -124,7 +124,7 @@ class FirstToolsChainTests {
     @Property
     void resolve_StoneToolsFromEmpty_PlansWoodenPickaxeFirst(
             @ForAll("stoneTools") String tool, @ForAll @IntRange(min = 1, max = 8) int count) {
-        TaskNode plan = ResourceResolver.resolve(tool, count, WORLD);
+        TaskNode plan = CorePlanner.resolve(tool, count, WORLD);
 
         List<ScriptCall> calls = flatten(plan);
         assertEquals(
@@ -144,7 +144,7 @@ class FirstToolsChainTests {
 
     @Test
     void resolve_StonePickaxeWithWoodenPickaxeInInventory_ReusesIt() {
-        TaskNode plan = ResourceResolver.resolve("stone_pickaxe", 1, WORLD, Map.of("wooden_pickaxe", 1));
+        TaskNode plan = CorePlanner.resolve("stone_pickaxe", 1, WORLD, Map.of("wooden_pickaxe", 1));
 
         List<ScriptCall> calls = flatten(plan);
         assertEquals(
@@ -158,7 +158,7 @@ class FirstToolsChainTests {
 
     @Test
     void resolve_IronIngotFromEmpty_SmeltingComesAfterFurnaceFuelAndPickaxes() {
-        TaskNode plan = ResourceResolver.resolve("iron_ingot", 1, WORLD);
+        TaskNode plan = CorePlanner.resolve("iron_ingot", 1, WORLD);
 
         List<ScriptCall> calls = flatten(plan);
         int table = indexOf(calls, "craft", "crafting_table");

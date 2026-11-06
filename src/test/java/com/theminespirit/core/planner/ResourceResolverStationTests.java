@@ -39,7 +39,7 @@ class ResourceResolverStationTests {
 
     @Test
     void resolve_ThreeByThreeCraft_AcquiresCraftingTableRightBeforeIt() {
-        TaskNode plan = ResourceResolver.resolve("wooden_pickaxe", 1, WORLD);
+        TaskNode plan = CorePlanner.resolve("wooden_pickaxe", 1, WORLD);
 
         assertEquals(
                 seq(
@@ -54,7 +54,7 @@ class ResourceResolverStationTests {
 
     @Test
     void resolve_TwoCraftsNeedingTable_AcquiresTableOnce() {
-        TaskNode plan = ResourceResolver.resolve("tool_kit", 1, WORLD);
+        TaskNode plan = CorePlanner.resolve("tool_kit", 1, WORLD);
 
         assertEquals(
                 1,
@@ -67,7 +67,7 @@ class ResourceResolverStationTests {
 
     @Test
     void resolve_InventoryCraft_DoesNotAskForStation() {
-        TaskNode plan = ResourceResolver.resolve("stick", 4, WORLD);
+        TaskNode plan = CorePlanner.resolve("stick", 4, WORLD);
 
         assertEquals(
                 0,
@@ -77,7 +77,7 @@ class ResourceResolverStationTests {
 
     @Test
     void resolve_Smelt_AcquiresFurnaceAndItsTableBeforeSmelting() {
-        TaskNode plan = ResourceResolver.resolve("iron_ingot", 1, WORLD);
+        TaskNode plan = CorePlanner.resolve("iron_ingot", 1, WORLD);
 
         assertEquals(
                 seq(
@@ -92,7 +92,7 @@ class ResourceResolverStationTests {
 
     @Test
     void resolve_FurnaceStandingInWorld_SkipsFurnaceBuildingPlan() {
-        TaskNode plan = ResourceResolver.resolve("iron_ingot", 1, WORLD, Map.of("coal", 1), Set.of("furnace"));
+        TaskNode plan = CorePlanner.resolve("iron_ingot", 1, WORLD, Map.of("coal", 1), Set.of("furnace"));
 
         assertEquals(
                 seq(gather("iron_ore", 1), smelt("iron_ingot", 1)),
@@ -103,7 +103,7 @@ class ResourceResolverStationTests {
 
     @Test
     void resolve_CraftingTableStandingInWorld_FurnacePlannedWithoutTable() {
-        TaskNode plan = ResourceResolver.resolve("iron_ingot", 1, WORLD, Map.of("coal", 1), Set.of("crafting_table"));
+        TaskNode plan = CorePlanner.resolve("iron_ingot", 1, WORLD, Map.of("coal", 1), Set.of("crafting_table"));
 
         assertEquals(
                 seq(gather("iron_ore", 1), seq(gather("cobblestone", 8), craft("furnace", 1)), smelt("iron_ingot", 1)),
@@ -114,7 +114,7 @@ class ResourceResolverStationTests {
 
     @Test
     void resolve_SmeltAndThreeByThreeCraft_EachStationOnce() {
-        TaskNode plan = ResourceResolver.resolve("iron_pickaxe", 1, WORLD);
+        TaskNode plan = CorePlanner.resolve("iron_pickaxe", 1, WORLD);
 
         assertEquals(
                 1,
@@ -141,7 +141,7 @@ class ResourceResolverStationTests {
 
         UnplannableGoalException error = assertThrows(
                 UnplannableGoalException.class,
-                () -> ResourceResolver.resolve("wooden_pickaxe", 1, noTable),
+                () -> CorePlanner.resolve("wooden_pickaxe", 1, noTable),
                 "Станция, которую негде взять, обязана давать отказ: иначе план выглядит готовым и ломается у "
                         + "верстака");
 

@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -13,7 +12,6 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 class ParserBoundsGuardTests {
-    private static final Path TACTICS = SourceFiles.path("core/tactics");
     private static final List<String> PARSERS =
             List.of("FactorScalesParser.java", "EnemyProfilesParser.java", "ModesParser.java", "WeightsParser.java");
     private static final Pattern BOUNDED_READ = Pattern.compile("\\.(?:number|integer)\\(\\s*[^)\\s][^)]*\\)");
@@ -31,7 +29,7 @@ class ParserBoundsGuardTests {
     void tacticsParsers_Scanned_ReadNumbersWithoutOwnBounds() throws IOException {
         List<String> offenders = new ArrayList<>();
         for (String parser : PARSERS) {
-            offenders.addAll(boundedReads(parser, Files.readString(TACTICS.resolve(parser))));
+            offenders.addAll(boundedReads(parser, Files.readString(SourceFiles.path("core/tactics/" + parser))));
         }
 
         assertEquals(

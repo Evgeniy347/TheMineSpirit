@@ -25,7 +25,7 @@ class CraftedSourceTests {
 
         UnplannableGoalException error = assertThrows(
                 UnplannableGoalException.class,
-                () -> ResourceResolver.resolve(PLANKS, 148, knowledge),
+                () -> CorePlanner.resolve(PLANKS, 148, knowledge),
                 "Доски — крафтовый предмет: при потере рецепта резолвер обязан назвать причину, а не искать "
                         + "37 размещённых досок по постройкам (аномалия A, oak_planks ×148)");
 
@@ -43,7 +43,7 @@ class CraftedSourceTests {
                 Map.of(),
                 Map.of(PLANKS, 4));
 
-        TaskNode plan = ResourceResolver.resolve(PLANKS, 8, knowledge);
+        TaskNode plan = CorePlanner.resolve(PLANKS, 8, knowledge);
 
         assertEquals(
                 new SequenceNode(List.of(gather("oak_log", 2), craft(PLANKS, 8))),
@@ -57,7 +57,7 @@ class CraftedSourceTests {
 
         UnplannableGoalException error = assertThrows(
                 UnplannableGoalException.class,
-                () -> ResourceResolver.resolve(SAPLING, 4, knowledge),
+                () -> CorePlanner.resolve(SAPLING, 4, knowledge),
                 "Саженец не добывается выкапыванием посаженного: без рецепта источник — листва (GatherPlans), "
                         + "а не размещённые саженцы в мире (N8)");
 
@@ -74,7 +74,7 @@ class CraftedSourceTests {
 
         assertThrows(
                 UnplannableGoalException.class,
-                () -> ResourceResolver.resolve("minecraft:oak_planks", 67, knowledge),
+                () -> CorePlanner.resolve("minecraft:oak_planks", 67, knowledge),
                 "Пространство имён не делает доски другим блоком: 'minecraft:oak_planks' и 'oak_planks' — "
                         + "один предмет, и добыча размещённых досок запрещена так же, как для короткого id (A)");
     }
@@ -84,7 +84,7 @@ class CraftedSourceTests {
         ResourceKnowledge knowledge =
                 new StubKnowledge(Set.of("glass"), Map.of(), Map.of()).withGatherSource("glass", "sand");
 
-        TaskNode plan = ResourceResolver.resolve("glass", 3, knowledge);
+        TaskNode plan = CorePlanner.resolve("glass", 3, knowledge);
 
         assertEquals(
                 gather("sand", 3),
@@ -97,7 +97,7 @@ class CraftedSourceTests {
     void resolve_NaturalBlock_StillGathersFromWorld() {
         ResourceKnowledge knowledge = new StubKnowledge(Set.of("dirt"), Map.of(), Map.of());
 
-        TaskNode plan = ResourceResolver.resolve("dirt", 5, knowledge);
+        TaskNode plan = CorePlanner.resolve("dirt", 5, knowledge);
 
         assertEquals(
                 gather("dirt", 5),
@@ -124,7 +124,7 @@ class CraftedSourceTests {
 
             assertThrows(
                     UnplannableGoalException.class,
-                    () -> ResourceResolver.resolve(item, 4, knowledge),
+                    () -> CorePlanner.resolve(item, 4, knowledge),
                     "Крафтовый '" + item + "' без рецепта обязан отказывать на любом пути выдачи (graph:make, "
                             + "supply, supply_gather, acquire), а не искать размещённую копию блоком в мире");
         }
@@ -157,12 +157,12 @@ class CraftedSourceTests {
 
         UnplannableGoalException bricks = assertThrows(
                 UnplannableGoalException.class,
-                () -> ResourceResolver.resolve("stone_bricks", 111, knowledge),
+                () -> CorePlanner.resolve("stone_bricks", 111, knowledge),
                 "Кирпичи — крафтовый предмет: без рецепта сбор обязан отказать, а не искать блок "
                         + "(-329,63,-515) в 150 блоках от поселения (observe18 B5)");
         UnplannableGoalException stairs = assertThrows(
                 UnplannableGoalException.class,
-                () -> ResourceResolver.resolve("stone_brick_stairs", 1, knowledge),
+                () -> CorePlanner.resolve("stone_brick_stairs", 1, knowledge),
                 "Ступени кирпича — крафтовый предмет: без рецепта дух не идёт за блоком (-18,74,-421)");
 
         assertTrue(
