@@ -11,10 +11,10 @@ import org.junit.jupiter.api.Test;
 class SourceFilesTests {
     @Test
     void path_MainSource_ResolvesUnderMain() {
-        Path file = SourceFiles.path("core/board/Board.java");
+        Path file = SourceFiles.path("core/reload/DataTables.java");
 
         assertEquals(
-                SourceFiles.MAIN.resolve("com/theminespirit/core/board/Board.java"),
+                SourceFiles.MAIN.resolve("com/theminespirit/core/reload/DataTables.java"),
                 file,
                 "логический путь main-исходника обязан разворачиваться в MAIN, а не в TEST");
         assertTrue(Files.isRegularFile(file), "логический путь main-исходника обязан вести к файлу: " + file);
@@ -67,7 +67,7 @@ class SourceFilesTests {
 
     @Test
     void logical_MainAndTest_RoundTrip() {
-        String main = "core/board/Board.java";
+        String main = "core/reload/DataTables.java";
         String test = "guards/SourceFilesTests.java";
         String api = "core/observation/BlockCoord.java";
 

@@ -691,6 +691,14 @@ analyze_unit() {
         if [ -f TestResults/unit/test-cost.csv ]; then
             cpu_ms=$(awk -F, 'NR > 1 { sum += $4 } END { print sum + 0 }' TestResults/unit/test-cost.csv)
         fi
+        local cost module_root cost_name
+        for module_root in ${MOD_MODULE_MAIN_ROOTS//,/ }; do
+            cost_name="$(basename "${module_root%%/src/*}")"
+            cost="TestResults/$cost_name/test-cost.csv"
+            if [ -f "$cost" ]; then
+                cpu_ms=$((cpu_ms + $(awk -F, 'NR > 1 { sum += $4 } END { print sum + 0 }' "$cost")))
+            fi
+        done
         local cpu=$((cpu_ms / 1000))
         if [ "$cpu" -gt "$UNIT_CPU_STOP" ]; then
             echo "FAIL cpu: $total тестов зелёные, но время процессора тестов $cpu с больше предела $UNIT_CPU_STOP с"
@@ -841,7 +849,7 @@ if [ "$MODE" = "unit" ]; then
     rm -f TestResults/api/xml/TEST-*.xml
     for module_root in ${MOD_MODULE_MAIN_ROOTS//,/ }; do
         name="${module_root%%/src/*}"
-        rm -f "TestResults/$(basename "$name")/xml/TEST-*.xml"
+        rm -f "TestResults/$(basename "$name")/xml/TEST-*.xml" "TestResults/$(basename "$name")/test-cost.csv"
     done
     start_monitor "unit"
 
@@ -854,11 +862,7 @@ if [ "$MODE" = "unit" ]; then
             UNIT_EXTRA=(staticAnalysis --continue)
         fi
     else
-        UNIT_EXCLUDE=(-x :api:test)
-        for module_root in ${MOD_MODULE_MAIN_ROOTS//,/ }; do
-            name="${module_root%%/src/*}"
-            UNIT_EXCLUDE+=(-x ":${name//\//:}:test")
-        done
+        UNIT_EXCLUDE=(-Ptheminespirit.filtered)
     fi
 
     if command -v setsid >/dev/null 2>&1; then

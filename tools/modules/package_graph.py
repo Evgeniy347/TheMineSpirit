@@ -49,10 +49,25 @@ def _layout_extra(key: str) -> str:
     return ""
 
 
-DEFAULT_MAIN = ",".join(["src/main/java", "api/src/main/java"] + [p for p in _layout_extra("module_roots").split(",") if p])
-DEFAULT_TEST = ",".join(
-    ["src/test/java", "api/src/test/java"] + [p for p in _layout_extra("module_test_roots").split(",") if p]
-)
+def _settings_module_dirs() -> list[str]:
+    """Каталоги модулей из единственного источника — include-строк settings.gradle."""
+    path = Path("settings.gradle")
+    if not path.is_file():
+        return []
+    text = path.read_text(encoding="utf-8")
+    return [
+        match[1:].replace(":", "/")
+        for match in re.findall(r"^\s*include\s+'(:[^']+)'", text, re.MULTILINE)
+        if match not in (":api", ":mod")
+    ]
+
+
+def _module_roots(source_set: str) -> list[str]:
+    return [f"{directory}/src/{source_set}/java" for directory in _settings_module_dirs()]
+
+
+DEFAULT_MAIN = ",".join(["src/main/java", "api/src/main/java"] + _module_roots("main"))
+DEFAULT_TEST = ",".join(["src/test/java", "api/src/test/java"] + _module_roots("test"))
 
 PACKAGE_RE = re.compile(r"^\s*package\s+([\w.]+)\s*;", re.MULTILINE)
 IMPORT_RE = re.compile(r"^\s*import\s+(static\s+)?([\w.*]+)\s*;", re.MULTILINE)

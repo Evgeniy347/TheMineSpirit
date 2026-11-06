@@ -36,7 +36,7 @@ class GraphExportTests {
             GraphPlan plan = world.plan();
             Map<String, Object> entry = new LinkedHashMap<>();
             entry.put("mutations", GraphChaos.names(combo));
-            entry.put("state", state(world.state()));
+            entry.put("state", GraphStateJson.state(world.state()));
             List<Map<String, Object>> tasks = new ArrayList<>();
             for (GraphPlan.Task task : plan.tasks()) {
                 Map<String, Object> row = new LinkedHashMap<>();
@@ -66,7 +66,9 @@ class GraphExportTests {
         Files.createDirectories(LIVE.getParent());
         new ObjectMapper()
                 .enable(SerializationFeature.INDENT_OUTPUT)
-                .writeValue(LIVE.toFile(), state(GraphMutations.liveStageOne().state()));
+                .writeValue(
+                        LIVE.toFile(),
+                        GraphStateJson.state(GraphMutations.liveStageOne().state()));
         assertTrue(Files.size(LIVE) > 0, "Живой этап 1 для Python-модели записан в " + LIVE);
     }
 
@@ -76,7 +78,7 @@ class GraphExportTests {
         for (GraphBaseWorlds.BaseWorld base : GraphBaseWorlds.baseWorlds()) {
             GraphSimulation.Outcome outcome = GraphSimulation.runUntil(base.world(), BASE_LIMIT, base.stopStage());
             Map<String, Object> entry = new LinkedHashMap<>();
-            entry.put("state", state(base.world().state()));
+            entry.put("state", GraphStateJson.state(base.world().state()));
             entry.put("limit", BASE_LIMIT);
             entry.put("stopStage", base.stopStage());
             entry.put("steps", outcome.steps());
@@ -92,22 +94,5 @@ class GraphExportTests {
         Files.createDirectories(BASES.getParent());
         new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValue(BASES.toFile(), bases);
         assertTrue(Files.size(BASES) > 0, "Базовые миры для Python-модели записаны в " + BASES);
-    }
-
-    static Map<String, Object> state(GraphState state) {
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("stock", state.stock());
-        out.put("stage", state.stage());
-        out.put("kits", state.kits());
-        out.put("buildings", state.buildings());
-        out.put("materials", state.materials());
-        out.put("storageFreePercent", state.storageFreePercent());
-        out.put("events", state.events().stream().sorted().toList());
-        out.put("world", state.world().stream().sorted().toList());
-        out.put("distances", state.distances());
-        out.put("stations", state.stations());
-        out.put("orders", state.orders());
-        out.put("facts", state.facts());
-        return out;
     }
 }
