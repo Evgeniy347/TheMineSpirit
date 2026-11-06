@@ -1,6 +1,5 @@
 package com.theminespirit.core.building;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -111,10 +110,6 @@ class OrchardDecorTests {
         assertTrue(SchematicActions.isTrampleGround("minecraft:grass_block"), "По траве тропинку топчут лопатой");
         assertTrue(SchematicActions.isTrampleGround("minecraft:dirt"), "По земле тропинку топчут лопатой");
         assertFalse(SchematicActions.isTrampleGround("minecraft:stone"), "Камень лопатой в тропинку не превратить");
-        assertEquals(
-                "minecraft:wooden_shovel", SchematicActions.shovelItem(false), "Без запаса камня — деревянная лопата");
-        assertEquals(
-                "minecraft:stone_shovel", SchematicActions.shovelItem(true), "С камнем — каменная лопата, она прочнее");
     }
 
     private static Schematic parse() throws IOException {

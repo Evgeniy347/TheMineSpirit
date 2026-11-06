@@ -1,6 +1,8 @@
 package com.theminespirit.core.building;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -29,11 +31,22 @@ class SchematicActionsTests {
                 SchematicBlocks.itemOf("farmland").endsWith("dirt"),
                 "Пашню в смете считают землёй: другой предмет дух в руках не носит");
         assertTrue(
+                SchematicBlocks.itemOf("dirt_path").endsWith("dirt"),
+                "Тропу в смете считают землёй: предмета dirt_path не существует, а смета иначе просит духа "
+                        + "добыть его и стройка падает");
+        assertTrue(
                 SchematicBlocks.itemOf("water").endsWith("water_bucket"),
                 "Воду в смете считают ведром: блок воды без ведра не поставить");
         assertTrue(
                 SchematicBlocks.itemOf("wheat").endsWith("wheat_seeds"),
                 "Посев в смете считают семенами: колос в инвентаре не держат");
+    }
+
+    @Test
+    void toolKind_ActionBlocks_NameTheirTool() {
+        assertEquals("*_shovel", SchematicActions.toolKind("minecraft:dirt_path"), "Тропу топчут лопатой");
+        assertEquals("*_hoe", SchematicActions.toolKind("minecraft:farmland"), "Пашню делает тяпка");
+        assertNull(SchematicActions.toolKind("minecraft:stone"), "Обычному блоку инструмент не нужен");
     }
 
     @Test

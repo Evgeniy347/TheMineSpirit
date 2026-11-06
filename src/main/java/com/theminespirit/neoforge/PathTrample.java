@@ -1,22 +1,19 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.board.ActionToolPlans;
 import com.theminespirit.core.building.PathGround;
 import com.theminespirit.core.building.SchematicActions;
-import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
-import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ShovelItem;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
@@ -64,26 +61,33 @@ final class PathTrample {
         return new BlockPlacer.Started(ground.immutable());
     }
 
-    static List<ScriptCall> restock(SpiritEntity spirit, String blockId) {
-        if (!SchematicActions.isActionPlaced(blockId) || shovelSlot(spirit) != NO_SLOT) {
-            return List.of();
+    static Optional<TaskNode> toolRestock(SpiritEntity spirit, String blockId) {
+        String kind = SchematicActions.toolKind(blockId);
+        if (kind == null) {
+            return Optional.empty();
         }
-        boolean cobble = spirit.getInventory().countItem(Items.COBBLESTONE) > 0;
-        String item = SchematicActions.shovelItem(cobble);
-        int held = spirit.getInventory().countItem(BuiltInRegistries.ITEM.get(ResourceLocation.parse(item)));
-        return List.of(new ScriptCall("acquire", Map.of("item", item, "count", held + 1)));
+        if ("*_hoe".equals(kind)) {
+            return hasHoe(spirit) ? Optional.empty() : Optional.of(ActionToolPlans.hoe());
+        }
+        return shovelSlot(spirit) == NO_SLOT ? Optional.of(ActionToolPlans.shovel()) : Optional.empty();
     }
 
-    static List<ScriptCall> restockHoe(SpiritEntity spirit) {
+    static boolean hasTool(SpiritEntity spirit, String blockId) {
+        String kind = SchematicActions.toolKind(blockId);
+        if (kind == null) {
+            return true;
+        }
+        return "*_hoe".equals(kind) ? hasHoe(spirit) : shovelSlot(spirit) != NO_SLOT;
+    }
+
+    private static boolean hasHoe(SpiritEntity spirit) {
         for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
             ItemStack stack = spirit.getInventory().getItem(slot);
             if (stack.getItem() instanceof HoeItem && stack.getDamageValue() < stack.getMaxDamage() - 1) {
-                return List.of();
+                return true;
             }
         }
-        String item =
-                spirit.getInventory().countItem(Items.COBBLESTONE) > 0 ? "minecraft:stone_hoe" : "minecraft:wooden_hoe";
-        return List.of(new ScriptCall("acquire", Map.of("item", item, "count", 1)));
+        return false;
     }
 
     private static int shovelSlot(SpiritEntity spirit) {

@@ -224,7 +224,7 @@ final class SchematicSite {
                 unique.add(cell);
             }
         }
-        List<BlockCoord> cells = new ArrayList<>(unique);
+        List<BlockCoord> cells = SchematicWild.clearCells(level, unique, entries);
         for (Schematic.PlacedEntry entry : entries) {
             if (entry.optional() || SchematicActions.isActionPlaced(entry.block())) {
                 continue;
