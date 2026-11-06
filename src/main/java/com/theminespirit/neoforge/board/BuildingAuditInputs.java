@@ -105,7 +105,7 @@ public final class BuildingAuditInputs {
         if (!service.board().ledger().has(BoardCase.BUILD_HOUSE, 1)) {
             return;
         }
-        RepairAudit.Report report = WorldAreaInputs.houseReport(level, scan.stage(), now);
+        RepairAudit.Report report = WorldAreaInputs.houseReport(level, scan.stage(), scan.wood(), now);
         if (report == null) {
             return;
         }
@@ -188,7 +188,8 @@ public final class BuildingAuditInputs {
             return new GraphFacts.Building(id, level, 0, 0, Map.of(), Map.of(), 0, at, true, true);
         }
         int percent = audit.total() == 0 ? (built ? 100 : 0) : Math.min(100, audit.done() * 100 / audit.total());
-        int damage = built ? Math.max(audit.missingCount() + audit.extraCount(), audit.total() - audit.done()) : 0;
+        boolean started = built || audit.done() > 0;
+        int damage = started ? Math.max(audit.missingCount() + audit.extraCount(), audit.total() - audit.done()) : 0;
         return new GraphFacts.Building(
                 id, level, percent, damage, audit.missing(), audit.extra(), audit.wrong(), at, false, true);
     }

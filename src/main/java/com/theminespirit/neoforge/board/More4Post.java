@@ -52,9 +52,9 @@ final class More4Post {
 
     static boolean post(GraphPost post, GraphTickets.Ticket ticket) {
         return switch (ticket.node()) {
-            case "more4_guard_settlement", "more4_guard_with_pet" -> guard(post, post.scan.home());
-            case "more4_watch_chests" -> guard(post, chestPoint(post));
-            case "more4_guard_portal" -> guard(post, portal(post));
+            case "more4_guard_settlement", "more4_guard_with_pet" -> guard(post, ticket, post.scan.home());
+            case "more4_watch_chests" -> guard(post, ticket, chestPoint(post));
+            case "more4_guard_portal" -> guard(post, ticket, portal(post));
             case "more4_bring_player_food" -> bringFood(post);
             case "more4_lend_player_tool" -> lendTool(post);
             case "more4_switch_tool" -> switchTool(post);
@@ -67,12 +67,17 @@ final class More4Post {
         };
     }
 
-    private static boolean guard(GraphPost post, @Nullable BlockCoord point) {
+    private static boolean guard(GraphPost post, GraphTickets.Ticket ticket, @Nullable BlockCoord point) {
         if (point == null) {
             return false;
         }
-        return ActivityLaunch.launch(
-                post, BoardCase.ACTIVITY_GUARD, "patrol", new ScriptCall("patrol", More4Scripts.patrolParams(point)));
+        return ActivityLaunch.launchOrQueue(
+                post,
+                ticket.id(),
+                ticket.task().priority(),
+                BoardCase.ACTIVITY_GUARD,
+                "patrol",
+                new ScriptCall("patrol", More4Scripts.patrolParams(point)));
     }
 
     private static @Nullable BlockCoord chestPoint(GraphPost post) {

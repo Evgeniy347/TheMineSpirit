@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
+import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.LevelRepair;
 import com.theminespirit.core.board.StageAudit;
@@ -88,9 +89,13 @@ final class WorldPost {
         if (found.pits().isEmpty()) {
             return false;
         }
+        int room = room(open(post, "world:backfill:"), BATCH);
+        if (room == 0) {
+            return true;
+        }
         for (BlockCoord at : fresh(
                 found.pits().keySet().stream().sorted(ORDER).toList(),
-                BATCH,
+                room,
                 cell -> busy(post, "world:backfill:", cell))) {
             post.submit(
                     post.ticket(
@@ -128,8 +133,12 @@ final class WorldPost {
         if (found.traces().isEmpty()) {
             return false;
         }
+        int room = room(open(post, "world:trace:"), BATCH);
+        if (room == 0) {
+            return true;
+        }
         boolean posted = false;
-        for (BlockCoord at : found.traces().stream().sorted(ORDER).limit(BATCH).toList()) {
+        for (BlockCoord at : found.traces().stream().sorted(ORDER).limit(room).toList()) {
             String id = "world:trace:" + key(at);
             if (post.done(id) || post.open(id)) {
                 posted = true;
@@ -152,6 +161,26 @@ final class WorldPost {
     private static boolean busy(GraphPost post, String prefix, BlockCoord at) {
         String id = prefix + key(at);
         return post.done(id) || post.open(id);
+    }
+
+    static int room(int open, int batch) {
+        return Math.max(0, batch - open);
+    }
+
+    private static int open(GraphPost post, String prefix) {
+        int open = 0;
+        for (var ticket : post.service.board().all()) {
+            if (!ticket.id().startsWith(prefix)) {
+                continue;
+            }
+            var status = post.service.board().statusOf(ticket.id()).orElse(null);
+            if (status == BoardStatus.PENDING
+                    || status == BoardStatus.WAITING_RESOURCES
+                    || status == BoardStatus.ASSIGNED) {
+                open++;
+            }
+        }
+        return open;
     }
 
     static List<BlockCoord> fresh(List<BlockCoord> sorted, int batch, Predicate<BlockCoord> busy) {

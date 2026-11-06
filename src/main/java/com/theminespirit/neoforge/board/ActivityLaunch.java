@@ -14,6 +14,11 @@ final class ActivityLaunch {
         return spirit != null && start(post, spirit, activity, script, task);
     }
 
+    static boolean launchOrQueue(
+            GraphPost post, String key, int priority, BoardCase activity, String script, TaskNode task) {
+        return post.requestActivity(key, priority, activity, script, task);
+    }
+
     static boolean launchOn(GraphPost post, SpiritEntity spirit, BoardCase activity, String script, TaskNode task) {
         if (spirit.isRemoved() || busy(post, spirit)) {
             return false;

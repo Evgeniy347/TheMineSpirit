@@ -43,6 +43,17 @@ class WorldPostTests {
     }
 
     @Test
+    void room_OpenBatch_LeavesOnlyMissingSlots() {
+        assertEquals(8, WorldPost.room(0, 8), "пустая доска даёт всю порцию уборки");
+        assertEquals(3, WorldPost.room(5, 8), "уже стоящие задания занимают места порции");
+        assertEquals(
+                0,
+                WorldPost.room(9, 8),
+                "порция не растёт: иначе 95 world:backfill забивают доску, и вытеснение снимает "
+                        + "repair:build_mine с причиной always");
+    }
+
+    @Test
     void fresh_AllCellsOnBoard_ReturnsNothing() {
         List<BlockCoord> cells = List.of(cell(0), cell(1));
 
