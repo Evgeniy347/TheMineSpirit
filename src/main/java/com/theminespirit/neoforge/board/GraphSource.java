@@ -235,9 +235,10 @@ public final class GraphSource {
                     .filter(progress -> progress.total() > 0)
                     .ifPresent(progress -> {
                         int percent = progress.done() * 100 / progress.total();
-                        shown.put(
+                        shown.computeIfPresent(
                                 id,
-                                shown.get(id) + " " + percent + "%(" + progress.done() + "/" + progress.total() + ")");
+                                (key, value) ->
+                                        value + " " + percent + "%(" + progress.done() + "/" + progress.total() + ")");
                     });
         }
         return shown.toString();
