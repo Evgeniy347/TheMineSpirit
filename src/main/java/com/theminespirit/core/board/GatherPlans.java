@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
@@ -19,8 +20,6 @@ final class GatherPlans {
     private static final String COUNT = "count";
     private static final String ITEM = "item";
     private static final String ACQUIRE = "acquire";
-    private static final String DIRT_PATH = "dirt_path";
-    private static final String WOODEN_SHOVEL = "minecraft:wooden_shovel";
     private static final String SPECIES = "species";
     private static final String RADIUS = "radius";
     private static final String MINECRAFT = "minecraft:";
@@ -33,6 +32,9 @@ final class GatherPlans {
     private GatherPlans() {}
 
     static Optional<TaskNode> plan(TicketTarget target, String item, int batch) {
+        if (SchematicActions.isActionPlaced(item)) {
+            return Optional.empty();
+        }
         Optional<TaskNode> portal = PortalPlans.special(target, item, batch);
         if (portal.isPresent()) {
             return portal;
@@ -48,10 +50,6 @@ final class GatherPlans {
         Optional<TaskNode> planks = planksPlan(target, item, batch);
         if (planks.isPresent()) {
             return planks;
-        }
-        Optional<TaskNode> path = pathPlan(target, item, batch);
-        if (path.isPresent()) {
-            return path;
         }
         Optional<TreeSpecies> tree = treeOf(item);
         if (tree.isEmpty()) {
@@ -116,18 +114,6 @@ final class GatherPlans {
                 Map.of(SPECIES, tree.id(), COUNT, trees, RADIUS, BoardTuning.chopRadius(), "replant", true));
         return sequence(
                 TicketPlans.gotoTarget(target), new FallbackNode(List.of(sequence(takeAxe(), chop), withoutTrees)));
-    }
-
-    private static Optional<TaskNode> pathPlan(TicketTarget target, String item, int batch) {
-        if (!DIRT_PATH.equals(pathOf(item))) {
-            return Optional.empty();
-        }
-        List<TaskNode> steps = new ArrayList<>();
-        steps.add(TicketPlans.gotoTarget(target));
-        steps.add(new ScriptCall(ACQUIRE, Map.of(ITEM, WOODEN_SHOVEL, COUNT, 1)));
-        steps.add(new ScriptCall(
-                "gather", Map.of("block", DIRT_PATH, COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)));
-        return Optional.of(new SequenceNode(steps));
     }
 
     private static Optional<TaskNode> stripPlan(TicketTarget target, String item, int batch) {
@@ -200,12 +186,11 @@ final class GatherPlans {
     }
 
     static TaskNode shovel() {
-        return optionalTool("*_shovel", "wooden_shovel");
-    }
-
-    private static TaskNode optionalTool(String kind, String wooden) {
-        return new FallbackNode(
-                List.of(tool(kind, wooden), new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
+        return new FallbackNode(List.of(
+                ActionToolPlans.shovel(),
+                new ScriptCall(ACQUIRE, Map.of(ITEM, "*_shovel", COUNT, 1)),
+                new ScriptCall(ACQUIRE, Map.of(ITEM, "wooden_shovel", COUNT, 1)),
+                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
     private static TaskNode tool(String kind, String wooden) {

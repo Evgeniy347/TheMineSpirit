@@ -8,6 +8,7 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -86,6 +87,10 @@ final class TicketStoragePlans {
         String item = target.supplyItem() == null ? DEFAULT_SUPPLY_ITEM : target.supplyItem();
         int count = target.supplyCount() > 0 ? target.supplyCount() : 1;
         int batch = Math.min(count, CatalogLimits.COUNT_MAX);
+        String tool = SchematicActions.toolKind(item);
+        if (tool != null) {
+            return groundAction(target, item, tool, batch);
+        }
         if (COAL.equals(item)) {
             return new SequenceNode(List.of(
                     TicketPlans.gotoTarget(target),
@@ -113,6 +118,19 @@ final class TicketStoragePlans {
         }
         ScriptCall acquire = new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, batch, "fresh", true));
         return new SequenceNode(List.of(TicketPlans.gotoTarget(target), acquire));
+    }
+
+    private static TaskNode groundAction(TicketTarget target, String item, String tool, int batch) {
+        boolean tilled = SchematicActions.isTilled(item);
+        List<TaskNode> steps = new ArrayList<>(3);
+        steps.add(TicketPlans.gotoTarget(target));
+        steps.add("*_hoe".equals(tool) ? ActionToolPlans.hoe() : ActionToolPlans.shovel());
+        steps.add(new ScriptCall(
+                tilled ? "till" : "gather",
+                tilled
+                        ? Map.of(COUNT, batch, RADIUS, CatalogLimits.FARM_RADIUS_MAX)
+                        : Map.of(BLOCK, "dirt_path", COUNT, batch, RADIUS, CatalogLimits.HARVEST_RADIUS_MAX)));
+        return new SequenceNode(steps);
     }
 
     static TaskNode restockFood(TicketTarget target) {
