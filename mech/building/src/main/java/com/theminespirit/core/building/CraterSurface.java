@@ -11,5 +11,13 @@ public interface CraterSurface {
 
     boolean isAir(int x, int y, int z);
 
+    default boolean isFluid(int x, int y, int z) {
+        return false;
+    }
+
+    default boolean isFillable(int x, int y, int z) {
+        return isAir(x, y, z) || isFluid(x, y, z);
+    }
+
     boolean isProtected(int x, int y, int z);
 }

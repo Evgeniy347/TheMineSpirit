@@ -2,7 +2,6 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildBox;
-import com.theminespirit.core.building.BuildOrder;
 import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildState;
@@ -16,8 +15,6 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +33,6 @@ import org.slf4j.Logger;
 public final class FillSession {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int NO_STAND_LOGGED = 4;
-    private static final int MAX_DEFERRALS = 2;
     private static final int LONG_STATE_TICKS = 200;
 
     public enum Outcome {
@@ -61,20 +57,19 @@ public final class FillSession {
     private int stateTicks;
     private @Nullable State lastState;
     private @Nullable BlockCoord currentStand;
-    private final Map<BlockCoord, Integer> deferred = new HashMap<>();
-    private final List<BlockCoord> order;
+    private final List<BlockCoord> order = new ArrayList<>();
     private final LevelSafetyView safety;
+    private final FillTerrain terrain;
     private final BlockPlacer placer;
     private final Approach approach;
     private final BuildReservations reservations;
-
-    private final Set<BlockCoord> spiritCells;
-    private boolean noExit;
 
     private State state = State.PICK;
     private Outcome outcome = Outcome.RUNNING;
     private String failureReason;
     private int cursor;
+    private int brokenY = Integer.MAX_VALUE;
+    private int passPlaced;
     private BlockCoord current;
     private int placed;
     private int prebuilt;
@@ -83,7 +78,6 @@ public final class FillSession {
     private int noStand;
     private int protectedSkipped;
     private int foreignSkipped;
-    private int blockReads;
 
     private final BuildResult tally = new BuildResult();
     private @Nullable PillarColumn pillar;
@@ -99,13 +93,12 @@ public final class FillSession {
         this.wanted = BlockStates.stateFor(blockId);
         this.region = Set.copyOf(cells);
         this.safety = new LevelSafetyView(level);
+        this.terrain = new FillTerrain(level, spirit, wanted, region);
         this.placer = new BlockPlacer(spirit);
         this.approach = new Approach(spirit);
         this.reservations = BuildReservationHub.forLevel(level);
-        Set<BlockCoord> occupied = spiritCells();
-        this.spiritCells = Set.copyOf(occupied);
-        this.order = new ArrayList<>(BuildOrder.placement(List.copyOf(cells), occupied));
-        if (insideBox(spirit.blockPosition()) && !occupied.isEmpty() && !onFloor()) {
+        replan();
+        if (insideBox(spirit.blockPosition())) {
             state = State.EXIT;
         }
     }
@@ -179,7 +172,7 @@ public final class FillSession {
     }
 
     public int blockReads() {
-        return blockReads;
+        return terrain.blockReads();
     }
 
     public Map<String, Object> saveState() {
@@ -205,7 +198,6 @@ public final class FillSession {
     private void exitTick() {
         BlockCoord exit = exitStand();
         if (exit == null) {
-            noExit = true;
             state = State.PICK;
             return;
         }
@@ -222,14 +214,12 @@ public final class FillSession {
     private void pick() {
         while (cursor < order.size()) {
             BlockCoord cell = order.get(cursor);
-            if (noExit && spiritCells.contains(cell)) {
-                skipped++;
-                tally.skipped();
-                cursor++;
-                continue;
+            if (cell.y() > brokenY) {
+                endPass();
+                return;
             }
             BlockPos pos = toPos(cell);
-            blockReads++;
+            terrain.countRead();
             BlockState current = level.getBlockState(pos);
             if (current.is(wanted.getBlock())) {
                 prebuilt++;
@@ -240,14 +230,12 @@ public final class FillSession {
                 foreignSkipped++;
                 skipped++;
                 tally.skipped();
+                brokenY = Math.min(brokenY, cell.y());
                 cursor++;
                 continue;
             }
             reservations.reserve(cell, spirit.getUUID());
             this.current = cell;
-            if (deferOwnWater(cell)) {
-                continue;
-            }
             if (cell.equals(spiritCoord())) {
                 pillar = pillarHere(cell);
                 state = State.PILLAR;
@@ -277,6 +265,7 @@ public final class FillSession {
                 noStand++;
                 skipped++;
                 tally.skipped();
+                brokenY = Math.min(brokenY, cell.y());
                 release(cell);
                 cursor++;
                 continue;
@@ -286,6 +275,7 @@ public final class FillSession {
                 noStand++;
                 skipped++;
                 tally.skipped();
+                brokenY = Math.min(brokenY, cell.y());
                 release(cell);
                 cursor++;
                 continue;
@@ -294,6 +284,14 @@ public final class FillSession {
             currentStand = stand;
             approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
             state = State.APPROACH;
+            return;
+        }
+        endPass();
+    }
+
+    private void endPass() {
+        int done = passPlaced;
+        if (done > 0 && replan()) {
             return;
         }
         state = State.DONE;
@@ -305,6 +303,7 @@ public final class FillSession {
             case RUNNING -> {}
             case BUILT -> {
                 placed++;
+                passPlaced++;
                 tally.placed(blockId);
                 releaseAndAdvance();
                 state = State.PICK;
@@ -317,6 +316,7 @@ public final class FillSession {
                         pillar.failureReason());
                 skipped++;
                 tally.skipped();
+                brokenY = Math.min(brokenY, current.y());
                 releaseAndAdvance();
                 state = State.PICK;
             }
@@ -333,20 +333,6 @@ public final class FillSession {
             }
         }
         return true;
-    }
-
-    private boolean deferOwnWater(BlockCoord cell) {
-        if (!cell.equals(spiritCoord()) || !floatingIn(cell) || deferred.merge(cell, 1, Integer::sum) > MAX_DEFERRALS) {
-            return false;
-        }
-        order.add(cell);
-        release(cell);
-        cursor++;
-        return true;
-    }
-
-    private boolean floatingIn(BlockCoord cell) {
-        return level.getBlockState(toPos(cell)).getFluidState().is(FluidTags.WATER);
     }
 
     private PillarColumn pillarHere(BlockCoord cell) {
@@ -371,11 +357,6 @@ public final class FillSession {
                 && level.getBlockState(pos.above())
                         .getCollisionShape(level, pos.above())
                         .isEmpty();
-    }
-
-    private boolean onFloor() {
-        BlockPos below = spirit.blockPosition().below();
-        return level.getBlockState(below).isFaceSturdy(level, below, Direction.UP);
     }
 
     private boolean allowedStand(BlockCoord stand) {
@@ -412,6 +393,7 @@ public final class FillSession {
                 noStand++;
                 skipped++;
                 tally.skipped();
+                brokenY = Math.min(brokenY, current == null ? Integer.MAX_VALUE : current.y());
                 releaseAndAdvance();
                 state = State.PICK;
             }
@@ -428,6 +410,7 @@ public final class FillSession {
         BlockPlacer.Begin begin = placer.begin(pos, wanted, blockId);
         if (begin instanceof BlockPlacer.Started) {
             placed++;
+            passPlaced++;
             tally.placed(blockId);
             releaseAndAdvance();
             state = State.PICK;
@@ -437,6 +420,7 @@ public final class FillSession {
             protectedSkipped++;
             skipped++;
             tally.skipped();
+            brokenY = Math.min(brokenY, current.y());
             releaseAndAdvance();
             state = State.PICK;
             if (placed == 0 && cursor >= order.size()) {
@@ -456,12 +440,6 @@ public final class FillSession {
                         + "; поставлено " + placed + " из " + order.size());
             }
             case OCCUPIED, NO_SUPPORT -> {
-                if (deferred.merge(current, 1, Integer::sum) <= MAX_DEFERRALS) {
-                    order.add(current);
-                    releaseAndAdvance();
-                    state = State.PICK;
-                    return;
-                }
                 if (skipped < NO_STAND_LOGGED) {
                     LOGGER.info(
                             "[fill] {}: {} не поставить: {} (дух в {})",
@@ -472,6 +450,7 @@ public final class FillSession {
                 }
                 skipped++;
                 tally.skipped();
+                brokenY = Math.min(brokenY, current.y());
                 releaseAndAdvance();
                 state = State.PICK;
             }
@@ -486,6 +465,7 @@ public final class FillSession {
                 }
                 skipped++;
                 tally.skipped();
+                brokenY = Math.min(brokenY, current.y());
                 releaseAndAdvance();
                 state = State.PICK;
             }
@@ -493,6 +473,7 @@ public final class FillSession {
                 noStand++;
                 skipped++;
                 tally.skipped();
+                brokenY = Math.min(brokenY, current.y());
                 releaseAndAdvance();
                 state = State.PICK;
             }
@@ -507,12 +488,24 @@ public final class FillSession {
         if (failed > 0) {
             return;
         }
-        if (placed == 0) {
-            fail(summary() + "; ни один блок не поставлен");
+        if (terrain.complete()) {
+            tally.supplies(placed, 0);
+            outcome = Outcome.SUCCEEDED;
             return;
         }
-        tally.supplies(placed, 0);
-        outcome = Outcome.SUCCEEDED;
+        fail(summary());
+    }
+
+    private boolean replan() {
+        order.clear();
+        order.addAll(terrain.plan(spiritCoord()).cells());
+        cursor = 0;
+        current = null;
+        currentStand = null;
+        pillar = null;
+        brokenY = Integer.MAX_VALUE;
+        passPlaced = 0;
+        return !order.isEmpty();
     }
 
     private Outcome fail(String reason) {
@@ -530,22 +523,9 @@ public final class FillSession {
     }
 
     private String summary() {
-        return "поставлено " + placed + " из " + order.size() + "; пропущено: " + skipped + " (без стоянки: " + noStand
-                + ", защищено: " + protectedSkipped + ", занято другим духом: " + foreignSkipped + ")";
-    }
-
-    private Set<BlockCoord> spiritCells() {
-        BlockPos feet = spirit.blockPosition();
-        Set<BlockCoord> cells = new HashSet<>();
-        BlockCoord legs = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-        BlockCoord head = new BlockCoord(feet.getX(), feet.getY() + 1, feet.getZ());
-        if (region.contains(legs)) {
-            cells.add(legs);
-        }
-        if (region.contains(head)) {
-            cells.add(head);
-        }
-        return cells;
+        return "не все клетки засыпаны: поставлено " + placed + " из " + region.size() + "; пропущено: " + skipped
+                + " (без стоянки: " + noStand + ", защищено: " + protectedSkipped + ", занято другим духом: "
+                + foreignSkipped + ")";
     }
 
     private boolean insideBox(BlockPos pos) {

@@ -77,7 +77,7 @@ public final class BlockPlacer {
         }
         BlockState current = level.getBlockState(target);
         boolean action = SchematicActions.isActionPlaced(blockId);
-        if (!action && !current.isAir() && !current.canBeReplaced()) {
+        if (!action && !replaceable(current)) {
             return new Refused(
                     RefuseReason.OCCUPIED,
                     "клетка " + target.toShortString() + " занята блоком " + BlockStates.idOf(current)
@@ -142,6 +142,10 @@ public final class BlockPlacer {
             SettlementChestWatch.placed(server, target, level.getBlockState(target));
         }
         return new Started(target.immutable());
+    }
+
+    private static boolean replaceable(BlockState state) {
+        return state.isAir() || state.canBeReplaced() || !state.getFluidState().isEmpty();
     }
 
     private static Begin farmland(SpiritEntity spirit, Level level, BlockPos target) {
