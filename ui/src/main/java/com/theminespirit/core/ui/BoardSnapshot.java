@@ -1,6 +1,7 @@
 package com.theminespirit.core.ui;
 
 import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.rest.BoardListings;
 import com.theminespirit.core.rest.BoardTask;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -96,24 +97,7 @@ public final class BoardSnapshot {
     }
 
     public static BoardTileGroup groupOf(BoardTask task, Set<String> unfinishedIds) {
-        Objects.requireNonNull(task, "task не может быть null: группу определяют по заданию");
-        Objects.requireNonNull(unfinishedIds, "unfinishedIds не может быть null: нет заданий — пустое множество");
-        if (task.done() || BoardStatus.DONE.name().equals(task.status())) {
-            return BoardTileGroup.DONE;
-        }
-        String status = task.status();
-        if (BoardStatus.ASSIGNED.name().equals(status)) {
-            return BoardTileGroup.ACTIVE;
-        }
-        if (!BoardStatus.PENDING.name().equals(status) || !task.missing().isEmpty()) {
-            return BoardTileGroup.WAITING;
-        }
-        for (String dependency : task.dependsOn()) {
-            if (unfinishedIds.contains(dependency)) {
-                return BoardTileGroup.WAITING;
-            }
-        }
-        return BoardTileGroup.AVAILABLE;
+        return BoardListings.groupOf(task, unfinishedIds);
     }
 
     private static List<String> detailsOf(List<String> modifiers, @Nullable List<String> target) {

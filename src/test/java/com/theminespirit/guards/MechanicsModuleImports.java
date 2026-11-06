@@ -16,7 +16,14 @@ final class MechanicsModuleImports {
             Pattern.compile("^\\s*import\\s+(?:static\\s+)?([\\w.*]+)\\s*;", Pattern.MULTILINE);
     private static final Pattern PACKAGE = Pattern.compile("^\\s*package\\s+([\\w.]+)\\s*;", Pattern.MULTILINE);
     private static final List<String> ALLOWED_PREFIXES = List.of(
-            "java.", "com.fasterxml.", "org.jspecify.", "org.junit.", "org.opentest4j.", "net.jqwik.", "com.tngtech.");
+            "java.",
+            "javax.",
+            "com.fasterxml.",
+            "org.jspecify.",
+            "org.junit.",
+            "org.opentest4j.",
+            "net.jqwik.",
+            "com.tngtech.");
 
     private MechanicsModuleImports() {}
 

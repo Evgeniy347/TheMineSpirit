@@ -1,8 +1,7 @@
 package com.theminespirit.core.rest;
 
-import com.theminespirit.core.ui.BoardSnapshot;
+import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.ui.BoardTileGroup;
-import com.theminespirit.core.ui.BoardVersion;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -13,8 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 
 public final class BoardListings {
+    private static final long FNV_OFFSET = 0xcbf29ce484222325L;
+    private static final long FNV_PRIME = 0x100000001b3L;
     private static final Comparator<BoardTask> ORDER =
             Comparator.comparingLong(BoardTask::createdAt).thenComparing(BoardTask::id);
 
@@ -40,7 +42,7 @@ public final class BoardListings {
             if (!matches(task, query)) {
                 continue;
             }
-            BoardTileGroup group = BoardSnapshot.groupOf(task, unfinished);
+            BoardTileGroup group = groupOf(task, unfinished);
             groups.merge(group, 1, Integer::sum);
             if (query.group() != null && group != query.group()) {
                 continue;
@@ -52,7 +54,59 @@ public final class BoardListings {
         int to = Math.min(from + query.limit(), total);
         List<BoardTask> page = List.copyOf(filtered.subList(from, to));
         String nextCursor = to < total ? cursorOf(to) : null;
-        return new BoardListing(page, total, from, query.limit(), groups, nextCursor, BoardVersion.ofTasks(sorted));
+        return new BoardListing(page, total, from, query.limit(), groups, nextCursor, versionOf(sorted));
+    }
+
+    public static BoardTileGroup groupOf(BoardTask task, Set<String> unfinishedIds) {
+        Objects.requireNonNull(task, "task не может быть null: группу определяют по заданию");
+        Objects.requireNonNull(unfinishedIds, "unfinishedIds не может быть null: нет заданий — пустое множество");
+        if (task.done() || BoardStatus.DONE.name().equals(task.status())) {
+            return BoardTileGroup.DONE;
+        }
+        String status = task.status();
+        if (BoardStatus.ASSIGNED.name().equals(status)) {
+            return BoardTileGroup.ACTIVE;
+        }
+        if (!BoardStatus.PENDING.name().equals(status) || !task.missing().isEmpty()) {
+            return BoardTileGroup.WAITING;
+        }
+        for (String dependency : task.dependsOn()) {
+            if (unfinishedIds.contains(dependency)) {
+                return BoardTileGroup.WAITING;
+            }
+        }
+        return BoardTileGroup.AVAILABLE;
+    }
+
+    public static long versionOf(List<BoardTask> tasks) {
+        Objects.requireNonNull(tasks, "tasks не может быть null: версия доски считается по её заданиям");
+        long hash = FNV_OFFSET;
+        for (BoardTask task : tasks) {
+            hash = mix(hash, task.id());
+            hash = mix(hash, task.boardCase());
+            hash = mix(hash, task.status());
+            hash = mix(hash, task.assignee() == null ? "-" : task.assignee());
+            hash = mix(hash, Long.toString(task.createdAt()));
+            hash = mix(hash, Boolean.toString(task.done()));
+            hash = mix(hash, Integer.toString(task.level()));
+            hash = mix(hash, Integer.toString(task.effectivePriority()));
+            for (String dependency : task.dependsOn()) {
+                hash = mix(hash, "d:" + dependency);
+            }
+            for (Map.Entry<String, Integer> entry : new TreeMap<>(task.missing()).entrySet()) {
+                hash = mix(hash, "m:" + entry.getKey() + "=" + entry.getValue());
+            }
+        }
+        return hash;
+    }
+
+    private static long mix(long hash, String value) {
+        long next = hash;
+        for (int index = 0; index < value.length(); index++) {
+            next ^= value.charAt(index);
+            next *= FNV_PRIME;
+        }
+        return (next ^ 0x1fL) * FNV_PRIME;
     }
 
     public static String cursorOf(int offset) {

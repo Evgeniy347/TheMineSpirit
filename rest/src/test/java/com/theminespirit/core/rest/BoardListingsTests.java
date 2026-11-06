@@ -8,7 +8,6 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.LiveBoardFixture;
 import com.theminespirit.core.board.StockView;
-import com.theminespirit.core.ui.BoardSnapshot;
 import com.theminespirit.core.ui.BoardTileGroup;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -78,7 +77,7 @@ class BoardListingsTests {
                 "Порция колонки обязана уважать limit: " + listing.tasks().size());
         assertTrue(
                 listing.tasks().stream()
-                        .allMatch(task -> BoardSnapshot.groupOf(task, unfinished) == BoardTileGroup.WAITING),
+                        .allMatch(task -> BoardListings.groupOf(task, unfinished) == BoardTileGroup.WAITING),
                 "Фильтр group обязан отдавать только задания колонки WAITING");
         assertEquals(
                 listing.groups().get(BoardTileGroup.WAITING),

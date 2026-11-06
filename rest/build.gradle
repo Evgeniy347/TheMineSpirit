@@ -1,0 +1,10 @@
+plugins {
+    id 'theminespirit.module'
+}
+
+dependencies {
+    implementation project(':board')
+    implementation project(':tactics')
+    implementation project(':content')
+    implementation project(':policy')
+}
