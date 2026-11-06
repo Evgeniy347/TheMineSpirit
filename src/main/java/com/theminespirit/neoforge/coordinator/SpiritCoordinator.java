@@ -229,7 +229,7 @@ public final class SpiritCoordinator {
             spirit.tactics().setWard(null);
             return;
         }
-        if (current != null) {
+        if (current != null && current.equals(ours)) {
             spirit.tactics().holdDirective();
         }
     }
