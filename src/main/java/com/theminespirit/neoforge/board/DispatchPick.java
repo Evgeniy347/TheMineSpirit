@@ -10,6 +10,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.hunger.SpiritHunger;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -34,7 +35,11 @@ final class DispatchPick {
             candidates.put(spirit.getUUID(), candidate(spirit, stockTools));
             round.board()
                     .stuck()
-                    .see(spirit.getUUID(), at(spirit), round.board().now());
+                    .see(
+                            spirit.getUUID(),
+                            at(spirit),
+                            round.board().now(),
+                            DigOutScript.open(spirit.level(), spirit.blockPosition()));
         }
     }
 

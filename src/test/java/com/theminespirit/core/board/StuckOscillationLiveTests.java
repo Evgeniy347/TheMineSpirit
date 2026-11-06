@@ -35,11 +35,11 @@ class StuckOscillationLiveTests {
     }
 
     @Test
-    void see_SpiritLeavingArea_ClearsStuckMark() throws IOException {
+    void see_SpiritWanderingFarInsidePit_KeepsStuckMark() throws IOException {
         JsonNode live = new ObjectMapper().readTree(Files.readString(LIVE, StandardCharsets.UTF_8));
         UUID spirit = UUID.fromString(live.get("spirit").asText());
         BlockCoord first = coord(live.get("positions").get(0));
-        BlockCoord far = new BlockCoord(first.x() + StuckSpirits.AREA_RADIUS + 1, first.y(), first.z());
+        BlockCoord far = new BlockCoord(first.x() + 12, first.y() - 4, first.z());
         StuckSpirits stuck = new StuckSpirits();
         stuck.see(spirit, first);
         stuck.mark(spirit, 100);
@@ -47,9 +47,28 @@ class StuckOscillationLiveTests {
         stuck.see(spirit, far);
 
         assertFalse(
+                stuck.drainChanges().stream().anyMatch(change -> !change.marked()),
+                "Сдвиг внутри ямы не выдаётся за выход: метка снимается только по поверхности (observe24 B1)");
+        assertTrue(
                 stuck.isStuck(spirit, 100),
-                "Дух ушёл дальше " + StuckSpirits.AREA_RADIUS + " блоков: метка застревания снимается, иначе он "
-                        + "навсегда выпадает из раздачи");
+                "Ушёл далеко, но остался в ловушке: метка держится, иначе дух снова получит работу в яме");
+    }
+
+    @Test
+    void see_SpiritReachedSurface_ClearsStuckMark() throws IOException {
+        JsonNode live = new ObjectMapper().readTree(Files.readString(LIVE, StandardCharsets.UTF_8));
+        UUID spirit = UUID.fromString(live.get("spirit").asText());
+        BlockCoord first = coord(live.get("positions").get(0));
+        BlockCoord surface = new BlockCoord(first.x() + 4, first.y(), first.z());
+        StuckSpirits stuck = new StuckSpirits();
+        stuck.see(spirit, first);
+        stuck.mark(spirit, 100);
+
+        stuck.see(spirit, surface, 0, true);
+
+        assertFalse(
+                stuck.isStuck(spirit, 100),
+                "Дух вышел на поверхность: метка застревания снимается, иначе он навсегда выпадает из раздачи");
     }
 
     private static BlockCoord coord(JsonNode node) {

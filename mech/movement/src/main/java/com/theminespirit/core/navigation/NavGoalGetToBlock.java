@@ -37,6 +37,11 @@ public final class NavGoalGetToBlock implements NavGoal {
     }
 
     @Override
+    public Integer goalY() {
+        return y;
+    }
+
+    @Override
     public boolean equals(Object other) {
         if (!(other instanceof NavGoalGetToBlock goal)) {
             return false;

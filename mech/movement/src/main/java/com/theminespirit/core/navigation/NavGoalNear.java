@@ -39,6 +39,11 @@ public final class NavGoalNear implements NavGoal {
     }
 
     @Override
+    public Integer goalY() {
+        return y;
+    }
+
+    @Override
     public boolean equals(Object other) {
         if (!(other instanceof NavGoalNear goal)) {
             return false;

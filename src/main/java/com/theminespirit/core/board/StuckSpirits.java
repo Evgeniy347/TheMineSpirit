@@ -11,7 +11,6 @@ import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 public final class StuckSpirits {
-    public static final int AREA_RADIUS = 4;
     private static final int MAX_CHANGES = 64;
 
     public record Stuck(@Nullable BlockCoord at, long since, boolean noPath) {
@@ -41,32 +40,29 @@ public final class StuckSpirits {
     private long restoredAt;
 
     public void see(UUID spirit, BlockCoord at) {
-        see(spirit, at, 0);
+        see(spirit, at, 0, false);
     }
 
     public void see(UUID spirit, BlockCoord at, long now) {
+        see(spirit, at, now, false);
+    }
+
+    public void see(UUID spirit, BlockCoord at, long now, boolean escaped) {
         Objects.requireNonNull(spirit, "Дух не может быть null: позиция наблюдается у конкретного духа");
         Objects.requireNonNull(at, "Позиция не может быть null: по ней видно, сдвинулся ли дух");
-        BlockCoord previous = seen.put(spirit, at);
+        seen.put(spirit, at);
         Stuck known = stuck.get(spirit);
         if (known == null) {
             return;
         }
-        BlockCoord origin = known.at() == null ? previous : known.at();
-        if (origin != null && !near(origin, at)) {
+        if (escaped) {
             stuck.remove(spirit);
-            note(spirit, at, now, false, "сдвинулся с " + origin + " на " + at);
+            note(spirit, at, now, false, "вышел на поверхность: с " + at + " (метка с тика " + known.since() + ")");
             return;
         }
         if (known.at() == null) {
             stuck.put(spirit, new Stuck(at, known.since(), known.noPath()));
         }
-    }
-
-    private static boolean near(BlockCoord origin, BlockCoord at) {
-        return Math.abs(origin.x() - at.x()) <= AREA_RADIUS
-                && Math.abs(origin.y() - at.y()) <= AREA_RADIUS
-                && Math.abs(origin.z() - at.z()) <= AREA_RADIUS;
     }
 
     public void mark(UUID spirit, long now) {
