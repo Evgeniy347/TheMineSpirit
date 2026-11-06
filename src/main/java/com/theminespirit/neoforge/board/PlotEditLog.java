@@ -60,9 +60,10 @@ public final class PlotEditLog {
         if (!(breaker instanceof SpiritEntity spirit) || !(spirit.level() instanceof ServerLevel server)) {
             return "—";
         }
-        return BoardRegistry.peek(server)
+        String boardTask = BoardRegistry.peek(server)
                 .map(service -> BoardLog.culprit(service.board().assignedTo(spirit.getUUID())))
-                .orElse("—");
+                .orElse(null);
+        return BoardLog.culpritOrAction(boardTask, spirit.currentTaskScript().orElse(null));
     }
 
     private static Plan plan(StageSite site) {

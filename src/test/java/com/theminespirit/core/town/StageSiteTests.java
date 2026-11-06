@@ -243,4 +243,57 @@ class StageSiteTests {
                         site.anchor().z() + 1000),
                 "За пределами плана добыча остаётся разрешённой: иначе духи не добудут землю вовсе");
     }
+
+    @Test
+    void planCell_TreeAboveMineLot_NotPlan() {
+        int x = SITE.mine().x() + SITE.mine().width() / 2;
+        int z = SITE.mine().z() + SITE.mine().depth() / 2;
+        int above = SITE.anchor().y() + StageSite.BUILDING_HEIGHT + 10;
+
+        assertTrue(
+                SITE.planCell(x, SITE.anchor().y(), z),
+                "Колонка лота шахты у земли — план: спуск и его вход принадлежат постройке");
+        assertFalse(
+                SITE.planCell(x, above, z),
+                "Дерево над лотом шахты (y=" + above + ") — не клетка плана: иначе рубка отказывается целиком "
+                        + "(observe24: бревно y=97 над лотом шахты, 4 отказа, дерево не срублено)");
+    }
+
+    @Test
+    void planCell_RingPostColumn_OnlyAtFenceHeight() {
+        ColumnMask.Cell post = SITE.ring().posts().iterator().next();
+        int above = SITE.anchor().y() + StageSite.BUILDING_HEIGHT + 10;
+
+        assertTrue(
+                SITE.planCell(post.x(), SITE.anchor().y(), post.z()),
+                "Столб ограды у земли — клетка плана: его нельзя выломать случайной уборкой");
+        assertFalse(
+                SITE.planCell(post.x(), above, post.z()),
+                "Столб ограды не занимает бесконечную колонку: дерево над ним рубится, а не считается планом");
+        assertFalse(
+                SITE.planCell(post.x(), SITE.anchor().y() - 10, post.z()),
+                "Под землёй столба ограды нет: глубокую клетку той же колонки план не защищает");
+        assertEquals(
+                PlanBuilding.NONE,
+                SITE.planBuilding(post.x(), above, post.z()),
+                "Имя постройки над оградой не выдаётся: иначе защита считает дерево частью забора");
+    }
+
+    @Test
+    void planCell_LiveObserve24TreeAboveMine_NotPlan() throws IOException {
+        String text = Files.readString(Path.of("src/test/resources/live/observe24/town-plan.txt"))
+                .replace("\r\n", "\n");
+        TownPlan plan = TownPlanCodec.decode(text);
+        StageSite site = StageSites.of(plan, 1, plan.anchor().y(), TownRules.load());
+
+        assertTrue(
+                site.mine().covers(-163, -507),
+                "Живой план observe24: дерево (-163,85,-507) стоит над лотом шахты " + site.mine());
+        assertFalse(
+                site.planCell(-163, 97, -507),
+                "Живой случай observe24: бревно y=97 над лотом шахты — не план, дерево рубится целиком");
+        assertTrue(
+                site.planCell(-163, plan.anchor().y(), -507),
+                "Предусловие: у земли та же колонка остаётся планом шахты");
+    }
 }

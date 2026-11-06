@@ -3,6 +3,8 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.RepairAudit;
 import com.theminespirit.core.building.BuildRotation;
+import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicWood;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairData;
@@ -22,13 +24,17 @@ final class RepairAuditWatch {
 
     private RepairAuditWatch() {}
 
-    static RepairAudit.@Nullable Report houseReport(ServerLevel level, StageSite site, long now) {
+    static Schematic wanted(String scheme, String wood) {
+        return SchematicWood.swap(SchematicResources.load(scheme), wood);
+    }
+
+    static RepairAudit.@Nullable Report houseReport(ServerLevel level, StageSite site, String wood, long now) {
         Optional<String> scheme = DataTables.INSTANCE.stages().current().scheme(BoardCase.BUILD_HOUSE, 1);
         if (scheme.isEmpty()) {
             return null;
         }
         return RepairAudit.audit(
-                SchematicResources.load(scheme.orElseThrow()),
+                wanted(scheme.orElseThrow(), wood),
                 site.houseOrigin(),
                 BuildRotation.NONE,
                 new LevelWorld(level),

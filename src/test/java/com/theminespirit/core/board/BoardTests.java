@@ -789,6 +789,36 @@ class BoardTests {
                 "Вытеснено самое старое невыданное задание");
     }
 
+    @Test
+    void evictOverflow_AlwaysRepair_IsSparedBeforeWorldCleanup() {
+        Board board = boardAt(0);
+        board.submit(ticket("repair:build_mine", BoardCase.REPAIR_BUILDING, 0, List.of()));
+        for (int index = 0; index <= BoardTuning.MAX_PENDING; index++) {
+            board.submit(new BoardTicket(
+                    "world_fill_" + index,
+                    BoardCase.FILL_CRATER,
+                    Optional.empty(),
+                    BoardRules.priorityOf(BoardCase.FILL_CRATER),
+                    index + 1,
+                    1,
+                    "graph:event:backfill:backfill",
+                    List.of(),
+                    Map.of()));
+        }
+
+        board.prune(0);
+
+        assertEquals(
+                Optional.of(BoardStatus.PENDING),
+                board.statusOf("repair:build_mine"),
+                "Постоянный ремонт шахты не вытесняется потоком засыпок: иначе repair:build_mine снимается "
+                        + "каждый пересчёт, и шахта 75→74% стоит без ремонта");
+        assertEquals(
+                Optional.of(BoardStatus.CANCELLED),
+                board.statusOf("world_fill_0"),
+                "Переполнение разгружают задачи мира, а не постоянный ремонт");
+    }
+
     @Property
     void all_AfterThousandOps_IsDeterministic(@ForAll long seed) {
         assertEquals(
