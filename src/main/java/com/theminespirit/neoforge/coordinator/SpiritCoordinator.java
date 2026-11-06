@@ -12,6 +12,7 @@ import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkReservations;
+import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.CombatMode;
@@ -226,6 +227,10 @@ public final class SpiritCoordinator {
         if (ours != null && ours.mode() == CombatMode.AGGRESSIVE && ours.equals(current)) {
             spirit.tactics().clearDirective(DirectiveOwner.COORDINATOR);
             spirit.tactics().setWard(null);
+            return;
+        }
+        if (current != null) {
+            spirit.tactics().holdDirective();
         }
     }
 
@@ -241,17 +246,26 @@ public final class SpiritCoordinator {
             if (spirit == null || spirit.isRemoved()) {
                 continue;
             }
-            if (spirit.currentTaskScript().isPresent()
-                    && spirit.tactics()
-                            .activeDirective()
-                            .map(current -> !current.equals(last))
-                            .orElse(false)) {
+            CombatDirective current = spirit.tactics().activeDirective().orElse(null);
+            if (busy(spirit) && current != null) {
+                if (current.equals(last)) {
+                    spirit.tactics().holdDirective();
+                }
+                continue;
+            }
+            if (spirit.currentTaskScript().isPresent() && current != null && !current.equals(last)) {
                 continue;
             }
             spirit.tactics().clearDirective(DirectiveOwner.COORDINATOR);
             spirit.tactics().clearGuardZone();
             spirit.tactics().setWard(null);
         }
+    }
+
+    private static boolean busy(SpiritEntity spirit) {
+        return spirit.currentTaskScript().isPresent()
+                || spirit.currentPlan().isPresent()
+                || spirit.taskStatus().orElse(null) == RunStatus.RUNNING;
     }
 
     private void applyDirectiveToSpirit(SpiritEntity spirit, CombatDirective d, String forcedTargetId) {

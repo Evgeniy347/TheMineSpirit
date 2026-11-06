@@ -19,6 +19,7 @@ import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -130,10 +131,11 @@ public final class GraphSource {
         }
         report(half.plan(), half.result(), unconnected, freeSpirit(half), half.now());
         decisionLog.note(half.plan(), half.now());
+        decisionLog.noteFailures(half.state(), half.now());
         reportWorld(half.level(), half.state(), half.now());
-        reportMine(half.level(), half.service(), half.graph(), half.state(), half.scan(), half.now());
+        reportBuilds(half.level(), half.service(), half.graph(), half.state(), half.scan(), half.now());
         if (half.deep()) {
-            String buildings = new TreeMap<>(half.state().buildings()) + " "
+            String buildings = buildingsText(half) + " "
                     + half.plan().tasks().stream()
                             .filter(task -> task.id().startsWith("building:"))
                             .map(task -> readiness(
@@ -225,6 +227,22 @@ public final class GraphSource {
         return task.feasible() ? "" : "?(" + GraphWhy.building(graph, state, task.makes()) + ")";
     }
 
+    private static String buildingsText(Half half) {
+        Map<String, String> shown = new TreeMap<>();
+        half.state().buildings().forEach((id, state) -> shown.put(id, state.toString()));
+        for (String id : List.of("mine", "wheat_field", "streets")) {
+            GraphObserve.progressOf(half.level(), half.service(), half.graph(), half.state(), half.scan(), id)
+                    .filter(progress -> progress.total() > 0)
+                    .ifPresent(progress -> {
+                        int percent = progress.done() * 100 / progress.total();
+                        shown.put(
+                                id,
+                                shown.get(id) + " " + percent + "%(" + progress.done() + "/" + progress.total() + ")");
+                    });
+        }
+        return shown.toString();
+    }
+
     private void reportWorld(ServerLevel level, GraphState state, long now) {
         GraphObserve.remember(state);
         if (notes.due("world", now)) {
@@ -232,15 +250,15 @@ public final class GraphSource {
         }
     }
 
-    private void reportMine(
+    private void reportBuilds(
             ServerLevel level,
             BoardService service,
             SupplyGraph graph,
             GraphState state,
             FirstStepsRunner.StageScan scan,
             long now) {
-        if (notes.due("plot:mine", now)) {
-            GraphObserve.mine(level, service, graph, state, scan);
+        if (notes.due("plot:builds", now)) {
+            GraphObserve.builds(level, service, graph, state, scan);
         }
     }
 

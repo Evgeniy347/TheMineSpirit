@@ -22,7 +22,7 @@ gametest/GameTestFixtures.java	354
 gametest/HouseMovementGameTests.java	365
 gametest/RestFixture.java	310
 neoforge/BlockBreaker.java	393
-neoforge/BuildSchematicScript.java	1180
+neoforge/BuildSchematicScript.java	1182
 neoforge/ChopTreeScript.java	343
 neoforge/ClearAreaSession.java	541
 neoforge/DescentSession.java	359
@@ -36,7 +36,9 @@ neoforge/SchematicSite.java	364
 neoforge/SpiritEntity.java	749
 neoforge/SpiritScripts.java	384
 neoforge/WorldScanner.java	306
-neoforge/board/BoardService.java	1005
+neoforge/board/BoardService.java	1012
+neoforge/board/GraphSource.java	317
+neoforge/coordinator/SpiritCoordinator.java	306
 neoforge/board/FirstStepsRunner.java	686
 neoforge/board/TransferWatch.java	569
 neoforge/crafting/CraftScript.java	383
@@ -46,7 +48,7 @@ neoforge/husbandry/HerdSession.java	436
 neoforge/husbandry/HiveSession.java	410
 neoforge/movement/ExploreScript.java	309
 neoforge/repair/RepairScript.java	304
-neoforge/tactics/TacticsService.java	649
+neoforge/tactics/TacticsService.java	665
 core/board/AnimalLifecycleTests.java	303
 core/board/BoardConfigTests.java	401
 core/board/BoardLogTests.java	422
@@ -76,7 +78,7 @@ core/tactics/FactorTests.java	422
 core/tactics/TacticsConfigTests.java	370
 core/task/TaskReconcilerTests.java	368
 core/task/TaskRegistryTests.java	312
-guards/DependencyVersionGuardTests.java	364
+guards/DependencyVersionGuardTests.java	399
 guards/GameTestIsolationGuardTests.java	352
 guards/GameTestTimeoutGuardTests.java	484
 guards/ProductionCommentGuardTests.java	575

@@ -366,6 +366,13 @@ public final class BoardService {
 
     private record Capture(Species species, UUID animal, String cause, TicketTarget penTarget) {}
 
+    public Optional<TicketTarget> targetOf(String ticketId) {
+        if (ticketId == null) {
+            throw new IllegalArgumentException("ticketId не может быть null: цель ищется у конкретного задания");
+        }
+        return Optional.ofNullable(targets.get(ticketId));
+    }
+
     public BoardOutcome submit(BoardTicket ticket, TicketTarget target) {
         BoardOutcome outcome = board.submit(ticket);
         if (outcome == BoardOutcome.ACCEPTED) {

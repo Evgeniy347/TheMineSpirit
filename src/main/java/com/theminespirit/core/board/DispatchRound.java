@@ -4,6 +4,7 @@ import com.theminespirit.core.plan.TaskNode;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -222,18 +223,42 @@ public final class DispatchRound {
     }
 
     public String why(BoardTicket ticket, List<Candidate> spirits, @Nullable String supplyItem) {
-        List<String> parts = new ArrayList<>();
+        List<String> blockers = new ArrayList<>();
+        List<String> busy = new ArrayList<>();
+        int eligible = 0;
         for (Candidate spirit : spirits) {
             if (ticket.assignee().filter(owner -> !owner.equals(spirit.id())).isPresent()) {
                 continue;
             }
-            parts.add(
-                    spirit.name() + " — " + refusal(ticket, spirit, supplyItem).orElse("свободен, но выдача отложена"));
+            eligible++;
+            String reason = refusal(ticket, spirit, supplyItem).orElse(null);
+            if (reason == null) {
+                blockers.add(spirit.name() + " — свободен, но выдача отложена");
+            } else if (reason.startsWith("занят: ")) {
+                busy.add(reason.substring("занят: ".length()));
+            } else {
+                blockers.add(spirit.name() + " — " + reason);
+            }
         }
-        if (parts.isEmpty()) {
+        if (eligible == 0) {
             return ticket.assignee().isPresent() ? "своего духа нет в мире" : "нет духов";
         }
-        return String.join("; ", parts);
+        if (blockers.isEmpty()) {
+            return "ждёт свободного духа: заняты " + eligible + " (" + distinct(busy, 4) + ")";
+        }
+        String text = "ждёт духа: " + String.join("; ", blockers);
+        if (!busy.isEmpty()) {
+            text += "; ещё занято " + busy.size();
+        }
+        return text;
+    }
+
+    private static String distinct(List<String> values, int limit) {
+        List<String> unique = new ArrayList<>(new LinkedHashSet<>(values));
+        if (unique.size() <= limit) {
+            return String.join(", ", unique);
+        }
+        return String.join(", ", unique.subList(0, limit)) + ", …";
     }
 
     private String heldIds(UUID spirit) {
