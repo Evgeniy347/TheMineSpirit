@@ -15,6 +15,7 @@ def moduleTests = file('src/test/java')
 tasks.named('test', Test) {
     onlyIf { moduleTests.exists() }
     failOnNoDiscoveredTests = moduleTests.exists() && !project.hasProperty('theminespirit.filtered')
+    filter { setFailOnNoMatchingTests(!project.hasProperty('theminespirit.filtered')) }
     workingDir = rootProject.projectDir
     useJUnitPlatform {
         excludeTags 'slow', 'mutation', 'export'

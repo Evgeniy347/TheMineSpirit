@@ -1,81 +1,107 @@
 package com.theminespirit.guards;
 
+import static com.theminespirit.guards.MechanicsModuleImports.apiClasses;
+import static com.theminespirit.guards.MechanicsModuleImports.violations;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class BoardModuleGuardTests {
-    private static final Pattern RELOAD_IMPORT = Pattern.compile(
-            "^\\s*import\\s+(?:static\\s+)?com\\.theminespirit\\.core\\.reload\\.([\\w*]+)\\s*;", Pattern.MULTILINE);
-    private static final Pattern IMPORT = Pattern.compile(
-            "^\\s*import\\s+(?:static\\s+)?com\\.theminespirit\\.(core\\.[\\w.]+)\\s*;", Pattern.MULTILINE);
+    private static final Path MAIN = Path.of("board/src/main/java");
+    private static final Path TEST = Path.of("board/src/test/java");
+    private static final Path PACKAGE = Path.of("com/theminespirit");
+    private static final List<String> OWN_PACKAGES = List.of("core.board", "core.board.graph");
+    private static final List<String> MECHANIC_PACKAGES = List.of(
+            "core.building",
+            "core.town",
+            "core.movement",
+            "core.inventory",
+            "core.crafting",
+            "core.alchemy",
+            "core.armor",
+            "core.doors",
+            "core.experience",
+            "core.hunger",
+            "core.night",
+            "core.repair",
+            "core.sleep",
+            "core.social");
+    private static final List<String> TEST_MECHANIC_PACKAGES = List.of("core.forestry");
 
     @Test
-    void boardSources_ReloadImplementation_NotImported() {
-        List<String> found = new ArrayList<>();
-        SourceFiles.allMain().forEach((file, text) -> {
-            String logical = SourceFiles.logical(file);
-            if (!logical.startsWith("core/board/")) {
-                return;
+    void boardSources_LiveInBoardModule_NotInRoot() {
+        assertTrue(
+                Files.isDirectory(MAIN.resolve(PACKAGE).resolve("core/board")),
+                "Доска не собрана отдельным модулем: board/src/main/java/com/theminespirit/core/board "
+                        + "отсутствует. Как надо: исходники доски физически в :board, пакет прежний.");
+        List<String> misplaced = new ArrayList<>();
+        for (String logical : List.of(
+                "core/board/Board.java",
+                "core/board/BoardTicket.java",
+                "core/board/ToolGate.java",
+                "core/board/BoardTuning.java",
+                "core/board/WorkStand.java",
+                "core/board/graph/GraphPlanner.java")) {
+            Path file = SourceFiles.path(logical);
+            if (!file.normalize().startsWith(MAIN)) {
+                misplaced.add(logical + " → " + file);
             }
-            Matcher matcher = RELOAD_IMPORT.matcher(text);
-            while (matcher.find()) {
-                String contract = matcher.group(1);
-                if (contract.contains("*") || isApiContract(contract)) {
-                    continue;
-                }
-                found.add(logical + ": " + matcher.group().trim());
-            }
-        });
-
-        assertEquals(
-                List.of(),
-                found,
-                "Доска не должна зависеть от загрузчика таблиц (core.reload): иначе :board не собрать без корня, "
-                        + "а схема таблицы живёт не у владельца. Как надо: владелец таблицы отдаёт значение через "
-                        + "свой current()/useSource(), а reload только связывает его в DataTableBindings. "
-                        + "Нарушители:");
-    }
-
-    private static boolean isApiContract(String name) {
-        try {
-            return SourceFiles.path("core/reload/" + name + ".java").normalize().startsWith(SourceFiles.API);
-        } catch (IllegalArgumentException absent) {
-            return false;
         }
+        SourceFiles.allMain().forEach((file, text) -> {
+            String logical = SourceFiles.logical(file);
+            if (logical.startsWith("core/board/")
+                    && !file.normalize().startsWith(MAIN)
+                    && !file.normalize().startsWith(SourceFiles.API)) {
+                misplaced.add("вне :board: " + logical);
+            }
+        });
+        assertEquals(
+                List.of(),
+                misplaced,
+                "Классы доски обязаны лежать в :board (кроме контрактов :api): иначе правка доски снова гоняет "
+                        + "все тесты корня, а модуль не собирается сам. Нарушители:");
     }
 
     @Test
-    void boardSources_HusbandryAndMining_OnlyApiFacts() {
-        List<String> found = new ArrayList<>();
-        SourceFiles.allMain().forEach((file, text) -> {
-            String logical = SourceFiles.logical(file);
-            if (!logical.startsWith("core/board/")) {
-                return;
-            }
-            Matcher matcher = IMPORT.matcher(text);
-            while (matcher.find()) {
-                String name = matcher.group(1);
-                if (!name.startsWith("core.husbandry.") && !name.startsWith("core.mining.")) {
-                    continue;
-                }
-                Path target = SourceFiles.path(name.replace('.', '/') + ".java").normalize();
-                if (!target.startsWith(SourceFiles.API)) {
-                    found.add(logical + ": " + name + " → " + target);
-                }
-            }
-        });
+    void boardTests_LiveInBoardModule_LocalTestsExist() {
+        assertTrue(
+                Files.isDirectory(TEST.resolve(PACKAGE).resolve("core/board")),
+                "У :board нет своих тестов (board/src/test/java): перенос тестов молча отключил проверки доски.");
+        assertTrue(
+                Files.isRegularFile(TEST.resolve(PACKAGE).resolve("core/board/BoardRequireTests.java")),
+                "Тест BoardRequireTests обязан переехать в :board: иначе ./gradlew :board:test проверяет не доску.");
+    }
 
+    @Test
+    void boardModule_Imports_OnlyApiAndDeclaredMechanics() {
+        Set<String> apiClasses = apiClasses(SourceFiles.javaUnder(SourceFiles.apiPackage()));
+        List<String> visible = new ArrayList<>(OWN_PACKAGES);
+        visible.addAll(MECHANIC_PACKAGES);
         assertEquals(
                 List.of(),
-                found,
-                "Доска знает о скоте и шахте только факты из :api: иначе :board тянет механику и не собирается сам. "
-                        + "Как надо: словарь/факт (вид питомца, правила руды) перенеси в api/src/main/java с тем же "
-                        + "пакетом, реализацию механики оставь у владельца. Нарушители (файл → класс):");
+                violations(SourceFiles.javaUnder(MAIN.resolve(PACKAGE)), apiClasses, visible),
+                "Доска зависит только от :api и механик, которые сама объявила в build.gradle: импорт корня "
+                        + "(script/reload/neoforge) возвращает цикл и запрещает отдельную сборку :board. Как надо: "
+                        + "контракт — в :api, данные и действие — у владельца. Нарушители:");
+    }
+
+    @Test
+    void boardTests_Imports_OnlyApiAndDeclaredMechanics() {
+        Set<String> apiClasses = apiClasses(SourceFiles.javaUnder(SourceFiles.apiPackage()));
+        List<String> visible = new ArrayList<>(OWN_PACKAGES);
+        visible.addAll(MECHANIC_PACKAGES);
+        visible.addAll(TEST_MECHANIC_PACKAGES);
+        visible.add("testing");
+        assertEquals(
+                List.of(),
+                violations(SourceFiles.javaUnder(TEST.resolve(PACKAGE)), apiClasses, visible),
+                "Тест доски компилируется только с :api, своими и объявленными модулями: импорт корня в тесте "
+                        + "скрывает, что :board без корня не собрать. Нарушители:");
     }
 }

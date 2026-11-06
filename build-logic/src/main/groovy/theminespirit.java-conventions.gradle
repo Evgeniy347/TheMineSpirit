@@ -122,5 +122,6 @@ if (project != rootProject) {
     tasks.withType(Test).configureEach {
         reports.html.outputLocation = rootProject.file("TestResults/${project.name}/html")
         reports.junitXml.outputLocation = rootProject.file("TestResults/${project.name}/xml")
+        systemProperty 'theminespirit.testCost.csv', "TestResults/${project.name}/test-cost.csv"
     }
 }

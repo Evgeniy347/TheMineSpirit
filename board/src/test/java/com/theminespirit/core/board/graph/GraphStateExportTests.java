@@ -40,7 +40,7 @@ class GraphStateExportTests {
                 GraphFeedback.none());
         GraphState state = GraphWorld.empty().state().withFacts(facts).withOrders(Map.of("coal", 3));
 
-        String json = new ObjectMapper().writeValueAsString(GraphExportTests.state(state));
+        String json = new ObjectMapper().writeValueAsString(GraphStateJson.state(state));
 
         assertTrue(json.contains("\"facts\""), "Выгрузка обязана содержать новые факты графа");
         assertTrue(json.contains("\"spirit-1\""), "Выгрузка обязана содержать факты духа");

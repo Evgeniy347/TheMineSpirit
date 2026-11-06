@@ -25,4 +25,5 @@ tasks.named('test', Test) {
     systemProperty 'theminespirit.updateSnapshots',
             System.getProperty('theminespirit.updateSnapshots', System.getenv('THEMINESPIRIT_UPDATE_SNAPSHOTS') ?: 'false')
     failOnNoDiscoveredTests = !project.hasProperty('theminespirit.filtered')
+    filter { setFailOnNoMatchingTests(!project.hasProperty('theminespirit.filtered')) }
 }

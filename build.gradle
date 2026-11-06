@@ -64,6 +64,7 @@ base {
 
 sourceSets.main.output.classesDirs.from(provider {
     project(':api').sourceSets.main.output.classesDirs +
+            project(':board').sourceSets.main.output.classesDirs +
             project(':policy').sourceSets.main.output.classesDirs +
             project(':mech:mining').sourceSets.main.output.classesDirs +
             project(':mech:movement').sourceSets.main.output.classesDirs +
@@ -77,7 +78,7 @@ sourceSets.main.output.classesDirs.from(provider {
             project(':mech:town').sourceSets.main.output.classesDirs
 })
 tasks.named('classes') {
-    dependsOn ':api:classes', ':policy:classes'
+    dependsOn ':api:classes', ':board:classes', ':policy:classes'
     dependsOn ':mech:mining:classes', ':mech:movement:classes', ':mech:inventory:classes'
     dependsOn ':mech:farming:classes', ':mech:forestry:classes', ':mech:crafting:classes', ':mech:husbandry:classes'
     dependsOn ':mech:small:classes', ':mech:building:classes', ':mech:town:classes'
@@ -135,6 +136,7 @@ configurations {
 
 dependencies {
     implementation project(':api')
+    implementation project(':board')
     implementation project(':policy')
     implementation project(':mech:mining')
     implementation project(':mech:movement')
@@ -210,7 +212,7 @@ publishing {
 
 def unitTestThreads = (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}") as int
 tasks.named('test', Test) {
-    dependsOn ':api:test', ':policy:test'
+    dependsOn ':api:test', ':board:test', ':policy:test'
     dependsOn ':mech:mining:test', ':mech:movement:test', ':mech:inventory:test'
     dependsOn ':mech:farming:test', ':mech:forestry:test', ':mech:crafting:test', ':mech:husbandry:test'
     dependsOn ':mech:small:test', ':mech:building:test', ':mech:town:test'
@@ -230,12 +232,14 @@ tasks.named('test', Test) {
     systemProperty 'theminespirit.updateSnapshots',
             System.getProperty('theminespirit.updateSnapshots', System.getenv('THEMINESPIRIT_UPDATE_SNAPSHOTS') ?: 'false')
     failOnNoDiscoveredTests = !project.hasProperty('theminespirit.filtered')
+    filter { setFailOnNoMatchingTests(!project.hasProperty('theminespirit.filtered')) }
     reports.html.outputLocation = file('TestResults/unit/html')
     reports.junitXml.outputLocation = file('TestResults/unit/xml')
 }
 
 tasks.named('staticAnalysisFast') {
     dependsOn ':test-fixtures:staticAnalysisFast'
+    dependsOn ':board:staticAnalysisFast'
     dependsOn ':policy:staticAnalysisFast'
     dependsOn ':mech:mining:staticAnalysisFast', ':mech:movement:staticAnalysisFast', ':mech:inventory:staticAnalysisFast'
     dependsOn ':mech:farming:staticAnalysisFast'
@@ -246,6 +250,7 @@ tasks.named('staticAnalysisFast') {
 }
 tasks.named('staticAnalysis') {
     dependsOn ':test-fixtures:staticAnalysis'
+    dependsOn ':board:staticAnalysis'
     dependsOn ':policy:staticAnalysis'
     dependsOn ':mech:mining:staticAnalysis', ':mech:movement:staticAnalysis', ':mech:inventory:staticAnalysis'
     dependsOn ':mech:farming:staticAnalysis'
@@ -360,14 +365,14 @@ tasks.named('check') {
 }
 
 tasks.named('pmdMain') {
-    dependsOn ':api:pmdMain', ':test-fixtures:pmdMain', ':policy:pmdMain'
+    dependsOn ':api:pmdMain', ':board:pmdMain', ':test-fixtures:pmdMain', ':policy:pmdMain'
     dependsOn ':mech:mining:pmdMain', ':mech:movement:pmdMain', ':mech:inventory:pmdMain'
     dependsOn ':mech:farming:pmdMain', ':mech:forestry:pmdMain', ':mech:crafting:pmdMain', ':mech:husbandry:pmdMain'
     dependsOn ':mech:small:pmdMain', ':mech:building:pmdMain', ':mech:town:pmdMain'
 }
 
 tasks.named('pmdTest') {
-    dependsOn ':api:pmdTest', ':test-fixtures:pmdTest', ':policy:pmdTest'
+    dependsOn ':api:pmdTest', ':board:pmdTest', ':test-fixtures:pmdTest', ':policy:pmdTest'
     dependsOn ':mech:mining:pmdTest', ':mech:movement:pmdTest', ':mech:inventory:pmdTest'
     dependsOn ':mech:farming:pmdTest', ':mech:forestry:pmdTest', ':mech:crafting:pmdTest', ':mech:husbandry:pmdTest'
     dependsOn ':mech:small:pmdTest', ':mech:building:pmdTest', ':mech:town:pmdTest'

@@ -48,7 +48,7 @@ final class SimulationSample {
         for (Case sample : cases()) {
             Map<String, Object> entry = new LinkedHashMap<>();
             entry.put("name", sample.name());
-            entry.put("state", GraphExportTests.state(sample.world().state()));
+            entry.put("state", GraphStateJson.state(sample.world().state()));
             entry.put("limit", sample.limit());
             entry.put("steps", sample.outcome().steps());
             entry.put("finished", sample.outcome().finished());
