@@ -28,7 +28,7 @@ class ResourceResolverTests {
 
     @Test
     void resolve_GatherableItem_ReturnsGatherCall() {
-        TaskNode plan = ResourceResolver.resolve("oak_log", 5, KNOWLEDGE);
+        TaskNode plan = CorePlanner.resolve("oak_log", 5, KNOWLEDGE);
 
         assertEquals(
                 gather("oak_log", 5),
@@ -42,7 +42,7 @@ class ResourceResolverTests {
         ResourceKnowledge knowledge =
                 new StubKnowledge(Set.of("raw_iron"), Map.of(), Map.of()).withGatherSource("raw_iron", "iron_ore");
 
-        TaskNode plan = ResourceResolver.resolve("raw_iron", 3, knowledge);
+        TaskNode plan = CorePlanner.resolve("raw_iron", 3, knowledge);
 
         assertEquals(
                 gather("iron_ore", 3),
@@ -59,7 +59,7 @@ class ResourceResolverTests {
                         Map.of("coal", "coal_ore"))
                 .withGatherSource("coal", "coal_ore");
 
-        TaskNode plan = ResourceResolver.resolve("coal", 1, knowledge);
+        TaskNode plan = CorePlanner.resolve("coal", 1, knowledge);
 
         assertEquals(
                 gather("coal_ore", 1),
@@ -72,7 +72,7 @@ class ResourceResolverTests {
 
     @Test
     void resolve_SmeltableItem_ReturnsInputFuelAndSmeltSequence() {
-        TaskNode plan = ResourceResolver.resolve("iron_ingot", 2, KNOWLEDGE);
+        TaskNode plan = CorePlanner.resolve("iron_ingot", 2, KNOWLEDGE);
 
         assertEquals(
                 new SequenceNode(List.of(gather("iron_ore", 2), gather("coal", 1), smelt("iron_ingot", 2))),
@@ -84,7 +84,7 @@ class ResourceResolverTests {
 
     @Test
     void resolve_CraftableItem_ReturnsIngredientsAndCraft() {
-        TaskNode plan = ResourceResolver.resolve("stick", 1, KNOWLEDGE);
+        TaskNode plan = CorePlanner.resolve("stick", 1, KNOWLEDGE);
 
         assertEquals(
                 new SequenceNode(List.of(gather("oak_log", 2), craft("stick", 1))),
@@ -138,7 +138,7 @@ class ResourceResolverTests {
                 Map.of(),
                 Map.of("oak_planks", 4));
 
-        TaskNode plan = ResourceResolver.resolve("oak_planks", 8, planks);
+        TaskNode plan = CorePlanner.resolve("oak_planks", 8, planks);
 
         assertEquals(
                 new SequenceNode(List.of(gather("oak_log", 2), craft("oak_planks", 8))),
@@ -155,7 +155,7 @@ class ResourceResolverTests {
                 Map.of(),
                 Map.of("oak_planks", 4));
 
-        TaskNode plan = ResourceResolver.resolve("oak_planks", 1, planks);
+        TaskNode plan = CorePlanner.resolve("oak_planks", 1, planks);
 
         assertEquals(
                 new SequenceNode(List.of(gather("oak_log", 1), craft("oak_planks", 1))),
@@ -171,7 +171,7 @@ class ResourceResolverTests {
 
         UnplannableGoalException error = assertThrows(
                 UnplannableGoalException.class,
-                () -> ResourceResolver.resolve("heavy", Integer.MAX_VALUE, heavy),
+                () -> CorePlanner.resolve("heavy", Integer.MAX_VALUE, heavy),
                 "Переполнение произведения количества ингредиента на число крафтов обязано отвергаться: "
                         + "тихое переполнение int превратит план в отрицательную добычу");
 
@@ -183,7 +183,7 @@ class ResourceResolverTests {
 
     @Test
     void resolve_NestedCraftableItem_ResolvesIngredientsRecursively() {
-        TaskNode plan = ResourceResolver.resolve("iron_pickaxe", 1, KNOWLEDGE);
+        TaskNode plan = CorePlanner.resolve("iron_pickaxe", 1, KNOWLEDGE);
 
         assertEquals(
                 new SequenceNode(List.of(
@@ -205,7 +205,7 @@ class ResourceResolverTests {
                         "c", List.of(new Ingredient("d", 1))),
                 Map.of());
 
-        TaskNode plan = ResourceResolver.resolve("a", 1, shared);
+        TaskNode plan = CorePlanner.resolve("a", 1, shared);
 
         assertEquals(
                 new SequenceNode(List.of(
@@ -221,7 +221,7 @@ class ResourceResolverTests {
     void resolve_UnknownItem_ThrowsUnplannableGoalNamingItem() {
         UnplannableGoalException error = assertThrows(
                 UnplannableGoalException.class,
-                () -> ResourceResolver.resolve("diamond", 1, KNOWLEDGE),
+                () -> CorePlanner.resolve("diamond", 1, KNOWLEDGE),
                 "Предмет без способа добычи обязан давать UnplannableGoalException: молчаливый пропуск предмета "
                         + "превратит цель в план, который ничего не добывает");
 
@@ -247,7 +247,7 @@ class ResourceResolverTests {
 
         UnplannableGoalException error = assertThrows(
                 UnplannableGoalException.class,
-                () -> ResourceResolver.resolve("a", 1, cyclic),
+                () -> CorePlanner.resolve("a", 1, cyclic),
                 "Зацикленный рецепт обязан прерываться: иначе рекурсия заполнит стек и уронит серверный тик");
 
         assertTrue(
@@ -268,7 +268,7 @@ class ResourceResolverTests {
                         Map.of())
                 .withTool("stone", "wooden_pickaxe");
 
-        TaskNode plan = ResourceResolver.resolve("stone", 1, knowledge);
+        TaskNode plan = CorePlanner.resolve("stone", 1, knowledge);
 
         assertEquals(
                 new SequenceNode(List.of(
@@ -287,7 +287,7 @@ class ResourceResolverTests {
                         Map.of())
                 .withTool("stone", "wooden_pickaxe");
 
-        TaskNode plan = ResourceResolver.resolve("stone", 1, knowledge, Map.of("wooden_pickaxe", 1));
+        TaskNode plan = CorePlanner.resolve("stone", 1, knowledge, Map.of("wooden_pickaxe", 1));
 
         assertEquals(
                 gather("stone", 1),
@@ -303,7 +303,7 @@ class ResourceResolverTests {
                         Map.of())
                 .withTool("stone", "wooden_pickaxe");
 
-        TaskNode plan = ResourceResolver.resolve("stone", 1, knowledge, Map.of("stone_pickaxe", 1));
+        TaskNode plan = CorePlanner.resolve("stone", 1, knowledge, Map.of("stone_pickaxe", 1));
 
         assertEquals(
                 gather("stone", 1),
@@ -321,7 +321,7 @@ class ResourceResolverTests {
                 .withGatherSource("cobblestone", "stone")
                 .withTool("stone", "wooden_pickaxe");
 
-        TaskNode plan = ResourceResolver.resolve("cobblestone", 1, knowledge);
+        TaskNode plan = CorePlanner.resolve("cobblestone", 1, knowledge);
 
         assertEquals(
                 new SequenceNode(List.of(
@@ -336,7 +336,7 @@ class ResourceResolverTests {
     void resolve_CountZero_ThrowsIllegalArgumentException() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> ResourceResolver.resolve("oak_log", 0, KNOWLEDGE),
+                () -> CorePlanner.resolve("oak_log", 0, KNOWLEDGE),
                 "Количество 0 обязано отвергаться: скрипт gather со count=0 молча ничего не делает, "
                         + "а цель выглядит исполненной");
     }
@@ -345,7 +345,7 @@ class ResourceResolverTests {
     void resolve_CountNegative_ThrowsIllegalArgumentException() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> ResourceResolver.resolve("oak_log", -1, KNOWLEDGE),
+                () -> CorePlanner.resolve("oak_log", -1, KNOWLEDGE),
                 "Отрицательное количество обязано отвергаться: отрицательный count через умножение ингредиентов "
                         + "превратит план в бессмысленные отрицательные добычи");
     }
@@ -372,13 +372,13 @@ class ResourceResolverTests {
         ResourceKnowledge knowledge = new StubKnowledge(Set.of("oak_log"), Map.of(), Map.of());
         assertThrows(
                 PlanValidationException.class,
-                () -> ResourceResolver.resolve("oak_log", 300, knowledge),
+                () -> CorePlanner.resolve("oak_log", 300, knowledge),
                 "Резолвер обязан валидировать итоговый план по границам count: count > 256 должен отклоняться");
     }
 
     @Test
     void resolve_EightIngotsWithCoal_PlansSingleCoal() {
-        TaskNode plan = ResourceResolver.resolve("iron_ingot", 8, KNOWLEDGE);
+        TaskNode plan = CorePlanner.resolve("iron_ingot", 8, KNOWLEDGE);
 
         assertEquals(
                 new SequenceNode(List.of(gather("iron_ore", 8), gather("coal", 1), smelt("iron_ingot", 8))),
@@ -392,7 +392,7 @@ class ResourceResolverTests {
         ResourceKnowledge logsOnly =
                 new StubKnowledge(Set.of("oak_log", "iron_ore"), Map.of(), Map.of("iron_ingot", "iron_ore"));
 
-        TaskNode plan = ResourceResolver.resolve("iron_ingot", 8, logsOnly);
+        TaskNode plan = CorePlanner.resolve("iron_ingot", 8, logsOnly);
 
         assertEquals(
                 new SequenceNode(List.of(gather("iron_ore", 8), gather("oak_log", 6), smelt("iron_ingot", 8))),
@@ -406,7 +406,7 @@ class ResourceResolverTests {
         ResourceKnowledge charcoalOnly = new StubKnowledge(
                 Set.of("oak_log", "iron_ore"), Map.of(), Map.of("iron_ingot", "iron_ore", "charcoal", "oak_log"));
 
-        TaskNode plan = ResourceResolver.resolve("iron_ingot", 8, charcoalOnly);
+        TaskNode plan = CorePlanner.resolve("iron_ingot", 8, charcoalOnly);
 
         assertEquals(
                 new SequenceNode(List.of(
@@ -424,7 +424,7 @@ class ResourceResolverTests {
 
         UnplannableGoalException error = assertThrows(
                 UnplannableGoalException.class,
-                () -> ResourceResolver.resolve("iron_ingot", 2, noFuel),
+                () -> CorePlanner.resolve("iron_ingot", 2, noFuel),
                 "Плавка без доступного топлива обязана отвергаться: молчаливый план без топлива выглядит готовым, "
                         + "а печь встанет на первом же предмете");
 
@@ -439,7 +439,7 @@ class ResourceResolverTests {
 
     @Test
     void resolve_InventoryCoversFuel_OmitsFuelGather() {
-        TaskNode plan = ResourceResolver.resolve("iron_ingot", 2, KNOWLEDGE, Map.of("coal", 5));
+        TaskNode plan = CorePlanner.resolve("iron_ingot", 2, KNOWLEDGE, Map.of("coal", 5));
 
         assertEquals(
                 new SequenceNode(List.of(gather("iron_ore", 2), smelt("iron_ingot", 2))),
@@ -450,7 +450,7 @@ class ResourceResolverTests {
 
     @Test
     void resolve_InventoryPartiallyCoversFuel_GathersRemainder() {
-        TaskNode plan = ResourceResolver.resolve("iron_ingot", 9, KNOWLEDGE, Map.of("coal", 1));
+        TaskNode plan = CorePlanner.resolve("iron_ingot", 9, KNOWLEDGE, Map.of("coal", 1));
 
         assertEquals(
                 new SequenceNode(List.of(gather("iron_ore", 9), gather("coal", 1), smelt("iron_ingot", 9))),
@@ -461,7 +461,7 @@ class ResourceResolverTests {
 
     @Test
     void resolve_InventoryHoldsLogs_SpendsThemAndGathersRemainder() {
-        TaskNode plan = ResourceResolver.resolve("iron_ingot", 8, KNOWLEDGE, Map.of("oak_log", 2));
+        TaskNode plan = CorePlanner.resolve("iron_ingot", 8, KNOWLEDGE, Map.of("oak_log", 2));
 
         assertEquals(
                 new SequenceNode(List.of(gather("iron_ore", 8), gather("oak_log", 4), smelt("iron_ingot", 8))),
@@ -482,7 +482,7 @@ class ResourceResolverTests {
                                 new Ingredient("gold_ingot", 1))),
                 Map.of("iron_ingot", "iron_ore", "copper_ingot", "copper_ore", "gold_ingot", "gold_ore"));
 
-        TaskNode plan = ResourceResolver.resolve("gear", 1, forge, Map.of("coal", 2));
+        TaskNode plan = CorePlanner.resolve("gear", 1, forge, Map.of("coal", 2));
 
         assertEquals(
                 new SequenceNode(List.of(
@@ -503,7 +503,7 @@ class ResourceResolverTests {
                 Map.of("oak_planks", List.of(new Ingredient("oak_log", 1))),
                 Map.of("iron_ingot", "iron_ore", "charcoal", "oak_log"));
 
-        TaskNode plan = ResourceResolver.resolve("iron_ingot", 8, sawmill);
+        TaskNode plan = CorePlanner.resolve("iron_ingot", 8, sawmill);
 
         assertEquals(
                 new SequenceNode(List.of(
@@ -520,7 +520,7 @@ class ResourceResolverTests {
     void resolve_NullInventory_ThrowsNullPointerException() {
         assertThrows(
                 NullPointerException.class,
-                () -> ResourceResolver.resolve("iron_ingot", 2, KNOWLEDGE, null),
+                () -> CorePlanner.resolve("iron_ingot", 2, KNOWLEDGE, null),
                 "Null-инвентарь обязан отвергаться: молчаливое чтение null превратит выбор топлива в падение в тике");
     }
 
@@ -537,7 +537,7 @@ class ResourceResolverTests {
         ResourceKnowledge knowledge =
                 new StubKnowledge(Set.of("oak_log"), Map.of("stick", List.of(new Ingredient("oak_log", 40))), Map.of());
 
-        TaskNode plan = ResourceResolver.resolve("stick", 8, knowledge);
+        TaskNode plan = CorePlanner.resolve("stick", 8, knowledge);
 
         assertEquals(
                 new SequenceNode(List.of(
@@ -555,7 +555,7 @@ class ResourceResolverTests {
 
     @Test
     void resolve_Log_GathersInWideRadius() {
-        TaskNode plan = ResourceResolver.resolve("oak_log", 2, KNOWLEDGE);
+        TaskNode plan = CorePlanner.resolve("oak_log", 2, KNOWLEDGE);
 
         assertEquals(
                 new ScriptCall(

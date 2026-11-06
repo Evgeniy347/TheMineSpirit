@@ -22,7 +22,7 @@ class CharcoalFuelResolveTests {
     void resolve_CharcoalFuel_BurnsWoodInsteadOfCoal() {
         ResourceKnowledge knowledge = woodKnowledge();
 
-        TaskNode plan = ResourceResolver.resolve("charcoal", 1, knowledge);
+        TaskNode plan = CorePlanner.resolve("charcoal", 1, knowledge);
 
         assertEquals(
                 new SequenceNode(List.of(
@@ -37,7 +37,7 @@ class CharcoalFuelResolveTests {
 
     @Test
     void resolve_CharcoalWithLogsInInventory_DoesNotGatherInput() {
-        TaskNode plan = ResourceResolver.resolve("charcoal", 1, woodKnowledge(), Map.of("oak_log", 2));
+        TaskNode plan = CorePlanner.resolve("charcoal", 1, woodKnowledge(), Map.of("oak_log", 2));
         List<ScriptCall> steps = new ArrayList<>();
         collect(plan, steps);
 

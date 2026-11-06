@@ -16,7 +16,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class FallbackPlannerTests {
-    private static final FallbackPlanner PLANNER = new FallbackPlanner();
+    private static final FallbackPlanner PLANNER = CorePlanner.fallback();
     private static final WorldObservation OBSERVATION = Observations.empty("spirit_1");
 
     private static TaskNode plan(Goal goal) {

@@ -31,7 +31,7 @@ class ResourceResolverProperties {
         String root = item(decisions.size());
 
         if (isObtainable(root, knowledge)) {
-            TaskNode plan = ResourceResolver.resolve(root, count, knowledge);
+            TaskNode plan = CorePlanner.resolve(root, count, knowledge);
 
             assertEquals(
                     expectedFinalStep(root, count, knowledge),
@@ -48,7 +48,7 @@ class ResourceResolverProperties {
         } else {
             UnplannableGoalException error = assertThrows(
                     UnplannableGoalException.class,
-                    () -> ResourceResolver.resolve(root, count, knowledge),
+                    () -> CorePlanner.resolve(root, count, knowledge),
                     "Для предмета без способа добычи в графе резолвер обязан бросить UnplannableGoalException: "
                             + "молчаливый план без предмета выглядит исполненной целью. Предмет=" + root);
 
@@ -65,7 +65,7 @@ class ResourceResolverProperties {
         ResourceKnowledge knowledge =
                 new StubKnowledge(Set.of("iron_ore", "coal", "oak_log"), Map.of(), Map.of("iron_ingot", "iron_ore"));
 
-        TaskNode plan = ResourceResolver.resolve("iron_ingot", count, knowledge);
+        TaskNode plan = CorePlanner.resolve("iron_ingot", count, knowledge);
 
         FuelBalance balance = FuelBalance.of(plan);
         assertTrue(
@@ -86,7 +86,7 @@ class ResourceResolverProperties {
         Assume.that(isObtainable(root, knowledge));
 
         List<ScriptCall> calls = new ArrayList<>();
-        flatten(ResourceResolver.resolve(root, count, knowledge), calls);
+        flatten(CorePlanner.resolve(root, count, knowledge), calls);
 
         for (String station : List.of("bench", "oven")) {
             long produced =
@@ -109,7 +109,7 @@ class ResourceResolverProperties {
         String root = item(decisions.size());
         Assume.that(isObtainable(root, knowledge));
 
-        TaskNode plan = ResourceResolver.resolve(root, count, knowledge);
+        TaskNode plan = CorePlanner.resolve(root, count, knowledge);
 
         assertTrue(
                 FuelBalance.of(plan).fuelAheadOfEverySmelt(),
@@ -122,7 +122,7 @@ class ResourceResolverProperties {
         ResourceKnowledge knowledge =
                 new StubKnowledge(Set.of("iron_ore", "coal"), Map.of(), Map.of("iron_ingot", "iron_ore"));
 
-        TaskNode plan = ResourceResolver.resolve("iron_ingot", count, knowledge);
+        TaskNode plan = CorePlanner.resolve("iron_ingot", count, knowledge);
 
         List<ScriptCall> calls = new ArrayList<>();
         flatten(plan, calls);
