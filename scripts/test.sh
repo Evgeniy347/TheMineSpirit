@@ -20,6 +20,8 @@ GAMETEST_WARN="${THEMINESPIRIT_GAMETEST_WARN_SECONDS:-120}"
 GAMETEST_STOP="${THEMINESPIRIT_GAMETEST_STOP_SECONDS:-200}"
 GAMETEST_FULL_WARN="${THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS:-180}"
 GAMETEST_FULL_STOP="${THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS:-300}"
+GAMETEST_PREPARE_WARN="${THEMINESPIRIT_GAMETEST_PREPARE_WARN_SECONDS:-300}"
+GAMETEST_PREPARE_STOP="${THEMINESPIRIT_GAMETEST_PREPARE_STOP_SECONDS:-600}"
 
 case "$OSTYPE" in
     msys*|cygwin*|win*)
@@ -75,7 +77,9 @@ usage() {
   THEMINESPIRIT_GAMETEST_WARN_SECONDS предупреждение быстрого gametest (по умолчанию 120)
   THEMINESPIRIT_GAMETEST_STOP_SECONDS стоп быстрого gametest (по умолчанию 200)
   THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS  предупреждение --full (180)
-  THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS  стоп --full (300)
+  THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS  стоп --full (300, от старта шардов)
+  THEMINESPIRIT_GAMETEST_PREPARE_WARN_SECONDS  предупреждение подготовки сборки (300)
+  THEMINESPIRIT_GAMETEST_PREPARE_STOP_SECONDS  стоп подготовки сборки (600, отдельный бюджет)
   THEMINESPIRIT_GAMETEST_SHARDS      число параллельных серверов GameTest (ПК 3, Linux 1)
   THEMINESPIRIT_GAMETEST_LOCK        путь к замку (Windows: C:\ProgramData\theminespirit\theminespirit-gametest.lock, Linux: /tmp/theminespirit-gametest.lock)
   THEMINESPIRIT_GAMETEST_WAIT        ожидание замка, с (по умолчанию 1800)
@@ -416,7 +420,9 @@ monitor_loop() {
         now_s now
         elapsed=$((now - MONITOR_START_TIME))
         if [ "$warned" = 0 ] && [ "$elapsed" -ge "$MONITOR_WARN_SECONDS" ]; then
-            if [ "$MONITOR_MODE" = "gametest" ]; then
+            if [ "$MONITOR_MODE" = "prepare" ]; then
+                echo "ВНИМАНИЕ: подготовка сборки идёт дольше $MONITOR_WARN_SECONDS с — повод задуматься" >&2
+            elif [ "$MONITOR_MODE" = "gametest" ]; then
                 echo "ВНИМАНИЕ: полный GameTest идёт дольше $MONITOR_WARN_SECONDS с — повод задуматься (регрессия скорости?)" >&2
             else
                 echo "ВНИМАНИЕ: unit идёт дольше $MONITOR_WARN_SECONDS с — повод задуматься (регрессия скорости?)" >&2
@@ -425,7 +431,7 @@ monitor_loop() {
         fi
         if [ "$elapsed" -ge "$MONITOR_STOP_SECONDS" ]; then
             echo "стоп по пределу $MONITOR_STOP_SECONDS с" >&2
-            : >"$MONITOR_LOG_FILE.stopped"
+            printf '%s' "$MONITOR_MODE" >"$MONITOR_LOG_FILE.stopped"
             kill_gametest_server
             if [ -f "$MONITOR_LOG_FILE.gradlepids" ]; then
                 while read -r gpid; do
@@ -477,7 +483,7 @@ start_heartbeat() {
     case "$HEARTBEAT_FILE" in */*) mkdir -p "${HEARTBEAT_FILE%/*}" ;; esac
     : >"$HEARTBEAT_FILE"
     now_s now
-    deadline=$(( now + GAMETEST_WAIT + (UNIT_STOP > GAMETEST_FULL_STOP ? UNIT_STOP : GAMETEST_FULL_STOP) + 300 ))
+    deadline=$(( now + GAMETEST_WAIT + GAMETEST_PREPARE_STOP + (UNIT_STOP > GAMETEST_FULL_STOP ? UNIT_STOP : GAMETEST_FULL_STOP) + 300 ))
     (
         sleeper=""
         trap '[ -n "$sleeper" ] && kill "$sleeper" 2>/dev/null; exit 0' TERM
@@ -529,7 +535,11 @@ cleanup() {
 on_signal() {
     trap - TERM INT
     if [ -n "${LOG_FILE:-}" ] && [ -f "$LOG_FILE.stopped" ]; then
-        echo "стоп по пределу ${STOP_SECONDS} с"
+        if [ "$(cat "$LOG_FILE.stopped" 2>/dev/null)" = "prepare" ]; then
+            echo "стоп: подготовка сборки (предел ${GAMETEST_PREPARE_STOP} с)"
+        else
+            echo "стоп по пределу ${STOP_SECONDS} с"
+        fi
         echo "полный лог: $LOG_FILE"
         exit 124
     fi
@@ -926,13 +936,14 @@ else
         START_WARN="$GAMETEST_WARN"
         START_STOP="$GAMETEST_STOP"
     fi
-    start_monitor "gametest" "$START_WARN" "$START_STOP"
 
     GRADLE_PIDS=()
     : >"$LOG_FILE.gradlepids"
 
     SHARD_EXCLUDES=()
     if [ "$GAMETEST_SHARDS" -gt 1 ]; then
+        now_s START_TIME
+        start_monitor "prepare" "$GAMETEST_PREPARE_WARN" "$GAMETEST_PREPARE_STOP"
         PRE_TASKS=(createMinecraftArtifacts classes jar
             writeGameTestServerLegacyClasspath prepareGameTestServerRun)
         while read -r module_path; do
@@ -944,10 +955,17 @@ else
         wait "$PRE_PID"
         PRE_CODE=$?
         : >"$LOG_FILE.gradlepids"
+        stop_timer
+        if [ -f "$LOG_FILE.stopped" ]; then
+            cat "$LOG_FILE.preflight" >"$LOG_FILE"
+            rm -f "$LOG_FILE.preflight"
+            echo "стоп: подготовка сборки (предел ${GAMETEST_PREPARE_STOP} с)"
+            echo "полный лог: $LOG_FILE"
+            exit 124
+        fi
         if [ "$PRE_CODE" -ne 0 ]; then
             cat "$LOG_FILE.preflight" >"$LOG_FILE"
             rm -f "$LOG_FILE.preflight"
-            stop_timer
             echo "FAIL gametest: подготовка сборки упала (код $PRE_CODE)"
             echo "полный лог: $LOG_FILE"
             exit 2
@@ -957,6 +975,10 @@ else
             -x processResources -x classes -x downloadAssets -x jar -x :build-logic:jar
             -x writeGameTestServerLegacyClasspath -x prepareGameTestServerRun)
     fi
+
+    now_s START_TIME
+    start_monitor "gametest" "$START_WARN" "$START_STOP"
+    echo "gametest: бюджет сценариев ${START_STOP} с — от старта шардов (подготовка сборки — ${GAMETEST_PREPARE_STOP} с отдельно)" >&2
 
     for ((shard = 0; shard < GAMETEST_SHARDS; shard++)); do
         shard_log="$LOG_FILE"

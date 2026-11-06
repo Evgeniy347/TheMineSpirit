@@ -26,7 +26,9 @@ class TestTimeLimitGuardTests {
             "GAMETEST_WARN", 120,
             "GAMETEST_STOP", 200,
             "GAMETEST_FULL_WARN", 180,
-            "GAMETEST_FULL_STOP", 300);
+            "GAMETEST_FULL_STOP", 300,
+            "GAMETEST_PREPARE_WARN", 300,
+            "GAMETEST_PREPARE_STOP", 600);
 
     @Test
     void testScript_TimeLimits_EqualAgreedValues() {
