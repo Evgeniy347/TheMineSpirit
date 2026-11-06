@@ -88,6 +88,15 @@ class TacticsModuleGuardTests {
     }
 
     @Test
+    void tacticsRuleCoverageGuard_StaysInModule_BecauseItReadsModuleScenarios() {
+        assertTrue(
+                Files.isRegularFile(TEST.resolve(PACKAGE).resolve("core/tactics/TacticsRuleCoverageGuardTests.java")),
+                "Сторож покрытия правил обязан оставаться в :tactics: он читает scenarios.json модуля и движок "
+                        + "тактики, которых нет в корне. Правило: сторож с данными модуля живёт в module/src/test, "
+                        + "остальные — в guards/. Иначе его перенос в корень требует :test-fixtures → :tactics.");
+    }
+
+    @Test
     void tacticsModule_Imports_OnlyApiAndDeclaredModules() {
         Set<String> apiClasses = apiClasses(SourceFiles.javaUnder(SourceFiles.apiPackage()));
         List<String> visible = new ArrayList<>(OWN_PACKAGES);

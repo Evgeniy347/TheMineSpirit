@@ -30,9 +30,13 @@ include ':mech:small'
 include ':board'
 include ':tactics'
 include ':content'
+include ':rest'
+include ':ui'
 include ':mod'
 include ':mech:mining'
 include ':mech:movement'
 include ':mech:inventory'
 include ':mech:building'
 include ':mech:town'
+
+def mechanicsModules = [':policy']

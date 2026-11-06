@@ -28,8 +28,8 @@ printf '%s' "$subject" | LC_ALL=C.UTF-8 grep -qP '\p{Cyrillic}' || fail "опи�
 type="${subject%%:*}"
 if [ "$type" = "feat" ] || [ "$type" = "fix" ]; then
     staged="$(git diff --cached --name-only --diff-filter=ACMR)"
-    production="$(printf '%s\n' "$staged" | grep -E '^(src|api|policy|mech/[a-z]+)/src/main/java/' | grep -v "^$GAME_TESTS")"
-    tests="$(printf '%s\n' "$staged" | grep -E '^(src|api|policy|mech/[a-z]+)/src/test/java/|^$GAME_TESTS')"
+    production="$(printf '%s\n' "$staged" | grep -E '^(src|api|policy|mech/[a-z]+|board|tactics|content|rest|ui)/src/main/java/' | grep -v "^$GAME_TESTS")"
+    tests="$(printf '%s\n' "$staged" | grep -E '^(src|api|policy|mech/[a-z]+|board|tactics|content|rest|ui)/src/test/java/|^$GAME_TESTS')"
     if [ -n "$production" ] && [ -z "$tests" ]; then
         cat >&2 <<EOF
 Коммит отклонён: «$subject» меняет поведение (тип $type), но не приносит ни одного теста.

@@ -3,15 +3,19 @@ package com.theminespirit.guards;
 import static com.theminespirit.guards.MechanicsModuleImports.apiClasses;
 import static com.theminespirit.guards.MechanicsModuleImports.violations;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
@@ -30,14 +34,17 @@ class MechanicsModuleGuardTests {
         }
     }
 
-    private static final Set<String> NON_MECHANICS = Set.of(":board", ":test-fixtures", ":tactics", ":content");
     private static final String MAIN_SUFFIX = "/src/main/java";
+    private static final Pattern INCLUDE = Pattern.compile("^\\s*include\\s+'(:[^']+)'", Pattern.MULTILINE);
+    private static final Pattern MECHANICS_LIST = Pattern.compile("(?s)def\\s+mechanicsModules\\s*=\\s*\\[(.*?)]");
+    private static final Pattern MODULE_ID = Pattern.compile("'(:[^']+)'");
 
     private static final Map<String, List<String>> MODULE_DEPENDENCIES =
             Map.of(":mech:town", List.of("core.building"), ":mech:small", List.of("core.inventory"));
 
     private static List<Module> modules() {
         List<Module> modules = new ArrayList<>();
+        Set<String> mechanics = mechanicsModules();
         for (Path mainRoot : SourceFiles.moduleMainRoots()) {
             String path = mainRoot.toString().replace('\\', '/');
             if (!path.endsWith(MAIN_SUFFIX)) {
@@ -45,13 +52,53 @@ class MechanicsModuleGuardTests {
             }
             String id = ":"
                     + path.substring(0, path.length() - MAIN_SUFFIX.length()).replace('/', ':');
-            if (NON_MECHANICS.contains(id) || !Files.isDirectory(mainRoot)) {
+            if (!mechanics.contains(id) || !Files.isDirectory(mainRoot)) {
                 continue;
             }
             Path testRoot = mainRoot.getParent().getParent().resolve("test/java");
             modules.add(new Module(id, packages(mainRoot), mainRoot, testRoot));
         }
         return List.copyOf(modules);
+    }
+
+    private static Set<String> mechanicsModules() {
+        String settings;
+        try {
+            settings = Files.readString(Path.of("settings.gradle"));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Сторож не смог прочитать список модулей settings.gradle", e);
+        }
+        Set<String> mechanics = new LinkedHashSet<>();
+        Set<String> included = new LinkedHashSet<>();
+        Matcher include = INCLUDE.matcher(settings);
+        while (include.find()) {
+            String id = include.group(1);
+            included.add(id);
+            if (id.startsWith(":mech:")) {
+                mechanics.add(id);
+            }
+        }
+        Matcher list = MECHANICS_LIST.matcher(settings);
+        assertTrue(
+                list.find(),
+                "В settings.gradle нет списка def mechanicsModules = [...]: тип модуля не вывести. Как надо: "
+                        + "механики под mech/ находятся по каталогу, а верхнеуровневую (:policy) перечисли в списке.");
+        Matcher id = MODULE_ID.matcher(list.group(1));
+        while (id.find()) {
+            mechanics.add(id.group(1));
+        }
+        assertTrue(
+                !mechanics.isEmpty(),
+                "Модулей-механик не нашлось: сторож молча проверяет ноль механик. Как надо: модуль механики лежит "
+                        + "в mech/ или перечислен в mechanicsModules.");
+        assertTrue(
+                included.containsAll(mechanics),
+                "Список mechanicsModules называет модуль, которого нет в include settings.gradle: тип и сборка "
+                        + "разъедутся. Лишние: "
+                        + mechanics.stream()
+                                .filter(module -> !included.contains(module))
+                                .toList());
+        return Set.copyOf(mechanics);
     }
 
     private static List<String> packages(Path mainRoot) {

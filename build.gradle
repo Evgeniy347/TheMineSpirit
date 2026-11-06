@@ -67,6 +67,8 @@ sourceSets.main.output.classesDirs.from(provider {
             project(':board').sourceSets.main.output.classesDirs +
             project(':tactics').sourceSets.main.output.classesDirs +
             project(':content').sourceSets.main.output.classesDirs +
+            project(':rest').sourceSets.main.output.classesDirs +
+            project(':ui').sourceSets.main.output.classesDirs +
             project(':policy').sourceSets.main.output.classesDirs +
             project(':mech:mining').sourceSets.main.output.classesDirs +
             project(':mech:movement').sourceSets.main.output.classesDirs +
@@ -81,6 +83,7 @@ sourceSets.main.output.classesDirs.from(provider {
 })
 tasks.named('classes') {
     dependsOn ':api:classes', ':board:classes', ':tactics:classes', ':content:classes', ':policy:classes'
+    dependsOn ':rest:classes', ':ui:classes'
     dependsOn ':mech:mining:classes', ':mech:movement:classes', ':mech:inventory:classes'
     dependsOn ':mech:farming:classes', ':mech:forestry:classes', ':mech:crafting:classes', ':mech:husbandry:classes'
     dependsOn ':mech:small:classes', ':mech:building:classes', ':mech:town:classes'
@@ -141,6 +144,8 @@ dependencies {
     implementation project(':board')
     implementation project(':tactics')
     implementation project(':content')
+    implementation project(':rest')
+    implementation project(':ui')
     implementation project(':policy')
     implementation project(':mech:mining')
     implementation project(':mech:movement')
@@ -217,6 +222,7 @@ publishing {
 def unitTestThreads = (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}") as int
 tasks.named('test', Test) {
     dependsOn ':api:test', ':board:test', ':tactics:test', ':content:test', ':policy:test'
+    dependsOn ':rest:test', ':ui:test'
     dependsOn ':mech:mining:test', ':mech:movement:test', ':mech:inventory:test'
     dependsOn ':mech:farming:test', ':mech:forestry:test', ':mech:crafting:test', ':mech:husbandry:test'
     dependsOn ':mech:small:test', ':mech:building:test', ':mech:town:test'
@@ -246,6 +252,8 @@ tasks.named('staticAnalysisFast') {
     dependsOn ':board:staticAnalysisFast'
     dependsOn ':tactics:staticAnalysisFast'
     dependsOn ':content:staticAnalysisFast'
+    dependsOn ':rest:staticAnalysisFast'
+    dependsOn ':ui:staticAnalysisFast'
     dependsOn ':policy:staticAnalysisFast'
     dependsOn ':mech:mining:staticAnalysisFast', ':mech:movement:staticAnalysisFast', ':mech:inventory:staticAnalysisFast'
     dependsOn ':mech:farming:staticAnalysisFast'
@@ -259,6 +267,8 @@ tasks.named('staticAnalysis') {
     dependsOn ':board:staticAnalysis'
     dependsOn ':tactics:staticAnalysis'
     dependsOn ':content:staticAnalysis'
+    dependsOn ':rest:staticAnalysis'
+    dependsOn ':ui:staticAnalysis'
     dependsOn ':policy:staticAnalysis'
     dependsOn ':mech:mining:staticAnalysis', ':mech:movement:staticAnalysis', ':mech:inventory:staticAnalysis'
     dependsOn ':mech:farming:staticAnalysis'
@@ -375,6 +385,7 @@ tasks.named('check') {
 
 tasks.named('pmdMain') {
     dependsOn ':api:pmdMain', ':board:pmdMain', ':tactics:pmdMain', ':content:pmdMain', ':test-fixtures:pmdMain', ':policy:pmdMain'
+    dependsOn ':rest:pmdMain', ':ui:pmdMain'
     dependsOn ':mech:mining:pmdMain', ':mech:movement:pmdMain', ':mech:inventory:pmdMain'
     dependsOn ':mech:farming:pmdMain', ':mech:forestry:pmdMain', ':mech:crafting:pmdMain', ':mech:husbandry:pmdMain'
     dependsOn ':mech:small:pmdMain', ':mech:building:pmdMain', ':mech:town:pmdMain'
@@ -382,6 +393,7 @@ tasks.named('pmdMain') {
 
 tasks.named('pmdTest') {
     dependsOn ':api:pmdTest', ':board:pmdTest', ':tactics:pmdTest', ':content:pmdTest', ':test-fixtures:pmdTest', ':policy:pmdTest'
+    dependsOn ':rest:pmdTest', ':ui:pmdTest'
     dependsOn ':mech:mining:pmdTest', ':mech:movement:pmdTest', ':mech:inventory:pmdTest'
     dependsOn ':mech:farming:pmdTest', ':mech:forestry:pmdTest', ':mech:crafting:pmdTest', ':mech:husbandry:pmdTest'
     dependsOn ':mech:small:pmdTest', ':mech:building:pmdTest', ':mech:town:pmdTest'
