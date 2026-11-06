@@ -32,9 +32,19 @@ public final class SurfaceEscape {
 
     public static Optional<List<BlockCoord>> path(
             BlockCoord start, RouteWorld world, Predicate<BlockCoord> sky, @Nullable BlockCoord preferred) {
+        return path(start, world, sky, preferred, cell -> false);
+    }
+
+    public static Optional<List<BlockCoord>> path(
+            BlockCoord start,
+            RouteWorld world,
+            Predicate<BlockCoord> sky,
+            @Nullable BlockCoord preferred,
+            Predicate<BlockCoord> blocked) {
         Objects.requireNonNull(start, "Старт не может быть null: без него путь к небу не начать");
         Objects.requireNonNull(world, "Мир не может быть null: без него не видно прохода");
         Objects.requireNonNull(sky, "Признак неба не может быть null: без него путь некуда вести");
+        Objects.requireNonNull(blocked, "Запрет клеток не может быть null: пусто — запрета нет");
         if (sky.test(start)) {
             return Optional.of(List.of(start));
         }
@@ -51,7 +61,7 @@ public final class SurfaceEscape {
         while (!queue.isEmpty() && visits++ < MAX_VISITS) {
             BlockCoord cell = queue.poll();
             for (BlockCoord next : moves(world, cell)) {
-                if (!seen.add(next)) {
+                if (blocked.test(next) || !seen.add(next)) {
                     continue;
                 }
                 parent.put(next, cell);

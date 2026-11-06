@@ -33,7 +33,7 @@ final class GraphObserve {
                 report.hangingText(),
                 report.damaged(),
                 report.unknown() ? " (чанки не загружены)" : "");
-        List<FloatingBlocks.Finding> floating = FloatingScanCycle.latest(level);
+        List<FloatingBlocks.Finding> floating = FloatingBlocks.countedInGraph(FloatingScanCycle.latest(level));
         if (!floating.isEmpty()) {
             LOGGER.info("[graph] висящее: {}", FloatingNote.line(floating));
         }

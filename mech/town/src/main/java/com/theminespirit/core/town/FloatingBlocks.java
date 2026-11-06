@@ -133,6 +133,19 @@ public final class FloatingBlocks {
         return STATIONS.contains(path) ? Kind.STATION : Kind.OTHER;
     }
 
+    public static boolean countedInGraph(Finding finding) {
+        Objects.requireNonNull(finding, "Находка не может быть null: по её виду решают, входит ли она в граф");
+        return switch (finding.kind()) {
+            case CHEST, REGISTERED_CHEST, STATION -> false;
+            case FENCE, STUMP, TREE, OTHER -> true;
+        };
+    }
+
+    public static List<Finding> countedInGraph(List<Finding> findings) {
+        Objects.requireNonNull(findings, "Находки не могут быть null: пусто — пустой список");
+        return findings.stream().filter(FloatingBlocks::countedInGraph).toList();
+    }
+
     public static String pathOf(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: путь берётся из него");
         int colon = blockId.indexOf(':');
