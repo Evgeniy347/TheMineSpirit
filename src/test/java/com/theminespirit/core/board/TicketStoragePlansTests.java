@@ -93,6 +93,57 @@ class TicketStoragePlansTests {
         assertTrue(withdraw.params().get("radius") instanceof Integer, "radius остаётся в запросе withdraw");
     }
 
+    @Test
+    void gatherMaterials_Farmland_TillsSoilInsteadOfGatheringItem() {
+        TaskNode plan = TicketPlans.plan(
+                BoardCase.GATHER_MATERIALS, TicketTarget.at(SITE).withSupply("farmland", 5));
+        List<ScriptCall> calls = calls(plan);
+
+        assertEquals(
+                List.of("goto", "withdraw", "withdraw", "till"),
+                calls.stream().map(ScriptCall::script).toList(),
+                "Пашню делают тяпкой на месте, а не добывают предмет farmland: иначе дух ищет в мире "
+                        + "несуществующий блок и проваливает graph:till_soil");
+        assertTrue(
+                calls.stream()
+                        .filter(call -> "withdraw".equals(call.script()))
+                        .allMatch(call -> "*_hoe".equals(call.params().get("item"))),
+                "Тяпку берут из сундука, а не крафтят в обход графа: " + calls);
+        assertEquals(5, calls.get(3).params().get("count"), "Вспахать нужно ровно столько клеток, сколько просят");
+        assertTrue(
+                calls.stream().noneMatch(call -> "acquire".equals(call.script())),
+                "Ни одного acquire farmland: предмет пашни не существует: " + calls);
+    }
+
+    @Test
+    void gatherMaterials_DirtPath_TramplesGroundInsteadOfGatheringItem() {
+        TaskNode plan = TicketPlans.plan(
+                BoardCase.GATHER_MATERIALS, TicketTarget.at(SITE).withSupply("dirt_path", 20));
+        List<ScriptCall> calls = calls(plan);
+
+        assertEquals(
+                List.of("goto", "withdraw", "withdraw", "gather"),
+                calls.stream().map(ScriptCall::script).toList(),
+                "Тропу топчут лопатой по земле, а не добывают предмет dirt_path: иначе дух идёт за "
+                        + "несуществующим предметом и проваливает сад/улицы");
+        assertTrue(
+                calls.stream()
+                        .filter(call -> "withdraw".equals(call.script()))
+                        .allMatch(call -> "*_shovel".equals(call.params().get("item"))),
+                "Лопату берут из сундука: " + calls);
+        assertEquals("dirt_path", calls.get(3).params().get("block"), "Топчут именно тропинку");
+        assertEquals(20, calls.get(3).params().get("count"), "Топчут столько клеток, сколько просят");
+        assertTrue(
+                calls.stream().noneMatch(call -> "acquire".equals(call.script())),
+                "Дорожку не добывают предметом dirt_path: " + calls);
+    }
+
+    private static List<ScriptCall> calls(TaskNode node) {
+        List<ScriptCall> calls = new ArrayList<>();
+        collect(node, calls);
+        return calls;
+    }
+
     private static ScriptCall find(TaskNode node, String script) {
         List<ScriptCall> calls = new ArrayList<>();
         collect(node, calls);

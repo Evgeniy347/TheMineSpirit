@@ -18,6 +18,7 @@ public final class SchematicActions {
             "wither_rose");
     private static final Map<String, String> ITEM_OVERRIDES = Map.of(
             "farmland", "dirt",
+            "dirt_path", "dirt",
             "water", "water_bucket",
             "wheat", "wheat_seeds",
             "carrots", "carrot",
@@ -33,8 +34,6 @@ public final class SchematicActions {
     private static final String COARSE_DIRT = "coarse_dirt";
     private static final String ROOTED_DIRT = "rooted_dirt";
     private static final String MYCELIUM = "mycelium";
-    private static final String WOODEN_SHOVEL = "minecraft:wooden_shovel";
-    private static final String STONE_SHOVEL = "minecraft:stone_shovel";
 
     private SchematicActions() {}
 
@@ -56,6 +55,19 @@ public final class SchematicActions {
     public static boolean isTilled(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, пашут ли его тяпкой");
         return FARMLAND.equals(SchematicBlocks.path(blockId));
+    }
+
+    public static @Nullable String toolKind(String blockId) {
+        Objects.requireNonNull(
+                blockId, "Id блока не может быть null: без него неизвестно, каким инструментом его делают");
+        String path = SchematicBlocks.path(blockId);
+        if (DIRT_PATH.equals(path)) {
+            return "*_shovel";
+        }
+        if (FARMLAND.equals(path)) {
+            return "*_hoe";
+        }
+        return null;
     }
 
     public static boolean isWalkway(String blockId) {
@@ -87,9 +99,5 @@ public final class SchematicActions {
                 || COARSE_DIRT.equals(path)
                 || ROOTED_DIRT.equals(path)
                 || MYCELIUM.equals(path);
-    }
-
-    public static String shovelItem(boolean cobblestone) {
-        return cobblestone ? STONE_SHOVEL : WOODEN_SHOVEL;
     }
 }

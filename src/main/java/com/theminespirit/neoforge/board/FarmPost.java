@@ -97,7 +97,10 @@ final class FarmPost {
 
     private static boolean special(GraphPost post, GraphTickets.Ticket ticket) {
         return switch (ticket.node()) {
-            case "till_soil" -> till(post, ticket.id());
+            case "till_soil" -> {
+                till(post, ticket.id());
+                yield true;
+            }
             case "plant_crop" -> launch(post, ActivityPlans.plantCrop(post.scan.home(), "wheat", 8));
             case "harvest_crop" -> launch(post, ActivityPlans.harvestCrop(post.scan.home()));
             case "milk_animal" ->

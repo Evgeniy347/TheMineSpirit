@@ -82,6 +82,7 @@ final class BuildSchematicScript implements ScriptInstance {
     private final Map<BlockCoord, Integer> refusals = new HashMap<>();
 
     private Set<BlockCoord> ownShare = Set.of();
+    private final BuildToolRestock toolRestock = new BuildToolRestock();
     private long squadVersion = -1;
     private BlockCoord approachStand;
     private BlockCoord breaking;
@@ -321,7 +322,7 @@ final class BuildSchematicScript implements ScriptInstance {
             missing.removeIf(entry -> !site.supported(entry));
         }
         if (missing.isEmpty() && !unsupplied.isEmpty()) {
-            return noMaterial(unsupplied.get(0).block());
+            return noMaterial(unsupplied.get(0).block(), null);
         }
         if (missing.isEmpty()) {
             return waitingForeign && ++finishWaits <= MAX_FINISH_WAITS ? ScriptStatus.RUNNING : finish();
@@ -333,7 +334,7 @@ final class BuildSchematicScript implements ScriptInstance {
         }
         boolean lastStep = main.isEmpty();
         if (lastStep && unsupplied.stream().anyMatch(entry -> !SchematicBlocks.isEntranceBlock(entry.block()))) {
-            return noMaterial(unsupplied.get(0).block());
+            return noMaterial(unsupplied.get(0).block(), null);
         }
         List<Schematic.PlacedEntry> targets = ownFirst(lastStep ? entrances : main);
         return placeStep(targets, lastStep);
@@ -464,6 +465,12 @@ final class BuildSchematicScript implements ScriptInstance {
     private Optional<ScriptStatus> placeOne(Schematic.PlacedEntry entry) {
         if (SchematicActions.isFluidPlaced(entry.block())) return waterOne(entry);
         BlockCoord cell = entry.pos();
+        BlockCoord weed = SchematicWild.entryWeed(level, breaker, entry);
+        if (weed != null) {
+            breaking = weed;
+            breakingId = BlockStates.idOf(level.getBlockState(SchematicSite.toPos(weed)));
+            return Optional.of(ScriptStatus.RUNNING);
+        }
         if (BuildMakeWay.selfIn(spirit, cell)) {
             lastRefusal = "строитель стоит в клетке " + cell + " — сначала отойти";
             return BuildMakeWay.outsideStand(site, feet()).map(this::beginApproach);
@@ -497,7 +504,7 @@ final class BuildSchematicScript implements ScriptInstance {
             case BlockPlacer.Refused refused -> {
                 lastRefusal = refused.reason() + ": " + refused.message();
                 if (refused.reason() == BlockPlacer.RefuseReason.NO_MATERIAL) {
-                    return Optional.of(noMaterial(entry.block()));
+                    return Optional.of(noMaterial(entry.block(), refused.message()));
                 }
                 int attempts = refusals.merge(cell, 1, Integer::sum);
                 if (attempts >= BuildTuning.MAX_CONSECUTIVE_SKIPS) {
@@ -638,7 +645,7 @@ final class BuildSchematicScript implements ScriptInstance {
         }
         return fail("не совпало со схемой " + missing.size() + " из "
                 + site.entries().size() + " клеток"
-                + (clear.isEmpty() ? "" : ", не очищено " + clear.size()) + ": " + sample(missing, clear)
+                + (clear.isEmpty() ? "" : ", не очищено " + clear.size()) + ": " + BuildSamples.of(missing, clear)
                 + "; дух " + feet() + "; поставлено " + placed + ", очищено " + cleared + "; причины: "
                 + reasons());
     }
@@ -668,33 +675,9 @@ final class BuildSchematicScript implements ScriptInstance {
         return first.getKey() + " — " + first.getValue() + (blocked.size() > 1 ? " и ещё " + (blocked.size() - 1) : "");
     }
 
-    private static String sample(List<Schematic.PlacedEntry> missing, List<BlockCoord> clear) {
-        List<String> shown = new ArrayList<>();
-        for (Schematic.PlacedEntry entry : missing) {
-            if (shown.size() == 6) {
-                shown.add("…");
-                break;
-            }
-            shown.add(entry.block() + "@" + entry.pos());
-        }
-        for (BlockCoord cell : clear) {
-            if (shown.size() >= 8) {
-                break;
-            }
-            shown.add("воздух@" + cell);
-        }
-        return String.join(", ", shown);
-    }
-
-    private ScriptStatus noMaterial(String blockId) {
+    private ScriptStatus noMaterial(String blockId, @Nullable String refusal) {
         if (trips < BuildSupplyTrip.MAX_TRIPS) {
-            int band = phaseBand;
-            List<ScriptCall> steps = BuildSupplyTrip.plan(
-                    spirit,
-                    site,
-                    entry -> band < 0
-                            || (BuildPhase.rough(entry.block())
-                                    && BuildPhase.band(entry.pos().y() - bottomY) >= band));
+            List<ScriptCall> steps = BuildSupplyTrip.plan(spirit, site, phaseBand, bottomY);
             if (!steps.isEmpty()) {
                 trips++;
                 LOGGER.info(
@@ -708,13 +691,16 @@ final class BuildSchematicScript implements ScriptInstance {
                 return startSupply(steps);
             }
         }
-        List<ScriptCall> tool = SchematicActions.isTilled(blockId)
-                ? PathTrample.restockHoe(spirit)
-                : PathTrample.restock(spirit, blockId);
-        if (!tool.isEmpty() && crafts < MAX_OWN_CRAFTS) {
-            crafts++;
-            LOGGER.info("Стройка {}: для земли нужен инструмент ({}) — заход за ним", buildKey, blockId);
-            return startSupply(tool);
+        if (SchematicActions.toolKind(blockId) != null) {
+            BuildToolRestock.Answer answer = toolRestock.answer(spirit, blockId, refusal);
+            if (answer.plan() != null && crafts < MAX_OWN_CRAFTS) {
+                crafts++;
+                LOGGER.info("Стройка {}: нужен инструмент ({}) — сундук, иначе крафт графа", buildKey, blockId);
+                return startSupply(answer.plan());
+            }
+            failed++;
+            tally.failed();
+            return fail(answer.reason());
         }
         int needed = countMissing(blockId);
         if (crafts < MAX_OWN_CRAFTS && "minecraft:torch".equals(blockId)) {
@@ -747,12 +733,13 @@ final class BuildSchematicScript implements ScriptInstance {
     }
 
     private ScriptStatus startSupply(List<ScriptCall> steps) {
+        return startSupply(new SequenceNode(new ArrayList<TaskNode>(steps)));
+    }
+
+    private ScriptStatus startSupply(TaskNode plan) {
         approach.cancel();
         approachStand = null;
-        supplyRunner = TaskRunner.start(
-                new SequenceNode(new ArrayList<TaskNode>(steps)),
-                SpiritScripts.registryFor(spirit),
-                ConditionRegistry.of(Map.of()));
+        supplyRunner = TaskRunner.start(plan, SpiritScripts.registryFor(spirit), ConditionRegistry.of(Map.of()));
         return ScriptStatus.RUNNING;
     }
 
