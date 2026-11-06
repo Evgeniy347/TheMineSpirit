@@ -1,7 +1,7 @@
 package com.theminespirit.core.board.route;
 
-import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.PlotLeveling;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

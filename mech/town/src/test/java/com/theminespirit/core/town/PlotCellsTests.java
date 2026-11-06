@@ -1,4 +1,4 @@
-package com.theminespirit.core.board;
+package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

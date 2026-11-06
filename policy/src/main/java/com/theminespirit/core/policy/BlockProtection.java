@@ -5,7 +5,7 @@ import com.theminespirit.core.observation.IdFilter;
 import java.util.List;
 import java.util.Objects;
 
-public final class BlockProtection {
+public final class BlockProtection implements StrayRules {
     public static final int NEIGHBOUR_COUNT = 26;
     public static final int MAX_THRESHOLD = NEIGHBOUR_COUNT;
 
@@ -98,10 +98,12 @@ public final class BlockProtection {
         return new Allowed();
     }
 
+    @Override
     public boolean natural(String blockId) {
         return natural.matches(blockId);
     }
 
+    @Override
     public boolean stray(String blockId) {
         return strays.matches(blockId);
     }

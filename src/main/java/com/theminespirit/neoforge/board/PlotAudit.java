@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.PlotCells;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.PlotCells;
 import com.theminespirit.core.town.StageSite;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

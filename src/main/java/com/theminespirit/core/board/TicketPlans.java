@@ -16,7 +16,9 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.StageSite;
+import com.theminespirit.core.town.StageSites;
 import com.theminespirit.core.town.StageWork;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -30,9 +32,9 @@ import org.jspecify.annotations.Nullable;
 
 public final class TicketPlans {
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
-    public static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
+    public static final String MINE_DESCENT_SCHEME = StageSites.MINE_DESCENT_SCHEME;
     public static final int FENCE_PARTS = 4;
-    public static final String MINE_DESCENT_ROTATION = "clockwise_90";
+    public static final String MINE_DESCENT_ROTATION = StageSites.MINE_DESCENT_ROTATION;
     public static final int MINE_TUNNEL_SIZE = 5;
     private static final int MINE_FLOOR_TAKE = 32;
     private static final String BLOCK = "block";

@@ -1,12 +1,9 @@
-package com.theminespirit.core.board;
+package com.theminespirit.core.town;
 
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.town.ColumnMask;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.function.IntBinaryOperator;
@@ -63,23 +60,6 @@ public record SettlementPlot(BlockCoord anchor, int min, int max, int columns, S
 
     public SettlementPlot withWood(String species) {
         return new SettlementPlot(anchor, min, max, columns, species);
-    }
-
-    public BoardLogEntry journalEntry(long tick, String configHash) {
-        return journalEntry(tick, configHash, List.of());
-    }
-
-    public BoardLogEntry journalEntry(long tick, String configHash, List<String> extra) {
-        List<String> details = new ArrayList<>(List.of(
-                "x=" + anchor.x(),
-                "y=" + anchor.y(),
-                "z=" + anchor.z(),
-                "min=" + min,
-                "max=" + max,
-                "columns=" + columns,
-                "wood=" + wood));
-        details.addAll(extra);
-        return BoardLog.note(JOURNAL_ID, BoardCase.CLEAR_GROUNDS, tick, List.copyOf(details), null, configHash);
     }
 
     private static int median(int[] values) {

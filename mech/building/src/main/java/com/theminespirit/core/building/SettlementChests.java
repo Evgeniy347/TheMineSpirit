@@ -1,7 +1,6 @@
 package com.theminespirit.core.building;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.town.SettlementReach;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -13,6 +12,7 @@ import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public final class SettlementChests {
     public static final int CELL_SIZE = 16;
@@ -86,12 +86,12 @@ public final class SettlementChests {
         return nearest(from, known.size());
     }
 
-    public List<BlockCoord> warehouse(BlockCoord from, SettlementReach reach) {
+    public List<BlockCoord> warehouse(BlockCoord from, Predicate<BlockCoord> insideArea) {
         Objects.requireNonNull(from, "Точка отсчёта не может быть null: склад отдаётся в порядке расстояния");
-        Objects.requireNonNull(reach, "Граница поселения не может быть null: без неё склад не ограничить");
+        Objects.requireNonNull(insideArea, "Граница поселения не может быть null: без неё склад не ограничить");
         List<BlockCoord> inside = new ArrayList<>();
         for (BlockCoord pos : nearest(from, known.size())) {
-            if (reach.covers(pos.x(), pos.z())) {
+            if (insideArea.test(pos)) {
                 inside.add(pos);
             }
         }

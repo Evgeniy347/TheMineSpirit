@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 class SettlementLevelGuardTests {
     private static final Path LEVEL = Path.of("com/theminespirit/core/board/SettlementLevel.java");
     private static final Path HEIGHT = Path.of("com/theminespirit/core/board/PlotHeight.java");
-    private static final Path PLOT = Path.of("com/theminespirit/core/board/SettlementPlot.java");
+    private static final Path PLOT = SourceFiles.path("core/town/SettlementPlot.java");
     private static final Path STORE = Path.of("com/theminespirit/neoforge/board/SettlementPlotStore.java");
 
     private static final Set<String> TERRAIN_LEVEL_CALC = Set.of(

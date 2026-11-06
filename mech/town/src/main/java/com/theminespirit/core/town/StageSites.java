@@ -1,13 +1,11 @@
 package com.theminespirit.core.town;
 
-import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Preset;
+import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.reload.DataTables;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -20,12 +18,20 @@ public final class StageSites {
     public static final String MINE = "mine";
     public static final String ORCHARD = "orchard";
     public static final String ORCHARD_EXTRA = "orchard_extra";
+    public static final String MINE_DESCENT_SCHEME = "mine_descent_v1";
+    public static final String MINE_DESCENT_ROTATION = "clockwise_90";
+    public static final String ORCHARD_SCHEME = "orchard_1";
 
     private StageSites() {}
 
     public static Optional<StageSite> find(TownPlan plan, int stage, int levelY, TownRules rules) {
+        return find(plan, stage, levelY, rules, ORCHARD_SCHEME);
+    }
+
+    public static Optional<StageSite> find(
+            TownPlan plan, int stage, int levelY, TownRules rules, String orchardScheme) {
         Objects.requireNonNull(plan, "План не может быть null: этап берёт места из него");
-        return complete(plan) ? Optional.of(of(plan, stage, levelY, rules)) : Optional.empty();
+        return complete(plan) ? Optional.of(of(plan, stage, levelY, rules, orchardScheme)) : Optional.empty();
     }
 
     public static boolean complete(TownPlan plan) {
@@ -40,8 +46,13 @@ public final class StageSites {
     }
 
     public static StageSite of(TownPlan plan, int stage, int levelY, TownRules rules) {
+        return of(plan, stage, levelY, rules, ORCHARD_SCHEME);
+    }
+
+    public static StageSite of(TownPlan plan, int stage, int levelY, TownRules rules, String orchardScheme) {
         Objects.requireNonNull(plan, "План не может быть null: этап берёт места из него");
         Objects.requireNonNull(rules, "Правила плана не могут быть null: поле ограды этапа — данные");
+        Objects.requireNonNull(orchardScheme, "Схема сада не может быть null: саду нужны места деревьев");
         Layout layout = layout(plan, stage, rules)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "У этапа " + stage + " нет ни одной площадки под выравнивание: план без построек этапа"));
@@ -58,8 +69,8 @@ public final class StageSites {
                 mine,
                 minePlot(mine, levelY),
                 orchard,
-                orchardSaplings(orchard, levelY),
-                extraOrchards(own, levelY),
+                orchardSaplings(orchard, levelY, orchardScheme),
+                extraOrchards(own, levelY, orchardScheme),
                 layout.level(),
                 layout.streets(),
                 layout.enclosure(),
@@ -106,27 +117,19 @@ public final class StageSites {
         return Optional.of(new Layout(anchor, level, streets, enclosure, fenceStrip, ring));
     }
 
-    private static List<OrchardPlot> extraOrchards(List<Placement> own, int levelY) {
+    private static List<OrchardPlot> extraOrchards(List<Placement> own, int levelY, String orchardScheme) {
         List<OrchardPlot> plots = new ArrayList<>();
         for (Placement place : own) {
             if (OrchardSites.isSite(place.id())) {
                 String wood = OrchardSites.speciesOfBuilding(place.id()).orElseThrow();
-                plots.add(new OrchardPlot(place, place.id(), wood, orchardSaplings(place, levelY)));
+                plots.add(new OrchardPlot(place, place.id(), wood, orchardSaplings(place, levelY, orchardScheme)));
             }
         }
         return List.copyOf(plots);
     }
 
-    private static List<BlockCoord> orchardSaplings(Placement orchard, int levelY) {
-        String scheme = DataTables.INSTANCE
-                .stages()
-                .current()
-                .scheme(BoardCase.BUILD_ORCHARD, 1)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "stages.json: нет схемы BUILD_ORCHARD уровня 1 — саду не из чего взять места деревьев"));
-        Schematic schematic = DataTables.INSTANCE
-                .presets()
-                .current()
+    private static List<BlockCoord> orchardSaplings(Placement orchard, int levelY, String scheme) {
+        Schematic schematic = PresetLibrary.current()
                 .byId(scheme)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Нет схемы '" + scheme + "' для сада: проверьте presets.json и файл схемы"))
@@ -145,19 +148,13 @@ public final class StageSites {
     }
 
     private static MinePlot minePlot(Placement mine, int levelY) {
-        String scheme = TicketPlans.MINE_DESCENT_SCHEME;
-        Preset preset = DataTables.INSTANCE
-                .presets()
-                .current()
+        String scheme = MINE_DESCENT_SCHEME;
+        Preset preset = PresetLibrary.current()
                 .byId(scheme)
                 .orElseThrow(() -> new IllegalArgumentException("Нет схемы '" + scheme
                         + "' для шахты: проверьте presets.json и файл схемы — без неё спуск не размечен"));
         return MinePlot.of(
-                mine,
-                levelY,
-                preset.schematic(),
-                preset.entry(),
-                BuildRotation.parse(TicketPlans.MINE_DESCENT_ROTATION));
+                mine, levelY, preset.schematic(), preset.entry(), BuildRotation.parse(MINE_DESCENT_ROTATION));
     }
 
     private static Placement need(TownPlan plan, String id, int stage) {

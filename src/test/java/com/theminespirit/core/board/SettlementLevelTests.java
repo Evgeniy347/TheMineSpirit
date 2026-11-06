@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSites;
 import com.theminespirit.core.town.TownFixtures;
 import com.theminespirit.core.town.TownPlan;

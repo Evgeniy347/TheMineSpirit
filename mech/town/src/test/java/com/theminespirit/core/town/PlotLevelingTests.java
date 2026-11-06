@@ -1,11 +1,10 @@
-package com.theminespirit.core.board;
+package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.town.ColumnMask;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

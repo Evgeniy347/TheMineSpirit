@@ -75,7 +75,19 @@ class MechanicsModuleGuardTests {
                     ":mech:husbandry",
                     List.of("core.husbandry"),
                     Path.of("mech/husbandry/src/main/java"),
-                    Path.of("mech/husbandry/src/test/java")));
+                    Path.of("mech/husbandry/src/test/java")),
+            new Module(
+                    ":mech:building",
+                    List.of("core.building"),
+                    Path.of("mech/building/src/main/java"),
+                    Path.of("mech/building/src/test/java")),
+            new Module(
+                    ":mech:town",
+                    List.of("core.town"),
+                    Path.of("mech/town/src/main/java"),
+                    Path.of("mech/town/src/test/java")));
+
+    private static final Map<String, List<String>> MODULE_DEPENDENCIES = Map.of(":mech:town", List.of("core.building"));
 
     private static List<Module> modules() {
         List<Path> declared = SourceFiles.moduleMainRoots();
@@ -100,6 +112,17 @@ class MechanicsModuleGuardTests {
                 }
             }
         }
+        SourceFiles.allMain().forEach((file, text) -> {
+            for (Module module : modules()) {
+                for (String packageName : module.packageNames()) {
+                    if (SourceFiles.logical(file).startsWith(packageName.replace('.', '/') + "/")
+                            && !file.normalize().startsWith(module.mainRoot())
+                            && !file.normalize().startsWith(SourceFiles.API)) {
+                        missing.add(module.id() + ": дубль вне модуля " + SourceFiles.logical(file));
+                    }
+                }
+            }
+        });
 
         assertEquals(
                 List.of(),
@@ -141,7 +164,9 @@ class MechanicsModuleGuardTests {
                 if (!Files.isDirectory(packageDir)) {
                     continue;
                 }
-                violations.addAll(violations(SourceFiles.javaUnder(packageDir), apiClasses, module.packageNames()));
+                List<String> visible = new ArrayList<>(module.packageNames());
+                visible.addAll(MODULE_DEPENDENCIES.getOrDefault(module.id(), List.of()));
+                violations.addAll(violations(SourceFiles.javaUnder(packageDir), apiClasses, visible));
             }
         }
 
@@ -163,7 +188,9 @@ class MechanicsModuleGuardTests {
                 if (!Files.isDirectory(packageDir)) {
                     continue;
                 }
-                violations.addAll(violations(SourceFiles.javaUnder(packageDir), apiClasses, module.packageNames()));
+                List<String> visible = new ArrayList<>(module.packageNames());
+                visible.addAll(MODULE_DEPENDENCIES.getOrDefault(module.id(), List.of()));
+                violations.addAll(violations(SourceFiles.javaUnder(packageDir), apiClasses, visible));
             }
         }
 

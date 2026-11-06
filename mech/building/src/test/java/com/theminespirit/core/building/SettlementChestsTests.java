@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.town.SettlementReach;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -123,11 +122,10 @@ class SettlementChestsTests {
         BlockCoord farBarrel = new BlockCoord(-73, 75, -119);
         chests.add(yard);
         chests.add(farBarrel);
-        SettlementReach reach = new SettlementReach(-200, -540, -140, -460);
-
         assertEquals(
                 List.of(yard),
-                chests.warehouse(spirit, reach),
+                chests.warehouse(
+                        spirit, pos -> pos.x() >= -200 && pos.x() <= -140 && pos.z() >= -540 && pos.z() <= -460),
                 "Склад поселения — только контейнеры внутри его границ: бочка −73,75,−119 в ~100 блоках вне ограды "
                         + "не склад поселения (аномалия 6), иначе дух идёт за материалом за пределы поселения");
     }

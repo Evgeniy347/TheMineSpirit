@@ -1,13 +1,13 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.SettlementPlot;
 import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeCandidates;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.core.script.ChopTreeParams;
+import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.policy.OrchardTrees;
 import java.util.Collection;

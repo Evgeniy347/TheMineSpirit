@@ -4,8 +4,6 @@ import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.MineLayout;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.ui.MineGeometry;
-import com.theminespirit.core.ui.TownMapView;
 import java.util.Objects;
 
 public record MinePlot(BlockCoord origin, BlockCoord entrance, int x1, int z1, int x2, int z2) {
@@ -25,8 +23,24 @@ public record MinePlot(BlockCoord origin, BlockCoord entrance, int x1, int z1, i
         Objects.requireNonNull(rotation, "Поворот спуска не может быть null: без него прямоугольник неверен");
         BlockCoord origin = origin(mine, levelY);
         MineLayout layout = MineLayout.place(descent, entry, origin, rotation, MineLayout.Extent.NONE);
-        TownMapView.Bounds bounds = MineGeometry.airBounds(layout.air(), origin);
+        Bounds bounds = airBounds(layout.air(), origin);
         return new MinePlot(origin, layout.entrance(), bounds.x1(), bounds.z1(), bounds.x2(), bounds.z2());
+    }
+
+    private record Bounds(int x1, int z1, int x2, int z2) {}
+
+    private static Bounds airBounds(Iterable<BlockCoord> air, BlockCoord empty) {
+        int x1 = Integer.MAX_VALUE;
+        int z1 = Integer.MAX_VALUE;
+        int x2 = Integer.MIN_VALUE;
+        int z2 = Integer.MIN_VALUE;
+        for (BlockCoord cell : air) {
+            x1 = Math.min(x1, cell.x());
+            z1 = Math.min(z1, cell.z());
+            x2 = Math.max(x2, cell.x());
+            z2 = Math.max(z2, cell.z());
+        }
+        return x1 > x2 ? new Bounds(empty.x(), empty.z(), empty.x(), empty.z()) : new Bounds(x1, z1, x2, z2);
     }
 
     public static BlockCoord origin(Placement mine, int levelY) {

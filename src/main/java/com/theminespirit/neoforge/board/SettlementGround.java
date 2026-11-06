@@ -2,9 +2,9 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.MineDescentBottom;
-import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.SiteLevels;
 import com.theminespirit.core.town.StageSite;
 import java.util.function.IntBinaryOperator;

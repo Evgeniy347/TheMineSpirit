@@ -4,7 +4,7 @@ import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
-import com.theminespirit.core.policy.BlockProtection;
+import com.theminespirit.core.policy.StrayRules;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
@@ -28,7 +28,7 @@ public final class StrayRule {
 
     private StrayRule() {}
 
-    public static boolean stray(String blockId, Set<Fact> facts, BlockProtection protection) {
+    public static boolean stray(String blockId, Set<Fact> facts, StrayRules protection) {
         Objects.requireNonNull(blockId, "Блок не может быть null: снос решается по его имени");
         Objects.requireNonNull(facts, "Признаки клетки не могут быть null: пустые задают пустым набором");
         if (facts.contains(Fact.PLANNED) || facts.contains(Fact.PLAYER)) {

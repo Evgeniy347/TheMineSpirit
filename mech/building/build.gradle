@@ -1,0 +1,32 @@
+plugins {
+    id 'theminespirit.java-conventions'
+}
+
+dependencies {
+    api project(':api')
+    testRuntimeOnly files(rootProject.file('src/main/resources'), rootProject.file('src/test/resources'))
+    testRuntimeOnly files(rootProject.layout.buildDirectory.dir('classes/java/test'))
+}
+
+tasks.named('test', Test) {
+    dependsOn rootProject.tasks.named('testClasses')
+    workingDir = rootProject.projectDir
+    useJUnitPlatform {
+        excludeTags 'slow', 'mutation', 'export'
+    }
+    maxParallelForks = 1
+    systemProperty 'junit.jupiter.execution.parallel.enabled', 'true'
+    systemProperty 'junit.jupiter.execution.parallel.mode.default', 'same_thread'
+    systemProperty 'junit.jupiter.execution.parallel.mode.classes.default', 'concurrent'
+    systemProperty 'junit.jupiter.execution.parallel.config.strategy', 'fixed'
+    systemProperty 'junit.jupiter.execution.parallel.config.fixed.parallelism',
+            "${(System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}")}"
+    jvmArgs '-XX:+UseSerialGC'
+    maxHeapSize = '512m'
+    systemProperty 'theminespirit.modId', 'theminespirit'
+    systemProperty 'theminespirit.updateSnapshots',
+            System.getProperty('theminespirit.updateSnapshots', System.getenv('THEMINESPIRIT_UPDATE_SNAPSHOTS') ?: 'false')
+    failOnNoDiscoveredTests = true
+    reports.html.outputLocation = rootProject.file('TestResults/${project.name}/html')
+    reports.junitXml.outputLocation = rootProject.file('TestResults/${project.name}/xml')
+}

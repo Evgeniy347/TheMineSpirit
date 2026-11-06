@@ -2,12 +2,12 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.MorePlans;
-import com.theminespirit.core.board.PlotLeveling;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.WoolRules;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.husbandry.HerdSpecies;
 import com.theminespirit.neoforge.husbandry.HerdSurvey;

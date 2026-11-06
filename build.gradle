@@ -71,12 +71,15 @@ sourceSets.main.output.classesDirs.from(provider {
             project(':mech:farming').sourceSets.main.output.classesDirs +
             project(':mech:forestry').sourceSets.main.output.classesDirs +
             project(':mech:crafting').sourceSets.main.output.classesDirs +
-            project(':mech:husbandry').sourceSets.main.output.classesDirs
+            project(':mech:husbandry').sourceSets.main.output.classesDirs +
+            project(':mech:building').sourceSets.main.output.classesDirs +
+            project(':mech:town').sourceSets.main.output.classesDirs
 })
 tasks.named('classes') {
     dependsOn ':api:classes', ':policy:classes'
     dependsOn ':mech:mining:classes', ':mech:movement:classes', ':mech:inventory:classes'
     dependsOn ':mech:farming:classes', ':mech:forestry:classes', ':mech:crafting:classes', ':mech:husbandry:classes'
+    dependsOn ':mech:building:classes', ':mech:town:classes'
 }
 
 neoForge {
@@ -139,6 +142,8 @@ dependencies {
     implementation project(':mech:forestry')
     implementation project(':mech:crafting')
     implementation project(':mech:husbandry')
+    implementation project(':mech:building')
+    implementation project(':mech:town')
     implementation "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
     additionalRuntimeClasspath "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
     jarJar("com.fasterxml.jackson.core:jackson-databind:${jackson_version}") {
@@ -205,6 +210,7 @@ tasks.named('test', Test) {
     dependsOn ':api:test', ':policy:test'
     dependsOn ':mech:mining:test', ':mech:movement:test', ':mech:inventory:test'
     dependsOn ':mech:farming:test', ':mech:forestry:test', ':mech:crafting:test', ':mech:husbandry:test'
+    dependsOn ':mech:building:test', ':mech:town:test'
     useJUnitPlatform {
         excludeTags 'slow', 'mutation', 'export'
     }
@@ -232,6 +238,7 @@ tasks.named('staticAnalysisFast') {
     dependsOn ':mech:forestry:staticAnalysisFast'
     dependsOn ':mech:crafting:staticAnalysisFast'
     dependsOn ':mech:husbandry:staticAnalysisFast'
+    dependsOn ':mech:building:staticAnalysisFast', ':mech:town:staticAnalysisFast'
 }
 tasks.named('staticAnalysis') {
     dependsOn ':policy:staticAnalysis'
@@ -240,6 +247,7 @@ tasks.named('staticAnalysis') {
     dependsOn ':mech:forestry:staticAnalysis'
     dependsOn ':mech:crafting:staticAnalysis'
     dependsOn ':mech:husbandry:staticAnalysis'
+    dependsOn ':mech:building:staticAnalysis', ':mech:town:staticAnalysis'
 }
 
 tasks.register('slowTest', Test) {
@@ -350,12 +358,14 @@ tasks.named('pmdMain') {
     dependsOn ':api:pmdMain', ':policy:pmdMain'
     dependsOn ':mech:mining:pmdMain', ':mech:movement:pmdMain', ':mech:inventory:pmdMain'
     dependsOn ':mech:farming:pmdMain', ':mech:forestry:pmdMain', ':mech:crafting:pmdMain', ':mech:husbandry:pmdMain'
+    dependsOn ':mech:building:pmdMain', ':mech:town:pmdMain'
 }
 
 tasks.named('pmdTest') {
     dependsOn ':api:pmdTest', ':policy:pmdTest'
     dependsOn ':mech:mining:pmdTest', ':mech:movement:pmdTest', ':mech:inventory:pmdTest'
     dependsOn ':mech:farming:pmdTest', ':mech:forestry:pmdTest', ':mech:crafting:pmdTest', ':mech:husbandry:pmdTest'
+    dependsOn ':mech:building:pmdTest', ':mech:town:pmdTest'
 }
 
 tasks.named('test') {
