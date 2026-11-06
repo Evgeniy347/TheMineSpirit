@@ -1,0 +1,9 @@
+plugins {
+    id 'theminespirit.java-conventions'
+}
+
+dependencies {
+    testFixturesImplementation platform("org.junit:junit-bom:${junit_version}")
+    testFixturesImplementation 'org.junit.platform:junit-platform-launcher'
+    testFixturesImplementation "net.jqwik:jqwik:${jqwik_version}"
+}

@@ -39,7 +39,9 @@ class MethodShapeGuardTests {
     void productionMethods_ThreeBooleanFlags_AreAbsent() {
         List<String> found = new ArrayList<>();
         for (Path root : SourceFiles.mainPackages()) {
-            found.addAll(violations(root, EXCEPTIONS));
+            if (Files.isDirectory(root)) {
+                found.addAll(violations(root, EXCEPTIONS));
+            }
         }
 
         assertEquals(

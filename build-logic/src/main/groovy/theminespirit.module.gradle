@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     api project(':api')
+    testImplementation testFixtures(project(':test-fixtures'))
 }
 
 def moduleTestThreads =
@@ -13,7 +14,7 @@ def moduleTests = file('src/test/java')
 
 tasks.named('test', Test) {
     onlyIf { moduleTests.exists() }
-    failOnNoDiscoveredTests = moduleTests.exists()
+    failOnNoDiscoveredTests = moduleTests.exists() && !project.hasProperty('theminespirit.filtered')
     workingDir = rootProject.projectDir
     useJUnitPlatform {
         excludeTags 'slow', 'mutation', 'export'
@@ -31,7 +32,5 @@ tasks.named('test', Test) {
     systemProperty 'jqwik.database', '.jqwik-database'
     systemProperty 'theminespirit.updateSnapshots',
             System.getProperty('theminespirit.updateSnapshots', System.getenv('THEMINESPIRIT_UPDATE_SNAPSHOTS') ?: 'false')
-    classpath += files(rootProject.file('src/main/resources'))
-    reports.html.outputLocation = rootProject.file("TestResults/${project.name}/html")
-    reports.junitXml.outputLocation = rootProject.file("TestResults/${project.name}/xml")
+    classpath += files(rootProject.file('src/main/resources'), rootProject.file('src/test/resources'))
 }

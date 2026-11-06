@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -20,8 +21,18 @@ TEST = "src/test/java"
 DEFAULT_FILES = ("config/filesize-baseline.txt", "config/comment-baseline.txt")
 
 
+def settings_module_dirs(root: Path) -> list[str]:
+    """Каталоги модулей из единственного источника — include-строк settings.gradle."""
+    text = (root / "settings.gradle").read_text(encoding="utf-8")
+    return [
+        match[1:].replace(":", "/")
+        for match in re.findall(r"^\s*include\s+'(:[^']+)'", text, re.MULTILINE)
+        if match not in (":api", ":mod")
+    ]
+
+
 def layout_roots(root: Path) -> list[str]:
-    """Корни исходников из config/layout.properties: корень, api и модули."""
+    """Корни исходников: корень, api и модули (модули — из settings.gradle)."""
     package_root = "com/theminespirit"
     lines = (root / "config/layout.properties").read_text(encoding="utf-8").splitlines()
     values: dict[str, str] = {}
@@ -32,12 +43,15 @@ def layout_roots(root: Path) -> list[str]:
         key, value = text.split("=", 1)
         values[key.strip()] = value.strip()
     package_root = values.get("package_root", package_root)
-    extra: list[str] = []
-    for key in ("module_roots", "module_test_roots"):
-        extra.extend(part.strip() for part in values.get(key, "").split(",") if part.strip())
-    return [f"{values.get('main', MAIN)}/{package_root}", f"{values.get('test', TEST)}/{package_root}"] + [
-        f"{item}/{package_root}" for item in extra
+    extra = [
+        f"{directory}/src/{source_set}/{package_root}"
+        for directory in settings_module_dirs(root)
+        for source_set in ("main", "test")
     ]
+    return [
+        f"{values.get('main', MAIN)}/{package_root}",
+        f"{values.get('test', TEST)}/{package_root}",
+    ] + extra
 
 
 def logical(path: str, prefixes: list[str]) -> str:

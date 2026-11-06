@@ -854,11 +854,7 @@ if [ "$MODE" = "unit" ]; then
             UNIT_EXTRA=(staticAnalysis --continue)
         fi
     else
-        UNIT_EXCLUDE=(-x :api:test)
-        for module_root in ${MOD_MODULE_MAIN_ROOTS//,/ }; do
-            name="${module_root%%/src/*}"
-            UNIT_EXCLUDE+=(-x ":${name//\//:}:test")
-        done
+        UNIT_EXCLUDE=(-Ptheminespirit.filtered)
     fi
 
     if command -v setsid >/dev/null 2>&1; then
