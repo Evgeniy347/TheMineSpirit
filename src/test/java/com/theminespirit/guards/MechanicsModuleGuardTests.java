@@ -1,26 +1,18 @@
 package com.theminespirit.guards;
 
+import static com.theminespirit.guards.MechanicsModuleImports.apiClasses;
+import static com.theminespirit.guards.MechanicsModuleImports.violations;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 class MechanicsModuleGuardTests {
-    private static final Pattern IMPORT =
-            Pattern.compile("^\\s*import\\s+(?:static\\s+)?([\\w.*]+)\\s*;", Pattern.MULTILINE);
-    private static final Pattern PACKAGE = Pattern.compile("^\\s*package\\s+([\\w.]+)\\s*;", Pattern.MULTILINE);
-    private static final List<String> ALLOWED_PREFIXES = List.of(
-            "java.", "com.fasterxml.", "org.jspecify.", "org.junit.", "org.opentest4j.", "net.jqwik.", "com.tngtech.");
-
     private record Module(String id, List<String> packageNames, Path mainRoot, Path testRoot) {
         List<Path> mainPackages() {
             return packageNames.stream().map(name -> packageDir(mainRoot, name)).toList();
@@ -77,6 +69,20 @@ class MechanicsModuleGuardTests {
                     Path.of("mech/husbandry/src/main/java"),
                     Path.of("mech/husbandry/src/test/java")),
             new Module(
+                    ":mech:small",
+                    List.of(
+                            "core.alchemy",
+                            "core.armor",
+                            "core.doors",
+                            "core.experience",
+                            "core.hunger",
+                            "core.night",
+                            "core.repair",
+                            "core.sleep",
+                            "core.social"),
+                    Path.of("mech/small/src/main/java"),
+                    Path.of("mech/small/src/test/java")),
+            new Module(
                     ":mech:building",
                     List.of("core.building"),
                     Path.of("mech/building/src/main/java"),
@@ -87,7 +93,8 @@ class MechanicsModuleGuardTests {
                     Path.of("mech/town/src/main/java"),
                     Path.of("mech/town/src/test/java")));
 
-    private static final Map<String, List<String>> MODULE_DEPENDENCIES = Map.of(":mech:town", List.of("core.building"));
+    private static final Map<String, List<String>> MODULE_DEPENDENCIES =
+            Map.of(":mech:town", List.of("core.building"), ":mech:small", List.of("core.inventory"));
 
     private static List<Module> modules() {
         List<Path> declared = SourceFiles.moduleMainRoots();
@@ -173,10 +180,10 @@ class MechanicsModuleGuardTests {
         assertEquals(
                 List.of(),
                 violations,
-                "Механика зависит только от :api: импорт корня (board/graph/reload/…), другой механики или "
-                        + "Minecraft возвращает циклическую зависимость и запрещает отдельную сборку. Как надо: "
-                        + "нужный контракт — в :api, данные и граф передаёт владелец (доска/граф знает механику, "
-                        + "а не наоборот). Нарушители:");
+                "Механика зависит только от :api и объявленных в build.gradle механик: импорт корня "
+                        + "(board/graph/reload/…), необъявленной механики или Minecraft возвращает циклическую "
+                        + "зависимость и запрещает отдельную сборку. Как надо: нужный контракт — в :api, данные и "
+                        + "граф передаёт владелец (доска/граф знает механику, а не наоборот). Нарушители:");
     }
 
     @Test
@@ -197,8 +204,8 @@ class MechanicsModuleGuardTests {
         assertEquals(
                 List.of(),
                 violations,
-                "Тест механики компилируется только с :api и своим модулем: импорт корня/доски в тесте "
-                        + "скрывает, что модуль без корня не собрать. Нарушители:");
+                "Тест механики компилируется только с :api, своим и объявленными модулями: импорт корня/доски "
+                        + "в тесте скрывает, что модуль без корня не собрать. Нарушители:");
     }
 
     @Test
@@ -224,6 +231,24 @@ class MechanicsModuleGuardTests {
                 List.of(),
                 violations(neighbor, apiClasses, List.of("core.policy")),
                 "Сторож ложно срабатывает: импорт класса :api допустим");
+        Map<Path, String> sibling = Map.of(Path.of("mech/small/src/main/java/core/night/Night.java"), """
+                package com.theminespirit.core.night;
+                import com.theminespirit.core.doors.DoorTuning;
+                class Night {}
+                """);
+        assertEquals(
+                List.of(),
+                violations(sibling, apiClasses, List.of("core.doors", "core.night")),
+                "Сторож ложно срабатывает: пакеты одного модуля (:mech:small) вправе знать друг друга");
+        Map<Path, String> dependent = Map.of(Path.of("mech/small/src/main/java/core/social/Transfer.java"), """
+                package com.theminespirit.core.social;
+                import com.theminespirit.core.inventory.Stack;
+                class Transfer {}
+                """);
+        assertEquals(
+                List.of(),
+                violations(dependent, apiClasses, List.of("core.social", "core.inventory")),
+                "Сторож ложно срабатывает: разрешённая механика (:mech:inventory) доступна модулю");
     }
 
     @Test
@@ -241,54 +266,5 @@ class MechanicsModuleGuardTests {
                 violations(sample, apiClasses, List.of("core.inventory")),
                 "Сторож обязан отличать модуль по физическому пути, а не по имени пакета: ToolChoice в :mech:mining "
                         + "недоступен :mech:inventory");
-    }
-
-    private static Set<String> apiClasses(Map<Path, String> sources) {
-        Set<String> classes = new LinkedHashSet<>();
-        sources.forEach((file, text) -> {
-            Matcher pkg = PACKAGE.matcher(text);
-            assertTrue(pkg.find(), "Файл " + file + " без package: :api не может быть частью пакета");
-            classes.add(pkg.group(1) + "." + file.getFileName().toString().replace(".java", ""));
-        });
-        return classes;
-    }
-
-    private static List<String> violations(
-            Map<Path, String> sources, Set<String> apiClasses, List<String> ownPackages) {
-        List<String> found = new ArrayList<>();
-        sources.forEach((file, text) -> {
-            Matcher matcher = IMPORT.matcher(text);
-            while (matcher.find()) {
-                String name = matcher.group(1);
-                if (name.endsWith(".*")) {
-                    name = name.substring(0, name.length() - 2);
-                }
-                if (allowed(name, apiClasses, ownPackages)) {
-                    continue;
-                }
-                found.add(SourceFiles.logical(file) + ": " + name);
-            }
-        });
-        return found;
-    }
-
-    private static boolean allowed(String name, Set<String> apiClasses, List<String> ownPackages) {
-        for (String prefix : ALLOWED_PREFIXES) {
-            if (name.startsWith(prefix)) {
-                return true;
-            }
-        }
-        for (String ownPackage : ownPackages) {
-            String own = "com.theminespirit." + ownPackage;
-            if (name.equals(own) || name.startsWith(own + ".")) {
-                return true;
-            }
-        }
-        for (String apiClass : apiClasses) {
-            if (name.equals(apiClass) || name.startsWith(apiClass + ".")) {
-                return true;
-            }
-        }
-        return false;
     }
 }

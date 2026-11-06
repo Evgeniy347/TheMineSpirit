@@ -2,8 +2,9 @@ package com.theminespirit.core.hunger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
-import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.reload.TableSlot;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public record HungerRules(
         int regenFoodThreshold,
@@ -40,6 +41,8 @@ public record HungerRules(
 
     private static final HungerRules DEFAULTS = new HungerRules(18, 80, 6.0, 80, 1.0F, 14, 0.1, 0.1, 0.005, 0.1);
 
+    private static final TableSlot<HungerRules> SOURCE = new TableSlot<>(HungerRules::load);
+
     public HungerRules {
         if (regenFoodThreshold < 0 || regenFoodThreshold > SpiritHunger.MAX_FOOD) {
             throw new IllegalArgumentException("Порог восстановления " + regenFoodThreshold + " вне [0, "
@@ -71,7 +74,15 @@ public record HungerRules(
     }
 
     public static HungerRules loadDefault() {
-        return DataTables.INSTANCE.hunger().current();
+        return current();
+    }
+
+    public static HungerRules current() {
+        return SOURCE.current();
+    }
+
+    public static void useSource(Supplier<HungerRules> supplier) {
+        SOURCE.use(supplier);
     }
 
     public static HungerRules load() {
