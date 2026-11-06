@@ -11,6 +11,7 @@ import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.movement.RescueReach;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,6 +22,8 @@ import org.slf4j.Logger;
 final class GraphRescuePost {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String RESCUE = "rescue:";
+
+    private record HelperChoice(Optional<UUID> id, String why) {}
 
     private GraphRescuePost() {}
 
@@ -43,12 +46,17 @@ final class GraphRescuePost {
                 continue;
             }
             long since = mark.orElseThrow().since();
+            BlockPos feet = spirit.blockPosition();
+            BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
             RescueTicket.Escape escape = RescueTicket.escape(post.level, spirit, home, noPath(mark));
-            boolean helper = helper(post, fact.id());
-            String refusal = refusal(post, ticketId, escape, helper);
-            RescuePlans.Assignment assignment = RescuePlans.assign(id, since, refusal, helper);
+            int failures = post.service.board().ticketFailures(ticketId);
+            HelperChoice helper = !escape.self() || failures > 0
+                    ? helper(post, fact.id(), at)
+                    : new HelperChoice(Optional.empty(), "не нужен: выход есть");
+            String refusal = refusal(escape, helper, failures);
+            RescuePlans.Assignment assignment = RescuePlans.assign(id, since, refusal, helper.id());
+            say(post, spirit, since, lifecycle(assignment, at, since, escape, helper));
             if (assignment.mode() == RescuePlans.Mode.IMPOSSIBLE) {
-                say(post, spirit, since, "невозможен — " + assignment.why());
                 posted = true;
                 continue;
             }
@@ -56,8 +64,6 @@ final class GraphRescuePost {
                 posted = true;
                 continue;
             }
-            BlockPos feet = spirit.blockPosition();
-            BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
             TaskNode plan = assignment.mode() == RescuePlans.Mode.SELF
                     ? escape.plan()
                     : RescuePlans.plan(
@@ -77,32 +83,52 @@ final class GraphRescuePost {
         return posted;
     }
 
-    private static @Nullable String refusal(
-            GraphPost post, String ticketId, RescueTicket.Escape escape, boolean helper) {
+    private static String refusal(RescueTicket.Escape escape, HelperChoice helper, int failures) {
         if (!escape.self()) {
             return escape.why();
         }
-        if (helper && post.service.board().ticketFailures(ticketId) > 0) {
+        if (helper.id().isPresent() && failures > 0) {
             return "выход сам не удался (" + escape.why() + ")";
         }
         return null;
+    }
+
+    private static String lifecycle(
+            RescuePlans.Assignment assignment,
+            BlockCoord at,
+            long since,
+            RescueTicket.Escape escape,
+            HelperChoice helper) {
+        String mode = switch (assignment.mode()) {
+            case SELF -> "выходит сам: " + escape.why();
+            case HELPER -> "помощник: " + helper.why();
+            case IMPOSSIBLE -> "невозможен: " + assignment.why() + "; " + helper.why();
+        };
+        return "в " + at + ": " + mode + "; метка с тика " + since;
     }
 
     private static boolean noPath(Optional<StuckSpirits.Stuck> mark) {
         return mark.map(StuckSpirits.Stuck::noPath).orElse(false);
     }
 
-    private static boolean helper(GraphPost post, String rescuee) {
+    private static HelperChoice helper(GraphPost post, String rescuee, BlockCoord trapped) {
+        @Nullable String firstRefusal = null;
         for (SpiritEntity other : post.spirits) {
             if (other.isRemoved() || other.getUUID().toString().equals(rescuee)) {
                 continue;
             }
             GraphFacts.Spirit fact = post.facts.spirits().get(other.getUUID().toString());
             if (fact == null || !fact.stuck()) {
-                return true;
+                RescueReach.Verdict verdict = RescueReach.check(post.level, other.blockPosition(), trapped);
+                if (verdict.reachable()) {
+                    return new HelperChoice(Optional.of(other.getUUID()), other.displayName() + " — " + verdict.why());
+                }
+                if (firstRefusal == null) {
+                    firstRefusal = other.displayName() + " — " + verdict.why();
+                }
             }
         }
-        return false;
+        return new HelperChoice(Optional.empty(), firstRefusal == null ? "свободного помощника нет" : firstRefusal);
     }
 
     private static void say(GraphPost post, SpiritEntity spirit, long since, String text) {

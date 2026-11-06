@@ -86,12 +86,14 @@ class StuckDispatchLiveTests {
         board.stuck().see(stuck, new BlockCoord(at.x() + 1, at.y(), at.z()));
         assertTrue(
                 board.stuck().isStuck(stuck, clock[0]),
-                "Сдвиг на блок внутри области " + StuckSpirits.AREA_RADIUS + " — колебание, а не освобождение: "
-                        + "метка обязана держаться (observe13 N23)");
-        board.stuck().see(stuck, new BlockCoord(at.x() + StuckSpirits.AREA_RADIUS + 1, at.y(), at.z()));
-        assertFalse(
+                "Сдвиг на блок внутри ловушки — колебание, а не освобождение: метка обязана держаться (observe13 N23)");
+        board.stuck().see(stuck, new BlockCoord(at.x() + 9, at.y() - 3, at.z()), clock[0], false);
+        assertTrue(
                 board.stuck().isStuck(stuck, clock[0]),
-                "Дух вышел из области: смена позиции снимает запрет на новые задания");
+                "Блуждание по яме на девять блоков — всё ещё ловушка: метка не снимается сдвигом (observe24 B1)");
+        board.stuck().see(stuck, new BlockCoord(at.x() + 9, at.y(), at.z()), clock[0], true);
+        assertFalse(
+                board.stuck().isStuck(stuck, clock[0]), "Дух вышел на поверхность: запрет на новые задания снимается");
     }
 
     private static DispatchRound.Candidate candidate(UUID id, String name) {

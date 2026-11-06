@@ -34,7 +34,7 @@ final class DispatchPick {
             candidates.put(spirit.getUUID(), candidate(spirit, stockTools));
             round.board()
                     .stuck()
-                    .see(spirit.getUUID(), at(spirit), round.board().now());
+                    .see(spirit.getUUID(), at(spirit), round.board().now(), PitRescue.escaped(spirit));
         }
     }
 

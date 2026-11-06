@@ -136,9 +136,6 @@ final class DeadCodeExemptions {
                     "core/navigation/NavCachedWorld.java|method|NavCachedWorld#cachedBytes",
                     "Счётчик памяти кэша для отчёта: docs/research/baritone-navigation.md"),
             new Exemption(
-                    "core/navigation/NavAStarSearch.java|class|<top>#NavAStarSearch",
-                    "Прототип поиска Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
-            new Exemption(
                     "core/navigation/NavGoalComposite.java|class|<top>#NavGoalComposite",
                     "Прототип цели Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
             new Exemption(

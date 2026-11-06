@@ -66,10 +66,10 @@ class StuckStageLiveTests {
                 afterIdle.isEmpty(),
                 "Стоящий дух не получает заданий и после паузы: пока он не сдвинулся и не спасён, доска "
                         + "держит запрет (observe15 B1/A11)");
-        board.stuck().see(spirit, new BlockCoord(at.x() + StuckSpirits.AREA_RADIUS + 1, at.y(), at.z()));
+        board.stuck().see(spirit, new BlockCoord(at.x() + 7, at.y(), at.z()), clock[0], true);
         assertTrue(
                 new DispatchRound(board, clock[0]).choose(mine, candidates).isPresent(),
-                "Дух сдвинулся дальше области колебания — запрет снимается, и задание снова выдаётся");
+                "Дух вышел на поверхность — запрет снимается, и задание снова выдаётся");
         assertEquals(
                 BoardOutcome.CLAIMED,
                 board.claim(mine.id(), spirit, clock[0]),

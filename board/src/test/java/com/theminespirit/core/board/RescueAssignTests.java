@@ -9,11 +9,13 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class RescueAssignTests {
+    private static final UUID HELPER = UUID.fromString("f58b83b6-c9a0-406d-967a-822843debf54");
+
     @Test
     void assign_SelfPlanExists_SelfAssignee() {
         UUID stuck = UUID.randomUUID();
 
-        RescuePlans.Assignment assignment = RescuePlans.assign(stuck, 140, null, true);
+        RescuePlans.Assignment assignment = RescuePlans.assign(stuck, 140, null, Optional.empty());
 
         assertEquals(RescuePlans.Mode.SELF, assignment.mode(), "Сам выходит, если у него есть план выхода");
         assertEquals(Optional.of(stuck), assignment.assignee(), "Самоспасение выдаётся самому застрявшему");
@@ -24,11 +26,28 @@ class RescueAssignTests {
     }
 
     @Test
-    void assign_NoSelfPlanWithHelper_HelperWithoutAssignee() {
-        RescuePlans.Assignment assignment = RescuePlans.assign(UUID.randomUUID(), 140, "нет кирки", true);
+    void assign_SelfPlanExists_HelperNotSpent() {
+        UUID stuck = UUID.randomUUID();
+
+        RescuePlans.Assignment assignment = RescuePlans.assign(stuck, 140, null, Optional.of(HELPER));
+
+        assertEquals(
+                RescuePlans.Mode.SELF,
+                assignment.mode(),
+                "Свой выход дешевле помощника: дух не ждёт чужую работу, когда может выбраться сам");
+        assertEquals(Optional.of(stuck), assignment.assignee(), "Самоспасение остаётся адресным застрявшему");
+    }
+
+    @Test
+    void assign_NoSelfPlanWithHelper_HelperAssigned() {
+        RescuePlans.Assignment assignment =
+                RescuePlans.assign(UUID.randomUUID(), 140, "нет кирки", Optional.of(HELPER));
 
         assertEquals(RescuePlans.Mode.HELPER, assignment.mode(), "Без своего плана выход ставит помощник");
-        assertEquals(Optional.empty(), assignment.assignee(), "Помощника выбирает выдача, а не сам застрявший");
+        assertEquals(
+                Optional.of(HELPER),
+                assignment.assignee(),
+                "Помощник назначен тот, до кого проверен достижимый путь: выдача не ищет его заново");
         assertTrue(
                 assignment.why().contains("помощник") && assignment.why().contains("нет кирки"),
                 "Причина называет и помощника, и почему сам не выйдет: " + assignment.why());
@@ -36,7 +55,7 @@ class RescueAssignTests {
 
     @Test
     void assign_NoSelfPlanNoHelper_Impossible() {
-        RescuePlans.Assignment assignment = RescuePlans.assign(UUID.randomUUID(), 140, "нет кирки", false);
+        RescuePlans.Assignment assignment = RescuePlans.assign(UUID.randomUUID(), 140, "нет кирки", Optional.empty());
 
         assertEquals(
                 RescuePlans.Mode.IMPOSSIBLE,

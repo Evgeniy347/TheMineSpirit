@@ -176,6 +176,54 @@ class NavAStarTests {
         assertEquals(3, result.end().x(), "дух выходит на другом берегу");
     }
 
+    @Test
+    void pit_DeadEndUnderWall_PathDoesNotDescend() {
+        NavTestWorld world = underWallCorridor(false);
+        NavResult result = plan(world, 0, walkOnly(), new NavGoalBlock(10, 1, 0));
+
+        assertFalse(result.found(), "яма без выхода не ведёт к цели: мост из неё не строится");
+        assertTrue(
+                result.path() == null || result.path().positions().stream().allMatch(cell -> cell.y() >= 1),
+                "путь не заходит в яму под стеной: ниже поверхности нет ни одной клетки — "
+                        + "иначе дух сходит с ума в ловушке (observe24 B1): "
+                        + (result.path() == null ? "путь пуст" : result.path().positions()));
+    }
+
+    @Test
+    void cave_UnderSettlementWithWater_PathStaysAboveGround() {
+        NavTestWorld world = underWallCorridor(true);
+        NavResult result = plan(world, 0, walkOnly(), new NavGoalBlock(10, 1, 0));
+
+        assertTrue(
+                result.path() == null || result.path().positions().stream().allMatch(cell -> cell.y() >= 1),
+                "под поселением пещера с водой без выхода: путь не спускается туда, где вода держит духа — "
+                        + (result.path() == null ? "путь пуст" : result.path().positions()));
+    }
+
+    private static NavTestWorld underWallCorridor(boolean water) {
+        NavTestWorld world = NavTestWorld.flat(0);
+        for (int x = 0; x <= 12; x++) {
+            world.solid(x, 1, -1).solid(x, 2, -1).solid(x, 3, -1);
+            world.solid(x, 1, 1).solid(x, 2, 1).solid(x, 3, 1);
+        }
+        for (int x = 4; x <= 9; x++) {
+            world.solid(x, 1, 0).solid(x, 2, 0).solid(x, 3, 0);
+        }
+        world.solid(12, 1, 0).solid(12, 2, 0).solid(12, 3, 0);
+        for (int x = 3; x <= 10; x++) {
+            for (int z = -1; z <= 1; z++) {
+                world.air(x, -2, z).air(x, -1, z);
+            }
+        }
+        if (water) {
+            for (int x = 7; x <= 10; x++) {
+                world.wet(x, -2, 0);
+            }
+        }
+        world.air(3, 0, 0);
+        return world;
+    }
+
     private static NavResult plan(NavTestWorld world, int blocks, NavSettings settings, NavGoal goal) {
         return NavAStarSearch.plan(new NavContext(world, settings, blocks), 0, 1, 0, goal);
     }

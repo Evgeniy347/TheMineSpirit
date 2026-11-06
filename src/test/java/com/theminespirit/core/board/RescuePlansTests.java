@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.movement.SelfEscape;
@@ -45,10 +46,10 @@ class RescuePlansTests {
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
 
         assertEquals(
-                List.of("goto", "dig_out", "wait", "clear_area", "goto"),
+                List.of("goto", "wait", "clear_area"),
                 scripts(plan),
-                "план спасения проходит каталог: подойти (с прокопом, если проход закрыт), вскрыть клетку вокруг духа,"
-                        + " снова подойти");
+                "план спасения проходит каталог: подойти и вскрыть клетку вокруг духа; копать вниз к духу "
+                        + "запрещено (observe24 B3)");
     }
 
     @Test
@@ -183,20 +184,26 @@ class RescuePlansTests {
                 scripts(posted),
                 "План помощника один: выставление задания и восстановление из NBT не расходятся");
         assertEquals(
-                List.of("goto", "dig_out", "wait", "clear_area", "dig_out", "goto"),
+                List.of("goto", "wait", "clear_area", "goto"),
                 scripts(posted),
-                "Помощник идёт к духу (с прокопом и ожиданием), вскрывает клетку, выводит к дому");
+                "Помощник идёт к духу, вскрывает клетку и возвращается к дому; копать вниз он не начинает");
+        assertFalse(
+                scripts(posted).contains("dig_out"),
+                "В плане помощника нет dig_out: путь вниз на десятки блоков — причина провала 0 из 6 (observe24 B3)");
     }
 
     @Test
-    void helper_WithoutHome_ReturnsToTrapped() {
+    void helper_WithoutHome_StaysAtTrapped() {
         TaskNode plan = RescuePlans.helper(TRAPPED, null);
 
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
         assertEquals(
-                List.of("goto", "dig_out", "wait", "clear_area", "goto"),
+                List.of("goto", "wait", "clear_area"),
                 scripts(plan),
-                "Без дома план возвращает помощника к самому духу, а не оставляет в пустоте");
+                "Без дома помощник вскрывает клетку на месте, а не уходит в пустоту");
+        assertFalse(
+                scripts(plan).contains("dig_out"),
+                "Без дома помощник не копает вниз к застрявшему: бездну не пробивают (observe24 B3)");
     }
 
     @Test

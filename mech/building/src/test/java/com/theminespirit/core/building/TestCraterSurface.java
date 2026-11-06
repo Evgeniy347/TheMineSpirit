@@ -13,6 +13,7 @@ final class TestCraterSurface implements CraterSurface {
     private final Map<Long, Integer> depths = new HashMap<>();
     private final Set<BlockCoord> solid = new HashSet<>();
     private final Set<BlockCoord> air = new HashSet<>();
+    private final Set<BlockCoord> fluid = new HashSet<>();
     private final Set<BlockCoord> protectedCells = new HashSet<>();
 
     TestCraterSurface(BlockCoord center, int radius) {
@@ -41,6 +42,11 @@ final class TestCraterSurface implements CraterSurface {
 
     TestCraterSurface air(BlockCoord pos) {
         air.add(pos);
+        return this;
+    }
+
+    TestCraterSurface fluid(BlockCoord pos) {
+        fluid.add(pos);
         return this;
     }
 
@@ -81,6 +87,11 @@ final class TestCraterSurface implements CraterSurface {
         int level = groundLevel(x, z);
         int depth = depths.getOrDefault(key(x, z), 0);
         return y > level - depth;
+    }
+
+    @Override
+    public boolean isFluid(int x, int y, int z) {
+        return fluid.contains(new BlockCoord(x, y, z));
     }
 
     @Override

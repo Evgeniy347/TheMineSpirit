@@ -112,12 +112,15 @@ public final class Approach {
                 goal.x, goal.y, goal.z, spirit.getNavigation().isDone())) {
             moveToTarget(goal);
             spirit.countPathBuild();
-            if (mode == PathMode.CAREFUL && spirit.onGround()) {
-                refusal = CarefulPath.refusal(spirit.getNavigation().getPath());
-                if (refusal != null) {
-                    finish();
-                    return State.STUCK;
-                }
+            Path path = spirit.getNavigation().getPath();
+            String descent = mode == PathMode.CAREFUL && spirit.onGround()
+                    ? CarefulPath.refusal(path)
+                    : CarefulPath.descentRefusal(path, (int) Math.floor(spirit.getY()), (int) Math.floor(goal.y));
+            if (descent != null) {
+                if (mode != PathMode.CAREFUL && rescued(target)) return State.MOVING;
+                refusal = descent;
+                finish();
+                return State.STUCK;
             }
             followNetwork(target);
         }

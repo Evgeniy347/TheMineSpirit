@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.movement;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.movement.DescentPath;
 import com.theminespirit.core.movement.SearchMillis;
 import com.theminespirit.core.movement.SurfaceEscape;
 import com.theminespirit.core.observation.BlockCoord;
@@ -57,7 +58,27 @@ public final class SurfaceRoute {
             LOGGER.info("[dig_out] дух {}: пути вниз из {} к {} нет", spirit.displayName(), start, target);
             return Optional.empty();
         }
-        return Optional.of(route(spirit, level, found.orElseThrow(), "вниз", started));
+        List<BlockCoord> cells = found.orElseThrow();
+        BlockCoord end = cells.get(cells.size() - 1);
+        String refusal = DescentPath.refusalOrNull(cells, water(level, end));
+        if (refusal != null) {
+            LOGGER.info(
+                    "[dig_out] дух {}: путь вниз из {} к {} отвергнут: {} ({} клеток, конец {})",
+                    spirit.displayName(),
+                    start,
+                    target,
+                    refusal,
+                    cells.size(),
+                    end);
+            return Optional.empty();
+        }
+        return Optional.of(route(spirit, level, cells, "вниз", started));
+    }
+
+    private static boolean water(Level level, BlockCoord cell) {
+        return level.getFluidState(new BlockPos(cell.x(), cell.y(), cell.z())).is(FluidTags.WATER)
+                || level.getFluidState(new BlockPos(cell.x(), cell.y() - 1, cell.z()))
+                        .is(FluidTags.WATER);
     }
 
     private static RouteWalk route(
