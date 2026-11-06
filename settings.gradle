@@ -39,7 +39,4 @@ include ':mech:inventory'
 include ':mech:building'
 include ':mech:town'
 
-def mechanicsModules = [
-    ':policy', ':mech:farming', ':mech:forestry', ':mech:crafting', ':mech:husbandry', ':mech:small',
-    ':mech:mining', ':mech:movement', ':mech:inventory', ':mech:building', ':mech:town'
-]
+def mechanicsModules = [':policy']

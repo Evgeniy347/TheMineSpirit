@@ -69,24 +69,28 @@ class MechanicsModuleGuardTests {
             throw new UncheckedIOException("Сторож не смог прочитать список модулей settings.gradle", e);
         }
         Set<String> mechanics = new LinkedHashSet<>();
+        Set<String> included = new LinkedHashSet<>();
+        Matcher include = INCLUDE.matcher(settings);
+        while (include.find()) {
+            String id = include.group(1);
+            included.add(id);
+            if (id.startsWith(":mech:")) {
+                mechanics.add(id);
+            }
+        }
         Matcher list = MECHANICS_LIST.matcher(settings);
         assertTrue(
                 list.find(),
                 "В settings.gradle нет списка def mechanicsModules = [...]: тип модуля не вывести. Как надо: "
-                        + "перечисли в списке id механик из include; это единственное место, где модуль объявлен.");
+                        + "механики под mech/ находятся по каталогу, а верхнеуровневую (:policy) перечисли в списке.");
         Matcher id = MODULE_ID.matcher(list.group(1));
         while (id.find()) {
             mechanics.add(id.group(1));
         }
         assertTrue(
                 !mechanics.isEmpty(),
-                "Список mechanicsModules в settings.gradle пуст: сторож молча проверяет ноль механик. Как надо: "
-                        + "перечисли id механик.");
-        Set<String> included = new LinkedHashSet<>();
-        Matcher include = INCLUDE.matcher(settings);
-        while (include.find()) {
-            included.add(include.group(1));
-        }
+                "Модулей-механик не нашлось: сторож молча проверяет ноль механик. Как надо: модуль механики лежит "
+                        + "в mech/ или перечислен в mechanicsModules.");
         assertTrue(
                 included.containsAll(mechanics),
                 "Список mechanicsModules называет модуль, которого нет в include settings.gradle: тип и сборка "
