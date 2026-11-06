@@ -855,6 +855,10 @@ if [ "$MODE" = "unit" ]; then
         fi
     else
         UNIT_EXCLUDE=(-x :api:test)
+        for module_root in ${MOD_MODULE_MAIN_ROOTS//,/ }; do
+            name="${module_root%%/src/*}"
+            UNIT_EXCLUDE+=(-x ":${name//\//:}:test")
+        done
     fi
 
     if command -v setsid >/dev/null 2>&1; then

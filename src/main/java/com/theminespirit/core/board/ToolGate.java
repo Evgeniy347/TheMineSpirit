@@ -9,8 +9,8 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 public final class ToolGate {
-    public static final String PICKAXE = "_pickaxe";
-    public static final String AXE = "_axe";
+    public static final String PICKAXE = ToolsConfig.PICKAXE;
+    public static final String AXE = ToolsConfig.AXE;
     public static final String TOOL_MODIFIER = "tool=";
     public static final String CARRY_MODIFIER = "carry=";
     private static final String MINECRAFT = "minecraft:";

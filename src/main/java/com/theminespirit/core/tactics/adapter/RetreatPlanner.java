@@ -11,7 +11,7 @@ import java.util.Optional;
 public final class RetreatPlanner {
     public static final double AWAY_DISTANCE = 12.0;
     public static final double KITE_DISTANCE = 10.0;
-    public static final double HOME_ARRIVAL = 2.0;
+    public static final double HOME_ARRIVAL = RetreatSpacing.HOME_ARRIVAL;
     public static final double SPOT_ARRIVAL = 0.5;
     public static final double WATER_ARRIVAL = 1.2;
     public static final double RUN_ARRIVAL = 1.5;
