@@ -2,6 +2,15 @@ plugins {
     id 'theminespirit.module'
 }
 
+description = 'Геометрия поселения: план, участки, стены, улицы и уровни'
+
 dependencies {
     implementation project(':mech:building')
+    // lib: тесты поселения проверяют сшивку с доской и таблицами; боевой модуль их не тянет.
+    testImplementation project(':board')
+    testImplementation project(':content')
+    testImplementation project(':tactics')
+    testImplementation project(':mech:small')
+    testImplementation project(':policy')
+    testImplementation project(':ui')
 }

@@ -12,10 +12,24 @@ def moduleTestThreads =
 
 def moduleTests = file('src/test/java')
 
+def hasTag = { String tag ->
+    moduleTests.isDirectory()
+            && fileTree(moduleTests).matching { include '**/*.java' }.files.any { it.getText('UTF-8').contains("@Tag(\"${tag}\")") }
+}
+
 tasks.named('test', Test) {
     onlyIf { moduleTests.exists() }
     failOnNoDiscoveredTests = moduleTests.exists() && !project.hasProperty('theminespirit.filtered')
     filter { setFailOnNoMatchingTests(!project.hasProperty('theminespirit.filtered')) }
+    // lib: --tests действует только на задачу test названного проекта; модули фильтруются тем же списком.
+    def moduleTestFilter = project.findProperty('theminespirit.tests')
+    if (moduleTestFilter != null) {
+        filter {
+            moduleTestFilter.toString().split(',').each { pattern -> includeTestsMatching(pattern.trim()) }
+            setFailOnNoMatchingTests(false)
+        }
+        failOnNoDiscoveredTests = false
+    }
     workingDir = rootProject.projectDir
     useJUnitPlatform {
         excludeTags 'slow', 'mutation', 'export'
@@ -33,7 +47,57 @@ tasks.named('test', Test) {
     systemProperty 'jqwik.database', '.jqwik-database'
     systemProperty 'theminespirit.updateSnapshots',
             System.getProperty('theminespirit.updateSnapshots', System.getenv('THEMINESPIRIT_UPDATE_SNAPSHOTS') ?: 'false')
-    classpath += files(rootProject.file('mod/src/main/resources'), rootProject.file('src/test/resources'))
+    classpath += files(rootProject.file('src/test/resources'))
+}
+
+// lib: :mod несёт свои ресурсы сам; ручное добавление того же каталога дублирует фрагменты графа
+// (GraphFragments считает повтор id конфликтом). Модуль без :mod получает данные мода отсюда.
+afterEvaluate {
+    def usesMod = configurations.testImplementation.dependencies.any { dependency ->
+        dependency instanceof org.gradle.api.artifacts.ProjectDependency
+                && dependency.path == ':mod'
+    }
+    if (!usesMod) {
+        tasks.withType(Test).configureEach {
+            classpath += files(rootProject.file('mod/src/main/resources'))
+        }
+    }
+}
+
+// lib: тир принадлежит модулю: правка механики гоняет её медленные/мутационные тесты, а не все.
+tasks.register('slowTest', Test) {
+    group = 'verification'
+    description = 'Медленные тесты модуля (тег slow)'
+    onlyIf { moduleTests.exists() }
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath + files(rootProject.file('mod/src/main/resources'), rootProject.file('src/test/resources'))
+    workingDir = rootProject.projectDir
+    useJUnitPlatform {
+        includeTags 'slow'
+    }
+    maxParallelForks = 1
+    systemProperty 'jqwik.tries.default', '1000'
+    systemProperty 'theminespirit.modId', 'theminespirit'
+    systemProperty 'theminespirit.testCost.csv', "TestResults/${project.name}/slow-test-cost.csv"
+    failOnNoDiscoveredTests = hasTag('slow')
+    shouldRunAfter tasks.named('test')
+}
+
+tasks.register('mutationTest', Test) {
+    group = 'verification'
+    description = 'Мутационный перебор ситуаций модуля (тег mutation)'
+    onlyIf { moduleTests.exists() }
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath + files(rootProject.file('mod/src/main/resources'), rootProject.file('src/test/resources'))
+    workingDir = rootProject.projectDir
+    useJUnitPlatform {
+        includeTags 'mutation'
+    }
+    maxParallelForks = (System.getenv('THEMINESPIRIT_MUTATION_FORKS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}") as int
+    maxHeapSize = '2g'
+    systemProperty 'theminespirit.modId', 'theminespirit'
+    failOnNoDiscoveredTests = hasTag('mutation')
+    shouldRunAfter tasks.named('test')
 }
 
 tasks.register('graphExport', Test) {

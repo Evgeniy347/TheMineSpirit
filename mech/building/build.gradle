@@ -1,3 +1,10 @@
 plugins {
     id 'theminespirit.module'
 }
+
+description = 'Постройки, схемы и геометрия стройки'
+
+dependencies {
+    // lib: тесты схем проверяют живые снимки через neoforge-код :mod; боевой модуль от него не зависит.
+    testImplementation project(':mod')
+}

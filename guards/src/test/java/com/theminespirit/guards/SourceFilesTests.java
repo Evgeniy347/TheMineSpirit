@@ -25,10 +25,13 @@ class SourceFilesTests {
         Path file = SourceFiles.path("guards/SourceFilesTests.java");
 
         assertEquals(
-                SourceFiles.TEST.resolve("com/theminespirit/guards/SourceFilesTests.java"),
-                file,
-                "логический путь теста обязан разворачиваться в TEST, а не в MAIN");
+                "guards/SourceFilesTests.java",
+                SourceFiles.logical(file),
+                "логический путь теста обязан пережить оба перевода — где бы ни лежал модуль :guards");
         assertTrue(Files.isRegularFile(file), "логический путь теста обязан вести к файлу: " + file);
+        assertTrue(
+                file.normalize().startsWith(SourceFiles.path("guards").normalize()),
+                "тест сторожа обязан лежать в каталоге своего модуля: " + file);
     }
 
     @Test

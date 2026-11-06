@@ -1,13 +1,6 @@
+// lib: мод-точка входа: classpath NeoForge + сборка jar с метаданными.
+// Classpath вынесен в theminespirit.neoforge-classpath, чтобы механики с neoforge-кодом
+// получали его той же одной настройкой, без копипасты.
 plugins {
-    id 'theminespirit.java-conventions'
-    id 'net.neoforged.moddev'
-}
-
-neoForge {
-    version = project.neo_version
-
-    parchment {
-        mappingsVersion = project.parchment_mappings_version
-        minecraftVersion = project.parchment_minecraft_version
-    }
+    id 'theminespirit.neoforge-classpath'
 }

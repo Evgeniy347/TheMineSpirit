@@ -14,7 +14,7 @@
 | Команда | Что делает | Результат |
 |---|---|---|
 | `scripts/test.sh unit` | быстрые JUnit-тесты (включая свойства jqwik, кроме `@Tag("slow")`) | `OK unit: N тестов, T с` |
-| `scripts/test.sh unit --tests "*Guard*"` | только тесты, подходящие под фильтр gradle | `OK unit: N тестов, T с` |
+| `scripts/test.sh unit --tests "*GuardTests*"` | только тесты, подходящие под фильтр gradle | `OK unit: N тестов, T с` |
 | `scripts/test.sh gametest` | GameTest под замком шардами: общий набор без ручных демо-аудитов | `OK gametest: N тестов, T с` |
 | `scripts/test.sh gametest --full` | то же с пределом полного прогона (демо-аудиты и здесь не идут) | `OK gametest: N тестов, T с` |
 | `scripts/test.sh gametest demo_audit_<постройка>` | ручной аудит одной постройки (только явно) | `OK gametest: N тестов, T с` |
@@ -159,7 +159,7 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 
 | Скрипт | Назначение |
 |---|---|
-| [scripts/test.sh](scripts/test.sh) | единственный запуск тестов: `unit [--tests …]`, `gametest [пачка…]`; лог — `TestResults/logs/`, замок GameTest и пределы — в шапке скрипта; коды 0/1/2/75/124 |
+| [scripts/test.sh](scripts/test.sh) | единственный запуск тестов: `unit [--tests …]`, `gametest [пачка…]`; лог — `TestResults/logs/`, замок GameTest и пределы — в шапке скрипта; коды 0/1/2/75/124; карта скриптов — [scripts/README.md](scripts/README.md) |
 | [scripts/gametest.sh](scripts/gametest.sh) | обёртка над `scripts/test.sh gametest` (совместимость) |
 | [scripts/prove-red.sh](scripts/prove-red.sh) | тест `fix:`-коммита краснеет на родителе и зеленеет на коммите |
 | [scripts/schematic.sh](scripts/schematic.sh) | постройки текстом: `show` (материалы, срезы), `check` (сторожа) |
@@ -180,19 +180,21 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 ## Структура
 
 ```
-agents/strategist/                    ← агент-стратег духов (Python, стандартная библиотека), docs/STRATEGIST.md
+agents/strategist/                    ← агент-стратег духов (Python), docs/STRATEGIST.md
 mod/src/main/java/com/theminespirit/  ← TheMineSpirit.java, neoforge/, поддержка механик
 mod/src/main/resources/data/          ← данные мода, схемы, board/*.json
-mod/src/main/templates/               ← neoforge.mods.toml (подставляется из gradle.properties)
-gametest/src/main/java/…/gametest/    ← GameTest-классы
-api/ board/ tactics/ content/ rest/   ← Gradle-модули логики без Minecraft
-ui/ policy/ mech/*/                   ← и механики; зависит только от :api
-src/test/java/                        ← сторожа и тесты корня
+mod/src/main/templates/               ← neoforge.mods.toml (из gradle.properties)
+gametest/src/main/java/…/gametest/    ← GameTest-классы (:gametest)
+api board tactics content rest ui policy  ← модули логики (карта — docs/research/modules.md)
+mech/*/                               ← механики: farming, forestry, crafting, husbandry, mining, movement, inventory, building, town, small
+guards/src/test/java/                 ← сторожа (:guards, всегда)
+src/test/java/                        ← только отчёты о стоимости тестов корня
 ```
 
+Каждый модуль — настоящий sourceSet (`<модуль>/src/{main,test}/java`), собирается сам, зависит от `:api` и явно
+объявленных модулей; тесты — в `src/test`; тиры `slowTest`/`mutationTest` — по модулям, корень собирает все.
 Версии Minecraft, NeoForge и зависимостей — в `gradle.properties`.
 
 ## Локальные рабочие каталоги
 
-`temp-scripts/` и `TestResults/` игнорируются Git; после клонирования их может не быть:
-`mkdir -p temp-scripts TestResults`.
+`temp-scripts/` и `TestResults/` игнорируются Git; после клонирования их может не быть: `mkdir -p temp-scripts TestResults`.

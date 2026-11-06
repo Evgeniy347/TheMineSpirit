@@ -1,0 +1,19 @@
+plugins {
+    id 'theminespirit.module'
+}
+
+// lib: сторожа читают исходники и классы всех модулей, поэтому это листовой модуль:
+// на него не зависит ни один боевой модуль, а корневой test подключает его первым.
+dependencies {
+    testImplementation project(':board')
+    testImplementation project(':tactics')
+    testImplementation project(':content')
+    testImplementation project(':policy')
+    testImplementation project(':rest')
+    testImplementation project(':ui')
+    testImplementation project(':mech:building')
+    testImplementation project(':mech:town')
+    testImplementation project(':mech:inventory')
+    testImplementation project(':mech:movement')
+    testImplementation project(':mod')
+}
