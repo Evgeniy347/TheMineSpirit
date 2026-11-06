@@ -51,16 +51,18 @@ write_probe assertTrue 'assertTrue(true, "зелёный тест-зонд");'
 
 printf 'package com.theminespirit;
 
-class Unstaged {}
+class Unstaged {
+    static final int VALUE = 1;
+}
 ' >src/test/java/com/theminespirit/Unstaged.java
 git add src/test/java/com/theminespirit/Unstaged.java
-echo "" >>"$probe"
+sed -i 's/VALUE = 1/VALUE = 2/' src/test/java/com/theminespirit/Unstaged.java
 check unstaged_warning 0 да git commit -m "test: пустой класс-зонд"
 grep -q "ВНИМАНИЕ — прогон относится к рабочему дереву" "$work/unstaged_warning.out"     && echo "OK предупреждение о незастейдженных правках напечатано" || echo "FAIL предупреждения о незастейдженных правках нет"
-git checkout -q HEAD -- "$probe"
+git checkout -q HEAD -- src/test/java/com/theminespirit/Unstaged.java
 
 git checkout -q -b side
-echo "" >>src/test/java/com/theminespirit/Unstaged.java
+sed -i 's/VALUE = 1/VALUE = 3/' src/test/java/com/theminespirit/Unstaged.java
 git add -A && git commit -q -m "test: правка на ветке"
 git checkout -q -
 echo "ещё документ" >>docs/TESTING.md
