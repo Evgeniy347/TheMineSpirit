@@ -35,4 +35,29 @@ class BoardLogCulpritTests {
                 BoardLog.culprit(List.of()),
                 "Без задания в строке обязан стоять прочерк: пустое место читается как забытое поле");
     }
+
+    @Test
+    void culpritOrAction_AssignedTicket_KeepsId() {
+        assertEquals(
+                "repair:build_house",
+                BoardLog.culpritOrAction("repair:build_house", "dig_out"),
+                "Задание доски сильнее имени скрипта: id задания — главная причина правки плана");
+    }
+
+    @Test
+    void culpritOrAction_SelfEscapeWithoutTicket_NamesRescueAction() {
+        assertEquals(
+                "самоспасение: dig_out",
+                BoardLog.culpritOrAction(null, "dig_out"),
+                "Самоспасение не ставит задание доски, но [plot-edit] обязан назвать действие, которым сломан "
+                        + "план: в observe24 стояло «задание —», и причину искали по всему логу");
+    }
+
+    @Test
+    void culpritOrAction_NoTicketAndNoScript_Dash() {
+        assertEquals(
+                "—",
+                BoardLog.culpritOrAction("—", null),
+                "Без задания и действия остаётся прочерк: пустое место читается как забытое поле");
+    }
 }

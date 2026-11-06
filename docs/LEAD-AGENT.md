@@ -24,7 +24,14 @@ Claude, который ведёт проект: ставит задания ис
 - Запуск opencode: задание `oc-results/task-<имя>.msg`, из worktree —
   `OPENCODE_BIN="$(command -v opencode)" PYTHON=python OPENCODE_MODEL=<модель> nohup bash scripts/opencode-task.sh
   -f ../oc-results/task-<имя>.msg > ../oc-results/l-<имя>.out 2>&1; echo "EXIT=$?" >> …`. Продолжение — `-s <ses_…>`
-  (грязное дерево — `OPENCODE_ALLOW_DIRTY=1`). Остановка — только по PID (никаких `pkill -f`/`killall`).
+  (грязное дерево — `OPENCODE_ALLOW_DIRTY=1`). Остановка — только по дереву PID конкретного исполнителя (никаких
+  `pkill -f`/`killall`, никаких kill по шаблону имени). Обёртки главного агента — `oc-results/run-one.sh`,
+  `next-slot.sh` (блокирует до конца исполнителя — каждый запуск отдельной фоновой задачей), `lead-merge.sh`
+  (`LEAD_MERGE_OK=1`, база размеров чинится `fix-baseline.py`), `procs.ps1` (зомби и загрузка).
+- Присмотр: свежесть — по самому новому `attempt-*.jsonl` (после сбоя провайдера обёртка начинает новую попытку);
+  «завис» — молчит >30 мин. EXIT=0 без отчёта («жду копию/тесты») — продолжить той же сессией с
+  `oc-results/task-continue-nowait.msg`. «Location not found» при `-s` — новая сессия с самодостаточным заданием.
+- Ветки, двигающие классы по модулям (переезд, `docs/research/modules.md`), сливать строго по одной.
 - Задание исполнителю — самодостаточное: цель, что уже сделано, файлы, запреты (git-операции из AGENTS.md,
   `mutationTest` — только с согласия владельца), формат отчёта (хэши, итог тестов, что не сделано).
 

@@ -152,10 +152,16 @@ public record StageSite(
     }
 
     public boolean planCell(int x, int y, int z) {
-        if (minePlan(x, z) || ringPost(x, z)) {
+        if (y > anchor.y() + BUILDING_HEIGHT) {
+            return false;
+        }
+        if (minePlan(x, z)) {
             return true;
         }
-        if (y < anchor.y() - 1 || y > anchor.y() + BUILDING_HEIGHT) {
+        if (ringPost(x, z)) {
+            return y >= anchor.y() - 1;
+        }
+        if (y < anchor.y() - 1) {
             return false;
         }
         return hut.covers(x, z)
@@ -166,6 +172,9 @@ public record StageSite(
     }
 
     public PlanBuilding planBuilding(int x, int y, int z) {
+        if (y > anchor.y() + BUILDING_HEIGHT) {
+            return PlanBuilding.NONE;
+        }
         boolean insideHeight = y >= anchor.y() - 1 && y <= anchor.y() + BUILDING_HEIGHT;
         if (insideHeight) {
             if (hut.covers(x, z)) {
@@ -181,7 +190,7 @@ public record StageSite(
         if (minePlan(x, z)) {
             return PlanBuilding.MINE;
         }
-        if (ringPost(x, z)) {
+        if (insideHeight && ringPost(x, z)) {
             return PlanBuilding.FENCE;
         }
         if (insideHeight && fenceStrip.contains(x, z)) {

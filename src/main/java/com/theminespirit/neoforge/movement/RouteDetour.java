@@ -10,6 +10,7 @@ import com.theminespirit.core.navigation.NavRouteSteps;
 import com.theminespirit.core.navigation.NavSegmentedRoute;
 import com.theminespirit.core.navigation.NavSegmentedSession;
 import com.theminespirit.core.navigation.NavSettings;
+import com.theminespirit.core.navigation.NavWorld;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.route.Route;
 import com.theminespirit.core.route.RouteCell;
@@ -106,7 +107,8 @@ public final class RouteDetour {
         LevelNavWorld live = new LevelNavWorld(spirit.level());
         NavCachedWorld cache = new NavCachedWorld();
         packLocal(live, cache, from);
-        NavContext context = new NavContext(new NavCacheWorld(live, cache), settings, blocks);
+        NavWorld effective = rescue ? new RescueNavWorld(live, from, cell -> PlanDetour.foreign(spirit, cell)) : live;
+        NavContext context = new NavContext(new NavCacheWorld(effective, cache), settings, blocks);
         NavSegmentedSession session = new NavSegmentedSession(
                 context,
                 from,

@@ -1,6 +1,7 @@
 package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
@@ -161,6 +162,34 @@ class FloatingBlocksTests {
 
         assertEquals(1, found.size(), "Сканируются только колонки участка: чужой забор за границей не в списке");
         assertEquals(new BlockCoord(1, 66, 1), found.get(0).at(), "Находка называет точные координаты");
+    }
+
+    @Test
+    void countedInGraph_Buildings_ExcludedFromHanging() {
+        Fake world = new Fake();
+        world.put(2, 67, 2, "minecraft:chest");
+        world.put(3, 68, 3, "minecraft:furnace");
+        world.put(4, 68, 4, "minecraft:crafting_table");
+        world.put(5, 66, 5, "minecraft:oak_fence");
+        world.put(6, 70, 6, "minecraft:oak_planks");
+
+        assertFalse(
+                FloatingBlocks.countedInGraph(world.only(2, 67, 2)),
+                "Сундук — постройка/станция, а не висящий блок: [graph] висящее его не считает (observe24: "
+                        + "в составе висящего chest/furnace/crafting_table)");
+        assertFalse(
+                FloatingBlocks.countedInGraph(world.only(3, 68, 3)),
+                "Печь — станция поселения, а не мусор: граф не должен звать её в уборку висящего");
+        assertFalse(
+                FloatingBlocks.countedInGraph(world.only(4, 68, 4)),
+                "Верстак — станция поселения, а не висящий блок: граф не должен звать его в уборку висящего");
+        assertTrue(FloatingBlocks.countedInGraph(world.only(5, 66, 5)), "Забор без опоры — висящее");
+        assertTrue(FloatingBlocks.countedInGraph(world.only(6, 70, 6)), "Доска без опоры — висящее");
+        assertEquals(
+                2,
+                FloatingBlocks.countedInGraph(List.of(world.only(2, 67, 2), world.only(5, 66, 5), world.only(6, 70, 6)))
+                        .size(),
+                "Список для [graph] висящее отбрасывает сундук и станции: 2 из 3 находок — висящее");
     }
 
     private static final class Fake implements FloatingBlocks.World {
