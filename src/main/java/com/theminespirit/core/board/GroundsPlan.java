@@ -7,6 +7,7 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.SiteLevels;
 import com.theminespirit.core.town.StageWork;
 import java.util.ArrayList;

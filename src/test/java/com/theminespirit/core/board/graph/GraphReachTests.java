@@ -46,6 +46,20 @@ class GraphReachTests {
     }
 
     @Test
+    void producers_TwoStatesShareGraphIndex_NoSecondIndex() {
+        String node = GRAPH.ways().stream()
+                .map(SupplyGraph.Way::makes)
+                .filter(makes -> GRAPH.producers(makes).size() > 1)
+                .findFirst()
+                .orElseThrow();
+        GraphReach other = new GraphReach(GRAPH, GraphWorld.empty().state());
+        assertSame(
+                GRAPH.producers(node),
+                other.producers(node),
+                "Индекс путей один на граф: планировщик не строит второй набор «предмет → пути» на каждое состояние");
+    }
+
+    @Test
     void producers_UnknownNode_Empty() {
         assertTrue(
                 REACH.producers("no_such_item").isEmpty(),

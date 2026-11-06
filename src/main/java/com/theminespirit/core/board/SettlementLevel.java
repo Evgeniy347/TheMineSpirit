@@ -2,10 +2,13 @@ package com.theminespirit.core.board;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageSites;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownRules;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -18,6 +21,25 @@ public final class SettlementLevel {
 
     private SettlementLevel() {}
 
+    public static BoardLogEntry journalEntry(SettlementPlot plot, long tick, String configHash) {
+        return journalEntry(plot, tick, configHash, List.of());
+    }
+
+    public static BoardLogEntry journalEntry(SettlementPlot plot, long tick, String configHash, List<String> extra) {
+        Objects.requireNonNull(plot, "Участок не может быть null: без него нечего записывать в журнал");
+        List<String> details = new ArrayList<>(List.of(
+                "x=" + plot.anchor().x(),
+                "y=" + plot.anchor().y(),
+                "z=" + plot.anchor().z(),
+                "min=" + plot.min(),
+                "max=" + plot.max(),
+                "columns=" + plot.columns(),
+                "wood=" + plot.wood()));
+        details.addAll(extra);
+        return BoardLog.note(
+                SettlementPlot.JOURNAL_ID, BoardCase.CLEAR_GROUNDS, tick, List.copyOf(details), null, configHash);
+    }
+
     public static int of(SettlementPlot plot) {
         Objects.requireNonNull(plot, "Участок не может быть null: без него у поселения нет высоты");
         return plot.anchor().y();
@@ -29,7 +51,11 @@ public final class SettlementLevel {
 
     public static Optional<StageSite> site(TownPlan plan, int stage, int level) {
         Objects.requireNonNull(plan, "План не может быть null: места этапа берутся из него");
-        return StageSites.find(plan, stage, level, TownRules.current());
+        String orchardScheme = StageRules.current()
+                .scheme(BoardCase.BUILD_ORCHARD, 1)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "stages.json: нет схемы BUILD_ORCHARD уровня 1 — саду не из чего взять места деревьев"));
+        return StageSites.find(plan, stage, level, TownRules.current(), orchardScheme);
     }
 
     public static Optional<StageSite> site(TownPlan plan, int stage, SettlementPlot plot) {

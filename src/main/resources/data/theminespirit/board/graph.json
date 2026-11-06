@@ -19,7 +19,7 @@
     "petAlone": 1.0,
     "herdFull": 1.0,
     "fieldFull": 1.0,
-    "failureBackoff": 0.5,
+    "failureBackoff": 0.55,
     "failureTargets": 2.0,
     "failureHalfLife": 3000.0,
     "failureSoft": 0.5,
@@ -2791,7 +2791,7 @@
     "player_house": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 721,
+      "base": 953,
       "materials": {
         "oak_log": 24,
         "oak_planks": 64,
@@ -2801,7 +2801,7 @@
     "forge": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 497,
+      "base": 657,
       "materials": {
         "cobblestone": 48,
         "bricks": 32,
@@ -2811,7 +2811,7 @@
     "bakery": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 497,
+      "base": 657,
       "materials": {
         "oak_log": 12,
         "oak_planks": 24,
@@ -2821,7 +2821,7 @@
     "apiary": {
       "case": "PLACE_BEEHIVE",
       "stage": 3,
-      "base": 390,
+      "base": 516,
       "materials": {
         "#planks": 16
       }
@@ -2829,7 +2829,7 @@
     "kennel": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 330,
+      "base": 436,
       "materials": {
         "oak_log": 8,
         "oak_planks": 24,
@@ -2839,7 +2839,7 @@
     "stable": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 330,
+      "base": 436,
       "materials": {
         "oak_log": 16,
         "oak_planks": 32,
@@ -2849,7 +2849,7 @@
     "barracks": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 438,
+      "base": 579,
       "materials": {
         "oak_log": 16,
         "oak_planks": 48,
@@ -2860,7 +2860,7 @@
     "weaver": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 390,
+      "base": 516,
       "materials": {
         "oak_log": 12,
         "oak_planks": 32,
@@ -2906,7 +2906,7 @@
     "melon_patch": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 330,
+      "base": 436,
       "materials": {
         "melon_slice": 1,
         "dirt": 16
@@ -2915,7 +2915,7 @@
     "pumpkin_patch": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 330,
+      "base": 436,
       "materials": {
         "pumpkin": 1,
         "dirt": 16
@@ -2924,7 +2924,7 @@
     "cocoa_grove": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 277,
+      "base": 366,
       "materials": {
         "cocoa_beans": 4,
         "oak_log": 8
@@ -2951,7 +2951,7 @@
     "brewing_stand": {
       "case": "CRAFT_BREWING_STAND",
       "stage": 3,
-      "base": 390,
+      "base": 516,
       "materials": {
         "blaze_rod": 1,
         "cobblestone": 3
@@ -2960,7 +2960,7 @@
     "enchanting_table": {
       "case": "ENCHANT_ROOM",
       "stage": 3,
-      "base": 390,
+      "base": 516,
       "materials": {
         "diamond": 2,
         "obsidian": 4,
@@ -2970,7 +2970,7 @@
     "portal_hall": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 390,
+      "base": 516,
       "materials": {
         "cobblestone": 160,
         "obsidian": 10,
@@ -2984,7 +2984,7 @@
     "portal_lit": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 390,
+      "base": 516,
       "materials": {
         "flint_and_steel": 1
       },
@@ -3109,7 +3109,7 @@
     "mine_level_4": {
       "case": "BUILD_MINE",
       "stage": 3,
-      "base": 497,
+      "base": 657,
       "materials": {
         "torch": 8
       },
@@ -3260,7 +3260,7 @@
     "player_house_3": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 721,
+      "base": 953,
       "materials": {
         "oak_log": 32,
         "oak_planks": 96,
@@ -3313,7 +3313,7 @@
     "warehouse_3": {
       "case": "BUILD_WAREHOUSE",
       "stage": 3,
-      "base": 608,
+      "base": 804,
       "materials": {
         "stone_bricks": 128,
         "chest": 32,
@@ -3358,7 +3358,7 @@
     "barn_3": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 463,
+      "base": 612,
       "materials": {
         "oak_log": 40,
         "oak_planks": 80,
@@ -3420,7 +3420,7 @@
     "pen_3": {
       "case": "BUILD_PEN",
       "stage": 3,
-      "base": 497,
+      "base": 657,
       "materials": {
         "oak_fence": 48,
         "oak_fence_gate": 2,
@@ -3435,7 +3435,7 @@
     "pen_4": {
       "case": "BUILD_PEN",
       "stage": 3,
-      "base": 497,
+      "base": 657,
       "materials": {
         "oak_fence": 64,
         "oak_fence_gate": 3,
@@ -3497,7 +3497,7 @@
     "workshop_3": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 463,
+      "base": 612,
       "materials": {
         "oak_planks": 80,
         "stone_bricks": 48,
@@ -3530,7 +3530,7 @@
     "forge_3": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 497,
+      "base": 657,
       "materials": {
         "cobblestone": 128,
         "bricks": 64,
@@ -3547,7 +3547,7 @@
     "apiary_2": {
       "case": "PLACE_BEEHIVE",
       "stage": 3,
-      "base": 419,
+      "base": 554,
       "materials": {
         "oak_planks": 24,
         "beehive": 4,
@@ -3561,7 +3561,7 @@
     "kennel_2": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 358,
+      "base": 473,
       "materials": {
         "oak_planks": 32,
         "hay_block": 4,
@@ -3575,7 +3575,7 @@
     "stable_2": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 358,
+      "base": 473,
       "materials": {
         "oak_planks": 64,
         "oak_fence": 24,
@@ -3650,7 +3650,7 @@
     "bakery_3": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 497,
+      "base": 657,
       "materials": {
         "bricks": 96,
         "stone_bricks": 64,
@@ -3666,7 +3666,7 @@
     "weaver_2": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 419,
+      "base": 554,
       "materials": {
         "bricks": 64,
         "oak_planks": 48,
@@ -3696,7 +3696,7 @@
     "barracks_3": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 463,
+      "base": 612,
       "materials": {
         "oak_planks": 128,
         "stone_bricks": 48,
@@ -3712,7 +3712,7 @@
     "outpost_1": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 390,
+      "base": 516,
       "materials": {
         "oak_log": 24,
         "oak_planks": 32,
@@ -3725,7 +3725,7 @@
     "outpost_2": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 390,
+      "base": 516,
       "materials": {
         "oak_log": 32,
         "oak_planks": 48,
@@ -3786,7 +3786,7 @@
     "wall_4": {
       "case": "BUILD_FENCE",
       "stage": 3,
-      "base": 551,
+      "base": 728,
       "materials": {
         "stone_bricks": 192,
         "lantern": 8
@@ -3827,7 +3827,7 @@
     "gate_3": {
       "case": "BUILD_FENCE",
       "stage": 3,
-      "base": 551,
+      "base": 728,
       "materials": {
         "stone_bricks": 64,
         "oak_fence_gate": 3,
@@ -3882,7 +3882,7 @@
     "archer_tower_3": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 390,
+      "base": 516,
       "materials": {
         "stone_bricks": 96,
         "oak_planks": 32,
@@ -3908,7 +3908,7 @@
     "bridge_2": {
       "case": "BUILD_HOUSE",
       "stage": 3,
-      "base": 390,
+      "base": 516,
       "materials": {
         "stone_bricks": 96,
         "lantern": 4

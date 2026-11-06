@@ -8,6 +8,7 @@ import com.theminespirit.core.board.LevelingRules;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.building.PresetLibrary;
+import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.hunger.HungerRules;
 import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.inventory.KitFor;
@@ -33,6 +34,7 @@ final class DataTableBindings {
         LevelingRules.useSource(() -> tables.leveling().current());
         SupplyGraph.useSource(() -> tables.graph().current());
         PresetLibrary.useSource(() -> tables.presets().current());
+        SpiritReach.useSource(() -> tables.building().current().reach());
         TownRules.useSource(() -> tables.town().current());
         RepairData.useSource(() -> tables.repair().current());
         HungerRules.useSource(() -> tables.hunger().current());

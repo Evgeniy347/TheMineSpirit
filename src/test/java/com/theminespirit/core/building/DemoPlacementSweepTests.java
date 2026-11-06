@@ -4,7 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.LoadedContent;
+import com.theminespirit.core.reload.TableStatus;
 import com.theminespirit.neoforge.SchematicResources;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +18,19 @@ import org.junit.jupiter.api.Test;
 class DemoPlacementSweepTests {
     private static final int[][] LOOKS = {{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
 
+    static PresetLibrary loadReal() {
+        List<LoadedContent> contents = new ArrayList<>();
+        String index = PresetLibrary.SCHEMATICS_ROOT + PresetLibrary.INDEX_ID + ".json";
+        contents.add(new LoadedContent(JsonResource.readClasspath(index), index, TableStatus.Source.MOD));
+        for (String path : PresetLibrary.bodyPaths(index, index)) {
+            contents.add(new LoadedContent(JsonResource.readClasspath(path), path, TableStatus.Source.MOD));
+        }
+        return PresetLibrary.parse(contents);
+    }
+
     @Test
     void compute_EveryBuildingAndLook_ChestAndSpawnFitOnPlatform() {
-        PresetLibrary library = DemoPlacementTests.loadReal();
+        PresetLibrary library = loadReal();
         for (DemoBuildings.Building building : DemoBuildings.all()) {
             for (DemoBuildings.Level level : building.levels()) {
                 Schematic schematic = SchematicResources.load(level.scheme());
@@ -92,7 +105,7 @@ class DemoPlacementSweepTests {
 
     @Test
     void compute_EveryBuildingLookAndExplicitRotation_ChestGroupOutsideSchema() {
-        PresetLibrary library = DemoPlacementTests.loadReal();
+        PresetLibrary library = loadReal();
         for (DemoBuildings.Building building : DemoBuildings.all()) {
             for (DemoBuildings.Level level : building.levels()) {
                 Schematic schematic = SchematicResources.load(level.scheme());

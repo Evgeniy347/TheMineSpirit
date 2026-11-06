@@ -55,7 +55,7 @@ public final class StageBuilds {
                         town,
                         DataTables.INSTANCE.town().current().streets(),
                         DataTables.INSTANCE.presets().current(),
-                        StreetWork.level(DataTables.INSTANCE.stages().current(), site.stage())))
+                        StreetWork.level(streetLevel(site.stage()))))
                 .orElseThrow(() -> new IllegalStateException(
                         "Места этапа есть, а плана поселения нет: улицам этапа не по чему лечь"));
         return new StageWork(site, List.of(), builds);
@@ -146,6 +146,21 @@ public final class StageBuilds {
     private static boolean fenceAtLevel(ServerLevel level, ColumnMask.Cell post, int fenceY) {
         BlockState state = level.getBlockState(new BlockPos(post.x(), fenceY, post.z()));
         return state.is(BlockTags.FENCES) || state.is(BlockTags.FENCE_GATES);
+    }
+
+    private static int streetLevel(int stage) {
+        Integer level = DataTables.INSTANCE
+                .stages()
+                .current()
+                .stages()
+                .get(stage - 1)
+                .buildings()
+                .get(BoardCase.BUILD_STREETS);
+        if (level == null) {
+            throw new IllegalStateException("stages.json: у этапа " + stage
+                    + " нет BUILD_STREETS — улицам этапа не из чего выбрать материал плиток");
+        }
+        return level;
     }
 
     private static List<BlockCoord> oldFence(ServerLevel level, ColumnMask.Cell post, int fenceY) {

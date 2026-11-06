@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.SettlementPlot;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,7 +69,7 @@ class SettlementPlotTests {
     void journalEntry_WrittenAndRead_KeepsHeight() {
         SettlementPlot plot = new SettlementPlot(new BlockCoord(-171, 68, -487), 63, 74, 529, "jungle");
         BoardJournal journal = new BoardJournal(directory.resolve("board-log.jsonl"));
-        journal.enqueue(plot.journalEntry(100, "hash-1"));
+        journal.enqueue(SettlementLevel.journalEntry(plot, 100, "hash-1"));
         journal.flushAll();
 
         BoardLogEntry read = journal.last(1).get(0);

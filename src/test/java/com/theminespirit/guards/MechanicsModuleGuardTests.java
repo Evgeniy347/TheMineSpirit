@@ -13,12 +13,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class MechanicsModuleGuardTests {
-    private record Module(
-            String id, List<String> packageNames, List<String> allowedPackages, Path mainRoot, Path testRoot) {
-        Module(String id, List<String> packageNames, Path mainRoot, Path testRoot) {
-            this(id, packageNames, List.of(), mainRoot, testRoot);
-        }
-
+    private record Module(String id, List<String> packageNames, Path mainRoot, Path testRoot) {
         List<Path> mainPackages() {
             return packageNames.stream().map(name -> packageDir(mainRoot, name)).toList();
         }
@@ -85,9 +80,21 @@ class MechanicsModuleGuardTests {
                             "core.repair",
                             "core.sleep",
                             "core.social"),
-                    List.of("core.inventory"),
                     Path.of("mech/small/src/main/java"),
-                    Path.of("mech/small/src/test/java")));
+                    Path.of("mech/small/src/test/java")),
+            new Module(
+                    ":mech:building",
+                    List.of("core.building"),
+                    Path.of("mech/building/src/main/java"),
+                    Path.of("mech/building/src/test/java")),
+            new Module(
+                    ":mech:town",
+                    List.of("core.town"),
+                    Path.of("mech/town/src/main/java"),
+                    Path.of("mech/town/src/test/java")));
+
+    private static final Map<String, List<String>> MODULE_DEPENDENCIES =
+            Map.of(":mech:town", List.of("core.building"), ":mech:small", List.of("core.inventory"));
 
     private static List<Module> modules() {
         List<Path> declared = SourceFiles.moduleMainRoots();
@@ -112,6 +119,17 @@ class MechanicsModuleGuardTests {
                 }
             }
         }
+        SourceFiles.allMain().forEach((file, text) -> {
+            for (Module module : modules()) {
+                for (String packageName : module.packageNames()) {
+                    if (SourceFiles.logical(file).startsWith(packageName.replace('.', '/') + "/")
+                            && !file.normalize().startsWith(module.mainRoot())
+                            && !file.normalize().startsWith(SourceFiles.API)) {
+                        missing.add(module.id() + ": дубль вне модуля " + SourceFiles.logical(file));
+                    }
+                }
+            }
+        });
 
         assertEquals(
                 List.of(),
@@ -153,11 +171,9 @@ class MechanicsModuleGuardTests {
                 if (!Files.isDirectory(packageDir)) {
                     continue;
                 }
-                violations.addAll(violations(
-                        SourceFiles.javaUnder(packageDir),
-                        apiClasses,
-                        module.packageNames(),
-                        module.allowedPackages()));
+                List<String> visible = new ArrayList<>(module.packageNames());
+                visible.addAll(MODULE_DEPENDENCIES.getOrDefault(module.id(), List.of()));
+                violations.addAll(violations(SourceFiles.javaUnder(packageDir), apiClasses, visible));
             }
         }
 
@@ -179,11 +195,9 @@ class MechanicsModuleGuardTests {
                 if (!Files.isDirectory(packageDir)) {
                     continue;
                 }
-                violations.addAll(violations(
-                        SourceFiles.javaUnder(packageDir),
-                        apiClasses,
-                        module.packageNames(),
-                        module.allowedPackages()));
+                List<String> visible = new ArrayList<>(module.packageNames());
+                visible.addAll(MODULE_DEPENDENCIES.getOrDefault(module.id(), List.of()));
+                violations.addAll(violations(SourceFiles.javaUnder(packageDir), apiClasses, visible));
             }
         }
 
@@ -233,7 +247,7 @@ class MechanicsModuleGuardTests {
                 """);
         assertEquals(
                 List.of(),
-                violations(dependent, apiClasses, List.of("core.social"), List.of("core.inventory")),
+                violations(dependent, apiClasses, List.of("core.social", "core.inventory")),
                 "Сторож ложно срабатывает: разрешённая механика (:mech:inventory) доступна модулю");
     }
 

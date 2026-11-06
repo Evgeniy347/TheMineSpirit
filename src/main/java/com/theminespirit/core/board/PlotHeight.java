@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.PlotLeveling;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.IntBinaryOperator;

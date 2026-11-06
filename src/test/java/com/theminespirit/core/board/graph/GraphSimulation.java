@@ -224,7 +224,9 @@ final class GraphSimulation {
             return;
         }
         if (task.id().startsWith("event:")) {
-            world.events.remove(task.id().split(":", 3)[1]);
+            String event = task.id().split(":", 3)[1];
+            world.events.remove(event);
+            GraphSimulationEvents.after(world, event);
             return;
         }
         if (task.id().startsWith("building:")) {

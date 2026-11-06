@@ -831,6 +831,58 @@ def test_live_stage_one():
     print("OK: живой этап 1 закрывается за " + str(len(steps)) + " заданий")
 
 
+def test_base_worlds():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    with open(sim_gpu.bases_path(os.path.join(EXPORT, "bases.json")), "r", encoding="utf-8") as handle:
+        expected = json.load(handle)
+    for name in sim_gpu.BASE_NAMES:
+        world = sim_gpu.base_world(graph, name, os.path.join(EXPORT, "bases.json"))
+        outcome = sim_gpu.run(world, limit=int(expected[name]["limit"]))
+        assert bool(outcome["finished"]) == bool(expected[name]["finished"]), \
+            "Базовый мир '" + name + "': финиш Python " + str(outcome["finished"]) \
+            + " != Java " + str(expected[name]["finished"])
+        assert outcome["steps"] == int(expected[name]["steps"]), \
+            "Базовый мир '" + name + "': шагов Python " + str(outcome["steps"]) \
+            + " != Java " + str(expected[name]["steps"])
+        assert outcome["stage"] == int(expected[name]["stage"]), \
+            "Базовый мир '" + name + "': этап Python " + str(outcome["stage"]) \
+            + " != Java " + str(expected[name]["stage"])
+        trail = [{"id": task, "priority": priority} for _stage, task, priority in outcome["trail"]]
+        assert trail == expected[name]["trail"], \
+            "Базовый мир '" + name + "': путь Python разошёлся с Java"
+
+    dirty = [task for _stage, task, _priority in sim_gpu.run(
+        sim_gpu.base_world(graph, "dirty", os.path.join(EXPORT, "bases.json")),
+        limit=1600)["trail"]]
+    for prefix in ("event:demolish_stray:", "event:backfill:", "event:clear_floating:", "event:repair_"):
+        assert any(task.startswith(prefix) for task in dirty), \
+            "Грязный базовый мир обязан звать уборку: " + prefix + " в " + str(dirty[:20])
+
+    night_world = sim_gpu.base_world(graph, "night", os.path.join(EXPORT, "bases.json"))
+    night = {task["id"]: task for task in night_world.plan()["tasks"]}
+    assert "event:life_threat:defend" in night and night["event:life_threat:defend"]["feasible"], \
+        "Ночь с угрозой обязана защищаться: " + str(sorted(night)[:20])
+    assert "event:expedition_ready:expedition" in night, "Поход выдаёт только узел графа"
+    assert not any(task.startswith("chop_") and task_info["feasible"] and task_info["makes"] == "oak_log"
+                   for task, task_info in night.items()), \
+        "Ночью далёкая рубка не выполнима"
+
+    failures_world = sim_gpu.base_world(graph, "failures", os.path.join(EXPORT, "bases.json"))
+    failed = {task["id"]: task for task in failures_world.plan()["tasks"]}
+    assert "chop_oak_log" in failed, "Провал не убирает путь из плана: " + str(sorted(failed)[:20])
+
+    noaxe = sim_gpu.run(sim_gpu.base_world(graph, "noaxe", os.path.join(EXPORT, "bases.json")),
+                        limit=4000)["trail"]
+    steps = [task for _stage, task, _priority in noaxe]
+    first_wood = next((index for index, task in enumerate(steps)
+                       if task.startswith(("chop_jungle_log", "chop_oak_log"))), -1)
+    first_axe = next((index for index, task in enumerate(steps) if "axe@" in task), -1)
+    assert first_wood >= 0, "Пустой старт без топора рубит дерево руками: " + str(steps[:10])
+    assert first_axe < 0 or first_wood < first_axe, \
+        "Топор не ждёт себя: рубка " + str(first_wood) + ", топор " + str(first_axe)
+    print("OK: базовые миры совпадают с Java (живой, грязный, провалы, ночь, без топора)")
+
+
 def test_tool_condition_and_soil():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     bare = sim_gpu.World.settled(graph).with_item("cobblestone", 0).tools("spirit-1", -1)
@@ -1106,6 +1158,7 @@ if __name__ == "__main__":
         test_dead_inputs()
         test_new_input_worlds()
         test_live_stage_one()
+        test_base_worlds()
         test_tool_condition_and_soil()
         test_stage_two_worlds()
         test_failure_memory()

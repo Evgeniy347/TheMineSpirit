@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
@@ -27,8 +28,12 @@ class StreetWorkTests {
             "street7_cross",
             StreetLayout.PATCH);
 
+    private static int stageLevel(int stage) {
+        return STAGES.stages().get(stage - 1).buildings().get(BoardCase.BUILD_STREETS);
+    }
+
     private static Set<String> materials(int stage) {
-        int level = StreetWork.level(STAGES, stage);
+        int level = stageLevel(stage);
         Set<String> blocks = new TreeSet<>();
         for (String tile : TILES) {
             String scheme = StreetWork.scheme(tile, level);
@@ -66,7 +71,7 @@ class StreetWorkTests {
                 TownFixtures.flatPlan(),
                 DataTables.INSTANCE.town().current().streets(),
                 PRESETS,
-                StreetWork.level(STAGES, 1));
+                stageLevel(1));
         assertFalse(builds.isEmpty(), "на выровненных площадках этапа 1 есть улицы: плиткам есть где лечь");
         ColumnMask within = StreetWork.within(site);
         for (SchemeBuild build : builds) {

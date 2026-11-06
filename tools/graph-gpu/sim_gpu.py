@@ -476,28 +476,6 @@ def _more6_world(graph):
     return world
 
 
-def _dirty_world(graph):
-    world = ready_world(graph)
-    damaged = [bid for bid, building in graph.buildings.items()
-               if not building.optional and building.stage <= 3 and world.buildings.get(bid) == BUILT]
-    damaged = damaged[:4]
-    world.with_facts({
-        "strays": [{"id": "stray-" + str(index), "type": "wall",
-                    "position": {"x": index, "y": 64, "z": 0}, "blocks": {"wall": 1}}
-                   for index in range(236)],
-        "terrain": {"pits": 760, "hanging": 120, "heightDrop": 50, "deepestPit": 5,
-                    "traces": 30, "cut": {"minecraft:dirt": 100},
-                    "fill": {"minecraft:dirt": 200}, "floating": {"minecraft:oak_log": 50}},
-        "buildings": {bid: {"id": bid, "damage": 5, "missing": {"minecraft:dirt": 3},
-                            "extra": {}, "wrong": 0, "auditPercent": 60, "unknown": False}
-                      for bid in damaged},
-        "feedback": {"clock": {"morning": False, "duskSoon": True, "night": False, "dayTime": 12000},
-                     "player": {"near": True, "holdingBlock": True, "usingItem": False, "digging": False},
-                     "failures": []},
-    })
-    return world
-
-
 def _blocked_world(graph):
     world = ready_world(graph)
     world.world.update({"more:bad_trip_conditions", "more:work_duplicate"})
@@ -568,6 +546,48 @@ def live_stage_one(graph, path=None):
     return world
 
 
+BASE_NAMES = ("live1", "dirty", "failures", "night", "noaxe")
+
+
+def from_state(graph, state, stop_stage=None):
+    """Состояние из graphExport -> World: тот же вход, что пишет Java."""
+    kits = dict(sorted((state.get("kits") or {}).items(),
+                       key=lambda entry: int(entry[0].rsplit("-", 1)[-1])
+                       if entry[0].rsplit("-", 1)[-1].isdigit() else 0))
+    world = World(
+        graph,
+        stock=state.get("stock"),
+        kits=kits,
+        buildings=state.get("buildings"),
+        stage=int(state.get("stage", 1)),
+        storage_free=int(state.get("storageFreePercent", 60)),
+        events=state.get("events"),
+        world=state.get("world"),
+        materials=state.get("materials"),
+        stations=state.get("stations"),
+        distances=state.get("distances"),
+        facts=state.get("facts"),
+    )
+    if stop_stage is not None:
+        world.stop_stage = int(stop_stage)
+    return world
+
+
+def bases_path(path=None):
+    if path is None:
+        path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            "TestResults", "graph-export", "bases.json")
+    return path
+
+
+def base_world(graph, name, path=None):
+    """Базовый мир из выгрузки graphExport: имя пишет Java (GraphMutations.baseWorlds)."""
+    with open(bases_path(path), "r", encoding="utf-8") as handle:
+        data = json.load(handle)[name]
+    return from_state(graph, data["state"], data.get("stopStage"))
+
+
 def input_builders():
     """Сборщики миров областей: (имя, graph -> World)."""
     return [
@@ -581,14 +601,12 @@ def input_builders():
         ("more3", _more3_world),
         ("more4", _more4_world),
         ("more5", _more5_world),
-        ("dirty", _dirty_world),
         ("blocked", _blocked_world),
         ("field", _field_world),
         ("more7", _more7_world),
         ("more6", _more6_world),
         ("dig", _dig_world),
-        ("live1", lambda graph: live_stage_one(graph)),
-    ]
+    ] + [(name, lambda graph, name=name: base_world(graph, name)) for name in BASE_NAMES]
 
 
 def input_worlds(graph):

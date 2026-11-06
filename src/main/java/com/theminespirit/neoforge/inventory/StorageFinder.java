@@ -89,7 +89,8 @@ public final class StorageFinder {
         SettlementChests chests = SettlementChestStore.get(level).chests();
         Optional<SettlementReach> reach =
                 Level.OVERWORLD.equals(level.dimension()) ? CraftTerminalService.reach(level) : Optional.empty();
-        return reach.map(found -> chests.warehouse(origin, found)).orElseGet(() -> chests.warehouse(origin));
+        return reach.map(found -> chests.warehouse(origin, pos -> found.covers(pos.x(), pos.z())))
+                .orElseGet(() -> chests.warehouse(origin));
     }
 
     private static List<StoragePoints.Spot> spots(ServerLevel level, BlockCoord origin) {

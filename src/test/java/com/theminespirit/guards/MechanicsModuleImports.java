@@ -31,11 +31,6 @@ final class MechanicsModuleImports {
     }
 
     static List<String> violations(Map<Path, String> sources, Set<String> apiClasses, List<String> ownPackages) {
-        return violations(sources, apiClasses, ownPackages, List.of());
-    }
-
-    static List<String> violations(
-            Map<Path, String> sources, Set<String> apiClasses, List<String> ownPackages, List<String> allowedPackages) {
         List<String> found = new ArrayList<>();
         sources.forEach((file, text) -> {
             Matcher matcher = IMPORT.matcher(text);
@@ -44,7 +39,7 @@ final class MechanicsModuleImports {
                 if (name.endsWith(".*")) {
                     name = name.substring(0, name.length() - 2);
                 }
-                if (allowed(name, apiClasses, ownPackages, allowedPackages)) {
+                if (allowed(name, apiClasses, ownPackages)) {
                     continue;
                 }
                 found.add(SourceFiles.logical(file) + ": " + name);
@@ -53,8 +48,7 @@ final class MechanicsModuleImports {
         return found;
     }
 
-    private static boolean allowed(
-            String name, Set<String> apiClasses, List<String> ownPackages, List<String> allowedPackages) {
+    private static boolean allowed(String name, Set<String> apiClasses, List<String> ownPackages) {
         for (String prefix : ALLOWED_PREFIXES) {
             if (name.startsWith(prefix)) {
                 return true;
@@ -63,12 +57,6 @@ final class MechanicsModuleImports {
         for (String ownPackage : ownPackages) {
             String own = "com.theminespirit." + ownPackage;
             if (name.equals(own) || name.startsWith(own + ".")) {
-                return true;
-            }
-        }
-        for (String allowedPackage : allowedPackages) {
-            String allowed = "com.theminespirit." + allowedPackage;
-            if (name.equals(allowed) || name.startsWith(allowed + ".")) {
                 return true;
             }
         }
