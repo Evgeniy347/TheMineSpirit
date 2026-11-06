@@ -14,7 +14,7 @@
 | Команда | Что делает | Результат |
 |---|---|---|
 | `scripts/test.sh unit` | быстрые JUnit-тесты (включая свойства jqwik, кроме `@Tag("slow")`) | `OK unit: N тестов, T с` |
-| `scripts/test.sh unit --tests "*Guard*"` | только тесты, подходящие под фильтр gradle | `OK unit: N тестов, T с` |
+| `scripts/test.sh unit --tests "*GuardTests*"` | только тесты, подходящие под фильтр gradle | `OK unit: N тестов, T с` |
 | `scripts/test.sh gametest` | GameTest под замком шардами: общий набор без ручных демо-аудитов | `OK gametest: N тестов, T с` |
 | `scripts/test.sh gametest --full` | то же с пределом полного прогона (демо-аудиты и здесь не идут) | `OK gametest: N тестов, T с` |
 | `scripts/test.sh gametest demo_audit_<постройка>` | ручной аудит одной постройки (только явно) | `OK gametest: N тестов, T с` |

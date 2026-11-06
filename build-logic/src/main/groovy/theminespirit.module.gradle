@@ -21,6 +21,15 @@ tasks.named('test', Test) {
     onlyIf { moduleTests.exists() }
     failOnNoDiscoveredTests = moduleTests.exists() && !project.hasProperty('theminespirit.filtered')
     filter { setFailOnNoMatchingTests(!project.hasProperty('theminespirit.filtered')) }
+    // lib: --tests действует только на задачу test названного проекта; модули фильтруются тем же списком.
+    def moduleTestFilter = project.findProperty('theminespirit.tests')
+    if (moduleTestFilter != null) {
+        filter {
+            moduleTestFilter.toString().split(',').each { pattern -> includeTestsMatching(pattern.trim()) }
+            setFailOnNoMatchingTests(false)
+        }
+        failOnNoDiscoveredTests = false
+    }
     workingDir = rootProject.projectDir
     useJUnitPlatform {
         excludeTags 'slow', 'mutation', 'export'

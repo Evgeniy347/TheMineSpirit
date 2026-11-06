@@ -58,7 +58,7 @@ usage() {
 
 Примеры:
   scripts/test.sh unit
-  scripts/test.sh unit --tests "*Guard*"
+  scripts/test.sh unit --tests "*GuardTests*"
   scripts/test.sh unit --fast-analyzers
   scripts/test.sh gametest
   scripts/test.sh gametest --full
@@ -865,6 +865,7 @@ if [ "$MODE" = "unit" ]; then
 
     UNIT_EXTRA=()
     UNIT_EXCLUDE=()
+    UNIT_PROPS=()
     if [ ${#UNIT_TESTS[@]} -eq 0 ]; then
         if [ "$UNIT_FAST_ANALYZERS" = 1 ]; then
             UNIT_EXTRA=(staticAnalysisFast --continue)
@@ -873,12 +874,19 @@ if [ "$MODE" = "unit" ]; then
         fi
     else
         UNIT_EXCLUDE=(-Ptheminespirit.filtered)
+        # lib: --tests действует только на задачу test того проекта, который назван в командной строке;
+        # тесты модулей фильтруются тем же списком через свойство.
+        local_unit_patterns=()
+        for ((unit_index = 0; unit_index < ${#UNIT_TESTS[@]}; unit_index += 2)); do
+            local_unit_patterns+=("${UNIT_TESTS[$((unit_index + 1))]}")
+        done
+        [ ${#local_unit_patterns[@]} -gt 0 ] && UNIT_PROPS=(-Ptheminespirit.tests="$(IFS=,; printf '%s' "${local_unit_patterns[*]}")")
     fi
 
     if command -v setsid >/dev/null 2>&1; then
-        setsid "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXCLUDE[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
+        setsid "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXCLUDE[@]}" "${UNIT_PROPS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
     else
-        "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXCLUDE[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
+        "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXCLUDE[@]}" "${UNIT_PROPS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
     fi
     GRADLE_PID=$!
     echo "$GRADLE_PID" >"$LOG_FILE.gradlepid"
