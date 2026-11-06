@@ -778,12 +778,14 @@ final class BuildSchematicScript implements ScriptInstance {
         planTrips = built.trips();
         plan = new BuildPlanCursor(built, site.origin());
         LOGGER.info(
-                "Стройка {}: план — стоянок {}, заходов {}, не поставлено {}, сундук у {}, расчёт {} мс",
+                "Стройка {}: план — стоянок {}, заходов {}, не поставлено {}, сундук снабжения {} (от участка {}), "
+                        + "расчёт {} мс",
                 buildKey,
                 planStands,
                 planTrips,
                 built.stuck(),
-                planSupply,
+                planSupply.plus(site.origin()),
+                site.origin(),
                 (System.nanoTime() - planBegan) / 1_000_000);
     }
 

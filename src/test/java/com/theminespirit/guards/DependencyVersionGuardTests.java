@@ -47,6 +47,41 @@ class DependencyVersionGuardTests {
             Pattern.compile("(?m)^\\s*(toolVersion\\s*=|palantirJavaFormat\\s*\\()\\s*['\"]([^'\"]*)['\"]");
 
     @Test
+    void buildLogicSettings_DeclareRepositories_ForCleanOfflineBuild() throws IOException {
+        String settings = read(SETTINGS);
+        String buildLogic = read(Path.of("build-logic", "settings.gradle"));
+        int management = buildLogic.indexOf("pluginManagement");
+        assertTrue(management >= 0, "build-logic/settings.gradle без pluginManagement: плагины сборки не разрешатся");
+        String managed = blockBody(buildLogic.substring(management), Pattern.compile("pluginManagement\\s*\\{"));
+        int resolution = buildLogic.indexOf("dependencyResolutionManagement");
+        assertTrue(
+                resolution >= 0,
+                "build-logic/settings.gradle без dependencyResolutionManagement: spotless/moddev/errorprone/"
+                        + "spotbugs не найдут mavenCentral на чистом кэше");
+        String declared =
+                blockBody(buildLogic.substring(resolution), Pattern.compile("dependencyResolutionManagement\\s*\\{"));
+        for (String where : List.of("pluginManagement build-logic", "dependencyResolutionManagement build-logic")) {
+            String body = where.startsWith("plugin") ? managed : declared;
+            assertTrue(
+                    body.contains("mavenCentral()") && body.contains("gradlePluginPortal()"),
+                    where + " без mavenCentral/gradlePluginPortal: чистая offline-сборка не найдёт "
+                            + "spotless/moddev/errorprone/spotbugs");
+        }
+        String rootManagement = settings.substring(Math.max(0, settings.indexOf("pluginManagement")));
+        rootManagement = blockBody(rootManagement, Pattern.compile("pluginManagement\\s*\\{"));
+        assertTrue(
+                rootManagement.contains("mavenCentral()"),
+                "settings.gradle → pluginManagement без mavenCentral(): плагины корня не разрешатся на чистом кэше");
+        Path warm = Path.of("scripts", "warm-gradle-cache.sh");
+        assertTrue(Files.isRegularFile(warm), "нет scripts/warm-gradle-cache.sh: чистый сервер не прогреет кэш");
+        String warmText = read(warm);
+        assertTrue(
+                warmText.contains("assemble") && warmText.contains("--offline"),
+                "scripts/warm-gradle-cache.sh не собирает assemble и не проверяет ту же сборку --offline: "
+                        + "прогрев не доказывает, что publish.sh соберётся без сети");
+    }
+
+    @Test
     void buildGradle_CurrentDependencies_KeepVersionsInPropertiesAndThreeConfigs() {
         String build = read(BUILD);
         String properties = read(PROPERTIES);

@@ -710,6 +710,49 @@ code=$?
     && ok "gametest-code: ненулевой код gradle при «All N passed» — красный" \
     || fail "gametest-code: код=$code, вывод: $out"
 
+cat >"$work/bin/slow-prepare" <<'FAKE'
+#!/usr/bin/env bash
+for a in "$@"; do
+    case "$a" in
+        runGameTestServer)
+            : >"${SHARD_MARK:?}"
+            sleep "${SHARD_SLEEP:-30}"
+            echo "All 1 required tests passed"
+            exit 0
+            ;;
+    esac
+done
+sleep "${PREP_SLEEP:-0}"
+echo "prepared"
+exit 0
+FAKE
+chmod +x "$work/bin/slow-prepare"
+mark="$work/shard-started"
+rm -f "$mark"
+out=$(PREP_SLEEP=30 SHARD_MARK="$mark" THEMINESPIRIT_GRADLEW="$work/bin/slow-prepare" \
+    THEMINESPIRIT_GAMETEST_SHARDS=2 THEMINESPIRIT_GAMETEST_NOFLOCK=1 \
+    THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock" \
+    THEMINESPIRIT_GAMETEST_PREPARE_WARN_SECONDS=600 THEMINESPIRIT_GAMETEST_PREPARE_STOP_SECONDS=1 \
+    THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS=600 bash scripts/test.sh gametest --full 2>&1)
+code=$?
+[ "$code" = 124 ] && echo "$out" | grep -q "стоп: подготовка сборки" \
+    && ok "gametest-prepare-limit: подготовка сборки останавливается своим пределом" \
+    || fail "gametest-prepare-limit: код=$code, вывод: $out"
+rm -rf "$work/tmp/lock.d"
+
+rm -f "$mark"
+out=$(PREP_SLEEP=3 SHARD_SLEEP=30 SHARD_MARK="$mark" THEMINESPIRIT_GRADLEW="$work/bin/slow-prepare" \
+    THEMINESPIRIT_GAMETEST_SHARDS=2 THEMINESPIRIT_GAMETEST_NOFLOCK=1 \
+    THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock" \
+    THEMINESPIRIT_GAMETEST_PREPARE_WARN_SECONDS=600 THEMINESPIRIT_GAMETEST_PREPARE_STOP_SECONDS=600 \
+    THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS=600 THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS=2 \
+    bash scripts/test.sh gametest --full 2>&1)
+code=$?
+[ "$code" = 124 ] && [ -f "$mark" ] && echo "$out" | grep -q "стоп по пределу 2 с" \
+    && ok "gametest-shard-budget: предел сценариев считается от старта шардов, а не от сборки" \
+    || fail "gametest-shard-budget: код=$code, шард стартовал=$( [ -f "$mark" ] && echo да || echo нет), вывод: $out"
+rm -rf "$work/tmp/lock.d"
+
 rm -rf "$work/tmp/lock.d" "$argsdir"
 
 exit $failed

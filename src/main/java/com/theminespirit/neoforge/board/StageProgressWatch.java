@@ -165,6 +165,14 @@ final class StageProgressWatch {
         if (target == null || target.work() == null || !BUILDS.contains(ticket.boardCase())) {
             return Optional.empty();
         }
+        return placed(level, ticket, target);
+    }
+
+    static Optional<FirstStepsRunner.Placed> placed(
+            ServerLevel level, BoardTicket ticket, @Nullable TicketTarget target) {
+        if (target == null || target.work() == null) {
+            return Optional.empty();
+        }
         if (target.leveling() != null) {
             LevelRepair.Progress progress = LevelRepair.progress(target.leveling(), at -> {
                 BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
