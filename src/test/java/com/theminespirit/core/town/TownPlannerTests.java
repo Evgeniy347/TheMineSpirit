@@ -9,7 +9,6 @@ import com.theminespirit.core.building.FenceGateRule;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -235,22 +234,11 @@ class TownPlannerTests {
     }
 
     static TownPlan plan(IntBinaryOperator feet, IntBinaryOperator water) {
-        return TownPlanner.plan(grid(feet, water), ANCHOR, RULES, STAGES);
+        return TownFixtures.plan(feet, water);
     }
 
     static TerrainGrid grid(IntBinaryOperator feet, IntBinaryOperator water) {
-        int side = 2 * RADIUS + 1;
-        int[] heights = new int[side * side];
-        BitSet wet = new BitSet(side * side);
-        for (int dz = -RADIUS; dz <= RADIUS; dz++) {
-            for (int dx = -RADIUS; dx <= RADIUS; dx++) {
-                int x = ANCHOR.x() + dx;
-                int z = ANCHOR.z() + dz;
-                heights[TerrainGrid.index(RADIUS, dx, dz)] = feet.applyAsInt(x, z);
-                wet.set(TerrainGrid.index(RADIUS, dx, dz), water.applyAsInt(x, z) != 0);
-            }
-        }
-        return TerrainGrid.around(ANCHOR, RADIUS, heights, wet);
+        return TownFixtures.grid(feet, water);
     }
 
     private static boolean escapes(FenceLine fence) {

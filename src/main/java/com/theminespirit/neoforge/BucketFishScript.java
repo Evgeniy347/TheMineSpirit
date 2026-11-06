@@ -5,7 +5,7 @@ import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.fishing.BucketCatch;
 import com.theminespirit.core.fishing.FishBuckets;
-import com.theminespirit.core.fishing.FishingData;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.script.BucketFishParams;
 import com.theminespirit.neoforge.crafting.ItemIds;
 import java.util.Map;
@@ -44,7 +44,8 @@ public final class BucketFishScript implements ScriptInstance {
     public BucketFishScript(SpiritEntity spirit, BucketFishParams params) {
         this.spirit = spirit;
         this.params = params;
-        this.limit = BucketCatch.limit(params.count(), FishingData.loadDefault());
+        this.limit =
+                BucketCatch.limit(params.count(), DataTables.INSTANCE.fishing().current());
         this.approach = new Approach(spirit);
         this.timeoutTicks = params.radius() * TIMEOUT_PER_BLOCK + TIMEOUT_RESERVE;
     }

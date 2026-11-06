@@ -1,0 +1,18 @@
+plugins {
+    id 'theminespirit.module'
+}
+
+dependencies {
+    implementation project(':board')
+    implementation project(':tactics')
+    implementation project(':policy')
+    implementation project(':mech:farming')
+    implementation project(':mech:forestry')
+    implementation project(':mech:husbandry')
+    implementation project(':mech:inventory')
+    implementation project(':mech:mining')
+    implementation project(':mech:movement')
+    implementation project(':mech:small')
+    implementation project(':mech:building')
+    implementation project(':mech:town')
+}

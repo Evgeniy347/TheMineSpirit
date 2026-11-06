@@ -1,13 +1,39 @@
 package com.theminespirit.core.town;
 
 import com.theminespirit.core.board.StageRules;
+import com.theminespirit.core.observation.BlockCoord;
+import java.util.BitSet;
 import java.util.List;
+import java.util.function.IntBinaryOperator;
 
 public final class TownFixtures {
     public static final int LEVEL = 70;
-    private static final TownPlan FLAT = TownPlannerTests.plan((x, z) -> LEVEL, (x, z) -> 0);
+    private static final TownRules RULES = TownRules.load();
+    private static final List<List<String>> STAGES = StageRules.load().plans();
+    private static final BlockCoord ANCHOR = new BlockCoord(200, 70, -300);
+    private static final int RADIUS = RULES.ground().probeRadius();
+    private static final TownPlan FLAT = plan((x, z) -> LEVEL, (x, z) -> 0);
 
     private TownFixtures() {}
+
+    public static TownPlan plan(IntBinaryOperator feet, IntBinaryOperator water) {
+        return TownPlanner.plan(grid(feet, water), ANCHOR, RULES, STAGES);
+    }
+
+    public static TerrainGrid grid(IntBinaryOperator feet, IntBinaryOperator water) {
+        int side = 2 * RADIUS + 1;
+        int[] heights = new int[side * side];
+        BitSet wet = new BitSet(side * side);
+        for (int dz = -RADIUS; dz <= RADIUS; dz++) {
+            for (int dx = -RADIUS; dx <= RADIUS; dx++) {
+                int x = ANCHOR.x() + dx;
+                int z = ANCHOR.z() + dz;
+                heights[TerrainGrid.index(RADIUS, dx, dz)] = feet.applyAsInt(x, z);
+                wet.set(TerrainGrid.index(RADIUS, dx, dz), water.applyAsInt(x, z) != 0);
+            }
+        }
+        return TerrainGrid.around(ANCHOR, RADIUS, heights, wet);
+    }
 
     public static TownPlan flatPlan() {
         return FLAT;
@@ -19,7 +45,7 @@ public final class TownFixtures {
 
     public static TownPlan hillyPlan(long seed) {
         Relief relief = new Relief(seed);
-        return TownPlannerTests.plan(relief::feet, relief::water);
+        return plan(relief::feet, relief::water);
     }
 
     public static StageSite site(TownPlan plan) {
@@ -29,7 +55,7 @@ public final class TownFixtures {
     public static TownPlan planWithOrchard(String building) {
         TownRules rules = TownRules.load();
         return TownPlanner.plant(
-                TownPlannerTests.grid((x, z) -> LEVEL, (x, z) -> 0),
+                grid((x, z) -> LEVEL, (x, z) -> 0),
                 flatPlan(),
                 rules,
                 StageRules.load().plans(),

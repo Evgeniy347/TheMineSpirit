@@ -32,7 +32,8 @@ class BoardModuleGuardTests {
             "core.repair",
             "core.sleep",
             "core.social");
-    private static final List<String> TEST_MECHANIC_PACKAGES = List.of("core.forestry");
+    private static final List<String> TEST_EXTRA_PACKAGES = List.of(
+            "core.forestry", "core.reload", "core.script", "core.tactics", "core.intellect", "core.processing", "live");
 
     @Test
     void boardSources_LiveInBoardModule_NotInRoot() {
@@ -96,7 +97,7 @@ class BoardModuleGuardTests {
         Set<String> apiClasses = apiClasses(SourceFiles.javaUnder(SourceFiles.apiPackage()));
         List<String> visible = new ArrayList<>(OWN_PACKAGES);
         visible.addAll(MECHANIC_PACKAGES);
-        visible.addAll(TEST_MECHANIC_PACKAGES);
+        visible.addAll(TEST_EXTRA_PACKAGES);
         visible.add("testing");
         assertEquals(
                 List.of(),

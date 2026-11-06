@@ -1,7 +1,6 @@
 package com.theminespirit.core.fishing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -158,15 +157,6 @@ class FishingDataTests {
                 holder.current(),
                 "После /reload с изменённым json держатель обязан нести новые размеры воды: иначе датапак мира "
                         + "не поменяет требования к пруду без перезапуска, а таблица числится горячей ложно");
-    }
-
-    @Test
-    void loadDefault_ConsumerCall_ReturnsLiveHolder() {
-        assertSame(
-                DataTables.INSTANCE.fishing().current(),
-                FishingData.loadDefault(),
-                "Потребитель обязан брать версию из держателя, а не читать classpath/константу: иначе /reload "
-                        + "не поменяет ему числа, хотя таблица перечитана");
     }
 
     @SuppressWarnings("unchecked")

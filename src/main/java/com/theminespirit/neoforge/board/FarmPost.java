@@ -18,12 +18,12 @@ import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmJob;
-import com.theminespirit.core.fishing.FishingData;
 import com.theminespirit.core.fishing.FishingNeeds;
 import com.theminespirit.core.hunger.SpiritHunger;
 import com.theminespirit.core.husbandry.PetKind;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.FarmActions;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.husbandry.HerdSpecies;
@@ -208,7 +208,9 @@ final class FarmPost {
             return ChestSpaceWatch.post(post);
         }
         if ("smoker".equals(node)) {
-            if (!FishingNeeds.wantsSmoker(post.stock.available(), FishingData.loadDefault())
+            if (!FishingNeeds.wantsSmoker(
+                            post.stock.available(),
+                            DataTables.INSTANCE.fishing().current())
                     || FishingSite.smokerNear(post.level, home)) {
                 return true;
             }

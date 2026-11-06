@@ -7,5 +7,6 @@ dependencies {
     implementation project(':mech:inventory')
     implementation project(':mech:small')
     testImplementation project(':board')
+    testImplementation project(':content')
     testImplementation project(':mech:forestry')
 }
