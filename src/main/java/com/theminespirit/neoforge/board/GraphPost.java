@@ -18,6 +18,7 @@ import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.route.RouteResource;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.CraftedItems;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashMap;
@@ -264,6 +265,10 @@ final class GraphPost {
 
     Set<String> waiting() {
         return waiting;
+    }
+
+    boolean requestActivity(String key, int priority, BoardCase activity, String script, TaskNode task) {
+        return service.requestActivity(spirits, key, priority, activity, script, task, now);
     }
 
     boolean launchActivity(SpiritEntity spirit, BoardCase activity, ActivityPlans.Plan plan) {

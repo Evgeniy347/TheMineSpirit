@@ -73,6 +73,14 @@ public final class ProtectionGate {
         return decideBreak(pos, state, false, true, ownBuilding);
     }
 
+    static boolean harvestPlanCell(boolean spiritBuilt, boolean planCell) {
+        return spiritBuilt && planCell;
+    }
+
+    private static boolean harvestProtectsPlan(ServerLevel level, BlockPos pos, BlockCoord coord) {
+        return harvestPlanCell(PlacedBlocksData.get(level).isSpiritMarked(pos), inPlan(level, coord));
+    }
+
     private static boolean inPlan(ServerLevel level, BlockCoord coord) {
         return SettlementPlotStore.get(level)
                 .site()
@@ -138,6 +146,12 @@ public final class ProtectionGate {
         if (demolish && !inProtectedZone && level instanceof ServerLevel server && inFenceStrip(server, coord, id)) {
             decision = new BlockProtection.Allowed();
         } else if (tended) {
+            if (level instanceof ServerLevel server && harvestProtectsPlan(server, pos, coord)) {
+                return new BlockProtection.Refused(
+                        PolicyId.PROTECTED_ZONE,
+                        "клетка " + pos.toShortString() + " — блок плана поселения: добыча сняла бы стену "
+                                + "шахты или постройки, её возвращает ремонт по аудиту");
+            }
             decision = PROTECTION.check(
                     blockId(state),
                     Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, AIR_ID),

@@ -368,10 +368,12 @@ public final class TicketPlans {
         int blocks = target.craterBlocks() > 0
                 ? target.craterBlocks()
                 : craterBlocksEstimate(BoardTuning.CRATER_BLOCKS_ESTIMATE_RADIUS);
+        int depth = Math.max(1, Math.min(blocks, CatalogLimits.WORLD_Y_MAX - CatalogLimits.WORLD_Y_MIN));
+        int bottom = Math.max(CatalogLimits.WORLD_Y_MIN, target.target().y() - depth + 1);
         return sequence(
                 gotoTarget(target),
                 new ScriptCall(ACQUIRE, Map.of(ITEM, "dirt", COUNT, Math.min(blocks, CatalogLimits.COUNT_MAX))),
-                fillArea(target, "dirt", CRATER_FILL_RADIUS));
+                fillArea(target, "dirt", CRATER_FILL_RADIUS, bottom));
     }
 
     private static int craterBlocksEstimate(int radius) {
@@ -838,6 +840,10 @@ public final class TicketPlans {
     }
 
     private static TaskNode fillArea(TicketTarget target, String block, int radius) {
+        return fillArea(target, block, radius, target.target().y());
+    }
+
+    private static TaskNode fillArea(TicketTarget target, String block, int radius, int fromY) {
         return new ScriptCall(
                 FILL,
                 Map.of(
@@ -846,7 +852,7 @@ public final class TicketPlans {
                         "x1",
                         target.target().x() - radius,
                         "y1",
-                        target.target().y(),
+                        fromY,
                         "z1",
                         target.target().z() - radius,
                         "x2",
