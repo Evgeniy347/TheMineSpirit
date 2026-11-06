@@ -36,8 +36,8 @@ check red_test_rejected 1 да git commit -m "test: красный зонд"
 grep -E "Коммит отклонён|FAILED" "$work/red_test_rejected.out" | head -n 3 | sed 's/^/  /'
 git reset -q "$probe"
 
-echo "правка документа" >>README.md
-git add README.md
+echo "правка документа" >>docs/TESTING.md
+git add docs/TESTING.md
 check docs_commit_no_run 0 нет git commit -m "docs: правка без прогона"
 
 write_probe assertTrue 'assertTrue(true, "зелёный тест-зонд");'
@@ -52,15 +52,15 @@ printf 'package com.theminespirit;
 class Unstaged {}
 ' >src/test/java/com/theminespirit/Unstaged.java
 git add src/test/java/com/theminespirit/Unstaged.java
-echo "// правка в рабочем дереве, не в индексе" >>"$probe"
+echo "" >>"$probe"
 check unstaged_warning 0 да git commit -m "test: пустой класс-зонд"
 grep -q "ВНИМАНИЕ — прогон относится к рабочему дереву" "$work/unstaged_warning.out"     && echo "OK предупреждение о незастейдженных правках напечатано" || echo "FAIL предупреждения о незастейдженных правках нет"
 git checkout -q HEAD -- "$probe"
 
 git checkout -q -b side
-echo "// ветка" >>src/test/java/com/theminespirit/Unstaged.java
+echo "" >>src/test/java/com/theminespirit/Unstaged.java
 git add -A && git commit -q -m "test: правка на ветке"
 git checkout -q -
-echo "ещё документ" >>README.md
-git add README.md && git commit -q -m "docs: правка на основной ветке"
+echo "ещё документ" >>docs/TESTING.md
+git add docs/TESTING.md && git commit -q -m "docs: правка на основной ветке"
 check merge_no_run 0 нет git merge --no-ff -m "chore: слияние side" side
