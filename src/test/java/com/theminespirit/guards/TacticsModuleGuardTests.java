@@ -20,7 +20,6 @@ class TacticsModuleGuardTests {
             List.of("core.tactics", "core.intellect", "core.coordinator", "core.planner", "core.processing");
     private static final List<String> MODULE_PACKAGES = List.of("core.policy", "core.inventory", "core.night");
     private static final List<String> TEST_MODULE_PACKAGES = List.of("core.board", "core.forestry");
-    private static final List<String> REMAINING_IN_ROOT = List.of();
     private static final List<String> REMAINING_TESTS_IN_ROOT = List.of(
             "core/planner/CorePlanner.java",
             "core/planner/AcquireScriptTests.java",
@@ -55,19 +54,12 @@ class TacticsModuleGuardTests {
                 misplaced.add(logical + " → " + file);
             }
         }
-        for (String logical : REMAINING_IN_ROOT) {
-            Path file = SourceFiles.path(logical);
-            if (file.normalize().startsWith(MAIN)) {
-                misplaced.add("пора в :tactics: " + logical);
-            }
-        }
         SourceFiles.allMain().forEach((file, text) -> {
             String logical = SourceFiles.logical(file);
             for (String own : OWN_PACKAGES) {
                 if (logical.startsWith(own.replace('.', '/') + "/")
                         && !file.normalize().startsWith(MAIN)
-                        && !file.normalize().startsWith(SourceFiles.API)
-                        && !REMAINING_IN_ROOT.contains(logical)) {
+                        && !file.normalize().startsWith(SourceFiles.API)) {
                     misplaced.add("вне :tactics: " + logical);
                 }
             }
