@@ -193,7 +193,7 @@ class ProductionCommentGuardTests {
                 "run/world/level.dat",
                 "TestResults/task.md");
         List<String> scanned = List.of(
-                "src/main/java/com/theminespirit/TheMineSpirit.java",
+                "mod/src/main/java/com/theminespirit/TheMineSpirit.java",
                 "src/test/java/com/theminespirit/guards/SampleTests.java",
                 "api/src/main/java/com/theminespirit/core/board/BoardCase.java",
                 "api/src/test/java/com/theminespirit/core/board/BoardCaseTests.java",

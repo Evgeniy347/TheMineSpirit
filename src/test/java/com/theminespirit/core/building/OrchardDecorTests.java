@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 
 class OrchardDecorTests {
     private static final Path ORCHARD =
-            Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT + "orchard_1.txt");
+            Path.of("mod/src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT + "orchard_1.txt");
     private static final Set<String> FLOWERS =
             Set.of("poppy", "dandelion", "cornflower", "allium", "azure_bluet", "oxeye_daisy", "blue_orchid");
 

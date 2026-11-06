@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 public final class SchematicTool {
-    static final Path ROOT = Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
+    static final Path ROOT = Path.of("mod/src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
 
     private SchematicTool() {}
 

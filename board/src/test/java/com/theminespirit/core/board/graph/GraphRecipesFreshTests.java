@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 class GraphRecipesFreshTests {
-    private static final Path RECIPES = Path.of("src/main/resources/" + SupplyGraph.RECIPES);
+    private static final Path RECIPES = Path.of("mod/src/main/resources/" + SupplyGraph.RECIPES);
 
     @Test
     void committed_Recipes_MatchFreshExport() throws IOException {

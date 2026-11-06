@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 class GraphSchematicClosureTests {
-    private static final Path ROOT = Path.of("src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
+    private static final Path ROOT = Path.of("mod/src/main/resources/" + PresetLibrary.SCHEMATICS_ROOT);
 
     @Test
     void schematics_EveryBlockItem_ClosesToWorldResource() throws IOException {

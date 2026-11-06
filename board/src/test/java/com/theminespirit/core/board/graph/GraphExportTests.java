@@ -54,7 +54,7 @@ class GraphExportTests {
         }
         Files.createDirectories(OUT.getParent());
         Files.copy(
-                Path.of("src/main/resources/" + SupplyGraph.RESOURCE),
+                Path.of("mod/src/main/resources/" + SupplyGraph.RESOURCE),
                 OUT.resolveSibling("graph.json"),
                 StandardCopyOption.REPLACE_EXISTING);
         new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValue(OUT.toFile(), cases);

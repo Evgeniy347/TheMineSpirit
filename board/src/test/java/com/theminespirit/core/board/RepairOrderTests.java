@@ -6,10 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.RepairAudit.WorldView;
 import com.theminespirit.core.building.BuildRotation;
+import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicTextParser;
+import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.repair.RepairData;
-import com.theminespirit.neoforge.SchematicResources;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +30,7 @@ class RepairOrderTests {
 
     @Test
     void audit_LiveHutMissingTwelfth_NeedsRepairWithoutRebuild() {
-        Schematic hut = SchematicResources.load(HUT);
+        Schematic hut = load(HUT);
         WorldView world = damagedWorld(hut, missingCells(hut));
         RepairAudit.Report report = RepairAudit.audit(
                 hut, HUT_ORIGIN, BuildRotation.NONE, world, RepairData.defaults(), new HashMap<>(), NOW);
@@ -75,6 +77,11 @@ class RepairOrderTests {
                 need,
                 board.find(ticket.id()).orElseThrow().requiredItems(),
                 "Тикет несёт материалы недостающих клеток");
+    }
+
+    private static Schematic load(String id) {
+        String path = PresetLibrary.SCHEMATICS_ROOT + id + SchematicTextParser.EXTENSION;
+        return SchematicTextParser.parse(JsonResource.readClasspath(path), path).schematic();
     }
 
     private static Set<BlockCoord> missingCells(Schematic hut) {

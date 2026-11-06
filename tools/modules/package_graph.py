@@ -15,6 +15,7 @@
     python tools/modules/package_graph.py neoforge
     python tools/modules/package_graph.py tests
     python tools/modules/package_graph.py matrix --depth 2 --csv build/tmp/m.csv
+    python tools/modules/package_graph.py modules
     python tools/modules/package_graph.py json --out build/tmp/graph.json
     python tools/modules/package_graph.py selftest
 
@@ -58,16 +59,41 @@ def _settings_module_dirs() -> list[str]:
     return [
         match[1:].replace(":", "/")
         for match in re.findall(r"^\s*include\s+'(:[^']+)'", text, re.MULTILINE)
-        if match not in (":api", ":mod")
+        if match not in (":api",)
     ]
+
+
+MODULE_DIRS = _settings_module_dirs()
+
+
+def module_of(path: str, mapping: dict[str, str] | None = None) -> str:
+    """Файл → Gradle-модуль по settings.gradle (длинный префикс каталога побеждает).
+
+    Корневой проект — «:root», :api — особый случай (его корень api/ не входит
+    в include-каталоги). Без этого маппинга рёбра пакетов дают ложные циклы:
+    пакет может жить сразу в :api и у владельца, а две механики — в одном :mod.
+    """
+    directories = mapping if mapping is not None else {d: ":" + d.replace("/", ":") for d in MODULE_DIRS}
+    normalized = path.replace("\\", "/")
+    best = ""
+    owner = ":root"
+    for directory, module in directories.items():
+        if normalized.startswith(directory + "/") and len(directory) > len(best):
+            best = directory
+            owner = module
+    if best:
+        return owner
+    if normalized.startswith("api/"):
+        return ":api"
+    return ":root"
 
 
 def _module_roots(source_set: str) -> list[str]:
     return [f"{directory}/src/{source_set}/java" for directory in _settings_module_dirs()]
 
 
-DEFAULT_MAIN = ",".join(["src/main/java", "api/src/main/java"] + _module_roots("main"))
-DEFAULT_TEST = ",".join(["src/test/java", "api/src/test/java"] + _module_roots("test"))
+DEFAULT_MAIN = ",".join(["api/src/main/java"] + _module_roots("main"))
+DEFAULT_TEST = ",".join(["api/src/test/java", "src/test/java"] + _module_roots("test"))
 
 PACKAGE_RE = re.compile(r"^\s*package\s+([\w.]+)\s*;", re.MULTILINE)
 IMPORT_RE = re.compile(r"^\s*import\s+(static\s+)?([\w.*]+)\s*;", re.MULTILINE)
@@ -179,6 +205,52 @@ def build_edges(files: list[SourceFile]) -> tuple[dict[tuple[str, str], int], li
         for target in targets:
             edges[(sf.package, target)] += 1
     return edges, warnings
+
+
+def build_module_edges(files: list[SourceFile]) -> dict[tuple[str, str], int]:
+    """Рёбра модуль → модуль по фактам файлов, без ложных циклов пакетов.
+
+    Цель ребра — модуль, где объявлен класс (файл → модуль по settings.gradle),
+    а не пакет: пакет контрактов живёт в :api и у владельца одновременно.
+    """
+    by_simple, local_names = declared_names(files)
+    class_modules: dict[str, set[str]] = defaultdict(set)
+    package_modules: dict[str, set[str]] = defaultdict(set)
+    for sf in files:
+        owner = module_of(sf.path)
+        for cls in sf.classes:
+            class_modules[sf.package + "." + cls].add(owner)
+            package_modules[sf.package].add(owner)
+
+    def owner_of(fqcn: str) -> str:
+        owners = class_modules.get(fqcn)
+        return next(iter(owners)) if owners is not None and len(owners) == 1 else ""
+
+    edges: dict[tuple[str, str], int] = defaultdict(int)
+
+    def add(src: str, target: str) -> None:
+        if target and src != target:
+            edges[(src, target)] += 1
+
+    for sf in files:
+        src = module_of(sf.path)
+        external = {imp.rsplit(".", 1)[-1] for imp in sf.imports if imp not in class_modules}
+        for imp in sf.imports:
+            add(src, owner_of(imp))
+        for package in sf.wildcards:
+            for owner in package_modules.get(package, set()):
+                add(src, owner)
+        own = {sf.package + "." + cls for cls in sf.classes}
+        for fq in sf.fqns:
+            if fq not in own:
+                add(src, owner_of(fq))
+        for ident in sf.identifiers:
+            if ident in local_names[sf.package] or ident in external:
+                continue
+            owners = by_simple.get(ident)
+            if owners and len(owners) == 1:
+                add(src, owner_of(next(iter(owners))))
+    return edges
 
 
 def group(pkg: str, depth: int) -> str:
@@ -459,6 +531,28 @@ def write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def cmd_modules(args: argparse.Namespace) -> int:
+    """Зависимости и циклы на уровне Gradle-модулей (файл → модуль по settings.gradle)."""
+    files, _, _ = load(args)
+    edges = build_module_edges(files)
+    counts: dict[str, int] = defaultdict(int)
+    for sf in files:
+        counts[module_of(sf.path)] += 1
+    nodes = set(counts) | {src for src, _ in edges} | {dst for _, dst in edges}
+    print(f"модулей: {len(counts)}, файлов: {len(files)}")
+    print(f"{'модуль':20} {'файлов':>7}")
+    for module in sorted(counts, key=lambda name: (-counts[name], name)):
+        print(f"{module:20} {counts[module]:7}")
+    print("\nзависимости модулей:")
+    for (src, dst), count in sorted(edges.items(), key=lambda kv: (-kv[1], kv[0])):
+        print(f"  {src:20} -> {dst:20} {count:5}")
+    cycles = strongly_connected(nodes, edges)
+    print(f"\nциклов модулей (SCC > 1): {len(cycles)}")
+    for component in cycles:
+        print("  " + " <-> ".join(component))
+    return 0
+
+
 def cmd_selftest(args: argparse.Namespace) -> int:
     """Проверка анализатора на синтетических файлах: рёбра, циклы, счёт тестов, срез, ложные связи."""
     import tempfile
@@ -493,6 +587,13 @@ def cmd_selftest(args: argparse.Namespace) -> int:
         assert group("com.theminespirit.core.board.graph", 2) == "core.board", "срез пакета неверен"
         assert group("com.theminespirit.core.board.graph", 3) == "core.board.graph", "срез depth=3 неверен"
         assert full("core.board") == "com.theminespirit.core.board", "короткое имя не развёрнуто"
+        mapping = {"mod": ":mod", "mech/mining": ":mech:mining", "api": ":api"}
+        assert module_of("mod/src/main/java/com/theminespirit/X.java", mapping) == ":mod"
+        assert module_of("mech/mining/src/main/java/com/theminespirit/X.java", mapping) == ":mech:mining"
+        assert module_of("api/src/main/java/com/theminespirit/X.java", mapping) == ":api"
+        assert module_of("src/test/java/com/theminespirit/XTest.java", mapping) == ":root"
+        assert module_of("gametest/src/main/java/com/theminespirit/gametest/X.java",
+                         {"mod": ":mod"}) == ":root", "незнакомый каталог не должен притворяться модулем"
     print("selftest: ok")
     return 0
 
@@ -505,8 +606,8 @@ def main(argv: list[str] | None = None) -> int:
             pass
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("command", choices=[
-        "summary", "cycles", "mutual", "backrefs", "evidence", "neoforge", "tests", "matrix", "json",
-        "selftest"])
+        "summary", "cycles", "mutual", "backrefs", "evidence", "neoforge", "tests", "matrix", "modules",
+        "json", "selftest"])
     parser.add_argument("--depth", type=int, default=2, help="глубина пакета от com.theminespirit (2 = core.board)")
     parser.add_argument("--main", default=DEFAULT_MAIN, help="корни main-исходников через запятую")
     parser.add_argument("--test", default=DEFAULT_TEST, help="корни тестовых исходников через запятую")
@@ -526,7 +627,7 @@ def main(argv: list[str] | None = None) -> int:
     handlers = {
         "summary": cmd_summary, "cycles": cmd_cycles, "mutual": cmd_mutual, "backrefs": cmd_backrefs,
         "evidence": cmd_evidence, "neoforge": cmd_neoforge, "tests": cmd_tests,
-        "matrix": cmd_matrix, "json": cmd_json, "selftest": cmd_selftest,
+        "matrix": cmd_matrix, "modules": cmd_modules, "json": cmd_json, "selftest": cmd_selftest,
     }
     return handlers[args.command](args)
 

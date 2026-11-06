@@ -8,6 +8,7 @@ REST="${LIVE_DEBUG_REST:-http://$HOST:8765}"
 AGENT="${LIVE_DEBUG_AGENT:-${USER:-agent}}"
 TTL="${LIVE_DEBUG_TTL:-14400}"
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
+. "$REPO/scripts/module-paths.sh"
 SRC="$REPO/scripts/live-debug"
 OUT="$REPO/build/live-debug/classes"
 SERVER_DIR="/opt/minecraft/server"
@@ -122,7 +123,16 @@ classes_arg() {
     if [ -n "${LIVE_DEBUG_CLASSES:-}" ]; then
         win_path "$LIVE_DEBUG_CLASSES"
     else
-        win_path "$REPO/build/classes/java/main"
+        local dirs module_root first=1
+        for module_root in "$MOD_MAIN_DIR" ${MOD_MODULE_MAIN_ROOTS//,/ }; do
+            dirs="$(win_path "$REPO/$module_root")"
+            if [ "$first" = 1 ]; then
+                first=0
+                printf '%s' "$dirs"
+            else
+                printf ';%s' "$dirs"
+            fi
+        done
     fi
 }
 
@@ -252,7 +262,7 @@ case "$command" in
         done
         if [ "$build" -eq 1 ]; then
             mkdir -p "$REPO/build/live-debug"
-            if ! (cd "$REPO" && ./gradlew -q compileJava > "$REPO/build/live-debug/compile.log" 2>&1); then
+            if ! (cd "$REPO" && ./gradlew -q :mod:classes > "$REPO/build/live-debug/compile.log" 2>&1); then
                 tail -20 "$REPO/build/live-debug/compile.log" >&2
                 die "compileJava упал: hotswap не отправлен (лог: build/live-debug/compile.log)"
             fi

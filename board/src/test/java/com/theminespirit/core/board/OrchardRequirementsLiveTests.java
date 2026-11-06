@@ -25,7 +25,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class OrchardRequirementsLiveTests {
-    private static final Path SCHEME = Path.of("src/main/resources/data/theminespirit/schematics/orchard_1.txt");
+    private static final Path SCHEME = Path.of("mod/src/main/resources/data/theminespirit/schematics/orchard_1.txt");
 
     @Test
     void orchard_Requirements_MatchPlotDirtPathAndTorch() throws IOException {

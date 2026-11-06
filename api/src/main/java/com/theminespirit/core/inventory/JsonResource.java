@@ -25,7 +25,7 @@ public final class JsonResource {
         try (InputStream stream = JsonResource.class.getClassLoader().getResourceAsStream(resourcePath)) {
             if (stream == null) {
                 throw new IllegalStateException("Файл '" + resourcePath
-                        + "' не найден на classpath: проверьте, что он лежит в src/main/resources "
+                        + "' не найден на classpath: проверьте, что он лежит в mod/src/main/resources "
                         + "и путь указан от корня ресурсов");
             }
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);

@@ -1,7 +1,7 @@
 """Модель графа потребностей поселения — перенос правил Java (GraphPlanner) один в один.
 
 Источник истины: src/main/java/com/theminespirit/core/board/graph/*.java
-Данные: src/main/resources/data/theminespirit/board/graph.json
+Данные: mod/src/main/resources/data/theminespirit/board/graph.json
 (выгрузка: ./gradlew graphExport -> TestResults/graph-export/graph.json)
 """
 
@@ -43,7 +43,7 @@ STORE_CHESTS = "store:chests"
 STORE_SORTED = "store:sorted"
 STORE_DEFAULT_BASE = 50
 STORE_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-WAREHOUSE_CATEGORIES = os.path.join(STORE_ROOT, "src", "main", "resources", "data",
+WAREHOUSE_CATEGORIES = os.path.join(STORE_ROOT, "mod", "src", "main", "resources", "data",
                                     "theminespirit", "inventory", "warehouse_categories.json")
 _CATEGORIES = None
 
@@ -71,7 +71,7 @@ def category_of(item):
 NAMESPACE = "minecraft:"
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 FRAGMENT_DIR = os.path.join(
-    ROOT_DIR, "src", "main", "resources", "data", "theminespirit", "board", "graph.d")
+    ROOT_DIR, "mod", "src", "main", "resources", "data", "theminespirit", "board", "graph.d")
 ARMOR_SLOTS = ("HEAD", "CHEST", "LEGS", "FEET")
 ARMOR_SUFFIXES = {
     "_helmet": "HEAD",

@@ -1,35 +1,235 @@
 plugins {
-    id 'theminespirit.java-conventions'
+    id 'theminespirit.neoforge-mod'
+    id 'maven-publish'
 }
 
-def rootTest = rootProject.sourceSets.test
-def explicitlyRequested = gradle.startParameter.taskNames.any { name ->
-    name == 'mod:test' || name == ':mod:test' || name.startsWith('mod:') || name.startsWith(':mod:')
+def resolveBuildNumber = {
+    def explicit = project.findProperty('build_number')
+    if (explicit != null) {
+        def text = explicit.toString().trim()
+        if (!(text ==~ /[1-9][0-9]*/)) {
+            throw new GradleException("build_number должен быть положительным целым числом, получено: '${explicit}'")
+        }
+        return text.toInteger()
+    }
+    try {
+        def git = providers.exec {
+            commandLine 'git', 'rev-list', '--count', 'HEAD'
+            ignoreExitValue = true
+        }
+        def result = git.result.get()
+        def text = git.standardOutput.asText.get().trim()
+        if (result.exitValue != 0 || !(text ==~ /[1-9][0-9]*/)) {
+            throw new GradleException("Не удалось вычислить номер сборки: 'git rev-list --count HEAD' вернул код "
+                    + "${result.exitValue} и '${text}'. Проверьте, что проект — git-репозиторий с коммитами, "
+                    + "или задайте номер явно: ./gradlew build -Pbuild_number=N")
+        }
+        return text.toInteger()
+    } catch (GradleException error) {
+        throw error
+    } catch (Exception error) {
+        throw new GradleException("Не удалось вычислить номер сборки: git недоступен (${error.message}). "
+                + "Установите git или задайте номер явно: ./gradlew build -Pbuild_number=N", error)
+    }
+}
+def modVersion = "${mod_version_minor}.${resolveBuildNumber()}"
+version = modVersion
+group = mod_group_id
+
+base {
+    archivesName = mod_id
 }
 
+repositories {
+    maven {
+        url = "https://maven.blamejared.com"
+        content {
+            includeGroup "mezz.jei"
+        }
+    }
+}
+
+sourceSets.main.resources {
+    srcDir('src/generated/resources')
+
+    exclude("**/*.bbmodel")
+    exclude("src/generated/**/.cache")
+}
+
+sourceSets.main.output.classesDirs.from(provider {
+    project(':api').sourceSets.main.output.classesDirs +
+            project(':board').sourceSets.main.output.classesDirs +
+            project(':tactics').sourceSets.main.output.classesDirs +
+            project(':content').sourceSets.main.output.classesDirs +
+            project(':rest').sourceSets.main.output.classesDirs +
+            project(':ui').sourceSets.main.output.classesDirs +
+            project(':policy').sourceSets.main.output.classesDirs +
+            project(':mech:mining').sourceSets.main.output.classesDirs +
+            project(':mech:movement').sourceSets.main.output.classesDirs +
+            project(':mech:inventory').sourceSets.main.output.classesDirs +
+            project(':mech:farming').sourceSets.main.output.classesDirs +
+            project(':mech:forestry').sourceSets.main.output.classesDirs +
+            project(':mech:crafting').sourceSets.main.output.classesDirs +
+            project(':mech:husbandry').sourceSets.main.output.classesDirs +
+            project(':mech:small').sourceSets.main.output.classesDirs +
+            project(':mech:building').sourceSets.main.output.classesDirs +
+            project(':mech:town').sourceSets.main.output.classesDirs
+})
+tasks.named('classes') {
+    dependsOn ':api:classes', ':board:classes', ':tactics:classes', ':content:classes', ':policy:classes'
+    dependsOn ':rest:classes', ':ui:classes'
+    dependsOn ':mech:mining:classes', ':mech:movement:classes', ':mech:inventory:classes'
+    dependsOn ':mech:farming:classes', ':mech:forestry:classes', ':mech:crafting:classes', ':mech:husbandry:classes'
+    dependsOn ':mech:small:classes', ':mech:building:classes', ':mech:town:classes'
+}
+
+neoForge {
+    runs {
+        client {
+            client()
+        }
+
+        server {
+            server()
+            programArgument '--nogui'
+        }
+
+        data {
+            data()
+
+            programArguments.addAll '--mod', project.mod_id, '--all',
+                    '--output', file('src/generated/resources/').getAbsolutePath(),
+                    '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+configurations {
+    runtimeClasspath.extendsFrom localRuntime
+}
+
+dependencies {
+    api project(':api')
+    api project(':board')
+    api project(':tactics')
+    api project(':content')
+    api project(':rest')
+    api project(':ui')
+    api project(':policy')
+    api project(':mech:mining')
+    api project(':mech:movement')
+    api project(':mech:inventory')
+    api project(':mech:farming')
+    api project(':mech:forestry')
+    api project(':mech:crafting')
+    api project(':mech:husbandry')
+    api project(':mech:small')
+    api project(':mech:building')
+    api project(':mech:town')
+    testImplementation testFixtures(project(':test-fixtures'))
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
+    additionalRuntimeClasspath "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
+    jarJar("com.fasterxml.jackson.core:jackson-databind:${jackson_version}") {
+        version {
+            strictly "${jackson_version_range}"
+            prefer "${jackson_version}"
+        }
+    }
+    jarJar("com.fasterxml.jackson.core:jackson-core:${jackson_version}") {
+        version {
+            strictly "${jackson_version_range}"
+            prefer "${jackson_version}"
+        }
+    }
+    jarJar("com.fasterxml.jackson.core:jackson-annotations:${jackson_version}") {
+        version {
+            strictly "${jackson_version_range}"
+            prefer "${jackson_version}"
+        }
+    }
+
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
+}
+
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : modVersion,
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
+}
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+tasks.named('jar', Jar) {
+    destinationDirectory = rootProject.layout.buildDirectory.dir('libs')
+}
+
+def modTestThreads =
+        (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}")
 tasks.named('test', Test) {
-    onlyIf { explicitlyRequested }
     workingDir = rootProject.projectDir
-    dependsOn rootProject.tasks.named('testClasses')
-    testClassesDirs = rootTest.output.classesDirs
-    classpath = rootTest.runtimeClasspath
     useJUnitPlatform {
         excludeTags 'slow', 'mutation', 'export'
-    }
-    filter {
-        excludeTestsMatching 'com.theminespirit.core.board.*'
     }
     maxParallelForks = 1
     systemProperty 'junit.jupiter.execution.parallel.enabled', 'true'
     systemProperty 'junit.jupiter.execution.parallel.mode.default', 'same_thread'
     systemProperty 'junit.jupiter.execution.parallel.mode.classes.default', 'concurrent'
     systemProperty 'junit.jupiter.execution.parallel.config.strategy', 'fixed'
-    systemProperty 'junit.jupiter.execution.parallel.config.fixed.parallelism',
-            "${(System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}")}"
-    jvmArgs '-XX:+UseSerialGC'
+    systemProperty 'junit.jupiter.execution.parallel.config.fixed.parallelism', "${modTestThreads}"
+    jvmArgs '-XX:+UseSerialGC', "-XX:ActiveProcessorCount=${Math.max(2, modTestThreads as int)}"
     maxHeapSize = '512m'
-    systemProperty 'theminespirit.modId', 'theminespirit'
+    systemProperty 'theminespirit.modId', project.mod_id
+    systemProperty 'jqwik.tries.default', '200'
+    systemProperty 'jqwik.database', '.jqwik-database'
     systemProperty 'theminespirit.updateSnapshots',
             System.getProperty('theminespirit.updateSnapshots', System.getenv('THEMINESPIRIT_UPDATE_SNAPSHOTS') ?: 'false')
-    failOnNoDiscoveredTests = true
+    classpath += files(rootProject.file('src/test/resources'))
+    failOnNoDiscoveredTests = !project.hasProperty('theminespirit.filtered')
+    filter { setFailOnNoMatchingTests(!project.hasProperty('theminespirit.filtered')) }
+}
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url "file://${project.projectDir}/repo"
+        }
+    }
+}
+
+tasks.register('schematicTool', JavaExec) {
+    group = 'theminespirit'
+    description = 'Постройки в текстовом формате: show <файл|id> [поворот], check [файл|id…]'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.theminespirit.core.building.SchematicTool'
+    jvmArgs '-Dstdout.encoding=UTF-8', '-Dfile.encoding=UTF-8'
+    workingDir = rootProject.projectDir
+    args((System.getProperty('theminespirit.schematic.args') ?: '').split('\u0001').findAll { !it.isEmpty() })
 }

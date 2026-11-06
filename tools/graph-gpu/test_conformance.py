@@ -20,9 +20,9 @@ from graph_model import BUILT, Graph, Planner, State, plan
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 EXPORT = os.path.join(ROOT, "TestResults", "graph-export")
-RECIPES = os.path.join(ROOT, "src", "main", "resources", "data", "theminespirit", "board",
+RECIPES = os.path.join(ROOT, "mod", "src", "main", "resources", "data", "theminespirit", "board",
                        "graph-recipes.json")
-FRAGMENTS = os.path.join(ROOT, "src", "main", "resources", "data", "theminespirit", "board",
+FRAGMENTS = os.path.join(ROOT, "mod", "src", "main", "resources", "data", "theminespirit", "board",
                          "graph.d")
 
 
@@ -181,7 +181,7 @@ def test_store_nodes():
 
 def test_world_fragment():
     graph = Graph.load_merged(
-        os.path.join(ROOT, "src", "main", "resources", "data", "theminespirit", "board", "graph.json"),
+        os.path.join(ROOT, "mod", "src", "main", "resources", "data", "theminespirit", "board", "graph.json"),
         RECIPES,
         FRAGMENTS)
     for node in ("demolish_stray", "backfill", "clear_floating", "level_lot", "restore_trace"):
@@ -224,7 +224,7 @@ def test_world_inputs():
 
 def test_gear_fragment():
     graph = Graph.load_merged(
-        os.path.join(ROOT, "src", "main", "resources", "data", "theminespirit", "board", "graph.json"),
+        os.path.join(ROOT, "mod", "src", "main", "resources", "data", "theminespirit", "board", "graph.json"),
         RECIPES,
         FRAGMENTS)
     for node in ("gear_equip_best", "gear_craft_armor", "gear_craft_pickaxe", "gear_craft_axe",

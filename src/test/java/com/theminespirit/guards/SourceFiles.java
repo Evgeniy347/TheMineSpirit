@@ -28,7 +28,7 @@ public final class SourceFiles {
     public static final Path TEST_RESOURCES = Path.of(layout().getProperty("test_resources"));
     public static final Path TEMPLATES = Path.of(layout().getProperty("templates"));
     public static final Path GENERATED_RESOURCES = Path.of(layout().getProperty("generated_resources"));
-    public static final Path GAME_TESTS = MAIN.resolve(layout().getProperty("gametests"));
+    public static final Path GAME_TESTS = Path.of(layout().getProperty("gametests"));
 
     private static final Path SETTINGS = Path.of("settings.gradle");
     private static final Pattern INCLUDE = Pattern.compile("^\\s*include\\s+'(:[^']+)'", Pattern.MULTILINE);
@@ -111,7 +111,7 @@ public final class SourceFiles {
         Matcher matcher = INCLUDE.matcher(settings);
         while (matcher.find()) {
             String id = matcher.group(1);
-            if (":api".equals(id) || ":mod".equals(id)) {
+            if (":api".equals(id)) {
                 continue;
             }
             roots.add(Path.of(id.substring(1).replace(':', '/'), sourceSet));

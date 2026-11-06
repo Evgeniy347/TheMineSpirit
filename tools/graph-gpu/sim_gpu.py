@@ -943,7 +943,7 @@ def run(world, limit=4000, device="cuda"):
 
 def load_graph(export):
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    base = os.path.join(root, "src", "main", "resources", "data", "theminespirit", "board")
+    base = os.path.join(root, "mod", "src", "main", "resources", "data", "theminespirit", "board")
     recipes = os.path.join(base, "graph-recipes.json")
     fragments = os.path.join(base, "graph.d")
     return Graph.load_merged(os.path.join(export, "graph.json"), recipes, fragments)

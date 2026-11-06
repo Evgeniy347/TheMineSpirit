@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 class DependencyVersionGuardTests {
-    private static final Path BUILD = Path.of("build.gradle");
+    private static final Path BUILD = Path.of("mod/build.gradle");
     private static final Path PROPERTIES = Path.of("gradle.properties");
     private static final Path SETTINGS = Path.of("settings.gradle");
 

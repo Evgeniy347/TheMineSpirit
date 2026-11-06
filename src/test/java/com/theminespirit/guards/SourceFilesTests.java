@@ -102,8 +102,10 @@ class SourceFilesTests {
     }
 
     @Test
-    void gameTests_UnderMainRoot_AreDirectories() {
-        assertTrue(SourceFiles.GAME_TESTS.startsWith(SourceFiles.MAIN), "GameTest — часть main-исходников");
+    void gameTests_HaveOwnModuleRoot_AndExist() {
+        assertTrue(
+                SourceFiles.GAME_TESTS.startsWith(Path.of("gametest/src/main/java")),
+                "GameTest — отдельный модуль :gametest, а не часть main-исходников мода");
         assertTrue(Files.isDirectory(SourceFiles.GAME_TESTS), "каталог GameTest обязан существовать");
     }
 }

@@ -19,7 +19,7 @@ MOD_RESOURCES_DIR="$(module_layout_value resources)"
 MOD_TEST_RESOURCES_DIR="$(module_layout_value test_resources)"
 MOD_TEMPLATES_DIR="$(module_layout_value templates)"
 MOD_GENERATED_DIR="$(module_layout_value generated_resources)"
-MOD_GAME_TESTS_DIR="$MOD_MAIN_DIR/$(module_layout_value gametests)"
+MOD_GAME_TESTS_DIR="$(module_layout_value gametests)"
 MOD_JAR_DIR="${THEMINESPIRIT_JAR_DIR:-$(module_layout_value jar_dir)}"
 MOD_SETTINGS_FILE="${THEMINESPIRIT_SETTINGS:-$PROJECT_ROOT/settings.gradle}"
 
@@ -32,7 +32,7 @@ settings_module_dirs() {
     sed -nE "s/^[[:space:]]*include[[:space:]]+'(:[^']+)'.*/\1/p" "$MOD_SETTINGS_FILE" |
         while IFS= read -r id; do
             case "$id" in
-                :api|:mod) continue ;;
+                :api) continue ;;
             esac
             printf '%s\n' "${id#:}" | tr ':' '/'
         done

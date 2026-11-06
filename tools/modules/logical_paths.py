@@ -27,7 +27,7 @@ def settings_module_dirs(root: Path) -> list[str]:
     return [
         match[1:].replace(":", "/")
         for match in re.findall(r"^\s*include\s+'(:[^']+)'", text, re.MULTILINE)
-        if match not in (":api", ":mod")
+        if match not in (":api",)
     ]
 
 

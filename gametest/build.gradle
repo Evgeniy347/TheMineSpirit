@@ -1,0 +1,92 @@
+plugins {
+    id 'theminespirit.neoforge-mod'
+}
+
+dependencies {
+    // lib: jar :mod в рантайме NeoForge находит вторым модом с тем же id — берём только компиляцию.
+    compileOnly project(':mod')
+    additionalRuntimeClasspath "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
+    testImplementation testFixtures(project(':test-fixtures'))
+}
+
+// lib: чужой sourceSet в mods{} даёт путь от корня, поэтому мод и сцены склеиваются в output :gametest.
+sourceSets.main.output.classesDirs.from(provider { project(':mod').sourceSets.main.output.classesDirs })
+sourceSets.main.resources.srcDir(project(':mod').layout.buildDirectory.dir('resources/main'))
+tasks.named('classes') {
+    dependsOn ':mod:classes'
+}
+tasks.named('processResources', ProcessResources) {
+    dependsOn ':mod:processResources'
+}
+tasks.named('createMinecraftArtifacts') {
+    dependsOn ':mod:processResources'
+}
+
+neoForge {
+    accessTransformers.from(project(':mod').file('src/main/resources/META-INF/accesstransformer.cfg'))
+
+    runs {
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            systemProperty 'theminespirit.gametest.filter', providers.systemProperty('theminespirit.gametest.filter').orElse('').get()
+            systemProperty 'theminespirit.gametest.seed', providers.systemProperty('theminespirit.gametest.seed').orElse('').get()
+            jvmArguments.addAll '-XX:+UseSerialGC', '-Xmx1536m', '-XX:+ExitOnOutOfMemoryError'
+            gameDirectory = rootProject.file(providers.systemProperty('theminespirit.gametest.dir').orElse('build/gametest-run').get())
+            logLevel = org.slf4j.event.Level.INFO
+        }
+
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+def gameTestThreads =
+        (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}")
+tasks.named('test', Test) {
+    workingDir = rootProject.projectDir
+    useJUnitPlatform {
+        excludeTags 'slow', 'mutation', 'export'
+    }
+    maxParallelForks = 1
+    systemProperty 'junit.jupiter.execution.parallel.enabled', 'true'
+    systemProperty 'junit.jupiter.execution.parallel.mode.default', 'same_thread'
+    systemProperty 'junit.jupiter.execution.parallel.mode.classes.default', 'concurrent'
+    systemProperty 'junit.jupiter.execution.parallel.config.strategy', 'fixed'
+    systemProperty 'junit.jupiter.execution.parallel.config.fixed.parallelism', "${gameTestThreads}"
+    jvmArgs '-XX:+UseSerialGC', "-XX:ActiveProcessorCount=${Math.max(2, gameTestThreads as int)}"
+    maxHeapSize = '512m'
+    systemProperty 'theminespirit.modId', project.mod_id
+    systemProperty 'jqwik.tries.default', '200'
+    systemProperty 'jqwik.database', '.jqwik-database'
+    systemProperty 'theminespirit.updateSnapshots',
+            System.getProperty('theminespirit.updateSnapshots', System.getenv('THEMINESPIRIT_UPDATE_SNAPSHOTS') ?: 'false')
+    classpath += files(rootProject.file('src/test/resources'))
+    failOnNoDiscoveredTests = !project.hasProperty('theminespirit.filtered')
+    filter { setFailOnNoMatchingTests(!project.hasProperty('theminespirit.filtered')) }
+}
+
+tasks.named('runGameTestServer') {
+    doFirst {
+        new File(gameDirectory.getAsFile().get(), 'world').deleteDir()
+        def lockPath = System.getProperty('theminespirit.gametest.lock')
+        def token = (System.getProperty('theminespirit.gametest.token') ?: '').trim()
+        if (!lockPath || !token) {
+            throw new GradleException("runGameTestServer: прямой запуск без замка запрещён. Используй scripts/test.sh gametest (docs/TESTING.md): скрипт берёт замок и передаёт -Dtheminespirit.gametest.lock/-Dtheminespirit.gametest.token.")
+        }
+        def dirToken = new File(lockPath + '.d/token')
+        def fileToken = new File(lockPath + '.token')
+        def markerToken = dirToken.exists() ? dirToken.getText('UTF-8').trim() : (fileToken.exists() ? fileToken.getText('UTF-8').trim() : '')
+        if (markerToken != token) {
+            throw new GradleException("runGameTestServer: токен замка не совпадает (${markerToken ? 'устаревший или чужой замок' : 'замок отсутствует'}). Прямой запуск запрещён: scripts/test.sh gametest (docs/TESTING.md).")
+        }
+    }
+}

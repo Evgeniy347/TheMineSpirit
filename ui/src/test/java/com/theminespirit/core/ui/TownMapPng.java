@@ -33,7 +33,7 @@ final class TownMapPng {
     static final int WIDTH = 960;
     static final int HEIGHT = 640;
     static final long[] SEEDS = {11, 23, 47};
-    private static final Path LANG = Path.of("src/main/resources/assets/theminespirit/lang/ru_ru.json");
+    private static final Path LANG = Path.of("mod/src/main/resources/assets/theminespirit/lang/ru_ru.json");
     private static final int PAD = 4;
     private static final List<TownSnapshot.Progress> PROGRESS = List.of(
             new TownSnapshot.Progress(40, 40, false),

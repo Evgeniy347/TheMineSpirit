@@ -54,7 +54,7 @@ public final class BoardSnapshot {
         }
         List<Row> rows = new ArrayList<>(tasks.size());
         for (BoardTask task : tasks) {
-            BoardTileGroup group = groupOf(task, unfinished);
+            BoardTileGroup group = BoardListings.groupOf(task, unfinished);
             long doneAt = 0L;
             if (group == BoardTileGroup.DONE && task.done()) {
                 doneAt = task.finishedAt() > 0 ? task.finishedAt() : task.createdAt();
@@ -94,10 +94,6 @@ public final class BoardSnapshot {
     private static boolean unfinished(Row row) {
         return row.group() == BoardTileGroup.DONE
                 && !BoardStatus.DONE.name().equals(row.task().status());
-    }
-
-    public static BoardTileGroup groupOf(BoardTask task, Set<String> unfinishedIds) {
-        return BoardListings.groupOf(task, unfinishedIds);
     }
 
     private static List<String> detailsOf(List<String> modifiers, @Nullable List<String> target) {
