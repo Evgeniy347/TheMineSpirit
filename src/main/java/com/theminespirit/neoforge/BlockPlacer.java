@@ -157,8 +157,9 @@ public final class BlockPlacer {
         }
         return new Refused(
                 RefuseReason.NO_MATERIAL,
-                "нет тяпки для пашни: сначала нужна тяпка (в " + target.toShortString() + " осталась "
-                        + BlockStates.idOf(level.getBlockState(target)) + ")");
+                "тяпкой по " + target.toShortString() + " пашня не вышла: нужна земля или трава и пустая "
+                        + "клетка сверху (в клетке " + BlockStates.idOf(level.getBlockState(target))
+                        + ", сверху " + BlockStates.idOf(level.getBlockState(target.above())) + ")");
     }
 
     private @Nullable Begin placementGuard(Level level, BlockPos target, BlockState state, boolean supportRequired) {

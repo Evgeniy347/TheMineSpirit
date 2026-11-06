@@ -22,7 +22,7 @@ gametest/GameTestFixtures.java	354
 gametest/HouseMovementGameTests.java	365
 gametest/RestFixture.java	310
 neoforge/BlockBreaker.java	393
-neoforge/BuildSchematicScript.java	1180
+neoforge/BuildSchematicScript.java	1167
 neoforge/ChopTreeScript.java	343
 neoforge/ClearAreaSession.java	541
 neoforge/DescentSession.java	359

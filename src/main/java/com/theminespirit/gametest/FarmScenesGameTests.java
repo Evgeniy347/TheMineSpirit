@@ -33,10 +33,24 @@ public final class FarmScenesGameTests {
     // [флак] замер ~2500 тиков: 132 клетки грядки (пахота, посев, вода); бюджет 4000 ≈ 1,6×
     @GameTest(template = "big_arena", batch = "scene_farm_field", timeoutTicks = 4000)
     public static void wheatField_OnGround_BuildsFarmlandSownAndWatered(GameTestHelper helper) {
+        buildWheatField(helper, false);
+    }
+
+    // mc: [флак] ванильная тяпка пашет только при пустой клетке сверху; замер ~2500 тиков,
+    // бюджет 4000 ≈ 1,6×
+    @GameTest(template = "big_arena", batch = "scene_farm_field", timeoutTicks = 4000)
+    public static void wheatField_OnWeedyGround_ClearsWeedsAndBuilds(GameTestHelper helper) {
+        buildWheatField(helper, true);
+    }
+
+    private static void buildWheatField(GameTestHelper helper, boolean weedy) {
         GameTestFixtures.reset(helper, 16);
         for (int x = -1; x <= 15; x++) {
             for (int z = -1; z <= 15; z++) {
                 helper.setBlock(x, 0, z, Blocks.GRASS_BLOCK);
+                if (weedy) {
+                    helper.setBlock(x, 1, z, Blocks.SHORT_GRASS);
+                }
             }
         }
         int levelY = 1;
