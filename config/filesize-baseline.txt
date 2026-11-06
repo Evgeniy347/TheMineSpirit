@@ -50,7 +50,7 @@ neoforge/tactics/TacticsService.java	649
 core/board/AnimalLifecycleTests.java	303
 core/board/BoardConfigTests.java	401
 core/board/BoardLogTests.java	422
-core/board/BoardTests.java	936
+core/board/BoardTests.java	966
 core/board/BoardTicketTests.java	401
 core/board/TicketPlansTests.java	1230
 core/board/graph/GraphPlannerTests.java	933
