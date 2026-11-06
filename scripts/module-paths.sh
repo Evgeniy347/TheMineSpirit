@@ -43,8 +43,11 @@ settings_module_dirs() {
 settings_module_dir() {
     sed -nE "s/^[[:space:]]*include[[:space:]]+'(:[^']+)'.*/\1/p" "$MOD_SETTINGS_FILE" |
         while IFS= read -r id; do
-            [ "$id" = "$1" ] && printf '%s\n' "${id#:}" | tr ':' '/'
+            if [ "$id" = "$1" ]; then
+                printf '%s\n' "${id#:}" | tr ':' '/'
+            fi
         done
+    return 0
 }
 
 MOD_MAIN_DIR="$(settings_module_dir ':mod')/src/main/java"
