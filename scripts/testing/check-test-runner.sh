@@ -640,6 +640,76 @@ code=$?
     && grep -qx "exclude=" build/gametest-run/theminespirit-gametest.properties \
     && ok "gametest-manual-demo: явная пачка демо-аудита идёт без исключения" \
     || fail "gametest-manual-demo: код=$code, args=$(tr '\n' ' ' <"$argsdir/args-0" 2>/dev/null), вывод: $out"
+
+cat >"$work/bin/shard-faulty" <<'FAKE'
+#!/usr/bin/env bash
+shard=0
+for a in "$@"; do
+    case "$a" in
+        -Dtheminespirit.gametest.dir=*shard-*) shard="${a##*shard-}" ;;
+    esac
+done
+case "${SHARD_CASE:-}" in
+    silent) [ "$shard" = 2 ] && echo "All 7 required tests passed" ;;
+    broken)
+        if [ "$shard" = 1 ]; then
+            echo "> Task :api:jar FAILED"
+            echo "Unable to delete file 'api.jar'"
+            echo "BUILD FAILED"
+            exit 1
+        fi
+        echo "All 7 required tests passed"
+        ;;
+    shares)
+        echo "GameTest filter []: удалено 0 тестов из 21, осталось 7 (исключения [], шард Shard[index=$shard, count=3])"
+        echo "All 7 required tests passed :)"
+        ;;
+    mismatch)
+        echo "GameTest filter []: удалено 0 тестов из 21, осталось 6 (исключения [], шард Shard[index=$shard, count=3])"
+        echo "All 7 required tests passed :)"
+        ;;
+    single-bad) echo "All 7 required tests passed :)"; exit 1 ;;
+esac
+exit 0
+FAKE
+chmod +x "$work/bin/shard-faulty"
+out=$(SHARD_CASE=silent THEMINESPIRIT_GRADLEW="$work/bin/shard-faulty" \
+    THEMINESPIRIT_GAMETEST_SHARDS=3 THEMINESPIRIT_GAMETEST_NOFLOCK=1 \
+    THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock" bash scripts/test.sh gametest 2>&1)
+code=$?
+[ "$code" != 0 ] && echo "$out" | grep -q "шард 0 не запускал сцены" \
+    && ok "gametest-missing-shard: пустой лог шарда — красный, а не «OK 7 тестов»" \
+    || fail "gametest-missing-shard: код=$code, вывод: $out"
+out=$(SHARD_CASE=broken THEMINESPIRIT_GRADLEW="$work/bin/shard-faulty" \
+    THEMINESPIRIT_GAMETEST_SHARDS=3 THEMINESPIRIT_GAMETEST_NOFLOCK=1 \
+    THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock" bash scripts/test.sh gametest 2>&1)
+code=$?
+[ "$code" != 0 ] && echo "$out" | grep -q "шард 1 не дошёл до" \
+    && echo "$out" | grep -q "Unable to delete" \
+    && ok "gametest-failed-shard: упавшая сборка шарда называет причину" \
+    || fail "gametest-failed-shard: код=$code, вывод: $out"
+out=$(SHARD_CASE=shares THEMINESPIRIT_GRADLEW="$work/bin/shard-faulty" \
+    THEMINESPIRIT_GAMETEST_SHARDS=3 THEMINESPIRIT_GAMETEST_NOFLOCK=1 \
+    THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock" bash scripts/test.sh gametest 2>&1)
+code=$?
+[ "$code" = 0 ] && echo "$out" | grep -q "OK gametest: 21 тестов (3 шардов: 7+7+7)" \
+    && ok "gametest-shard-sum: итог — сумма сцен по шардам" \
+    || fail "gametest-shard-sum: код=$code, вывод: $out"
+out=$(SHARD_CASE=mismatch THEMINESPIRIT_GRADLEW="$work/bin/shard-faulty" \
+    THEMINESPIRIT_GAMETEST_SHARDS=3 THEMINESPIRIT_GAMETEST_NOFLOCK=1 \
+    THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock" bash scripts/test.sh gametest 2>&1)
+code=$?
+[ "$code" != 0 ] && echo "$out" | grep -q "шард 0 прошёл 7 тестов, а ему назначено 6 сцен" \
+    && ok "gametest-shard-mismatch: шард прошёл не свои сцены — красный" \
+    || fail "gametest-shard-mismatch: код=$code, вывод: $out"
+out=$(SHARD_CASE=single-bad THEMINESPIRIT_GRADLEW="$work/bin/shard-faulty" \
+    THEMINESPIRIT_GAMETEST_SHARDS=1 THEMINESPIRIT_GAMETEST_NOFLOCK=1 \
+    THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock" bash scripts/test.sh gametest --full 2>&1)
+code=$?
+[ "$code" != 0 ] && echo "$out" | grep -q "прогон ушёл с кодом 1" \
+    && ok "gametest-code: ненулевой код gradle при «All N passed» — красный" \
+    || fail "gametest-code: код=$code, вывод: $out"
+
 rm -rf "$work/tmp/lock.d" "$argsdir"
 
 exit $failed

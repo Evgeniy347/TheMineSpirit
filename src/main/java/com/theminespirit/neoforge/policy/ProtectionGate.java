@@ -8,11 +8,11 @@ import com.theminespirit.core.policy.BreakVeto;
 import com.theminespirit.core.policy.LocalSurroundings;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.policy.PortalPolicy;
-import com.theminespirit.core.policy.ProtectionConfig;
 import com.theminespirit.core.policy.SelfRescue;
 import com.theminespirit.core.policy.SettlementBreak;
 import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.policy.ZonePolicy;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.FenceDemolition;
 import com.theminespirit.core.town.PlanBuilding;
 import com.theminespirit.core.town.PlanBuildings;
@@ -32,7 +32,8 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public final class ProtectionGate {
     private static final String NATURAL_STAND_IN = "minecraft:stone";
-    private static final BlockProtection PROTECTION = ProtectionConfig.load();
+    private static final BlockProtection PROTECTION =
+            DataTables.INSTANCE.protection().current();
     private static final String AIR_ID = "minecraft:air";
 
     private final SpiritEntity spirit;

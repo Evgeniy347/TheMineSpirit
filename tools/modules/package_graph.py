@@ -36,11 +36,22 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT_PACKAGE = "com.theminespirit"
-DEFAULT_MAIN = (
-    "src/main/java,api/src/main/java,mech/building/src/main/java,mech/town/src/main/java"
-)
-DEFAULT_TEST = (
-    "src/test/java,api/src/test/java,mech/building/src/test/java,mech/town/src/test/java"
+
+
+def _layout_extra(key: str) -> str:
+    path = Path("config/layout.properties")
+    if not path.is_file():
+        return ""
+    for line in path.read_text(encoding="utf-8").splitlines():
+        text = line.strip()
+        if text.startswith(key + "="):
+            return text[len(key) + 1 :]
+    return ""
+
+
+DEFAULT_MAIN = ",".join(["src/main/java", "api/src/main/java"] + [p for p in _layout_extra("module_roots").split(",") if p])
+DEFAULT_TEST = ",".join(
+    ["src/test/java", "api/src/test/java"] + [p for p in _layout_extra("module_test_roots").split(",") if p]
 )
 
 PACKAGE_RE = re.compile(r"^\s*package\s+([\w.]+)\s*;", re.MULTILINE)

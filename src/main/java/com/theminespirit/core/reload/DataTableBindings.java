@@ -10,6 +10,11 @@ import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.husbandry.FeedTable;
+import com.theminespirit.core.inventory.KitFor;
+import com.theminespirit.core.inventory.WarehouseCategories;
+import com.theminespirit.core.mining.DescentData;
+import com.theminespirit.core.mining.DescentLevels;
+import com.theminespirit.core.mining.DropTable;
 import com.theminespirit.core.observation.ObservationLimits;
 import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.core.town.TownRules;
@@ -31,5 +36,10 @@ final class DataTableBindings {
         SpiritReach.useSource(() -> tables.building().current().reach());
         TownRules.useSource(() -> tables.town().current());
         RepairData.useSource(() -> tables.repair().current());
+        DescentData.useSource(() -> tables.descent().current());
+        DescentLevels.useSource(() -> tables.descentLevels().current());
+        DropTable.useSource(() -> tables.drops().current());
+        WarehouseCategories.useSource(() -> tables.warehouseCategories().current());
+        KitFor.useSource(() -> tables.kitFor().current());
     }
 }

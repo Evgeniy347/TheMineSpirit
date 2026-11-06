@@ -15,27 +15,39 @@ import argparse
 import sys
 from pathlib import Path
 
-PREFIXES = (
-    "src/main/java/com/theminespirit/",
-    "src/test/java/com/theminespirit/",
-    "api/src/main/java/com/theminespirit/",
-    "api/src/test/java/com/theminespirit/",
-    "mech/building/src/main/java/com/theminespirit/",
-    "mech/building/src/test/java/com/theminespirit/",
-    "mech/town/src/main/java/com/theminespirit/",
-    "mech/town/src/test/java/com/theminespirit/",
-)
+MAIN = "src/main/java"
+TEST = "src/test/java"
 DEFAULT_FILES = ("config/filesize-baseline.txt", "config/comment-baseline.txt")
 
 
-def logical(path: str) -> str:
-    for prefix in PREFIXES:
-        if path.startswith(prefix):
-            return path[len(prefix):]
+def layout_roots(root: Path) -> list[str]:
+    """Корни исходников из config/layout.properties: корень, api и модули."""
+    package_root = "com/theminespirit"
+    lines = (root / "config/layout.properties").read_text(encoding="utf-8").splitlines()
+    values: dict[str, str] = {}
+    for line in lines:
+        text = line.strip()
+        if not text or text.startswith("#") or "=" not in text:
+            continue
+        key, value = text.split("=", 1)
+        values[key.strip()] = value.strip()
+    package_root = values.get("package_root", package_root)
+    extra: list[str] = []
+    for key in ("module_roots", "module_test_roots"):
+        extra.extend(part.strip() for part in values.get(key, "").split(",") if part.strip())
+    return [f"{values.get('main', MAIN)}/{package_root}", f"{values.get('test', TEST)}/{package_root}"] + [
+        f"{item}/{package_root}" for item in extra
+    ]
+
+
+def logical(path: str, prefixes: list[str]) -> str:
+    for prefix in prefixes:
+        if path.startswith(prefix + "/"):
+            return path[len(prefix) + 1 :]
     return path
 
 
-def convert(file: Path, check: bool) -> int:
+def convert(file: Path, check: bool, prefixes: list[str]) -> int:
     lines = file.read_text(encoding="utf-8").splitlines()
     changed = 0
     result = []
@@ -48,7 +60,7 @@ def convert(file: Path, check: bool) -> int:
             result.append(line)
             continue
         old = line[:separator]
-        new = logical(old)
+        new = logical(old, prefixes)
         if new != old:
             changed += 1
             if check:
@@ -67,13 +79,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("files", nargs="*", default=list(DEFAULT_FILES), help="baseline-файлы")
     args = parser.parse_args(argv)
     root = Path(args.root)
+    prefixes = layout_roots(root)
     changed = 0
     for name in args.files:
         file = root / name
         if not file.is_file():
             print(f"нет файла {file}", file=sys.stderr)
             return 2
-        changed += convert(file, args.check)
+        changed += convert(file, args.check, prefixes)
     action = "физических ключей" if args.check else "ключей переписано"
     print(f"{action}: {changed}")
     return 1 if args.check and changed else 0
