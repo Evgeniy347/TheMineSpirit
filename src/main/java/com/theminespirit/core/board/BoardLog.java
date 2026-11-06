@@ -37,6 +37,13 @@ public final class BoardLog {
         return assigned.isEmpty() ? "—" : assigned.get(0).id();
     }
 
+    public static String culpritOrAction(@Nullable String task, @Nullable String action) {
+        if (task != null && !task.isBlank() && !"—".equals(task)) {
+            return task;
+        }
+        return action == null || action.isBlank() ? "—" : "самоспасение: " + action;
+    }
+
     public static BoardLogEntry placement(
             String spirit, String task, String block, BlockCoord pos, String reason, long tick, String hash) {
         return note(

@@ -29,7 +29,9 @@ public final class SurfaceRoute {
         Optional<List<BlockCoord>> found = SurfaceEscape.path(
                 start,
                 new RouteLevelView(spirit),
-                cell -> DigOutScript.open(level, new BlockPos(cell.x(), cell.y(), cell.z())));
+                cell -> DigOutScript.open(level, new BlockPos(cell.x(), cell.y(), cell.z())),
+                null,
+                cell -> PlanDetour.foreign(spirit, cell));
         if (found.isEmpty()) {
             LOGGER.info("[dig_out] дух {}: пути к небу из {} нет — копаю ступенями", spirit.displayName(), start);
             return Optional.empty();
@@ -49,7 +51,8 @@ public final class SurfaceRoute {
                         && Math.abs(cell.z() - target.z()) <= 2
                         && cell.y() >= target.y() - 2
                         && cell.y() <= target.y() + 2,
-                target);
+                target,
+                cell -> PlanDetour.foreign(spirit, cell));
         if (found.isEmpty()) {
             LOGGER.info("[dig_out] дух {}: пути вниз из {} к {} нет", spirit.displayName(), start, target);
             return Optional.empty();
