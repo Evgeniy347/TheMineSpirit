@@ -20,7 +20,9 @@ import org.junit.jupiter.api.Test;
 class GraphExportTests {
     private static final Path OUT = Path.of("TestResults/graph-export/conformance.json");
     private static final Path LIVE = Path.of("TestResults/graph-export/live1.json");
+    private static final Path BASES = Path.of("TestResults/graph-export/bases.json");
     private static final int CASES = 200;
+    private static final int BASE_LIMIT = 4000;
 
     @Test
     void export_SampledStates_WriteConformanceCases() throws IOException {
@@ -66,6 +68,30 @@ class GraphExportTests {
                 .enable(SerializationFeature.INDENT_OUTPUT)
                 .writeValue(LIVE.toFile(), state(GraphMutations.liveStageOne().state()));
         assertTrue(Files.size(LIVE) > 0, "Живой этап 1 для Python-модели записан в " + LIVE);
+    }
+
+    @Test
+    void export_BaseWorlds_WriteStarts() throws IOException {
+        Map<String, Object> bases = new LinkedHashMap<>();
+        for (GraphBaseWorlds.BaseWorld base : GraphBaseWorlds.baseWorlds()) {
+            GraphSimulation.Outcome outcome = GraphSimulation.runUntil(base.world(), BASE_LIMIT, base.stopStage());
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("state", state(base.world().state()));
+            entry.put("limit", BASE_LIMIT);
+            entry.put("stopStage", base.stopStage());
+            entry.put("steps", outcome.steps());
+            entry.put("finished", outcome.finished());
+            entry.put("stage", outcome.reachedStage());
+            entry.put(
+                    "trail",
+                    outcome.trail().stream()
+                            .map(step -> Map.of("id", step.task(), "priority", step.priority()))
+                            .toList());
+            bases.put(base.name(), entry);
+        }
+        Files.createDirectories(BASES.getParent());
+        new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValue(BASES.toFile(), bases);
+        assertTrue(Files.size(BASES) > 0, "Базовые миры для Python-модели записаны в " + BASES);
     }
 
     static Map<String, Object> state(GraphState state) {

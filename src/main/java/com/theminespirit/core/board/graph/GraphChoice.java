@@ -23,7 +23,7 @@ public record GraphChoice(
         double failureSoft,
         double failureTargetRadius) {
     public static final GraphChoice NEUTRAL = new GraphChoice(
-            1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.5, 2.0, 3000.0, 0.5, 6.0);
+            1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.55, 2.0, 3000.0, 0.5, 6.0);
 
     public GraphChoice {
         requireNonNegative("дальняя дорога", farTrip);

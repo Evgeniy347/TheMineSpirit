@@ -1,7 +1,6 @@
 package com.theminespirit.core.board.graph;
 
 import com.theminespirit.core.night.NightLeash;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,29 +11,23 @@ final class GraphReach {
     private static final NightLeash LEASH = NightLeash.withDefaultRules();
     private final SupplyGraph graph;
     private final GraphState state;
-    private final Map<String, List<SupplyGraph.Way>> producers = new HashMap<>();
-    private final Map<String, SupplyGraph.Way> ways = new HashMap<>();
     private final Map<String, Boolean> sourced = new HashMap<>();
 
     GraphReach(SupplyGraph graph, GraphState state) {
         this.graph = graph;
         this.state = state;
-        for (SupplyGraph.Way way : graph.ways()) {
-            producers.computeIfAbsent(way.makes(), key -> new ArrayList<>()).add(way);
-            ways.putIfAbsent(way.id(), way);
-        }
     }
 
     List<SupplyGraph.Way> producers(String node) {
-        return producers.getOrDefault(node, List.of());
+        return graph.producers(node);
     }
 
     Optional<SupplyGraph.Way> way(String id) {
-        return Optional.ofNullable(ways.get(id));
+        return graph.way(id);
     }
 
     SupplyGraph.@Nullable Way find(String id) {
-        return ways.get(id);
+        return graph.way(id).orElse(null);
     }
 
     boolean available(SupplyGraph.Way way) {

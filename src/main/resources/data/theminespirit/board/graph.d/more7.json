@@ -51,7 +51,7 @@
     "expedition_ready": {
       "band": 15,
       "tasks": [
-        {"id": "expedition", "case": "ACTIVITY_EXPEDITION", "base": 90, "consumes": {},
+        {"id": "expedition", "case": "ACTIVITY_EXPEDITION", "base": 117, "consumes": {},
          "implemented": true}
       ],
       "advice": ["go_mining_expedition"]
