@@ -25,10 +25,7 @@
   "weaponTarget": 2,
   "teamMin": 2,
   "teamMax": 3,
-  "inviteTtlTicks": 3600,
-  "inviteRepeatTicks": 600,
-  "inviteExtendTicks": 1200,
-  "inviteMaxExtends": 3,
+  "expeditionCooldownTicks": 3600,
   "strategicTtlTicks": 6000,
   "healFraction": 0.35,
   "armedDps": 6.0
