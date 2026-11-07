@@ -1,5 +1,7 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.FillArea;
+import com.theminespirit.core.building.FillOrder;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
@@ -68,8 +70,10 @@ public final class LevelRepair {
                             "filter",
                             List.of("minecraft:" + PlotLeveling.DEFAULT_BLOCK)))));
         }
-        int volume = leveling.fillVolume();
-        if (volume > 0) {
+        List<FillOrder.Box> layers = FillOrder.layers(leveling.fill());
+        int batch = Math.min(LevelingRules.current().batch(), CatalogLimits.COUNT_MAX);
+        for (List<FillOrder.Box> group : FillOrder.batches(layers, batch)) {
+            int volume = FillOrder.volume(group);
             BlockCoord source = GroundsPlan.dirtSource(target, 1);
             steps.add(retried(new ScriptCall(
                     "acquire_at",
@@ -84,10 +88,9 @@ public final class LevelRepair {
                             source.y(),
                             "z",
                             source.z()))));
+            group.forEach(box -> steps.add(retried(
+                    new ScriptCall("fill", params(box, Map.of("block", PlotLeveling.DEFAULT_BLOCK))))));
         }
-        leveling.fill()
-                .forEach(box -> steps.add(retried(
-                        new ScriptCall("fill", params(box, Map.of("block", PlotLeveling.DEFAULT_BLOCK))))));
         return new SequenceNode(steps);
     }
 
@@ -99,7 +102,7 @@ public final class LevelRepair {
         return new PlotLeveling.Box(cell.x(), cell.y(), cell.z(), cell.x(), cell.y(), cell.z());
     }
 
-    private static Map<String, Object> params(PlotLeveling.Box box, Map<String, Object> extra) {
+    private static Map<String, Object> params(FillArea box, Map<String, Object> extra) {
         Map<String, Object> params = new LinkedHashMap<>(extra);
         params.put("x1", box.x1());
         params.put("y1", box.y1());

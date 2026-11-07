@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.building.BuildOrder;
+import com.theminespirit.core.building.FillOrder;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.HashSet;
 import java.util.List;
@@ -10,7 +10,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
-final class FillTerrain implements BuildOrder.World {
+final class FillTerrain implements FillOrder.World {
     private final Level level;
     private final SpiritEntity spirit;
     private final BlockState wanted;
@@ -24,8 +24,8 @@ final class FillTerrain implements BuildOrder.World {
         this.region = region;
     }
 
-    BuildOrder.Plan plan(BlockCoord anchor) {
-        return BuildOrder.fill(List.copyOf(region), occupiedByOthers(), this, anchor);
+    FillOrder.Plan plan(BlockCoord anchor) {
+        return FillOrder.fill(List.copyOf(region), occupiedByOthers(), this, anchor);
     }
 
     @Override
@@ -48,14 +48,7 @@ final class FillTerrain implements BuildOrder.World {
     }
 
     boolean complete() {
-        for (BlockCoord cell : region) {
-            BlockState state = level.getBlockState(toPos(cell));
-            blockReads++;
-            if (state.isAir() || !state.getFluidState().isEmpty() || state.canBeReplaced()) {
-                return false;
-            }
-        }
-        return true;
+        return FillOrder.filled(region, this);
     }
 
     void countRead() {

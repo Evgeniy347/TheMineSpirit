@@ -1,5 +1,7 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.FillArea;
+import com.theminespirit.core.building.FillOrder;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
@@ -110,8 +112,8 @@ public final class GroundsPlan {
         List<PlotLeveling.Box> voids = leveling.voids().stream()
                 .filter(box -> !single || frame.part(box.x1(), box.z1()) == quarter)
                 .toList();
-        List<PlotLeveling.Box> pits = new ArrayList<>(LevelLayers.layers(fills));
-        pits.addAll(LevelLayers.layers(voids));
+        List<FillOrder.Box> pits = new ArrayList<>(FillOrder.layers(fills));
+        pits.addAll(FillOrder.layers(voids));
         steps.addAll(fillSteps(leveling, pits, source, frame.y()));
         for (PlotLeveling.Box chunk : chunks(target, frame)) {
             if (!single || frame.part(chunk.x1(), chunk.z1()) == quarter) {
@@ -136,23 +138,22 @@ public final class GroundsPlan {
                                 "z", spot.z()))));
     }
 
-    private static List<TaskNode> fillSteps(
-            PlotLeveling leveling, List<PlotLeveling.Box> pits, BlockCoord source, int y) {
+    private static List<TaskNode> fillSteps(PlotLeveling leveling, List<FillOrder.Box> pits, BlockCoord source, int y) {
         List<TaskNode> steps = new ArrayList<>();
         int batch = Math.min(LevelingRules.current().batch(), CatalogLimits.COUNT_MAX);
         if (PlotLeveling.DEFAULT_BLOCK.equals(leveling.block())) {
-            for (List<PlotLeveling.Box> group : FillBatches.of(pits, batch)) {
-                steps.add(dirtFor(FillBatches.volume(group), source));
+            for (List<FillOrder.Box> group : FillOrder.batches(pits, batch)) {
+                steps.add(dirtFor(FillOrder.volume(group), source));
                 group.forEach(layer -> steps.add(fillLayer(layer, PlotLeveling.DEFAULT_BLOCK)));
             }
             return steps;
         }
-        List<PlotLeveling.Box> top = new ArrayList<>();
-        List<PlotLeveling.Box> deep = new ArrayList<>();
-        for (PlotLeveling.Box layer : pits) {
+        List<FillOrder.Box> top = new ArrayList<>();
+        List<FillOrder.Box> deep = new ArrayList<>();
+        for (FillOrder.Box layer : pits) {
             (PlotLeveling.topLayer(layer.y1(), y) ? top : deep).add(layer);
         }
-        int deepVolume = FillBatches.volume(deep);
+        int deepVolume = FillOrder.volume(deep);
         if (deepVolume > 0) {
             steps.add(new ScriptCall(
                     "acquire",
@@ -163,8 +164,8 @@ public final class GroundsPlan {
                             Math.min(deepVolume, CatalogLimits.COUNT_MAX))));
         }
         deep.forEach(layer -> steps.add(fillLayer(layer, leveling.block())));
-        for (List<PlotLeveling.Box> group : FillBatches.of(top, batch)) {
-            steps.add(dirtFor(FillBatches.volume(group), source));
+        for (List<FillOrder.Box> group : FillOrder.batches(top, batch)) {
+            steps.add(dirtFor(FillOrder.volume(group), source));
             group.forEach(
                     layer -> steps.add(fillLayer(layer, PlotLeveling.fillBlock(layer.y1(), y, leveling.block()))));
         }
@@ -192,7 +193,7 @@ public final class GroundsPlan {
         return chunks;
     }
 
-    private static TaskNode fillLayer(PlotLeveling.Box layer, String block) {
+    private static TaskNode fillLayer(FillOrder.Box layer, String block) {
         return retried(new ScriptCall("fill", boxParams(layer, Map.of("block", block))));
     }
 
@@ -248,7 +249,7 @@ public final class GroundsPlan {
         return parts;
     }
 
-    static Map<String, Object> boxParams(PlotLeveling.Box box, Map<String, Object> extra) {
+    static Map<String, Object> boxParams(FillArea box, Map<String, Object> extra) {
         Map<String, Object> params = new LinkedHashMap<>(extra);
         params.put("x1", box.x1());
         params.put("y1", box.y1());

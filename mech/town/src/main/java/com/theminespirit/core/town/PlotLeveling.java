@@ -1,5 +1,6 @@
 package com.theminespirit.core.town;
 
+import com.theminespirit.core.building.FillArea;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +20,8 @@ public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box
         this(cut, fill, block, List.of());
     }
 
-    public record Box(int x1, int y1, int z1, int x2, int y2, int z2) {
+    public record Box(int x1, int y1, int z1, int x2, int y2, int z2) implements FillArea {
+        @Override
         public int volume() {
             return (x2 - x1 + 1) * (y2 - y1 + 1) * (z2 - z1 + 1);
         }
