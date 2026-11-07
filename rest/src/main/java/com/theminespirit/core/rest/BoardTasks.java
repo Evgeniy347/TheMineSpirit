@@ -1,7 +1,6 @@
 package com.theminespirit.core.rest;
 
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardStatus;
@@ -88,8 +87,7 @@ public final class BoardTasks {
                 || status == BoardStatus.ASSIGNED;
         boolean done = status == BoardStatus.DONE
                 || (status != BoardStatus.BLOCKED && !queued && board.ledger().has(ticket.boardCase(), ticket.level()));
-        BoardTiming attempt =
-                BoardTiming.attempt(status, timing, BoardActivities.isActivity(ticket.boardCase()), ticket.createdAt());
+        BoardTiming attempt = BoardTiming.attempt(status, timing);
         return new BoardTask(
                 ticket.id(),
                 ticket.boardCase().name(),
@@ -110,6 +108,7 @@ public final class BoardTasks {
                 attempt.durationTicks(board.now()),
                 BoardWhy.waitReason(board, ticket, stock, board.now()).orElse(null),
                 target == null ? null : target.supplyItem(),
-                target == null ? 0 : target.supplyCount());
+                target == null ? 0 : target.supplyCount(),
+                ticket.executors().stream().map(UUID::toString).toList());
     }
 }

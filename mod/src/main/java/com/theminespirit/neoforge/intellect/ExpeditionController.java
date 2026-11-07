@@ -48,6 +48,11 @@ public final class ExpeditionController {
     private UUID missionLeader;
     private String refusal;
 
+    public static TaskNode missionPlan() {
+        return new SequenceNode(
+                List.of(new ScriptCall("mine_vein", MINE_PARAMS), new ScriptCall(RETURN_HOME, Map.of())));
+    }
+
     @FunctionalInterface
     public interface Launcher {
         boolean launch(SpiritEntity spirit, String script, TaskNode task, long now);
@@ -163,7 +168,7 @@ public final class ExpeditionController {
 
     private boolean dispatchMine(List<SpiritEntity> members, Expedition expedition, long now) {
         List<SpiritEntity> team = team(members, expedition);
-        List<String> missing = missingKit(team);
+        List<String> missing = missingKit(team, stock);
         if (!missing.isEmpty()) {
             String reason = "перед спуском в шахту нужен набор: " + String.join(", ", missing);
             if (!reason.equals(refusal)) {
@@ -180,12 +185,7 @@ public final class ExpeditionController {
         boolean launched = false;
         for (SpiritEntity spirit : team) {
             if (spirit.getUUID().equals(leader.getUUID())) {
-                launched |= launch(
-                        spirit,
-                        "mine_vein",
-                        new SequenceNode(List.of(
-                                new ScriptCall("mine_vein", MINE_PARAMS), new ScriptCall(RETURN_HOME, Map.of()))),
-                        now);
+                launched |= launch(spirit, "mine_vein", missionPlan(), now);
             } else {
                 launched |= launch(
                         spirit,
@@ -203,7 +203,7 @@ public final class ExpeditionController {
         return launched;
     }
 
-    private List<String> missingKit(List<SpiritEntity> team) {
+    public static List<String> missingKit(List<SpiritEntity> team, StockView stock) {
         StackMapper mapper = new StackMapper();
         List<Stack> inventory = new ArrayList<>();
         for (SpiritEntity spirit : team) {

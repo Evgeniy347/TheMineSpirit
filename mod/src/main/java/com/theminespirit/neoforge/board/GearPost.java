@@ -56,7 +56,7 @@ final class GearPost {
             GearRules.Upgrade known = upgrade.orElseThrow();
             BlockCoord chest = StorePost.at(known.chest());
             ActivityPlans.Plan plan = ActivityPlans.equip(chest, post.craftPoint(), known.item());
-            return post.launchActivity(spirit, BoardCase.ACTIVITY_ARM, plan);
+            return GraphActivityPost.launch(post, spirit, BoardCase.ACTIVITY_ARM, plan);
         }
         return false;
     }
@@ -78,7 +78,7 @@ final class GearPost {
                 return false;
             }
             ActivityPlans.Plan plan = ActivityPlans.craft(post.craftPoint(), item.orElseThrow(), 1);
-            return post.launchActivity(spirit, BoardCase.ACTIVITY_CRAFT, plan);
+            return GraphActivityPost.launch(post, spirit, BoardCase.ACTIVITY_CRAFT, plan);
         }
         return false;
     }

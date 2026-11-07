@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -146,23 +145,5 @@ class BoardScenarioTests {
                 List.of(),
                 inverted,
                 "Изготовление инструмента обязано перевешивать задание, которому он нужен: иначе дух копает руками");
-    }
-
-    @Test
-    void submit_ActivityCase_NotAcceptedAsTicket() {
-        Board board = new Board(() -> 0);
-        BoardOutcome outcome = board.submit(new BoardTicket(
-                "activity:mine",
-                BoardCase.ACTIVITY_MINE,
-                Optional.empty(),
-                BoardRules.priorityOf(BoardCase.ACTIVITY_MINE),
-                0,
-                1,
-                BoardTicket.ALWAYS_CAUSE,
-                List.of(),
-                Map.of()));
-        assertTrue(
-                outcome != BoardOutcome.ACCEPTED,
-                "Занятие (ACTIVITY_*) не выдаётся через claimable: принятое заданием, оно висит вечно");
     }
 }

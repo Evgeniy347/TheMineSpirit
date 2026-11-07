@@ -105,6 +105,16 @@ public record BoardState(
                 .findFirst();
     }
 
+    public BoardState withoutActivities() {
+        List<Entry> kept = entries.stream()
+                .filter(entry -> !BoardActivities.isActivity(entry.ticket().boardCase()))
+                .toList();
+        if (kept.size() == entries.size()) {
+            return this;
+        }
+        return new BoardState(kept, ledger, blocked, pauses, stuck);
+    }
+
     public BoardState withoutLegacy(Set<String> keepPrefixes) {
         Objects.requireNonNull(keepPrefixes, "Список префиксов не может быть null: пустой набор задают пустым");
         List<Entry> kept = entries.stream()

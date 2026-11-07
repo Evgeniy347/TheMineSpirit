@@ -48,7 +48,7 @@ final class BoardDispatchDesk {
         this.board = Objects.requireNonNull(board, "board не может быть null: задания выдаёт доска");
         this.targets = Objects.requireNonNull(targets, "targets не может быть null: цели задания общие с доской");
         this.settlement = new BoardSettlementDesk(host, board, targets);
-        this.activities = new BoardActivityDesk(host, board);
+        this.activities = new BoardActivityDesk(host, board, targets);
     }
 
     int claims() {
@@ -73,7 +73,6 @@ final class BoardDispatchDesk {
 
     void reconcile(List<SpiritEntity> spirits, boolean census) {
         WaitRefresh.tick(board, spirits, targets, host.stock(), crafters, board.now());
-        activities.startWaiting(spirits, board.now());
         if (!census) return;
     }
 
@@ -93,25 +92,12 @@ final class BoardDispatchDesk {
         settlement.release(spirit);
     }
 
-    boolean requestActivity(
-            List<SpiritEntity> spirits,
-            String key,
-            int priority,
-            BoardCase activity,
-            String script,
-            TaskNode task,
-            long now) {
-        return activities.request(spirits, key, priority, activity, script, task, now);
+    BoardActivityDesk activityDesk() {
+        return activities;
     }
 
-    boolean launch(
-            SpiritEntity spirit,
-            BoardCase activity,
-            String script,
-            TaskNode task,
-            BoardService.Launcher launcher,
-            long now) {
-        return activities.launch(spirit, activity, script, task, launcher, now);
+    void activityIssued(String ticketId, long generation) {
+        settlement.issued(ticketId, generation);
     }
 
     private boolean holderFreed(ServerLevel level) {
@@ -179,7 +165,7 @@ final class BoardDispatchDesk {
                         spirit.displayName());
             }
             try {
-                JobLaunch.start(host.cards, spirit, ticket.id(), plan);
+                JobLaunch.start(spirit, ticket.id(), plan);
             } catch (RuntimeException failure) {
                 LOGGER.error(
                         "Задание {}: дух {} не принял задание: {}",
@@ -198,7 +184,7 @@ final class BoardDispatchDesk {
                 WorkReserveHub.reserve(spirit, new WorkTarget(WorkKind.CELL, target.target()));
                 host.notices.assigned(board, ticket, target, pick.whyChosen(ticket, spirit, crafters), spirit);
             } else {
-                JobLaunch.dropUnclaimed(host.cards, spirit, ticket.id(), outcome);
+                JobLaunch.dropUnclaimed(spirit, ticket.id(), outcome);
             }
         }
     }

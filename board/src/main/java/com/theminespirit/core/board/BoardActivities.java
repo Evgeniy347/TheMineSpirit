@@ -13,7 +13,6 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public final class BoardActivities {
-    public static final String ID_PREFIX = "activity:";
     public static final String TARGET_KEY = "target=";
     public static final Set<BoardCase> CASES = EnumSet.of(
             BoardCase.ACTIVITY_ARM,

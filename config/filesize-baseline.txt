@@ -1,4 +1,4 @@
-core/board/Board.java	684
+core/board/Board.java	680
 core/board/TicketPlans.java	901
 core/board/graph/GraphPlanner.java	503
 core/board/graph/RecipeImport.java	555
@@ -36,7 +36,7 @@ neoforge/SchematicSite.java	364
 neoforge/SpiritEntity.java	749
 neoforge/SpiritScripts.java	384
 neoforge/WorldScanner.java	306
-neoforge/board/BoardService.java	364
+neoforge/board/BoardService.java	353
 neoforge/board/FirstStepsRunner.java	686
 neoforge/board/TransferWatch.java	569
 neoforge/crafting/CraftScript.java	383

@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.graph.GraphCadence;
@@ -101,9 +102,15 @@ public final class GraphSource {
         GraphStanding.seed(post, half.plan().tasks(), half.result().live());
         for (GraphTickets.Ticket ticket : half.result().post()) {
             BoardStatus status = half.service().board().statusOf(ticket.id()).orElse(null);
+            boolean activity = BoardActivities.isActivity(ticket.task().boardCase());
             if (status == BoardStatus.DONE) {
+                if (activity) {
+                    continue;
+                }
                 half.service().board().reopen(ticket.id());
-            } else if (status != null) {
+            } else if (status != null && !activity) {
+                continue;
+            } else if (activity && closed(status)) {
                 continue;
             }
             if (!post.post(ticket)) {
@@ -177,6 +184,10 @@ public final class GraphSource {
             }
             StageSettle.settle(level, service, stock, scan, building.boardCase(), level.getGameTime());
         }
+    }
+
+    private static boolean closed(BoardStatus status) {
+        return status == BoardStatus.DONE || status == BoardStatus.FAILED || status == BoardStatus.CANCELLED;
     }
 
     private static boolean freeSpirit(Half half) {

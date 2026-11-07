@@ -38,7 +38,7 @@ class BoardActivitiesTests {
     }
 
     @Test
-    void submit_ActivityCase_RejectedAsNotTicket() {
+    void submit_ActivityCase_BecomesTicket() {
         Board board = new Board(() -> 100);
         UUID spirit = UUID.fromString("11111111-2222-3333-4444-555555555555");
         BoardTicket card = new BoardTicket(
@@ -53,10 +53,14 @@ class BoardActivitiesTests {
                 Map.of());
 
         assertEquals(
-                BoardOutcome.NOT_A_TICKET,
+                BoardOutcome.ACCEPTED,
                 board.submit(card),
-                "Занятие не становится билетом доски: иначе на доске снова появятся activity-карточки мимо графа");
-        assertEquals(Optional.empty(), board.occupation(spirit), "Карточки занятия на доске больше нет");
+                "Занятие графа — полноценное задание доски: иначе владелец не видит, чем занят дух");
+        board.claim(card.id(), spirit, 100);
+        assertEquals(
+                Optional.of(BoardCase.ACTIVITY_SENSE),
+                board.occupation(spirit),
+                "Занятие выданного духа читается с доски, а не из отдельной карточки");
     }
 
     @Test
