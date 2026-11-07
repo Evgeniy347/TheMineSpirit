@@ -49,8 +49,17 @@ public final class StageCatalog {
 
     public static boolean placed(String planId) {
         return entry(planId)
-                .map(entry -> entry.boardCase() == BoardCase.BUILD_PLACED)
+                .map(entry -> entry.boardCase() == BoardCase.BUILD_PLACED || latePlan(planId))
                 .orElse(false);
+    }
+
+    private static boolean latePlan(String planId) {
+        for (StageRules.Stage stage : StageRules.current().stages()) {
+            if (stage.stage() >= 3 && stage.plan().contains(planId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static boolean watcherOwned(BoardCase boardCase) {

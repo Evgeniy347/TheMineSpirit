@@ -73,6 +73,7 @@ public final class SettlementStageService {
         long now = board.now();
         List<String> forgotten = forget(service, plan, change, now);
         List<String> cancelled = cancel(service, change.stage(), rules, stages, change, now);
+        StageWorldGate.reset(level, change.stage());
         String line = "[stage] откат " + plan.previous() + "→" + change.stage() + ": причина " + change.reason()
                 + ", кем " + change.by();
         LOGGER.info("{}", line);
@@ -155,11 +156,10 @@ public final class SettlementStageService {
             if (planId != null) {
                 return planReady(planId);
             }
-            if (levelOfBuilding != 1) {
-                return StageRollback.Readiness.UNKNOWN;
-            }
-            return stageOneReady(Objects.requireNonNull(
-                    boardCase, "Кейс постройки не может быть null: без него готовность не проверить"));
+            return stageOneReady(
+                    Objects.requireNonNull(
+                            boardCase, "Кейс постройки не может быть null: без него готовность не проверить"),
+                    levelOfBuilding);
         } catch (RuntimeException failure) {
             LOGGER.warn(
                     "[stage] готовность постройки (кейс {}, план {}, уровень {}) не проверена: {}",
@@ -171,19 +171,20 @@ public final class SettlementStageService {
         }
     }
 
-    private StageRollback.Readiness stageOneReady(BoardCase boardCase) {
+    private StageRollback.Readiness stageOneReady(BoardCase boardCase, int levelOfBuilding) {
         Optional<StageSite> site = SettlementPlotStore.get(level).site();
         if (site.isEmpty()) {
             return StageRollback.Readiness.UNKNOWN;
         }
-        if (boardCase == BoardCase.STOCK_CHESTS) {
+        if (levelOfBuilding == 1 && boardCase == BoardCase.STOCK_CHESTS) {
             TownSnapshot.Progress yard = YardFloorWatch.progress(level, site.orElseThrow());
             if (yard.total() > 0 && yard.damaged()) {
                 return StageRollback.Readiness.NOT_READY;
             }
         }
         String wood = wood();
-        FirstStepsRunner.Placed placed = FirstStepsRunner.audit(level, boardCase, site.orElseThrow(), wood);
+        FirstStepsRunner.Placed placed =
+                FirstStepsRunner.audit(level, boardCase, levelOfBuilding, site.orElseThrow(), wood);
         if (placed.total() == 0) {
             return StageRollback.Readiness.UNKNOWN;
         }

@@ -1,6 +1,5 @@
 package com.theminespirit.core.board;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -12,16 +11,9 @@ public final class SettlementStage {
         return rules().stageOf(ledger);
     }
 
-    public static int of(BoardLedger ledger, StageWorld world) {
-        Objects.requireNonNull(ledger, "Журнал доски не может быть null: этап читается по построенному");
+    public static int of(StageWorld world) {
         Objects.requireNonNull(world, "Мир этапа не может быть null: по нему видно, что стоит на самом деле");
-        StageRules rules = rules();
-        for (StageRules.Stage stage : rules.stages()) {
-            if (!missing(rules, ledger, stage, world).isEmpty()) {
-                return stage.stage();
-            }
-        }
-        return rules.stages().size() + 1;
+        return rules().stageOf(world);
     }
 
     public static Map<String, Integer> missing(BoardLedger ledger) {
@@ -29,15 +21,14 @@ public final class SettlementStage {
         return rules().missingOf(ledger);
     }
 
-    public static Map<String, Integer> missing(BoardLedger ledger, StageWorld world) {
-        Objects.requireNonNull(ledger, "Журнал доски не может быть null: остаток этапа читается по построенному");
+    public static Map<String, Integer> missing(StageWorld world) {
         Objects.requireNonNull(world, "Мир этапа не может быть null: по нему видно, что стоит на самом деле");
-        StageRules rules = rules();
-        int stage = of(ledger, world);
-        if (stage > rules.stages().size()) {
-            return Map.of();
-        }
-        return missing(rules, ledger, rules.stages().get(stage - 1), world);
+        return rules().missingOf(world);
+    }
+
+    public static Map<String, Integer> missing(StageWorld world, int stage) {
+        Objects.requireNonNull(world, "Мир этапа не может быть null: по нему видно, что стоит на самом деле");
+        return rules().missingOf(world, stage);
     }
 
     public static StageGate gate(BoardLedger ledger) {
@@ -45,10 +36,14 @@ public final class SettlementStage {
         return new StageGate(of(ledger), missing(ledger));
     }
 
-    public static StageGate gate(BoardLedger ledger, StageWorld world) {
-        Objects.requireNonNull(ledger, "Журнал доски не может быть null: гейт этапа читается по нему");
-        Objects.requireNonNull(world, "Мир этапа не может быть null: по нему видно, что стоит на самом деле");
-        return new StageGate(of(ledger, world), missing(ledger, world));
+    public static StageGate gate(StageWorld world) {
+        Objects.requireNonNull(world, "Мир этапа не может быть null: гейт этапа читается по нему");
+        return new StageGate(of(world), missing(world));
+    }
+
+    public static StageGate gate(StageWorld world, int stage) {
+        Objects.requireNonNull(world, "Мир этапа не может быть null: гейт этапа читается по нему");
+        return new StageGate(stage, missing(world, stage));
     }
 
     public static boolean allows(BoardCase boardCase, int level, BoardLedger ledger) {
@@ -65,20 +60,6 @@ public final class SettlementStage {
             return true;
         }
         return level <= stage;
-    }
-
-    private static Map<String, Integer> missing(
-            StageRules rules, BoardLedger ledger, StageRules.Stage stage, StageWorld world) {
-        Map<String, Integer> missing = new LinkedHashMap<>(rules.missingOf(ledger, stage.stage()));
-        stage.buildings().entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .filter(entry -> !world.built(entry.getKey(), entry.getValue()))
-                .forEach(entry -> missing.putIfAbsent(entry.getKey().name(), entry.getValue()));
-        stage.requires().entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .filter(entry -> !world.builtPlan(entry.getKey(), entry.getValue()))
-                .forEach(entry -> missing.putIfAbsent(entry.getKey(), entry.getValue()));
-        return Map.copyOf(missing);
     }
 
     private static StageRules rules() {

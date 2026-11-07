@@ -7,10 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class StageWorldGateTests {
@@ -31,7 +33,7 @@ class StageWorldGateTests {
         BoardLedger ledger = journalStageTwo();
         StageWorld world = world(live());
 
-        StageGate gate = SettlementStage.gate(ledger, world);
+        StageGate gate = SettlementStage.gate(world);
 
         assertEquals(2, SettlementStage.of(ledger), "Журнал observe18 считает этап 1 закрытым");
         assertEquals(
@@ -52,7 +54,7 @@ class StageWorldGateTests {
 
     @Test
     void gate_WorldComplete_OpensSecondStage() throws IOException {
-        StageGate gate = SettlementStage.gate(journalStageTwo(), world(complete(live())));
+        StageGate gate = SettlementStage.gate(world(complete(live())));
 
         assertEquals(2, gate.stage(), "Все части этапа 1 стоят в мире — этап 2 открыт");
         assertTrue(gate.missing().containsKey("BUILD_WAREHOUSE"), "Остаток этапа 2 считает склад уровня 2");
@@ -60,10 +62,17 @@ class StageWorldGateTests {
     }
 
     @Test
-    void gate_WorldSilent_KeepsJournal() {
-        StageGate gate = SettlementStage.gate(journalStageTwo(), StageWorld.ANY);
+    void gate_WorldEmpty_JournalStillFirst() {
+        StageGate gate = SettlementStage.gate(emptyWorld());
 
-        assertEquals(2, gate.stage(), "Мир без данных не запирает этап: решает журнал");
+        assertEquals(
+                1,
+                gate.stage(),
+                "Журнал observe18 считает этап 1 закрытым, но в мире ничего нет — этап остаётся первым: "
+                        + "отметки журнала этап не закрывают");
+        assertTrue(
+                gate.missing().containsKey("BUILD_MINE"),
+                "Причина видна на доске: шахта в мире не подтверждена. Остаток: " + gate.missing());
     }
 
     @Test
@@ -81,6 +90,108 @@ class StageWorldGateTests {
                 board.submit(mine(2, "mine_level_2_again")),
                 "Гейт мира запирает уровень 2, пока этап 1 не закрыт целиком");
         assertEquals(1, board.ledger().stage(), "Доска показывает этап мира, а не журнала");
+    }
+
+    @Test
+    void stages_MandatoryAuditsOfEveryStage_OpenNextOnlyByWorld() {
+        StageRules rules = StageRules.load();
+        ModelWorld world = new ModelWorld();
+        StageConfirmation confirmation = new StageConfirmation(1, 1);
+
+        for (int number = 1; number <= rules.stages().size(); number++) {
+            assertEquals(
+                    number,
+                    SettlementStage.of(world),
+                    "Этап " + number + " открыт только после аудита всех предыдущих этапов");
+            assertEquals(
+                    number, confirmation.gate(world).stage(), "Гейт стоит на подтверждённом аудите этапа " + number);
+
+            built(world, rules.stages().get(number - 1));
+            assertEquals(
+                    number + 1,
+                    SettlementStage.of(world),
+                    "Обязательные постройки этапа " + number + " из аудита мира закрывают его целиком; "
+                            + "желательные (optional) переход не держат");
+        }
+        assertEquals(5, SettlementStage.of(world), "После четвёртого этапа все этапы закрыты");
+    }
+
+    @Test
+    void journal_AllMarksWithoutWorld_StaysFirstStage() {
+        StageRules rules = StageRules.load();
+        BoardLedger journal = new BoardLedger();
+        rules.stages().forEach(stage -> {
+            stage.buildings().forEach((boardCase, level) -> journal.note(boardCase, level));
+            stage.requires().forEach((id, level) -> notePlan(journal, rules, id, level));
+            stage.optional().forEach((id, level) -> notePlan(journal, rules, id, level));
+        });
+
+        assertEquals(
+                5,
+                SettlementStage.of(journal),
+                "Журнал «построено» считает все этапы закрытыми; остаток " + SettlementStage.missing(journal));
+        assertEquals(
+                1,
+                new StageConfirmation(1, 1).gate(new ModelWorld()).stage(),
+                "Пустой мир при полном журнале оставляет первый этап: отметки журнала этап не закрывают");
+    }
+
+    @Test
+    void damagedMandatory_SingleBadAudit_KeepsStageThreeAuditsRollBack() {
+        StageRules rules = StageRules.load();
+        ModelWorld world = new ModelWorld();
+        rules.stages().forEach(stage -> built(world, stage));
+        StageConfirmation confirmation = new StageConfirmation(5);
+
+        world.removePlan("forge", 1);
+        assertEquals(3, SettlementStage.of(world), "Повреждённая кузница не даёт закрыть третий этап");
+        assertEquals(5, confirmation.observe(3), "Один плохой аудит этап не откатывает");
+        assertEquals(5, confirmation.observe(3), "Второй плохой аудит этап ещё не откатывает");
+        assertEquals(3, confirmation.observe(3), "Третий плохой аудит подряд откатывает этап до мира");
+        assertEquals(
+                3,
+                confirmation.observe(3),
+                "Подтверждённый откат держится: этап 3 не закрыт, пока кузница не восстановлена");
+    }
+
+    private static void built(ModelWorld world, StageRules.Stage stage) {
+        stage.buildings().forEach(world::add);
+        stage.requires().forEach(world::addPlan);
+    }
+
+    private static void notePlan(BoardLedger ledger, StageRules rules, String id, int level) {
+        BoardCase boardCase = rules.planCases().get(id);
+        if (boardCase == null) {
+            ledger.notePlan(id, level);
+        } else {
+            ledger.note(boardCase, level);
+        }
+    }
+
+    private static final class ModelWorld implements StageWorld {
+        private final Set<String> built = new HashSet<>();
+
+        private void add(BoardCase boardCase, int level) {
+            built.add(boardCase.name() + ":" + level);
+        }
+
+        private void addPlan(String id, int level) {
+            built.add(id + ":" + level);
+        }
+
+        private void removePlan(String id, int level) {
+            built.remove(id + ":" + level);
+        }
+
+        @Override
+        public boolean built(BoardCase boardCase, int level) {
+            return built.contains(boardCase.name() + ":" + level);
+        }
+
+        @Override
+        public boolean builtPlan(String id, int level) {
+            return built.contains(id + ":" + level);
+        }
     }
 
     private static BoardLedger journalStageTwo() {
@@ -141,13 +252,30 @@ class StageWorldGateTests {
         return new StageWorld() {
             @Override
             public boolean built(BoardCase boardCase, int level) {
+                if (level != 1) {
+                    return false;
+                }
                 int[] counts = progress.get(boardCase.name());
-                return level != 1 || counts == null || (counts[1] > 0 && counts[0] >= counts[1]);
+                return counts == null || (counts[1] > 0 && counts[0] >= counts[1]);
             }
 
             @Override
             public boolean builtPlan(String id, int level) {
                 return true;
+            }
+        };
+    }
+
+    private static StageWorld emptyWorld() {
+        return new StageWorld() {
+            @Override
+            public boolean built(BoardCase boardCase, int level) {
+                return false;
+            }
+
+            @Override
+            public boolean builtPlan(String id, int level) {
+                return false;
             }
         };
     }

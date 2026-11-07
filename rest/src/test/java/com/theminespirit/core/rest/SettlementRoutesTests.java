@@ -40,7 +40,8 @@ class SettlementRoutesTests {
                 2,
                 4,
                 Map.of("BUILD_MINE", 2),
-                List.of(new StageView.Requirement(1, "BUILD_MINE", 1, true, StageRollback.Readiness.NOT_READY))));
+                List.of(new StageView.Requirement(
+                        1, "BUILD_MINE", 1, true, StageRollback.Readiness.NOT_READY, false))));
 
         RestResponse response = send("GET", "/v1/settlement/stage", "");
 
@@ -51,6 +52,10 @@ class SettlementRoutesTests {
                 "not_ready",
                 parsed.get("requirements").get(0).get("world").asText(),
                 "GET обязан отдавать состояние постройки по миру словами ready/not_ready/unknown: " + response.body());
+        assertEquals(
+                false,
+                parsed.get("requirements").get(0).get("optional").asBoolean(),
+                "GET обязан отличать обязательную постройку от желательной: " + response.body());
     }
 
     @Test
