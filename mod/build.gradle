@@ -130,6 +130,8 @@ dependencies {
     api project(':mech:building')
     api project(':mech:town')
     testImplementation testFixtures(project(':test-fixtures'))
+    testImplementation testFixtures(project(':board'))
+    testImplementation testFixtures(project(':mech:town'))
     implementation "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
     additionalRuntimeClasspath "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
     jarJar("com.fasterxml.jackson.core:jackson-databind:${jackson_version}") {

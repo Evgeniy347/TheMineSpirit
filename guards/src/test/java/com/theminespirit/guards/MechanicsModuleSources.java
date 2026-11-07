@@ -36,6 +36,7 @@ final class MechanicsModuleSources {
     private static final Pattern MODULE_ID = Pattern.compile("'(:[^']+)'");
     private static final Pattern TEST_DEPENDENCY = Pattern.compile("testImplementation\\s+project\\('(:[^']+)'\\)");
     private static final Pattern FIXTURES = Pattern.compile("testFixtures\\(project\\(':test-fixtures'\\)\\)");
+    private static final Pattern MODULE_FIXTURES = Pattern.compile("testFixtures\\(project\\('(:[^']+)'\\)\\)");
 
     private MechanicsModuleSources() {}
 
@@ -132,11 +133,20 @@ final class MechanicsModuleSources {
         if (FIXTURES.matcher(text).find()) {
             packages.addAll(testFixturePackages());
         }
+        Matcher fixtures = MODULE_FIXTURES.matcher(text);
+        while (fixtures.find()) {
+            packages.addAll(fixturePackages(fixtures.group(1)));
+        }
         return packages;
     }
 
     static Set<String> testFixturePackages() {
         Path root = Path.of("test-fixtures/src/testFixtures/java");
+        return Files.isDirectory(root.resolve("com/theminespirit")) ? new LinkedHashSet<>(packages(root)) : Set.of();
+    }
+
+    private static Set<String> fixturePackages(String id) {
+        Path root = Path.of(id.substring(1).replace(':', '/'), "src/testFixtures/java");
         return Files.isDirectory(root.resolve("com/theminespirit")) ? new LinkedHashSet<>(packages(root)) : Set.of();
     }
 

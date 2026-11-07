@@ -3,8 +3,6 @@ plugins {
 }
 
 dependencies {
-    testFixturesImplementation project(':board')
-    testFixturesImplementation project(':mech:town')
     testFixturesImplementation platform("org.junit:junit-bom:${junit_version}")
     testFixturesImplementation 'org.junit.jupiter:junit-jupiter-api'
     testFixturesImplementation 'org.junit.platform:junit-platform-launcher'

@@ -6,6 +6,9 @@ description = 'Геометрия поселения: план, участки, 
 
 dependencies {
     implementation project(':mech:building')
+    testImplementation testFixtures(project(':mech:town'))
+    testImplementation testFixtures(project(':board'))
+    testFixturesImplementation project(':board')
     // lib: тесты поселения проверяют сшивку с доской и таблицами; боевой модуль их не тянет.
     testImplementation project(':board')
     testImplementation project(':content')

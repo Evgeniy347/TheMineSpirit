@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    testImplementation testFixtures(project(':board'))
     implementation project(':board')
     implementation project(':tactics')
     implementation project(':content')

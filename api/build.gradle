@@ -4,7 +4,6 @@ plugins {
 
 dependencies {
     api "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
-    testImplementation testFixtures(project(':test-fixtures'))
 }
 
 tasks.named('test', Test) {
