@@ -1011,7 +1011,7 @@ if [ "$MODE" = "unit" ]; then
         fi
         for unit_module in "${UNIT_MODULES[@]}"; do
             if [ "$unit_module" = ":root" ]; then
-                UNIT_TARGETS+=("test")
+                UNIT_TARGETS+=(":test")
                 UNIT_PROPS+=(-Ptheminespirit.rootOnly)
             else
                 UNIT_TARGETS+=("$unit_module:test")
@@ -1029,7 +1029,7 @@ if [ "$MODE" = "unit" ]; then
         fi
         echo "unit: модули ${UNIT_MODULES[*]}" >&2
     else
-        UNIT_TARGETS=(test)
+        UNIT_TARGETS=(:test)
         if [ ${#UNIT_TESTS[@]} -eq 0 ]; then
             if [ "$UNIT_FAST_ANALYZERS" = 1 ]; then
                 UNIT_EXTRA=(staticAnalysisFast --continue)

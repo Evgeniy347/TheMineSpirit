@@ -389,7 +389,7 @@ code=$?
     || fail "gametest-filter: код=$code, args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
 
 out=$(ARGS_FILE="$argsfile" bash scripts/test.sh unit --tests 'com.theminespirit.testing.TestCostReporterTests' 2>&1)
-grep -qx "test" "$argsfile" && grep -qx -- "--rerun" "$argsfile" \
+grep -qx ":test" "$argsfile" && grep -qx -- "--rerun" "$argsfile" \
     && ok "unit-rerun: gradle test идёт с --rerun" \
     || fail "unit-rerun: args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
 
@@ -406,7 +406,7 @@ for a in "$@"; do
     case "$a" in
         :board:test) suite board com.example.Board ;;
         :guards:test) suite guards com.example.Guards ;;
-        test) suite unit com.example.Root ;;
+        :test|test) suite unit com.example.Root ;;
     esac
 done
 echo "BUILD SUCCESSFUL"
