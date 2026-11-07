@@ -1,13 +1,13 @@
 package com.theminespirit.neoforge.intellect;
 
-import com.theminespirit.core.inventory.Stack;
-import com.theminespirit.neoforge.PickaxeCheck;
-import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.inventory.StackMapper;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.intellect.DescentKit;
 import com.theminespirit.core.intellect.OutsideRules;
+import com.theminespirit.core.inventory.Stack;
+import com.theminespirit.neoforge.PickaxeCheck;
+import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.InventoryTables;
+import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
