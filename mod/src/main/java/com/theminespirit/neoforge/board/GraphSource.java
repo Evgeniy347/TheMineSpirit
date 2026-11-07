@@ -1,6 +1,8 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.graph.GraphCadence;
 import com.theminespirit.core.board.graph.GraphPlan;
@@ -59,7 +61,8 @@ public final class GraphSource {
         if (pending != null) {
             return finish(pending);
         }
-        Set<String> signals = GraphSignals.of(events, spirits, service, now);
+        Set<String> signals = new HashSet<>(GraphSignals.of(events, spirits, service, now));
+        signals.add("rescue_reach:" + service.sources.rescueReach().generation());
         if (!cadence.due(now, signals)) {
             return lastLive;
         }
@@ -101,9 +104,15 @@ public final class GraphSource {
         GraphStanding.seed(post, half.plan().tasks(), half.result().live());
         for (GraphTickets.Ticket ticket : half.result().post()) {
             BoardStatus status = half.service().board().statusOf(ticket.id()).orElse(null);
+            boolean activity = BoardActivities.isActivity(ticket.task().boardCase());
             if (status == BoardStatus.DONE) {
+                if (activity) {
+                    continue;
+                }
                 half.service().board().reopen(ticket.id());
-            } else if (status != null) {
+            } else if (status != null && !activity) {
+                continue;
+            } else if (activity && closed(status)) {
                 continue;
             }
             if (!post.post(ticket)) {
@@ -116,7 +125,9 @@ public final class GraphSource {
         for (GraphPlan.Task task : half.plan().tasks()) {
             if (task.implemented() && task.priority() > 0) {
                 GraphTicketIds.ids(task, half.graph())
-                        .forEach(id -> half.service().board().reprioritize(id, task.priority()));
+                        .forEach(id -> half.service()
+                                .board()
+                                .reprioritize(id, Math.min(task.priority(), BoardTuning.MAX_PRIORITY)));
             }
         }
         reporter.report(half.plan(), half.result(), unconnected, freeSpirit(half), half.now());
@@ -177,6 +188,10 @@ public final class GraphSource {
             }
             StageSettle.settle(level, service, stock, scan, building.boardCase(), level.getGameTime());
         }
+    }
+
+    private static boolean closed(BoardStatus status) {
+        return status == BoardStatus.DONE || status == BoardStatus.FAILED || status == BoardStatus.CANCELLED;
     }
 
     private static boolean freeSpirit(Half half) {

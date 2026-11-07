@@ -47,6 +47,7 @@
 | [graph-ideas-nodes.json](graph-ideas-nodes.json) | Черновик узлов-кандидатов в формате graph.json, не подключён к моду | свой код |
 | [graph-inputs-migration.md](graph-inputs-migration.md) | Пофайловый переход «всё через граф» и критерий приёмки шага | свой код |
 | [modules.md](modules.md) | Разбивка на Gradle-модули: граф пакетов, циклы, границы, тесты, план | свой код |
+| [analyzers-cost.md](analyzers-cost.md) | Цена анализаторов на правке: варианты, детекторы SpotBugs, что отключено и почему | собственный замер |
 
 ## Самое ценное по областям
 

@@ -174,7 +174,7 @@ final class PitStairPlanner {
         return groundY(x, z, from, world).orElse(from);
     }
 
-    private static OptionalInt groundY(int x, int z, int from, PitExitPlanner.World world) {
+    static OptionalInt groundY(int x, int z, int from, PitExitPlanner.World world) {
         for (int y = from; y <= from + PitExitPlanner.MAX_RISE; y++) {
             BlockCoord cell = new BlockCoord(x, y, z);
             if (PitExitPlanner.passable(world.at(cell))

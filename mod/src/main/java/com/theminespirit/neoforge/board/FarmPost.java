@@ -132,7 +132,7 @@ final class FarmPost {
         if (HOE.changed("till:" + spirit.getUUID(), "есть")) {
             LOGGER.info("[ферма] нужна тяпка {}: взял — пашу", spirit.displayName());
         }
-        return post.launchActivity(spirit, BoardCase.ACTIVITY_FARM, ActivityPlans.till(post.scan.home()));
+        return GraphActivityPost.launch(post, spirit, BoardCase.ACTIVITY_FARM, ActivityPlans.till(post.scan.home()));
     }
 
     private static @Nullable SpiritEntity idleWithHoe(GraphPost post) {
@@ -154,7 +154,7 @@ final class FarmPost {
         if (spirit == null) {
             return false;
         }
-        return post.launchActivity(spirit, BoardCase.ACTIVITY_FARM, plan);
+        return GraphActivityPost.launch(post, spirit, BoardCase.ACTIVITY_FARM, plan);
     }
 
     static boolean building(GraphPost post, GraphTickets.Ticket ticket) {

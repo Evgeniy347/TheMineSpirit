@@ -33,7 +33,9 @@ public final class Board {
     private final Map<String, Integer> ticketFailures = new LinkedHashMap<>();
     private final Map<String, String> lastFailReasons = new LinkedHashMap<>();
     private final WaitNotes waitNotes = new WaitNotes();
+    private final HoldBook holds = new HoldBook();
     private final BlockedBook blocked;
+    private final BoardAssignments assignments;
     private final CasePauseBook casePauses = new CasePauseBook();
     private final StuckSpirits stuckSpirits = new StuckSpirits();
     private final List<BoardLogEntry> detachments = new ArrayList<>();
@@ -51,6 +53,7 @@ public final class Board {
         Objects.requireNonNull(nowTicks, "nowTicks не может быть null: без часов доска не считает просрочку");
         this.nowTicks = nowTicks;
         this.events = Objects.requireNonNull(events, "Слушатель переходов не может быть null: иначе BoardEvents.NONE");
+        this.assignments = new BoardAssignments(tickets, statuses, claimAssignees, nowTicks);
         this.blocked = new BlockedBook(
                 statuses, tickets, claimAssignees, ticketFailures, lastFailReasons, failHistory, blockNotes);
     }
@@ -62,9 +65,6 @@ public final class Board {
     public BoardState snapshot() {
         List<BoardState.Entry> entries = new ArrayList<>();
         for (BoardTicket ticket : tickets.values()) {
-            if (BoardActivities.isActivity(ticket.boardCase())) {
-                continue;
-            }
             entries.add(new BoardState.Entry(
                     ticket,
                     Objects.requireNonNull(statuses.get(ticket.id()), "У билета '" + ticket.id() + "' нет статуса"),
@@ -91,6 +91,7 @@ public final class Board {
         stuckSpirits.restore(state.stuck(), nowTicks.getAsLong());
         ledger.clear();
         ledger.restore(state.ledger());
+        holds.clear();
         for (BoardState.Entry entry : state.entries()) {
             BoardTicket ticket = entry.ticket();
             tickets.put(ticket.id(), ticket);
@@ -103,9 +104,6 @@ public final class Board {
 
     public BoardOutcome submit(BoardTicket ticket) {
         Objects.requireNonNull(ticket, "ticket не может быть null: доска хранит задание, " + "а не пустую заявку");
-        if (BoardActivities.isActivity(ticket.boardCase())) {
-            return BoardOutcome.NOT_A_TICKET;
-        }
         if (!SettlementStage.allows(ticket.boardCase(), ticket.level(), ledger.stage())) {
             return BoardOutcome.STAGE_LOCKED;
         }
@@ -170,7 +168,7 @@ public final class Board {
         refreshGateStatuses(stock);
         List<BoardTicket> ready = new ArrayList<>();
         for (BoardTicket ticket : tickets.values()) {
-            if (statuses.get(ticket.id()) != BoardStatus.PENDING || BoardActivities.isActivity(ticket.boardCase())) {
+            if (statuses.get(ticket.id()) != BoardStatus.PENDING || holds.held(ticket.id())) {
                 continue;
             }
             if (!dependenciesDone(ticket)) {
@@ -194,6 +192,10 @@ public final class Board {
         return waitNotes.of(ticketId, nowTicks.getAsLong());
     }
 
+    public HoldBook holds() {
+        return holds;
+    }
+
     public BoardOutcome claim(String ticketId, UUID spirit, long now) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: выдача идёт по id задания");
         Objects.requireNonNull(spirit, "spirit не может быть null: выдача идёт конкретному духу");
@@ -208,6 +210,9 @@ public final class Board {
         }
         if (status == BoardStatus.BLOCKED) {
             return BoardOutcome.BLOCKED;
+        }
+        if (holds.held(ticketId)) {
+            return BoardOutcome.GATE_BLOCKED;
         }
         if (!dependenciesDone(ticket)) {
             return BoardOutcome.NOT_FOUND;
@@ -227,6 +232,7 @@ public final class Board {
         statuses.put(ticketId, BoardStatus.ASSIGNED);
         claimAssignees.put(ticketId, spirit);
         waitNotes.forget(ticketId);
+        holds.release(ticketId);
         events.transition(BoardLog.Event.ASSIGNED, ticket, spirit, now);
         return BoardOutcome.CLAIMED;
     }
@@ -248,6 +254,7 @@ public final class Board {
         ticketFailures.remove(ticketId);
         lastFailReasons.remove(ticketId);
         blocked.clear(ticketId);
+        holds.release(ticketId);
         return true;
     }
 
@@ -282,6 +289,7 @@ public final class Board {
             ticketFailures.put(ticketId, BoardTuning.ticketFailLimit() - 1);
         }
         noteTicketFailure(ticket, now, stock);
+        holds.release(ticketId);
         events.transition(BoardLog.Event.FAILED, ticket.withFailure(reason), claimAssignees.get(ticketId), now);
         return true;
     }
@@ -410,15 +418,15 @@ public final class Board {
                 continue;
             }
             if (release(ticket.id())) {
-                released.add(new HolderRelease(ticket.id(), ticket.boardCase(), holder, false));
+                released.add(new HolderRelease(
+                        ticket.id(), ticket.boardCase(), holder, BoardActivities.isActivity(ticket.boardCase())));
             }
         }
         return List.copyOf(released);
     }
 
     public Optional<BoardCase> occupation(UUID spirit) {
-        Objects.requireNonNull(spirit, "spirit не может быть null: занятие читается у конкретного духа");
-        return Optional.empty();
+        return assignments.occupation(spirit);
     }
 
     public List<String> retain(Set<String> liveCauses, long now) {
@@ -455,6 +463,7 @@ public final class Board {
                 statuses.remove(ticket.id());
                 claimAssignees.remove(ticket.id());
                 blocked.clear(ticket.id());
+                holds.release(ticket.id());
                 removed.add(ticket.id());
             }
         }
@@ -474,7 +483,8 @@ public final class Board {
         int removed = 0;
         List<String> removableIds = new ArrayList<>();
         for (BoardTicket ticket : tickets.values()) {
-            if (StageTicket.removable(statuses.get(ticket.id()), ticket.id())) {
+            if (StageTicket.removable(statuses.get(ticket.id()), ticket.id())
+                    || BoardActivities.stale(ticket, statuses.get(ticket.id()), liveCauses)) {
                 removableIds.add(ticket.id());
             }
         }
@@ -484,43 +494,25 @@ public final class Board {
         for (String id : removableIds) {
             tickets.remove(id);
             statuses.remove(id);
+            holds.release(id);
             removed++;
         }
         failTicks.entrySet().removeIf(mark -> now - mark.getValue() >= BoardTuning.failBackoffTicks());
+        holds.retain(tickets.keySet());
         removed += evictOverflow(liveCauses);
         return removed;
     }
 
     public List<BoardTicket> assignedTo(UUID spirit) {
-        Objects.requireNonNull(spirit, "spirit не может быть null: держатель задания — дух");
-        List<BoardTicket> held = new ArrayList<>();
-        for (BoardTicket ticket : tickets.values()) {
-            if (statuses.get(ticket.id()) == BoardStatus.ASSIGNED
-                    && holds(ticket, spirit)
-                    && !BoardActivities.isActivity(ticket.boardCase())) {
-                held.add(ticket);
-            }
-        }
-        held.sort(QueueOrder.of(tickets.values(), statuses, now()));
-        return List.copyOf(held);
+        return assignments.assignedTo(spirit);
     }
 
     public Map<UUID, Integer> assignedCounts() {
-        Map<UUID, Integer> counts = new LinkedHashMap<>();
-        for (BoardTicket ticket : tickets.values()) {
-            if (statuses.get(ticket.id()) != BoardStatus.ASSIGNED || BoardActivities.isActivity(ticket.boardCase())) {
-                continue;
-            }
-            UUID holder = holder(ticket);
-            if (holder != null) {
-                counts.merge(holder, 1, Integer::sum);
-            }
-        }
-        return counts;
+        return assignments.counts();
     }
 
-    private boolean holds(BoardTicket ticket, UUID spirit) {
-        return ticket.assignee().filter(spirit::equals).isPresent() || spirit.equals(claimAssignees.get(ticket.id()));
+    public boolean updatePending(BoardTicket ticket) {
+        return assignments.updatePending(ticket);
     }
 
     private @Nullable UUID holder(BoardTicket ticket) {
@@ -633,6 +625,7 @@ public final class Board {
             ticketFailures.remove(ticketId);
             lastFailReasons.remove(ticketId);
             blocked.clear(ticketId);
+            holds.release(ticketId);
             events.transition(event, ticket, claimAssignees.get(ticketId), nowTicks.getAsLong());
         }
         for (BoardTicket dependant : tickets.values()) {

@@ -11,6 +11,7 @@ import com.theminespirit.core.board.graph.GraphDecisions;
 import com.theminespirit.core.board.graph.GraphFailureMemory;
 import com.theminespirit.core.board.graph.GraphNotes;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.movement.RescueReach;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ public final class BoardSources {
     private final TransferDriftWatch transferDrift = new TransferDriftWatch();
     private final DemandWatch demand = new DemandWatch();
     private final GraphSource graph = new GraphSource();
+    private final RescueReach.Cache rescueReach = new RescueReach.Cache();
     private final SourceFailureLog failures = new SourceFailureLog(BoardTuning.logSummaryTicks());
     private final GraphFailureMemory graphFailures = new GraphFailureMemory();
     private final GraphNotes notes = new GraphNotes();
@@ -47,6 +49,10 @@ public final class BoardSources {
 
     public GraphFailureMemory graphFailures() {
         return graphFailures;
+    }
+
+    RescueReach.Cache rescueReach() {
+        return rescueReach;
     }
 
     public boolean due(String key, String text, long now) {
@@ -117,6 +123,7 @@ public final class BoardSources {
         Set<String> fences = guard.call("fence", () -> FenceWatch.liveCauses(level), Set.of());
         live.addAll(craters);
         live.addAll(fences);
+        guard.run("rescue_reach", () -> rescueReach.advance(now, 5_000_000L));
         live.addAll(guard.call(
                 "graph",
                 () -> graph.tick(

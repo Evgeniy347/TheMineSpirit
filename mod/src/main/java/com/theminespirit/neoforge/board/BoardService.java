@@ -18,7 +18,6 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import com.theminespirit.neoforge.net.BuildFingerprint;
@@ -38,7 +37,6 @@ import org.slf4j.Logger;
 public final class BoardService {
     private static final Logger LOGGER = LogUtils.getLogger();
     public final BoardSources sources;
-    final ActivityCards cards = new ActivityCards();
     final BoardNotices notices = new BoardNotices();
     private final Board board;
     private final JournalService journal;
@@ -82,11 +80,19 @@ public final class BoardService {
         this.tickets = new BoardTicketDesk(this, board, targets);
         if (store != null) {
             BoardState restored = store.state();
-            BoardState owned = restored.withoutLegacy(Set.of(GraphTickets.PREFIX));
-            int dropped = restored.entries().size() - owned.entries().size();
+            BoardState byGraph = restored.withoutLegacy(Set.of(GraphTickets.PREFIX));
+            int dropped = restored.entries().size() - byGraph.entries().size();
             if (dropped > 0) {
                 LOGGER.warn(
                         "[board] при загрузке снято {} заданий мимо графа: их ставят заново источники графа", dropped);
+            }
+            BoardState owned = byGraph.withoutActivities();
+            int activities = byGraph.entries().size() - owned.entries().size();
+            if (activities > 0) {
+                LOGGER.info(
+                        "[board] при загрузке снято {} занятий: духи потеряли задачи перезапуска, "
+                                + "источники графа поставят их заново",
+                        activities);
             }
             if (!owned.isEmpty()) {
                 board.restore(owned);
@@ -285,29 +291,12 @@ public final class BoardService {
         WorkReserveHub.releaseAll(spirit);
     }
 
-    @FunctionalInterface
-    public interface Launcher {
-        boolean start(SpiritEntity spirit, String script, TaskNode task, long tick);
+    BoardActivityDesk activities() {
+        return dispatch.activityDesk();
     }
 
-    public boolean requestActivity(
-            List<SpiritEntity> spirits,
-            String key,
-            int priority,
-            BoardCase activity,
-            String script,
-            TaskNode task,
-            long now) {
-        return dispatch.requestActivity(spirits, key, priority, activity, script, task, now);
-    }
-
-    public boolean launch(
-            SpiritEntity spirit, BoardCase activity, String script, TaskNode task, Launcher launcher, long now) {
-        return dispatch.launch(spirit, activity, script, task, launcher, now);
-    }
-
-    boolean idleOrActivity(SpiritEntity spirit) {
-        return board.assignedTo(spirit.getUUID()).isEmpty();
+    void activityIssued(String id, long generation) {
+        dispatch.activityIssued(id, generation);
     }
 
     void detachForAction(SpiritEntity spirit) {

@@ -38,6 +38,7 @@ public final class BoardStateStore extends SavedData {
     private static final String DEPENDS_KEY = "DependsOn";
     private static final String REQUIRED_KEY = "RequiredItems";
     private static final String MODIFIERS_KEY = "Modifiers";
+    private static final String EXECUTORS_KEY = "Executors";
     private static final String ASSIGNEE_KEY = "Assignee";
     private static final String STATUS_KEY = "Status";
     private static final String HOLDER_KEY = "Holder";
@@ -144,6 +145,11 @@ public final class BoardStateStore extends SavedData {
             modifiers.add(StringTag.valueOf(modifier));
         }
         tag.put(MODIFIERS_KEY, modifiers);
+        ListTag executors = new ListTag();
+        for (UUID executor : ticket.executors()) {
+            executors.add(StringTag.valueOf(executor.toString()));
+        }
+        tag.put(EXECUTORS_KEY, executors);
         ticket.assignee().ifPresent(assignee -> tag.putUUID(ASSIGNEE_KEY, assignee));
         tag.putString(STATUS_KEY, entry.status().name());
         UUID holder = entry.holder();
@@ -174,6 +180,11 @@ public final class BoardStateStore extends SavedData {
         for (int index = 0; index < modifiersTag.size(); index++) {
             modifiers.add(modifiersTag.getString(index));
         }
+        List<UUID> executors = new ArrayList<>();
+        ListTag executorsTag = tag.getList(EXECUTORS_KEY, Tag.TAG_STRING);
+        for (int index = 0; index < executorsTag.size(); index++) {
+            executors.add(UUID.fromString(executorsTag.getString(index)));
+        }
         BoardTicket ticket = new BoardTicket(
                 tag.getString(ID_KEY),
                 boardCase(tag.getString(CASE_KEY)),
@@ -184,7 +195,8 @@ public final class BoardStateStore extends SavedData {
                 tag.getString(CAUSE_KEY),
                 depends,
                 required,
-                modifiers);
+                modifiers,
+                executors);
         Long failedAt = tag.contains(FAILED_AT_KEY) ? tag.getLong(FAILED_AT_KEY) : null;
         return new BoardState.Entry(
                 ticket,

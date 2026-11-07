@@ -16,8 +16,7 @@ public final class BoardReserve {
         Objects.requireNonNull(board, "Бронь без доски не считается: материалы держат её задания");
         Map<String, Integer> reserved = new HashMap<>();
         for (BoardTicket ticket : board.all()) {
-            if (BoardActivities.isActivity(ticket.boardCase())
-                    || !OPEN.contains(board.statusOf(ticket.id()).orElse(BoardStatus.DONE))) {
+            if (!OPEN.contains(board.statusOf(ticket.id()).orElse(BoardStatus.DONE))) {
                 continue;
             }
             ticket.requiredItems().forEach((item, count) -> reserved.merge(shortId(item), count, Integer::sum));

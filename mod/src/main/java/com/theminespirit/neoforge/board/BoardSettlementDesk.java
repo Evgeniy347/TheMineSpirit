@@ -3,14 +3,10 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.AbsentOwners;
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
-import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ConfigStamp;
-import com.theminespirit.core.board.HolderRelease;
-import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.TaskStall;
 import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
@@ -20,7 +16,6 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.task.SpiritReading;
-import com.theminespirit.core.town.StageWork;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.HashMap;
@@ -47,11 +42,13 @@ final class BoardSettlementDesk {
     private final AbsentOwners absentOwners = new AbsentOwners();
     private final StageProgressWatch progress = new StageProgressWatch();
     private final BoardIncidents incidents = new BoardIncidents();
+    private final BoardCrewDesk crew;
 
     BoardSettlementDesk(BoardService host, Board board, Map<String, TicketTarget> targets) {
         this.host = Objects.requireNonNull(host, "host не может быть null: расчёт задания живёт на доске");
         this.board = board;
         this.targets = targets;
+        this.crew = new BoardCrewDesk(host, board, targets);
     }
 
     void retain(Set<String> alive) {
@@ -75,18 +72,25 @@ final class BoardSettlementDesk {
             issuedGenerations.remove(ticket.id());
             board.release(ticket.id());
         }
-        host.cards.forget(spirit.getUUID());
     }
 
     void settleOwners(List<SpiritEntity> spirits) {
+        crew.watch(spirits);
         for (SpiritEntity spirit : spirits) {
             if (spirit.isRemoved()) {
                 host.releaseSpirit(spirit);
                 continue;
             }
             RunStatus status = spirit.taskStatus().orElse(null);
-            dropUntooled(spirit);
             List<BoardTicket> held = board.assignedTo(spirit.getUUID());
+            if (!held.isEmpty()) {
+                BoardTicket crew = held.get(0);
+                UUID owner = board.holderOf(crew.id()).orElse(null);
+                if (crew.teamwork() && owner != null && !owner.equals(spirit.getUUID())) {
+                    continue;
+                }
+            }
+            dropUntooled(spirit);
             if (held.isEmpty()) {
                 continue;
             }
@@ -107,7 +111,7 @@ final class BoardSettlementDesk {
                     String empty = run == TicketRun.SUCCEEDED && spirit.level() instanceof ServerLevel level
                             ? progress.emptyResult(level, ticket, targets.get(ticket.id()))
                             : null;
-                    settle(spirit, ticket, run == TicketRun.SUCCEEDED && empty == null, empty);
+                    settle(spirit, ticket, run == TicketRun.SUCCEEDED && empty == null, empty, spirits);
                 }
                 case RESUME -> resume(spirit, ticket, spirits);
                 case RUNNING -> checkStall(spirit, ticket);
@@ -117,36 +121,7 @@ final class BoardSettlementDesk {
     }
 
     void releaseDeadHolders(ServerLevel level, List<SpiritEntity> spirits, long now) {
-        Set<UUID> live = new HashSet<>();
-        for (SpiritEntity spirit : spirits) {
-            live.add(spirit.getUUID());
-        }
-        for (BoardTicket ticket : board.all()) {
-            if (board.statusOf(ticket.id()).orElse(null) != BoardStatus.ASSIGNED
-                    || BoardActivities.isActivity(ticket.boardCase())) {
-                continue;
-            }
-            UUID holder = board.holderOf(ticket.id()).orElse(null);
-            if (holder == null || live.contains(holder) || !repairGoalDone(level, ticket)) {
-                continue;
-            }
-            board.complete(ticket.id());
-        }
-        for (HolderRelease freed : board.releaseDeadHolders(live)) {
-            if (freed.activity()) {
-                host.cards.forget(freed.holder());
-            }
-            LOGGER.info(
-                    "[board] задание {} освобождено: держатель {} погиб или удалён", freed.ticketId(), freed.holder());
-            host.journal()
-                    .recordEntry(BoardLog.note(
-                            freed.ticketId(),
-                            freed.boardCase(),
-                            now,
-                            List.of("держатель " + freed.holder() + " погиб/удалён"),
-                            freed.holder().toString(),
-                            ConfigStamp.current()));
-        }
+        crew.releaseDeadHolders(level, spirits, now);
     }
 
     void dropAbsentOwners(List<SpiritEntity> spirits, long now) {
@@ -156,21 +131,6 @@ final class BoardSettlementDesk {
             LOGGER.info(
                     "[board] задание {} снято: его дух удалён или не появлялся {} тиков", id, AbsentOwners.GRACE_TICKS);
         }
-    }
-
-    private boolean repairGoalDone(ServerLevel level, BoardTicket ticket) {
-        if (ticket.boardCase() != BoardCase.REPAIR_BUILDING || !ticket.id().startsWith(RepairPlan.PREFIX)) {
-            return false;
-        }
-        TicketTarget target = targets.get(ticket.id());
-        StageWork work = target == null ? null : target.work();
-        String wood = target == null ? null : target.wood();
-        if (work == null || work.repairs().isEmpty() || wood == null) {
-            return false;
-        }
-        FirstStepsRunner.Placed placed =
-                FirstStepsRunner.audit(level, BoardCase.valueOf(work.repairs()), work.site(), wood);
-        return placed.confident() && placed.total() > 0 && placed.done() >= placed.total();
     }
 
     private void dropUntooled(SpiritEntity spirit) {
@@ -234,7 +194,7 @@ final class BoardSettlementDesk {
         TaskNode plan;
         try {
             plan = JobLaunch.plan(ticket, target);
-            JobLaunch.start(host.cards, spirit, ticket.id(), plan);
+            JobLaunch.start(spirit, ticket.id(), plan);
         } catch (RuntimeException failure) {
             LOGGER.warn(
                     "[incident] дух {} не продолжил задание {} после вытеснения: {}; задание возвращено доске",
@@ -253,7 +213,12 @@ final class BoardSettlementDesk {
                 ticket.boardCase());
     }
 
-    private void settle(SpiritEntity spirit, BoardTicket ticket, boolean success, @Nullable String verdict) {
+    private void settle(
+            SpiritEntity spirit,
+            BoardTicket ticket,
+            boolean success,
+            @Nullable String verdict,
+            List<SpiritEntity> spirits) {
         issuedGenerations.remove(ticket.id());
         SettleNotes.note(
                 spirit, ticket, success, host.supplyClosed(), spirit.level().getGameTime());
@@ -289,5 +254,6 @@ final class BoardSettlementDesk {
             }
         }
         WorkReserveHub.releaseAll(spirit);
+        crew.cancel(ticket, spirit.getUUID(), spirits);
     }
 }

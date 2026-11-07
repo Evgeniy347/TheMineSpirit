@@ -2,6 +2,9 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.graph.GraphNames;
+import com.theminespirit.core.board.graph.GraphPlan;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -18,6 +21,14 @@ final class GraphTicketFactory {
             List<String> modifiers) {}
 
     private GraphTicketFactory() {}
+
+    static Map<String, Integer> items(GraphPost post, GraphPlan.Task task) {
+        Map<String, Integer> items = new HashMap<>();
+        task.consumes()
+                .forEach((item, count) ->
+                        items.merge(GraphNames.item(post.graph, item, post.scan.wood()), count, Integer::sum));
+        return Map.copyOf(items);
+    }
 
     static BoardTicket ticket(GraphPost post, Request request) {
         return new BoardTicket(
@@ -43,7 +54,9 @@ final class GraphTicketFactory {
                 level,
                 base.cause(),
                 dependsOn,
-                base.requiredItems());
+                base.requiredItems(),
+                base.modifiers(),
+                base.executors());
     }
 
     static BoardTicket dated(BoardTicket base, long createdAt) {
@@ -56,6 +69,8 @@ final class GraphTicketFactory {
                 base.level(),
                 base.cause(),
                 base.dependsOn(),
-                base.requiredItems());
+                base.requiredItems(),
+                base.modifiers(),
+                base.executors());
     }
 }

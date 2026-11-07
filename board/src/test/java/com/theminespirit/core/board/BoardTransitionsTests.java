@@ -61,12 +61,12 @@ class BoardTransitionsTests {
     }
 
     @Test
-    void line_CancelledActivity_IsNotDuplicatedByFailureLine() {
+    void line_CancelledActivity_IsLogged() {
         assertTrue(
-                BoardTransitions.line(BoardLog.Event.CANCELLED, activity("activity:spirit-1"), 5, "spirit-1")
-                        .isEmpty(),
-                "Занятие снимается после провала: [incident] уже назвал причину, CANCELLED на activity:* — вторая "
-                        + "строка одной неудачи (observe20 п.11)");
+                BoardTransitions.line(BoardLog.Event.CANCELLED, activity("graph:event:night:guard"), 0, "spirit-1")
+                        .isPresent(),
+                "Отмена занятия — такая же отмена задания доски: владелец обязан видеть, почему охрана или поход "
+                        + "исчезли с доски");
     }
 
     @Test

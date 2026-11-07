@@ -2,7 +2,6 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BuildProgressSnapshots;
@@ -70,8 +69,7 @@ final class BoardTicketDesk {
         }
         for (SpiritEntity spirit : spirits) {
             String ticket = orphans.remove(spirit.getUUID());
-            boolean holdsTicket = board.assignedTo(spirit.getUUID()).stream()
-                    .anyMatch(held -> !BoardActivities.isActivity(held.boardCase()));
+            boolean holdsTicket = !board.assignedTo(spirit.getUUID()).isEmpty();
             if (ticket == null || spirit.isRemoved() || holdsTicket) {
                 continue;
             }
@@ -128,6 +126,7 @@ final class BoardTicketDesk {
             return;
         }
         board.holderOf(ticketId).ifPresent(holders::add);
+        board.find(ticketId).ifPresent(ticket -> holders.addAll(ticket.executors()));
         for (BoardTicket ticket : board.all()) {
             if (ticket.dependsOn().contains(ticketId)) {
                 collectHolders(ticket.id(), holders, visited);
