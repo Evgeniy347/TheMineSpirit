@@ -6,7 +6,7 @@
 | Скрипт | Что делает |
 |---|---|
 | `test.sh unit [--changed | --module <м>] [--tests …] [--fast-analyzers]` | быстрые JUnit-тесты: весь набор, затронутые модули или один модуль; лог — `TestResults/logs/` |
-| `changed-modules.sh` | путь → модуль → зависящие модули для `test.sh unit --changed` (обратный граф по settings/build.gradle) |
+| `changed-modules.sh` | путь → модуль → зависящие модули для `test.sh unit --changed` (граф из settings/build.gradle с кэшем в `build/tmp`) |
 | `test.sh gametest [--full] [фильтр…]` | GameTest под замком, шарды, `--full` — полный предел |
 | `gametest.sh` | обёртка над `test.sh gametest` |
 | `module-paths.sh` | общие переменные путей для остальных скриптов (`MOD_MAIN_DIR`, ресурсы, jar, GameTest) |

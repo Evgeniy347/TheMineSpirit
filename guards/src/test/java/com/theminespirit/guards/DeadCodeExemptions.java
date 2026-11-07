@@ -13,21 +13,6 @@ final class DeadCodeExemptions {
                     "neoforge/SpiritEntity.java|method|SpiritEntity#setChild",
                     "Заготовка под открытую задачу: todo.md → «Дети»"),
             new Exemption(
-                    "neoforge/board/BoardService.java|method|BoardService#completeCapture",
-                    "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exemption(
-                    "neoforge/board/BoardService.java|method|BoardService#completeLure",
-                    "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exemption(
-                    "neoforge/board/BoardService.java|method|BoardService#completeLure",
-                    "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exemption(
-                    "neoforge/board/BoardService.java|method|BoardService#notifyAnimalDied",
-                    "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exemption(
-                    "neoforge/board/BoardService.java|method|BoardService#notifyAnimalDied",
-                    "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),
-            new Exemption(
                     "neoforge/crafting/RecipeKnowledge.java|method|RecipeKnowledge#indexBuilds",
                     "Заготовка под открытую задачу: todo.md → «Кузнечество»"),
             new Exemption(

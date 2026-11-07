@@ -9,7 +9,6 @@ import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.BuildSquad;
-import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.building.CellPartition;
 import com.theminespirit.core.building.ReachPlanner;
@@ -31,7 +30,6 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.RemovalLog;
 import com.theminespirit.core.script.BuildSchematicParams;
-import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.movement.PathNetworkService;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,92 +39,98 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class BuildSchematicScript implements ScriptInstance {
-    private static final int MAX_OWN_CRAFTS = 8;
-    private static final int TORCHES_PER_COAL = 4;
-    private static final int MAX_FINISH_WAITS = 200;
-    private static final int MAX_CENTRING_TICKS = 20;
+    static final int MAX_OWN_CRAFTS = 8;
+    static final int TORCHES_PER_COAL = 4;
+    static final int MAX_FINISH_WAITS = 200;
+    static final int MAX_CENTRING_TICKS = 20;
+    static final int WALK_MARGIN = 6;
+    static final int MAX_PLAN_TOP_UPS = 8;
     private static final int SITE_NETWORK_RING = 6;
-    private static final int WALK_MARGIN = 6;
     private static final int MAX_PLAN_TRIP_RETRIES = 2;
-    private static final int MAX_PLAN_TOP_UPS = 8;
     private static final int HARD_APPROACH_PATH_BUILDS = 4;
 
     private static final Logger LOGGER = LogUtils.getLogger();
-    private final SpiritEntity spirit;
-    private final Level level;
-    private final SchematicSite site;
-    private final BlockPlacer placer;
-    private final BlockBreaker breaker;
-    private final Approach approach;
-    private final BuildPitWatch pit;
-    private final BuildReservations reservations;
-    private final BuildKey buildKey;
-    private final BuildSquad squad;
-    private final BuildResult tally = new BuildResult();
-    private final Set<BlockCoord> excludedStands = new HashSet<>();
-    private final Map<BlockCoord, String> blocked = new LinkedHashMap<>();
-    private final Map<BlockCoord, Integer> refusals = new HashMap<>();
+    final SpiritEntity spirit;
+    final Level level;
+    final SchematicSite site;
+    final BlockBreaker breaker;
+    final Approach approach;
+    final BuildPitWatch pit;
+    final BuildReservations reservations;
+    final BuildKey buildKey;
+    final BuildSquad squad;
+    final BuildResult tally = new BuildResult();
+    final Set<BlockCoord> excludedStands = new HashSet<>();
+    final Map<BlockCoord, String> blocked = new LinkedHashMap<>();
+    final Map<BlockCoord, Integer> refusals = new HashMap<>();
+    final BuildToolRestock toolRestock = new BuildToolRestock();
+    BlockCoord breaking;
+    String breakingId = "-";
+    final RemovalLog removals = new RemovalLog();
+    long ticks;
+    int placed;
+    int cleared;
+    int failed;
+    int finishWaits;
+    boolean standsRetried;
+    int bottomY = Integer.MAX_VALUE;
+    ScriptStatus outcome = ScriptStatus.RUNNING;
+    String failureReason;
+    String lastRefusal = "";
+    TaskRunner supplyRunner;
+    int crafts;
+    int trips;
+    int standsChosen;
+    int roofStands;
+    int retreatRefusals;
+    int centring;
+    int phaseBand = -1;
+    int highestBand = -1;
 
+    @Nullable
+    BuildPlanCursor plan;
+
+    boolean planChecked;
+
+    @Nullable
+    CompletableFuture<BuildPlanner.Plan> planPending;
+
+    long planStartTick;
+    long planBegan;
+    BlockCoord planSupply = new BlockCoord(0, 0, 0);
+    Map<String, Item> planItems = Map.of();
+    Map<BlockCoord, Schematic.PlacedEntry> primaryAt = Map.of();
+    boolean planStandVisited;
+    BuildPlanCursor.@Nullable Fetch planFetch;
+    BuildPlanCursor.@Nullable Fetch retryFetch;
+    int planFetchRetries;
+    int planTopUps;
+
+    @Nullable
+    List<ScriptCall> supplyWalk;
+
+    int approachPathMark;
+    final Set<BlockCoord> planCarried = new HashSet<>();
+    long planStands;
+    long planTrips;
+    int planDeviations;
+    private final BlockPlacer placer;
     private Set<BlockCoord> ownShare = Set.of();
-    private final BuildToolRestock toolRestock = new BuildToolRestock();
     private long squadVersion = -1;
     private BlockCoord approachStand;
-    private BlockCoord breaking;
-    private String breakingId = "-";
-    private final RemovalLog removals = new RemovalLog();
-    private long ticks;
     private long lastPlaceTick = Long.MIN_VALUE / 2;
-    private int placed;
-    private int cleared;
-    private int failed;
-    private int finishWaits;
-    private boolean standsRetried;
-    private int bottomY = Integer.MAX_VALUE;
-    private ScriptStatus outcome = ScriptStatus.RUNNING;
-    private String failureReason;
-    private String lastRefusal = "";
-    private TaskRunner supplyRunner;
-    private int crafts;
-    private int trips;
-    private int standsChosen;
-    private int roofStands;
-    private int retreatRefusals;
-    private int centring;
-    private int phaseBand = -1;
-    private int highestBand = -1;
-    private @Nullable BuildPlanCursor plan;
-    private boolean planChecked;
-    private @Nullable CompletableFuture<BuildPlanner.Plan> planPending;
-    private long planStartTick;
-    private long planBegan;
-    private BlockCoord planSupply = new BlockCoord(0, 0, 0);
-    private Map<String, Item> planItems = Map.of();
-    private Map<BlockCoord, Schematic.PlacedEntry> primaryAt = Map.of();
-    private boolean planStandVisited;
-    private BuildPlanCursor.@Nullable Fetch planFetch;
-    private BuildPlanCursor.@Nullable Fetch retryFetch;
-    private int planFetchRetries;
-    private int planTopUps;
-    private @Nullable List<ScriptCall> supplyWalk;
-    private int approachPathMark;
-    private final Set<BlockCoord> planCarried = new HashSet<>();
-    private long planStands;
-    private long planTrips;
-    private int planDeviations;
+    private final SchematicPlanPhase planPhase;
+    private final SchematicResult report;
 
     BuildSchematicScript(SpiritEntity spirit, BuildSchematicParams params) {
         this(
@@ -153,6 +157,8 @@ final class BuildSchematicScript implements ScriptInstance {
         this.buildKey = new BuildKey(file, origin, rotation);
         this.pit = new BuildPitWatch(spirit, level, site, buildKey);
         this.squad = BuildSquadRegistry.join(level, buildKey, spirit.getUUID());
+        this.planPhase = new SchematicPlanPhase(this);
+        this.report = new SchematicResult(this);
         if (level instanceof ServerLevel server) {
             PathNetworkService.beginSite(server, buildKey, site.networkBox(SITE_NETWORK_RING), site.doorCells());
         }
@@ -164,7 +170,7 @@ final class BuildSchematicScript implements ScriptInstance {
             return outcome;
         }
         if (spirit.isRemoved()) {
-            return fail("дух исчез во время стройки по схеме");
+            return report.fail("дух исчез во время стройки по схеме");
         }
         ticks++;
         if (pit.stalled(ticks, placed, cleared, trips)) {
@@ -270,21 +276,18 @@ final class BuildSchematicScript implements ScriptInstance {
             return ScriptStatus.RUNNING;
         }
         if (!planChecked) {
-            startPlan();
+            planPhase.startPlan();
         }
         CompletableFuture<BuildPlanner.Plan> pending = planPending;
         if (pending != null) {
             if (ticks == planStartTick) {
                 return ScriptStatus.RUNNING;
             }
-            acceptPlan(pending);
+            planPhase.acceptPlan(pending);
         }
-        BuildPlanCursor cursor = plan;
-        if (cursor != null) {
-            Optional<ScriptStatus> planned = planStep(cursor);
-            if (planned.isPresent()) {
-                return planned.get();
-            }
+        Optional<ScriptStatus> planned = planPhase.step();
+        if (planned.isPresent()) {
+            return planned.get();
         }
         List<Schematic.PlacedEntry> missing = new ArrayList<>();
         List<Schematic.PlacedEntry> unsupplied = new ArrayList<>();
@@ -322,10 +325,10 @@ final class BuildSchematicScript implements ScriptInstance {
             missing.removeIf(entry -> !site.supported(entry));
         }
         if (missing.isEmpty() && !unsupplied.isEmpty()) {
-            return noMaterial(unsupplied.get(0).block(), null);
+            return report.noMaterial(unsupplied.get(0).block(), null);
         }
         if (missing.isEmpty()) {
-            return waitingForeign && ++finishWaits <= MAX_FINISH_WAITS ? ScriptStatus.RUNNING : finish();
+            return waitingForeign && ++finishWaits <= MAX_FINISH_WAITS ? ScriptStatus.RUNNING : report.finish();
         }
         List<Schematic.PlacedEntry> main = new ArrayList<>();
         List<Schematic.PlacedEntry> entrances = new ArrayList<>();
@@ -334,7 +337,7 @@ final class BuildSchematicScript implements ScriptInstance {
         }
         boolean lastStep = main.isEmpty();
         if (lastStep && unsupplied.stream().anyMatch(entry -> !SchematicBlocks.isEntranceBlock(entry.block()))) {
-            return noMaterial(unsupplied.get(0).block(), null);
+            return report.noMaterial(unsupplied.get(0).block(), null);
         }
         List<Schematic.PlacedEntry> targets = ownFirst(lastStep ? entrances : main);
         return placeStep(targets, lastStep);
@@ -462,7 +465,7 @@ final class BuildSchematicScript implements ScriptInstance {
         };
     }
 
-    private Optional<ScriptStatus> placeOne(Schematic.PlacedEntry entry) {
+    Optional<ScriptStatus> placeOne(Schematic.PlacedEntry entry) {
         if (SchematicActions.isFluidPlaced(entry.block())) return waterOne(entry);
         BlockCoord cell = entry.pos();
         BlockCoord weed = SchematicWild.entryWeed(level, breaker, entry);
@@ -504,7 +507,7 @@ final class BuildSchematicScript implements ScriptInstance {
             case BlockPlacer.Refused refused -> {
                 lastRefusal = refused.reason() + ": " + refused.message();
                 if (refused.reason() == BlockPlacer.RefuseReason.NO_MATERIAL) {
-                    return Optional.of(noMaterial(entry.block(), refused.message()));
+                    return Optional.of(report.noMaterial(entry.block(), refused.message()));
                 }
                 int attempts = refusals.merge(cell, 1, Integer::sum);
                 if (attempts >= BuildTuning.MAX_CONSECUTIVE_SKIPS) {
@@ -557,6 +560,18 @@ final class BuildSchematicScript implements ScriptInstance {
         return beginApproach(stand.get());
     }
 
+    ScriptStatus beginApproach(BlockCoord stand) {
+        approachStand = stand;
+        pit.descent(feet(), stand);
+        approachPathMark = spirit.pathBuilds();
+        standsChosen++;
+        if (site.onRoof(stand)) {
+            roofStands++;
+        }
+        approach.beginWithRoutes(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
+        return ScriptStatus.RUNNING;
+    }
+
     private ReachPlanner.World clearWorld() {
         return new ReachPlanner.World() {
             @Override
@@ -571,7 +586,7 @@ final class BuildSchematicScript implements ScriptInstance {
         };
     }
 
-    private ReachPlanner.World placeWorld(Map<BlockCoord, Schematic.PlacedEntry> byCell, boolean outsideOnly) {
+    ReachPlanner.World placeWorld(Map<BlockCoord, Schematic.PlacedEntry> byCell, boolean outsideOnly) {
         return new ReachPlanner.World() {
             @Override
             public boolean ready(BlockCoord cell) {
@@ -612,557 +627,53 @@ final class BuildSchematicScript implements ScriptInstance {
         ownShare = Set.copyOf(share);
     }
 
-    private ScriptStatus finish() {
-        BuildStats stats = noteStats();
-        reservations.releaseAll(spirit.getUUID());
-        List<Schematic.PlacedEntry> missing = site.missing();
-        List<BlockCoord> clear = site.toClear();
-        LOGGER.info(
-                "Стройка {}: подходов {} (план {}), стоянок выбрано {} (план {}), на крыше {}, отказов правила отхода {}, "
-                        + "заходов {} (план {}), клеток плана на обычную стройку {}",
-                buildKey,
-                stats.approaches(),
-                stats.planApproaches(),
-                standsChosen,
-                planStands,
-                roofStands,
-                retreatRefusals,
-                trips,
-                planTrips,
-                planDeviations);
-        if (missing.isEmpty() && clear.isEmpty()) {
-            leaveSquad();
-            if (level instanceof ServerLevel server) {
-                PathNetworkService.endSite(server, buildKey);
-            }
-            tally.supplies(placed, 0);
-            logRemovals();
-            outcome = ScriptStatus.SUCCEEDED;
-            return outcome;
-        }
-        for (int i = 0; i < blocked.size(); i++) {
-            tally.skipped();
-        }
-        return fail("не совпало со схемой " + missing.size() + " из "
-                + site.entries().size() + " клеток"
-                + (clear.isEmpty() ? "" : ", не очищено " + clear.size()) + ": " + BuildSamples.of(missing, clear)
-                + "; дух " + feet() + "; поставлено " + placed + ", очищено " + cleared + "; причины: "
-                + reasons());
-    }
-
-    private String reasons() {
-        List<Schematic.PlacedEntry> missing = site.missing();
-        if (!missing.isEmpty()) {
-            Schematic.PlacedEntry first = missing.get(0);
-            String why = blocked.get(first.pos());
-            String state = "в мире "
-                    + level.getBlockState(SchematicSite.toPos(first.pos()))
-                            .getBlock()
-                            .getDescriptionId()
-                    + ", свободна " + site.freeForPlacing(first) + ", опора " + site.supported(first) + ", материал "
-                    + BlockItems.countIn(spirit.getInventory(), first.block()) + ", основная часть "
-                    + site.primaries().contains(first) + ", занята другим "
-                    + reservations.foreign(first.pos(), spirit.getUUID());
-            if (why != null || blocked.isEmpty()) {
-                return first.pos() + " — " + (why == null ? "не отложена" : why) + " (" + state + ")"
-                        + (lastRefusal.isBlank() ? "" : "; последний отказ: " + lastRefusal);
-            }
-        }
-        if (blocked.isEmpty()) {
-            return lastRefusal.isBlank() ? "нет" : lastRefusal;
-        }
-        Map.Entry<BlockCoord, String> first = blocked.entrySet().iterator().next();
-        return first.getKey() + " — " + first.getValue() + (blocked.size() > 1 ? " и ещё " + (blocked.size() - 1) : "");
-    }
-
-    private ScriptStatus noMaterial(String blockId, @Nullable String refusal) {
-        if (trips < BuildSupplyTrip.MAX_TRIPS) {
-            List<ScriptCall> steps = BuildSupplyTrip.plan(spirit, site, phaseBand, bottomY);
-            if (!steps.isEmpty()) {
-                trips++;
-                LOGGER.info(
-                        "Стройка {}: заход {} за материалами ({} шагов withdraw), поставлено {} из {}, не хватило '{}'",
-                        buildKey,
-                        trips,
-                        steps.size(),
-                        placed,
-                        site.primaries().size(),
-                        blockId);
-                return startSupply(steps);
-            }
-        }
-        if (SchematicActions.toolKind(blockId) != null) {
-            BuildToolRestock.Answer answer = toolRestock.answer(spirit, blockId, refusal);
-            if (answer.plan() != null && crafts < MAX_OWN_CRAFTS) {
-                crafts++;
-                LOGGER.info("Стройка {}: нужен инструмент ({}) — сундук, иначе крафт графа", buildKey, blockId);
-                return startSupply(answer.plan());
-            }
-            failed++;
-            tally.failed();
-            return fail(answer.reason());
-        }
-        int needed = countMissing(blockId);
-        if (crafts < MAX_OWN_CRAFTS && "minecraft:torch".equals(blockId)) {
-            int held = BlockItems.countIn(spirit.getInventory(), blockId);
-            int count = Math.min(CatalogLimits.COUNT_MAX, held + Math.max(needed - held, 1));
-            int coal = spirit.getInventory().countItem(Items.COAL)
-                    + spirit.getInventory().countItem(Items.CHARCOAL);
-            if (coal * TORCHES_PER_COAL >= count - held) {
-                crafts++;
-                LOGGER.info("Стройка {}: крафт своих факелов ×{} из угля духа", buildKey, count - held);
-                return startSupply(SelfCraftSteps.of(spirit, blockId, count));
-            }
-        }
-        if (crafts < MAX_OWN_CRAFTS && !OwnWood.species(blockId).isEmpty()) {
-            int held = BlockItems.countIn(spirit.getInventory(), blockId);
-            int count = Math.min(CatalogLimits.COUNT_MAX, held + Math.max(needed - held, 1));
-            if (OwnWood.planksHeld(spirit.getInventory(), OwnWood.species(blockId))
-                    >= OwnWood.plankCost(blockId, count - held)) {
-                crafts++;
-                LOGGER.info("Стройка {}: крафт своего {} ×{} из брёвен духа", buildKey, blockId, count - held);
-                return startSupply(SelfCraftSteps.of(spirit, blockId, count));
-            }
-        }
-        failed++;
-        tally.failed();
-        int have = BlockItems.countIn(spirit.getInventory(), blockId);
-        tally.supplies(placed + have, Math.max(needed - have, 0));
-        return fail("не хватило материала '" + blockId + "': поставлено " + placed + " из "
-                + site.primaries().size() + "; нужно " + needed + ", есть " + have);
-    }
-
-    private ScriptStatus startSupply(List<ScriptCall> steps) {
+    ScriptStatus startSupply(List<ScriptCall> steps) {
         return startSupply(new SequenceNode(new ArrayList<TaskNode>(steps)));
     }
 
-    private ScriptStatus startSupply(TaskNode plan) {
+    ScriptStatus startSupply(TaskNode plan) {
         approach.cancel();
         approachStand = null;
         supplyRunner = TaskRunner.start(plan, SpiritScripts.registryFor(spirit), ConditionRegistry.of(Map.of()));
         return ScriptStatus.RUNNING;
     }
 
-    private void startPlan() {
-        planChecked = true;
-        if (squad.size() > 1) {
-            return;
-        }
-        planBegan = System.nanoTime();
-        planStartTick = ticks;
-        BuildPlanStart.Prepared prepared = BuildPlanStart.of(spirit, site);
-        Map<BlockCoord, Schematic.PlacedEntry> byCell = new HashMap<>();
-        site.primaries().forEach(entry -> byCell.put(entry.pos(), entry));
-        primaryAt = Map.copyOf(byCell);
-        planItems = prepared.items();
-        planSupply = prepared.supply();
-        Schematic schematic = site.schematic();
-        BuildRotation rotation = site.rotation();
-        SpiritReach reach = SpiritReach.current();
-        planPending = CompletableFuture.supplyAsync(
-                () -> BuildPlanner.plan(
-                        schematic, rotation, prepared.supply(), reach, BuildPlanner.Portion.FILL, prepared.start()),
-                Util.backgroundExecutor());
-    }
-
-    private void acceptPlan(CompletableFuture<BuildPlanner.Plan> pending) {
-        planPending = null;
-        BuildPlanner.Plan built;
-        try {
-            built = pending.join();
-        } catch (CompletionException | CancellationException e) {
-            LOGGER.warn("Стройка {}: план не построен ({}) — обычная стройка", buildKey, e.getMessage());
-            return;
-        }
-        planStands = built.stands();
-        planTrips = built.trips();
-        plan = new BuildPlanCursor(built, site.origin());
-        LOGGER.info(
-                "Стройка {}: план — стоянок {}, заходов {}, не поставлено {}, сундук снабжения {} (от участка {}), "
-                        + "расчёт {} мс",
-                buildKey,
-                planStands,
-                planTrips,
-                built.stuck(),
-                planSupply.plus(site.origin()),
-                site.origin(),
-                (System.nanoTime() - planBegan) / 1_000_000);
-    }
-
-    private boolean pendingCell(BlockCoord cell) {
-        Schematic.PlacedEntry entry = primaryAt.get(cell);
-        return entry != null && !blocked.containsKey(cell) && !(site.matches(entry) && site.secondPartMatches(entry));
-    }
-
-    private Optional<ScriptStatus> planStep(BuildPlanCursor cursor) {
-        BuildPlanCursor.Fetch again = retryFetch;
-        if (again != null) {
-            retryFetch = null;
-            return Optional.of(planFetch(again));
-        }
-        BuildPlanCursor.Next next = cursor.next(this::pendingCell);
-        switch (next) {
-            case BuildPlanCursor.Done ignored -> {
-                LOGGER.info(
-                        "Стройка {}: план исполнен — стоянок {} (план {}), заходов {} (план {}), клеток на обычную "
-                                + "стройку {}",
-                        buildKey,
-                        standsChosen,
-                        planStands,
-                        trips,
-                        planTrips,
-                        planDeviations);
-                leavePlan();
-                return Optional.empty();
-            }
-            case BuildPlanCursor.Fetch fetch -> {
-                nextPlanStep(cursor);
-                planFetchRetries = 0;
-                return Optional.of(planFetch(fetch));
-            }
-            case BuildPlanCursor.StandAt at -> {
-                if (at.cells().stream()
-                                .allMatch(cell -> SchematicBlocks.isEntranceBlock(
-                                        primaryAt.get(cell).block()))
-                        && innerLeft()) {
-                    LOGGER.info(
-                            "Стройка {}: до дверей плана остались клетки внутри — дальше обычная стройка", buildKey);
-                    leavePlan();
-                    return Optional.empty();
-                }
-                return Optional.of(standStep(cursor, at));
-            }
-        }
-    }
-
-    private void leavePlan() {
-        plan = null;
-        planDeviations += planCarried.size();
-        planCarried.clear();
-        blocked.clear();
-        refusals.clear();
-        standsRetried = false;
-    }
-
-    private boolean innerLeft() {
-        for (Schematic.PlacedEntry entry : site.primaries()) {
-            if (!SchematicBlocks.isEntranceBlock(entry.block())
-                    && !(site.matches(entry) && site.secondPartMatches(entry))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private ScriptStatus planFetch(BuildPlanCursor.Fetch fetch) {
-        planFetch = fetch;
-        Map<Item, Integer> wanted = new LinkedHashMap<>();
-        for (BuildPlanner.Taken taken : fetch.taken()) {
-            Item item = planItems.get(taken.item());
-            if (item != null) {
-                wanted.merge(item, taken.count(), Integer::sum);
-            }
-        }
-        List<ScriptCall> steps = BuildSupplyTrip.exact(spirit, site, wanted);
-        if (steps.isEmpty()) {
-            planFetch = null;
-            return ScriptStatus.RUNNING;
-        }
-        trips++;
-        LOGGER.info(
-                "Стройка {}: заход {} по плану (заход плана {}, {} шагов withdraw), поставлено {} из {}",
-                buildKey,
-                trips,
-                fetch.number(),
-                steps.size(),
-                placed,
-                site.primaries().size());
-        BlockCoord origin = site.origin();
-        BlockCoord supply =
-                new BlockCoord(origin.x() + planSupply.x(), origin.y() + planSupply.y(), origin.z() + planSupply.z());
-        if (feet().equals(supply)) {
-            return startSupply(steps);
-        }
-        supplyWalk = steps;
-        approach.begin(new Vec3(supply.x() + 0.5, supply.y(), supply.z() + 0.5), BuildTuning.STAND_ARRIVAL);
-        return ScriptStatus.RUNNING;
-    }
-
-    private void nextPlanStep(BuildPlanCursor cursor) {
-        cursor.advance();
-        planStandVisited = false;
-        centring = 0;
-    }
-
-    private ScriptStatus standStep(BuildPlanCursor cursor, BuildPlanCursor.StandAt at) {
-        if (!planStandVisited) {
-            planStandVisited = true;
-            if (!feet().equals(at.stand())) {
-                if (BuildStandPath.plannedReachable(site, at.stand(), WALK_MARGIN, feet())) {
-                    return beginApproach(at.stand());
-                }
-                lastRefusal = "стоянка плана " + at.stand() + " недостижима пешком от " + feet();
-                LOGGER.info(
-                        "Стройка {}: стоянка плана {} недостижима пешком от {} — шаг {} идёт обычной стройкой",
-                        buildKey,
-                        at.stand(),
-                        feet(),
-                        cursor.index());
-            }
-        }
-        planCarried.removeIf(cell -> !pendingCell(cell));
-        List<BlockCoord> cells = new ArrayList<>(at.cells());
-        for (BlockCoord carried : planCarried) {
-            if (!cells.contains(carried) && pendingCell(carried)) {
-                cells.add(carried);
-            }
-        }
-        Map<BlockCoord, Schematic.PlacedEntry> byCell = new LinkedHashMap<>();
-        if (repairStates(cells, byCell)) {
-            return ScriptStatus.RUNNING;
-        }
-        List<Schematic.PlacedEntry> targets = new ArrayList<>(byCell.values());
-        PlanPlacing placing = placeFromPlanStand(cells, byCell);
-        if (placing.status().isPresent()) {
-            return placing.status().get();
-        }
-        if (placing.overlapped() && ++centring <= MAX_CENTRING_TICKS) {
-            BlockCoord here = feet();
-            spirit.getNavigation().stop();
-            spirit.getMoveControl().setWantedPosition(here.x() + 0.5, spirit.getY(), here.z() + 0.5, 1.0);
-            return ScriptStatus.RUNNING;
-        }
-        centring = 0;
-        List<Schematic.PlacedEntry> supplied = new ArrayList<>();
-        Map<Item, Integer> lacking = new LinkedHashMap<>();
-        for (Schematic.PlacedEntry entry : targets) {
-            if (SchematicActions.isFluidPlaced(entry.block())) continue;
-            if (BlockItems.countIn(spirit.getInventory(), entry.block()) > 0) {
-                supplied.add(entry);
-            } else {
-                lacking.merge(BlockItems.itemFor(entry.block()), 1, Integer::sum);
-            }
-        }
-        if (supplied.isEmpty() && !lacking.isEmpty() && planTopUps < MAX_PLAN_TOP_UPS) {
-            for (Schematic.PlacedEntry entry : site.primaries()) {
-                if (SchematicActions.isFluidPlaced(entry.block())) continue;
-                Item item = BlockItems.itemFor(entry.block());
-                if (lacking.containsKey(item) && !site.matches(entry)) {
-                    lacking.merge(item, 1, Integer::sum);
-                }
-            }
-            List<ScriptCall> steps = BuildSupplyTrip.exact(spirit, site, lacking);
-            if (!steps.isEmpty()) {
-                planTopUps++;
-                trips++;
-                LOGGER.info(
-                        "Стройка {}: дозаход {} — шагу плана {} не хватило {}",
-                        buildKey,
-                        trips,
-                        cursor.index(),
-                        lacking);
-                return startSupply(steps);
-            }
-        }
-        if (!supplied.isEmpty()) {
-            carryRest(cursor, supplied);
-            return ScriptStatus.RUNNING;
-        }
-        deferPlanStep(cursor, at, targets);
-        return ScriptStatus.RUNNING;
-    }
-
-    private boolean repairStates(List<BlockCoord> cells, Map<BlockCoord, Schematic.PlacedEntry> byCell) {
-        for (BlockCoord cell : cells) {
-            Schematic.PlacedEntry entry = primaryAt.get(cell);
-            if (entry == null) {
-                continue;
-            }
-            if (site.rightBlockWrongState(entry)) {
-                site.repairState(entry);
-                return true;
-            }
-            byCell.put(cell, entry);
-        }
-        return false;
-    }
-
-    private void carryRest(BuildPlanCursor cursor, List<Schematic.PlacedEntry> supplied) {
-        for (Schematic.PlacedEntry entry : supplied) {
-            if (!site.matches(entry)) {
-                planCarried.add(entry.pos());
-            }
-        }
-        nextPlanStep(cursor);
-    }
-
-    private ScriptStatus beginApproach(BlockCoord stand) {
-        approachStand = stand;
-        pit.descent(feet(), stand);
-        approachPathMark = spirit.pathBuilds();
-        standsChosen++;
-        if (site.onRoof(stand)) {
-            roofStands++;
-        }
-        approach.beginWithRoutes(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
-        return ScriptStatus.RUNNING;
-    }
-
-    private record PlanPlacing(Optional<ScriptStatus> status, boolean overlapped) {}
-
-    private PlanPlacing placeFromPlanStand(List<BlockCoord> cells, Map<BlockCoord, Schematic.PlacedEntry> byCell) {
-        boolean overlapped = false;
-        ReachPlanner.World world = placeWorld(byCell, false);
-        for (BlockCoord cell : ReachPlanner.workableNow(SpiritReach.current(), feet(), cells, world)) {
-            Schematic.PlacedEntry entry = byCell.get(cell);
-            if (entry == null || (SchematicBlocks.isEntranceBlock(entry.block()) && !site.outsideFootprint(feet()))) {
-                continue;
-            }
-            if (site.overlaps(entry, spirit.getBoundingBox())) {
-                overlapped = true;
-                continue;
-            }
-            if (!site.keepsRetreat(feet(), List.of(entry))) {
-                retreatRefusals++;
-                continue;
-            }
-            if (BlockItems.countIn(spirit.getInventory(), entry.block()) == 0) {
-                continue;
-            }
-            Optional<ScriptStatus> placedNow = placeOne(entry);
-            if (placedNow.isPresent()) {
-                return new PlanPlacing(placedNow, overlapped);
-            }
-        }
-        return new PlanPlacing(Optional.empty(), overlapped);
-    }
-
-    private void deferPlanStep(
-            BuildPlanCursor cursor, BuildPlanCursor.StandAt at, List<Schematic.PlacedEntry> targets) {
-        planDeviations += at.cells().size();
-        Schematic.PlacedEntry first = targets.isEmpty() ? null : targets.get(0);
-        LOGGER.info(
-                "Стройка {}: шаг плана {} — со стоянки {} не поставлено {} (например {}: свободна {}, "
-                        + "опора {}, материал {}; последний отказ: {}), дух {}; клетки — обычной стройке",
-                buildKey,
-                cursor.index(),
-                at.stand(),
-                at.cells().size(),
-                first == null ? "?" : first.block() + "@" + first.pos(),
-                first != null && site.freeForPlacing(first),
-                first != null && site.supported(first),
-                first == null ? 0 : BlockItems.countIn(spirit.getInventory(), first.block()),
-                lastRefusal.isBlank() ? "нет" : lastRefusal,
-                feet());
-        for (BlockCoord cell : at.cells()) {
-            blocked.putIfAbsent(cell, "план: со стоянки " + at.stand() + " не поставить");
-        }
-        nextPlanStep(cursor);
-    }
-
-    private int countMissing(String blockId) {
-        int total = 0;
-        for (Schematic.PlacedEntry entry : site.primaries()) {
-            if (entry.block().equals(blockId) && !site.matches(entry)) {
-                total++;
-            }
-        }
-        return Math.max(total, 1);
-    }
-
-    private BuildStats noteStats() {
-        BuildStats stats = new BuildStats(planStands, planTrips, standsChosen, trips, planDeviations);
-        spirit.noteBuildStats(stats);
-        return stats;
-    }
-
-    private void logRemovals() {
-        if (!removals.isEmpty()) {
-            LOGGER.info("[clear] стройка {} духом {} сняла: {}", buildKey, spirit.displayName(), removals.summary());
-        }
-    }
-
-    private ScriptStatus fail(String reason) {
-        logRemovals();
-        noteStats();
-        failureReason = reason;
-        outcome = ScriptStatus.FAILED;
-        cancel();
-        return outcome;
-    }
-
-    private void stopSupply() {
-        if (supplyRunner != null) {
-            supplyRunner.cancel();
-            supplyRunner = null;
-        }
-    }
-
-    private void leaveSquad() {
-        BuildSquadRegistry.leave(level, buildKey, spirit.getUUID());
-    }
-
     @Override
     public Optional<Progress> progress() {
-        int total = Math.max(site.entries().size(), 1);
-        return Optional.of(new Progress(site.entries().size() - site.missing().size(), total));
+        return report.progress();
     }
 
     @Override
     public Optional<ScriptResult> result() {
-        return outcome == ScriptStatus.SUCCEEDED
-                ? Optional.of(new ScriptResult.Data(tally.toData()))
-                : Optional.empty();
+        return report.result();
     }
 
     @Override
     public void cancel() {
-        supplyWalk = null;
-        if (planPending != null) {
-            planPending.cancel(false);
-            planPending = null;
-        }
-        stopSupply();
-        approach.cancel();
-        breaker.cancel();
-        breaking = null;
-        reservations.releaseAll(spirit.getUUID());
-        leaveSquad();
+        report.cancel();
     }
 
     @Override
     public void suspend() {
-        stopSupply();
-        approach.suspend();
-        breaker.cancel();
-        breaking = null;
+        report.suspend();
     }
 
     @Override
     public String failureReason() {
-        return failureReason;
+        return report.failureReason();
     }
 
     @Override
     public Map<String, Object> saveState() {
-        return Map.copyOf(new BuildState(placed, 0, blocked.size(), failed, outcome == ScriptStatus.RUNNING).toMap());
+        return report.saveState();
     }
 
     @Override
     public void restoreState(Map<String, Object> state) {
-        BuildState snapshot = BuildState.fromMap(state);
-        placed = Math.max(placed, snapshot.placed());
-        failed = Math.max(failed, snapshot.failed());
-        String kind = site.entries().isEmpty() ? "" : site.entries().get(0).block();
-        for (int i = 0; i < snapshot.placed() && !kind.isEmpty(); i++) {
-            tally.placed(kind);
-        }
-        for (int i = 0; i < snapshot.failed(); i++) {
-            tally.failed();
-        }
+        report.restoreState(state);
     }
 
-    private BlockCoord feet() {
+    BlockCoord feet() {
         BlockPos pos = spirit.blockPosition();
         return new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
     }
