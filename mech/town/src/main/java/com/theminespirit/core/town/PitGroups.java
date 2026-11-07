@@ -1,7 +1,9 @@
 package com.theminespirit.core.town;
 
+import com.theminespirit.core.building.FillArea;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -59,6 +61,20 @@ public final class PitGroups {
         }
         pitsOut.sort(Comparator.comparing(Pit::anchor));
         return List.copyOf(pitsOut);
+    }
+
+    public static boolean overlaps(Collection<BlockCoord> cells, FillArea area) {
+        for (BlockCoord cell : cells) {
+            if (cell.x() >= area.x1()
+                    && cell.x() <= area.x2()
+                    && cell.y() >= area.y1()
+                    && cell.y() <= area.y2()
+                    && cell.z() >= area.z1()
+                    && cell.z() <= area.z2()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Pit pit(List<Column> group) {

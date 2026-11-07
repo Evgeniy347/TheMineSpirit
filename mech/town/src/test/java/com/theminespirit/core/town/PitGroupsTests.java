@@ -1,6 +1,7 @@
 package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.LinkedHashMap;
@@ -94,6 +95,17 @@ class PitGroupsTests {
         assertEquals(1, groups.size(), "Живая воронка 3×3 из снимка — одна задача, а не девять билетов");
         assertEquals(45, groups.get(0).blocks(), "9 столбцов по 5 блоков — 45 блоков одной задачей");
         assertEquals("-198,-526:3x3", groups.get(0).key(), "Ключ воронки — её минимальный столбец и размер");
+    }
+
+    @Test
+    void overlaps_OpenTaskCoversSurvivingColumn_ReusesSameId() {
+        PitGroups.Pit after =
+                PitGroups.group(Map.of(new BlockCoord(5, LEVEL - 1, 5), 2)).get(0);
+
+        assertTrue(
+                PitGroups.overlaps(after.cells(), new PlotLeveling.Box(4, LEVEL - 3, 4, 6, LEVEL - 1, 6)),
+                "Оставшийся столбец входит в старую задачу: после частичной засыпки она продолжается, "
+                        + "а не получает новый id");
     }
 
     @Test

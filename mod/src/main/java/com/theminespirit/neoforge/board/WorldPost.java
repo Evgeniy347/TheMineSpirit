@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 final class WorldPost {
     static final String REPAIR_NODE = "repair:";
@@ -94,12 +95,18 @@ final class WorldPost {
         }
         int posted = 0;
         for (PitGroups.Pit pit : PitGroups.group(found.pits())) {
-            String id = "world:backfill:" + pit.key();
-            if (post.done(id) || post.open(id)) {
-                continue;
+            String id = covering(post, pit);
+            if (id == null) {
+                id = "world:backfill:" + pit.key();
+                if (post.done(id)) {
+                    continue;
+                }
             }
             if (posted >= room) {
                 break;
+            }
+            if (post.open(id)) {
+                continue;
             }
             post.submit(
                     post.ticket(
@@ -115,6 +122,31 @@ final class WorldPost {
             posted++;
         }
         return true;
+    }
+
+    private static @Nullable String covering(GraphPost post, PitGroups.Pit pit) {
+        for (var ticket : post.service.board().all()) {
+            if (!ticket.id().startsWith("world:backfill:")) {
+                continue;
+            }
+            var status = post.service.board().statusOf(ticket.id()).orElse(null);
+            if (status == null
+                    || status == BoardStatus.DONE
+                    || status == BoardStatus.CANCELLED
+                    || post.service.targetOf(ticket.id()).isEmpty()) {
+                continue;
+            }
+            var target = post.service.targetOf(ticket.id()).orElseThrow();
+            if (target.leveling() == null) {
+                continue;
+            }
+            for (var box : target.leveling().fill()) {
+                if (PitGroups.overlaps(pit.cells(), box)) {
+                    return ticket.id();
+                }
+            }
+        }
+        return null;
     }
 
     private static boolean lot(GraphPost post, GraphTickets.Ticket ticket, SettlementScan.Strays found, int priority) {
