@@ -2,16 +2,12 @@ package com.theminespirit.neoforge.intellect;
 
 import com.theminespirit.core.board.ExpeditionMinePlan;
 import com.theminespirit.core.board.StockView;
-import com.theminespirit.core.intellect.DescentKit;
 import com.theminespirit.core.intellect.Expedition;
 import com.theminespirit.core.intellect.ExpeditionDispatch;
 import com.theminespirit.core.intellect.IntellectTuning;
-import com.theminespirit.core.intellect.OutsideRules;
-import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.neoforge.inventory.InventoryTables;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -88,7 +84,7 @@ public final class ExpeditionController {
 
     private boolean dispatchMine(List<? extends ExpeditionMember> members, Expedition expedition, long now) {
         List<ExpeditionMember> team = team(members, expedition);
-        List<String> missing = missingKit(team);
+        List<String> missing = ExpeditionKit.missing(team, stock);
         if (!missing.isEmpty()) {
             String reason = "перед спуском в шахту нужен набор: " + String.join(", ", missing);
             if (!reason.equals(refusal)) {
@@ -134,19 +130,6 @@ public final class ExpeditionController {
             missionLeader = plan.leader();
         }
         return launched;
-    }
-
-    private List<String> missingKit(List<ExpeditionMember> team) {
-        List<Stack> inventory = new ArrayList<>();
-        for (ExpeditionMember spirit : team) {
-            inventory.addAll(spirit.inventory());
-        }
-        stock.available().forEach((item, count) -> {
-            for (int left = count; left > 0; left -= 64) {
-                inventory.add(new Stack(item, 0, Math.min(left, 64), 64));
-            }
-        });
-        return DescentKit.missing(OutsideRules.loadDefault().mineKit(), inventory, InventoryTables.values());
     }
 
     private void monitorMission(List<? extends ExpeditionMember> members, long now) {
