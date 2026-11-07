@@ -15,18 +15,24 @@ final class BuiltAuditCache {
     private BuiltAuditCache() {}
 
     static FirstStepsRunner.Placed of(ServerLevel level, BoardCase step, StageSite stage, String fallback) {
+        return of(level, step, 1, stage, fallback);
+    }
+
+    static FirstStepsRunner.Placed of(
+            ServerLevel level, BoardCase step, int buildingLevel, StageSite stage, String fallback) {
         long bucket = level.getGameTime() / CACHE_TICKS;
         if (bucket != cacheBucket) {
             cacheBucket = bucket;
             CACHE.clear();
         }
-        String key = level.dimension().location() + "|" + step.name() + "|" + stage.anchor() + "|" + fallback;
-        return CACHE.computeIfAbsent(key, ignored -> compute(level, step, stage, fallback, key));
+        String key = level.dimension().location() + "|" + step.name() + "|" + buildingLevel + "|" + stage.anchor() + "|"
+                + fallback;
+        return CACHE.computeIfAbsent(key, ignored -> compute(level, step, buildingLevel, stage, fallback, key));
     }
 
     private static FirstStepsRunner.Placed compute(
-            ServerLevel level, BoardCase step, StageSite stage, String fallback, String key) {
-        BuildGap.Gap gap = FirstStepsRunner.gap(level, step, stage, fallback);
+            ServerLevel level, BoardCase step, int buildingLevel, StageSite stage, String fallback, String key) {
+        BuildGap.Gap gap = FirstStepsRunner.gap(level, step, buildingLevel, stage, fallback);
         AuditJournal.watch(level, step, key, gap);
         return new FirstStepsRunner.Placed(gap.done(), gap.total(), gap.unknown());
     }

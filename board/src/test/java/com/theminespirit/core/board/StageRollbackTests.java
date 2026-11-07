@@ -78,6 +78,40 @@ class StageRollbackTests {
     }
 
     @Test
+    void view_StageThreeOptional_ListedButNotInMissing() {
+        StageRules rules = new StageRules(
+                List.of(
+                        new StageRules.Stage(1, Map.of(BoardCase.BUILD_MINE, 1)),
+                        new StageRules.Stage(2, Map.of(BoardCase.BUILD_HOUSE, 1)),
+                        new StageRules.Stage(
+                                3,
+                                Map.of(BoardCase.BUILD_WAREHOUSE, 1),
+                                List.of("town_hall", "library"),
+                                Map.of("town_hall", 1),
+                                Map.of("library", 1))),
+                Map.of(),
+                Map.of());
+        BoardLedger ledger = new BoardLedger();
+        ledger.complete(BoardCase.BUILD_MINE, 1);
+        ledger.complete(BoardCase.BUILD_HOUSE, 1);
+        StageRollback.World world = (boardCase, planId, level) -> StageRollback.Readiness.READY;
+
+        StageView view = StageRollback.view(rules, BUILDING_STAGES, ledger, world);
+
+        assertEquals(3, view.stage(), "Третий этап открыт: первые два подтверждены");
+        assertTrue(
+                view.requirements().stream()
+                        .anyMatch(requirement -> "library".equals(requirement.id())
+                                && requirement.stage() == 3
+                                && requirement.optional()),
+                "Желательная библиотека показывается отдельно: " + view.requirements());
+        assertTrue(
+                !view.missing().containsKey("library"),
+                "Желательная постройка не держит этап: остаток не должен называть библиотеку. Остаток: "
+                        + view.missing());
+    }
+
+    @Test
     void plan_RollbackToFirst_ForgetsHigherMarksAndWorldDrift() {
         BoardLedger ledger = firstStageBuilt();
         ledger.complete(BoardCase.BUILD_WAREHOUSE, 2);

@@ -1,23 +1,25 @@
 ### GET /v1/settlement/stage
 
-Текущий этап поселения и почему он такой. Этап считается по журналу доски (`SettlementStage.of`): он стоит на
-первом этапе, у которого не закрыта хотя бы одна постройка. Ответ:
+Текущий этап поселения и почему он такой. Этап считается по **аудиту мира** против плана: он стоит на
+первом этапе, у которого мир не подтверждает хотя бы одну обязательную постройку. Журнал доски этап не
+закрывает. Ответ:
 
 ```json
 { "stage": 2, "stages": 4,
   "missing": {"BUILD_MINE": 2},
   "requirements": [
-    {"stage": 1, "id": "BUILD_HOUSE", "level": 1, "closed": true, "world": "ready"},
-    {"stage": 1, "id": "BUILD_MINE", "level": 1, "closed": true, "world": "not_ready"},
-    {"stage": 2, "id": "BUILD_MINE", "level": 2, "closed": false, "world": "unknown"}
+    {"stage": 1, "id": "BUILD_HOUSE", "level": 1, "closed": true, "world": "ready", "optional": false},
+    {"stage": 1, "id": "BUILD_MINE", "level": 1, "closed": true, "world": "not_ready", "optional": false},
+    {"stage": 2, "id": "BUILD_MINE", "level": 2, "closed": false, "world": "unknown", "optional": false}
   ] }
 ```
 
 - `stage` — этап, на котором стоит поселение; `stages + 1` значит «все этапы закрыты»;
-- `missing` — остаток текущего этапа по журналу (чего не хватает до закрытия);
-- `requirements` — постройки всех этапов до текущего включительно: что закрыто журналом (`closed`) и что стоит
-  по миру (`world`: `ready`, `not_ready`, `unknown`). Расхождение `closed: true` и `world: not_ready` — это
-  и есть «этап открылся, а постройка не готова»: лечится откатом этапа ниже.
+- `missing` — остаток текущего этапа по миру (чего мир не подтвердил до закрытия);
+- `requirements` — постройки и обязательные (`optional: false`), и желательные (`optional: true`) этапов до
+  текущего включительно; `world` — `ready`, `not_ready`, `unknown`, а `closed` — отметка журнала для сравнения.
+  Желательные переход не держат. Смена этапа принимается после трёх одинаковых аудитов подряд, поэтому один
+  сбой не дёргает этап.
 
 ### POST /v1/settlement/stage
 

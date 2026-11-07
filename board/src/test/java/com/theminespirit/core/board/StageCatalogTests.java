@@ -69,6 +69,49 @@ class StageCatalogTests {
     }
 
     @Test
+    void stageRequirements_StagesThreeAndFour_HaveCaseSchemeAndPlanEntry() {
+        StageRules rules = StageRules.load();
+        List<String> problems = new ArrayList<>();
+
+        for (int number = 3; number <= 4; number++) {
+            StageRules.Stage stage = rules.stages().get(number - 1);
+            List<String> ids = new ArrayList<>(stage.requires().keySet());
+            ids.addAll(stage.optional().keySet());
+            for (String id : ids) {
+                if (!stage.plan().contains(id)) {
+                    problems.add("этап " + number + ", " + id + ": нет в plan этапа");
+                }
+                Optional<StageCatalog.Entry> entry = StageCatalog.entry(id);
+                if (entry.isEmpty()) {
+                    problems.add("этап " + number + ", " + id + ": нет кейса и схемы");
+                    continue;
+                }
+                StageCatalog.Entry resolved = entry.orElseThrow();
+                if (DataTables.INSTANCE
+                        .presets()
+                        .current()
+                        .byId(resolved.scheme())
+                        .isEmpty()) {
+                    problems.add("этап " + number + ", " + id + ": схема '" + resolved.scheme() + "' не читается");
+                }
+                if (DataTables.INSTANCE.town().current().entry(id).isEmpty()) {
+                    problems.add("этап " + number + ", " + id + ": нет в каталоге плана town.json");
+                }
+                if (!StageCatalog.placed(id)) {
+                    problems.add("этап " + number + ", " + id + ": кейс " + resolved.boardCase()
+                            + " не ставит схему постройки плана");
+                }
+            }
+        }
+
+        assertEquals(
+                List.of(),
+                problems,
+                "Обязательные и желательные постройки этапов 3–4 обязаны иметь кейс постройки плана, схему и "
+                        + "запись в town.json; иначе этап не закрыть, а вкладка покажет пустую строку: " + problems);
+    }
+
+    @Test
     void watcherOwned_Pen_IsBuiltByGraph() {
         assertFalse(
                 StageCatalog.watcherOwned(BoardCase.BUILD_PEN),

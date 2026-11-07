@@ -29,5 +29,6 @@ final class StageBootstrap {
 
     static void forget(ServerLevel level) {
         READY.remove(level);
+        StageWorldGate.forget(level);
     }
 }

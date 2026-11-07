@@ -16,7 +16,8 @@ public record StageView(int stage, int stages, Map<String, Integer> missing, Lis
                 requirements, "Требования этапа не могут быть null: пустой этап задают пустым списком"));
     }
 
-    public record Requirement(int stage, String id, int level, boolean closed, StageRollback.Readiness world) {
+    public record Requirement(
+            int stage, String id, int level, boolean closed, StageRollback.Readiness world, boolean optional) {
         public Requirement {
             if (stage < 1) {
                 throw new IllegalArgumentException(

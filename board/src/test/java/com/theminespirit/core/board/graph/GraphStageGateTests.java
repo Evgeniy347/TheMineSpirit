@@ -42,6 +42,23 @@ class GraphStageGateTests {
     }
 
     @Test
+    void building_DamagedOrIncomplete_NotReady() {
+        GraphFacts damaged = facts(
+                new GraphFacts.Building("hut", 1, 100, 2, Map.of(), Map.of("minecraft:dirt", 2), 0, null, false, true),
+                GraphSiteFacts.Terrain.empty(),
+                List.of());
+        GraphFacts partial = facts(
+                new GraphFacts.Building("hut", 1, 99, 1, Map.of(), Map.of(), 0, null, false, true),
+                GraphSiteFacts.Terrain.empty(),
+                List.of());
+
+        assertFalse(
+                GraphStageGate.buildingReady(damaged, "hut"),
+                "Повреждённая постройка (чужое/лишнее) не закрывает этап, даже если план поставлен на 100%");
+        assertFalse(GraphStageGate.buildingReady(partial, "hut"), "Готовность ниже 100% не закрывает этап");
+    }
+
+    @Test
     void building_UnknownChunks_NotReady() {
         GraphFacts.Building unknown =
                 new GraphFacts.Building("hut", 1, 100, 0, Map.of(), Map.of(), 0, null, true, true);
@@ -85,7 +102,8 @@ class GraphStageGateTests {
     }
 
     private static GraphFacts.Building building(Map<String, Integer> missing) {
-        return new GraphFacts.Building("hut", 1, 90, 3, missing, Map.of(), 0, null, false, true);
+        int count = missing.values().stream().mapToInt(Integer::intValue).sum();
+        return new GraphFacts.Building("hut", 1, count == 0 ? 100 : 90, count, missing, Map.of(), 0, null, false, true);
     }
 
     private static GraphSiteFacts.Terrain terrain(Map<String, Integer> cut, Map<String, Integer> fill) {
