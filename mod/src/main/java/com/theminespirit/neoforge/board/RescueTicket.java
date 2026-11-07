@@ -1,22 +1,20 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.RescuePlans;
-import com.theminespirit.core.movement.PitEscape;
+import com.theminespirit.core.movement.PitExitPlanner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.DigOutScript;
+import com.theminespirit.neoforge.PickaxeCheck;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import org.jspecify.annotations.Nullable;
 
 final class RescueTicket {
@@ -36,29 +34,28 @@ final class RescueTicket {
 
     static Escape escape(ServerLevel level, SpiritEntity spirit, BlockCoord home, boolean noPath) {
         BlockPos feet = spirit.blockPosition();
-        Optional<PitEscape.Exit> pit = PitRescue.trapped(spirit);
-        int blocks = spirit.getInventory().countItem(Items.DIRT)
-                + spirit.getInventory().countItem(Items.COBBLESTONE);
-        boolean steps = pit.map(exit -> blocks >= exit.rise()).orElse(false);
-        boolean tool = canDig(spirit);
-        boolean open = DigOutScript.open(level, feet);
-        RescuePlans.Self method =
-                RescuePlans.self(new RescuePlans.Situation(pit.isPresent(), steps, tool, open, noPath));
-        return switch (method) {
-            case PIT -> {
-                PitEscape.Exit exit = pit.orElseThrow();
-                BlockCoord rim = new BlockCoord(
-                        feet.getX() + exit.rimDx(), feet.getY() + exit.rise() + 1, feet.getZ() + exit.rimDz());
-                yield new Escape(
-                        true,
-                        new FallbackNode(List.of(PitRescue.plan(spirit, exit), digOut(rim))),
-                        "яма: " + (steps ? "поднимается столбом" : "прокопает край"));
+        Optional<PitExitPlanner.Plan> pit = PitRescue.trapped(spirit);
+        if (pit.isPresent()) {
+            PitExitPlanner.Plan exit = pit.orElseThrow();
+            if (!exit.possible()) {
+                return new Escape(false, null, "яма без выхода: " + exit.why());
             }
+            return new Escape(
+                    true,
+                    new FallbackNode(List.of(PitRescue.plan(spirit, exit), digOut(exit.exit()))),
+                    "яма: " + exit.why());
+        }
+        boolean tool = PickaxeCheck.has(spirit);
+        boolean open = DigOutScript.open(level, feet);
+        RescuePlans.Self method = RescuePlans.self(new RescuePlans.Situation(false, false, tool, open, noPath));
+        return switch (method) {
+            case PIT ->
+                throw new IllegalStateException("Яма без плана выхода: PitRescue обязан назвать способ подъёма");
             case WALK ->
                 new Escape(
                         true, new FallbackNode(List.of(gotoPoint(home), digOut(home))), "путь домой есть, идёт пешком");
             case DIG -> dig(level, feet, home, open);
-            case NONE -> new Escape(false, null, refusal(pit, open, noPath));
+            case NONE -> new Escape(false, null, refusal(open, noPath));
         };
     }
 
@@ -71,10 +68,7 @@ final class RescueTicket {
                 true, new FallbackNode(List.of(digOut(goal), gotoPoint(home))), "под землёй, копает на поверхность");
     }
 
-    private static String refusal(Optional<PitEscape.Exit> pit, boolean open, boolean noPath) {
-        if (pit.isPresent()) {
-            return "в яме нужны блоки-ступени (" + pit.orElseThrow().rise() + ") или кирка";
-        }
+    private static String refusal(boolean open, boolean noPath) {
         if (!open) {
             return "под землёй нужна кирка, чтобы выйти";
         }
@@ -82,20 +76,6 @@ final class RescueTicket {
             return "пути домой нет, а кирки, чтобы прокопать, нет";
         }
         return "выход не найден: нет ступеней и кирки";
-    }
-
-    private static boolean canDig(SpiritEntity spirit) {
-        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
-            if (pickaxe(spirit.getInventory().getItem(slot))) {
-                return true;
-            }
-        }
-        return spirit.mainHandOwned() && pickaxe(spirit.getMainHandItem());
-    }
-
-    private static boolean pickaxe(ItemStack stack) {
-        return !stack.isEmpty()
-                && BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath().endsWith("_pickaxe");
     }
 
     private static ScriptCall gotoPoint(BlockCoord point) {

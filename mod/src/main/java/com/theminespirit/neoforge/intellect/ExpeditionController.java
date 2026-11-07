@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.intellect;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.ExpeditionMinePlan;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.intellect.DescentKit;
 import com.theminespirit.core.intellect.Expedition;
@@ -8,8 +9,10 @@ import com.theminespirit.core.intellect.ExpeditionDispatch;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.OutsideRules;
 import com.theminespirit.core.inventory.Stack;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.neoforge.PickaxeCheck;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.InventoryTables;
 import com.theminespirit.neoforge.inventory.StackMapper;
@@ -104,11 +107,27 @@ public final class ExpeditionController {
         }
         ExpeditionDispatch.Plan plan =
                 ExpeditionDispatch.plan(team.stream().map(SpiritEntity::getUUID).toList(), leaderId);
+        SpiritEntity leader = byId.get(plan.leader());
+        if (leader == null) {
+            leader = team.get(0);
+        }
+        if (!PickaxeCheck.has(leader)) {
+            String reason = "поход в шахту не начат: у лидера " + leader.displayName() + " нет кирки";
+            if (!reason.equals(refusal)) {
+                LOGGER.info("[graph] экспедиция отложена: {}", reason);
+            }
+            refusal = reason;
+            return false;
+        }
+        BlockCoord bottom = new BlockCoord(
+                (int) expedition.target().x(), (int) expedition.target().y(), (int)
+                        expedition.target().z());
         boolean launched = false;
         for (ExpeditionDispatch.Order order : plan.orders()) {
             SpiritEntity spirit = byId.get(order.spirit());
             if (spirit != null) {
-                launched |= launch(spirit, order.script(), order.task(), now);
+                TaskNode task = order.spirit().equals(plan.leader()) ? ExpeditionMinePlan.plan(bottom) : order.task();
+                launched |= launch(spirit, order.script(), task, now);
             }
         }
         if (launched) {

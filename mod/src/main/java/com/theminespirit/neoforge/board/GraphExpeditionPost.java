@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.graph.ActivityPlans;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.coordinator.SettlementGroups;
@@ -38,13 +39,18 @@ final class GraphExpeditionPost {
         ExpeditionController.Launcher launcher = (spirit, script, task, now) ->
                 post.launchActivity(spirit, BoardCase.ACTIVITY_EXPEDITION, new ActivityPlans.Plan(script, task));
         if (controller.active().isEmpty() && !controller.dispatchedRecently(post.now)) {
-            controller.offer(expedition(post.scan.home(), members, post.now));
+            BlockCoord bottom =
+                    MineDescentBottom.standOf(post.scan.stage().mineEntrance()).orElse(null);
+            if (bottom == null) {
+                return false;
+            }
+            controller.offer(expedition(post.scan.home(), members, post.now, bottom));
         }
         controller.update(post.spirits, post.stock, post.now, launcher);
         return true;
     }
 
-    private static Expedition expedition(BlockCoord home, List<SpiritEntity> members, long now) {
+    private static Expedition expedition(BlockCoord home, List<SpiritEntity> members, long now, BlockCoord mineBottom) {
         List<UUID> team = members.stream()
                 .sorted(Comparator.comparingDouble(
                                 (SpiritEntity spirit) -> spirit.distanceToSqr(home.x() + 0.5, home.y(), home.z() + 0.5))
@@ -52,6 +58,6 @@ final class GraphExpeditionPost {
                 .limit(IntellectTuning.loadDefault().teamMax())
                 .map(SpiritEntity::getUUID)
                 .toList();
-        return new Expedition(team, new Point(home.x() + 0.5, home.y() - 10, home.z() + 0.5), now);
+        return new Expedition(team, new Point(mineBottom.x(), mineBottom.y(), mineBottom.z()), now);
     }
 }
