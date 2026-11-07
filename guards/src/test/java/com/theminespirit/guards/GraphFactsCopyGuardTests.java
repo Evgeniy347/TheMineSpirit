@@ -123,6 +123,8 @@ class GraphFactsCopyGuardTests {
                                 "spirit-1",
                                 new GraphFacts.Position(1, 64, 2),
                                 20,
+                                Math.max(20, 1f),
+                                null,
                                 18,
                                 300,
                                 true,

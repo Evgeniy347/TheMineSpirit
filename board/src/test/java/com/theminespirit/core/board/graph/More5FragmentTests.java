@@ -149,12 +149,15 @@ class More5FragmentTests {
     }
 
     @Test
-    void more5PlayerEvent_FragmentLoad_StaysAboveCeiling() {
+    void more5PlayerEvent_FragmentLoad_StaysWithinOrdinaryCeiling() {
         GraphEvent player = GRAPH.events().get("more5_player_weak");
+        GraphPlan plan = GraphWorld.empty().event("more5_player_weak").plan();
 
-        assertEquals(20, player.band(), "Событие игрока в бою идёт отдельной полосой выше потолка");
+        assertFalse(player.life(), "Событие игрока в бою — обычное, потолок 100 оставлен только жизни");
         assertTrue(
-                player.tasks().stream().allMatch(task -> task.base() > GRAPH.maxPriority()),
-                "Все задания защиты игрока важнее обычного максимума");
+                player.tasks().stream().allMatch(task -> task.base() > 0), "У заданий защиты игрока есть вес события");
+        assertTrue(
+                plan.tasks().stream().allMatch(task -> task.priority() <= GraphPriorities.work(GRAPH)),
+                "Задания обычного события не выходят за потолок 99: " + plan.tasks());
     }
 }

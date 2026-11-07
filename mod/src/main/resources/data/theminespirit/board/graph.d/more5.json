@@ -80,7 +80,6 @@
   ],
   "events": {
     "more5_player_weak": {
-      "band": 20,
       "tasks": [
         {"id": "more5_defend_player", "case": "ACTIVITY_DEFEND", "base": 126, "consumes": {}, "implemented": true},
         {"id": "more5_feed_player", "case": "EAT_TO_FULL", "base": 117, "consumes": {"food": 1}, "implemented": true}

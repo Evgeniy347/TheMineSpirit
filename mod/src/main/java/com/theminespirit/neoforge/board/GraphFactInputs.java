@@ -13,6 +13,7 @@ import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.TownPlan;
+import com.theminespirit.neoforge.SpiritDamageWatch;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -60,6 +61,8 @@ public final class GraphFactInputs {
                             id,
                             position(spirit),
                             spirit.getHealth(),
+                            spirit.getMaxHealth(),
+                            SpiritDamageWatch.recent(spirit.getUUID(), now),
                             spirit.hunger().foodLevel(),
                             spirit.getAirSupply(),
                             spirit.isInWater(),

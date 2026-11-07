@@ -83,7 +83,20 @@ def test_fragments():
     print("OK: фрагменты графа сливаются, конфликт назван путём")
 
 
-def test_life_band():
+def life_facts(health=20, hurt=None, targets=()):
+    spirit = {"id": "spirit-1", "health": health, "maxHealth": 20}
+    if hurt is not None:
+        spirit["recentHurt"] = hurt
+    threats = [
+        {"id": "threat-" + str(index), "type": "minecraft:zombie", "health": 10,
+         "maxHealth": 20, "position": {"x": 0, "y": 64, "z": 0},
+         "target": target, "targetKind": "SPIRIT", "distance": distance}
+        for index, (target, distance) in enumerate(targets)
+    ]
+    return {"spirits": {"spirit-1": spirit}, "threats": threats}
+
+
+def test_life_priority():
     graph = Graph({
         "maxPriority": 100,
         "items": {},
@@ -91,7 +104,7 @@ def test_life_band():
         "ways": [],
         "events": {
             "life_threat": {
-                "band": 20,
+                "life": True,
                 "tasks": [
                     {"id": "defend", "case": "ACTIVITY_DEFEND", "base": 120, "consumes": {}},
                     {"id": "sleep", "case": "ACTIVITY_REST", "base": 101, "consumes": {}},
@@ -99,14 +112,28 @@ def test_life_band():
             }
         },
     })
-    tasks = plan(graph, State({"stage": 1, "events": ["life_threat"], "kits": {"spirit-1": {}}}))["tasks"]
-    by_id = {task["id"]: task["priority"] for task in tasks}
+    hurt = {"amount": 8, "source": "minecraft:zombie", "ticksAgo": 5}
+    state = State({
+        "stage": 1,
+        "kits": {"spirit-1": {}},
+        "events": ["life_threat"],
+        "facts": life_facts(health=4, hurt=hurt, targets=[("spirit-1", 2), ("spirit-1", 3)]),
+    })
+    by_id = {task["id"]: task["priority"] for task in plan(graph, state)["tasks"]}
     defend = by_id.get("event:life_threat:defend")
     sleep = by_id.get("event:life_threat:sleep")
-    assert defend is not None and sleep is not None, "Python-модель обязана видеть задания события жизни: " + str(tasks)
-    assert defend > 100 and sleep > 100, "Полоса жизни выше maxPriority и в Python: " + str(by_id)
-    assert defend >= sleep, "Защита важнее сна и в Python: " + str(by_id)
-    print("OK: полоса жизни выше maxPriority в Python")
+    assert defend == 100, "Раненый дух и два моба дают жизни потолок 100 в Python: " + str(by_id)
+    assert sleep is not None and sleep < defend, "Защита важнее сна и в Python: " + str(by_id)
+    calm = State({
+        "stage": 1,
+        "kits": {"spirit-1": {}},
+        "events": ["life_threat"],
+        "facts": life_facts(),
+    })
+    assert not any(task["id"].startswith("event:life_threat:") and task["priority"] > 0
+                   for task in plan(graph, calm)["tasks"]), \
+        "Здоровый дух без угроз не поднимает жизнь в Python"
+    print("OK: приоритет жизни считается из фактов и не выходит за 100 в Python")
 
 
 def dig_inputs(graph, facts):
@@ -529,8 +556,9 @@ def test_more5_inputs():
         assert tasks[task_id]["implemented"], "Связанное действие области выдаётся готовым: " + task_id
     water = "event:more5_crops_dry:more5_water_crops"
     assert water in tasks and tasks[water]["implemented"],         "Полив связан с действием и выдаётся готовым: " + water
-    assert tasks["event:more5_player_weak:more5_defend_player"]["priority"] > 100, \
-        "Python: защита игрока в бою выше обычного потолка"
+    defend = tasks["event:more5_player_weak:more5_defend_player"]["priority"]
+    assert 0 < defend <= 100, \
+        "Python: защита игрока не выходит за потолок доски: " + str(defend)
     print("OK: входы области graphmore5 учитываются в выборе")
 
 
@@ -683,7 +711,7 @@ def test_event_scaling():
         "ways": [],
         "events": {
             "life_threat": {
-                "band": 20,
+                "life": True,
                 "tasks": [
                     {"id": "defend", "case": "ACTIVITY_DEFEND", "base": 120, "consumes": {}},
                     {"id": "sleep", "case": "ACTIVITY_REST", "base": 101, "consumes": {}},
@@ -692,13 +720,13 @@ def test_event_scaling():
         },
     })
     scaled = graph.scaled({"events": {"life_threat": 0.5}})
-    assert scaled.events["life_threat"]["tasks"][0]["base"] == 110, \
-        "Полоса жизни масштабируется выше maxPriority: 100 + (120 - 100) / 2"
-    assert scaled.events["life_threat"]["tasks"][1]["base"] == 101, \
-        "Полоса жизни не опускается до maxPriority: сон остаётся выше 100"
+    assert scaled.events["life_threat"]["tasks"][0]["base"] == 60, \
+        "Множитель события масштабирует стартовый вес: 120 / 2"
+    assert scaled.events["life_threat"]["tasks"][1]["base"] == 51, \
+        "Множитель события масштабирует все задачи жизни: 101 / 2 с округлением"
     assert graph.events["life_threat"]["tasks"][0]["base"] == 120, \
         "Масштабирование не меняет исходный граф"
-    print("OK: множители событий меняют стартовые веса полос")
+    print("OK: множители событий меняют стартовые веса")
 
 
 def test_input_worlds():
@@ -990,13 +1018,16 @@ def test_failure_memory():
     assert far_many_ticks == 2200, \
         "Python: провал разных целей удлиняет дорогу по farTrip: " + str(far_many_ticks)
 
-    life = sim_gpu.World.settled(base).event("life_threat")
+    dangers = life_facts(health=4, targets=[("spirit-1", 2), ("spirit-1", 3)])
+    life = sim_gpu.World.settled(base).event("life_threat").with_facts(dangers)
     calm_life = next(t["priority"] for t in life.plan()["tasks"]
                      if t["id"] == "event:life_threat:defend")
     life_failed = life.copy()
-    life_failed.with_facts({"feedback": {"failures": [
+    failed_facts = life_facts(health=4, targets=[("spirit-1", 2), ("spirit-1", 3)])
+    failed_facts["feedback"] = {"failures": [
         {"node": "event:life_threat:defend", "target": "0,64,0", "count": 3,
-         "cause": "NO_PATH", "lastTick": 100}]}})
+         "cause": "NO_PATH", "lastTick": 100}]}
+    life_failed.with_facts(failed_facts)
     failed_life = next(t["priority"] for t in life_failed.plan()["tasks"]
                        if t["id"] == "event:life_threat:defend")
     assert failed_life == calm_life, \
@@ -1129,7 +1160,7 @@ def test_conformance():
 if __name__ == "__main__":
     try:
         test_fragments()
-        test_life_band()
+        test_life_priority()
         test_dig_inputs()
         test_area_nodes()
         test_store_nodes()

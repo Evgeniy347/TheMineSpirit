@@ -3,19 +3,27 @@ package com.theminespirit.core.board.graph;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import net.jqwik.api.ForAll;
+import net.jqwik.api.Property;
+import net.jqwik.api.constraints.IntRange;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 class LifeGraphPlannerTests {
+    private static final String DEFEND = "event:life_threat:defend";
+
     @Test
-    void fragment_LifeThreat_LivesInOwnFileWithBand() {
+    void fragment_LifeThreat_LivesInOwnFileWithLifeFacts() {
         SupplyGraph graph = SupplyGraph.loadDefault();
         GraphEvent life =
                 graph.events().getOrDefault("life_threat", new GraphEvent("", List.of(), Map.of(), List.of()));
 
         assertEquals("life_threat", life.name(), "Фрагмент life.json обязан добавить событие life_threat");
-        assertEquals(20, life.band(), "Жизнь идёт отдельной полосой выше обычного потолка");
+        assertTrue(life.life(), "Событие жизни помечено фактами жизни: иначе потолок 100 не отличить от работы");
         assertTrue(
                 life.tasks().stream()
                         .map(GraphEvent.Task::id)
@@ -25,67 +33,254 @@ class LifeGraphPlannerTests {
     }
 
     @Test
-    void plan_LifeThreat_DefendAboveMaxPriority() {
-        GraphWorld world = GraphWorld.settled().event("life_threat");
+    void plan_WoundedSpiritTwoMobs_DefendAtCeilingAboveEveryWork() {
+        GraphWorld world = GraphWorld.settled()
+                .event("life_threat")
+                .facts(danger("spirit-1", 4, 20, GraphFacts.TargetKind.SPIRIT, 2, 2));
         GraphPlan plan = world.plan();
 
-        int max = GraphWorld.GRAPH.maxPriority();
-        for (String id : List.of(
-                "event:life_threat:defend",
-                "event:life_threat:retreat",
-                "event:life_threat:arm",
-                "event:life_threat:heal",
-                "event:life_threat:eat",
-                "event:life_threat:sleep")) {
-            assertTrue(plan.task(id).isPresent(), "Путь жизни " + id + " обязан быть заданием: " + plan.tasks());
-            assertTrue(
-                    plan.priority(id) > max,
-                    "Защита жизни выше обычного потолка " + max + ", а не вровень: " + id + "=" + plan.priority(id));
-        }
-        assertTrue(
-                plan.priority("event:life_threat:defend") >= plan.priority("event:life_threat:sleep"),
-                "Защита важнее сна внутри полосы жизни: " + plan.tasks());
+        assertEquals(
+                GraphWorld.GRAPH.maxPriority(),
+                plan.priority(DEFEND),
+                "Раненый дух и два сагренных моба дают защите потолок графа, а не константу: " + plan.tasks());
         assertTrue(
                 plan.tasks().stream()
                         .filter(task -> !task.id().startsWith("event:life_"))
-                        .allMatch(task -> task.priority() <= max),
-                "Полоса жизни не поднимает обычные работы выше потолка: " + plan.tasks());
+                        .allMatch(task -> task.priority() <= GraphPriorities.work(GraphWorld.GRAPH)),
+                "Полоса жизни не поднимает обычные работы выше потолка 99: " + plan.tasks());
+        assertTrue(
+                plan.tasks().stream()
+                        .filter(task -> !task.id().equals(DEFEND))
+                        .allMatch(task -> task.priority() <= plan.priority(DEFEND)),
+                "Защита жизни выше остальных заданий: " + plan.tasks());
     }
 
     @Test
-    void plan_ThreatToSpirit_ProtectSpiritAboveMax() {
-        GraphPlan plan = GraphWorld.settled().event("life_threat_spirit").plan();
+    void plan_ThreatToSpirit_ProtectSpiritAtCeiling() {
+        GraphWorld world = GraphWorld.settled()
+                .event("life_threat_spirit")
+                .facts(danger("spirit-1", 4, 20, GraphFacts.TargetKind.SPIRIT, 2, 2));
+        GraphPlan plan = world.plan();
 
-        assertTrue(
-                plan.task("event:life_threat_spirit:protect_spirit").isPresent(),
-                "Есть угроза духу — защита духа: " + plan.tasks());
-        assertTrue(
-                plan.priority("event:life_threat_spirit:protect_spirit") > GraphWorld.GRAPH.maxPriority(),
-                "Защита духа выше обычного потолка: " + plan.priority("event:life_threat_spirit:protect_spirit"));
-    }
-
-    @Test
-    void plan_ThreatToPlayer_ProtectPlayerAboveMax() {
-        GraphPlan plan = GraphWorld.settled().event("life_threat_player").plan();
-
-        assertTrue(
-                plan.task("event:life_threat_player:protect_player").isPresent(),
-                "Есть угроза игроку — защита игрока: " + plan.tasks());
-        assertTrue(
-                plan.priority("event:life_threat_player:protect_player") > GraphWorld.GRAPH.maxPriority(),
-                "Защита игрока выше обычного потолка: " + plan.priority("event:life_threat_player:protect_player"));
-    }
-
-    @Test
-    void bandPriority_AnyScore_StaysAboveMaxAndKeepsOrder() {
-        assertEquals(0, GraphFlow.bandPriority(0, 100, 20), "Нет потока — нет задания");
-        assertTrue(GraphFlow.bandPriority(1, 100, 20) > 100, "Даже слабый поток жизни выше обычного потолка");
         assertEquals(
-                120,
-                GraphFlow.bandPriority(130, 100, 20),
-                "Сильный поток жизни держится в полосе, а не растёт бесконечно");
+                GraphWorld.GRAPH.maxPriority(),
+                plan.priority("event:life_threat_spirit:protect_spirit"),
+                "Есть угроза духу — защита духа на потолке: " + plan.tasks());
+    }
+
+    @Test
+    void plan_ThreatToPlayer_ProtectPlayerAtCeiling() {
+        GraphWorld world = GraphWorld.settled()
+                .event("life_threat_player")
+                .facts(danger("spirit-1", 20, 20, GraphFacts.TargetKind.PLAYER, 2, 2));
+        GraphPlan plan = world.plan();
+
+        assertEquals(
+                GraphWorld.GRAPH.maxPriority(),
+                plan.priority("event:life_threat_player:protect_player"),
+                "Два моба у игрока — защита игрока на потолке: " + plan.tasks());
+    }
+
+    @Test
+    void plan_HealthySpiritWithoutThreat_DoesNotRaiseLife() {
+        GraphWorld world = GraphWorld.settled().event("life_threat").facts(healthy("spirit-1", 20, 20));
+        GraphPlan plan = world.plan();
+
+        assertEquals(0, plan.priority(DEFEND), "Здоровый дух без угроз не поднимает жизнь: " + plan.tasks());
+    }
+
+    @Test
+    void risk_MobAggroedToOtherSpirit_RaisesOnlyItsTarget() {
+        GraphFacts facts = GraphFacts.empty()
+                .withSpirits(Map.of(
+                        "spirit-a", spirit("spirit-a", 4, 20, null),
+                        "spirit-b", spirit("spirit-b", 20, 20, null),
+                        "spirit-c", spirit("spirit-c", 10, 20, null)))
+                .withThreats(List.of(
+                        threat("threat-b", "spirit-b", GraphFacts.TargetKind.SPIRIT, 2),
+                        threat("threat-player", "player", GraphFacts.TargetKind.PLAYER, 5)));
+
+        assertEquals(0, LifeThreats.risk(facts, "spirit-a"), "Моб на другого духа не поднимает риск раненого духа");
+        assertTrue(LifeThreats.risk(facts, "spirit-b") > 0.2, "Моб, сагренный на духа, поднимает риск именно его");
+        assertEquals(0, LifeThreats.risk(facts, "spirit-c"), "Здоровый дух вне агра не получает чужую угрозу");
+    }
+
+    @Test
+    void plan_ManySpiritsAndMobs_LifeAtCeilingOnlyForAggroTargets() {
+        Map<String, GraphFacts.Spirit> spirits = new LinkedHashMap<>();
+        spirits.put("spirit-a", spirit("spirit-a", 4, 20, new GraphFacts.Hurt(6, "minecraft:zombie", 5)));
+        spirits.put("spirit-b", spirit("spirit-b", 20, 20, null));
+        spirits.put("spirit-c", spirit("spirit-c", 10, 20, null));
+        GraphFacts facts = GraphFacts.empty()
+                .withSpirits(spirits)
+                .withThreats(List.of(
+                        threat("threat-a1", "spirit-a", GraphFacts.TargetKind.SPIRIT, 1),
+                        threat("threat-a2", "spirit-a", GraphFacts.TargetKind.SPIRIT, 3),
+                        threat("threat-c", "spirit-c", GraphFacts.TargetKind.SPIRIT, 8),
+                        threat("threat-player", "player", GraphFacts.TargetKind.PLAYER, 5)));
+        GraphWorld world = GraphWorld.settled()
+                .event("life_threat")
+                .event("life_threat_spirit")
+                .event("life_threat_player")
+                .event("hungry")
+                .facts(facts);
+        GraphPlan plan = world.plan();
+
+        assertEquals(GraphWorld.GRAPH.maxPriority(), plan.priority(DEFEND), "Раненый дух под двумя мобами — потолок");
         assertTrue(
-                GraphFlow.bandPriority(110, 100, 20) > GraphFlow.bandPriority(101, 100, 20),
-                "Внутри полосы жизни порядок сохраняется");
+                plan.tasks().stream()
+                        .allMatch(task -> task.priority() >= 0 && task.priority() <= GraphWorld.GRAPH.maxPriority()),
+                "Ни одно задание графа не выходит за [0, 100]: " + plan.tasks());
+        assertTrue(
+                plan.tasks().stream()
+                        .filter(task -> !task.id().startsWith("event:life_"))
+                        .allMatch(task -> task.priority() <= GraphPriorities.work(GraphWorld.GRAPH)),
+                "Обычные задания не выше 99: " + plan.tasks());
+        assertTrue(
+                LifeThreats.risk(facts, "spirit-a") > LifeThreats.risk(facts, "spirit-c"),
+                "Два моба у духа опаснее одного дальнего");
+        assertEquals(0, LifeThreats.risk(facts, "spirit-b"), "Моб на другого духа не поднимает здорового духа");
+    }
+
+    @Test
+    void plan_OrdinaryChain_StopsBelowLifeCeiling() {
+        GraphWorld world = GraphWorld.settled()
+                .event("hungry")
+                .event("night")
+                .event("expedition_ready")
+                .event("more7_evening_return")
+                .with("oak_log", 0)
+                .with("oak_planks", 0)
+                .with("stick", 0);
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.tasks().stream().allMatch(task -> task.priority() <= GraphPriorities.work(GraphWorld.GRAPH)),
+                "Цепочка бревно → доски → палки не выходит за 99: " + plan.tasks());
+        assertEquals(
+                GraphPriorities.work(GraphWorld.GRAPH),
+                GraphFlow.priority(1_000_000, GraphPriorities.work(GraphWorld.GRAPH)),
+                "Даже бесконечный поток обычной работы упирается в 99, а не в 100");
+    }
+
+    @Property(tries = 200)
+    void plan_AnyLifeFacts_KeepsEveryPriorityInBoardRange(
+            @ForAll @IntRange(min = 0, max = 20) int health,
+            @ForAll @IntRange(min = 0, max = 4) int mobs,
+            @ForAll @IntRange(min = 0, max = 30) int distance,
+            @ForAll @IntRange(min = 0, max = 240) int hurtAge) {
+        GraphFacts.Hurt hurt =
+                health < 20 && hurtAge <= 200 ? new GraphFacts.Hurt(6, "minecraft:zombie", hurtAge) : null;
+        List<GraphFacts.Threat> threats = new ArrayList<>();
+        for (int index = 0; index < mobs; index++) {
+            threats.add(threat("threat-" + index, "spirit-1", GraphFacts.TargetKind.SPIRIT, distance + index));
+        }
+        GraphFacts facts = GraphFacts.empty()
+                .withSpirits(Map.of(
+                        "spirit-1",
+                        spirit("spirit-1", health, 20, health < 20 ? hurt : null),
+                        "spirit-2",
+                        spirit("spirit-2", 20, 20, null)))
+                .withThreats(threats);
+        GraphPlan plan = GraphWorld.settled()
+                .event("life_threat")
+                .event("life_threat_spirit")
+                .event("hungry")
+                .facts(facts)
+                .plan();
+
+        assertTrue(
+                plan.tasks().stream()
+                        .allMatch(task -> task.priority() >= 0 && task.priority() <= GraphWorld.GRAPH.maxPriority()),
+                "Свойство: приоритет из графа всегда в [0, 100], факты " + health + "/" + mobs + "/" + distance + "/"
+                        + hurtAge + ": " + plan.tasks());
+        assertTrue(
+                plan.tasks().stream()
+                        .filter(task -> !task.id().startsWith("event:life_"))
+                        .allMatch(task -> task.priority() <= GraphPriorities.work(GraphWorld.GRAPH)),
+                "Свойство: обычные задания не выше 99: " + plan.tasks());
+    }
+
+    static GraphFacts danger(
+            String spiritId, float health, float maxHealth, GraphFacts.TargetKind kind, int mobs, int distance) {
+        List<GraphFacts.Threat> threats = new ArrayList<>();
+        for (int index = 0; index < mobs; index++) {
+            threats.add(new GraphFacts.Threat(
+                    "threat-" + index,
+                    "minecraft:zombie",
+                    20,
+                    20,
+                    new GraphFacts.Position(index, 64, 0),
+                    spiritId,
+                    kind,
+                    kind == GraphFacts.TargetKind.SPIRIT,
+                    true,
+                    null,
+                    distance + index,
+                    null,
+                    0.2));
+        }
+        GraphFacts facts = GraphFacts.empty().withThreats(threats);
+        if (kind == GraphFacts.TargetKind.SPIRIT) {
+            facts = facts.withSpirits(Map.of(
+                    spiritId,
+                    new GraphFacts.Spirit(
+                            spiritId,
+                            new GraphFacts.Position(0, 64, 0),
+                            health,
+                            maxHealth,
+                            new GraphFacts.Hurt(6, "minecraft:zombie", 5),
+                            20,
+                            300,
+                            false,
+                            false,
+                            false,
+                            null,
+                            Map.of(),
+                            List.of(),
+                            List.of(),
+                            null)));
+        }
+        return facts;
+    }
+
+    static GraphFacts healthy(String spiritId, float health, float maxHealth) {
+        return GraphFacts.empty().withSpirits(Map.of(spiritId, spirit(spiritId, health, maxHealth, null)));
+    }
+
+    static GraphFacts.Spirit spirit(String spiritId, float health, float maxHealth, GraphFacts.@Nullable Hurt hurt) {
+        return new GraphFacts.Spirit(
+                spiritId,
+                new GraphFacts.Position(0, 64, 0),
+                health,
+                maxHealth,
+                hurt,
+                20,
+                300,
+                false,
+                false,
+                false,
+                null,
+                Map.of(),
+                List.of(),
+                List.of(),
+                null);
+    }
+
+    static GraphFacts.Threat threat(String id, String target, GraphFacts.TargetKind kind, int distance) {
+        return new GraphFacts.Threat(
+                id,
+                "minecraft:zombie",
+                20,
+                20,
+                new GraphFacts.Position(0, 64, distance),
+                target,
+                kind,
+                kind == GraphFacts.TargetKind.SPIRIT,
+                true,
+                null,
+                distance,
+                null,
+                0.2);
     }
 }

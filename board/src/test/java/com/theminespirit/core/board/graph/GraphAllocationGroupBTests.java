@@ -186,6 +186,8 @@ class GraphAllocationGroupBTests {
                         "spirit-1",
                         new GraphFacts.Position(0, 64, 0),
                         20,
+                        Math.max(20, 1f),
+                        null,
                         20,
                         300,
                         false,
@@ -194,7 +196,8 @@ class GraphAllocationGroupBTests {
                         null,
                         Map.of(),
                         List.of(),
-                        List.of(new GraphFacts.Tool("minecraft:stone_axe", "axe", 1, 10, 250)))),
+                        List.of(new GraphFacts.Tool("minecraft:stone_axe", "axe", 1, 10, 250)),
+                        null)),
                 Map.of());
         GraphPlan plan = plan(world);
 

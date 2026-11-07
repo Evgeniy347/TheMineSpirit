@@ -119,6 +119,8 @@ class More3RulesTests {
                 id,
                 new GraphFacts.Position(x, y, z),
                 20,
+                Math.max(20, 1f),
+                null,
                 20,
                 300,
                 false,
@@ -127,6 +129,7 @@ class More3RulesTests {
                 activity,
                 Map.of(),
                 List.of(),
-                List.of());
+                List.of(),
+                null);
     }
 }
