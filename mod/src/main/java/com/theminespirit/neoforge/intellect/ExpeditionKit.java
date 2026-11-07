@@ -27,6 +27,12 @@ public final class ExpeditionKit {
         return DescentKit.missing(OutsideRules.loadDefault().mineKit(), inventory, InventoryTables.values());
     }
 
+    public static boolean hasPickaxe(StockView stock) {
+        Objects.requireNonNull(stock, "Запасы поселения не могут быть null: без них неизвестно, есть ли кирка");
+        return stock.available().entrySet().stream()
+                .anyMatch(item -> item.getValue() > 0 && item.getKey().endsWith("_pickaxe"));
+    }
+
     static List<Stack> present(List<Stack> stacks) {
         Objects.requireNonNull(stacks, "Инвентарь духа не может быть null: пустой задают пустым списком");
         List<Stack> present = new ArrayList<>(stacks.size());

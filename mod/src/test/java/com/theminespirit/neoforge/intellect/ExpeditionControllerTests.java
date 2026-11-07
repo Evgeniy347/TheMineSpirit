@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.intellect.Expedition;
 import com.theminespirit.core.inventory.Stack;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.tactics.Point;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
 class ExpeditionControllerTests {
@@ -168,6 +172,41 @@ class ExpeditionControllerTests {
     }
 
     @Test
+    void update_LeaderLacksTorches_WithdrawsThemBeforeMine() {
+        ExpeditionController controller = new ExpeditionController();
+        Member leader = new Member(FIRST, "s1", List.of(new Stack("minecraft:diamond_pickaxe", 0, 1, 1)), true);
+        Member partner = new Member(SECOND, "s2", List.of(), true);
+        controller.offer(expedition());
+        List<TaskNode> leaderTasks = new ArrayList<>();
+
+        controller.update(
+                List.of(leader, partner),
+                new StockView(Map.of("minecraft:torch", 8, "minecraft:bread", 3)),
+                0,
+                (id, script, task, now) -> {
+                    if (FIRST.equals(id)) {
+                        leaderTasks.add(task);
+                    }
+                    return true;
+                });
+
+        assertTrue(controller.lastDispatch().isPresent(), "Набор со склада закрывает нехватку — поход начинается");
+        List<ScriptCall> steps = calls(leaderTasks.get(0));
+        int torch = index(
+                steps,
+                call -> "withdraw".equals(call.script())
+                        && "warehouse".equals(call.params().get("container"))
+                        && "minecraft:torch".equals(call.params().get("item")));
+        int mine = index(steps, call -> "mine_vein".equals(call.script()));
+        assertTrue(
+                torch >= 0 && torch < mine,
+                "Лидер добирает факелы со склада шагом withdraw до mine_vein, а не идёт в шахту без света: " + steps);
+        assertTrue(
+                steps.stream().noneMatch(call -> "acquire".equals(call.script())),
+                "Набор похода не крафтит инструменты мимо графа: " + steps);
+    }
+
+    @Test
     void update_PartnerLost_RemainingSpiritReturnsHome() {
         ExpeditionController controller = new ExpeditionController();
         Member first = new Member(FIRST, "s1", kit(), true);
@@ -187,5 +226,28 @@ class ExpeditionControllerTests {
         assertTrue(
                 scripts.contains(FIRST + ":return_home"),
                 "Потерянный напарник возвращает оставшегося домой, а не оставляет его одного: " + scripts);
+    }
+
+    private static int index(List<ScriptCall> steps, Predicate<ScriptCall> match) {
+        for (int index = 0; index < steps.size(); index++) {
+            if (match.test(steps.get(index))) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    private static List<ScriptCall> calls(TaskNode node) {
+        List<ScriptCall> found = new ArrayList<>();
+        collect(node, found);
+        return found;
+    }
+
+    private static void collect(TaskNode node, List<ScriptCall> found) {
+        if (node instanceof ScriptCall call) {
+            found.add(call);
+        } else if (node instanceof SequenceNode sequence) {
+            sequence.steps().forEach(step -> collect(step, found));
+        }
     }
 }

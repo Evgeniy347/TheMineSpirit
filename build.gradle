@@ -10,7 +10,6 @@ tasks.named('wrapper', Wrapper).configure {
 
 dependencies {
     testImplementation project(':mod')
-    testImplementation testFixtures(project(':test-fixtures'))
 }
 
 tasks.named('assemble') {

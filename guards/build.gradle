@@ -5,6 +5,8 @@ plugins {
 // lib: сторожа читают исходники и классы всех модулей, поэтому это листовой модуль:
 // на него не зависит ни один боевой модуль, а корневой test подключает его первым.
 dependencies {
+    testImplementation testFixtures(project(':board'))
+    testImplementation testFixtures(project(':mech:town'))
     testImplementation project(':board')
     testImplementation project(':tactics')
     testImplementation project(':content')

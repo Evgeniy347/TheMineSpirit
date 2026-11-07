@@ -108,14 +108,22 @@ tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
         html.required = false
     }
 }
-// lib: sourcepath нужен SpotBugs только для исходников в отчёте, но входит в ключ кэша содержимым файлов.
-// Каталоги ресурсов к анализу классов отношения не имеют: правка json заставляла повторять анализ модуля.
-// Оставляем в sourceDirs только java-исходники своей области.
+// lib: analyzable classDirs — только свои классы модуля. :mod складывает в output классы всех модулей для
+// fat jar, и без этого SpotBugs анализировал чужие классы второй раз.
 tasks.named('spotbugsMain') {
-    sourceDirs.setFrom(sourceSets.main.allJava.srcDirs)
+    classDirs.setFrom(sourceSets.main.java.destinationDirectory)
+    dependsOn tasks.named('compileJava')
+}
+// lib: sourceDirs — только для исходников в отчёте, но их содержимое входит в ключ кэша: правка комментария
+// повторяла весь анализ. Имена файлов и строки SpotBugs берёт из отладочной информации классов.
+tasks.named('spotbugsMain') {
+    sourceDirs.setFrom()
 }
 tasks.named('spotbugsTest') {
-    sourceDirs.setFrom(sourceSets.test.allJava.srcDirs)
+    sourceDirs.setFrom()
+}
+tasks.named('spotbugsTestFixtures') {
+    sourceDirs.setFrom()
 }
 
 tasks.register('staticAnalysisFast') {

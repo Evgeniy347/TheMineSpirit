@@ -2,12 +2,16 @@ package com.theminespirit.neoforge.intellect;
 
 import com.theminespirit.core.board.ExpeditionMinePlan;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.intellect.DescentKit;
 import com.theminespirit.core.intellect.Expedition;
 import com.theminespirit.core.intellect.ExpeditionDispatch;
 import com.theminespirit.core.intellect.IntellectTuning;
+import com.theminespirit.core.intellect.OutsideRules;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.neoforge.inventory.InventoryTables;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -104,7 +108,16 @@ public final class ExpeditionController {
         if (leader == null) {
             leader = team.get(0);
         }
-        if (!leader.hasPickaxe()) {
+        List<String> leaderMissing = ExpeditionKit.missing(List.of(leader), stock);
+        if (!leaderMissing.isEmpty()) {
+            String reason = "перед спуском в шахту лидеру нужен набор: " + String.join(", ", leaderMissing);
+            if (!reason.equals(refusal)) {
+                LOGGER.info("[graph] экспедиция отложена: {}", reason);
+            }
+            refusal = reason;
+            return false;
+        }
+        if (!leader.hasPickaxe() && !ExpeditionKit.hasPickaxe(stock)) {
             String reason = "поход в шахту не начат: у лидера " + leader.displayName() + " нет кирки";
             if (!reason.equals(refusal)) {
                 LOGGER.info("[graph] экспедиция отложена: {}", reason);
@@ -112,6 +125,8 @@ public final class ExpeditionController {
             refusal = reason;
             return false;
         }
+        List<ScriptCall> kit = DescentKit.supply(
+                OutsideRules.loadDefault().mineKit(), leader.inventory(), stock.available(), InventoryTables.values());
         BlockCoord bottom = new BlockCoord(
                 (int) expedition.target().x(), (int) expedition.target().y(), (int)
                         expedition.target().z());
@@ -119,7 +134,7 @@ public final class ExpeditionController {
         for (ExpeditionDispatch.Order order : plan.orders()) {
             ExpeditionMember spirit = byId.get(order.spirit());
             if (spirit != null) {
-                TaskNode task = order.spirit().equals(plan.leader()) ? ExpeditionMinePlan.plan(bottom) : order.task();
+                TaskNode task = order.spirit().equals(plan.leader()) ? leaderTask(bottom, kit) : order.task();
                 launched |= launch(spirit.id(), order.script(), task, now);
             }
         }
@@ -130,6 +145,16 @@ public final class ExpeditionController {
             missionLeader = plan.leader();
         }
         return launched;
+    }
+
+    private static TaskNode leaderTask(BlockCoord bottom, List<ScriptCall> kit) {
+        TaskNode mine = ExpeditionMinePlan.plan(bottom);
+        if (kit.isEmpty()) {
+            return mine;
+        }
+        List<TaskNode> steps = new ArrayList<>(kit);
+        steps.add(mine);
+        return new SequenceNode(steps);
     }
 
     private void monitorMission(List<? extends ExpeditionMember> members, long now) {

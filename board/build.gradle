@@ -9,6 +9,12 @@ dependencies {
     implementation project(':mech:inventory')
     implementation project(':mech:crafting')
     implementation project(':mech:small')
+    testImplementation testFixtures(project(':board'))
+    testImplementation testFixtures(project(':mech:town'))
+    testFixturesImplementation project(':mech:town')
+    testFixturesImplementation project(':mech:forestry')
+    testFixturesImplementation platform("org.junit:junit-bom:${junit_version}")
+    testFixturesImplementation 'org.junit.jupiter:junit-jupiter-api'
     testImplementation project(':content')
     testImplementation project(':tactics')
     testImplementation project(':mech:forestry')

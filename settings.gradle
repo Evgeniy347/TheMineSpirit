@@ -20,6 +20,7 @@ pluginManagement {
 
 plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+    id 'net.neoforged.moddev.repositories' version "${moddev_plugin_version}"
 }
 
 // lib: единственное место зависимостей сборки. project-уровень repositories выключает управление из settings
@@ -31,36 +32,8 @@ dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.PREFER_SETTINGS
     repositories {
         mavenCentral()
-        maven {
-            name = 'Mojang Meta'
-            url = 'https://maven.neoforged.net/mojang-meta/'
-            metadataSources {
-                gradleMetadata()
-            }
-            content {
-                includeModule 'net.neoforged', 'minecraft-dependencies'
-            }
-        }
-        maven {
-            name = 'NeoForged Releases'
-            url = 'https://maven.neoforged.net/releases/'
-            content {
-                // lib: только группы, которых нет в Maven Central; иначе каждый артефакт пробует этот хост.
-                includeGroupByRegex 'net\\.neoforged.*'
-                includeGroupByRegex 'cpw\\.mods.*'
-                includeGroupByRegex 'net\\.minecraftforge.*'
-            }
-        }
-        maven {
-            name = 'Mojang Minecraft Libraries'
-            url = 'https://libraries.minecraft.net/'
-            metadataSources {
-                mavenPom()
-            }
-            content {
-                includeGroupByRegex 'com\\.mojang.*'
-            }
-        }
+        // lib: репозитории NeoForged, Mojang Meta и Mojang Libraries добавляет
+        // net.neoforged.moddev.repositories из pluginManagement: свои копии здесь дублируют их.
         maven {
             name = 'ParchmentMC'
             url = 'https://maven.parchmentmc.org'
@@ -71,13 +44,6 @@ dependencyResolutionManagement {
         maven {
             name = 'BlameJared'
             url = 'https://maven.blamejared.com'
-            content {
-                includeGroup 'mezz.jei'
-            }
-        }
-        // lib: JEI на сервере лежит в ~/.m2 (maven.blamejared оттуда временами недоступен); последним и только
-        // для mezz.jei, чтобы не подменять остальные зависимости локальной машиной.
-        mavenLocal {
             content {
                 includeGroup 'mezz.jei'
             }

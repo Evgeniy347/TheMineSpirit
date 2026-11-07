@@ -186,11 +186,8 @@ final class GatherPlans {
     }
 
     static TaskNode shovel() {
-        return new FallbackNode(List.of(
-                ActionToolPlans.shovel(),
-                new ScriptCall(ACQUIRE, Map.of(ITEM, "*_shovel", COUNT, 1)),
-                new ScriptCall(ACQUIRE, Map.of(ITEM, "wooden_shovel", COUNT, 1)),
-                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
+        return new FallbackNode(
+                List.of(ActionToolPlans.shovel(), new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
     private static TaskNode tool(String kind, String wooden) {

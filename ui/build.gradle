@@ -8,4 +8,5 @@ dependencies {
     implementation project(':mech:building')
     implementation project(':mech:town')
     implementation project(':mech:mining')
+    testImplementation testFixtures(project(':mech:town'))
 }

@@ -10,7 +10,9 @@
 # Использование:
 #   scripts/testing/measure-analyzers.sh [--variant A|B|C|D|E|none] [--omit "Detector1,Detector2"]
 #                                        [--label ИМЯ] [--samples N] [--out КАТАЛОГ] [--analyzers-only]
+#                                        [--jfr-detectors]
 #   --analyzers-only  без полного unit: только задачи анализаторов :mod и :gametest (быстрый замер под нагрузкой)
+#   --jfr-detectors   профиль детекторов SpotBugs: JFR-запись JVM SpotBugs и топ-15 по выборкам (без unit)
 #
 # Варианты:
 #   A/none  как сейчас
@@ -29,6 +31,7 @@ SAMPLES=2
 OUT="${THEMINESPIRIT_ANALYZERS_OUT:-TestResults/analyzers}"
 OMIT=""
 ANALYZERS_ONLY=0
+JFR_DETECTORS=0
 INIT_SCRIPT=""
 EDIT_TARGETS=(
     "mod/src/main/java/com/theminespirit/neoforge/BuildSquadRegistry.java|BuildSquad squad = squads.computeIfAbsent(key, ignored -> new BuildSquad());"
@@ -48,6 +51,7 @@ while [ $# -gt 0 ]; do
         --samples) SAMPLES="${2:-}"; shift 2 ;;
         --out) OUT="${2:-}"; shift 2 ;;
         --analyzers-only) ANALYZERS_ONLY=1; shift ;;
+        --jfr-detectors) JFR_DETECTORS=1; shift ;;
         -h|--help) usage ;;
         *) echo "Неизвестный аргумент: $1" >&2; usage ;;
     esac
@@ -183,7 +187,14 @@ EOF
 }
 
 latest_profile() {
-    ls -t build/reports/profile/profile-*.html 2>/dev/null | head -1
+    local marker="$1" file
+    for file in $(ls -t build/reports/profile/profile-*.html 2>/dev/null); do
+        if [ -z "$marker" ] || [ "$file" -nt "$marker" ]; then
+            printf '%s\n' "$file"
+            return 0
+        fi
+    done
+    return 0
 }
 
 # lib: профиль Gradle — HTML-таблица задач; группируем по имени задачи и модулю.
@@ -233,11 +244,14 @@ PY
 }
 
 run_measured() {
-    local command="$1" sample="$2" start end wall profile summary total java
+    local command="$1" sample="$2" start end wall profile summary total java stamp marker
     local extra=()
     [ -n "$INIT_SCRIPT" ] && extra=(-I "$INIT_SCRIPT")
     java="$(java_count)"
     start=$(date +%s)
+    stamp="$(date -d "@$start" +%Y%m%d-%H%M%S 2>/dev/null || date +%Y%m%d-%H%M%S)"
+    marker="$OUT/.profile-start-$stamp-$$-$sample"
+    : >"$marker"
     if [ "$command" = "unit" ]; then
         THEMINESPIRIT_GRADLEW="$PROFILE_WRAPPER" bash scripts/test.sh unit >"$OUT/$LABEL-s$sample-unit.log" 2>&1
     elif [ "$command" = "analyzers" ]; then
@@ -252,12 +266,17 @@ run_measured() {
     local code=$?
     end=$(date +%s)
     wall=$((end - start))
-    profile="$(latest_profile)"
+    profile="$(latest_profile "$marker")"
+    rm -f "$marker"
+    if [ "$code" -ne 0 ]; then
+        echo "measure-analyzers: $command упал (код $code) — замер не записан, старый профиль не берём" >&2
+        return "$code"
+    fi
     if [ -z "$profile" ]; then
-        echo "measure-analyzers: нет профиля после $command (код $code)" >&2
+        echo "measure-analyzers: нет нового профиля после $command (старт $stamp, код $code)" >&2
         return 1
     fi
-    cp "$profile" "$OUT/$LABEL-s$sample-$command-profile.html"
+    cp "$profile" "$OUT/$LABEL-s$sample-$command-$stamp-profile.html"
     summary="$(parse_profile "$profile")"
     total="$(printf '%s\n' "$summary" | awk -F'\t' '$1=="TOTAL" {print}')"
     if [ -z "$total" ]; then
@@ -280,6 +299,67 @@ run_measured() {
         printf "   %-22s compile %6.1f  test %6.1f  spotless %5.1f  checkstyle %6.1f  pmd %6.1f  spotbugs %6.1f\n", $2,$3,$4,$5,$6,$7,$8 }'
     return "$code"
 }
+
+run_jfr_detectors() {
+    local stamp jfr init log
+    stamp="$(date +%Y%m%d-%H%M%S)"
+    jfr="$OUT/spotbugs-detectors-$LABEL-$stamp.jfr"
+    init="$OUT/jfr-detectors-$LABEL-$stamp.init.gradle"
+    log="$OUT/$LABEL-jfr-detectors-$stamp.log"
+    cat >"$init" <<EOF
+// lib: measure-analyzers TEMP (не коммитить) — JFR-профиль детекторов SpotBugs.
+gradle.allprojects { p ->
+    if (p.name in ["mod", "gametest"]) {
+        p.tasks.matching { it.name == "spotbugsMain" }.configureEach { t ->
+            if (t.hasProperty("jvmArgs")) {
+                t.jvmArgs.add("-XX:StartFlightRecording=filename=$jfr,settings=profile,dumponexit=true")
+            }
+        }
+    }
+}
+EOF
+    ./gradlew :mod:spotbugsMain :gametest:spotbugsMain --no-build-cache -Ptheminespirit.analyzers=on \
+        -I "$init" --console=plain >"$log" 2>&1 \
+        || { echo "measure-analyzers: JFR-профиль не снят, см. $log" >&2; return 1; }
+    [ -s "$jfr" ] || { echo "measure-analyzers: JFR-файл пуст или не создан: $jfr" >&2; return 1; }
+    echo "measure-analyzers: JFR-профиль $jfr (лог $log)"
+    "$PY" - "$jfr" <<'PY'
+import json
+import sys
+from collections import Counter
+
+path = sys.argv[1]
+with open(path, encoding='utf-8') as stream:
+    data = json.load(stream)
+events = data.get('events') or data.get('recording', {}).get('events') or []
+counts = Counter()
+samples = 0
+for event in events:
+    if event.get('type') != 'jdk.ExecutionSample':
+        continue
+    samples += 1
+    frames = event.get('values', {}).get('stackTrace', {}).get('frames', [])
+    for frame in frames:
+        method = frame.get('method', {})
+        owner = method.get('type', {}).get('name', '')
+        if owner.startswith('edu.umd.cs.findbugs.detect.'):
+            counts[owner.rsplit('.', 1)[-1]] += 1
+            break
+if samples == 0:
+    raise SystemExit('в JFR нет выборок jdk.ExecutionSample: запись не про SpotBugs')
+print(f'выборок: {samples}')
+for detector, count in counts.most_common(15):
+    print(f'{detector:44s} {count:6d} {100.0 * count / samples:5.1f}%')
+PY
+}
+
+if [ "$JFR_DETECTORS" = 1 ]; then
+    mkdir -p "$OUT"
+    apply_variant
+    [ -n "$INIT_SCRIPT" ] && cp "$INIT_SCRIPT" "$OUT/$LABEL-variant.init.gradle"
+    run_jfr_detectors
+    exit $?
+fi
 
 if [ ! -f "$MEASURE_TSV" ]; then
     printf 'label\tvariant\tsample\tcommand\twall_s\tjava\tcompile\ttest\tspotless\tcheckstyle\tpmd\tspotbugs\tanalyzers\tbase\tshare_pct\n' >"$MEASURE_TSV"
