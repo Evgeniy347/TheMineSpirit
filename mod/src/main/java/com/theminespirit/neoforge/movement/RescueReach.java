@@ -58,6 +58,7 @@ public final class RescueReach {
     public static final class Cache {
         private final Map<Key, Entry> verdicts = new LinkedHashMap<>();
         private final Map<Key, Probe> pending = new LinkedHashMap<>();
+        private long generation;
 
         public @Nullable Verdict verdict(UUID helper, BlockCoord from, BlockCoord target, long now) {
             Objects.requireNonNull(helper, "Помощник не может быть null: кэш адресный");
@@ -105,8 +106,13 @@ public final class RescueReach {
             }
         }
 
+        public long generation() {
+            return generation;
+        }
+
         private void remember(Probe probe, Verdict verdict, long now) {
             verdicts.put(probe.key, new Entry(verdict, now));
+            generation++;
             if (verdicts.size() > MAX_VERDICTS) {
                 Iterator<Key> oldest = verdicts.keySet().iterator();
                 oldest.next();

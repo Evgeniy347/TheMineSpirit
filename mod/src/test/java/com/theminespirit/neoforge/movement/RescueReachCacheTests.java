@@ -66,6 +66,19 @@ class RescueReachCacheTests {
     }
 
     @Test
+    void cache_CompletedVerdict_AdvancesGeneration() {
+        RescueReach.Cache cache = new RescueReach.Cache();
+        long before = cache.generation();
+        cache.request(FLAT, cell -> false, HELPER, FROM, TARGET, 0);
+        finish(cache, 0);
+
+        assertTrue(
+                cache.generation() > before,
+                "Готовый вердикт меняет поколение кэша: граф обязан проснуться и выдать помощника, а не ждать "
+                        + "следующего цикла до 600 тиков (debtnav, п.2)");
+    }
+
+    @Test
     void verdict_WaterAtEnd_NotReachable() {
         RescueReach.Cache cache = new RescueReach.Cache();
         cache.request(FLAT, cell -> true, HELPER, FROM, TARGET, 0);
