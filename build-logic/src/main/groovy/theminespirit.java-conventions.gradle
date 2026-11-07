@@ -13,10 +13,6 @@ file("${rootProject.projectDir}/gradle.properties").withInputStream { rootProper
 def versionOf = { String key -> rootProperties.getProperty(key) }
 def configAt = { String relative -> new File(rootProject.projectDir, "config/${relative}") }
 
-repositories {
-    mavenCentral()
-}
-
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 dependencies {
@@ -141,8 +137,8 @@ tasks.named('check') {
     dependsOn tasks.named('staticAnalysis')
 }
 
-// владелец 07.11: SpotBugs, PMD и Checkstyle выключены (время сборки); включить: -Ptheminespirit.analyzers=on
-// или analyzers=on в gradle.properties. Spotless (формат) и Error Prone (в компиляторе) работают всегда.
+// lib: владелец 07.11: SpotBugs, PMD и Checkstyle выключены (время сборки); включить: -Ptheminespirit.analyzers=on
+// lib: или analyzers=on в gradle.properties. Spotless (формат) и Error Prone (в компиляторе) работают всегда.
 if (findProperty('theminespirit.analyzers') != 'on') {
     tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach { enabled = false }
     tasks.withType(Pmd).configureEach { enabled = false }
