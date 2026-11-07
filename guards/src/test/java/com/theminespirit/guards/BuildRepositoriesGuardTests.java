@@ -65,6 +65,14 @@ class BuildRepositoriesGuardTests {
         assertTrue(
                 root.contains("https://maven.blamejared.com"),
                 "settings.gradle без maven.blamejared.com: compileOnly JEI (mezz.jei) не разрешится");
+        int managed = root.indexOf("dependencyResolutionManagement");
+        int mojangMeta = root.indexOf("'Mojang Meta'", managed);
+        int neoforged = root.indexOf("'NeoForged Releases'", managed);
+        assertTrue(
+                mojangMeta > managed && mojangMeta < neoforged,
+                "settings.gradle: репозиторий «Mojang Meta» должен идти раньше «NeoForged Releases» — "
+                        + "net.neoforged:minecraft-dependencies лежит только в mojang-meta, и иначе Gradle ищет "
+                        + "его на maven.neoforged.net/releases, а сбой сети отключает репозиторий на весь прогон");
         assertTrue(
                 buildLogic.contains("https://maven.neoforged.net/releases"),
                 "build-logic/settings.gradle без maven.neoforged.net: moddev-gradle не найдётся, если плагин-портал "
