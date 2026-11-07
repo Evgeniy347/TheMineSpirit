@@ -69,6 +69,10 @@ class ExpeditionMinePlanTests {
         TaskNode plan = ExpeditionMinePlan.plan(BOTTOM);
 
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
+        assertEquals(
+                4,
+                scripts(plan).size(),
+                "Поход собран из четырёх шагов каталога: спуск, ход, руда из хода, возврат домой");
     }
 
     private static List<String> scripts(TaskNode plan) {

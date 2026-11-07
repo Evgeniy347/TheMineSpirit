@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
@@ -42,7 +43,7 @@ final class PitStairPlanner {
             PitExitPlanner.Supplies supplies,
             Set<BlockCoord> protectedCells,
             int surface) {
-        PriorityQueue<Node> queue = new PriorityQueue<>(Comparator.comparingInt(Node::cost)
+        Queue<Node> queue = new PriorityQueue<>(Comparator.comparingInt(Node::cost)
                 .thenComparingInt(node -> node.at().y()));
         Map<BlockCoord, Step> came = new HashMap<>();
         Map<BlockCoord, Integer> best = new HashMap<>();
@@ -69,7 +70,7 @@ final class PitStairPlanner {
             Set<BlockCoord> protectedCells,
             Map<BlockCoord, Step> came,
             Map<BlockCoord, Integer> best,
-            PriorityQueue<Node> queue) {}
+            Queue<Node> queue) {}
 
     private static void explore(Node node, Context context) {
         BlockCoord feet = context.feet();
@@ -77,7 +78,7 @@ final class PitStairPlanner {
         Set<BlockCoord> protectedCells = context.protectedCells();
         Map<BlockCoord, Step> came = context.came();
         Map<BlockCoord, Integer> best = context.best();
-        PriorityQueue<Node> queue = context.queue();
+        Queue<Node> queue = context.queue();
         for (int[] side : sides()) {
             BlockCoord flat = new BlockCoord(
                     node.at().x() + side[0], node.at().y(), node.at().z() + side[1]);
