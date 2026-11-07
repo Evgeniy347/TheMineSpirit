@@ -86,6 +86,8 @@ class GraphLiveStageOneTests {
                                 "spirit-1",
                                 new GraphFacts.Position(0, 64, 0),
                                 20.0f,
+                                Math.max(20.0f, 1f),
+                                null,
                                 20,
                                 300,
                                 false,

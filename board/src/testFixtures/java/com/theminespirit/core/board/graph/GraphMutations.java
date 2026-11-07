@@ -153,6 +153,8 @@ final class GraphMutations {
                             "spirit-" + index,
                             new Position(index - 1, 64, 0),
                             20.0f,
+                            20.0f,
+                            null,
                             20,
                             300,
                             false,
@@ -161,7 +163,8 @@ final class GraphMutations {
                             null,
                             Map.of(),
                             List.of(),
-                            List.of()));
+                            List.of(),
+                            null));
         }
         world.facts = new GraphFacts(
                 spirits,

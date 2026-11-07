@@ -2,6 +2,7 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.neoforge.SpiritDamageWatch;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.LifeInputs;
 import java.util.List;
@@ -31,6 +32,11 @@ public final class LifeScenesGameTests {
         Zombie zombie = helper.spawn(EntityType.ZOMBIE, ZOMBIE_START);
         zombie.setPersistenceRequired();
         zombie.setTarget(spirit);
+        float healthBefore = spirit.getHealth();
+        helper.assertTrue(
+                spirit.hurt(helper.getLevel().damageSources().mobAttack(zombie), 4.0F),
+                "Зомби обязан ранить духа: иначе свежий урон не проверить в мире");
+        int distance = (int) Math.round(Math.sqrt(zombie.distanceToSqr(spirit)));
 
         helper.succeedWhen(() -> {
             LifeInputs.Input input = LifeInputs.of(helper.getLevel(), List.of(spirit), Set.of());
@@ -47,9 +53,22 @@ public final class LifeScenesGameTests {
                     threat.targetKind() == GraphFacts.TargetKind.SPIRIT && threat.targetingSelf(),
                     "Цель зомби — дух: связь «угроза духу → защитить», вид " + threat.targetKind());
             helper.assertTrue(
+                    spirit.getUUID().toString().equals(threat.target()),
+                    "Угроза называет духа, на которого агрена: " + threat.target());
+            helper.assertTrue(
                     input.events().contains("life_threat") && input.events().contains("life_threat_spirit"),
                     "Угроза духу поднимает события жизни и защиты духа: " + input.events());
-            helper.assertTrue(threat.distance() >= 0, "Расстояние до угрозы считается от духов: " + threat.distance());
+            helper.assertTrue(
+                    Math.abs(threat.distance() - distance) <= 1,
+                    "Расстояние моба считается до духа-цели: " + threat.distance() + " вместо " + distance);
+            helper.assertTrue(
+                    spirit.getHealth() < healthBefore,
+                    "Урон в мире уменьшает здоровье духа: " + spirit.getHealth() + "/" + healthBefore);
+            GraphFacts.Hurt hurt =
+                    SpiritDamageWatch.recent(spirit.getUUID(), helper.getLevel().getGameTime());
+            helper.assertTrue(
+                    hurt != null && hurt.amount() > 0 && "minecraft:zombie".equals(hurt.source()),
+                    "Свежий урон духу известен графу: " + hurt);
             zombie.discard();
             TacticsScene.finish(helper, spirit);
         });

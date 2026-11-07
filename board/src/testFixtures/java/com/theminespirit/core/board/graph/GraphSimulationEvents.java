@@ -158,6 +158,8 @@ final class GraphSimulationEvents {
                 spirit.id(),
                 spirit.position(),
                 spirit.health(),
+                Math.max(spirit.health(), 1f),
+                null,
                 spirit.food(),
                 spirit.air(),
                 spirit.inWater(),

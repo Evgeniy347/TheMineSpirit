@@ -40,4 +40,20 @@ public final class DemolitionKey {
                 .limit(BATCH)
                 .toList();
     }
+
+    public static boolean withinStand(BlockCoord stand, List<BlockCoord> cells) {
+        Objects.requireNonNull(stand, "Стенд уборки не может быть null: вокруг него собирают пакет");
+        Objects.requireNonNull(cells, "Клетки дерева не могут быть null: пустое дерево не собирают");
+        return cells.stream()
+                .allMatch(at -> Math.abs(at.x() - stand.x()) <= RADIUS && Math.abs(at.z() - stand.z()) <= RADIUS);
+    }
+
+    public static List<BlockCoord> treePiece(List<BlockCoord> candidates, BlockCoord stand) {
+        Objects.requireNonNull(candidates, "Кандидаты уборки не могут быть null: без них нет куска");
+        Objects.requireNonNull(stand, "Стенд уборки не может быть null: вокруг него собирают пакет");
+        return candidates.stream()
+                .filter(at -> Math.abs(at.x() - stand.x()) <= RADIUS && Math.abs(at.z() - stand.z()) <= RADIUS)
+                .limit(BATCH)
+                .toList();
+    }
 }

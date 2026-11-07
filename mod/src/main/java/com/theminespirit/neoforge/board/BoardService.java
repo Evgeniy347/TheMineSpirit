@@ -47,7 +47,7 @@ public final class BoardService {
     private final BoardHerdDesk herd;
     private final BoardSupplyDesk supply;
     private final BoardDispatchDesk dispatch;
-    private final BoardTicketDesk tickets;
+    final BoardTicketDesk tickets;
     private Set<String> liveCauses = Set.of();
     private long lastRebuild = -1;
     private int rebuilds;

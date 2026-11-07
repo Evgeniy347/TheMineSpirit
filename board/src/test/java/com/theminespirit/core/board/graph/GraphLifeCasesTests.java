@@ -3,7 +3,6 @@ package com.theminespirit.core.board.graph;
 import static com.theminespirit.core.board.graph.GraphCaseFixtures.busySettlement;
 import static com.theminespirit.core.board.graph.GraphCaseFixtures.home;
 import static com.theminespirit.core.board.graph.GraphCaseFixtures.ids;
-import static com.theminespirit.core.board.graph.GraphCaseFixtures.maxWork;
 import static com.theminespirit.core.board.graph.GraphCaseFixtures.tickets;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -23,13 +22,21 @@ class GraphLifeCasesTests {
     private static final String IDLE = "event:more6_spirit_idle:more6_assign_idle";
 
     @Test
-    void tickets_Threat_DefendFirstAboveAnyWork() {
-        GraphWorld world = busySettlement().event("life_threat");
+    void tickets_Threat_DefendFirstAtGraphCeiling() {
+        GraphWorld world = busySettlement()
+                .event("life_threat")
+                .facts(LifeGraphPlannerTests.danger("spirit-1", 4, 20, GraphFacts.TargetKind.SPIRIT, 2, 2));
         GraphPlan plan = world.plan();
 
+        assertEquals(
+                GraphWorld.GRAPH.maxPriority(),
+                plan.priority(DEFEND),
+                "Защита жизни получает потолок графа, а не значение выше доски: " + plan.priority(DEFEND));
         assertTrue(
-                plan.priority(DEFEND) > GraphWorld.GRAPH.maxPriority(),
-                "Защита жизни выше потолка работ: " + plan.priority(DEFEND));
+                plan.tasks().stream()
+                        .filter(task -> !task.id().startsWith("event:life_"))
+                        .allMatch(task -> task.priority() <= GraphPriorities.work(GraphWorld.GRAPH)),
+                "Обычные работы не поднимаются выше 99: " + plan.tasks());
         assertEquals(
                 DEFEND,
                 tickets(world.state()).post().get(0).task().id(),
@@ -40,33 +47,35 @@ class GraphLifeCasesTests {
     }
 
     @Test
-    void tickets_Hungry_EatFirstAboveAnyWork() {
+    void tickets_Hungry_EatStaysWithinOrdinaryCeiling() {
         GraphWorld world = busySettlement().event("hungry");
         GraphPlan plan = world.plan();
 
         assertTrue(
-                plan.priority(EAT) > maxWork(plan),
-                "Голодный дух ест раньше работы: иначе он падает на рубке с полным сундуком еды. Еда "
-                        + plan.priority(EAT) + ", самая важная работа " + maxWork(plan) + ", задания " + ids(plan));
-        assertEquals(
-                EAT,
-                tickets(world.state()).post().get(0).task().id(),
-                "Первое задание доски — еда, а не стройка или рубка");
+                plan.priority(EAT) > 0 && plan.priority(EAT) <= GraphPriorities.work(GraphWorld.GRAPH),
+                "Еда — обычное событие: она важна, но не выше потолка 99. Еда " + plan.priority(EAT) + ", задания "
+                        + ids(plan));
+        assertTrue(
+                tickets(world.state()).post().stream()
+                        .anyMatch(ticket -> ticket.task().id().equals(EAT)),
+                "Голодный дух получает задание доски «поесть»: "
+                        + tickets(world.state()).post());
     }
 
     @Test
-    void tickets_EveningOutside_ReturnHomeAboveAnyWork() {
+    void tickets_EveningOutside_ReturnHomeWithinOrdinaryCeiling() {
         GraphWorld world = busySettlement().event("more7_evening_return");
         GraphPlan plan = world.plan();
 
         assertTrue(
-                plan.priority(RETURN) > maxWork(plan),
-                "Перед ночью дух возвращается домой раньше новой работы: иначе он ночует в лесу. Возврат "
-                        + plan.priority(RETURN) + ", работа " + maxWork(plan) + ", задания " + ids(plan));
-        assertEquals(
-                RETURN,
-                tickets(world.state()).post().get(0).task().id(),
-                "Первое задание доски вечером — возврат домой");
+                plan.priority(RETURN) > 0 && plan.priority(RETURN) <= GraphPriorities.work(GraphWorld.GRAPH),
+                "Возврат домой — обычное событие, не выше потолка 99. Возврат " + plan.priority(RETURN) + ", задания "
+                        + ids(plan));
+        assertTrue(
+                tickets(world.state()).post().stream()
+                        .anyMatch(ticket -> ticket.task().id().equals(RETURN)),
+                "Вечером дух получает задание доски «вернуться домой»: "
+                        + tickets(world.state()).post());
     }
 
     @Test

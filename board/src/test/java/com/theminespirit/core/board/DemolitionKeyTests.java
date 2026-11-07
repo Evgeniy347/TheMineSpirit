@@ -35,4 +35,35 @@ class DemolitionKeyTests {
                 "Билет берёт кусок под одну область clear_area (радиус 4 и три слоя), а не весь участок");
         assertTrue(!piece.contains(far), "Далёкая клетка — другой кусок со своим билетом");
     }
+
+    @Test
+    void treePiece_NeighbourTrees_ShareOneStandWithoutCuttingTrunks() {
+        BlockCoord stand = new BlockCoord(0, 64, 0);
+        BlockCoord firstTree = new BlockCoord(1, 70, 1);
+        BlockCoord secondTree = new BlockCoord(3, 71, -2);
+        List<BlockCoord> cells = List.of(
+                new BlockCoord(1, 65, 1),
+                new BlockCoord(1, 66, 1),
+                firstTree,
+                new BlockCoord(3, 65, -2),
+                new BlockCoord(3, 66, -2),
+                secondTree);
+
+        assertTrue(
+                DemolitionKey.withinStand(stand, List.of(firstTree, secondTree)),
+                "Два дерева в радиусе 4 от общего стенда — один пакет уборки");
+        assertEquals(
+                cells,
+                DemolitionKey.treePiece(cells, stand),
+                "Пакет нескольких деревьев у общего стенда не режет стволы по высоте: иначе от дерева остаётся "
+                        + "только верхушка");
+    }
+
+    @Test
+    void withinStand_TreeFarFromStand_IsAnotherTicket() {
+        BlockCoord stand = new BlockCoord(0, 64, 0);
+        assertTrue(
+                !DemolitionKey.withinStand(stand, List.of(new BlockCoord(0, 65, 0), new BlockCoord(10, 65, 0))),
+                "Дерево за радиусом стенда — отдельный билет: общий стенд до него не достаёт");
+    }
 }

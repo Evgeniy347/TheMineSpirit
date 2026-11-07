@@ -82,9 +82,14 @@ final class GraphObserve {
             return Optional.empty();
         }
         if (WHEAT_FIELD.equals(id)) {
-            return wheatField(level, service);
+            Optional<TownSnapshot.Progress> current = wheatField(level, service);
+            current.ifPresent(snapshot -> service.tickets.progress.remember(id, snapshot));
+            return current.isPresent() ? current : service.tickets.progress.last(id);
         }
-        return Optional.of(FirstStepsRunner.progress(level, service, building.boardCase(), scan.stage(), scan.wood()));
+        TownSnapshot.Progress current =
+                FirstStepsRunner.progress(level, service, building.boardCase(), scan.stage(), scan.wood());
+        service.tickets.progress.remember(id, current);
+        return Optional.of(current);
     }
 
     private static Optional<TownSnapshot.Progress> wheatField(ServerLevel level, BoardService service) {

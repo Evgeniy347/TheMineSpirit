@@ -127,6 +127,8 @@ class GraphAllocationGroupCTests {
                         "spirit-1",
                         new GraphFacts.Position(0, 64, 0),
                         20,
+                        Math.max(20, 1f),
+                        null,
                         20,
                         300,
                         false,
@@ -135,7 +137,8 @@ class GraphAllocationGroupCTests {
                         null,
                         Map.of("minecraft:oak_log", 5),
                         List.of(),
-                        tools("axe", 1))),
+                        tools("axe", 1),
+                        null)),
                 Map.of("minecraft:cobblestone", 10));
         GraphTickets.Result result = tickets(world);
 
@@ -184,6 +187,8 @@ class GraphAllocationGroupCTests {
                 "spirit-1",
                 new GraphFacts.Position(0, 64, 0),
                 20,
+                Math.max(20, 1f),
+                null,
                 20,
                 300,
                 false,
@@ -192,7 +197,8 @@ class GraphAllocationGroupCTests {
                 null,
                 Map.of("minecraft:oak_log", 5),
                 List.of(),
-                tools("axe", 1))));
+                tools("axe", 1),
+                null)));
         GraphTickets.Result result = tickets(world);
 
         assertFalse(

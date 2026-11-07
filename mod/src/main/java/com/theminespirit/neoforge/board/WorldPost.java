@@ -12,14 +12,14 @@ import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.town.PitGroups;
 import com.theminespirit.core.town.SettlementScan;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
+import org.jspecify.annotations.Nullable;
 
 final class WorldPost {
     static final String REPAIR_NODE = "repair:";
@@ -93,22 +93,60 @@ final class WorldPost {
         if (room == 0) {
             return true;
         }
-        for (BlockCoord at : fresh(
-                found.pits().keySet().stream().sorted(ORDER).toList(),
-                room,
-                cell -> busy(post, "world:backfill:", cell))) {
+        int posted = 0;
+        for (PitGroups.Pit pit : PitGroups.group(found.pits())) {
+            String id = covering(post, pit);
+            if (id == null) {
+                id = "world:backfill:" + pit.key();
+                if (post.done(id)) {
+                    continue;
+                }
+            }
+            if (posted >= room) {
+                break;
+            }
+            if (post.open(id)) {
+                continue;
+            }
             post.submit(
                     post.ticket(
-                            "world:backfill:" + key(at),
+                            id,
                             BoardCase.FILL_CRATER,
                             Optional.empty(),
                             priority,
                             ticket.id(),
                             post.items(ticket.task())),
-                    TicketTarget.at(at)
-                            .withCraterBlocks(Math.min(found.pits().getOrDefault(at, 0) + 1, CatalogLimits.COUNT_MAX)));
+                    TicketTarget.at(pit.anchor())
+                            .withCraterBlocks(Math.min(pit.blocks(), CatalogLimits.COUNT_MAX))
+                            .withLeveling(LevelRepair.leveling(pit.cells(), List.of())));
+            posted++;
         }
         return true;
+    }
+
+    private static @Nullable String covering(GraphPost post, PitGroups.Pit pit) {
+        for (var ticket : post.service.board().all()) {
+            if (!ticket.id().startsWith("world:backfill:")) {
+                continue;
+            }
+            var status = post.service.board().statusOf(ticket.id()).orElse(null);
+            if (status == null
+                    || status == BoardStatus.DONE
+                    || status == BoardStatus.CANCELLED
+                    || post.service.targetOf(ticket.id()).isEmpty()) {
+                continue;
+            }
+            var target = post.service.targetOf(ticket.id()).orElseThrow();
+            if (target.leveling() == null) {
+                continue;
+            }
+            for (var box : target.leveling().fill()) {
+                if (PitGroups.overlaps(pit.cells(), box)) {
+                    return ticket.id();
+                }
+            }
+        }
+        return null;
     }
 
     private static boolean lot(GraphPost post, GraphTickets.Ticket ticket, SettlementScan.Strays found, int priority) {
@@ -158,11 +196,6 @@ final class WorldPost {
         return posted;
     }
 
-    private static boolean busy(GraphPost post, String prefix, BlockCoord at) {
-        String id = prefix + key(at);
-        return post.done(id) || post.open(id);
-    }
-
     static int room(int open, int batch) {
         return Math.max(0, batch - open);
     }
@@ -181,20 +214,6 @@ final class WorldPost {
             }
         }
         return open;
-    }
-
-    static List<BlockCoord> fresh(List<BlockCoord> sorted, int batch, Predicate<BlockCoord> busy) {
-        List<BlockCoord> fresh = new ArrayList<>();
-        for (BlockCoord at : sorted) {
-            if (fresh.size() >= batch) {
-                break;
-            }
-            if (busy.test(at)) {
-                continue;
-            }
-            fresh.add(at);
-        }
-        return List.copyOf(fresh);
     }
 
     private static String key(BlockCoord at) {

@@ -114,10 +114,13 @@ public final class LifeInputs {
     }
 
     private static int distance(Monster monster, List<SpiritEntity> spirits) {
-        double nearest = spirits.stream()
-                .mapToDouble(spirit -> monster.distanceToSqr(spirit))
-                .min()
-                .orElse(0);
+        LivingEntity target = monster.getTarget();
+        double nearest = target instanceof SpiritEntity
+                ? monster.distanceToSqr(target)
+                : spirits.stream()
+                        .mapToDouble(spirit -> monster.distanceToSqr(spirit))
+                        .min()
+                        .orElse(0);
         return (int) Math.round(Math.sqrt(nearest));
     }
 

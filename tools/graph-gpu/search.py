@@ -170,15 +170,9 @@ def absolute(graph, weights):
         event = graph.events.get(event_name)
         if event is None:
             continue
-        band = int(event.get("band", 0))
         tasks = {}
         for task in event["tasks"]:
-            base = float(task.get("base", 0))
-            if band > 0 and base > graph.max_priority:
-                value = graph.max_priority + int(math.floor((base - graph.max_priority) * factor + 0.5))
-            else:
-                value = int(math.floor(base * factor + 0.5))
-            tasks[task.get("id", "")] = value
+            tasks[task.get("id", "")] = int(math.floor(float(task.get("base", 0)) * factor + 0.5))
         out["events"][event_name] = tasks
     for name, factor in (weights.get("choice") or {}).items():
         if name in graph.costs.choice.values:

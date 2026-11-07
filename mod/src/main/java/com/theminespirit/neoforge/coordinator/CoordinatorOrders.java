@@ -5,6 +5,7 @@ import com.theminespirit.core.coordinator.CoordinatorDirectives;
 import com.theminespirit.core.coordinator.CoordinatorPlan;
 import com.theminespirit.core.coordinator.CoordinatorTuning;
 import com.theminespirit.core.coordinator.HelpCall;
+import com.theminespirit.core.coordinator.UrgentRelease;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.CombatDirective;
@@ -62,6 +63,10 @@ final class CoordinatorOrders {
             SpiritEntity spirit, UUID id, CombatDirective d, Set<UUID> urgent, Map<UUID, String> forced) {
         if (lastUrgent.contains(id) && !urgent.contains(id)) {
             lastUrgent.remove(id);
+            if (UrgentRelease.holdInsteadOfReset(busy(spirit))) {
+                yieldToTask(spirit, id);
+                return;
+            }
             lastDirectives.remove(id);
             lastForced.remove(id);
             spirit.tactics().clearDirective(DirectiveOwner.COORDINATOR);

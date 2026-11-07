@@ -91,6 +91,8 @@ class GearFragmentTests {
                                 "spirit-1",
                                 new GraphFacts.Position(0, 64, 0),
                                 20,
+                                Math.max(20, 1f),
+                                null,
                                 18,
                                 300,
                                 false,
@@ -99,7 +101,8 @@ class GearFragmentTests {
                                 null,
                                 Map.of(),
                                 List.of(),
-                                List.of())));
+                                List.of(),
+                                null)));
         GraphState state = GraphWorld.empty().state().withFacts(facts);
 
         GraphPlan plan = GraphPlanner.plan(GraphWorld.GRAPH, state);

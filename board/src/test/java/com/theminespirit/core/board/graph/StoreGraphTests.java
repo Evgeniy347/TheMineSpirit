@@ -94,6 +94,8 @@ class StoreGraphTests {
                         "spirit-1",
                         new GraphFacts.Position(0, 64, 0),
                         20,
+                        Math.max(20, 1f),
+                        null,
                         20,
                         300,
                         false,
@@ -102,7 +104,8 @@ class StoreGraphTests {
                         null,
                         Map.of("minecraft:oak_log", 5),
                         List.of(),
-                        List.of()))
+                        List.of(),
+                        null))
                 .chest(new GraphFacts.Chest(new GraphFacts.Position(1, 64, 1), Map.of(), 5, 27))
                 .build();
         GraphPlan plan = plan(GraphWorld.settled(), facts);

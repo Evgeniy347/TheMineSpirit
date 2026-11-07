@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -87,13 +89,18 @@ class BoardPostGuardTests {
     }
 
     @Test
-    void graphPostTicket_PriorityOutsideBoardRange_Clamped() {
-        String source = SourceFiles.javaUnder(BOARD).get(BOARD.resolve("GraphTicketFactory.java"));
+    void graphPostTicket_PriorityComesFromGraphInvariant_NotFromPostClamp() throws IOException {
+        String factory = SourceFiles.javaUnder(BOARD).get(BOARD.resolve("GraphTicketFactory.java"));
+        String plan = Files.readString(SourceFiles.path("core/board/graph/GraphPlan.java"));
 
         assertTrue(
-                source.contains("Math.min(100, Math.max(0, request.priority()))"),
-                "Билет графа с весом события выше 100 обязан зажиматься к диапазону BoardTicket: иначе источник "
-                        + "доски падает с IllegalArgumentException и задача (оборона/еда) не ставится");
+                factory.contains("request.priority()") && !factory.contains("Math.min(100"),
+                "Постановка не зажимает приоритет молча: потолок [0, 100] держит граф, а не доска. Иначе "
+                        + "ошибка графа прячется в GraphTicketFactory, а reprioritize получает не то же число");
+        assertTrue(
+                plan.contains("priority > BoardTuning.MAX_PRIORITY"),
+                "Задание графа обязано отклонять приоритет вне [0, 100]: одно правило для постановки и "
+                        + "reprioritize, без clamp в источнике");
     }
 
     @Test

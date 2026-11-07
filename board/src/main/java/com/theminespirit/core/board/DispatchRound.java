@@ -4,6 +4,7 @@ import com.theminespirit.core.plan.TaskNode;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -223,7 +224,8 @@ public final class DispatchRound {
     }
 
     public String why(BoardTicket ticket, List<Candidate> spirits, @Nullable String supplyItem) {
-        List<String> blockers = new ArrayList<>();
+        List<String> free = new ArrayList<>();
+        Map<String, List<String>> groups = new LinkedHashMap<>();
         List<String> busy = new ArrayList<>();
         int eligible = 0;
         for (Candidate spirit : spirits) {
@@ -233,20 +235,26 @@ public final class DispatchRound {
             eligible++;
             String reason = refusal(ticket, spirit, supplyItem).orElse(null);
             if (reason == null) {
-                blockers.add(spirit.name() + " — свободен, но выдача отложена");
+                free.add(spirit.name());
             } else if (reason.startsWith("занят: ")) {
                 busy.add(reason.substring("занят: ".length()));
             } else {
-                blockers.add(spirit.name() + " — " + reason);
+                groups.computeIfAbsent(reason, ignored -> new ArrayList<>()).add(spirit.name());
             }
         }
         if (eligible == 0) {
             return ticket.assignee().isPresent() ? "своего духа нет в мире" : "нет духов";
         }
-        if (blockers.isEmpty()) {
+        if (groups.isEmpty()) {
             return "ждёт свободного духа: заняты " + eligible + " (" + distinct(busy, 4) + ")";
         }
-        String text = "ждёт духа: " + String.join("; ", blockers);
+        List<String> blockerLines = new ArrayList<>();
+        groups.forEach((reason, names) -> blockerLines.add(
+                names.size() == 1 ? names.get(0) + " — " + reason : reason + ": " + distinct(names, 4)));
+        for (String name : free) {
+            blockerLines.add("свободен, но выдача отложена: " + name);
+        }
+        String text = "ждёт духа: " + String.join("; ", blockerLines);
         if (!busy.isEmpty()) {
             text += "; ещё занято " + busy.size();
         }

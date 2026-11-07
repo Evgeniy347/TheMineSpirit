@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.intellect;
 
-import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.ExpeditionMinePlan;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.intellect.DescentKit;
@@ -8,14 +7,11 @@ import com.theminespirit.core.intellect.Expedition;
 import com.theminespirit.core.intellect.ExpeditionDispatch;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.OutsideRules;
-import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.InventoryTables;
-import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,9 +19,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class ExpeditionController {
-    private static final Logger LOGGER = LogUtils.getLogger();
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExpeditionController.class);
     private static final String RETURN_HOME = "return_home";
 
     private StockView stock = new StockView(Map.of());
@@ -40,7 +37,7 @@ public final class ExpeditionController {
 
     @FunctionalInterface
     public interface Launcher {
-        boolean launch(SpiritEntity spirit, String script, TaskNode task, long now);
+        boolean launch(UUID spirit, String script, TaskNode task, long now);
     }
 
     public void offer(Expedition planned) {
@@ -73,7 +70,7 @@ public final class ExpeditionController {
         return Optional.ofNullable(refusal);
     }
 
-    public void update(List<SpiritEntity> members, StockView stock, long now, Launcher tasks) {
+    public void update(List<? extends ExpeditionMember> members, StockView stock, long now, Launcher tasks) {
         if (members == null || stock == null || tasks == null) {
             throw new IllegalArgumentException(
                     "Поход без духов, запасов или исполнителя не ведётся: команда идёт конкретным составом");
@@ -89,22 +86,39 @@ public final class ExpeditionController {
         }
     }
 
-    private boolean dispatchMine(List<SpiritEntity> members, Expedition expedition, long now) {
-        List<SpiritEntity> team = team(members, expedition);
+    private boolean dispatchMine(List<? extends ExpeditionMember> members, Expedition expedition, long now) {
+        List<ExpeditionMember> team = team(members, expedition);
+        List<String> missing = ExpeditionKit.missing(team, stock);
+        if (!missing.isEmpty()) {
+            String reason = "перед спуском в шахту нужен набор: " + String.join(", ", missing);
+            if (!reason.equals(refusal)) {
+                LOGGER.info("[graph] экспедиция отложена: {}", reason);
+            }
+            refusal = reason;
+            return false;
+        }
         UUID leaderId = expedition.team().get(0);
-        Map<UUID, SpiritEntity> byId = new HashMap<>();
-        for (SpiritEntity spirit : team) {
-            byId.put(spirit.getUUID(), spirit);
+        Map<UUID, ExpeditionMember> byId = new HashMap<>();
+        for (ExpeditionMember spirit : team) {
+            byId.put(spirit.id(), spirit);
         }
         ExpeditionDispatch.Plan plan =
-                ExpeditionDispatch.plan(team.stream().map(SpiritEntity::getUUID).toList(), leaderId);
-        SpiritEntity leader = byId.get(plan.leader());
+                ExpeditionDispatch.plan(team.stream().map(ExpeditionMember::id).toList(), leaderId);
+        ExpeditionMember leader = byId.get(plan.leader());
         if (leader == null) {
             leader = team.get(0);
         }
-        List<String> missing = missingKit(List.of(leader), stock);
-        if (!missing.isEmpty()) {
-            String reason = "перед спуском в шахту лидеру нужен набор: " + String.join(", ", missing);
+        List<String> leaderMissing = ExpeditionKit.missing(List.of(leader), stock);
+        if (!leaderMissing.isEmpty()) {
+            String reason = "перед спуском в шахту лидеру нужен набор: " + String.join(", ", leaderMissing);
+            if (!reason.equals(refusal)) {
+                LOGGER.info("[graph] экспедиция отложена: {}", reason);
+            }
+            refusal = reason;
+            return false;
+        }
+        if (!leader.hasPickaxe() && !ExpeditionKit.hasPickaxe(stock)) {
+            String reason = "поход в шахту не начат: у лидера " + leader.displayName() + " нет кирки";
             if (!reason.equals(refusal)) {
                 LOGGER.info("[graph] экспедиция отложена: {}", reason);
             }
@@ -112,19 +126,16 @@ public final class ExpeditionController {
             return false;
         }
         List<ScriptCall> kit = DescentKit.supply(
-                OutsideRules.loadDefault().mineKit(),
-                new StackMapper().map(leader.getInventory()),
-                stock.available(),
-                InventoryTables.values());
+                OutsideRules.loadDefault().mineKit(), leader.inventory(), stock.available(), InventoryTables.values());
         BlockCoord bottom = new BlockCoord(
                 (int) expedition.target().x(), (int) expedition.target().y(), (int)
                         expedition.target().z());
         boolean launched = false;
         for (ExpeditionDispatch.Order order : plan.orders()) {
-            SpiritEntity spirit = byId.get(order.spirit());
+            ExpeditionMember spirit = byId.get(order.spirit());
             if (spirit != null) {
                 TaskNode task = order.spirit().equals(plan.leader()) ? leaderTask(bottom, kit) : order.task();
-                launched |= launch(spirit, order.script(), task, now);
+                launched |= launch(spirit.id(), order.script(), task, now);
             }
         }
         if (launched) {
@@ -146,28 +157,14 @@ public final class ExpeditionController {
         return new SequenceNode(steps);
     }
 
-    public static List<String> missingKit(List<SpiritEntity> team, StockView stock) {
-        StackMapper mapper = new StackMapper();
-        List<Stack> inventory = new ArrayList<>();
-        for (SpiritEntity spirit : team) {
-            inventory.addAll(mapper.map(spirit.getInventory()));
-        }
-        stock.available().forEach((item, count) -> {
-            for (int left = count; left > 0; left -= 64) {
-                inventory.add(new Stack(item, 0, Math.min(left, 64), 64));
-            }
-        });
-        return DescentKit.missing(OutsideRules.loadDefault().mineKit(), inventory, InventoryTables.values());
-    }
-
-    private void monitorMission(List<SpiritEntity> members, long now) {
+    private void monitorMission(List<? extends ExpeditionMember> members, long now) {
         if (missionLeader == null) {
             return;
         }
-        Map<UUID, SpiritEntity> alive = new HashMap<>();
-        for (SpiritEntity spirit : members) {
-            if (!spirit.isRemoved()) {
-                alive.put(spirit.getUUID(), spirit);
+        Map<UUID, ExpeditionMember> alive = new HashMap<>();
+        for (ExpeditionMember spirit : members) {
+            if (!spirit.removed()) {
+                alive.put(spirit.id(), spirit);
             }
         }
         int present = 0;
@@ -181,14 +178,14 @@ public final class ExpeditionController {
         }
         boolean allReturning = present > 0;
         for (UUID id : missionTeam) {
-            SpiritEntity spirit = alive.get(id);
+            ExpeditionMember spirit = alive.get(id);
             if (spirit == null) {
                 continue;
             }
-            if (spirit.currentTaskScript().map(RETURN_HOME::equals).orElse(false)) {
+            if (spirit.currentScript().map(RETURN_HOME::equals).orElse(false)) {
                 continue;
             }
-            allReturning &= launch(spirit, RETURN_HOME, new ScriptCall(RETURN_HOME, Map.of()), now);
+            allReturning &= launch(id, RETURN_HOME, new ScriptCall(RETURN_HOME, Map.of()), now);
         }
         if (allReturning) {
             missionTeam = List.of();
@@ -196,10 +193,10 @@ public final class ExpeditionController {
         }
     }
 
-    private List<SpiritEntity> team(List<SpiritEntity> members, Expedition expedition) {
-        List<SpiritEntity> team = new ArrayList<>();
-        for (SpiritEntity spirit : members) {
-            if (!spirit.isRemoved() && expedition.team().contains(spirit.getUUID())) {
+    private List<ExpeditionMember> team(List<? extends ExpeditionMember> members, Expedition expedition) {
+        List<ExpeditionMember> team = new ArrayList<>();
+        for (ExpeditionMember spirit : members) {
+            if (!spirit.removed() && expedition.team().contains(spirit.id())) {
                 team.add(spirit);
             }
         }
@@ -212,7 +209,7 @@ public final class ExpeditionController {
         closedAt = now;
     }
 
-    private boolean launch(SpiritEntity spirit, String script, TaskNode task, long now) {
+    private boolean launch(UUID spirit, String script, TaskNode task, long now) {
         return launcher != null && launcher.launch(spirit, script, task, now);
     }
 }

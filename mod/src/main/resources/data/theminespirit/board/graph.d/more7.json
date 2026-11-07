@@ -29,7 +29,6 @@
       "advice": ["harvest_before_the_day_gets_busy"]
     },
     "more7_evening_return": {
-      "band": 10,
       "tasks": [
         {"id": "more7_return_home", "case": "ACTIVITY_RETURN", "base": 60, "consumes": {}, "implemented": true}
       ],
@@ -49,7 +48,6 @@
       "advice": ["expand_field_or_stop_sowing"]
     },
     "expedition_ready": {
-      "band": 15,
       "tasks": [
         {"id": "expedition", "case": "ACTIVITY_EXPEDITION", "base": 117, "consumes": {},
          "implemented": true}

@@ -35,7 +35,7 @@ final class GraphTicketFactory {
                 request.id(),
                 request.boardCase(),
                 request.assignee(),
-                Math.min(100, Math.max(0, request.priority())),
+                request.priority(),
                 post.now,
                 1,
                 request.cause(),

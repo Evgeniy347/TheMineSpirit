@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge.board;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardStatus;
-import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.graph.GraphCadence;
 import com.theminespirit.core.board.graph.GraphPlan;
@@ -21,8 +21,10 @@ import java.util.Optional;
 import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.monster.Monster;
+import org.slf4j.Logger;
 
 public final class GraphSource {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final double HOSTILE_RADIUS = 16;
     private static final long DEEP_INTERVAL_TICKS = 1200;
 
@@ -124,10 +126,19 @@ public final class GraphSource {
         post.flush();
         for (GraphPlan.Task task : half.plan().tasks()) {
             if (task.implemented() && task.priority() > 0) {
-                GraphTicketIds.ids(task, half.graph())
-                        .forEach(id -> half.service()
-                                .board()
-                                .reprioritize(id, Math.min(task.priority(), BoardTuning.MAX_PRIORITY)));
+                for (String id : GraphTicketIds.ids(task, half.graph())) {
+                    try {
+                        half.service().board().reprioritize(id, task.priority());
+                    } catch (RuntimeException error) {
+                        LOGGER.error(
+                                "[incident] граф не смог обновить приоритет задания {} до {}: {}; "
+                                        + "остальные задания и тик сервера идут",
+                                id,
+                                task.priority(),
+                                String.valueOf(error.getMessage()),
+                                error);
+                    }
+                }
             }
         }
         reporter.report(half.plan(), half.result(), unconnected, freeSpirit(half), half.now());

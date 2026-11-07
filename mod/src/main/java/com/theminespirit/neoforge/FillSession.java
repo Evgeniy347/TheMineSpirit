@@ -3,8 +3,6 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildReservations;
-import com.theminespirit.core.building.BuildResult;
-import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.mining.SafetyView;
@@ -65,15 +63,7 @@ public final class FillSession {
     private int brokenY = Integer.MAX_VALUE;
     private int passPlaced;
     private BlockCoord current;
-    private int placed;
-    private int prebuilt;
-    private int skipped;
-    private int failed;
-    private int noStand;
-    private int protectedSkipped;
-    private int foreignSkipped;
-
-    private final BuildResult tally = new BuildResult();
+    private final FillTally tally = new FillTally();
     private @Nullable PillarColumn pillar;
 
     public FillSession(SpiritEntity spirit, String blockId, BuildBox box) {
@@ -151,11 +141,11 @@ public final class FillSession {
     }
 
     public int placed() {
-        return placed;
+        return tally.placedCount();
     }
 
     public int skipped() {
-        return skipped;
+        return tally.skippedCount();
     }
 
     public String blockId() {
@@ -163,7 +153,7 @@ public final class FillSession {
     }
 
     public Map<String, Object> resultData() {
-        return tally.toData();
+        return tally.data();
     }
 
     public int blockReads() {
@@ -171,23 +161,11 @@ public final class FillSession {
     }
 
     public Map<String, Object> saveState() {
-        return new BuildState(placed, 0, skipped, failed, outcome == Outcome.RUNNING).toMap();
+        return tally.save(outcome == Outcome.RUNNING);
     }
 
     public void restoreState(Map<String, Object> saved) {
-        BuildState state = BuildState.fromMap(saved);
-        placed = Math.max(placed, state.placed());
-        skipped = Math.max(skipped, state.skipped());
-        failed = Math.max(failed, state.failed());
-        for (int i = 0; i < state.placed(); i++) {
-            tally.placed(blockId);
-        }
-        for (int i = 0; i < state.skipped(); i++) {
-            tally.skipped();
-        }
-        for (int i = 0; i < state.failed(); i++) {
-            tally.failed();
-        }
+        tally.restore(saved, blockId);
     }
 
     private void exitTick() {
@@ -217,13 +195,12 @@ public final class FillSession {
             terrain.countRead();
             BlockState current = level.getBlockState(pos);
             if (current.is(wanted.getBlock())) {
-                prebuilt++;
+                tally.prebuiltCount();
                 cursor++;
                 continue;
             }
             if (reservations.foreign(cell, spirit.getUUID())) {
-                foreignSkipped++;
-                skipped++;
+                tally.foreignSkipped();
                 tally.skipped();
                 brokenY = Math.min(brokenY, cell.y());
                 cursor++;
@@ -246,7 +223,7 @@ public final class FillSession {
             }
 
             if (spots.isEmpty()) {
-                if (noStand < NO_STAND_LOGGED) {
+                if (tally.noStandCount() < NO_STAND_LOGGED) {
                     BlockPos at = toPos(cell);
                     LOGGER.info(
                             "[fill] {}: нет стоянки у {}: под ней {}, в ней {}, над ней {}, верх без листвы y={}",
@@ -257,8 +234,7 @@ public final class FillSession {
                             level.getBlockState(at.above()).getBlock(),
                             level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cell.x(), cell.z()));
                 }
-                noStand++;
-                skipped++;
+                tally.noStand();
                 tally.skipped();
                 brokenY = Math.min(brokenY, cell.y());
                 release(cell);
@@ -267,8 +243,7 @@ public final class FillSession {
             }
             spots = spots.stream().filter(standView::allowedStand).toList();
             if (spots.isEmpty()) {
-                noStand++;
-                skipped++;
+                tally.noStand();
                 tally.skipped();
                 brokenY = Math.min(brokenY, cell.y());
                 release(cell);
@@ -297,7 +272,6 @@ public final class FillSession {
         switch (pillar.tick()) {
             case RUNNING -> {}
             case BUILT -> {
-                placed++;
                 passPlaced++;
                 tally.placed(blockId);
                 releaseAndAdvance();
@@ -309,7 +283,6 @@ public final class FillSession {
                         spirit.getName().getString(),
                         current,
                         pillar.failureReason());
-                skipped++;
                 tally.skipped();
                 brokenY = Math.min(brokenY, current.y());
                 releaseAndAdvance();
@@ -338,8 +311,7 @@ public final class FillSession {
             case MOVING -> {}
             case ARRIVED -> placeCurrent();
             case STUCK, TIMEOUT -> {
-                noStand++;
-                skipped++;
+                tally.noStand();
                 tally.skipped();
                 brokenY = Math.min(brokenY, current == null ? Integer.MAX_VALUE : current.y());
                 releaseAndAdvance();
@@ -357,7 +329,6 @@ public final class FillSession {
         BlockPos pos = toPos(current);
         BlockPlacer.Begin begin = placer.begin(pos, wanted, blockId);
         if (begin instanceof BlockPlacer.Started) {
-            placed++;
             passPlaced++;
             tally.placed(blockId);
             releaseAndAdvance();
@@ -365,13 +336,12 @@ public final class FillSession {
             return;
         }
         if (begin instanceof BlockPlacer.Protected single) {
-            protectedSkipped++;
-            skipped++;
+            tally.protectedSkipped();
             tally.skipped();
             brokenY = Math.min(brokenY, current.y());
             releaseAndAdvance();
             state = State.PICK;
-            if (placed == 0 && cursor >= order.size()) {
+            if (tally.placedCount() == 0 && cursor >= order.size()) {
                 fail("строить запрещено: " + single.reason() + "; поставлено 0 из " + order.size());
             }
             return;
@@ -379,16 +349,15 @@ public final class FillSession {
         BlockPlacer.Refused refused = (BlockPlacer.Refused) begin;
         switch (refused.reason()) {
             case NO_MATERIAL -> {
-                failed++;
                 tally.failed();
                 releaseAndAdvance();
-                int have = placed + BlockItems.countIn(spirit.getInventory(), blockId);
-                tally.supplies(have, Math.max(order.size() - prebuilt - have, 0));
+                int have = tally.placedCount() + BlockItems.countIn(spirit.getInventory(), blockId);
+                tally.supplies(have, Math.max(order.size() - tally.prebuiltCount() - have, 0));
                 fail("не хватило материала '" + blockId + "': нужно " + order.size() + ", есть " + have
-                        + "; поставлено " + placed + " из " + order.size());
+                        + "; поставлено " + tally.placedCount() + " из " + order.size());
             }
             case OCCUPIED, NO_SUPPORT -> {
-                if (skipped < NO_STAND_LOGGED) {
+                if (tally.skippedCount() < NO_STAND_LOGGED) {
                     LOGGER.info(
                             "[fill] {}: {} не поставить: {} (дух в {})",
                             spirit.getName().getString(),
@@ -396,14 +365,13 @@ public final class FillSession {
                             refused.message(),
                             spirit.blockPosition().toShortString());
                 }
-                skipped++;
                 tally.skipped();
                 brokenY = Math.min(brokenY, current.y());
                 releaseAndAdvance();
                 state = State.PICK;
             }
             case CHUNK_NOT_LOADED -> {
-                if (skipped < NO_STAND_LOGGED) {
+                if (tally.skippedCount() < NO_STAND_LOGGED) {
                     LOGGER.info(
                             "[fill] {}: {} не поставить: {} (дух в {})",
                             spirit.getName().getString(),
@@ -411,15 +379,13 @@ public final class FillSession {
                             refused.message(),
                             spirit.blockPosition().toShortString());
                 }
-                skipped++;
                 tally.skipped();
                 brokenY = Math.min(brokenY, current.y());
                 releaseAndAdvance();
                 state = State.PICK;
             }
             case OUT_OF_REACH -> {
-                noStand++;
-                skipped++;
+                tally.noStand();
                 tally.skipped();
                 brokenY = Math.min(brokenY, current.y());
                 releaseAndAdvance();
@@ -433,15 +399,15 @@ public final class FillSession {
             return;
         }
         releaseAll();
-        if (failed > 0) {
+        if (tally.failedCount() > 0) {
             return;
         }
         if (terrain.complete()) {
-            tally.supplies(placed, 0);
+            tally.supplies(tally.placedCount(), 0);
             outcome = Outcome.SUCCEEDED;
             return;
         }
-        fail(summary());
+        fail(tally.summary(region.size()));
     }
 
     private boolean replan() {
@@ -468,12 +434,6 @@ public final class FillSession {
         outcome = Outcome.FAILED;
         cancel();
         return outcome;
-    }
-
-    private String summary() {
-        return "не все клетки засыпаны: поставлено " + placed + " из " + region.size() + "; пропущено: " + skipped
-                + " (без стоянки: " + noStand + ", защищено: " + protectedSkipped + ", занято другим духом: "
-                + foreignSkipped + ")";
     }
 
     private SafetyView safetyView() {

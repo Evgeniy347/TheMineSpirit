@@ -9854,7 +9854,6 @@
       ]
     },
     "night": {
-      "band": 10,
       "tasks": [
         {"id": "more4_guard_settlement", "case": "ACTIVITY_GUARD", "base": 80, "consumes": {},
          "implemented": true},
@@ -9881,7 +9880,6 @@
       }
     },
     "hungry": {
-      "band": 20,
       "tasks": [
         {
           "id": "eat",
