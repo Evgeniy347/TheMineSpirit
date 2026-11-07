@@ -33,10 +33,7 @@ public record IntellectTuning(
         int weaponTarget,
         int teamMin,
         int teamMax,
-        long inviteTtlTicks,
-        long inviteRepeatTicks,
-        long inviteExtendTicks,
-        int inviteMaxExtends,
+        long expeditionCooldownTicks,
         long strategicTtlTicks,
         double healFraction,
         double armedDps) {
@@ -56,7 +53,7 @@ public record IntellectTuning(
     private static final String WEAPON_TARGET = "weaponTarget";
     private static final String TEAM_MIN = "teamMin";
     private static final String TEAM_MAX = "teamMax";
-    private static final String INVITE_MAX_EXTENDS = "inviteMaxExtends";
+    private static final String EXPEDITION_COOLDOWN = "expeditionCooldownTicks";
     private static final Set<String> FIELDS = Set.of(
             "demandIntervalTicks",
             "minSwitchTicks",
@@ -84,17 +81,14 @@ public record IntellectTuning(
             WEAPON_TARGET,
             TEAM_MIN,
             TEAM_MAX,
-            "inviteTtlTicks",
-            "inviteRepeatTicks",
-            "inviteExtendTicks",
-            INVITE_MAX_EXTENDS,
+            EXPEDITION_COOLDOWN,
             "strategicTtlTicks",
             "healFraction",
             "armedDps");
 
     private static final IntellectTuning DEFAULTS = new IntellectTuning(
             100, 200, 200, 0.15, 0.2, 8.0, 10.0, 1.0, 3, 1, 1.5, 0.75, 4.0, 9.0, 1, 8, 16, 1, 16, 1, 1200, 64, 32, 2, 2,
-            3, 3600, 600, 1200, 3, 6000, 0.35, 6.0);
+            3, 3600, 6000, 0.35, 6.0);
 
     private static final TableSlot<IntellectTuning> SOURCE = new TableSlot<>(IntellectTuning::defaults);
 
@@ -102,9 +96,7 @@ public record IntellectTuning(
         requireTicks("demandIntervalTicks", demandIntervalTicks);
         requireTicks("minSwitchTicks", minSwitchTicks);
         requireTicks("failBackoffTicks", failBackoffTicks);
-        requireTicks("inviteTtlTicks", inviteTtlTicks);
-        requireTicks("inviteRepeatTicks", inviteRepeatTicks);
-        requireTicks("inviteExtendTicks", inviteExtendTicks);
+        requireTicks(EXPEDITION_COOLDOWN, expeditionCooldownTicks);
         requireTicks("strategicTtlTicks", strategicTtlTicks);
         requireNonNegative("hysteresisMargin", hysteresisMargin);
         requireNonNegative("crowdPenalty", crowdPenalty);
@@ -146,7 +138,6 @@ public record IntellectTuning(
             throw new IllegalArgumentException("Предел команды " + teamMin + ".." + teamMax + ": максимум меньше "
                     + "минимума, экспедицию нельзя собрать ни при каком составе");
         }
-        requirePositive(INVITE_MAX_EXTENDS, inviteMaxExtends);
     }
 
     public static IntellectTuning defaults() {
@@ -196,10 +187,7 @@ public record IntellectTuning(
                     JsonResource.integer(root.get(WEAPON_TARGET), origin, WEAPON_TARGET),
                     JsonResource.integer(root.get(TEAM_MIN), origin, TEAM_MIN),
                     JsonResource.integer(root.get(TEAM_MAX), origin, TEAM_MAX),
-                    integer(root, origin, "inviteTtlTicks"),
-                    integer(root, origin, "inviteRepeatTicks"),
-                    integer(root, origin, "inviteExtendTicks"),
-                    JsonResource.integer(root.get(INVITE_MAX_EXTENDS), origin, INVITE_MAX_EXTENDS),
+                    JsonResource.integer(root.get(EXPEDITION_COOLDOWN), origin, EXPEDITION_COOLDOWN),
                     integer(root, origin, "strategicTtlTicks"),
                     decimal(root, origin, "healFraction"),
                     decimal(root, origin, "armedDps"));

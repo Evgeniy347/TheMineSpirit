@@ -79,6 +79,11 @@ tasks.named('pmdMain', Pmd) {
 tasks.named('pmdTest', Pmd) {
     ruleSetFiles = files(configAt('pmd/test.xml'))
 }
+// lib: java-test-fixtures создаёт pmdTestFixtures, а правило pmd { ruleSets = [] } оставляет её без набора правил —
+// задача падала «No rulesets specified» и валила check. Фикстуры — тестовый код, им подходит набор тестов.
+tasks.named('pmdTestFixtures', Pmd) {
+    ruleSetFiles = files(configAt('pmd/test.xml'))
+}
 
 spotbugs {
     toolVersion = versionOf('spotbugs_version')
@@ -88,11 +93,29 @@ spotbugs {
 tasks.named('spotbugsTest') {
     excludeFilter = configAt('spotbugs/exclude-test.xml')
 }
+// lib: spotbugsTestFixtures проверяет тестовые фикстуры — им нужен набор исключений тестов, а не боевого кода
+// (Random с явным зерном — воспроизводимый генератор сценария).
+tasks.named('spotbugsTestFixtures') {
+    excludeFilter = configAt('spotbugs/exclude-test.xml')
+}
 tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+    // lib: -release — метка версии в отчёте, детекторы её не читают. У :mod версия 0.1.N считается от числа
+    // коммитов, поэтому project.version менял ключ кэша SpotBugs на каждом коммите и неизменный код
+    // анализировался заново. Минор версии между коммитами стабилен.
+    release.set(versionOf('mod_version_minor'))
     reports {
         xml.required = true
         html.required = false
     }
+}
+// lib: sourcepath нужен SpotBugs только для исходников в отчёте, но входит в ключ кэша содержимым файлов.
+// Каталоги ресурсов к анализу классов отношения не имеют: правка json заставляла повторять анализ модуля.
+// Оставляем в sourceDirs только java-исходники своей области.
+tasks.named('spotbugsMain') {
+    sourceDirs.setFrom(sourceSets.main.allJava.srcDirs)
+}
+tasks.named('spotbugsTest') {
+    sourceDirs.setFrom(sourceSets.test.allJava.srcDirs)
 }
 
 tasks.register('staticAnalysisFast') {
@@ -112,6 +135,14 @@ tasks.register('staticAnalysis') {
 
 tasks.named('check') {
     dependsOn tasks.named('staticAnalysis')
+}
+
+// владелец 07.11: SpotBugs, PMD и Checkstyle выключены (время сборки); включить: -Ptheminespirit.analyzers=on
+// или analyzers=on в gradle.properties. Spotless (формат) и Error Prone (в компиляторе) работают всегда.
+if (findProperty('theminespirit.analyzers') != 'on') {
+    tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach { enabled = false }
+    tasks.withType(Pmd).configureEach { enabled = false }
+    tasks.withType(Checkstyle).configureEach { enabled = false }
 }
 
 if (project != rootProject) {

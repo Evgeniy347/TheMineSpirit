@@ -1,0 +1,78 @@
+package com.theminespirit.neoforge.board;
+
+import com.theminespirit.core.movement.PitExitPlanner;
+import com.theminespirit.core.observation.BlockCoord;
+import java.util.Set;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+
+final class PitWorldView implements PitExitPlanner.World {
+    private static final Set<String> SOFT = Set.of(
+            "dirt",
+            "grass_block",
+            "coarse_dirt",
+            "rooted_dirt",
+            "podzol",
+            "mycelium",
+            "dirt_path",
+            "farmland",
+            "clay",
+            "mud",
+            "muddy_mangrove_roots",
+            "moss_block",
+            "snow",
+            "snow_block",
+            "powder_snow",
+            "soul_sand",
+            "soul_soil",
+            "oak_leaves",
+            "spruce_leaves",
+            "birch_leaves",
+            "jungle_leaves",
+            "acacia_leaves",
+            "dark_oak_leaves",
+            "mangrove_leaves",
+            "cherry_leaves",
+            "azalea_leaves",
+            "flowering_azalea_leaves");
+    private static final Set<String> FALLING =
+            Set.of("sand", "red_sand", "gravel", "suspicious_sand", "suspicious_gravel");
+
+    private final Level level;
+
+    PitWorldView(Level level) {
+        this.level = level;
+    }
+
+    @Override
+    public PitExitPlanner.Kind at(BlockCoord cell) {
+        BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+        if (!level.isLoaded(pos)) {
+            return PitExitPlanner.Kind.HARD;
+        }
+        BlockState state = level.getBlockState(pos);
+        if (state.getFluidState().is(FluidTags.LAVA)) {
+            return PitExitPlanner.Kind.LAVA;
+        }
+        if (state.getFluidState().is(FluidTags.WATER)) {
+            return PitExitPlanner.Kind.WATER;
+        }
+        if (state.isAir() || (state.getCollisionShape(level, pos).isEmpty() && state.canBeReplaced())) {
+            return PitExitPlanner.Kind.AIR;
+        }
+        if (state.getDestroySpeed(level, pos) < 0) {
+            return PitExitPlanner.Kind.BEDROCK;
+        }
+        String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath();
+        if (FALLING.contains(id)) {
+            return PitExitPlanner.Kind.FALLING;
+        }
+        if (SOFT.contains(id)) {
+            return PitExitPlanner.Kind.SOFT;
+        }
+        return PitExitPlanner.Kind.HARD;
+    }
+}
