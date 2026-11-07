@@ -113,4 +113,13 @@ tasks.register('graphExport', Test) {
     workingDir = rootProject.projectDir
     systemProperty 'theminespirit.modId', 'theminespirit'
     failOnNoDiscoveredTests = false
+    if (hasTag('export')) {
+        // lib: файлы сверки Python-модели — выход graphExport; без них удалённый файл не заставит прогон повториться.
+        def exportDir = rootProject.layout.projectDirectory.dir('TestResults/graph-export')
+        outputs.files(
+                exportDir.file('conformance.json'),
+                exportDir.file('graph.json'),
+                exportDir.file('live1.json'),
+                exportDir.file('bases.json'))
+    }
 }

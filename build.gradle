@@ -28,11 +28,14 @@ tasks.named('assemble') {
 
 def unitTestThreads = (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}") as int
 tasks.named('test', Test) {
-    dependsOn ':guards:test', ':api:test', ':board:test', ':tactics:test', ':content:test', ':policy:test'
-    dependsOn ':rest:test', ':ui:test', ':mod:test', ':gametest:test'
-    dependsOn ':mech:mining:test', ':mech:movement:test', ':mech:inventory:test'
-    dependsOn ':mech:farming:test', ':mech:forestry:test', ':mech:crafting:test', ':mech:husbandry:test'
-    dependsOn ':mech:small:test', ':mech:building:test', ':mech:town:test'
+    // lib: --changed/--module зовут задачи модулей напрямую; корневой test без свойства тянет все модули.
+    if (!project.hasProperty('theminespirit.rootOnly')) {
+        dependsOn ':guards:test', ':api:test', ':board:test', ':tactics:test', ':content:test', ':policy:test'
+        dependsOn ':rest:test', ':ui:test', ':mod:test', ':gametest:test'
+        dependsOn ':mech:mining:test', ':mech:movement:test', ':mech:inventory:test'
+        dependsOn ':mech:farming:test', ':mech:forestry:test', ':mech:crafting:test', ':mech:husbandry:test'
+        dependsOn ':mech:small:test', ':mech:building:test', ':mech:town:test'
+    }
     useJUnitPlatform {
         excludeTags 'slow', 'mutation', 'export'
     }

@@ -9,13 +9,14 @@ git clone -q --no-hardlinks "$src" "$clone" || exit 2
 cp "$src"/scripts/git-hooks/* "$clone/scripts/git-hooks/"
 cd "$clone" || exit 2
 git config core.hooksPath scripts/git-hooks
+git config core.autocrlf input
 git config user.name check
 git config user.email check@example.invalid
 probe="src/test/java/com/theminespirit/ProbeTests.java"
 mkdir -p "$(dirname "$probe")"
 
 write_probe() {
-    printf 'package com.theminespirit;\nimport org.junit.jupiter.api.Test;\nimport static org.junit.jupiter.api.Assertions.%s;\nclass ProbeTests {\n    @Test void probe_Always_Result() { %s }\n}\n' \
+    printf 'package com.theminespirit;\n\nimport static org.junit.jupiter.api.Assertions.%s;\n\nimport org.junit.jupiter.api.Test;\n\nclass ProbeTests {\n    @Test\n    void probe_Always_Result() {\n        %s\n    }\n}\n' \
         "$1" "$2" >"$probe"
 }
 
@@ -36,8 +37,8 @@ check red_test_rejected 1 да git commit -m "test: красный зонд"
 grep -E "Коммит отклонён|FAILED" "$work/red_test_rejected.out" | head -n 3 | sed 's/^/  /'
 git reset -q "$probe"
 
-echo "правка документа" >>README.md
-git add README.md
+echo "правка документа" >>docs/TESTING.md
+git add docs/TESTING.md
 check docs_commit_no_run 0 нет git commit -m "docs: правка без прогона"
 
 write_probe assertTrue 'assertTrue(true, "зелёный тест-зонд");'
@@ -49,18 +50,21 @@ check partial_commit_red_rejected 1 да git commit -m "test: красный з�
 write_probe assertTrue 'assertTrue(true, "зелёный тест-зонд");'
 
 printf 'package com.theminespirit;
-class Unstaged {}
+
+class Unstaged {
+    static final int VALUE = 1;
+}
 ' >src/test/java/com/theminespirit/Unstaged.java
 git add src/test/java/com/theminespirit/Unstaged.java
-echo "// правка в рабочем дереве, не в индексе" >>"$probe"
+sed -i 's/VALUE = 1/VALUE = 2/' src/test/java/com/theminespirit/Unstaged.java
 check unstaged_warning 0 да git commit -m "test: пустой класс-зонд"
 grep -q "ВНИМАНИЕ — прогон относится к рабочему дереву" "$work/unstaged_warning.out"     && echo "OK предупреждение о незастейдженных правках напечатано" || echo "FAIL предупреждения о незастейдженных правках нет"
-git checkout -q HEAD -- "$probe"
+git checkout -q HEAD -- src/test/java/com/theminespirit/Unstaged.java
 
 git checkout -q -b side
-echo "// ветка" >>src/test/java/com/theminespirit/Unstaged.java
+sed -i 's/VALUE = 1/VALUE = 3/' src/test/java/com/theminespirit/Unstaged.java
 git add -A && git commit -q -m "test: правка на ветке"
 git checkout -q -
-echo "ещё документ" >>README.md
-git add README.md && git commit -q -m "docs: правка на основной ветке"
+echo "ещё документ" >>docs/TESTING.md
+git add docs/TESTING.md && git commit -q -m "docs: правка на основной ветке"
 check merge_no_run 0 нет git merge --no-ff -m "chore: слияние side" side

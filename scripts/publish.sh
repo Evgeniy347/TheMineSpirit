@@ -15,6 +15,7 @@ CLEANUP_SCRIPT_DIR="${CLEANUP_SCRIPT_DIR:-/opt/minecraft/scripts}"
 assume_yes=false
 dry_run=false
 do_restart=true
+check_build=false
 mode=full
 
 usage() {
@@ -41,6 +42,7 @@ usage() {
   -y, --yes         согласование уже получено, не спрашивать подтверждения
   -n, --dry-run     показать план, ничего не менять
       --no-restart  установить jar, но не перезапускать работающий сервер
+      --check-build только собрать :mod и показать путь/sha jar, ничего не выкладывая
   -h, --help        эта справка
 EOF
 }
@@ -50,6 +52,7 @@ while [ $# -gt 0 ]; do
         -y|--yes) assume_yes=true ;;
         -n|--dry-run) dry_run=true ;;
         --no-restart) do_restart=false ;;
+        --check-build) check_build=true ;;
         --temp)
             [ "$mode" = full ] || { echo "Режим уже выбран: $mode" >&2; exit 2; }
             mode=temp
@@ -77,6 +80,21 @@ version_of() {
 sha256_of() {
     sha256sum "$1" 2>/dev/null | cut -d' ' -f1
 }
+
+if $check_build; then
+    cd "$MOD_DIR"
+    echo "Сборка мода для проверки (без выкладки)…"
+    ./gradlew --quiet assemble
+    mapfile -t jars < <(find "$JAR_DIR" -maxdepth 1 -name 'theminespirit-*.jar' \
+        ! -name '*-sources.jar' ! -name '*-javadoc.jar' -printf '%T@ %p\n' | sort -rn | cut -d' ' -f2-)
+    if [ "${#jars[@]}" -eq 0 ]; then
+        echo "Сборка не дала theminespirit-*.jar в $MOD_JAR_DIR/" >&2
+        exit 1
+    fi
+    echo "jar: ${jars[0]}"
+    echo "sha256: $(sha256_of "${jars[0]}")"
+    exit 0
+fi
 
 server_jars() {
     find "$SERVER_DIR/mods" -maxdepth 1 -name 'theminespirit-*.jar' -printf '%T@ %p\n' 2>/dev/null \

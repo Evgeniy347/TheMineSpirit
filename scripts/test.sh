@@ -43,12 +43,17 @@ DIR_LOCK_HELD=0
 usage() {
     cat <<'EOF'
 Использование:
-  scripts/test.sh unit [--tests <фильтр gradle>]… [--fast-analyzers]
+  scripts/test.sh unit [--tests <фильтр gradle>]… [--changed | --module <модуль>]… [--fast-analyzers]
   scripts/test.sh gametest [--full] [--seed N] [имя пачки или теста…]
 
 Режимы:
   unit      быстрые JUnit-тесты (без запуска игры)
   gametest  GameTest под замком: общий набор без ручных демо-аудитов (--full — он же, с пределом полного)
+
+Отбор для unit:
+  --changed         только модули изменённых путей и те, кто от них зависит (scripts/changed-modules.sh)
+  --module <м>      только модуль (:board, mech:farming, root); повторяемый
+  --tests <фильтр>  тесты под фильтр; модули ищутся по исходникам тестов, чужие не собираются
 
 Мир GameTest всегда засеян: по умолчанию сид 0, поэтому место сетки тестов и случайность мира повторяются
 от прогона к прогону; --seed N выбирает другой повторяемый мир (и пересоздаёт его), сид пишется в лог
@@ -58,6 +63,9 @@ usage() {
 
 Примеры:
   scripts/test.sh unit
+  scripts/test.sh unit --changed
+  scripts/test.sh unit --module board
+  scripts/test.sh unit --module mech:farming --tests "*Farming*"
   scripts/test.sh unit --tests "*GuardTests*"
   scripts/test.sh unit --fast-analyzers
   scripts/test.sh gametest
@@ -95,10 +103,15 @@ EOF
 
 MODE=""
 UNIT_TESTS=()
+UNIT_TEST_PATTERNS=()
 GAMETEST_FILTERS=()
 GAMETEST_FULL=0
 GAMETEST_SEED=""
 UNIT_FAST_ANALYZERS=0
+UNIT_CHANGED=0
+UNIT_MODULES=()
+UNIT_SUBSET=0
+UNIT_NO_MATCH=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -126,11 +139,24 @@ while [ $# -gt 0 ]; do
             UNIT_FAST_ANALYZERS=1
             shift
             ;;
+        --changed)
+            [ "$MODE" = "unit" ] || { echo "--changed только для режима unit" >&2; usage; }
+            UNIT_CHANGED=1
+            shift
+            ;;
+        --module)
+            [ "$MODE" = "unit" ] || { echo "--module только для режима unit" >&2; usage; }
+            shift
+            [ $# -gt 0 ] || { echo "--module требует аргумент" >&2; usage; }
+            UNIT_MODULES+=("$1")
+            shift
+            ;;
         --tests)
             [ "$MODE" = "unit" ] || { echo "--tests только для режима unit" >&2; usage; }
             shift
             [ $# -gt 0 ] || { echo "--tests требует аргумент" >&2; usage; }
             UNIT_TESTS+=("--tests" "$1")
+            UNIT_TEST_PATTERNS+=("$1")
             shift
             ;;
         -h|--help)
@@ -149,6 +175,100 @@ while [ $# -gt 0 ]; do
 done
 
 [ -n "$MODE" ] || usage
+[ "$UNIT_CHANGED" = 1 ] && [ ${#UNIT_MODULES[@]} -gt 0 ] \
+    && { echo "--changed и --module вместе не выбираются" >&2; usage; }
+
+all_unit_modules() {
+    sed -nE "s/^[[:space:]]*include[[:space:]]+'(:[^']+)'.*/\1/p" "$MOD_SETTINGS_FILE"
+}
+
+normalize_module_id() {
+    local module="$1"
+    case "$module" in
+        root|:root|:) printf ':root'; return 0 ;;
+    esac
+    module="${module#:}"
+    module="${module//\//:}"
+    printf ':%s' "$module"
+}
+
+module_is_valid() {
+    local wanted="$1" known
+    [ "$wanted" = ":root" ] && return 0
+    while IFS= read -r known; do
+        [ "$known" = "$wanted" ] && return 0
+    done < <(all_unit_modules)
+    return 1
+}
+
+test_source_roots() {
+    local module dir
+    printf 'src/test/java\n'
+    while IFS= read -r module; do
+        [ -n "$module" ] || continue
+        dir="${module#:}"
+        dir="${dir//:/\/}"
+        [ -d "$dir/src/test/java" ] && printf '%s/src/test/java\n' "$dir"
+    done < <(all_unit_modules)
+}
+
+# lib: фильтр --tests не называет модуль, поэтому ищем совпадение по именам тестовых классов.
+# Иначе пришлось бы собирать все модули, как раньше.
+resolve_test_modules() {
+    local pattern root file relative fqcn base matched module
+    local -A found=()
+    while IFS= read -r pattern; do
+        while IFS= read -r root; do
+            [ -d "$root" ] || continue
+            while IFS= read -r file; do
+                relative="${file#"$root"/}"
+                fqcn="${relative%.java}"
+                fqcn="${fqcn//\//.}"
+                base="${fqcn##*.}"
+                matched=0
+                case "$fqcn" in $pattern) matched=1 ;; esac
+                case "$base" in $pattern) matched=1 ;; esac
+                case "$pattern" in "$fqcn".*|"$base".*) matched=1 ;; esac
+                [ "$matched" = 1 ] && found["$root"]=1
+            done < <(find "$root" -type f -name '*.java')
+        done < <(test_source_roots)
+    done < <(printf '%s\n' "${UNIT_TEST_PATTERNS[@]}")
+    UNIT_MODULES=()
+    for root in "${!found[@]}"; do
+        if [ "$root" = "src/test/java" ]; then
+            UNIT_MODULES+=(":root")
+        else
+            module="${root%/src/test/java}"
+            UNIT_MODULES+=(":${module//\//:}")
+        fi
+    done
+    [ ${#UNIT_MODULES[@]} -gt 1 ] && mapfile -t UNIT_MODULES < <(printf '%s\n' "${UNIT_MODULES[@]}" | sort)
+}
+
+if [ "$MODE" = "unit" ]; then
+    if [ "$UNIT_CHANGED" = 1 ]; then
+        mapfile -t UNIT_MODULES < <(bash scripts/changed-modules.sh)
+        UNIT_SUBSET=1
+    elif [ ${#UNIT_MODULES[@]} -gt 0 ]; then
+        normalized=()
+        for unit_module in "${UNIT_MODULES[@]}"; do
+            unit_module="$(normalize_module_id "$unit_module")"
+            module_is_valid "$unit_module" \
+                || { echo "test.sh: нет модуля ${unit_module#:} (список — settings.gradle)" >&2; exit 2; }
+            normalized+=("$unit_module")
+        done
+        UNIT_MODULES=("${normalized[@]}")
+        UNIT_SUBSET=1
+    elif [ ${#UNIT_TEST_PATTERNS[@]} -gt 0 ]; then
+        resolve_test_modules
+        UNIT_SUBSET=1
+        [ ${#UNIT_MODULES[@]} -eq 0 ] && UNIT_NO_MATCH=1
+    fi
+    if [ "$UNIT_NO_MATCH" = 1 ]; then
+        echo "test.sh: фильтр не совпал ни с одним тестовым классом: ${UNIT_TEST_PATTERNS[*]}" >&2
+        exit 1
+    fi
+fi
 
 GAMETEST_SHARDS="${THEMINESPIRIT_GAMETEST_SHARDS:-}"
 if [ -z "$GAMETEST_SHARDS" ]; then
@@ -654,6 +774,8 @@ parse_unit_reports() {
 analyze_unit() {
     local log="$1"
     local gradle_code="${2:-0}"
+    local subset="${3:-0}"
+    local filtered="${4:-0}"
     local xml_dir="TestResults/unit/xml"
 
     local total=0 failures=0 errors=0
@@ -724,6 +846,10 @@ analyze_unit() {
     fi
 
     if [ "$total" -eq 0 ]; then
+        if [ "$subset" = 1 ] && [ "$filtered" = 0 ] && [ "$gradle_code" -eq 0 ]; then
+            echo "OK unit: тестов нет (в выбранных модулях их нет)"
+            return 0
+        fi
         echo "BUILD ERROR"
         grep -m3 -E "error:|FAILED|Exception" "$log" | head -3
         echo "полный лог: $log"
@@ -859,20 +985,15 @@ if [ "$MODE" = "unit" ]; then
     rm -f TestResults/api/xml/TEST-*.xml
     for module_root in ${MOD_MODULE_MAIN_ROOTS//,/ }; do
         name="${module_root%%/src/*}"
-        rm -f "TestResults/$(basename "$name")/xml/TEST-*.xml" "TestResults/$(basename "$name")/test-cost.csv"
+        rm -f "TestResults/$(basename "$name")/xml/"TEST-*.xml "TestResults/$(basename "$name")/test-cost.csv"
     done
     start_monitor "unit"
 
     UNIT_EXTRA=()
     UNIT_EXCLUDE=()
     UNIT_PROPS=()
-    if [ ${#UNIT_TESTS[@]} -eq 0 ]; then
-        if [ "$UNIT_FAST_ANALYZERS" = 1 ]; then
-            UNIT_EXTRA=(staticAnalysisFast --continue)
-        else
-            UNIT_EXTRA=(staticAnalysis --continue)
-        fi
-    else
+    UNIT_TARGETS=()
+    if [ ${#UNIT_TESTS[@]} -gt 0 ]; then
         UNIT_EXCLUDE=(-Ptheminespirit.filtered)
         # lib: --tests действует только на задачу test того проекта, который назван в командной строке;
         # тесты модулей фильтруются тем же списком через свойство.
@@ -883,10 +1004,45 @@ if [ "$MODE" = "unit" ]; then
         [ ${#local_unit_patterns[@]} -gt 0 ] && UNIT_PROPS=(-Ptheminespirit.tests="$(IFS=,; printf '%s' "${local_unit_patterns[*]}")")
     fi
 
-    if command -v setsid >/dev/null 2>&1; then
-        setsid "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXCLUDE[@]}" "${UNIT_PROPS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
+    if [ "$UNIT_SUBSET" = 1 ]; then
+        if [ ${#UNIT_MODULES[@]} -eq 0 ]; then
+            echo "unit --changed: изменений в тестируемых путях нет — прогонять нечего"
+            exit 0
+        fi
+        for unit_module in "${UNIT_MODULES[@]}"; do
+            if [ "$unit_module" = ":root" ]; then
+                UNIT_TARGETS+=(":test")
+                UNIT_PROPS+=(-Ptheminespirit.rootOnly)
+            else
+                UNIT_TARGETS+=("$unit_module:test")
+            fi
+        done
+        if [ "$UNIT_FAST_ANALYZERS" = 1 ] && [ ${#UNIT_TESTS[@]} -eq 0 ]; then
+            for unit_module in "${UNIT_MODULES[@]}"; do
+                if [ "$unit_module" = ":root" ]; then
+                    UNIT_EXTRA+=(:spotlessCheck :checkstyleMain :checkstyleTest)
+                else
+                    UNIT_EXTRA+=("$unit_module:staticAnalysisFast")
+                fi
+            done
+            UNIT_EXTRA+=(--continue)
+        fi
+        echo "unit: модули ${UNIT_MODULES[*]}" >&2
     else
-        "$GRADLEW" test --rerun "${UNIT_TESTS[@]}" "${UNIT_EXCLUDE[@]}" "${UNIT_PROPS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
+        UNIT_TARGETS=(:test)
+        if [ ${#UNIT_TESTS[@]} -eq 0 ]; then
+            if [ "$UNIT_FAST_ANALYZERS" = 1 ]; then
+                UNIT_EXTRA=(staticAnalysisFast --continue)
+            else
+                UNIT_EXTRA=(staticAnalysis --continue)
+            fi
+        fi
+    fi
+
+    if command -v setsid >/dev/null 2>&1; then
+        setsid "$GRADLEW" "${UNIT_TARGETS[@]}" --rerun "${UNIT_TESTS[@]}" "${UNIT_EXCLUDE[@]}" "${UNIT_PROPS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
+    else
+        "$GRADLEW" "${UNIT_TARGETS[@]}" --rerun "${UNIT_TESTS[@]}" "${UNIT_EXCLUDE[@]}" "${UNIT_PROPS[@]}" "${UNIT_EXTRA[@]}" >"$LOG_FILE" 2>&1 &
     fi
     GRADLE_PID=$!
     echo "$GRADLE_PID" >"$LOG_FILE.gradlepid"
@@ -905,7 +1061,7 @@ if [ "$MODE" = "unit" ]; then
         exit 124
     fi
 
-    analyze_unit "$LOG_FILE" "$CODE"
+    analyze_unit "$LOG_FILE" "$CODE" "$UNIT_SUBSET" "${#UNIT_TESTS[@]}"
     exit $?
 
 else
