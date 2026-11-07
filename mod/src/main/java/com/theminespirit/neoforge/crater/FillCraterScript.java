@@ -28,7 +28,7 @@ public final class FillCraterScript implements ScriptInstance {
     private final FillSession session;
 
     private TaskRunner withdrawRunner;
-    private boolean withdrawPlanned;
+    private final CraterWithdraw withdraw = new CraterWithdraw();
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
 
@@ -52,15 +52,16 @@ public final class FillCraterScript implements ScriptInstance {
         if (outcome != ScriptStatus.RUNNING) {
             return outcome;
         }
-        if (withdrawRunner == null && !withdrawPlanned) {
-            withdrawPlanned = true;
+        if (withdrawRunner == null && withdraw.needsStart()) {
+            withdraw.started();
             withdrawRunner = startWithdraw();
         }
         if (withdrawRunner != null) {
-            ScriptStatus withdraw = tickWithdraw();
-            if (withdraw == ScriptStatus.RUNNING) {
+            ScriptStatus status = tickWithdraw();
+            if (status == ScriptStatus.RUNNING) {
                 return ScriptStatus.RUNNING;
             }
+            withdraw.finished();
             withdrawRunner = null;
         }
         return switch (session.tick()) {
@@ -138,12 +139,13 @@ public final class FillCraterScript implements ScriptInstance {
 
     @Override
     public Map<String, Object> saveState() {
-        return session.saveState();
+        return withdraw.save(session.saveState());
     }
 
     @Override
     public void restoreState(Map<String, Object> state) {
         session.restoreState(state);
-        withdrawPlanned = true;
+        withdraw.restore(state);
+        withdrawRunner = null;
     }
 }

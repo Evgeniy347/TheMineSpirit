@@ -1,11 +1,13 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildPlanner;
+import com.theminespirit.core.building.BuildSupplyPick;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
+import com.theminespirit.core.building.StandPathGate;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,12 +16,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jspecify.annotations.Nullable;
 
 final class BuildPlanStart {
     record Prepared(BlockCoord supply, BuildPlanner.Start start, Map<String, Item> items) {}
@@ -69,11 +69,13 @@ final class BuildPlanStart {
             }
         });
         int materialSlots = materialSlots(spirit, materials);
-        List<BlockPos> chests = BuildSupplyTrip.containers(spirit);
-        Map<String, Integer> chest = new TreeMap<>();
+        BlockPos spiritPos = spirit.blockPosition();
+        BlockCoord feet = new BlockCoord(spiritPos.getX(), spiritPos.getY(), spiritPos.getZ());
+        Set<String> needed = needed(inventory, required);
         Set<BlockPos> seen = new HashSet<>();
-        BlockPos supplyChest = null;
-        for (BlockPos pos : chests) {
+        List<BuildSupplyPick.Candidate> candidates = new ArrayList<>();
+        Map<BlockCoord, Map<String, Integer>> found = new LinkedHashMap<>();
+        for (BlockPos pos : BuildSupplyTrip.containers(spirit)) {
             BlockPos other = BuildSupplyTrip.otherHalf(spirit, pos);
             if (!seen.add(pos) || (!other.equals(pos) && seen.contains(other))) {
                 continue;
@@ -83,18 +85,38 @@ final class BuildPlanStart {
             }
             if (ContainerAccess.open(spirit.level(), pos) instanceof ContainerAccess.Opened opened) {
                 Container container = opened.container();
+                Map<String, Integer> counts = new TreeMap<>();
+                boolean hasNeeded = false;
                 for (Map.Entry<String, Item> item : items.entrySet()) {
                     int count = container.countItem(item.getValue());
                     if (count > 0) {
-                        chest.merge(item.getKey(), count, Integer::sum);
-                        if (supplyChest == null) {
-                            supplyChest = pos;
-                        }
+                        counts.put(item.getKey(), count);
+                        hasNeeded |= needed.contains(item.getKey());
                     }
+                }
+                Optional<BlockCoord> stand = BuildSupplyReach.feet(site, pos);
+                if (stand.isPresent()) {
+                    BlockCoord chest = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+                    candidates.add(new BuildSupplyPick.Candidate(chest, stand.get(), hasNeeded));
+                    found.put(chest, counts);
                 }
             }
         }
-        BlockCoord supply = supplyPoint(spirit, site, origin, chests, supplyChest, inventory, required);
+        boolean near = site.networkBox(BuildSchematicScript.WALK_MARGIN).contains(feet);
+        Optional<Set<BlockCoord>> walkable = site.walkable(feet, BuildSchematicScript.WALK_MARGIN);
+        List<BuildSupplyPick.Candidate> reachable = candidates.stream()
+                .filter(candidate ->
+                        StandPathGate.usable(site.standable(candidate.stand()), near, walkable, candidate.stand()))
+                .toList();
+        Map<String, Integer> chest = new TreeMap<>();
+        for (BuildSupplyPick.Candidate candidate : reachable) {
+            found.getOrDefault(candidate.chest(), Map.of())
+                    .forEach((key, count) -> chest.merge(key, count, Integer::sum));
+        }
+        boolean fetchNeeded = required.entrySet().stream()
+                .anyMatch(need -> inventory.getOrDefault(need.getKey(), 0) < need.getValue());
+        BlockCoord supply =
+                fetchNeeded ? relative(BuildSupplyPick.choose(feet, reachable), origin) : relative(feet, origin);
         BuildPlanner.Start start = new BuildPlanner.Start(
                 done,
                 skip,
@@ -125,49 +147,14 @@ final class BuildPlanStart {
         return !present.isAir() && !present.canBeReplaced();
     }
 
-    private static BlockCoord supplyPoint(
-            SpiritEntity spirit,
-            SchematicSite site,
-            BlockCoord origin,
-            List<BlockPos> chests,
-            @Nullable BlockPos supplyChest,
-            Map<String, Integer> inventory,
-            Map<String, Integer> required) {
-        BlockCoord feet = relative(
-                new BlockCoord(
-                        spirit.blockPosition().getX(),
-                        spirit.blockPosition().getY(),
-                        spirit.blockPosition().getZ()),
-                origin);
-        boolean fetchNeeded = required.entrySet().stream()
-                .anyMatch(need -> inventory.getOrDefault(need.getKey(), 0) < need.getValue());
-        BlockPos supplyPos =
-                !fetchNeeded ? null : (supplyChest != null ? supplyChest : (chests.isEmpty() ? null : chests.get(0)));
-        return supplyPos == null ? feet : supplyFeet(site, supplyPos).orElse(feet);
-    }
-
-    private static Optional<BlockCoord> supplyFeet(SchematicSite site, BlockPos chest) {
-        BlockCoord origin = site.origin();
-        @Nullable BlockCoord best = null;
-        double bestDistance = Double.MAX_VALUE;
-        BuildBox box = site.networkBox(0);
-        BlockPos centre = new BlockPos((box.minX() + box.maxX()) / 2, origin.y(), (box.minZ() + box.maxZ()) / 2);
-        for (Direction side : Direction.Plane.HORIZONTAL) {
-            BlockPos cell = chest.relative(side);
-            BlockCoord coord = new BlockCoord(cell.getX(), cell.getY(), cell.getZ());
-            if (cell.getY() != origin.y()
-                    || !site.standable(coord)
-                    || site.schemeCells().contains(coord)
-                    || !site.outsideFootprint(coord)) {
-                continue;
+    private static Set<String> needed(Map<String, Integer> inventory, Map<String, Integer> required) {
+        Set<String> needed = new HashSet<>();
+        required.forEach((key, count) -> {
+            if (inventory.getOrDefault(key, 0) < count) {
+                needed.add(key);
             }
-            double distance = cell.distSqr(centre);
-            if (distance < bestDistance) {
-                bestDistance = distance;
-                best = relative(coord, origin);
-            }
-        }
-        return Optional.ofNullable(best);
+        });
+        return needed;
     }
 
     private static Map<String, Integer> stacks(Map<String, Item> items) {

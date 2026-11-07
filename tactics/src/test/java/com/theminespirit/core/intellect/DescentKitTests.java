@@ -5,7 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.inventory.ValueTable;
+import com.theminespirit.core.plan.ScriptCall;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 class DescentKitTests {
@@ -64,6 +67,46 @@ class DescentKitTests {
         assertTrue(
                 missing.stream().anyMatch(line -> line.contains("food")),
                 "Отчёт обязан назвать еду, фактически: " + missing);
+    }
+
+    @Test
+    void supply_LeaderHasPickaxe_TakesTorchesAndFoodFromWarehouse() {
+        List<Stack> inventory = List.of(stack("minecraft:iron_pickaxe", 1));
+        Map<String, Integer> stock = Map.of(
+                "minecraft:iron_pickaxe", 1,
+                "minecraft:torch", 8,
+                "minecraft:bread", 3);
+
+        List<ScriptCall> steps = DescentKit.supply(KIT, inventory, stock, ValueTable.load());
+
+        assertEquals(
+                List.of("minecraft:torch", "minecraft:bread"),
+                steps.stream().map(call -> (String) call.params().get("item")).toList(),
+                "В поход добирается только то, чего у лидера нет: кирку при себе не перекладывают, "
+                        + "факелы и еду берут со склада перед спуском");
+        assertTrue(
+                steps.stream()
+                        .allMatch(call -> "withdraw".equals(call.script())
+                                && "warehouse".equals(call.params().get("container"))),
+                "Набор идёт шагом withdraw со склада поселения, а не местным крафтом мимо графа: " + steps);
+        assertEquals(
+                Map.of("minecraft:bread", 3, "minecraft:torch", 8),
+                steps.stream()
+                        .collect(Collectors.toMap(call -> (String) call.params().get("item"), call ->
+                                (Integer) call.params().get("count"))),
+                "Берут ровно нехватку набора: 8 факелов и 3 еды");
+    }
+
+    @Test
+    void supply_FullKit_NoSteps() {
+        List<Stack> inventory =
+                List.of(stack("minecraft:iron_pickaxe", 1), stack("minecraft:torch", 8), stack("minecraft:bread", 3));
+
+        assertEquals(
+                List.of(),
+                DescentKit.supply(
+                        KIT, inventory, Map.of("minecraft:torch", 8, "minecraft:bread", 3), ValueTable.load()),
+                "Полный набор у лидера — до старта ничего не забирают: лишний заход к складу задерживает поход");
     }
 
     @Test

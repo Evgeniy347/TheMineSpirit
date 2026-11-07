@@ -92,6 +92,7 @@ final class BuildSupplyTrip {
         }
         List<ScriptCall> steps = new ArrayList<>();
         Set<BlockPos> seen = new HashSet<>();
+        Predicate<BlockPos> reachable = BuildSupplyReach.reachable(site, coord(spirit.blockPosition()));
         for (BlockPos pos : chests) {
             if (freeSlots <= 0) {
                 break;
@@ -100,7 +101,7 @@ final class BuildSupplyTrip {
             if (!seen.add(pos) || (!other.equals(pos) && seen.contains(other))) {
                 continue;
             }
-            if (!spirit.level().isLoaded(pos)) {
+            if (!spirit.level().isLoaded(pos) || !reachable.test(pos)) {
                 continue;
             }
             if (!(ContainerAccess.open(spirit.level(), pos) instanceof ContainerAccess.Opened opened)) {

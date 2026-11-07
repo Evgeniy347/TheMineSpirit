@@ -11,8 +11,8 @@ import com.theminespirit.core.intellect.OutsideRules;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.neoforge.PickaxeCheck;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.InventoryTables;
 import com.theminespirit.neoforge.inventory.StackMapper;
@@ -91,15 +91,6 @@ public final class ExpeditionController {
 
     private boolean dispatchMine(List<SpiritEntity> members, Expedition expedition, long now) {
         List<SpiritEntity> team = team(members, expedition);
-        List<String> missing = missingKit(team, stock);
-        if (!missing.isEmpty()) {
-            String reason = "перед спуском в шахту нужен набор: " + String.join(", ", missing);
-            if (!reason.equals(refusal)) {
-                LOGGER.info("[graph] экспедиция отложена: {}", reason);
-            }
-            refusal = reason;
-            return false;
-        }
         UUID leaderId = expedition.team().get(0);
         Map<UUID, SpiritEntity> byId = new HashMap<>();
         for (SpiritEntity spirit : team) {
@@ -111,14 +102,20 @@ public final class ExpeditionController {
         if (leader == null) {
             leader = team.get(0);
         }
-        if (!PickaxeCheck.has(leader)) {
-            String reason = "поход в шахту не начат: у лидера " + leader.displayName() + " нет кирки";
+        List<String> missing = missingKit(List.of(leader), stock);
+        if (!missing.isEmpty()) {
+            String reason = "перед спуском в шахту лидеру нужен набор: " + String.join(", ", missing);
             if (!reason.equals(refusal)) {
                 LOGGER.info("[graph] экспедиция отложена: {}", reason);
             }
             refusal = reason;
             return false;
         }
+        List<ScriptCall> kit = DescentKit.supply(
+                OutsideRules.loadDefault().mineKit(),
+                new StackMapper().map(leader.getInventory()),
+                stock.available(),
+                InventoryTables.values());
         BlockCoord bottom = new BlockCoord(
                 (int) expedition.target().x(), (int) expedition.target().y(), (int)
                         expedition.target().z());
@@ -126,7 +123,7 @@ public final class ExpeditionController {
         for (ExpeditionDispatch.Order order : plan.orders()) {
             SpiritEntity spirit = byId.get(order.spirit());
             if (spirit != null) {
-                TaskNode task = order.spirit().equals(plan.leader()) ? ExpeditionMinePlan.plan(bottom) : order.task();
+                TaskNode task = order.spirit().equals(plan.leader()) ? leaderTask(bottom, kit) : order.task();
                 launched |= launch(spirit, order.script(), task, now);
             }
         }
@@ -137,6 +134,16 @@ public final class ExpeditionController {
             missionLeader = plan.leader();
         }
         return launched;
+    }
+
+    private static TaskNode leaderTask(BlockCoord bottom, List<ScriptCall> kit) {
+        TaskNode mine = ExpeditionMinePlan.plan(bottom);
+        if (kit.isEmpty()) {
+            return mine;
+        }
+        List<TaskNode> steps = new ArrayList<>(kit);
+        steps.add(mine);
+        return new SequenceNode(steps);
     }
 
     public static List<String> missingKit(List<SpiritEntity> team, StockView stock) {

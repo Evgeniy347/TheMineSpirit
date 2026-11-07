@@ -46,7 +46,7 @@ class TicketToolPlanTests {
     }
 
     @Test
-    void plan_ClearGrounds_AcquiresShovelBeforeClear() {
+    void plan_ClearGrounds_TakesShovelBeforeClear() {
         PlotLeveling leveling = new PlotLeveling(List.of(new PlotLeveling.Box(0, 64, 0, 0, 65, 0)), List.of(), "dirt");
         TaskNode plan = TicketPlans.plan(
                 BoardCase.CLEAR_GROUNDS,
@@ -56,11 +56,16 @@ class TicketToolPlanTests {
         assertTrue(
                 index(
                                 steps,
-                                call -> "acquire".equals(call.script())
+                                call -> "withdraw".equals(call.script())
                                         && "*_shovel".equals(call.params().get("item")))
                         < index(steps, call -> "clear_area".equals(call.script())),
                 "Лопата берётся со склада до расчистки: иначе дёрн и земля снимаются руками и работа не кончается: "
                         + steps);
+        assertTrue(
+                steps.stream()
+                        .noneMatch(call -> "acquire".equals(call.script())
+                                && "*_shovel".equals(call.params().get("item"))),
+                "Лопата не крафтится местным acquire мимо графа: снабжение инструментом ставит отдельный узел");
     }
 
     @Test
@@ -80,7 +85,7 @@ class TicketToolPlanTests {
     }
 
     @Test
-    void shovel_NoShovelAnywhere_PlanContinuesByHand() {
+    void shovel_NoShovelAnywhere_WithdrawsFromWarehouseThenWorksByHand() {
         TaskNode shovel = GatherPlans.shovel();
         List<ScriptCall> steps = calls(shovel);
 
@@ -88,15 +93,25 @@ class TicketToolPlanTests {
                 shovel instanceof FallbackNode fallback
                         && fallback.steps().get(fallback.steps().size() - 1) instanceof ScriptCall wait
                         && "wait".equals(wait.script()),
-                "Нет лопаты нигде — acquire завершается ожиданием, а расчистка идёт руками: инструмент — "
+                "Нет лопаты нигде — забор инструмента завершается ожиданием, а расчистка идёт руками: инструмент — "
                         + "предпочтение, а не запрет: " + steps);
         assertTrue(
-                index(
-                                steps,
-                                call -> "acquire".equals(call.script())
-                                        && "*_shovel".equals(call.params().get("item")))
-                        < index(steps, call -> "wait".equals(call.script())),
-                "Лопату сначала ищут на складе, и только потом работают руками: " + steps);
+                steps.stream().noneMatch(call -> "acquire".equals(call.script())),
+                "Лопата берётся только со склада: местный acquire/крафт обходил граф и делал инструмент мимо "
+                        + "учёта поселения, крафт ставит отдельный узел графа: " + steps);
+        int nearby = index(
+                steps,
+                call -> "withdraw".equals(call.script())
+                        && "auto".equals(call.params().get("container")));
+        int warehouse = index(
+                steps,
+                call -> "withdraw".equals(call.script())
+                        && "warehouse".equals(call.params().get("container")));
+        int hands = index(steps, call -> "wait".equals(call.script()));
+        assertTrue(
+                nearby < warehouse && warehouse < hands,
+                "Сначала лопату ищут в контейнерах рядом с духом, затем на складе поселения, и только потом "
+                        + "работают руками: " + steps);
     }
 
     @Test
