@@ -2,6 +2,13 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         mavenCentral()
+        maven {
+            name = 'NeoForged Releases'
+            url = 'https://maven.neoforged.net/releases/'
+            content {
+                includeGroupByRegex 'net\\.neoforged.*'
+            }
+        }
     }
     plugins {
         id 'net.neoforged.moddev' version "${moddev_plugin_version}"
@@ -13,6 +20,69 @@ pluginManagement {
 
 plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
+// lib: единственное место зависимостей сборки. project-уровень repositories выключает управление из settings
+// (Gradle 9: «The project declares repositories, effectively ignoring the repositories you have declared in the
+// settings»), а кэш Gradle привязан к репозиторию — собранный с одним набором репозиториев кэш не годится для
+// другого, и offline-сборка сервера падает на «No cached version … available for offline mode». PREFER_SETTINGS
+// делает этот файл единственным источником, в том числе для репозиториев, которые добавляет moddev.
+dependencyResolutionManagement {
+    repositoriesMode = RepositoriesMode.PREFER_SETTINGS
+    repositories {
+        mavenCentral()
+        maven {
+            name = 'Mojang Meta'
+            url = 'https://maven.neoforged.net/mojang-meta/'
+            metadataSources {
+                gradleMetadata()
+            }
+            content {
+                includeModule 'net.neoforged', 'minecraft-dependencies'
+            }
+        }
+        maven {
+            name = 'NeoForged Releases'
+            url = 'https://maven.neoforged.net/releases/'
+            content {
+                // lib: только группы, которых нет в Maven Central; иначе каждый артефакт пробует этот хост.
+                includeGroupByRegex 'net\\.neoforged.*'
+                includeGroupByRegex 'cpw\\.mods.*'
+                includeGroupByRegex 'net\\.minecraftforge.*'
+            }
+        }
+        maven {
+            name = 'Mojang Minecraft Libraries'
+            url = 'https://libraries.minecraft.net/'
+            metadataSources {
+                mavenPom()
+            }
+            content {
+                includeGroupByRegex 'com\\.mojang.*'
+            }
+        }
+        maven {
+            name = 'ParchmentMC'
+            url = 'https://maven.parchmentmc.org'
+            content {
+                includeGroup 'org.parchmentmc.data'
+            }
+        }
+        maven {
+            name = 'BlameJared'
+            url = 'https://maven.blamejared.com'
+            content {
+                includeGroup 'mezz.jei'
+            }
+        }
+        // lib: JEI на сервере лежит в ~/.m2 (maven.blamejared оттуда временами недоступен); последним и только
+        // для mezz.jei, чтобы не подменять остальные зависимости локальной машиной.
+        mavenLocal {
+            content {
+                includeGroup 'mezz.jei'
+            }
+        }
+    }
 }
 
 rootProject.name = 'the-mine-spirit'

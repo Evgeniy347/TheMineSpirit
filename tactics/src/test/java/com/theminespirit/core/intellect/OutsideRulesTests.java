@@ -10,9 +10,13 @@ import org.junit.jupiter.api.Test;
 
 class OutsideRulesTests {
     private static final String VALID = """
-            {"partyMin":2,"escortRadius":8.0,
+            {"partyMin":2,
             "mineKit":[{"match":["*_pickaxe"],"count":1},{"match":["torch"],"count":8},
             {"category":"food","count":3}]}
+            """;
+    private static final String RETIRED = """
+            {"partyMin":2,"escortRadius":8.0,
+            "mineKit":[{"match":["*_pickaxe"],"count":1}]}
             """;
 
     @Test
@@ -23,10 +27,6 @@ class OutsideRulesTests {
                 2,
                 rules.partyMin(),
                 "Порог группы обязан разобраться из файла: иначе число духов не управляется данными");
-        assertEquals(
-                8.0,
-                rules.escortRadius(),
-                "Радиус сопровождения читается из файла: иначе «рядом с игроком» стало бы константой в коде");
         assertEquals(3, rules.mineKit().size(), "Набор шахты из файла обязан содержать все три нужды");
         assertTrue(
                 rules.mineKit().get(1).covers("minecraft:torch", ValueTable.load()),
@@ -52,6 +52,20 @@ class OutsideRulesTests {
     }
 
     @Test
+    void parse_RetiredEscortRadius_Throws() {
+        IllegalStateException error = assertThrows(
+                IllegalStateException.class,
+                () -> OutsideRules.parse(RETIRED, "старый.json"),
+                "Старое поле escortRadius больше не читается: молча принятый радиус сопровождения вернул бы "
+                        + "правило «идти с игроком», которое владелец удалил");
+
+        assertTrue(
+                error.getMessage().contains("escortRadius"),
+                "Ошибка обязана называть устаревшее поле, иначе правку outside.json не найти, фактически: "
+                        + error.getMessage());
+    }
+
+    @Test
     void parse_PartyBelowTwo_Throws() {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
@@ -67,7 +81,7 @@ class OutsideRulesTests {
     @Test
     void parse_NeedWithoutMatchOrCategory_Throws() {
         String broken = """
-                {"partyMin":2,"escortRadius":8.0,"mineKit":[{"count":1}]}
+                {"partyMin":2,"mineKit":[{"count":1}]}
                 """;
 
         IllegalStateException error = assertThrows(

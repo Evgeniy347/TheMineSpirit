@@ -22,8 +22,6 @@ import java.util.Objects;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.level.block.state.BlockState;
@@ -252,8 +250,7 @@ public final class ExploreScript implements ScriptInstance {
             return null;
         }
         OutsideGate gate = OutsideGate.withDefaults();
-        OutsideGate.Decision decision = gate.admitExternal(
-                partySize(), playerNear(home.get(), gate.escortRadius()), leash.isEvening(dayFraction()));
+        OutsideGate.Decision decision = gate.admitExternal(partySize(), leash.isEvening(dayFraction()));
         return decision instanceof OutsideGate.Refused refused ? refused.reason() : null;
     }
 
@@ -266,21 +263,6 @@ public final class ExploreScript implements ScriptInstance {
                         other -> !other.equals(spirit) && other.isAlive())
                 .size();
         return 1 + nearby;
-    }
-
-    private boolean playerNear(BlockCoord home, double radius) {
-        if (!(spirit.level() instanceof ServerLevel level)) {
-            return false;
-        }
-        for (ServerPlayer player : level.players()) {
-            double dx = player.getX() - (home.x() + 0.5);
-            double dy = player.getY() - home.y();
-            double dz = player.getZ() - (home.z() + 0.5);
-            if (Math.sqrt(dx * dx + dy * dy + dz * dz) <= radius) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private double dayFraction() {

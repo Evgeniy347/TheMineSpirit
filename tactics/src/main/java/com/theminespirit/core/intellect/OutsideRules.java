@@ -12,17 +12,16 @@ import java.util.Set;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
-public record OutsideRules(int partyMin, double escortRadius, List<Need> mineKit) {
+public record OutsideRules(int partyMin, List<Need> mineKit) {
     public static final String RESOURCE = "data/theminespirit/intellect/outside.json";
     public static final int MIN_PARTY = 2;
 
     private static final TableSlot<OutsideRules> SOURCE = new TableSlot<>(OutsideRules::load);
     private static final String MINE_KIT = "mineKit";
-    private static final Set<String> FIELDS = Set.of("partyMin", "escortRadius", MINE_KIT);
+    private static final Set<String> FIELDS = Set.of("partyMin", MINE_KIT);
     private static final Set<String> NEED_FIELDS = Set.of("match", "category", "count");
     private static final OutsideRules DEFAULTS = new OutsideRules(
             MIN_PARTY,
-            8.0,
             List.of(
                     new Need(List.of("*_pickaxe"), null, 1),
                     new Need(List.of("torch"), null, 8),
@@ -32,10 +31,6 @@ public record OutsideRules(int partyMin, double escortRadius, List<Need> mineKit
         if (partyMin < MIN_PARTY) {
             throw new IllegalArgumentException("Порог группы " + partyMin + " меньше " + MIN_PARTY
                     + ": в одиночку за границу поселения не выходят, порог ниже двух отменяет правило");
-        }
-        if (Double.isNaN(escortRadius) || escortRadius <= 0) {
-            throw new IllegalArgumentException("Радиус сопровождения " + escortRadius
-                    + ": обязан быть положительным конечным числом, иначе «рядом» не имеет смысла");
         }
         Objects.requireNonNull(mineKit, "Набор шахты не может быть null: пустой набор задают пустым списком");
         mineKit = List.copyOf(mineKit);
@@ -61,10 +56,9 @@ public record OutsideRules(int partyMin, double escortRadius, List<Need> mineKit
         JsonNode root = JsonResource.parse(json, origin);
         JsonResource.checkFields(root, FIELDS, origin, "outside.json");
         int partyMin = JsonResource.integer(root.get("partyMin"), origin, "partyMin");
-        double escortRadius = JsonResource.decimal(root.get("escortRadius"), origin, "escortRadius");
         List<Need> kit = parseKit(root.get(MINE_KIT), origin);
         try {
-            return new OutsideRules(partyMin, escortRadius, kit);
+            return new OutsideRules(partyMin, kit);
         } catch (IllegalArgumentException error) {
             throw new IllegalStateException("Файл '" + origin + "': " + error.getMessage(), error);
         }

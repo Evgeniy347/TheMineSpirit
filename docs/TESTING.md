@@ -119,6 +119,8 @@
   из `test-cost.csv`), по часам 600/900 с — только защита от зависания (владелец 28.10: под нагрузкой
   параллельных исполнителей часы врут); общий GameTest 120/200 с, `--full` 180/300 с от старта шардов, подготовка
   сборки — отдельный бюджет 300/600 с (`стоп: подготовка сборки`) — замер общего набора 23.10 — 182–217 с.
+- **Анализаторы SpotBugs, PMD, Checkstyle выключены (владелец 07.11)** ради скорости: `theminespirit.analyzers=off` в `gradle.properties`;
+  включить на один прогон — `-Ptheminespirit.analyzers=on`. Spotless (формат) и Error Prone (компилятор) работают всегда.
 - Анализаторы: в хуке pre-commit — компилятор с Error Prone/NullAway, Spotless, Checkstyle (`--fast-analyzers`);
   SpotBugs и PMD — приёмка перед слиянием (`scripts/test.sh unit` без флага, `check`).
 - Покрытие — `./gradlew jacocoTestReport` (`TestResults/coverage/`), отчёт, не гейт.

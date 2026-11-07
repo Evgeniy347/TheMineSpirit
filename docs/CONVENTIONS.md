@@ -37,6 +37,8 @@
   `Lookup.present`, сообщение исключения — `ErrorText.of`.
 - Версии зависимостей и три конфигурации библиотеки — сторож `DependencyVersionGuardTests`; `src/generated/` —
   только datagen (менять версии — решение пользователя).
+- Репозитории зависимостей — только в `settings.gradle` и `build-logic/settings.gradle` (сторож
+  `BuildRepositoriesGuardTests`); `repositories {}` в build-файлах нет, кроме `publishing {}`.
 
 ## Производительность
 

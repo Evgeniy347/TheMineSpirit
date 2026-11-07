@@ -8,15 +8,6 @@ tasks.named('wrapper', Wrapper).configure {
     distributionType = Wrapper.DistributionType.BIN
 }
 
-repositories {
-    maven {
-        url = "https://maven.blamejared.com"
-        content {
-            includeGroup "mezz.jei"
-        }
-    }
-}
-
 dependencies {
     testImplementation project(':mod')
     testImplementation testFixtures(project(':test-fixtures'))
