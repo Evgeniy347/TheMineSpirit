@@ -8,8 +8,11 @@ public final class SurfaceLevel {
 
     private SurfaceLevel() {}
 
-    public static boolean escaped(boolean skyOpen, int feetY, List<Integer> surroundingHeights) {
+    public static boolean escaped(boolean skyOpen, int feetY, List<Integer> surroundingHeights, boolean walkExit) {
         Objects.requireNonNull(surroundingHeights, "Высоты вокруг не могут быть null: без них яму не отличить");
+        if (walkExit) {
+            return true;
+        }
         if (!skyOpen) {
             return false;
         }

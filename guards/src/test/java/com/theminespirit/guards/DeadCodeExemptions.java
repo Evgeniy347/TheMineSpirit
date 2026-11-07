@@ -10,6 +10,10 @@ final class DeadCodeExemptions {
                     "Генератор graph-recipes.json (export-задача): рецепты импортируются при генерации, "
                             + "в игре читается готовый файл; TestResults/task.md"),
             new Exemption(
+                    "core/navigation/NavAStarSearch.java|class|<top>#NavAStarSearch",
+                    "Синхронный plan — эталонный API навигации для тестов; в игре путь считает NavAStarSession "
+                            + "порциями вне тика графа (debtnav, п.2)"),
+            new Exemption(
                     "neoforge/SpiritEntity.java|method|SpiritEntity#setChild",
                     "Заготовка под открытую задачу: todo.md → «Дети»"),
             new Exemption(
@@ -208,7 +212,11 @@ final class DeadCodeExemptions {
             new Probe(
                     "core/farming/FarmPlanner.java|field|FarmPlanner#MAX_SAFETY_READS_PER_TARGET",
                     "maxSafetyReadsPerTarget_SearchBoxVolume_Is324",
-                    "бюджет чтений безопасности на цель: масштаб планирования фермы"));
+                    "бюджет чтений безопасности на цель: масштаб планирования фермы"),
+            new Probe(
+                    "core/navigation/NavAStarSession.java|method|NavAStarSession#returnableCacheSize",
+                    "livePit_DeepSearch_ReturnableCacheStaysBounded",
+                    "размер кэша обратимости: замер на живой яме, иначе предел не увидеть"));
 
     private DeadCodeExemptions() {}
 

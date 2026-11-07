@@ -1,8 +1,10 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -79,6 +81,28 @@ class BoardDoneTests {
                 BoardStatus.PENDING,
                 board.statusOf("eat:spirit").orElse(null),
                 "Повторяющееся задание после DONE ставится заново и ждёт выдачи");
+    }
+
+    @Test
+    void complete_MarkFromIndoors_ReleasedByReachedGoal() {
+        Board board = boardAt(0);
+        BlockCoord indoors = new BlockCoord(-188, 67, -516);
+        board.submit(ticket(
+                "graph:craft_stone_axe@spirit",
+                BoardCase.CRAFT_STONE_AXE,
+                0,
+                "graph:craft_stone_axe@spirit",
+                Map.of()));
+        assertEquals(BoardOutcome.CLAIMED, board.claim("graph:craft_stone_axe@spirit", SPIRIT, 0), "Дух берёт задание");
+        board.stuck().see(SPIRIT, indoors, 0);
+        board.stuck().mark(SPIRIT, 0, "провал движения");
+
+        assertTrue(board.complete("graph:craft_stone_axe@spirit"), "Задание выполнено");
+
+        assertFalse(
+                board.stuck().isStuck(SPIRIT, 30),
+                "Дух дошёл до цели и закрыл задание — метка, полученная в помещении, снимается сразу, а не "
+                        + "живёт до TTL (debtnav, п.5): иначе он 300 секунд не получает работу");
     }
 
     @Test

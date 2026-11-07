@@ -12,6 +12,7 @@ import java.util.function.LongSupplier;
 import org.jspecify.annotations.Nullable;
 
 public final class NavAStarSession {
+    public static final int MAX_RETURNABLE_CACHE = 512;
     private static final double[] COEFFICIENTS = {1.5, 2, 2.5, 3, 4, 5, 10};
     private static final double MIN_DIST_PATH = 5;
     private static final double MIN_IMPROVEMENT = 0.01;
@@ -30,6 +31,7 @@ public final class NavAStarSession {
     private final long started;
     private final Map<Long, NavNode> nodes = new HashMap<>();
     private final Map<Long, Boolean> returnableCache = new HashMap<>();
+    private int returnableCacheClears;
     private final NavOpenSet open = new NavBinaryHeapOpenSet();
     private final NavNode[] bestSoFar = new NavNode[COEFFICIENTS.length];
     private final double[] bestHeuristicSoFar = new double[COEFFICIENTS.length];
@@ -106,6 +108,14 @@ public final class NavAStarSession {
 
     public int considered() {
         return considered;
+    }
+
+    int returnableCacheSize() {
+        return returnableCache.size();
+    }
+
+    int returnableCacheClears() {
+        return returnableCacheClears;
     }
 
     private boolean timedOut() {
@@ -199,6 +209,10 @@ public final class NavAStarSession {
             return known;
         }
         boolean reachable = NavReversibility.canReturn(context.world(), x, y, z, referenceY);
+        if (returnableCache.size() >= MAX_RETURNABLE_CACHE) {
+            returnableCache.clear();
+            returnableCacheClears++;
+        }
         returnableCache.put(key, reachable);
         return reachable;
     }

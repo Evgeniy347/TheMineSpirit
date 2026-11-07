@@ -61,7 +61,8 @@ public final class GraphSource {
         if (pending != null) {
             return finish(pending);
         }
-        Set<String> signals = GraphSignals.of(events, spirits, service, now);
+        Set<String> signals = new HashSet<>(GraphSignals.of(events, spirits, service, now));
+        signals.add("rescue_reach:" + service.sources.rescueReach().generation());
         if (!cadence.due(now, signals)) {
             return lastLive;
         }

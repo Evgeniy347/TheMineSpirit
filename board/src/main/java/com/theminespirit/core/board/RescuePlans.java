@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.movement.PitExitPlanner;
 import com.theminespirit.core.movement.SelfEscape;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
@@ -99,12 +100,14 @@ public final class RescuePlans {
     public static void complete(StuckSpirits stuck, BoardTicket ticket, @Nullable UUID holder, long now) {
         Objects.requireNonNull(stuck, "Метки застревания не могут быть null: спасение снимает одну из них");
         Objects.requireNonNull(ticket, "Задание спасения не может быть null: по нему находят спасённого");
-        if (ticket.boardCase() != BoardCase.RESCUE_SPIRIT) {
-            return;
+        if (ticket.boardCase() == BoardCase.RESCUE_SPIRIT) {
+            rescuee(ticket.id())
+                    .or(() -> Optional.ofNullable(holder))
+                    .ifPresent(rescuee -> stuck.release(rescuee, now, "выход выполнен заданием " + ticket.id()));
         }
-        rescuee(ticket.id())
-                .or(() -> Optional.ofNullable(holder))
-                .ifPresent(rescuee -> stuck.release(rescuee, now, "выход выполнен заданием " + ticket.id()));
+        if (holder != null) {
+            stuck.release(holder, now, "дошёл до цели: задание " + ticket.id());
+        }
     }
 
     public static Self self(Situation situation) {
@@ -140,6 +143,10 @@ public final class RescuePlans {
     }
 
     public static TaskNode helper(BlockCoord trapped, @Nullable BlockCoord goal) {
+        return helper(trapped, goal, null);
+    }
+
+    public static TaskNode helper(BlockCoord trapped, @Nullable BlockCoord goal, PitExitPlanner.@Nullable Plan escape) {
         Objects.requireNonNull(trapped, "Цель спасения не может быть null: помощнику нужно к кому идти");
         BlockCoord from = new BlockCoord(trapped.x() - 1, trapped.y(), trapped.z() - 1);
         BlockCoord to = new BlockCoord(trapped.x() + 1, trapped.y() + 1, trapped.z() + 1);
@@ -155,10 +162,28 @@ public final class RescuePlans {
                                 "x2", to.x(),
                                 "y2", to.y(),
                                 "z2", to.z()))));
+        addEscape(steps, escape);
         if (goal != null) {
             steps.add(gotoPoint(goal));
         }
         return new SequenceNode(List.copyOf(steps));
+    }
+
+    private static void addEscape(List<TaskNode> steps, PitExitPlanner.@Nullable Plan escape) {
+        if (escape == null) {
+            return;
+        }
+        switch (escape.method()) {
+            case PILLAR -> {
+                steps.add(new ScriptCall("pillar_up", Map.of("height", escape.rise())));
+                steps.add(gotoPoint(escape.exit()));
+            }
+            case STAIRS -> {
+                steps.add(digOut(escape.exit()));
+                steps.add(gotoPoint(escape.exit()));
+            }
+            case WALK, IMPOSSIBLE -> {}
+        }
     }
 
     private static TaskNode withGoal(TaskNode escape, @Nullable BlockCoord goal) {

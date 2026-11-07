@@ -11,11 +11,14 @@ import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.movement.LevelNavWorld;
 import com.theminespirit.neoforge.movement.RescueReach;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.FluidTags;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -23,7 +26,7 @@ final class GraphRescuePost {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String RESCUE = "rescue:";
 
-    private record HelperChoice(Optional<UUID> id, String why) {}
+    private record HelperChoice(Optional<UUID> id, String why, boolean pending) {}
 
     private GraphRescuePost() {}
 
@@ -52,7 +55,11 @@ final class GraphRescuePost {
             int failures = post.service.board().ticketFailures(ticketId);
             HelperChoice helper = !escape.self() || failures > 0
                     ? helper(post, fact.id(), at)
-                    : new HelperChoice(Optional.empty(), "не нужен: выход есть");
+                    : new HelperChoice(Optional.empty(), "не нужен: выход есть", false);
+            if (helper.pending() && !escape.self()) {
+                posted = true;
+                continue;
+            }
             String refusal = refusal(escape, helper, failures);
             RescuePlans.Assignment assignment = RescuePlans.assign(id, since, refusal, helper.id());
             say(post, spirit, since, lifecycle(assignment, at, since, escape, helper));
@@ -66,9 +73,7 @@ final class GraphRescuePost {
             }
             TaskNode plan = assignment.mode() == RescuePlans.Mode.SELF
                     ? escape.plan()
-                    : RescuePlans.plan(
-                                    BoardCase.RESCUE_SPIRIT, TicketTarget.at(at).withRelocate(at, home))
-                            .orElseThrow();
+                    : RescuePlans.helper(at, home, PitRescue.escapeAfterClear(spirit));
             post.submit(
                     post.ticket(
                             ticketId,
@@ -112,23 +117,45 @@ final class GraphRescuePost {
     }
 
     private static HelperChoice helper(GraphPost post, String rescuee, BlockCoord trapped) {
+        RescueReach.Cache cache = post.service.sources.rescueReach();
+        LevelNavWorld world = new LevelNavWorld(post.level);
+        Predicate<BlockCoord> water = cell -> post.level
+                .getFluidState(new BlockPos(cell.x(), cell.y(), cell.z()))
+                .is(FluidTags.WATER);
         @Nullable String firstRefusal = null;
+        boolean pending = false;
         for (SpiritEntity other : post.spirits) {
             if (other.isRemoved() || other.getUUID().toString().equals(rescuee)) {
                 continue;
             }
             GraphFacts.Spirit fact = post.facts.spirits().get(other.getUUID().toString());
             if (fact == null || !fact.stuck()) {
-                RescueReach.Verdict verdict = RescueReach.check(post.level, other.blockPosition(), trapped);
+                BlockCoord from = at(other);
+                RescueReach.Verdict verdict = cache.verdict(other.getUUID(), from, trapped, post.now);
+                if (verdict == null) {
+                    cache.request(world, water, other.getUUID(), from, trapped, post.now);
+                    pending = true;
+                    continue;
+                }
                 if (verdict.reachable()) {
-                    return new HelperChoice(Optional.of(other.getUUID()), other.displayName() + " — " + verdict.why());
+                    return new HelperChoice(
+                            Optional.of(other.getUUID()), other.displayName() + " — " + verdict.why(), false);
                 }
                 if (firstRefusal == null) {
                     firstRefusal = other.displayName() + " — " + verdict.why();
                 }
             }
         }
-        return new HelperChoice(Optional.empty(), firstRefusal == null ? "свободного помощника нет" : firstRefusal);
+        if (pending) {
+            return new HelperChoice(Optional.empty(), "поиск пути идёт", true);
+        }
+        return new HelperChoice(
+                Optional.empty(), firstRefusal == null ? "свободного помощника нет" : firstRefusal, false);
+    }
+
+    private static BlockCoord at(SpiritEntity spirit) {
+        BlockPos feet = spirit.blockPosition();
+        return new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
     }
 
     private static void say(GraphPost post, SpiritEntity spirit, long since, String text) {

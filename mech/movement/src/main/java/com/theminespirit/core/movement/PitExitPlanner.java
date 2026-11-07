@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 
 public final class PitExitPlanner {
@@ -164,6 +165,11 @@ public final class PitExitPlanner {
             }
         }
         return Optional.empty();
+    }
+
+    public static OptionalInt groundY(int x, int z, int from, World world) {
+        Objects.requireNonNull(world, "Мир не может быть null: по нему ищется пол колонки");
+        return PitStairPlanner.groundY(x, z, from, world);
     }
 
     private static Optional<BlockCoord> rim(BlockCoord feet, World world) {
