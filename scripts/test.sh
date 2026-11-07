@@ -39,6 +39,10 @@ GAMETEST_STALE="${THEMINESPIRIT_GAMETEST_STALE_SECONDS:-120}"
 GAMETEST_LEGACY_STALE="${THEMINESPIRIT_GAMETEST_LEGACY_STALE_SECONDS:-900}"
 LOCK_BEAT_PID=""
 DIR_LOCK_HELD=0
+MAIN_PID=$$
+PARENT_WATCH_PID=""
+PAUSE_FIFO=""
+PAUSE_FD_OPEN=0
 
 usage() {
     cat <<'EOF'
@@ -97,6 +101,7 @@ usage() {
   THEMINESPIRIT_GAMETEST_NOFLOCK=1   принудительно использовать mkdir-замок (для Git Bash на Windows)
   THEMINESPIRIT_PYTHON               python для разбора отчётов unit (по умолчанию PYTHON, python3, python); none — только awk
   THEMINESPIRIT_TEST_HEARTBEAT       файл пульса для надзора (по умолчанию TestResults/test-running)
+  THEMINESPIRIT_TEST_DETACHED=1      не гасить прогон при смерти родителя (осознанно отвязанный запуск)
 EOF
     exit 2
 }
@@ -291,6 +296,44 @@ file_mtime() {
     stat -c %Y "$1" 2>/dev/null || echo 0
 }
 
+init_pause_tick() {
+    local dir="${TMPDIR:-/tmp}"
+    PAUSE_FIFO="$dir/theminespirit-test-pause.$$"
+    if ! mkfifo "$PAUSE_FIFO" 2>/dev/null; then
+        PAUSE_FIFO="$PROJECT_ROOT/TestResults/.test-pause.$$"
+        mkdir -p "$PROJECT_ROOT/TestResults" 2>/dev/null || true
+        mkfifo "$PAUSE_FIFO" 2>/dev/null || { PAUSE_FIFO=""; return 0; }
+    fi
+    if exec 9<>"$PAUSE_FIFO"; then
+        PAUSE_FD_OPEN=1
+        export PAUSE_FD_OPEN
+    fi
+    rm -f "$PAUSE_FIFO"
+    PAUSE_FIFO=""
+    return 0
+}
+
+pause_tick() {
+    local seconds="$1" rc=1
+    if [ "$PAUSE_FD_OPEN" = 1 ]; then
+        read -r -t "$seconds" -u 9 _ 2>/dev/null
+        rc=$?
+        [ "$rc" -ne 2 ] && return 0
+        PAUSE_FD_OPEN=0
+    fi
+    sleep "$seconds" 2>/dev/null
+    return 0
+}
+
+close_pause_tick() {
+    if [ "$PAUSE_FD_OPEN" = 1 ]; then
+        exec 9<&-
+        PAUSE_FD_OPEN=0
+    fi
+    [ -n "$PAUSE_FIFO" ] && rm -f "$PAUSE_FIFO"
+    return 0
+}
+
 
 pid_is_live() {
     local pid="$1" rest
@@ -353,7 +396,7 @@ kill_gametest_server() {
         done
         [ -n "$alive" ] || return 0
         pids="$alive"
-        sleep 1
+        pause_tick 1
         waited=$((waited + 1))
     done
     for pid in $pids; do
@@ -404,7 +447,7 @@ kill_own_tree() {
         pids="$alive"
         now_s now
         [ "$now" -lt "$deadline" ] || break
-        sleep 0.2
+        pause_tick 0.2
     done
     for pid in $pids; do
         kill -KILL "$pid" 2>/dev/null
@@ -424,7 +467,7 @@ stop_own_loop() {
             kill_own_tree "$pid" 0
             return 0
         fi
-        sleep 0.05
+        pause_tick 0.05
     done
     return 0
 }
@@ -438,19 +481,18 @@ stop_lock_beat() {
 
 start_lock_beat() {
     (
-        sleeper=""
-        trap '[ -n "$sleeper" ] && kill "$sleeper" 2>/dev/null; exit 0' TERM
+        beat=0
         while kill -0 "$$" 2>/dev/null; do
             tok=""
             read -r tok <"$GAMETEST_LOCK_DIR/token" 2>/dev/null
             [ "$tok" = "$GAMETEST_TOKEN" ] || break
             now_s now
-            printf '%s\n' "$now" >"$GAMETEST_LOCK_DIR/heartbeat.tmp" 2>/dev/null \
-                && mv -f "$GAMETEST_LOCK_DIR/heartbeat.tmp" "$GAMETEST_LOCK_DIR/heartbeat" 2>/dev/null
-            sleep "$GAMETEST_BEAT_INTERVAL" &
-            sleeper=$!
-            wait "$sleeper"
-            sleeper=""
+            if [ "$beat" = 0 ] || [ $((now - beat)) -ge "$GAMETEST_BEAT_INTERVAL" ]; then
+                printf '%s\n' "$now" >"$GAMETEST_LOCK_DIR/heartbeat.tmp" 2>/dev/null \
+                    && mv -f "$GAMETEST_LOCK_DIR/heartbeat.tmp" "$GAMETEST_LOCK_DIR/heartbeat" 2>/dev/null
+                beat=$now
+            fi
+            pause_tick 1
         done
     ) </dev/null >/dev/null 2>&1 &
     LOCK_BEAT_PID=$!
@@ -513,7 +555,7 @@ acquire_dir_lock() {
             fi
         fi
         [ "$waited" -ge "$GAMETEST_WAIT" ] && return 75
-        sleep 2
+        pause_tick 2
         waited=$((waited + 2))
     done
 }
@@ -530,13 +572,9 @@ GRADLE_PID=""
 START_TIME=0
 
 monitor_loop() {
-    local warned=0 now elapsed gpid sleeper=""
-    trap '[ -n "$sleeper" ] && kill "$sleeper" 2>/dev/null; exit 0' TERM
+    local warned=0 now elapsed gpid
     while kill -0 "$MONITOR_MAIN_PID" 2>/dev/null; do
-        sleep 1 &
-        sleeper=$!
-        wait "$sleeper"
-        sleeper=""
+        pause_tick 1
         now_s now
         elapsed=$((now - MONITOR_START_TIME))
         if [ "$warned" = 0 ] && [ "$elapsed" -ge "$MONITOR_WARN_SECONDS" ]; then
@@ -579,7 +617,7 @@ start_monitor() {
            MONITOR_WARN_SECONDS="$WARN_SECONDS" MONITOR_STOP_SECONDS="$STOP_SECONDS" \
            MONITOR_MODE="$mode" MONITOR_MAIN_PID="$$" MONITOR_GRADLE_GROUP=""
     export MODE GAMETEST_RUN_DIR GAMETEST_WORKTREE
-    export -f pid_is_live gametest_server_pids kill_gametest_server now_s own_tree_pids kill_own_tree monitor_loop
+    export -f pid_is_live gametest_server_pids kill_gametest_server now_s own_tree_pids kill_own_tree pause_tick monitor_loop
     if command -v setsid >/dev/null 2>&1; then
         MONITOR_GRADLE_GROUP=group
         setsid bash -c monitor_loop </dev/null >/dev/null 2>&1 &
@@ -605,16 +643,15 @@ start_heartbeat() {
     now_s now
     deadline=$(( now + GAMETEST_WAIT + GAMETEST_PREPARE_STOP + (UNIT_STOP > GAMETEST_FULL_STOP ? UNIT_STOP : GAMETEST_FULL_STOP) + 300 ))
     (
-        sleeper=""
-        trap '[ -n "$sleeper" ] && kill "$sleeper" 2>/dev/null; exit 0' TERM
+        beat=0
         while kill -0 "$$" 2>/dev/null; do
             now_s now
             [ "$now" -lt "$deadline" ] || break
-            printf '%s\n' "$BASHPID" >"$HEARTBEAT_FILE" 2>/dev/null
-            sleep 20 &
-            sleeper=$!
-            wait "$sleeper"
-            sleeper=""
+            if [ "$beat" = 0 ] || [ $((now - beat)) -ge 20 ]; then
+                printf '%s\n' "$BASHPID" >"$HEARTBEAT_FILE" 2>/dev/null
+                beat=$now
+            fi
+            pause_tick 1
         done
     ) </dev/null >/dev/null 2>&1 &
     HEARTBEAT_PID=$!
@@ -625,6 +662,29 @@ stop_heartbeat() {
         stop_own_loop "$HEARTBEAT_PID" 2
         HEARTBEAT_PID=""
         rm -f "$HEARTBEAT_FILE"
+    fi
+}
+
+start_parent_watch() {
+    [ "${THEMINESPIRIT_TEST_DETACHED:-0}" = 1 ] && return 0
+    local parent="${PPID:-0}"
+    case "$parent" in ''|*[!0-9]*) return 0 ;; esac
+    [ "$parent" -gt 1 ] || return 0
+    (
+        while kill -0 "$parent" 2>/dev/null && kill -0 "$MAIN_PID" 2>/dev/null; do
+            pause_tick 1
+        done
+        kill -0 "$MAIN_PID" 2>/dev/null || exit 0
+        printf '%s\n' "$parent" >"$LOG_FILE.parent-gone" 2>/dev/null
+        kill -TERM "$MAIN_PID" 2>/dev/null
+    ) </dev/null >/dev/null 2>&1 &
+    PARENT_WATCH_PID=$!
+}
+
+stop_parent_watch() {
+    if [ -n "$PARENT_WATCH_PID" ]; then
+        stop_own_loop "$PARENT_WATCH_PID" 2
+        PARENT_WATCH_PID=""
     fi
 }
 
@@ -643,6 +703,9 @@ stop_monitor() {
     fi
     stop_timer
     stop_heartbeat
+    stop_parent_watch
+    close_pause_tick
+    [ -n "${LOG_FILE:-}" ] && rm -f "$LOG_FILE.parent-gone"
     return 0
 }
 
@@ -654,6 +717,10 @@ cleanup() {
 
 on_signal() {
     trap - TERM INT
+    if [ -n "${LOG_FILE:-}" ] && [ -f "$LOG_FILE.parent-gone" ]; then
+        echo "test.sh: родитель прогона умер — прогон остановлен (сироту не оставляем)" >&2
+        exit 143
+    fi
     if [ -n "${LOG_FILE:-}" ] && [ -f "$LOG_FILE.stopped" ]; then
         if [ "$(cat "$LOG_FILE.stopped" 2>/dev/null)" = "prepare" ]; then
             echo "стоп: подготовка сборки (предел ${GAMETEST_PREPARE_STOP} с)"
@@ -978,7 +1045,9 @@ ELAPSED=0
 
 echo "Режим: $MODE" >&2
 echo "Лог: $LOG_FILE" >&2
+init_pause_tick
 start_heartbeat
+start_parent_watch
 
 if [ "$MODE" = "unit" ]; then
     rm -f TestResults/unit/xml/TEST-*.xml TestResults/unit/test-cost.csv
