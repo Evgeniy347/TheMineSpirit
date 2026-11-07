@@ -1,18 +1,18 @@
 package com.theminespirit.neoforge.intellect;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.ExpeditionMinePlan;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.intellect.DescentKit;
 import com.theminespirit.core.intellect.Expedition;
+import com.theminespirit.core.intellect.ExpeditionDispatch;
 import com.theminespirit.core.intellect.IntellectTuning;
-import com.theminespirit.core.intellect.Invitation;
-import com.theminespirit.core.intellect.InvitationAnswer;
-import com.theminespirit.core.intellect.InvitationState;
 import com.theminespirit.core.intellect.OutsideRules;
 import com.theminespirit.core.inventory.Stack;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.neoforge.PickaxeCheck;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.InventoryTables;
 import com.theminespirit.neoforge.inventory.StackMapper;
@@ -22,36 +22,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
 
 public final class ExpeditionController {
-    public static final double AGREE_RADIUS = 4.0;
-
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final String FOLLOW = "follow";
     private static final String RETURN_HOME = "return_home";
-    private static final int PARTNER_RADIUS = 3;
-    private static final Map<String, Object> MINE_PARAMS = Map.of("ore", "any", "count", 8, "radius", 16);
 
-    private final Invitation invitation = new Invitation();
     private StockView stock = new StockView(Map.of());
     private Launcher launcher;
     private Dispatch lastDispatch;
     private Expedition active;
-    private UUID expeditionId;
-    private long lastRepeatTick = Long.MIN_VALUE;
     private long closedAt = Long.MIN_VALUE;
     private boolean dispatched;
     private List<UUID> missionTeam = List.of();
     private UUID missionLeader;
     private String refusal;
-
-    public static TaskNode missionPlan() {
-        return new SequenceNode(
-                List.of(new ScriptCall("mine_vein", MINE_PARAMS), new ScriptCall(RETURN_HOME, Map.of())));
-    }
 
     @FunctionalInterface
     public interface Launcher {
@@ -66,23 +51,16 @@ public final class ExpeditionController {
             return;
         }
         active = planned;
-        expeditionId = UUID.randomUUID();
         dispatched = false;
         refusal = null;
-        invitation.open(planned.startedAt());
-        lastRepeatTick = planned.startedAt();
     }
 
     public boolean dispatchedRecently(long now) {
-        return dispatched && now - closedAt < IntellectTuning.loadDefault().inviteTtlTicks();
+        return dispatched && now - closedAt < IntellectTuning.loadDefault().expeditionCooldownTicks();
     }
 
     public Optional<Expedition> active() {
         return Optional.ofNullable(active);
-    }
-
-    public UUID expeditionId() {
-        return expeditionId;
     }
 
     public record Dispatch(String script, List<UUID> team, long tick) {}
@@ -95,26 +73,10 @@ public final class ExpeditionController {
         return Optional.ofNullable(refusal);
     }
 
-    public boolean onAnswer(String expedition, InvitationAnswer answer, long now) {
-        if (expedition == null || answer == null) {
-            throw new IllegalArgumentException("Ответ без похода не принять: кнопки зовут конкретную команду");
-        }
-        if (active == null || expeditionId == null || !expeditionId.toString().equals(expedition)) {
-            return false;
-        }
-        if (answer == InvitationAnswer.GO_WITHOUT) {
-            invitation.answer(answer, now);
-            return true;
-        }
-        invitation.answer(answer, now);
-        lastRepeatTick = now;
-        return true;
-    }
-
-    public void update(ServerLevel level, List<SpiritEntity> members, StockView stock, long now, Launcher tasks) {
-        if (level == null || members == null || stock == null || tasks == null) {
+    public void update(List<SpiritEntity> members, StockView stock, long now, Launcher tasks) {
+        if (members == null || stock == null || tasks == null) {
             throw new IllegalArgumentException(
-                    "Поход без уровня, духов, запасов или исполнителя не ведётся: команда идёт конкретным составом");
+                    "Поход без духов, запасов или исполнителя не ведётся: команда идёт конкретным составом");
         }
         launcher = tasks;
         this.stock = stock;
@@ -122,48 +84,9 @@ public final class ExpeditionController {
         if (active == null) {
             return;
         }
-        InvitationState state = invitation.tick(now);
-        SpiritEntity inviter = inviter(members, active);
-        Optional<ServerPlayer> guide = guideNear(level, inviter);
-        if (guide.isPresent() && inviter != null) {
-            if (dispatchFollow(members, active, guide.get(), now)) {
-                close(now);
-            }
-            return;
-        }
-        if (inviter != null
-                && now - lastRepeatTick >= IntellectTuning.loadDefault().inviteRepeatTicks()
-                && !state.goWithout()) {
-            ChatInvitation.send(level, inviter, expeditionId, active.team().size());
-            lastRepeatTick = now;
-        }
-        if (state.goWithout() && dispatchMine(members, active, now)) {
+        if (dispatchMine(members, active, now)) {
             close(now);
         }
-    }
-
-    public void accept(ServerPlayer player, List<SpiritEntity> members, long now) {
-        if (player == null || members == null) {
-            throw new IllegalArgumentException("Согласие без игрока не принять: за кем-то нужно идти");
-        }
-        if (active == null || launcher == null) {
-            return;
-        }
-        if (dispatchFollow(members, active, player, now)) {
-            close(now);
-        }
-    }
-
-    private boolean dispatchFollow(List<SpiritEntity> members, Expedition expedition, ServerPlayer guide, long now) {
-        String guideName = guide.getGameProfile().getName();
-        boolean launched = false;
-        for (SpiritEntity spirit : team(members, expedition)) {
-            launched |= launch(spirit, FOLLOW, new ScriptCall(FOLLOW, Map.of("target", guideName, "radius", 3)), now);
-        }
-        if (launched) {
-            lastDispatch = new Dispatch(FOLLOW, List.copyOf(expedition.team()), now);
-        }
-        return launched;
     }
 
     private boolean dispatchMine(List<SpiritEntity> members, Expedition expedition, long now) {
@@ -178,27 +101,40 @@ public final class ExpeditionController {
             return false;
         }
         UUID leaderId = expedition.team().get(0);
-        SpiritEntity leader = team.stream()
-                .filter(spirit -> spirit.getUUID().equals(leaderId))
-                .findFirst()
-                .orElse(team.get(0));
-        boolean launched = false;
+        Map<UUID, SpiritEntity> byId = new HashMap<>();
         for (SpiritEntity spirit : team) {
-            if (spirit.getUUID().equals(leader.getUUID())) {
-                launched |= launch(spirit, "mine_vein", missionPlan(), now);
-            } else {
-                launched |= launch(
-                        spirit,
-                        FOLLOW,
-                        new ScriptCall(FOLLOW, Map.of("target", leader.getStringUUID(), "radius", PARTNER_RADIUS)),
-                        now);
+            byId.put(spirit.getUUID(), spirit);
+        }
+        ExpeditionDispatch.Plan plan =
+                ExpeditionDispatch.plan(team.stream().map(SpiritEntity::getUUID).toList(), leaderId);
+        SpiritEntity leader = byId.get(plan.leader());
+        if (leader == null) {
+            leader = team.get(0);
+        }
+        if (!PickaxeCheck.has(leader)) {
+            String reason = "поход в шахту не начат: у лидера " + leader.displayName() + " нет кирки";
+            if (!reason.equals(refusal)) {
+                LOGGER.info("[graph] экспедиция отложена: {}", reason);
+            }
+            refusal = reason;
+            return false;
+        }
+        BlockCoord bottom = new BlockCoord(
+                (int) expedition.target().x(), (int) expedition.target().y(), (int)
+                        expedition.target().z());
+        boolean launched = false;
+        for (ExpeditionDispatch.Order order : plan.orders()) {
+            SpiritEntity spirit = byId.get(order.spirit());
+            if (spirit != null) {
+                TaskNode task = order.spirit().equals(plan.leader()) ? ExpeditionMinePlan.plan(bottom) : order.task();
+                launched |= launch(spirit, order.script(), task, now);
             }
         }
         if (launched) {
             refusal = null;
-            lastDispatch = new Dispatch("mine_vein", List.copyOf(expedition.team()), now);
+            lastDispatch = new Dispatch(ExpeditionDispatch.MINE, List.copyOf(expedition.team()), now);
             missionTeam = List.copyOf(expedition.team());
-            missionLeader = leader.getUUID();
+            missionLeader = plan.leader();
         }
         return launched;
     }
@@ -263,28 +199,8 @@ public final class ExpeditionController {
         return team;
     }
 
-    private SpiritEntity inviter(List<SpiritEntity> members, Expedition expedition) {
-        for (SpiritEntity spirit : team(members, expedition)) {
-            return spirit;
-        }
-        return null;
-    }
-
-    private Optional<ServerPlayer> guideNear(ServerLevel level, SpiritEntity inviter) {
-        if (inviter == null) {
-            return Optional.empty();
-        }
-        for (ServerPlayer player : level.players()) {
-            if (player.distanceTo(inviter) <= AGREE_RADIUS) {
-                return Optional.of(player);
-            }
-        }
-        return Optional.empty();
-    }
-
     private void close(long now) {
         active = null;
-        expeditionId = null;
         dispatched = true;
         closedAt = now;
     }

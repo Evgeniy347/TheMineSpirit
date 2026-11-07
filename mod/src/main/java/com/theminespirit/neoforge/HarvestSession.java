@@ -75,6 +75,7 @@ public final class HarvestSession {
     private final int radius;
     private final boolean skipWithoutTool;
     private final boolean vein;
+    private final boolean allowTunnel;
     private final LevelSafetyView safety;
     private final BlockBreaker breaker;
     private final Approach approach;
@@ -110,7 +111,7 @@ public final class HarvestSession {
     private int protectedSkipped;
     private final GatherCells terrain;
 
-    private HarvestSession(SpiritEntity spirit, Spec spec) {
+    private HarvestSession(SpiritEntity spirit, HarvestSpec spec) {
         this.spirit = spirit;
         this.rearm = new HarvestRearm(spirit);
         this.level = spirit.level();
@@ -121,30 +122,33 @@ public final class HarvestSession {
         this.radius = spec.radius();
         this.skipWithoutTool = spec.skipWithoutTool();
         this.vein = spec.vein();
+        this.allowTunnel = spec.allowTunnel();
         this.safety = new LevelSafetyView(level);
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
         this.terrain = new GatherCells(level);
     }
 
-    public static HarvestSession mineVein(SpiritEntity spirit, OreKind ore, int count, int radius) {
+    public static HarvestSession mineVein(
+            SpiritEntity spirit, OreKind ore, int count, int radius, boolean allowTunnel) {
         Set<Block> ores = BlockSets.resolve(IdFilter.of(List.copyOf(OreKind.blocks(ore))));
         return new HarvestSession(
                 spirit,
-                new Spec(
+                new HarvestSpec(
                         new VeinTargets(spirit.level(), spirit.blockPosition(), radius, ores),
                         WorkKind.VEIN,
                         ore.name().toLowerCase(Locale.ROOT),
                         count,
                         radius,
                         ore == OreKind.ANY,
-                        true));
+                        true,
+                        allowTunnel));
     }
 
     public static HarvestSession gather(SpiritEntity spirit, String block, int count, int radius) {
         return new HarvestSession(
                 spirit,
-                new Spec(
+                new HarvestSpec(
                         new GatherTargets(
                                 spirit.level(),
                                 spirit.blockPosition(),
@@ -156,7 +160,8 @@ public final class HarvestSession {
                         count,
                         radius,
                         IdFilter.isPattern(block),
-                        false));
+                        false,
+                        true));
     }
 
     public Outcome tick() {
@@ -428,6 +433,10 @@ public final class HarvestSession {
     private boolean beginTunnel(BlockCoord origin, List<BlockCoord> candidates) {
         if (tunnel != null) {
             return true;
+        }
+        if (!allowTunnel) {
+            tunnelRefusal = "проход к руде запрещён: дух вне спуска и хода шахты";
+            return false;
         }
         String refusal = tunnelRefusal;
         for (BlockCoord candidate : candidates) {
@@ -718,13 +727,4 @@ public final class HarvestSession {
     private static BlockPos toPos(BlockCoord coord) {
         return new BlockPos(coord.x(), coord.y(), coord.z());
     }
-
-    private record Spec(
-            HarvestTargets targets,
-            WorkKind kind,
-            String label,
-            int count,
-            int radius,
-            boolean skipWithoutTool,
-            boolean vein) {}
 }

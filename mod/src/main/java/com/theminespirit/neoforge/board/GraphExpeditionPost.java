@@ -2,12 +2,15 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.ExpeditionMinePlan;
+import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.core.intellect.Expedition;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -16,11 +19,14 @@ import com.theminespirit.neoforge.intellect.ExpeditionController;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 final class GraphExpeditionPost {
+    private static final String MINE = "mine_vein";
+
     private GraphExpeditionPost() {}
 
     static boolean post(GraphPost post, GraphTickets.Ticket ticket) {
@@ -31,14 +37,17 @@ final class GraphExpeditionPost {
             }
         }
         SettlementKey key = SettlementGroups.keyOf(
-                Optional.of(post.scan.home()),
-                members.isEmpty() ? null : members.get(0).getUUID());
+                Optional.of(post.scan.home()), members.isEmpty() ? null : members.get(0).getUUID());
         ExpeditionController controller =
                 CoordinatorRegistry.get(post.level, key).intellect().expeditions();
-        List<UUID> team = team(post.scan.home(), members, nearestTeam(controller));
+        List<UUID> team = team(
+                post.scan.home(),
+                members,
+                controller.active().map(Expedition::team).orElse(null));
         Optional<UUID> leader = team.stream().findFirst();
-        boolean known = known(post, ticket.id());
-        if (!known) {
+        BlockCoord bottom = MineDescentBottom.standOf(post.scan.stage().mineEntrance()).orElse(null);
+        BoardStatus status = post.service.board().statusOf(ticket.id()).orElse(null);
+        if (status == null || status == BoardStatus.PENDING) {
             GraphActivityPost.post(
                     post,
                     new GraphActivityPost.Post(
@@ -46,30 +55,27 @@ final class GraphExpeditionPost {
                             ticket.task().boardCase(),
                             new GraphActivityPost.Crew(leader, team),
                             GraphActivityPost.priority(post),
-                            "mine_vein",
-                            ExpeditionController.missionPlan(),
+                            MINE,
+                            plan(bottom),
                             null));
         }
-        List<UUID> crew = known
-                ? GraphActivityPost.ticket(post, ticket.id())
-                        .map(BoardTicket::executors)
-                        .orElse(team)
-                : team;
-        String wait = waitReason(team, post, controller);
-        BoardStatus status = post.service.board().statusOf(ticket.id()).orElse(null);
+        List<UUID> crew = GraphActivityPost.ticket(post, ticket.id())
+                .map(BoardTicket::executors)
+                .orElse(team);
+        String wait = waitReason(team, post, controller, bottom);
         if (status == BoardStatus.ASSIGNED) {
             post.service.activities().hold(ticket.id(), null);
         } else {
             post.service.activities().hold(ticket.id(), wait);
         }
         if (wait == null
+                && bottom != null
                 && controller.active().isEmpty()
                 && !controller.dispatchedRecently(post.now)
                 && team.size() >= IntellectTuning.loadDefault().teamMin()) {
-            controller.offer(new Expedition(team, mine(post.scan.home()), post.now));
+            controller.offer(new Expedition(team, point(bottom), post.now));
         }
         controller.update(
-                post.level,
                 post.spirits,
                 post.stock,
                 post.now,
@@ -83,30 +89,17 @@ final class GraphExpeditionPost {
         return true;
     }
 
-    private static boolean launch(GraphPost post, String id, List<UUID> crew, SpiritEntity spirit, TaskNode task) {
+    private static boolean launch(
+            GraphPost post, String id, List<UUID> crew, SpiritEntity spirit, TaskNode task) {
         if (spirit.isRemoved()) {
             return false;
         }
         Optional<UUID> leader = crew.isEmpty() ? Optional.empty() : Optional.of(crew.get(0));
         if (leader.filter(spirit.getUUID()::equals).isPresent()) {
             post.service.activities().hold(id, null);
-            if (!post.service.activities().start(id, spirit, task, post.now)) {
-                return false;
-            }
-            return true;
+            return post.service.activities().start(id, spirit, task, post.now);
         }
         return post.service.activities().startCrew(id, spirit, task);
-    }
-
-    private static boolean known(GraphPost post, String id) {
-        return GraphActivityPost.ticket(post, id).isPresent()
-                && post.service.board().statusOf(id).orElse(null) != BoardStatus.DONE
-                && post.service.board().statusOf(id).orElse(null) != BoardStatus.FAILED
-                && post.service.board().statusOf(id).orElse(null) != BoardStatus.CANCELLED;
-    }
-
-    private static @Nullable List<UUID> nearestTeam(ExpeditionController controller) {
-        return controller.active().map(Expedition::team).orElse(null);
     }
 
     private static List<UUID> team(BlockCoord home, List<SpiritEntity> members, @Nullable List<UUID> active) {
@@ -122,10 +115,14 @@ final class GraphExpeditionPost {
                 .toList();
     }
 
-    private static @Nullable String waitReason(List<UUID> team, GraphPost post, ExpeditionController controller) {
+    private static @Nullable String waitReason(
+            List<UUID> team, GraphPost post, ExpeditionController controller, @Nullable BlockCoord bottom) {
         int min = IntellectTuning.loadDefault().teamMin();
         if (team.size() < min) {
             return "нет команды: нужно " + min + " духа, рядом " + team.size();
+        }
+        if (bottom == null) {
+            return "низ шахты не найден: спуск не построен";
         }
         List<SpiritEntity> members = new ArrayList<>();
         for (SpiritEntity spirit : post.spirits) {
@@ -137,16 +134,19 @@ final class GraphExpeditionPost {
         if (!missing.isEmpty()) {
             return "перед спуском в шахту нужен набор: " + String.join(", ", missing);
         }
-        if (controller.active().isPresent()) {
-            return "поход ждёт ответа игрока: команда " + team.size() + " духа";
-        }
         if (controller.dispatchedRecently(post.now)) {
             return "поход недавно вернулся: ждёт нового повода";
         }
         return null;
     }
 
-    private static Point mine(BlockCoord home) {
-        return new Point(home.x() + 0.5, home.y() - 10, home.z() + 0.5);
+    private static TaskNode plan(@Nullable BlockCoord bottom) {
+        return bottom == null
+                ? new ScriptCall(ExpeditionMinePlan.RETURN_HOME, Map.of())
+                : ExpeditionMinePlan.plan(bottom);
+    }
+
+    private static Point point(BlockCoord bottom) {
+        return new Point(bottom.x() + 0.5, bottom.y(), bottom.z() + 0.5);
     }
 }

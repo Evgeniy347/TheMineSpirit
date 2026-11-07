@@ -1,23 +1,29 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.movement.PitEscape;
+import com.theminespirit.core.movement.PitExitPlanner;
 import com.theminespirit.core.movement.SurfaceLevel;
+import com.theminespirit.core.movement.ToolBreakCost;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.DigOutScript;
+import com.theminespirit.neoforge.PickaxeCheck;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.movement.CheapBlocks;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 final class PitRescue {
     private static final int SURFACE_RADIUS = 3;
+    private static final String GOTO = "goto";
+    private static final String DIG_OUT = "dig_out";
+    private static final String PILLAR = "pillar_up";
 
     private PitRescue() {}
 
@@ -32,38 +38,56 @@ final class PitRescue {
                 }
             }
         }
-        return SurfaceLevel.escaped(DigOutScript.open(level, feet), feet.getY(), heights);
+        boolean outside = !trapped(spirit).isPresent()
+                || SurfaceLevel.escaped(DigOutScript.open(level, feet), feet.getY(), heights);
+        return outside;
     }
 
-    static Optional<PitEscape.Exit> trapped(SpiritEntity spirit) {
+    static Optional<PitExitPlanner.Plan> trapped(SpiritEntity spirit) {
         Level level = spirit.level();
         BlockPos feet = spirit.blockPosition();
-        if (top(level, feet.getX(), feet.getZ()) > feet.getY()) {
+        if (top(level, feet.getX(), feet.getZ()) <= feet.getY()) {
             return Optional.empty();
         }
-        return PitEscape.exit(
-                (dx, dz) -> dx == 0 && dz == 0 ? feet.getY() : top(level, feet.getX() + dx, feet.getZ() + dz));
+        PitExitPlanner.Plan plan = PitExitPlanner.plan(
+                new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), new PitWorldView(level), supplies(spirit));
+        if (plan.method() == PitExitPlanner.Method.WALK && plan.exit().y() <= feet.getY() + 1) {
+            return Optional.empty();
+        }
+        return Optional.of(plan);
     }
 
-    static TaskNode plan(SpiritEntity spirit, PitEscape.Exit exit) {
-        BlockPos feet = spirit.blockPosition();
-        int standX = feet.getX() + exit.dx();
-        int standZ = feet.getZ() + exit.dz();
-        int rimY = top(spirit.level(), feet.getX() + exit.rimDx(), feet.getZ() + exit.rimDz());
-        int blocks = spirit.getInventory().countItem(Items.DIRT)
-                + spirit.getInventory().countItem(Items.COBBLESTONE);
+    static TaskNode plan(SpiritEntity spirit, PitExitPlanner.Plan exit) {
         List<TaskNode> steps = new ArrayList<>();
-        if (exit.dx() != 0 || exit.dz() != 0) {
-            steps.add(
-                    new ScriptCall("goto", Map.of("x", standX, "y", top(spirit.level(), standX, standZ), "z", standZ)));
-        }
-        if (blocks >= exit.rise()) {
-            steps.add(new ScriptCall("pillar_up", Map.of("height", exit.rise())));
-        } else {
-            steps.add(new ScriptCall(
-                    "dig_out", Map.of("x", feet.getX() + exit.rimDx(), "y", rimY, "z", feet.getZ() + exit.rimDz())));
+        BlockCoord target = exit.exit();
+        switch (exit.method()) {
+            case WALK -> steps.add(gotoPoint(target));
+            case PILLAR -> {
+                steps.add(new ScriptCall(PILLAR, Map.of("height", exit.rise())));
+                steps.add(gotoPoint(target));
+            }
+            case STAIRS -> {
+                steps.add(new ScriptCall(DIG_OUT, Map.of("x", target.x(), "y", target.y(), "z", target.z())));
+                steps.add(gotoPoint(target));
+            }
+            case IMPOSSIBLE ->
+                throw new IllegalArgumentException(
+                        "План невозможного выхода не выполняется: духу нужен помощник (" + exit.why() + ")");
         }
         return new SequenceNode(steps);
+    }
+
+    private static PitExitPlanner.Supplies supplies(SpiritEntity spirit) {
+        Map<String, Integer> counts = CheapBlocks.counts(spirit);
+        int blocks = 0;
+        for (String id : ToolBreakCost.CHEAP_ORDER) {
+            blocks += counts.getOrDefault(id, 0);
+        }
+        return new PitExitPlanner.Supplies(blocks, PickaxeCheck.has(spirit));
+    }
+
+    private static ScriptCall gotoPoint(BlockCoord point) {
+        return new ScriptCall(GOTO, Map.of("x", point.x(), "y", point.y(), "z", point.z()));
     }
 
     private static int top(Level level, int x, int z) {

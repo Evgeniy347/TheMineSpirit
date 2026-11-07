@@ -15,6 +15,13 @@ sourceSets.main.resources.srcDir(project(':mod').layout.buildDirectory.dir('reso
 tasks.named('classes') {
     dependsOn ':mod:classes'
 }
+// lib: в sourceSets.main.output :gametest склеены классы :mod (см. выше), и spotbugsMain анализировал их
+// второй раз (1000+ классов, ~90 с) — те же детекторы уже отработали в :mod:spotbugsMain. Оставляем
+// в анализе только собранные классы самого :gametest; классы :mod остаются в auxClasspath для разрешения ссылок.
+tasks.named('spotbugsMain') {
+    classDirs.setFrom(sourceSets.main.java.destinationDirectory)
+    dependsOn tasks.named('compileJava')
+}
 tasks.named('processResources', ProcessResources) {
     dependsOn ':mod:processResources'
 }

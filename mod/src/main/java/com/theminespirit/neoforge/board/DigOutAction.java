@@ -3,7 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.StillWatch;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.movement.PitEscape;
+import com.theminespirit.core.movement.PitExitPlanner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
@@ -53,14 +53,16 @@ final class DigOutAction {
                 start(service, spirit, SurfacePoint.of(level, settlement));
                 continue;
             }
-            if (DigOutScript.open(level, feet)) {
-                Optional<PitEscape.Exit> pit = PitRescue.trapped(spirit);
-                if (pit.isPresent()
-                        && service.board().assignedTo(spirit.getUUID()).isEmpty()) {
+            Optional<PitExitPlanner.Plan> pit = PitRescue.trapped(spirit);
+            if (pit.isPresent()) {
+                if (pit.orElseThrow().possible() && service.board().assignedTo(spirit.getUUID()).isEmpty()) {
                     pausedUntil.put(spirit.getUUID(), now + PAUSE_TICKS);
                     service.detachForAction(spirit);
                     spirit.startTask(PitRescue.plan(spirit, pit.orElseThrow()));
                 }
+                continue;
+            }
+            if (DigOutScript.open(level, feet)) {
                 continue;
             }
             boolean stillInWater = inWater(level, feet) && still.still(spirit.getUUID(), coord(feet), now, PAUSE_TICKS);

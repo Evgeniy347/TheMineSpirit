@@ -35,7 +35,6 @@ public final class SpiritCommands {
         SpiritTablesCommand.register(operatorOnly);
         SpiritPresetsCommand.register(operatorOnly);
         CraterCommand.register(operatorOnly);
-        SpiritInviteCommand.register(operatorOnly);
         SpiritUnprotectCommand.register(operatorOnly);
         SpiritDemoCommand.register(operatorOnly);
         SpiritPlanCommand.register(operatorOnly);

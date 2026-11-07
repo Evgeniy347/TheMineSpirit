@@ -65,7 +65,6 @@
 | `/spirit presets` | показывает библиотеку готовых построек: id, этап, тип, габариты, вход, материалы |
 | `/spirit craters` | показывает запомненные воронки криперов: id, центр, радиус, уровень края |
 | `/spirit plan` | показывает план поселения: площадь, контур и калитки, места построек этапа с готовностью в % |
-| `/spirit invite <id> wait/go/join` | ответ на приглашение в экспедицию: подождите (+60 с), идите без меня, иду с вами |
 | `/spirit unprotect <x1 y1 z1 x2 y2 z2> [причина]` | снимает защиту построек игрока в области (постройки вне её защищены как раньше) |
 | `/spirit unprotect list` | показывает разрешённые области: id, мир, куб, кто попросил, причина, срок |
 | `/spirit unprotect remove <id>` | снимает разрешение: постройки области снова защищены |
@@ -175,7 +174,7 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [scripts/mem-guard.sh](scripts/mem-guard.sh) | сторож памяти domovoy (SIGSTOP/SIGCONT тяжёлой java) |
 | [scripts/lead/](scripts/lead/) | инструменты главного агента: `oc-watch.sh`, `chkq.sh` (очередь приёмки), `agent-list.sh`, `nice-guard.sh`, `orphan-sweep.sh`, `orphan-sweep-win.sh`, `res-pc.ps1`, `keepawake.ps1` |
 | [scripts/install-git-hooks.sh](scripts/install-git-hooks.sh), [scripts/git-hooks/](scripts/git-hooks/) | хуки: формат коммита, зелёный коммит, запрет перезаписи истории |
-| [scripts/testing/](scripts/testing/) | проверки скриптов на подделках: `check-test-runner.sh`, `check-gametest-lock.sh`, `check-opencode-task.sh`, `check-orphan-sweep-win.sh`, `check-pre-commit.sh`, `check-commit-msg.sh`, `check-history-hooks.sh`, `check-chkq.sh`, `check-strategist.sh`, `check-hang-watch.sh` |
+| [scripts/testing/](scripts/testing/) | проверки скриптов на подделках: `check-test-runner.sh`, `check-gametest-lock.sh`, `check-opencode-task.sh`, `check-orphan-sweep-win.sh`, `check-pre-commit.sh`, `check-commit-msg.sh`, `check-history-hooks.sh`, `check-chkq.sh`, `check-strategist.sh`, `check-hang-watch.sh`; `check-static-analysis-cache.sh` — живая проверка кэша SpotBugs/PMD и отсутствия дублирующего анализа в :gametest |
 
 ## Структура
 
