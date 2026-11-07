@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.DemolitionKey;
 import com.theminespirit.core.board.DemolitionScope;
 import com.theminespirit.core.mining.UnreachableCells;
 import com.theminespirit.core.observation.BlockCoord;
@@ -130,14 +131,18 @@ final class DemolitionCollect {
                 }
                 case REMOVE -> {
                     if (finding.kind() == FloatingBlocks.Kind.TREE && found.placement != null) {
-                        continue;
+                        if (!DemolitionKey.withinStand(found.placement.stand(), finding.cells())) {
+                            continue;
+                        }
+                        found.treeCells = merged(found.treeCells, finding.cells());
+                        found.placement = DemolitionTickets.extend(found.placement, finding);
                     }
                     if (found.reachableShown++ < SHOWN) {
                         found.notes.add(at + " — " + finding.reason() + ": стоянка рядом есть — в уборку");
                     }
                     found.remove.addAll(finding.cells());
                     DemolitionGuard.claimForCleanup(level, ctx.plan(), finding);
-                    if (finding.kind() == FloatingBlocks.Kind.TREE) {
+                    if (finding.kind() == FloatingBlocks.Kind.TREE && found.placement == null) {
                         found.placement = DemolitionTickets.treePlacement(treeStand, finding);
                         found.treeCells = List.copyOf(finding.cells());
                     }
@@ -189,6 +194,12 @@ final class DemolitionCollect {
 
     private static boolean track(ServerLevel level, BlockCoord at) {
         return SettlementChestStore.get(level).track(pos(at));
+    }
+
+    private static List<BlockCoord> merged(List<BlockCoord> current, List<BlockCoord> next) {
+        Set<BlockCoord> cells = new HashSet<>(current);
+        cells.addAll(next);
+        return List.copyOf(cells);
     }
 
     private static boolean needed(ServerLevel level, PlotPlanBlocks.Plan plan, String blockId) {

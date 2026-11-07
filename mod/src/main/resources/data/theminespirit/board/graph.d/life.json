@@ -20,7 +20,7 @@
   ],
   "events": {
     "life_threat": {
-      "band": 20,
+      "life": true,
       "tasks": [
         {"id": "defend", "case": "ACTIVITY_DEFEND", "base": 120, "consumes": {}},
         {"id": "retreat", "case": "ACTIVITY_RETREAT", "base": 115, "consumes": {}},
@@ -39,21 +39,21 @@
       "advice": ["fight_or_retreat", "protect_spirit_or_player"]
     },
     "life_threat_spirit": {
-      "band": 20,
+      "life": true,
       "tasks": [
         {"id": "protect_spirit", "case": "ACTIVITY_DEFEND", "base": 125, "consumes": {}}
       ],
       "advice": ["protect_spirit"]
     },
     "life_threat_player": {
-      "band": 20,
+      "life": true,
       "tasks": [
         {"id": "protect_player", "case": "ACTIVITY_DEFEND", "base": 124, "consumes": {}}
       ],
       "advice": ["protect_player"]
     },
     "life_injury": {
-      "band": 20,
+      "life": true,
       "tasks": [
         {"id": "heal", "case": "ACTIVITY_REST", "base": 104, "consumes": {}}
       ],

@@ -171,6 +171,8 @@ class More6InputsTests {
                 id,
                 new GraphFacts.Position(0, 64, 0),
                 20,
+                Math.max(20, 1f),
+                null,
                 20,
                 300,
                 false,
@@ -179,7 +181,8 @@ class More6InputsTests {
                 activity,
                 inventory,
                 List.of(),
-                List.of());
+                List.of(),
+                null);
     }
 
     private static GraphFacts.Building building(String id, GraphFacts.Position position) {

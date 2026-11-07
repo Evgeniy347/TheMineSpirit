@@ -311,16 +311,106 @@ class Flow:
 
 
 def priority(score, maximum):
-    if score <= 0:
+    if score <= 0 or maximum <= 0:
         return 0
     return int(min(maximum, math.floor(maximum * (1.0 - math.exp(-score / maximum)) + 0.5)))
 
 
-def band_priority(score, maximum, band):
-    if score <= 0:
+DAMAGE_WINDOW_TICKS = 200
+THREAT_RADIUS = 16.0
+FULL_PRESSURE_MOBS = 1.5
+PRESSURE_BASE = 0.4
+PRESSURE_WOUND = 0.7
+HURT_SHARE = 0.2
+INJURY_WOUND = 0.8
+INJURY_HURT = 0.4
+
+
+def _clamp01(value):
+    return max(0.0, min(1.0, value))
+
+
+def _spirit_deficit(spirit):
+    if spirit is None:
+        return 0.0
+    maximum = float(spirit.get("maxHealth", spirit.get("health", 0)))
+    if maximum <= 0:
+        return 0.0
+    return _clamp01(1.0 - float(spirit.get("health", 0)) / maximum)
+
+
+def _spirit_hurt(spirit):
+    if spirit is None:
+        return 0.0
+    maximum = float(spirit.get("maxHealth", spirit.get("health", 0)))
+    hurt = spirit.get("recentHurt")
+    if maximum <= 0 or not hurt:
+        return 0.0
+    freshness = _clamp01(1.0 - int(hurt.get("ticksAgo", 0)) / float(DAMAGE_WINDOW_TICKS))
+    return _clamp01(float(hurt.get("amount", 0)) / maximum) * freshness
+
+
+def _threat_pressure(threats, match):
+    total = sum(_clamp01(1.0 - int(threat.get("distance", 0)) / THREAT_RADIUS)
+                for threat in threats if match(threat))
+    return min(1.0, total / FULL_PRESSURE_MOBS)
+
+
+def life_risk(state, spirit_id):
+    """LifeThreats.risk: здоровье, свежий урон и мобы, сагренные именно на этого духа."""
+    spirit = state.spirit_facts.get(spirit_id)
+    deficit = _spirit_deficit(spirit)
+    hurt = _spirit_hurt(spirit)
+    pressure = _threat_pressure(
+        state.threats,
+        lambda threat: threat.get("targetKind") == "SPIRIT"
+        and (threat.get("target") is None or threat.get("target") == spirit_id))
+    return _clamp01(pressure * (PRESSURE_BASE + PRESSURE_WOUND * deficit) + HURT_SHARE * min(1.0, hurt))
+
+
+def life_severity(state, event):
+    """LifeThreats.severity: опасность события жизни из фактов мира."""
+    def spirit_threat():
+        targets = set(state.spirit_facts)
+        any_spirit = False
+        for threat in state.threats:
+            if threat.get("targetKind") != "SPIRIT":
+                continue
+            any_spirit = True
+            if threat.get("target") is not None:
+                targets.add(threat.get("target"))
+        if not targets and any_spirit:
+            targets.add("")
+        return max((life_risk(state, target) for target in targets), default=0.0)
+
+    def player_threat():
+        return _threat_pressure(state.threats, lambda threat: threat.get("targetKind") == "PLAYER")
+
+    def injury():
+        return max((_clamp01(INJURY_WOUND * _spirit_deficit(spirit)
+                             + INJURY_HURT * min(1.0, _spirit_hurt(spirit)))
+                    for spirit in state.spirit_facts.values()), default=0.0)
+
+    if event == "life_threat":
+        return max(spirit_threat(), player_threat(), injury())
+    if event == "life_threat_spirit":
+        return spirit_threat()
+    if event == "life_threat_player":
+        return player_threat()
+    if event == "life_injury":
+        return injury()
+    return 0.0
+
+
+def life_priority(state, event, tasks, task, maximum):
+    if maximum <= 0 or not tasks:
         return 0
-    above = int(round(score - maximum))
-    return maximum + max(1, min(band, above))
+    top = max(int(item.get("base", 0)) for item in tasks)
+    severity = life_severity(state, event)
+    if top <= 0 or severity <= 0:
+        return 0
+    share = _clamp01(float(task.get("base", 0)) / top)
+    return min(maximum, max(0, int(math.floor(maximum * severity * share + 0.5))))
 
 
 class Choice:
@@ -560,6 +650,7 @@ class Graph:
         self.build_ready_boost = int(data.get("buildReadyBoost", 0))
         self.build_start_share = float(data.get("buildStartShare", 1.0))
         self.max_priority = int(data.get("maxPriority", 100))
+        self.work_priority = self.max_priority - 1 if self.max_priority > 0 else self.max_priority
         self.tiers = list(data.get("tiers") or [])
         kit = data.get("kit") or {}
         self.kit_tiers = dict(kit.get("tiers") or {})
@@ -580,7 +671,7 @@ class Graph:
                 "tasks": [dict(t) for t in (event.get("tasks") or [])],
                 "push": dict(event.get("push") or {}),
                 "advice": list(event.get("advice") or []),
-                "band": int(event.get("band", 0)),
+                "life": bool(event.get("life", False)),
             }
         self.groups = {k: list(v) for k, v in (data.get("groups") or {}).items()}
         self.triggers = [dict(t) for t in (data.get("triggers") or [])]
@@ -655,18 +746,12 @@ class Graph:
             if name in Choice.NEUTRAL:
                 section = data.setdefault("choice", {})
                 section[name] = float(section.get(name, Choice.NEUTRAL[name])) * factor
-        maximum = int(data.get("maxPriority", 100))
         for event_name, factor in (weights.get("events") or {}).items():
             event = data.get("events", {}).get(event_name)
             if event is None:
                 continue
-            band = int(event.get("band", 0))
             for task in event.get("tasks") or []:
-                base = float(task.get("base", 0))
-                if band > 0 and base > maximum:
-                    task["base"] = maximum + int(math.floor((base - maximum) * factor + 0.5))
-                else:
-                    task["base"] = int(math.floor(base * factor + 0.5))
+                task["base"] = int(math.floor(float(task.get("base", 0)) * factor + 0.5))
         return Graph(data)
 
     def members(self, node):
@@ -837,13 +922,13 @@ def buildings_first(graph, tasks, ready):
                      if not task["id"].startswith(BUILDING) and task["makes"] not in supply), default=0)
     order = sorted({task["priority"] for task in tasks
                     if task["id"].startswith(BUILDING) and task["priority"] > 0})
-    if not order or max_other >= graph.max_priority:
+    if not order or max_other >= graph.work_priority:
         return tasks
     start = max(max_other + 1, order[0])
-    room = max(order[0], graph.max_priority - (len(order) - 1))
+    room = max(order[0], graph.work_priority - (len(order) - 1))
     start = min(start, room)
-    step = max(1, (graph.max_priority - start) // (len(order) - 1)) if len(order) > 1 else 1
-    band = {value: min(graph.max_priority, start + index * step)
+    step = max(1, (graph.work_priority - start) // (len(order) - 1)) if len(order) > 1 else 1
+    band = {value: min(graph.work_priority, start + index * step)
             for index, value in enumerate(order)}
     max_supply = max((task["priority"] for task in tasks
                       if not task["id"].startswith(BUILDING) and task["makes"] in supply), default=0)
@@ -855,11 +940,11 @@ def buildings_first(graph, tasks, ready):
         elif task["makes"] in supply and task["consumes"]:
             priority = start
         elif task["makes"] in supply:
-            priority = min(graph.max_priority, task["priority"] + shift)
+            priority = min(graph.work_priority, task["priority"] + shift)
         else:
             priority = task["priority"]
         if priority != task["priority"]:
-            task = dict(task, priority=min(graph.max_priority, priority))
+            task = dict(task, priority=min(graph.work_priority, priority))
         result.append(task)
     return result
 
@@ -1522,7 +1607,7 @@ class Planner:
             raise KeyError("Станция " + building + " не описана среди построек графа")
         materials = self.materials(building)
         return {"id": STATION + building, "makes": building, "spirit": None,
-                "priority": priority(value * self.graph.decay, self.graph.max_priority),
+                "priority": priority(value * self.graph.decay, self.graph.work_priority),
                 "consumes": dict(materials), "feasible": self.stocked(materials),
                 "chance": False, "implemented": self.graph.implemented(building),
                 "ticks": self.graph.costs.ticks(STATION + building, known.board_case)}
@@ -1555,7 +1640,7 @@ class Planner:
     def task(self, key, value):
         graph = self.graph
         state = self.state
-        prio = priority(value, graph.max_priority)
+        prio = priority(value, graph.work_priority)
         if key.startswith(EXPLORE):
             return {"id": key, "makes": key[len(EXPLORE):], "spirit": None, "priority": prio,
                     "consumes": {}, "feasible": True, "chance": False, "implemented": False,
@@ -1563,12 +1648,11 @@ class Planner:
         if key.startswith(EVENT):
             parts = key.split(":", 2)
             event = graph.events.get(parts[1], {"tasks": []})
-            band = int(event.get("band", 0))
-            if band > 0:
-                prio = band_priority(value, graph.max_priority, band)
             task = next((t for t in event["tasks"] if t.get("id") == parts[2]), None)
             if task is None:
                 raise KeyError("Событие " + parts[1] + " задания не описано в графе")
+            if event.get("life", False):
+                prio = life_priority(state, parts[1], event["tasks"], task, graph.max_priority)
             consumes = self.event_consumes(task)
             building = task.get("building")
             fact = None if building is None else state.building_facts.get(building)

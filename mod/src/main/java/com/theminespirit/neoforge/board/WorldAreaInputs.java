@@ -79,7 +79,7 @@ final class WorldAreaInputs {
                 List.copyOf(found.pits().keySet()),
                 found.pits(),
                 found.mounds(),
-                counted.size(),
+                FloatingBlocks.hangingCount(floating),
                 found.traces().size(),
                 new Marks(
                         blockCounts(level, found.mounds()),

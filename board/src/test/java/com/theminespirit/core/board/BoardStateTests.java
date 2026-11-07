@@ -146,4 +146,20 @@ class BoardStateTests {
                         + "работу, которую граф не выбирал, и пересчёт спорит с доской");
         assertEquals(1, filtered.entries().size(), "Снятие не трогает задание графа и убирает все чужие записи");
     }
+
+    @Test
+    void withoutLegacy_GraphCauseWorldTicket_KeptEvenWithoutGraphId() {
+        Board board = boardAt(10);
+        board.submit(ticket("world:backfill:1,64,1", BoardCase.FILL_CRATER, "graph:event:backfill:backfill"));
+        board.submit(ticket("demolish:abc", BoardCase.DISMANTLE_SHELTER, "graph:event:demolish_stray:demolish_stray"));
+        board.submit(ticket("repair:build_mine", BoardCase.REPAIR_BUILDING, BoardTicket.ALWAYS_CAUSE));
+
+        BoardState filtered = board.snapshot().withoutLegacy(Set.of("graph:"));
+
+        assertEquals(
+                List.of("world:backfill:1,64,1", "demolish:abc"),
+                filtered.entries().stream().map(entry -> entry.ticket().id()).toList(),
+                "Задания, поставленные графом, опознаются по cause (graph:event:…), а не только по префиксу id: "
+                        + "world:/demolish: тоже граф, иначе после перезапуска они теряются и граф ставит их заново");
+    }
 }

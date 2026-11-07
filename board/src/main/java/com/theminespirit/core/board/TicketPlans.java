@@ -63,7 +63,6 @@ public final class TicketPlans {
     private static final String DEFAULT_SCHEME = "stone_house";
     private static final String DEFAULT_FENCE_BLOCK = "oak_fence";
     private static final String DEFAULT_LURE_ITEM = "wheat";
-    private static final int CRATER_FILL_RADIUS = 1;
     private static final int DISMANTLE_RADIUS = 4;
     private static final String FENCE_SCHEME = "fence";
     private static final String ENCHANT_ROOM_SCHEME = "enchant_room_v1";
@@ -137,7 +136,7 @@ public final class TicketPlans {
 
     private static TaskNode legacyPlan(BoardCase boardCase, TicketTarget target, int level) {
         return switch (boardCase) {
-            case FILL_CRATER -> fillCrater(target);
+            case FILL_CRATER -> PitFillPlan.plan(target);
             case REPAIR_FENCE -> repairFence(target);
             case CAPTURE_ANIMAL -> captureAnimal(target);
             case LURE_ANIMAL -> lureAnimal(target);
@@ -362,22 +361,6 @@ public final class TicketPlans {
             default -> ENCHANT_ROOM_HALL_SCHEME;
         };
         return sequence(gotoTarget(target), schematic(scheme, target));
-    }
-
-    private static TaskNode fillCrater(TicketTarget target) {
-        int blocks = target.craterBlocks() > 0
-                ? target.craterBlocks()
-                : craterBlocksEstimate(BoardTuning.CRATER_BLOCKS_ESTIMATE_RADIUS);
-        int depth = Math.max(1, Math.min(blocks, CatalogLimits.WORLD_Y_MAX - CatalogLimits.WORLD_Y_MIN));
-        int bottom = Math.max(CatalogLimits.WORLD_Y_MIN, target.target().y() - depth + 1);
-        return sequence(
-                gotoTarget(target),
-                new ScriptCall(ACQUIRE, Map.of(ITEM, "dirt", COUNT, Math.min(blocks, CatalogLimits.COUNT_MAX))),
-                fillArea(target, "dirt", CRATER_FILL_RADIUS, bottom));
-    }
-
-    private static int craterBlocksEstimate(int radius) {
-        return (int) Math.ceil(Math.PI * radius * radius);
     }
 
     private static TaskNode repairFence(TicketTarget target) {

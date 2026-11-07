@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardTuning;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,6 +20,11 @@ public record GraphPlan(List<Task> tasks, List<Notice> notices, List<Advice> adv
             int ticks) {
         public Task {
             consumes = Map.copyOf(consumes);
+            if (priority < 0 || priority > BoardTuning.MAX_PRIORITY) {
+                throw new IllegalArgumentException("Приоритет задания " + id + " " + priority
+                        + " вне доски [0, " + BoardTuning.MAX_PRIORITY
+                        + "]: потолок даёт граф, а не доска и не clamp источника");
+            }
         }
     }
 

@@ -27,7 +27,24 @@ final class DigInputs {
             DigFacts.Cause situation = situation(level, spirit, feet);
             String cause = DigFacts.trap(situation);
             if (cause != null) {
-                known.put(id, fact.withTrap(cause));
+                known.put(
+                        id,
+                        new GraphFacts.Spirit(
+                                fact.id(),
+                                fact.position(),
+                                fact.health(),
+                                fact.maxHealth(),
+                                fact.recentHurt(),
+                                fact.food(),
+                                fact.air(),
+                                fact.inWater(),
+                                true,
+                                fact.stuck(),
+                                fact.activity(),
+                                fact.inventory(),
+                                fact.armor(),
+                                fact.tools(),
+                                cause));
             }
         }
         return facts.withSpirits(known);

@@ -40,16 +40,16 @@ final class GraphBuildOrder {
                 .distinct()
                 .sorted()
                 .toList();
-        if (order.isEmpty() || maxOther >= graph.maxPriority()) {
+        if (order.isEmpty() || maxOther >= GraphPriorities.work(graph)) {
             return tasks;
         }
         int start = Math.max(maxOther + 1, order.get(0));
-        int room = Math.max(order.get(0), graph.maxPriority() - (order.size() - 1));
+        int room = Math.max(order.get(0), GraphPriorities.work(graph) - (order.size() - 1));
         start = Math.min(start, room);
-        int step = order.size() > 1 ? Math.max(1, (graph.maxPriority() - start) / (order.size() - 1)) : 1;
+        int step = order.size() > 1 ? Math.max(1, (GraphPriorities.work(graph) - start) / (order.size() - 1)) : 1;
         Map<Integer, Integer> band = new LinkedHashMap<>();
         for (int index = 0; index < order.size(); index++) {
-            band.put(order.get(index), Math.min(graph.maxPriority(), start + index * step));
+            band.put(order.get(index), Math.min(GraphPriorities.work(graph), start + index * step));
         }
         int maxSupply = tasks.stream()
                 .filter(task -> !task.id().startsWith(BUILDING))
@@ -68,7 +68,7 @@ final class GraphBuildOrder {
                     } else if (supply.contains(task.makes()) && !task.consumes().isEmpty()) {
                         priority = bandStart;
                     } else if (supply.contains(task.makes())) {
-                        priority = Math.min(graph.maxPriority(), task.priority() + shift);
+                        priority = Math.min(GraphPriorities.work(graph), task.priority() + shift);
                     } else {
                         priority = task.priority();
                     }
@@ -80,7 +80,7 @@ final class GraphBuildOrder {
                             task.boardCase(),
                             task.makes(),
                             task.spirit(),
-                            Math.min(graph.maxPriority(), priority),
+                            Math.min(GraphPriorities.work(graph), priority),
                             task.consumes(),
                             task.feasible(),
                             task.chance(),

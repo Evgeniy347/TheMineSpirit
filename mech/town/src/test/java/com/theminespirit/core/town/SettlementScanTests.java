@@ -130,18 +130,41 @@ class SettlementScanTests {
     }
 
     @Test
-    void scan_HighColumnAboveHead_IsHighNotOrdinaryStray() {
+    void scan_PlannedDepressionsAndSpiritTrace_AreNotPits() {
         Fake world = new Fake();
-        world.put(2, LEVEL + 20, 2, "minecraft:cobblestone");
+        world.lot(1, 1);
+        world.hole(1, 1, 4);
+        for (int y = LEVEL - 4; y <= LEVEL - 1; y++) {
+            world.planned.add(new BlockCoord(1, y, 1));
+        }
+        world.lot(3, 1);
+        world.hole(3, 1, 3);
+        for (int y = LEVEL - 3; y <= LEVEL - 1; y++) {
+            world.planned.add(new BlockCoord(3, y, 1));
+        }
+        world.lot(5, 1);
+        world.put(5, LEVEL - 1, 1, "minecraft:water");
+        world.planned.add(new BlockCoord(5, LEVEL - 1, 1));
+        world.hole(7, 1, 3);
+        world.dug(7, LEVEL - 1, 1);
+        for (int y = LEVEL - 3; y <= LEVEL - 1; y++) {
+            world.planned.add(new BlockCoord(7, y, 1));
+        }
+        world.hole(9, 1, 3);
+        world.dug(9, LEVEL - 1, 1);
+        world.spirit.add(new BlockCoord(9, LEVEL - 2, 1));
 
-        SettlementScan.Strays found = scan(world, ColumnMask.rect(0, 0, 6, 6));
+        SettlementScan.Strays found = scan(world, ColumnMask.rect(0, 0, 12, 3));
 
         assertEquals(
-                List.of(new BlockCoord(2, LEVEL + 20, 2)),
-                found.high().stream().map(cell -> cell.at()).toList(),
-                "Столб на 20 выше земли обязан попасть в отдельный факт high_strays: с земли его не достать, "
-                        + "а обычная расчистка ищет только нижние четыре клетки");
-        assertEquals(List.of(), found.strays(), "Высокое не смешивается с обычным лишним");
+                Map.of(),
+                found.pits(),
+                "Шахта, колодец, пашня с водой и ступени спуска — законные углубления плана, "
+                        + "а след духа возвращает restore_trace: засыпать их ямами нельзя");
+        assertEquals(
+                List.of(new BlockCoord(9, LEVEL - 2, 1)),
+                found.traces(),
+                "След духа остаётся следом, а не ямой: его возвращает отдельное задание");
     }
 
     @Test
@@ -158,18 +181,18 @@ class SettlementScanTests {
                 "яма, выкопанная духом, — след: её возвращают как было");
     }
 
-    private static SettlementScan.Strays scan(Fake world, ColumnMask area) {
+    static SettlementScan.Strays scan(Fake world, ColumnMask area) {
         return SettlementScan.scan(area.cells(), LEVEL, rules(), world);
     }
 
-    private static BlockProtection rules() {
+    static BlockProtection rules() {
         String json = "{\"deny\": [\"bedrock\"], \"natural\": [\"stone\", \"dirt\", \"short_grass\"], "
                 + "\"strays\": [\"*_fence\", \"cobblestone\"], \"buildingThreshold\": 6, "
                 + "\"maxUnprotectVolume\": 4096}";
         return ProtectionConfig.parse(json, ORIGIN);
     }
 
-    private static final class Fake implements SettlementScan.World {
+    static final class Fake implements SettlementScan.World {
         private final Map<BlockCoord, String> blocks = new HashMap<>();
         private final Set<BlockCoord> planned = new HashSet<>();
         private final Set<BlockCoord> player = new HashSet<>();
@@ -184,7 +207,11 @@ class SettlementScanTests {
         }
 
         void hole(int x, int z) {
-            for (int y = LEVEL - 1; y >= LEVEL - 3; y--) {
+            hole(x, z, 3);
+        }
+
+        void hole(int x, int z, int depth) {
+            for (int y = LEVEL - 1; y >= LEVEL - depth; y--) {
                 put(x, y, z, "minecraft:air");
             }
         }
@@ -204,9 +231,8 @@ class SettlementScanTests {
 
         @Override
         public boolean open(int x, int y, int z) {
-            return "minecraft:air"
-                    .equals(blocks.getOrDefault(
-                            new BlockCoord(x, y, z), y < LEVEL ? "minecraft:stone" : "minecraft:air"));
+            String id = blocks.getOrDefault(new BlockCoord(x, y, z), y < LEVEL ? "minecraft:stone" : "minecraft:air");
+            return "minecraft:air".equals(id) || "minecraft:water".equals(id);
         }
 
         @Override

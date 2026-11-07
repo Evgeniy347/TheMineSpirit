@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.building.FillOrder;
 import com.theminespirit.core.building.SchemeFilter;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.observation.BlockCoord;
@@ -970,10 +971,10 @@ class TicketPlansTests {
 
         assertEquals(
                 List.of(
-                        new PlotLeveling.Box(0, 64, 0, 2, 64, 0),
-                        new PlotLeveling.Box(0, 65, 0, 2, 65, 1),
-                        new PlotLeveling.Box(0, 66, 0, 2, 66, 1)),
-                LevelLayers.layers(rows),
+                        new FillOrder.Box(0, 64, 0, 2, 64, 0),
+                        new FillOrder.Box(0, 65, 0, 2, 65, 1),
+                        new FillOrder.Box(0, 66, 0, 2, 66, 1)),
+                FillOrder.layers(rows),
                 "Подсыпка — слоями снизу вверх по всей яме, ряды слоя слиты: рядами на всю глубину дух выбирался на "
                         + "край, и соседний ряд оставался траншеей без стоянки (INC-66)");
     }

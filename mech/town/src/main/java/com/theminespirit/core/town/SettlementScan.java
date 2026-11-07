@@ -110,14 +110,19 @@ public final class SettlementScan {
             if (lot.isPresent()) {
                 int lotLevel = lot.getAsInt();
                 BlockCoord ground = new BlockCoord(x, lotLevel - 1, z);
-                if (surface < lotLevel - 1 && !world.planned(ground.x(), ground.y(), ground.z())) {
+                if (surface < lotLevel - 1
+                        && !plannedRange(world, x, z, surface + 1, lotLevel - 1)
+                        && !markedRange(world, x, z, surface + 1, lotLevel - 1)) {
                     pits.put(ground, lotLevel - 1 - surface);
                 }
                 naturalBlocks(world, rules, x, z, lotLevel, surface, mounds);
             } else {
                 natural += naturalBlocks(world, rules, x, z, level, surface, null);
                 OptionalInt dug = world.dugTop(x, z);
-                if (dug.isPresent() && surface < dug.getAsInt() && !world.planned(x, dug.getAsInt(), z)) {
+                if (dug.isPresent()
+                        && surface < dug.getAsInt()
+                        && !plannedRange(world, x, z, surface + 1, dug.getAsInt())
+                        && !markedRange(world, x, z, surface + 1, dug.getAsInt())) {
                     pits.put(new BlockCoord(x, dug.getAsInt(), z), dug.getAsInt() - surface);
                 }
             }
@@ -167,6 +172,24 @@ public final class SettlementScan {
             }
         }
         return found;
+    }
+
+    private static boolean plannedRange(World world, int x, int z, int from, int to) {
+        for (int y = from; y <= to; y++) {
+            if (world.planned(x, y, z)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean markedRange(World world, int x, int z, int from, int to) {
+        for (int y = from; y <= to; y++) {
+            if (world.spiritMarked(x, y, z)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static int surface(World world, int x, int z, int level) {

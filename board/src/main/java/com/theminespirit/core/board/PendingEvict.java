@@ -28,18 +28,33 @@ final class PendingEvict {
                         || statuses.get(ticket.id()) == BoardStatus.WAITING_RESOURCES)
                 .toList();
         int over = pending.size() - BoardTuning.maxPending();
+        List<BoardTicket> repairs = pending.stream()
+                .filter(ticket -> !liveCauses.contains(ticket.cause()))
+                .filter(ticket -> ticket.id().startsWith("repair:"))
+                .sorted(Comparator.comparingLong(BoardTicket::createdAt).thenComparing(BoardTicket::id))
+                .toList();
         List<BoardTicket> unissued = pending.stream()
                 .filter(ticket -> !liveCauses.contains(ticket.cause()))
                 .filter(ticket -> !ticket.id().startsWith("repair:"))
                 .sorted(Comparator.comparingLong(BoardTicket::createdAt).thenComparing(BoardTicket::id))
                 .toList();
         int evicted = 0;
+        int repairOver = repairs.size() - BoardTuning.maxRepairPending();
+        for (BoardTicket ticket : repairs) {
+            if (evicted >= repairOver) {
+                break;
+            }
+            cancel.accept(ticket.id());
+            evicted++;
+        }
+        int rest = Math.max(0, over - evicted);
         for (BoardTicket ticket : unissued) {
-            if (evicted >= over) {
+            if (rest <= 0) {
                 return evicted;
             }
             cancel.accept(ticket.id());
             evicted++;
+            rest--;
         }
         return evicted;
     }

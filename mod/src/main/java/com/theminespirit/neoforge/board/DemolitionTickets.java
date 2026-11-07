@@ -100,6 +100,22 @@ final class DemolitionTickets {
                 stand, new BlockCoord(stand.x(), highest, stand.z()), new BlockCoord(stand.x(), lowest, stand.z()));
     }
 
+    static Placement extend(Placement placement, FloatingBlocks.Finding finding) {
+        int highest = finding.cells().stream()
+                .mapToInt(BlockCoord::y)
+                .max()
+                .orElse(finding.at().y());
+        int lowest = finding.cells().stream()
+                .mapToInt(BlockCoord::y)
+                .min()
+                .orElse(finding.at().y());
+        BlockCoord stand = placement.stand();
+        return new Placement(
+                stand,
+                new BlockCoord(stand.x(), Math.max(highest, placement.top().y()), stand.z()),
+                new BlockCoord(stand.x(), Math.min(lowest, placement.lowest().y()), stand.z()));
+    }
+
     static TicketTarget target(StageSite site, List<PlannedBlock> blocks, Placement placement) {
         TicketTarget target = placement.stand() == null
                 ? TicketTarget.at(blocks.get(0).at())

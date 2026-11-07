@@ -175,6 +175,8 @@ class More6RulesTests {
                 id,
                 new GraphFacts.Position(x, y, z),
                 health,
+                Math.max(health, 1f),
+                null,
                 20,
                 300,
                 false,
@@ -183,7 +185,8 @@ class More6RulesTests {
                 null,
                 Map.of(),
                 armor,
-                List.of());
+                List.of(),
+                null);
     }
 
     private static List<GraphFacts.Armor> brokenArmor() {
