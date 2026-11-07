@@ -55,7 +55,8 @@ final class DigOutAction {
             }
             Optional<PitExitPlanner.Plan> pit = PitRescue.trapped(spirit);
             if (pit.isPresent()) {
-                if (pit.orElseThrow().possible() && service.board().assignedTo(spirit.getUUID()).isEmpty()) {
+                if (pit.orElseThrow().possible()
+                        && service.board().assignedTo(spirit.getUUID()).isEmpty()) {
                     pausedUntil.put(spirit.getUUID(), now + PAUSE_TICKS);
                     service.detachForAction(spirit);
                     spirit.startTask(PitRescue.plan(spirit, pit.orElseThrow()));

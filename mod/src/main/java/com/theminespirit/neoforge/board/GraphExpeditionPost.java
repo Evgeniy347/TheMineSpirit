@@ -37,7 +37,8 @@ final class GraphExpeditionPost {
             }
         }
         SettlementKey key = SettlementGroups.keyOf(
-                Optional.of(post.scan.home()), members.isEmpty() ? null : members.get(0).getUUID());
+                Optional.of(post.scan.home()),
+                members.isEmpty() ? null : members.get(0).getUUID());
         ExpeditionController controller =
                 CoordinatorRegistry.get(post.level, key).intellect().expeditions();
         List<UUID> team = team(
@@ -45,7 +46,8 @@ final class GraphExpeditionPost {
                 members,
                 controller.active().map(Expedition::team).orElse(null));
         Optional<UUID> leader = team.stream().findFirst();
-        BlockCoord bottom = MineDescentBottom.standOf(post.scan.stage().mineEntrance()).orElse(null);
+        BlockCoord bottom =
+                MineDescentBottom.standOf(post.scan.stage().mineEntrance()).orElse(null);
         BoardStatus status = post.service.board().statusOf(ticket.id()).orElse(null);
         if (status == null || status == BoardStatus.PENDING) {
             GraphActivityPost.post(
@@ -89,8 +91,7 @@ final class GraphExpeditionPost {
         return true;
     }
 
-    private static boolean launch(
-            GraphPost post, String id, List<UUID> crew, SpiritEntity spirit, TaskNode task) {
+    private static boolean launch(GraphPost post, String id, List<UUID> crew, SpiritEntity spirit, TaskNode task) {
         if (spirit.isRemoved()) {
             return false;
         }
