@@ -6,24 +6,17 @@ import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.building.BuildTuning;
-import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.engine.ScriptInstance;
-import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
@@ -59,6 +52,7 @@ public final class FillSession {
     private @Nullable BlockCoord currentStand;
     private final List<BlockCoord> order = new ArrayList<>();
     private final LevelSafetyView safety;
+    private final FillStands standView;
     private final FillTerrain terrain;
     private final BlockPlacer placer;
     private final Approach approach;
@@ -93,12 +87,13 @@ public final class FillSession {
         this.wanted = BlockStates.stateFor(blockId);
         this.region = Set.copyOf(cells);
         this.safety = new LevelSafetyView(level);
+        this.standView = new FillStands(spirit, level, blockId, region, safety);
         this.terrain = new FillTerrain(level, spirit, wanted, region);
         this.placer = new BlockPlacer(spirit);
         this.approach = new Approach(spirit);
         this.reservations = BuildReservationHub.forLevel(level);
         replan();
-        if (insideBox(spirit.blockPosition())) {
+        if (standView.insideBox(spirit.blockPosition())) {
             state = State.EXIT;
         }
     }
@@ -196,7 +191,7 @@ public final class FillSession {
     }
 
     private void exitTick() {
-        BlockCoord exit = exitStand();
+        BlockCoord exit = standView.exitStand();
         if (exit == null) {
             state = State.PICK;
             return;
@@ -237,20 +232,20 @@ public final class FillSession {
             reservations.reserve(cell, spirit.getUUID());
             this.current = cell;
             if (cell.equals(spiritCoord())) {
-                pillar = pillarHere(cell);
+                pillar = standView.pillarHere(cell);
                 state = State.PILLAR;
                 return;
             }
-            if (inReach(cell)) {
+            if (standView.inReach(cell)) {
                 placeCurrent();
                 return;
             }
-            List<BlockCoord> stands = StandSpots.of(cell, safetyView(), spiritCoord());
-            if (stands.isEmpty() && floorUnder(cell) && allowedStand(cell)) {
-                stands = List.of(cell);
+            List<BlockCoord> spots = StandSpots.of(cell, safetyView(), spiritCoord());
+            if (spots.isEmpty() && standView.floorUnder(cell) && standView.allowedStand(cell)) {
+                spots = List.of(cell);
             }
 
-            if (stands.isEmpty()) {
+            if (spots.isEmpty()) {
                 if (noStand < NO_STAND_LOGGED) {
                     BlockPos at = toPos(cell);
                     LOGGER.info(
@@ -270,8 +265,8 @@ public final class FillSession {
                 cursor++;
                 continue;
             }
-            stands = stands.stream().filter(this::allowedStand).toList();
-            if (stands.isEmpty()) {
+            spots = spots.stream().filter(standView::allowedStand).toList();
+            if (spots.isEmpty()) {
                 noStand++;
                 skipped++;
                 tally.skipped();
@@ -280,7 +275,7 @@ public final class FillSession {
                 cursor++;
                 continue;
             }
-            BlockCoord stand = stands.get(0);
+            BlockCoord stand = spots.get(0);
             currentStand = stand;
             approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
             state = State.APPROACH;
@@ -323,53 +318,6 @@ public final class FillSession {
         }
     }
 
-    private boolean openAbove(BlockCoord stand) {
-        int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, stand.x(), stand.z());
-        for (int y = stand.y() + 1; y < top; y++) {
-            BlockPos pos = new BlockPos(stand.x(), y, stand.z());
-            BlockState state = level.getBlockState(pos);
-            if (!state.getCollisionShape(level, pos).isEmpty() && !(state.getBlock() instanceof LeavesBlock)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private PillarColumn pillarHere(BlockCoord cell) {
-        return level.getBlockState(toPos(cell)).getFluidState().is(FluidTags.WATER)
-                ? PillarColumn.throughWater(spirit, blockId)
-                : new PillarColumn(spirit, blockId, 1);
-    }
-
-    private boolean inReach(BlockCoord cell) {
-        BlockPos feet = spirit.blockPosition();
-        BlockPos pos = toPos(cell);
-        return (spirit.onGround() || spirit.isInWater())
-                && !pos.equals(feet)
-                && !pos.equals(feet.above())
-                && SpiritReach.reachable(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), cell);
-    }
-
-    private boolean floorUnder(BlockCoord cell) {
-        BlockPos pos = toPos(cell);
-        return level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP)
-                && level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()
-                && level.getBlockState(pos.above())
-                        .getCollisionShape(level, pos.above())
-                        .isEmpty();
-    }
-
-    private boolean allowedStand(BlockCoord stand) {
-        if (!(level instanceof ServerLevel server)) {
-            return true;
-        }
-        boolean sky = openAbove(stand);
-        return SettlementPlotStore.get(server)
-                .site()
-                .map(site -> site.fillStandAllowed(stand, sky))
-                .orElse(true);
-    }
-
     private void approachTick() {
         BlockPos feet = spirit.blockPosition();
         if (currentStand != null
@@ -381,7 +329,7 @@ public final class FillSession {
             placeCurrent();
             return;
         }
-        if (current != null && inReach(current)) {
+        if (current != null && standView.inReach(current)) {
             approach.cancel();
             placeCurrent();
             return;
@@ -402,7 +350,7 @@ public final class FillSession {
 
     private void placeCurrent() {
         if (current.equals(spiritCoord())) {
-            pillar = pillarHere(current);
+            pillar = standView.pillarHere(current);
             state = State.PILLAR;
             return;
         }
@@ -528,35 +476,6 @@ public final class FillSession {
                 + foreignSkipped + ")";
     }
 
-    private boolean insideBox(BlockPos pos) {
-        return region.contains(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
-    }
-
-    private BlockCoord exitStand() {
-        BlockPos feet = spirit.blockPosition();
-        BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-        List<BlockCoord> candidates = new ArrayList<>();
-        for (int dx = -3; dx <= 3; dx++) {
-            for (int dz = -3; dz <= 3; dz++) {
-                for (int dy = -1; dy <= 1; dy++) {
-                    BlockCoord cell = new BlockCoord(from.x() + dx, from.y() + dy, from.z() + dz);
-                    if (region.contains(cell)) {
-                        continue;
-                    }
-                    if (MiningSafety.canStand(cell, safetyView())) {
-                        candidates.add(cell);
-                    }
-                }
-            }
-        }
-        candidates.sort((first, second) -> {
-            long firstDistance = distanceSquared(from, first);
-            long secondDistance = distanceSquared(from, second);
-            return Long.compare(firstDistance, secondDistance);
-        });
-        return candidates.isEmpty() ? null : candidates.get(0);
-    }
-
     private SafetyView safetyView() {
         return safety;
     }
@@ -581,13 +500,6 @@ public final class FillSession {
     private void releaseAll() {
         reservations.releaseAll(spirit.getUUID());
         current = null;
-    }
-
-    private static long distanceSquared(BlockCoord from, BlockCoord to) {
-        long dx = (long) to.x() - from.x();
-        long dy = (long) to.y() - from.y();
-        long dz = (long) to.z() - from.z();
-        return dx * dx + dy * dy + dz * dz;
     }
 
     private static BlockPos toPos(BlockCoord coord) {

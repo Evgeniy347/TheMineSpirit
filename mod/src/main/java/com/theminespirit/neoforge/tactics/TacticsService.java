@@ -8,12 +8,9 @@ import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.DirectiveOwner;
-import com.theminespirit.core.tactics.DirectiveOwnership;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.Point;
-import com.theminespirit.core.tactics.RallyTuning;
 import com.theminespirit.core.tactics.RetreatMethod;
-import com.theminespirit.core.tactics.ReturnStall;
 import com.theminespirit.core.tactics.SafePointChoice;
 import com.theminespirit.core.tactics.Situation;
 import com.theminespirit.core.tactics.TacticalOption;
@@ -31,7 +28,6 @@ import com.theminespirit.core.tactics.adapter.DecisionRecord;
 import com.theminespirit.core.tactics.adapter.DecisionText;
 import com.theminespirit.core.tactics.adapter.ExecutionResult;
 import com.theminespirit.core.tactics.adapter.ForcedRetreat;
-import com.theminespirit.core.tactics.adapter.HelpCallGate;
 import com.theminespirit.core.tactics.adapter.IntentActionExecutor;
 import com.theminespirit.core.tactics.adapter.OrdersBuilder;
 import com.theminespirit.core.tactics.adapter.RetreatCommitment;
@@ -44,21 +40,16 @@ import com.theminespirit.core.tactics.adapter.TacticsSchedule;
 import com.theminespirit.core.tactics.adapter.TacticsTrace;
 import com.theminespirit.core.tactics.adapter.TargetDesignation;
 import com.theminespirit.neoforge.Approach;
-import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
 public final class TacticsService {
@@ -70,10 +61,8 @@ public final class TacticsService {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final TacticsEngine ENGINE = new TacticsEngine(TacticsConfig.loadDefault());
     private static final int NEVER = -1_000_000;
-    private static final int RETURN_MAX_TICKS = 600;
-    private static final int RETURN_COOLDOWN_TICKS = 1200;
 
-    private final SpiritEntity spirit;
+    final SpiritEntity spirit;
     private final TacticsAdapterSettings settings = TacticsAdapterSettings.loadDefault();
     private final WorldFactCollector collector = new WorldFactCollector(settings);
     private final CoreFactCollector situations = new CoreFactCollector(settings);
@@ -81,7 +70,7 @@ public final class TacticsService {
     private final TacticsSchedule schedule = new TacticsSchedule(settings.evalIntervalTicks());
     private final DecisionJournal journal =
             new DecisionJournal(settings.journalCapacity(), settings.journalMaxPerSecond());
-    private final HelpCallGate helpGate = new HelpCallGate();
+    private final TacticsRally rally;
     private final Approach approach;
     private final CombatActuator combat;
     private final RetreatExecutor retreating;
@@ -97,26 +86,15 @@ public final class TacticsService {
     private WorldFactCollector.Collected facts;
     private Optional<RetreatPlan> plan = Optional.empty();
     private RetreatMethod planMethod = RetreatMethod.NONE;
-    private Optional<Point> returnTarget = Optional.empty();
     private TacticsAction action = TacticsAction.IDLE;
-    private int returnTicks;
-    private long returnBlockedUntil;
-    private final ReturnStall returnStall = new ReturnStall();
-    private String lastReturnState = "-";
-    private CombatDirective directive;
-    private final DirectiveOwnership ownership = new DirectiveOwnership();
-    private Optional<StoredTactics> preDirective = Optional.empty();
-    private LivingEntity forcedTarget;
-    private RetreatMethod forcedMethod = RetreatMethod.NONE;
-    private Optional<Point> forcedPoint = Optional.empty();
+    private final TacticsReturn returnWalk;
+    private final TacticsDirectives directives;
     private String targetId;
     private String shootTargetId;
     private boolean active;
     private boolean paused;
     private boolean forced;
-    private boolean held;
     private boolean hurtPending;
-    private boolean returned;
     private int lastHurtTick = NEVER;
     private long suspendedUntil = Long.MIN_VALUE;
     private RetreatExecutor.Progress progress = RetreatExecutor.Progress.DONE;
@@ -125,16 +103,17 @@ public final class TacticsService {
     private int blockReads;
     private int entityQueries;
     private int failures;
-    private int helpCalls;
     private String lastFailure;
     private String restoreFailure;
-    private Optional<HelpCall> helpCall = Optional.empty();
 
     public TacticsService(SpiritEntity spirit) {
         this.spirit = spirit;
+        this.directives = new TacticsDirectives(this);
+        this.rally = new TacticsRally(spirit);
         this.approach = new Approach(spirit);
         this.combat = new CombatActuator(spirit, approach);
         this.retreating = new RetreatExecutor(spirit, approach, combat, collector);
+        this.returnWalk = new TacticsReturn(this, spirit, approach, retreating);
     }
 
     public void tick() {
@@ -216,83 +195,43 @@ public final class TacticsService {
     }
 
     public void applyDirective(CombatDirective directive) {
-        applyDirective(directive, DirectiveOwner.SCRIPT);
+        directives.apply(directive, DirectiveOwner.SCRIPT);
     }
 
     public void applyDirective(CombatDirective directive, DirectiveOwner owner) {
-        if (directive == null) {
-            throw new IllegalArgumentException("Приказ = null: боевой скрипт обязан передать CombatDirective, "
-                    + "иначе тактика не знает, какой режим и цель включить");
-        }
-        if (this.directive == null) {
-            preDirective = Optional.of(snapshot());
-        }
-        this.directive = directive;
-        ownership.appliedBy(owner);
-        held = false;
-        ordered = directive.mode();
-        forcedTarget = null;
-        setForcedRetreat(directive.retreat().orElse(RetreatMethod.NONE), directive.safePoint());
-        if (directive.mode() == CombatMode.PASSIVE) {
-            spirit.setTarget(null);
-        }
-        forced = true;
+        directives.apply(directive, owner);
     }
 
     public boolean clearDirective() {
-        return clearDirective(DirectiveOwner.SCRIPT);
+        return directives.clear(DirectiveOwner.SCRIPT);
     }
 
     public boolean clearDirective(DirectiveOwner owner) {
-        if (directive == null || !ownership.mayClear(owner)) {
-            return false;
-        }
-        directive = null;
-        held = false;
-        ownership.cleared();
-        forcedTarget = null;
-        setForcedRetreat(RetreatMethod.NONE, Optional.empty());
-        restore(preDirective.orElse(new StoredTactics(
-                DEFAULT_MODE, Optional.empty(), Optional.empty(), Optional.empty(), RetreatTracker.IDLE)));
-        preDirective = Optional.empty();
-        spirit.setTarget(null);
-        return true;
+        return directives.clear(owner);
     }
 
     public Optional<CombatDirective> activeDirective() {
-        return Optional.ofNullable(directive);
+        return directives.active();
     }
 
     public void holdDirective() {
-        if (directive != null && !held) {
-            held = true;
-            release();
-        }
+        directives.hold();
     }
 
     public boolean directiveHeld() {
-        return held;
+        return directives.held();
     }
 
     public void setForcedTarget(LivingEntity target) {
-        forcedTarget = target;
-        spirit.setTarget(target);
+        directives.setTarget(target);
     }
 
-    public void setForcedRetreat(RetreatMethod method, Optional<Point> point) {
-        if (method == null) {
-            throw new IllegalArgumentException(
-                    "Способ отхода = null: укажите RetreatMethod, " + "для «способ не навязан» — RetreatMethod.NONE");
-        }
-        if (point == null) {
-            throw new IllegalArgumentException("Точка отхода = null: отсутствие точки передаётся Optional.empty()");
-        }
-        if (point.isPresent() && method == RetreatMethod.NONE) {
-            throw new IllegalArgumentException("Точка " + point.get() + " при способе NONE: "
-                    + "точка имеет смысл только с явным способом отхода, иначе дух не знает, зачем она нужна");
-        }
-        forcedMethod = method;
-        forcedPoint = point;
+    void setOrdered(CombatMode mode) {
+        ordered = mode;
+    }
+
+    void markForced() {
+        forced = true;
     }
 
     public boolean hasState() {
@@ -370,16 +309,11 @@ public final class TacticsService {
     }
 
     public Optional<HelpCall> helpCall() {
-        if (helpCall.isEmpty()) {
-            return Optional.empty();
-        }
-        long now = spirit.level().getGameTime();
-        RallyTuning tuning = TacticsConfig.loadDefault().rules().retreat().rally();
-        return now - helpCall.get().raisedAt() <= tuning.callIntervalTicks() ? helpCall : Optional.empty();
+        return rally.call();
     }
 
     public int helpCalls() {
-        return helpCalls;
+        return rally.calls();
     }
 
     public StoredTactics snapshot() {
@@ -392,7 +326,7 @@ public final class TacticsService {
         ward = stored.ward().map(UUID::fromString);
         memory = stored.memory().orElse(null);
         retreat = stored.retreat();
-        held = false;
+        directives.resetHeld();
         forced = true;
     }
 
@@ -414,11 +348,11 @@ public final class TacticsService {
         stepCalls++;
         schedule.evaluated(now, byEvent);
         memory = next.memory();
-        next = ForcedRetreat.apply(next, directive, forcedMethod);
+        next = ForcedRetreat.apply(next, directives.current(), directives.method());
         retreat = RetreatCommitment.next(retreat, next, now, settings);
         result = intents.execute(next, collected.context());
         Optional<EnemyFact> designated = TargetDesignation.pick(next, collected.context());
-        Optional<LivingEntity> forcedTarget = designatedTarget();
+        Optional<LivingEntity> forcedTarget = directives.livingTarget();
         if (forcedTarget.isPresent()) {
             targetId = designated.map(EnemyFact::id).orElse(null);
             spirit.setTarget(forcedTarget.get());
@@ -439,37 +373,12 @@ public final class TacticsService {
                 .map(EnemyFact::id)
                 .orElse(null);
         replan(collected, situation);
-        returnTarget = next.returnTo().flatMap(point -> ReturnAnchor.stand(spirit, point));
-        returned = false;
+        returnWalk.set(next.returnTo().flatMap(point -> ReturnAnchor.stand(spirit, point)));
         logChange(next);
         journalDecision(now, next, situation);
-        updateHelpCall(now, next, situation);
+        rally.update(now, next, situation);
         outcome = next;
         facts = collected;
-    }
-
-    private void updateHelpCall(long now, TacticalOutcome next, Situation situation) {
-        RallyTuning tuning = TacticsConfig.loadDefault().rules().retreat().rally();
-        boolean calls =
-                next.decision() == TacticalOption.RETREAT && situation.enemies().size() >= tuning.callMinEnemies();
-        helpCall = calls
-                ? Optional.of(new HelpCall(spirit.getUUID(), situation.self().pos(), now))
-                : Optional.empty();
-        if (!calls || !helpGate.ready(now, tuning.callIntervalTicks())) {
-            return;
-        }
-        ServerPlayer player = playerNear(tuning.callRadius());
-        if (player == null) {
-            return;
-        }
-        BlockPos at = spirit.blockPosition();
-        player.sendSystemMessage(Component.literal("нужна помощь у " + at.getX() + " " + at.getY() + " " + at.getZ()));
-        helpGate.called(now);
-        helpCalls++;
-    }
-
-    private ServerPlayer playerNear(int radius) {
-        return spirit.level().getNearestPlayer(spirit, radius) instanceof ServerPlayer player ? player : null;
     }
 
     private void journalDecision(long now, TacticalOutcome next, Situation situation) {
@@ -486,7 +395,7 @@ public final class TacticsService {
     }
 
     private Optional<LivingEntity> designatedTarget() {
-        return Optional.ofNullable(forcedTarget).filter(LivingEntity::isAlive);
+        return directives.livingTarget();
     }
 
     private boolean engages(Optional<EnemyFact> designated) {
@@ -515,8 +424,8 @@ public final class TacticsService {
 
     private Optional<RetreatPlan> planFor(WorldFactCollector.Collected collected, Situation situation) {
         BlockPos feet = spirit.blockPosition();
-        Optional<Point> retreatPoint = forcedPoint.isPresent()
-                ? forcedPoint
+        Optional<Point> retreatPoint = directives.point().isPresent()
+                ? directives.point()
                 : SafePointChoice.nearest(situation.self().pos(), collected.home(), collected.camp());
         RetreatPlanner.Input input = new RetreatPlanner.Input(
                 situation.self().pos(),
@@ -540,14 +449,13 @@ public final class TacticsService {
             progress = retreating.step(plan.get(), entity(shootTargetId));
             return;
         }
-        LivingEntity target = forcedTarget != null && forcedTarget.isAlive()
-                ? forcedTarget
+        LivingEntity target = directives.target() != null && directives.target().isAlive()
+                ? directives.target()
                 : entity(targetId).orElse(null);
         if (outcome.decision() == TacticalOption.FIGHT && target != null) {
             active = true;
             action = TacticsAction.FIGHT;
-            returnTicks = 0;
-            returnBlockedUntil = 0;
+            returnWalk.clearCooldown();
             retreating.reset();
             if (result instanceof ExecutionResult.Shooting && spirit.gear().arrows() > 0) {
                 combat.shoot(target);
@@ -557,83 +465,17 @@ public final class TacticsService {
             return;
         }
         if (outcome.decision() == TacticalOption.IGNORE
-                && !held
-                && returnTarget.isPresent()
-                && !returned
-                && spirit.level().getGameTime() >= returnBlockedUntil) {
+                && !directives.held()
+                && returnWalk.due(spirit.level().getGameTime())) {
             active = true;
             action = zone.isPresent() ? TacticsAction.GUARD : TacticsAction.RETURN;
-            returnToAnchor(returnTarget.get());
+            returnWalk.walk(returnWalk.point());
             return;
         }
         release();
     }
 
-    private void returnToAnchor(Point point) {
-        retreating.reset();
-        spirit.gear().holdNothing();
-        Vec3 target = new Vec3(point.x(), point.y(), point.z());
-        double distance = spirit.position().distanceTo(target);
-        if (distance <= RETURN_ARRIVAL) {
-            approach.cancel();
-            returned = true;
-            returnTicks = 0;
-            return;
-        }
-        if (approach.detouring()) {
-            approach.tick();
-            return;
-        }
-        returnTicks++;
-        boolean stalled = returnStall.stalled(point, distance);
-        if (stalled) {
-            LOGGER.warn(
-                    "[incident] дух {} не дошёл до якоря {} за {} тиков (осталось {}, стоит в {}, подход {}): возврат "
-                            + "снят, дух свободен",
-                    spirit.displayName(),
-                    point,
-                    ReturnStall.STALL_TICKS,
-                    String.format(Locale.ROOT, "%.1f", distance),
-                    spirit.blockPosition().toShortString(),
-                    lastReturnState);
-            lastReturnState = "-";
-        }
-        if (stalled || returnTicks > RETURN_MAX_TICKS) {
-            if (returnTicks > RETURN_MAX_TICKS) {
-                LOGGER.warn(
-                        "[incident] дух {} шёл к якорю {} дольше {} тиков (осталось {}, стоит в {}): возврат снят на {}"
-                                + " тиков, дух свободен",
-                        spirit.displayName(),
-                        point,
-                        RETURN_MAX_TICKS,
-                        String.format(Locale.ROOT, "%.1f", distance),
-                        spirit.blockPosition().toShortString(),
-                        RETURN_COOLDOWN_TICKS);
-            }
-            approach.cancel();
-            returned = true;
-            returnTicks = 0;
-            returnStall.reset();
-            returnBlockedUntil = spirit.level().getGameTime() + RETURN_COOLDOWN_TICKS;
-            return;
-        }
-        if (!approach.isActive() && DigOutScript.sealed(spirit.level(), spirit.blockPosition())) {
-            returned = true;
-            returnTicks = 0;
-            returnBlockedUntil = spirit.level().getGameTime() + RETURN_COOLDOWN_TICKS;
-            release();
-            return;
-        }
-        if (!approach.isActive()) {
-            approach.beginWithRoutes(target, RETURN_ARRIVAL);
-        }
-        Approach.State state = approach.tick();
-        if (state != Approach.State.MOVING) {
-            lastReturnState = state + (approach.refusal() == null ? "" : ": " + approach.refusal());
-        }
-    }
-
-    private void release() {
+    void release() {
         action = TacticsAction.IDLE;
         if (active) {
             retreating.reset();
