@@ -468,6 +468,7 @@ cat >"$work/orphans.txt" <<'FIX'
 400	300	120	5	java.exe	java -Dfml.modFolders=x F:/repos/minecraft/wt-activitytickets
 500	101	0	40	sh.exe	./gradlew :board:test
 600	500	40	3	bash.exe	scripts/test.sh gametest
+700	999	30	25	java.exe	java -Dlivedebug.copy=wt-live F:/repos/minecraft/wt-live
 FIX
 out=$(ORPHANS_WIN_LIST="$work/orphans.txt" bash scripts/lead/orphans-win.sh 2>&1)
 code=$?

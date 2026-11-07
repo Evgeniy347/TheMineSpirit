@@ -78,8 +78,8 @@ select_orphans() {
         gsub(/\\/, "/", c)
         if (c ~ /opencode(\.exe)?[^,]* run / || c ~ /--format json/) return 0
         if (n == "java") {
-            if (c ~ /gradledaemon/) return 0
-            return c ~ /(wt-[a-z0-9._-]+|fml\.modfolders=|livedebug\.copy=)/
+            if (c ~ /gradledaemon/ || c ~ /livedebug\.copy=/) return 0
+            return c ~ /(wt-[a-z0-9._-]+|fml\.modfolders=)/
         }
         if (n != "bash" && n != "sh" && n != "cmd") return 0
         if (length(cmd) > 300) return 0
