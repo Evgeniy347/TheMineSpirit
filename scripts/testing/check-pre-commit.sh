@@ -68,6 +68,14 @@ write_probe assertTrue 'assertTrue(true, "зелёный тест-зонд");'
 git add "$probe"
 check green_test_accepted 0 да git commit -m "test: зелёный зонд"
 
+guard_probe="guards/src/test/java/com/theminespirit/guards/ProbeGuardTests.java"
+mkdir -p "$(dirname "$guard_probe")"
+printf 'package com.theminespirit.guards;\n\nclass ProbeGuardTests {}\n' >"$guard_probe"
+git add "$guard_probe"
+check guards_commit_runs 0 да git commit -m "test: правка сторожа"
+git reset -q "$guard_probe"
+rm -f "$guard_probe"
+
 write_probe fail 'fail("красный тест-зонд");'
 check partial_commit_red_rejected 1 да git commit -m "test: красный зонд через путь" -- "$probe"
 write_probe assertTrue 'assertTrue(true, "зелёный тест-зонд");'
@@ -84,10 +92,12 @@ check unstaged_warning 0 да git commit -m "test: пустой класс-зо�
 grep -q "ВНИМАНИЕ — прогон относится к рабочему дереву" "$work/unstaged_warning.out"     && echo "OK предупреждение о незастейдженных правках напечатано" || echo "FAIL предупреждения о незастейдженных правках нет"
 git checkout -q HEAD -- src/test/java/com/theminespirit/Unstaged.java
 
-git checkout -q -b side
+base=$(git rev-parse HEAD)
+git checkout -q -B side
 sed -i 's/VALUE = 1/VALUE = 3/' src/test/java/com/theminespirit/Unstaged.java
 git add -A && git commit -q -m "test: правка на ветке"
-git checkout -q -
+git checkout -q "$base"
 echo "ещё документ" >>docs/TESTING.md
 git add docs/TESTING.md && git commit -q -m "docs: правка на основной ветке"
 check merge_no_run 0 нет git merge --no-ff -m "chore: слияние side" side
+git branch -q -D side 2>/dev/null || true
