@@ -2,14 +2,9 @@ package com.theminespirit.neoforge.coordinator;
 
 import com.theminespirit.core.coordinator.CoordinatorTuning;
 import com.theminespirit.core.coordinator.SettlementKey;
-import com.theminespirit.core.intellect.InvitationAnswer;
-import com.theminespirit.neoforge.SpiritEntity;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 
 public final class CoordinatorRegistry {
     private static final Map<ServerLevel, LevelSettlements> BY_LEVEL = new ConcurrentHashMap<>();
@@ -71,48 +66,6 @@ public final class CoordinatorRegistry {
 
     public static void clear() {
         BY_LEVEL.clear();
-    }
-
-    public static boolean answerInvite(
-            ServerLevel level, String expedition, String answer, ServerPlayer player, long now) {
-        if (level == null || expedition == null || answer == null || player == null) {
-            throw new IllegalArgumentException(
-                    "Ответ без уровня, похода или игрока не принять: кнопки зовут конкретную команду");
-        }
-        LevelSettlements settlements = BY_LEVEL.get(level);
-        if (settlements == null) {
-            return false;
-        }
-        for (SpiritCoordinator coordinator : settlements.byKey.values().stream().toList()) {
-            if ("join".equals(answer)) {
-                if (expedition.equals(idOf(coordinator))) {
-                    coordinator.intellect().expeditions().accept(player, membersOf(level, coordinator), now);
-                    return true;
-                }
-                continue;
-            }
-            InvitationAnswer parsed = "wait".equals(answer) ? InvitationAnswer.WAIT_MORE : InvitationAnswer.GO_WITHOUT;
-            if (coordinator.intellect().expeditions().onAnswer(expedition, parsed, now)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static String idOf(SpiritCoordinator coordinator) {
-        return coordinator.intellect().expeditions().expeditionId() == null
-                ? ""
-                : coordinator.intellect().expeditions().expeditionId().toString();
-    }
-
-    private static List<SpiritEntity> membersOf(ServerLevel level, SpiritCoordinator coordinator) {
-        List<SpiritEntity> members = new ArrayList<>();
-        for (var snapshot : coordinator.snapshot().spirits()) {
-            if (level.getEntity(snapshot.id()) instanceof SpiritEntity spirit && !spirit.isRemoved()) {
-                members.add(spirit);
-            }
-        }
-        return members;
     }
 
     public static int size() {

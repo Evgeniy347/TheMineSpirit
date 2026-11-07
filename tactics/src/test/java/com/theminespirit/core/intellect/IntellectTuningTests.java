@@ -35,10 +35,7 @@ class IntellectTuningTests {
               "weaponTarget": 2,
               "teamMin": 2,
               "teamMax": 3,
-              "inviteTtlTicks": 3600,
-              "inviteRepeatTicks": 600,
-              "inviteExtendTicks": 1200,
-              "inviteMaxExtends": 3,
+              "expeditionCooldownTicks": 3600,
               "strategicTtlTicks": 6000,
               "healFraction": 0.35,
               "armedDps": 6.0
@@ -125,14 +122,9 @@ class IntellectTuningTests {
         assertEquals(3, tuning.teamMax(), "Экспедиция максимум трое: иначе шахта превратится в толпу");
         assertEquals(
                 3600,
-                tuning.inviteTtlTicks(),
-                "Вопрос висит 3 минуты: короче — игрок не успеет, дольше — духи стоят без дела");
-        assertEquals(
-                600,
-                tuning.inviteRepeatTicks(),
-                "Повтор каждые 30 секунд: чаще — спам, реже — игрок забудет про вопрос");
-        assertEquals(1200, tuning.inviteExtendTicks(), "Продление на 60 секунд: иначе собирающийся игрок не успеет");
-        assertEquals(3, tuning.inviteMaxExtends(), "Продлений не больше трёх: иначе вопрос висит бесконечно");
+                tuning.expeditionCooldownTicks(),
+                "Пауза между походами 3 минуты: короче — команда уходит в шахту без передышки, "
+                        + "дольше — поселение простаивает без руды");
         assertEquals(
                 6000,
                 tuning.strategicTtlTicks(),
