@@ -1,6 +1,7 @@
 package com.theminespirit.guards;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -59,20 +60,17 @@ class BuildRepositoriesGuardTests {
                 root.contains("gradlePluginPortal()"),
                 "settings.gradle → pluginManagement без gradlePluginPortal(): плагины сборки не разрешатся");
         assertTrue(
-                root.contains("https://maven.neoforged.net/releases"),
-                "settings.gradle без maven.neoforged.net: moddev отдаёт net.neoforged:neoforge только оттуда, "
-                        + "и project-уровень moddev для этого обходится");
+                root.contains("net.neoforged.moddev.repositories"),
+                "settings.gradle без net.neoforged.moddev.repositories: moddev снова добавит репозитории на "
+                        + "project-уровень, и Gradle предупредит, что настройки settings игнорируются");
+        int managed = root.indexOf("dependencyResolutionManagement");
+        assertFalse(
+                managed < 0 || root.substring(managed).contains("https://maven.neoforged.net/releases"),
+                "settings.gradle дублирует репозиторий NeoForged: его добавляет net.neoforged.moddev.repositories, "
+                        + "а вторая копия ломает порядок Mojang Meta → NeoForged Releases");
         assertTrue(
                 root.contains("https://maven.blamejared.com"),
                 "settings.gradle без maven.blamejared.com: compileOnly JEI (mezz.jei) не разрешится");
-        int managed = root.indexOf("dependencyResolutionManagement");
-        int mojangMeta = root.indexOf("'Mojang Meta'", managed);
-        int neoforged = root.indexOf("'NeoForged Releases'", managed);
-        assertTrue(
-                mojangMeta > managed && mojangMeta < neoforged,
-                "settings.gradle: репозиторий «Mojang Meta» должен идти раньше «NeoForged Releases» — "
-                        + "net.neoforged:minecraft-dependencies лежит только в mojang-meta, и иначе Gradle ищет "
-                        + "его на maven.neoforged.net/releases, а сбой сети отключает репозиторий на весь прогон");
         assertTrue(
                 buildLogic.contains("https://maven.neoforged.net/releases"),
                 "build-logic/settings.gradle без maven.neoforged.net: moddev-gradle не найдётся, если плагин-портал "
