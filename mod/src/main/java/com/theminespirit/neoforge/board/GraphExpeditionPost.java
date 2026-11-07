@@ -16,6 +16,8 @@ import com.theminespirit.core.tactics.Point;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
 import com.theminespirit.neoforge.intellect.ExpeditionController;
+import com.theminespirit.neoforge.intellect.ExpeditionKit;
+import com.theminespirit.neoforge.intellect.ExpeditionMember;
 import com.theminespirit.neoforge.intellect.SpiritExpeditionMember;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -134,13 +136,13 @@ final class GraphExpeditionPost {
         if (bottom == null) {
             return "низ шахты не найден: спуск не построен";
         }
-        List<SpiritEntity> members = new ArrayList<>();
+        List<ExpeditionMember> members = new ArrayList<>();
         for (SpiritEntity spirit : post.spirits) {
             if (!spirit.isRemoved() && team.contains(spirit.getUUID())) {
-                members.add(spirit);
+                members.add(SpiritExpeditionMember.of(spirit));
             }
         }
-        List<String> missing = SpiritExpeditionMember.missingKit(members, post.stock);
+        List<String> missing = ExpeditionKit.missing(members, post.stock);
         if (!missing.isEmpty()) {
             return "перед спуском в шахту нужен набор: " + String.join(", ", missing);
         }
