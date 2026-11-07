@@ -16,8 +16,10 @@ import com.theminespirit.core.tactics.Point;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
 import com.theminespirit.neoforge.intellect.ExpeditionController;
+import com.theminespirit.neoforge.intellect.SpiritExpeditionMember;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -77,11 +79,18 @@ final class GraphExpeditionPost {
                 && team.size() >= IntellectTuning.loadDefault().teamMin()) {
             controller.offer(new Expedition(team, point(bottom), post.now));
         }
+        Map<UUID, SpiritEntity> byId = new HashMap<>();
+        for (SpiritEntity spirit : post.spirits) {
+            byId.put(spirit.getUUID(), spirit);
+        }
         controller.update(
-                post.spirits,
+                post.spirits.stream().map(SpiritExpeditionMember::of).toList(),
                 post.stock,
                 post.now,
-                (spirit, script, task, tick) -> launch(post, ticket.id(), crew, spirit, task));
+                (id, script, task, tick) -> {
+                    SpiritEntity spirit = byId.get(id);
+                    return spirit != null && launch(post, ticket.id(), crew, spirit, task);
+                });
         if (status != BoardStatus.ASSIGNED) {
             String refused = controller.refusal().orElse(null);
             if (refused != null) {
@@ -131,7 +140,7 @@ final class GraphExpeditionPost {
                 members.add(spirit);
             }
         }
-        List<String> missing = ExpeditionController.missingKit(members, post.stock);
+        List<String> missing = SpiritExpeditionMember.missingKit(members, post.stock);
         if (!missing.isEmpty()) {
             return "перед спуском в шахту нужен набор: " + String.join(", ", missing);
         }

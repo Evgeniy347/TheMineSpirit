@@ -72,10 +72,21 @@ final class PlanDemolition {
         Collected collected =
                 scope == DemolitionScope.FLOATING ? base : FarmStray.withFarm(base, level, site, town, plan);
         List<BlockCoord> candidates = collected.treeCells().isEmpty() ? collected.remove() : collected.treeCells();
-        List<BlockCoord> stray = DemolitionKey.piece(candidates.stream()
-                .distinct()
-                .sorted(Comparator.comparingInt(BlockCoord::y).reversed().thenComparing(Comparator.naturalOrder()))
-                .toList());
+        List<BlockCoord> stray = collected.treeCells().isEmpty()
+                ? DemolitionKey.piece(candidates.stream()
+                        .distinct()
+                        .sorted(Comparator.comparingInt(BlockCoord::y)
+                                .reversed()
+                                .thenComparing(Comparator.naturalOrder()))
+                        .toList())
+                : DemolitionKey.treePiece(
+                        candidates.stream()
+                                .distinct()
+                                .sorted(Comparator.comparingInt(BlockCoord::y)
+                                        .reversed()
+                                        .thenComparing(Comparator.naturalOrder()))
+                                .toList(),
+                        collected.stand());
         List<PlannedBlock> blocks = stray.stream()
                 .map(cell -> new PlannedBlock(cell, StagePlans.AIR))
                 .toList();

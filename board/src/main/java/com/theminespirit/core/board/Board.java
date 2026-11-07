@@ -454,7 +454,7 @@ public final class Board {
         List<String> removed = new ArrayList<>();
         for (BoardTicket ticket : List.copyOf(tickets.values())) {
             BoardStatus status = statuses.get(ticket.id());
-            boolean sourceMade = SOURCE_PREFIXES.stream().anyMatch(ticket.id()::startsWith);
+            boolean sourceMade = SOURCE_PREFIXES.stream().anyMatch(ticket.id()::startsWith) || ticket.fromGraph();
             boolean waiting = status == BoardStatus.PENDING
                     || status == BoardStatus.WAITING_RESOURCES
                     || status == BoardStatus.ASSIGNED;

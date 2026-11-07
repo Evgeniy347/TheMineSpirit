@@ -118,7 +118,8 @@ public record BoardState(
     public BoardState withoutLegacy(Set<String> keepPrefixes) {
         Objects.requireNonNull(keepPrefixes, "Список префиксов не может быть null: пустой набор задают пустым");
         List<Entry> kept = entries.stream()
-                .filter(entry -> keepPrefixes.stream().anyMatch(entry.ticket().id()::startsWith))
+                .filter(entry -> keepPrefixes.stream().anyMatch(entry.ticket().id()::startsWith)
+                        || entry.ticket().fromGraph())
                 .toList();
         if (kept.size() == entries.size()) {
             return this;
