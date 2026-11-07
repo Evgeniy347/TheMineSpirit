@@ -187,9 +187,6 @@ while [ "$changed" = 1 ]; do
     done
 done
 
-# lib: корневые тесты ходят в :mod (testImplementation) — боевого ребра нет, но прогон дешёвый.
-[ "${SELECTED[:mod]:-}" = 1 ] && SELECTED[:root]=1
-
 [ "${SELECTED[:root]:-}" = 1 ] && print_module ":root"
 while IFS= read -r module; do
     [ -n "$module" ] && [ "${SELECTED[$module]:-}" = 1 ] && print_module "$module"
