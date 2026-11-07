@@ -40,7 +40,7 @@ final class GraphExpeditionPost {
         if (controller.active().isEmpty() && !controller.dispatchedRecently(post.now)) {
             controller.offer(expedition(post.scan.home(), members, post.now));
         }
-        controller.update(post.level, post.spirits, post.stock, post.now, launcher);
+        controller.update(post.spirits, post.stock, post.now, launcher);
         return true;
     }
 
