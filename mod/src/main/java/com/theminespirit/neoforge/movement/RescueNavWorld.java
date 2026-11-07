@@ -17,6 +17,11 @@ public final class RescueNavWorld implements NavWorld {
         this.blocked = Objects.requireNonNull(blocked, "Запрет клеток не может быть null: пусто — запрета нет");
     }
 
+    public static RescueNavWorld route(
+            NavWorld live, BlockCoord start, BlockCoord target, Predicate<BlockCoord> foreign) {
+        return new RescueNavWorld(live, start, cell -> !cell.equals(target) && foreign.test(cell));
+    }
+
     private boolean forbidden(int x, int y, int z) {
         BlockCoord cell = new BlockCoord(x, y, z);
         return !cell.equals(start) && blocked.test(cell);

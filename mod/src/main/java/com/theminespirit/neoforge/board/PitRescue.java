@@ -11,16 +11,25 @@ import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.PickaxeCheck;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.movement.CheapBlocks;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 final class PitRescue {
     private static final int SURFACE_RADIUS = 3;
+    private static final int EXIT_RADIUS = 6;
+    private static final int STEP_UP = 1;
+    private static final int SAFE_DROP = 3;
+    private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
     private static final String GOTO = "goto";
     private static final String DIG_OUT = "dig_out";
     private static final String PILLAR = "pillar_up";
@@ -31,16 +40,66 @@ final class PitRescue {
         Level level = spirit.level();
         BlockPos feet = spirit.blockPosition();
         List<Integer> heights = new ArrayList<>();
+        int highest = feet.getY();
         for (int dx = -SURFACE_RADIUS; dx <= SURFACE_RADIUS; dx++) {
             for (int dz = -SURFACE_RADIUS; dz <= SURFACE_RADIUS; dz++) {
                 if (dx != 0 || dz != 0) {
-                    heights.add(top(level, feet.getX() + dx, feet.getZ() + dz));
+                    int height = top(level, feet.getX() + dx, feet.getZ() + dz);
+                    heights.add(height);
+                    highest = Math.max(highest, height);
                 }
             }
         }
-        boolean outside = !trapped(spirit).isPresent()
-                || SurfaceLevel.escaped(DigOutScript.open(level, feet), feet.getY(), heights);
-        return outside;
+        boolean open = DigOutScript.open(level, feet);
+        boolean walkExit = (!open || feet.getY() + SurfaceLevel.MARGIN < highest) && walkOut(level, feet);
+        return SurfaceLevel.escaped(open, feet.getY(), heights, walkExit);
+    }
+
+    private static boolean walkOut(Level level, BlockPos feet) {
+        PitExitPlanner.World view = new PitWorldView(level);
+        int startX = feet.getX();
+        int startZ = feet.getZ();
+        OptionalInt start = PitExitPlanner.groundY(startX, startZ, feet.getY(), view);
+        if (start.isEmpty()) {
+            return false;
+        }
+        Set<Long> seen = new HashSet<>();
+        Deque<int[]> queue = new ArrayDeque<>();
+        int[] origin = {startX, startZ, start.getAsInt()};
+        seen.add(key(0, 0));
+        queue.add(origin);
+        while (!queue.isEmpty()) {
+            int[] cell = queue.poll();
+            for (int[] side : SIDES) {
+                int nx = cell[0] + side[0];
+                int nz = cell[1] + side[1];
+                OptionalInt ground = PitExitPlanner.groundY(nx, nz, cell[2], view);
+                if (ground.isEmpty()) {
+                    continue;
+                }
+                int climb = ground.getAsInt() - cell[2];
+                boolean walkable = climb <= STEP_UP && climb >= -SAFE_DROP;
+                if (!walkable) {
+                    continue;
+                }
+                int ndx = nx - startX;
+                int ndz = nz - startZ;
+                if (Math.abs(ndx) >= EXIT_RADIUS || Math.abs(ndz) >= EXIT_RADIUS) {
+                    if (DigOutScript.open(level, new BlockPos(nx, ground.getAsInt(), nz))) {
+                        return true;
+                    }
+                    continue;
+                }
+                if (seen.add(key(ndx, ndz))) {
+                    queue.add(new int[] {nx, nz, ground.getAsInt()});
+                }
+            }
+        }
+        return false;
+    }
+
+    private static long key(int dx, int dz) {
+        return (((long) dx) << 32) ^ (dz & 0xffffffffL);
     }
 
     static Optional<PitExitPlanner.Plan> trapped(SpiritEntity spirit) {
@@ -75,6 +134,22 @@ final class PitRescue {
                         "План невозможного выхода не выполняется: духу нужен помощник (" + exit.why() + ")");
         }
         return new SequenceNode(steps);
+    }
+
+    static PitExitPlanner.Plan escapeAfterClear(SpiritEntity spirit) {
+        Level level = spirit.level();
+        BlockPos feet = spirit.blockPosition();
+        BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
+        PitWorldView live = new PitWorldView(level);
+        PitExitPlanner.World cleared = cell -> inClearBox(cell, feet) ? PitExitPlanner.Kind.AIR : live.at(cell);
+        return PitExitPlanner.plan(from, cleared, supplies(spirit));
+    }
+
+    private static boolean inClearBox(BlockCoord cell, BlockPos feet) {
+        return Math.abs(cell.x() - feet.getX()) <= 1
+                && Math.abs(cell.z() - feet.getZ()) <= 1
+                && cell.y() >= feet.getY()
+                && cell.y() <= feet.getY() + 1;
     }
 
     private static PitExitPlanner.Supplies supplies(SpiritEntity spirit) {

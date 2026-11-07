@@ -107,7 +107,7 @@ public final class RouteDetour {
         LevelNavWorld live = new LevelNavWorld(spirit.level());
         NavCachedWorld cache = new NavCachedWorld();
         packLocal(live, cache, from);
-        NavWorld effective = rescue ? new RescueNavWorld(live, from, cell -> PlanDetour.foreign(spirit, cell)) : live;
+        NavWorld effective = RescueNavWorld.route(live, from, target, cell -> PlanDetour.foreign(spirit, cell));
         NavContext context = new NavContext(new NavCacheWorld(effective, cache), settings, blocks);
         NavSegmentedSession session = new NavSegmentedSession(
                 context,
