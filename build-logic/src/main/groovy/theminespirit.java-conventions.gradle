@@ -13,10 +13,6 @@ file("${rootProject.projectDir}/gradle.properties").withInputStream { rootProper
 def versionOf = { String key -> rootProperties.getProperty(key) }
 def configAt = { String relative -> new File(rootProject.projectDir, "config/${relative}") }
 
-repositories {
-    mavenCentral()
-}
-
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 dependencies {

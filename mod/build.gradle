@@ -40,15 +40,6 @@ base {
     archivesName = mod_id
 }
 
-repositories {
-    maven {
-        url = "https://maven.blamejared.com"
-        content {
-            includeGroup "mezz.jei"
-        }
-    }
-}
-
 sourceSets.main.resources {
     srcDir('src/generated/resources')
 
