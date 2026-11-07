@@ -40,14 +40,17 @@ class StaticAnalysisCacheGuardTests {
     }
 
     @Test
-    void spotbugs_WithResourceDirs_SourcePathOnlyJavaSources() throws IOException {
+    void spotbugs_WithSourceDirs_SourcesStayOutOfCacheKey() throws IOException {
         String conventions = read(CONVENTIONS);
         assertTrue(
-                conventions.contains("tasks.named('spotbugsMain')")
-                        && conventions.contains("sourceDirs.setFrom(sourceSets.main.allJava.srcDirs)")
-                        && conventions.contains("sourceDirs.setFrom(sourceSets.test.allJava.srcDirs)"),
-                "sourceDirs SpotBugs — это только java-исходники своей области: каталоги ресурсов в sourcepath "
-                        + "заставляли повторять анализ после правки любого json");
+                conventions.contains("tasks.named('spotbugsMain')") && conventions.contains("sourceDirs.setFrom()"),
+                "sourceDirs SpotBugs входят в ключ кэша содержимым файлов: правка комментария повторяла весь "
+                        + "анализ. Исходники в отчёте SpotBugs берёт из debug-информации классов, а sourceDirs "
+                        + "должны оставаться пустыми");
+        assertFalse(
+                conventions.contains("sourceDirs.setFrom(sourceSets"),
+                "sourceDirs снова привязаны к каталогам java: любая правка комментария сбрасывает кэш SpotBugs "
+                        + "и гоняет анализ без изменений байткода");
     }
 
     @Test

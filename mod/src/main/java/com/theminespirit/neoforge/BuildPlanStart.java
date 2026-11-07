@@ -4,7 +4,6 @@ import com.theminespirit.core.building.BuildPlanner;
 import com.theminespirit.core.building.BuildSupplyPick;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
-import com.theminespirit.core.building.StandPathGate;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import java.util.ArrayList;
@@ -102,11 +101,9 @@ final class BuildPlanStart {
                 }
             }
         }
-        boolean near = site.networkBox(BuildSchematicScript.WALK_MARGIN).contains(feet);
         Optional<Set<BlockCoord>> walkable = site.walkable(feet, BuildSchematicScript.WALK_MARGIN);
         List<BuildSupplyPick.Candidate> reachable = candidates.stream()
-                .filter(candidate ->
-                        StandPathGate.usable(site.standable(candidate.stand()), near, walkable, candidate.stand()))
+                .filter(candidate -> BuildSupplyReach.usable(site, feet, walkable, candidate.stand()))
                 .toList();
         Map<String, Integer> chest = new TreeMap<>();
         for (BuildSupplyPick.Candidate candidate : reachable) {

@@ -38,10 +38,15 @@ final class BuildSupplyReach {
     }
 
     static Predicate<BlockPos> reachable(SchematicSite site, BlockCoord feet) {
-        boolean near = site.networkBox(BuildSchematicScript.WALK_MARGIN).contains(feet);
         Optional<Set<BlockCoord>> walkable = site.walkable(feet, BuildSchematicScript.WALK_MARGIN);
         return chest -> feet(site, chest)
-                .map(stand -> StandPathGate.usable(site.standable(stand), near, walkable, stand))
+                .map(stand -> usable(site, feet, walkable, stand))
                 .orElse(true);
+    }
+
+    static boolean usable(SchematicSite site, BlockCoord feet, Optional<Set<BlockCoord>> walkable, BlockCoord stand) {
+        boolean local = site.networkBox(BuildSchematicScript.WALK_MARGIN).contains(feet)
+                && site.networkBox(BuildSchematicScript.WALK_MARGIN).contains(stand);
+        return StandPathGate.usable(site.standable(stand), local, walkable, stand);
     }
 }
