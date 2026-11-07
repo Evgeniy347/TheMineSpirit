@@ -425,7 +425,7 @@ own_tree_pids() {
 }
 
 kill_own_tree() {
-    local root="$1" grace="${2:-5}" pids pid alive now deadline
+    local root="$1" grace="${2:-5}" pids pid alive now deadline fresh child
     [ -n "$root" ] || return 0
     pids=$(own_tree_pids "$root")
     if [ -z "$pids" ]; then
@@ -439,6 +439,13 @@ kill_own_tree() {
     now_s now
     deadline=$((now + grace))
     while :; do
+        fresh=""
+        for pid in $pids; do
+            for child in $(own_tree_pids "$pid"); do
+                case " $pids " in *" $child "*) ;; *) fresh="$fresh $child" ;; esac
+            done
+        done
+        [ -n "$fresh" ] && pids="$pids$fresh"
         alive=""
         for pid in $pids; do
             pid_is_live "$pid" && alive="$alive $pid"
