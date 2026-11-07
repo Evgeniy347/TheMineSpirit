@@ -1,6 +1,7 @@
 package com.theminespirit.core.intellect;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,16 +19,20 @@ class OutsideGateTests {
     }
 
     @Test
-    void admitExternal_LoneSpirit_Refused() {
-        assertInstanceOf(
+    void admitExternal_LoneSpiritNoPlayerShortcut_Refused() {
+        OutsideGate.Refused refused = assertInstanceOf(
                 OutsideGate.Refused.class,
-                gate().admitExternal(1, false),
-                "Внешняя работа в одиночку не назначается, даже когда цель ещё не известна");
+                gate().admitExternal(1),
+                "Внешняя работа в одиночку не назначается, даже когда цель ещё не известна: игрока рядом больше "
+                        + "не спрашивают");
+        assertFalse(
+                refused.reason().contains("игрок"),
+                "Причина отказа не ищет игрока рядом: духи не ждут и не зовут его, фактически: " + refused.reason());
     }
 
     @Test
     void admitExternal_EveningLoneSpirit_RefusedWithNightReason() {
-        OutsideGate.Decision decision = gate().admitExternal(1, false, true);
+        OutsideGate.Decision decision = gate().admitExternal(1, true);
 
         OutsideGate.Refused refused = assertInstanceOf(
                 OutsideGate.Refused.class,
@@ -40,19 +45,10 @@ class OutsideGateTests {
     }
 
     @Test
-    void admitExternal_EveningPartyWithPlayer_StillRefused() {
-        assertInstanceOf(
-                OutsideGate.Refused.class,
-                gate().admitExternal(4, true, true),
-                "Ночью внешняя работа не назначается даже группой или при игроке: единственное исключение — "
-                        + "следование за игроком, а не работа рядом с ним");
-    }
-
-    @Test
     void admitExternal_TargetInsideSettlement_InsideWithBoundaryNote() {
         OutsideGate.Inside inside = assertInstanceOf(
                 OutsideGate.Inside.class,
-                gate().admitExternal(1, false, false, new Point(-189, 63, -518), new Point(-181, 73, -520)),
+                gate().admitExternal(1, false, new Point(-189, 63, -518), new Point(-181, 73, -520)),
                 "Шахта поселения рядом с домом лежит внутри границы: одиночка получает работу без выхода наружу");
 
         assertTrue(
@@ -67,7 +63,7 @@ class OutsideGateTests {
     void admitExternal_TargetAtSettlementRadius_Inside() {
         assertInstanceOf(
                 OutsideGate.Inside.class,
-                gate().admitExternal(1, false, false, new Point(32, 64, 0), new Point(0, 64, 0)),
+                gate().admitExternal(1, false, new Point(32, 64, 0), new Point(0, 64, 0)),
                 "Точка ровно на границе радиуса — ещё своя: за границей считается только расстояние больше радиуса");
     }
 
@@ -75,7 +71,7 @@ class OutsideGateTests {
     void admitExternal_TargetBeyondSettlementRadius_RefusedWithBoundary() {
         OutsideGate.Refused refused = assertInstanceOf(
                 OutsideGate.Refused.class,
-                gate().admitExternal(1, false, false, new Point(33, 64, 0), new Point(0, 64, 0)),
+                gate().admitExternal(1, false, new Point(33, 64, 0), new Point(0, 64, 0)),
                 "Точка за радиусом — внешняя: в одиночку туда не назначают");
 
         assertTrue(
@@ -89,7 +85,7 @@ class OutsideGateTests {
     void admitExternal_UnknownTargetLoneSpirit_RefusalNamesBoundary() {
         OutsideGate.Refused refused = assertInstanceOf(
                 OutsideGate.Refused.class,
-                gate().admitExternal(1, false, false, null, null),
+                gate().admitExternal(1, false, null, null),
                 "Без цели и дома границу поселения проверить нечем: работа считается внешней");
 
         assertTrue(
@@ -102,7 +98,7 @@ class OutsideGateTests {
     void admitExternal_UnknownTargetEvening_RefusalNamesNightAndBoundary() {
         OutsideGate.Refused refused = assertInstanceOf(
                 OutsideGate.Refused.class,
-                gate().admitExternal(4, true, true, null, null),
+                gate().admitExternal(4, true, null, null),
                 "Ночью внешняя работа с неизвестной целью не назначается даже группой");
 
         assertTrue(
@@ -112,18 +108,18 @@ class OutsideGateTests {
     }
 
     @Property(tries = 50)
-    void admitExternal_EveningParty_IsNeverAllowed(@ForAll("parties") int party, @ForAll boolean player) {
+    void admitExternal_EveningParty_IsNeverAllowed(@ForAll("parties") int party) {
         assertInstanceOf(
                 OutsideGate.Refused.class,
-                gate().admitExternal(party, player, true),
-                "Вечером внешняя работа отвергается при любом составе и любом сопровождении: ночь — жёсткая граница");
+                gate().admitExternal(party, true),
+                "Вечером внешняя работа отвергается при любом составе: ночь — жёсткая граница");
     }
 
     @Property(tries = 100)
     void admitExternal_AnyPartyAtThreshold_Allowed(@ForAll("parties") int party) {
         assertInstanceOf(
                 OutsideGate.Allowed.class,
-                gate().admitExternal(Math.max(party, 2), false),
+                gate().admitExternal(Math.max(party, 2)),
                 "Любая группа от порога допускается наружу независимо от случайного состава");
     }
 
