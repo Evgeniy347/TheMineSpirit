@@ -20,6 +20,7 @@ final class BoardPriorityTable {
             Map.entry("BUILD_WAREHOUSE", 50),
             Map.entry("LURE_ANIMAL", 65),
             Map.entry("DISMANTLE_SHELTER", 65),
+            Map.entry("CLEAR_HIGH", 62),
             Map.entry("RELOCATE_BUILDING", 60),
             Map.entry("BREED_ANIMALS", 55),
             Map.entry("COLLECT_DROPS", 55),

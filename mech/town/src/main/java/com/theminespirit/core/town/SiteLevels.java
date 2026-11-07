@@ -1,5 +1,6 @@
 package com.theminespirit.core.town;
 
+import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -51,6 +52,7 @@ public final class SiteLevels {
         Objects.requireNonNull(skip, "Пропускаемые колонки не могут быть null: нет таких — всегда false");
         Objects.requireNonNull(planned, "Признак плана не может быть null: постройки плана не срезают");
         int level = level(site);
+        int highest = level + 1 + SpiritReach.current().up();
         Map<Integer, Map<Integer, List<Integer>>> layers = new TreeMap<>();
         for (ColumnMask.Cell column : site.level().cells()) {
             if (skip.test(column)) {
@@ -58,6 +60,9 @@ public final class SiteLevels {
             }
             int top = tops.applyAsInt(column.x(), column.z());
             for (int y = level + 1; y < top; y++) {
+                if (y > highest) {
+                    continue;
+                }
                 if (!planned.test(new BlockCoord(column.x(), y, column.z()))) {
                     layers.computeIfAbsent(y, key -> new TreeMap<>())
                             .computeIfAbsent(column.z(), key -> new ArrayList<>())

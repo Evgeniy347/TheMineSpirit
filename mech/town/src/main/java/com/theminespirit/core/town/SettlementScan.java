@@ -35,6 +35,10 @@ public final class SettlementScan {
         boolean registered(int x, int y, int z);
 
         boolean plant(String blockId);
+
+        default int topSolid(int x, int z) {
+            return Integer.MIN_VALUE;
+        }
     }
 
     public record Strays(
@@ -43,12 +47,14 @@ public final class SettlementScan {
             List<StrayGroups.Cell> strays,
             List<BlockCoord> traces,
             int unknown,
-            int natural) {
+            int natural,
+            List<StrayGroups.Cell> high) {
         public Strays {
             pits = Map.copyOf(Objects.requireNonNull(pits, "Ямы не могут быть null"));
             mounds = List.copyOf(Objects.requireNonNull(mounds, "Насыпи не могут быть null"));
             strays = List.copyOf(Objects.requireNonNull(strays, "Лишнее не может быть null"));
             traces = List.copyOf(Objects.requireNonNull(traces, "Следы не могут быть null"));
+            high = List.copyOf(Objects.requireNonNull(high, "Высокое лишнее не может быть null"));
             if (unknown < 0 || natural < 0) {
                 throw new IllegalArgumentException("Неизвестных колонок " + unknown + " и природного " + natural
                         + ": отсутствие — ноль, а не минус");
@@ -60,8 +66,18 @@ public final class SettlementScan {
                 List<BlockCoord> mounds,
                 List<StrayGroups.Cell> strays,
                 List<BlockCoord> traces,
+                int unknown,
+                int natural) {
+            this(pits, mounds, strays, traces, unknown, natural, List.of());
+        }
+
+        public Strays(
+                Map<BlockCoord, Integer> pits,
+                List<BlockCoord> mounds,
+                List<StrayGroups.Cell> strays,
+                List<BlockCoord> traces,
                 int unknown) {
-            this(pits, mounds, strays, traces, unknown, 0);
+            this(pits, mounds, strays, traces, unknown, 0, List.of());
         }
 
         public static Strays empty() {
@@ -79,6 +95,7 @@ public final class SettlementScan {
         List<BlockCoord> mounds = new ArrayList<>();
         List<StrayGroups.Cell> strays = new ArrayList<>();
         List<BlockCoord> traces = new ArrayList<>();
+        List<StrayGroups.Cell> high = new ArrayList<>();
         int unknown = 0;
         int natural = 0;
         for (ColumnMask.Cell column : columns) {
@@ -104,7 +121,8 @@ public final class SettlementScan {
                     pits.put(new BlockCoord(x, dug.getAsInt(), z), dug.getAsInt() - surface);
                 }
             }
-            for (int y = level - TRACE_DEPTH; y <= level + STRAY_ABOVE; y++) {
+            int top = Math.max(level + STRAY_ABOVE, world.topSolid(x, z));
+            for (int y = level - TRACE_DEPTH; y <= top; y++) {
                 BlockCoord at = new BlockCoord(x, y, z);
                 boolean open = world.open(x, y, z);
                 if (open) {
@@ -122,10 +140,14 @@ public final class SettlementScan {
                         || !rules.stray(world.blockId(x, y, z))) {
                     continue;
                 }
-                strays.add(new StrayGroups.Cell(at, world.blockId(x, y, z)));
+                if (y > level + STRAY_ABOVE) {
+                    high.add(new StrayGroups.Cell(at, world.blockId(x, y, z)));
+                } else {
+                    strays.add(new StrayGroups.Cell(at, world.blockId(x, y, z)));
+                }
             }
         }
-        return new Strays(pits, mounds, strays, traces, unknown, natural);
+        return new Strays(pits, mounds, strays, traces, unknown, natural, high);
     }
 
     private static int naturalBlocks(

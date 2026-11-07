@@ -38,6 +38,19 @@ class SiteLevelsTests {
     }
 
     @Test
+    void extra_HighColumn_CutsOnlyReachablePart() {
+        ColumnMask.Cell cell = freeCell();
+        List<PlotLeveling.Box> extra = SiteLevels.extra(SITE, tops(cell, LEVEL + 20));
+
+        int highest = extra.stream().mapToInt(PlotLeveling.Box::y2).max().orElse(LEVEL);
+        assertEquals(
+                LEVEL + 15,
+                highest,
+                "Выравнивание не берёт высокие клетки: выше досягаемости с земли их снимает high_strays с подмости, "
+                        + "иначе дух идёт к столбу снизу и объявляет «нет пути»");
+    }
+
+    @Test
     void fenceY_AnySite_OneAboveLevel() {
         assertEquals(
                 LEVEL,

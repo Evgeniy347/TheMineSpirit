@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.ScaffoldPlan;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.movement.SelfEscape;
 import com.theminespirit.core.observation.BlockCoord;
@@ -36,6 +37,7 @@ public record TicketTarget(
         @Nullable StageWork work,
         SelfEscape.@Nullable Plan rescue,
         @Nullable BlockCoord deposit,
+        ScaffoldPlan.@Nullable Scaffold scaffold,
         @Nullable TaskNode plan) {
 
     public TicketTarget {
@@ -168,6 +170,12 @@ public record TicketTarget(
         return builder.build();
     }
 
+    public TicketTarget withScaffold(ScaffoldPlan.Scaffold plan) {
+        Builder builder = new Builder(this);
+        builder.scaffold = Objects.requireNonNull(plan, "Подмость не может быть null: без неё нечего сносить с высоты");
+        return builder.build();
+    }
+
     public TicketTarget withPlan(TaskNode explicit) {
         Builder builder = new Builder(this);
         builder.plan =
@@ -199,6 +207,7 @@ public record TicketTarget(
         private @Nullable StageWork work;
         private SelfEscape.@Nullable Plan rescue;
         private @Nullable BlockCoord deposit;
+        private ScaffoldPlan.@Nullable Scaffold scaffold;
         private @Nullable TaskNode plan;
 
         Builder(BlockCoord target) {
@@ -229,6 +238,7 @@ public record TicketTarget(
             work = source.work;
             rescue = source.rescue;
             deposit = source.deposit;
+            scaffold = source.scaffold;
             plan = source.plan;
         }
 
@@ -257,6 +267,7 @@ public record TicketTarget(
                     work,
                     rescue,
                     deposit,
+                    scaffold,
                     plan);
         }
     }

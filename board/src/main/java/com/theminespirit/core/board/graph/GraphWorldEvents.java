@@ -5,6 +5,7 @@ import java.util.Set;
 
 public final class GraphWorldEvents {
     public static final String DEMOLISH_STRAY = "demolish_stray";
+    public static final String HIGH_STRAYS = "high_strays";
     public static final String BACKFILL = "backfill";
     public static final String CLEAR_FLOATING = "clear_floating";
     public static final String LEVEL_LOT = "level_lot";
@@ -17,6 +18,9 @@ public final class GraphWorldEvents {
         Set<String> events = new LinkedHashSet<>();
         if (!facts.strays().isEmpty()) {
             events.add(DEMOLISH_STRAY);
+        }
+        if (!facts.terrain().high().isEmpty()) {
+            events.add(HIGH_STRAYS);
         }
         GraphSiteFacts.Terrain terrain = facts.terrain();
         if (terrain.pits() > 0 || !terrain.fill().isEmpty()) {

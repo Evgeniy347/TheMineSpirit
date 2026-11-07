@@ -237,6 +237,19 @@
         "cut_above_fill_below"
       ]
     },
+    "high_strays": {
+      "tasks": [
+        {
+          "id": "clear_high",
+          "case": "CLEAR_HIGH",
+          "base": 60,
+          "consumes": {}
+        }
+      ],
+      "advice": [
+        "climb_and_clear_high"
+      ]
+    },
     "restore_trace": {
       "tasks": [
         {

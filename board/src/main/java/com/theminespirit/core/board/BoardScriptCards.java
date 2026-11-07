@@ -53,6 +53,7 @@ final class BoardScriptCards {
     }
 
     private static void workScripts(Map<String, BoardCase> cases) {
+        put(cases, BoardCase.CLEAR_HIGH, "clear_high");
         put(
                 cases,
                 BoardCase.ACTIVITY_BUILD,

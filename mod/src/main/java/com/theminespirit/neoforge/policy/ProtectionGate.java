@@ -19,6 +19,7 @@ import com.theminespirit.core.town.PlanBuildings;
 import com.theminespirit.neoforge.BuildPlanOwner;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.ScaffoldStore;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -126,6 +127,14 @@ public final class ProtectionGate {
             BlockPos pos, BlockState state, boolean tended, boolean demolish, PlanBuilding ownBuilding) {
         checks++;
         BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+        if (spirit.level() instanceof ServerLevel server
+                && ScaffoldStore.get(server).blocked(spirit.getUUID(), coord, server.getGameTime())) {
+            return new BlockProtection.Refused(
+                    PolicyId.PROTECTED_ZONE,
+                    "клетка " + pos.toShortString()
+                            + " — временная подмость другой карточки high_strays: её ломает только исполнитель, "
+                            + "пока защита не истекла");
+        }
         BlockProtection.Decision outside = checkTravel(coord);
         if (outside instanceof BlockProtection.Refused) {
             return outside;

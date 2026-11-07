@@ -34,6 +34,9 @@ final class PlanStrays {
         int guarded = 0;
         for (StrayGroups.Cell cell : strays) {
             BlockCoord at = cell.at();
+            if (ScaffoldStore.get(level).claimed(at, level.getGameTime())) {
+                continue;
+            }
             if (unreachableCells.excluded(at) || !FloatingScan.reachable(level, at)) {
                 if (unreachable++ < shown) {
                     notes.add(at + " — лишнее вне плана, но рядом нет стоянки");

@@ -146,4 +146,31 @@ class CleanupCasesTests {
                 "Земли в сундуках хватает — добыча земли не ставится, иначе сундуки пополняются землёй "
                         + "вместо расхода: " + plan.tasks());
     }
+
+    @Test
+    void cleanup_HighStrays_PostClearHigh() {
+        GraphSiteFacts.HighStray high = new GraphSiteFacts.HighStray(
+                "scaffold:3,64,3",
+                new GraphFacts.Position(3, 64, 3),
+                19,
+                List.of("high:4,3"),
+                List.of(new GraphFacts.Position(4, 84, 3)),
+                Map.of("minecraft:dirt", 1));
+        GraphSiteFacts.Terrain withHigh =
+                new GraphSiteFacts.Terrain(0, 0, 0, 0, 0, Map.of(), Map.of(), Map.of(), false, 0, List.of(high));
+        GraphPlan plan = PlanCaseFacts.plan(GraphWorld.settled(), PlanCaseFacts.facts(Map.of(), List.of(), withHigh));
+
+        GraphPlan.Task clear = PlanCaseFacts.task(plan, "event:high_strays:clear_high");
+        assertTrue(clear.feasible(), "Высокий столб ставит узел clear_high, а не обычную расчистку: " + plan.tasks());
+        assertEquals(
+                BoardCase.CLEAR_HIGH,
+                clear.boardCase(),
+                "Высокие клетки убирает отдельный кейс с подмостью, иначе дух идёт к ним снизу и встаёт");
+
+        GraphPlan plain = PlanCaseFacts.plan(
+                GraphWorld.settled(), PlanCaseFacts.facts(Map.of(), List.of(), GraphSiteFacts.Terrain.empty()));
+        assertFalse(
+                PlanCaseFacts.posted(plain, "event:high_strays:clear_high"),
+                "Без факта high_strays узел не ставится: работа не берётся из воздуха: " + plain.tasks());
+    }
 }

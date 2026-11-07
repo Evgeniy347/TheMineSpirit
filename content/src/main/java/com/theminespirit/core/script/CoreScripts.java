@@ -52,7 +52,7 @@ public final class CoreScripts {
         specs.add(ItemScriptSpecs.acquireAt());
         specs.addAll(combatAndClimbSpecs());
         specs.addAll(placementSpecs());
-        specs.addAll(fillAndClearSpecs());
+        specs.addAll(FillAndClearScriptSpecs.all());
         specs.addAll(buildSpecs());
         specs.addAll(structureSpecs());
         specs.addAll(socialSpecs());
@@ -990,69 +990,6 @@ public final class CoreScripts {
                                         CatalogLimits.LIGHT_RADIUS_DEFAULT)),
                         List.of("в области есть куда ставить факелы", "в инвентаре есть факелы"),
                         List.of("на земле не осталось тёмных клеток", "итог называет, сколько факелов не хватило")));
-    }
-
-    private static List<ScriptSpec> fillAndClearSpecs() {
-        return List.of(
-                spec(
-                        "fill",
-                        "заполнить область блоком",
-                        List.of(
-                                ParamSpec.text(BLOCK, true),
-                                ParamSpec.integer(
-                                        "x1",
-                                        true,
-                                        -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
-                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
-                                ParamSpec.integer("y1", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
-                                ParamSpec.integer(
-                                        "z1",
-                                        true,
-                                        -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
-                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
-                                ParamSpec.integer(
-                                        "x2",
-                                        true,
-                                        -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
-                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
-                                ParamSpec.integer("y2", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
-                                ParamSpec.integer(
-                                        "z2",
-                                        true,
-                                        -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
-                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT)),
-                        List.of(),
-                        List.of("область заполнена")),
-                spec(
-                        "clear_area",
-                        "очистить область",
-                        List.of(
-                                ParamSpec.integer(
-                                        "x1",
-                                        true,
-                                        -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
-                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
-                                ParamSpec.integer("y1", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
-                                ParamSpec.integer(
-                                        "z1",
-                                        true,
-                                        -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
-                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
-                                ParamSpec.integer(
-                                        "x2",
-                                        true,
-                                        -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
-                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
-                                ParamSpec.integer("y2", true, CatalogLimits.WORLD_Y_MIN, CatalogLimits.WORLD_Y_MAX),
-                                ParamSpec.integer(
-                                        "z2",
-                                        true,
-                                        -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
-                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
-                                ParamSpec.bool("demolish", false, false),
-                                ParamSpec.bool("keep_ground", false, false)),
-                        List.of(),
-                        List.of("область очищена")));
     }
 
     private static List<ScriptSpec> buildSpecs() {

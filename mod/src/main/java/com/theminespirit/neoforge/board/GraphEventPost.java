@@ -1,14 +1,20 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.board.graph.GraphTickets;
+import com.theminespirit.core.building.ScaffoldPlan;
+import com.theminespirit.core.building.ToolBudget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -23,6 +29,9 @@ final class GraphEventPost {
     private GraphEventPost() {}
 
     static boolean post(GraphPost post, GraphTickets.Ticket ticket) {
+        if ("clear_high".equals(ticket.node())) {
+            return high(post, ticket);
+        }
         if (GraphMorePost.handles(ticket)) {
             return GraphMorePost.post(post, ticket, ticket.task());
         }
@@ -118,6 +127,56 @@ final class GraphEventPost {
         GraphFood.post(post, ticket.id(), ticket.task().priority());
         FarmPost.eat(post, ticket);
         return true;
+    }
+
+    private static boolean high(GraphPost post, GraphTickets.Ticket ticket) {
+        for (GraphSiteFacts.HighStray fact : post.facts.terrain().high()) {
+            ScaffoldPlan.Scaffold scaffold = new ScaffoldPlan.Scaffold(
+                    fact.id(),
+                    new BlockCoord(
+                            fact.anchor().x(), fact.anchor().y(), fact.anchor().z()),
+                    fact.height(),
+                    fact.stalks(),
+                    fact.cells().stream()
+                            .map(at -> new BlockCoord(at.x(), at.y(), at.z()))
+                            .toList());
+            String id = ticket.id() + ":" + scaffold.id();
+            BoardStatus status = post.service.board().statusOf(id).orElse(null);
+            if (status == BoardStatus.DONE) {
+                post.service.board().reopen(id);
+            } else if (post.open(id)) {
+                continue;
+            }
+            post.submit(
+                    post.ticket(
+                            id,
+                            BoardCase.CLEAR_HIGH,
+                            Optional.empty(),
+                            Math.min(100, ticket.task().priority()),
+                            ticket.id(),
+                            required(post, scaffold)),
+                    TicketTarget.at(scaffold.anchor()).withScaffold(scaffold));
+        }
+        return true;
+    }
+
+    private static Map<String, Integer> required(GraphPost post, ScaffoldPlan.Scaffold scaffold) {
+        Map<String, Integer> required = new LinkedHashMap<>();
+        required.put("minecraft:dirt", Math.max(1, scaffold.height()));
+        int hits = scaffold.blocks() + scaffold.height();
+        int available = post.facts.spirits().values().stream()
+                .mapToInt(spirit -> spirit.tools().stream()
+                        .filter(tool -> "pickaxe".equals(tool.kind()))
+                        .mapToInt(GraphFacts.Tool::durability)
+                        .sum())
+                .max()
+                .orElse(0);
+        ToolBudget.Plan budget = ToolBudget.of(hits, List.of(available));
+        if (!budget.enough()) {
+            int tools = ToolBudget.toolsFor(budget.missing(), 59);
+            required.put("minecraft:wooden_pickaxe", Math.max(1, tools));
+        }
+        return Map.copyOf(required);
     }
 
     private static boolean collect(GraphPost post, GraphTickets.Ticket ticket) {

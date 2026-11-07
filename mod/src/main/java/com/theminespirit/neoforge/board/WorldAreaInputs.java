@@ -31,7 +31,6 @@ final class WorldAreaInputs {
     private static final int PLACEMENT_SCAN = 256;
     private static final String PLACE = "place:";
     private static final String POS = "pos=";
-
     private static RepairAudit.@Nullable Report cachedHouse;
     private static @Nullable StageSite cachedHouseSite;
     private static String cachedHouseWood = "";
@@ -61,7 +60,12 @@ final class WorldAreaInputs {
             Map<String, GraphFacts.Building> buildings) {
         StageSite site = scan.stage();
         SettlementScan.Strays found = WorldAreaScan.scan(level, site, town);
-        List<GraphSiteFacts.Stray> strays = new ArrayList<>(strays(found, placements(service)));
+        int levelY = SettlementPlotStore.get(level)
+                .plot()
+                .map(plot -> plot.anchor().y())
+                .orElse(site.anchor().y());
+        HighStrayInputs.Input highInput = HighStrayInputs.of(level, found, levelY);
+        List<GraphSiteFacts.Stray> strays = new ArrayList<>(strays(highInput.low(), placements(service)));
         Set<GraphFacts.Position> seen = new HashSet<>();
         strays.forEach(stray -> seen.add(stray.position()));
         town.ifPresent(plan -> FarmStray.facts(level, site, plan).stream()
@@ -71,7 +75,7 @@ final class WorldAreaInputs {
                 .orElse(List.of());
         List<FloatingBlocks.Finding> counted = FloatingBlocks.countedInGraph(floating);
         Map<String, Boolean> lots = town.map(plan -> PlotLots.of(found, plan)).orElse(Map.of());
-        GraphSiteFacts.Terrain terrain = terrain(
+        GraphSiteFacts.Terrain flat = terrain(
                 List.copyOf(found.pits().keySet()),
                 found.pits(),
                 found.mounds(),
@@ -85,10 +89,11 @@ final class WorldAreaInputs {
                         floatingCounts(counted),
                         found.natural()),
                 found.unknown() > 0);
+        GraphSiteFacts.Terrain terrain = flat.withHigh(highInput.high());
         return new GraphWorldFacts(strays, terrain, PlotLots.ready(buildings, lots));
     }
 
-    static List<GraphSiteFacts.Stray> strays(SettlementScan.Strays found, List<Placed> placed) {
+    static List<GraphSiteFacts.Stray> strays(List<StrayGroups.Cell> cells, List<Placed> placed) {
         Map<BlockCoord, String> builders = new HashMap<>();
         for (Placed trace : placed) {
             if (trace.builder() != null) {
@@ -96,7 +101,7 @@ final class WorldAreaInputs {
             }
         }
         List<GraphSiteFacts.Stray> facts = new ArrayList<>();
-        for (StrayGroups.Group group : StrayGroups.of(found.strays(), builders)) {
+        for (StrayGroups.Group group : StrayGroups.of(cells, builders)) {
             BlockCoord at = group.position();
             facts.add(new GraphSiteFacts.Stray(
                     "stray:" + group.type() + "@" + key(at),

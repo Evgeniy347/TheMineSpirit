@@ -20,9 +20,9 @@ import org.junit.jupiter.api.Test;
 class BoardCaseV2Tests {
 
     @Test
-    void cases_TotalCount_IsEightySeven() {
+    void cases_TotalCount_IsEightyEight() {
         assertEquals(
-                87,
+                88,
                 BoardCase.values().length,
                 "Кейсов доски — 87: 82 прежних плюс BUILD_PLACED и четыре занятия вне очереди (стройка, перемещение, "
                         + "осмотр, общение) — по ним любой скрипт духа становится видимой карточкой. "
@@ -121,6 +121,7 @@ class BoardCaseV2Tests {
                         UUID.fromString("00000000-0000-0000-0000-0000000000a1"),
                         UUID.fromString("00000000-0000-0000-0000-0000000000a2"),
                         "bread",
-                        1);
+                        1)
+                .withScaffold(HighClearFixture.SCAFFOLD);
     }
 }

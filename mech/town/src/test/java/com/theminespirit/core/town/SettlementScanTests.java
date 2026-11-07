@@ -130,6 +130,21 @@ class SettlementScanTests {
     }
 
     @Test
+    void scan_HighColumnAboveHead_IsHighNotOrdinaryStray() {
+        Fake world = new Fake();
+        world.put(2, LEVEL + 20, 2, "minecraft:cobblestone");
+
+        SettlementScan.Strays found = scan(world, ColumnMask.rect(0, 0, 6, 6));
+
+        assertEquals(
+                List.of(new BlockCoord(2, LEVEL + 20, 2)),
+                found.high().stream().map(cell -> cell.at()).toList(),
+                "Столб на 20 выше земли обязан попасть в отдельный факт high_strays: с земли его не достать, "
+                        + "а обычная расчистка ищет только нижние четыре клетки");
+        assertEquals(List.of(), found.strays(), "Высокое не смешивается с обычным лишним");
+    }
+
+    @Test
     void scan_SpiritDugCell_IsTrace() {
         Fake world = new Fake();
         world.put(2, LEVEL - 2, 2, "minecraft:air");
@@ -233,6 +248,15 @@ class SettlementScanTests {
         @Override
         public boolean plant(String blockId) {
             return plants.contains(blockId);
+        }
+
+        @Override
+        public int topSolid(int x, int z) {
+            return blocks.entrySet().stream()
+                    .filter(entry -> entry.getKey().x() == x && entry.getKey().z() == z)
+                    .mapToInt(entry -> entry.getKey().y())
+                    .max()
+                    .orElse(LEVEL);
         }
     }
 }

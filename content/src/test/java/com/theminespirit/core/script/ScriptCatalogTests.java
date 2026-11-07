@@ -11,6 +11,7 @@ import com.theminespirit.core.mining.MiningTuning;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.mining.PickaxeTiers;
 import com.theminespirit.core.observation.ScanRadius;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -221,7 +222,7 @@ class ScriptCatalogTests {
     }
 
     static Stream<Arguments> scriptSpecRows() {
-        List<ScriptExpectation> rows = List.of(
+        List<ScriptExpectation> rows = new ArrayList<>(List.of(
                 spec("scan", List.of(), Map.of("radius", new long[] {1, 32})),
                 spec("scan_blocks", List.of(), Map.of("radius", new long[] {1, 32})),
                 spec("scan_entities", List.of(), Map.of("radius", new long[] {1, 32})),
@@ -435,23 +436,9 @@ class ScriptCatalogTests {
                                 "y2",
                                 new long[] {-64, 319},
                                 "z2",
-                                new long[] {WORLD_MIN, WORLD_MAX})),
-                spec(
-                        "clear_area",
-                        List.of("x1", "y1", "z1", "x2", "y2", "z2"),
-                        Map.of(
-                                "x1",
-                                new long[] {WORLD_MIN, WORLD_MAX},
-                                "y1",
-                                new long[] {-64, 319},
-                                "z1",
-                                new long[] {WORLD_MIN, WORLD_MAX},
-                                "x2",
-                                new long[] {WORLD_MIN, WORLD_MAX},
-                                "y2",
-                                new long[] {-64, 319},
-                                "z2",
-                                new long[] {WORLD_MIN, WORLD_MAX})),
+                                new long[] {WORLD_MIN, WORLD_MAX}))));
+        rows.addAll(ClearScriptSpecRows.rows());
+        rows.addAll(List.of(
                 spec(
                         "build_schematic",
                         List.of("file", "x", "y", "z"),
@@ -516,7 +503,7 @@ class ScriptCatalogTests {
                 spec("take", List.of("item", "count", "from"), Map.of("count", new long[] {1, 256})),
                 spec("report", List.of(), Map.of()),
                 spec("swap_tool", List.of("block"), Map.of()),
-                spec("drink_potion", List.of("type"), Map.of()));
+                spec("drink_potion", List.of("type"), Map.of())));
 
         return Stream.of(rows, GatherScriptSpecRows.rows(), BrewScriptSpecsRows.rows())
                 .flatMap(List::stream)

@@ -82,6 +82,7 @@ public final class BoardRules {
         priorities.put(BoardCase.BUILD_PEN, 65);
         priorities.put(BoardCase.LURE_ANIMAL, 65);
         priorities.put(BoardCase.DISMANTLE_SHELTER, 65);
+        priorities.put(BoardCase.CLEAR_HIGH, 62);
         priorities.put(BoardCase.RELOCATE_BUILDING, 60);
         priorities.put(BoardCase.BREED_ANIMALS, 55);
         priorities.put(BoardCase.BREW_POTION, 45);

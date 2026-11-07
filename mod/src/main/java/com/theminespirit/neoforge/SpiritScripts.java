@@ -26,7 +26,6 @@ import com.theminespirit.core.script.BuildFenceParams;
 import com.theminespirit.core.script.BuildSchematicParams;
 import com.theminespirit.core.script.CaptureParams;
 import com.theminespirit.core.script.CatalogLimits;
-import com.theminespirit.core.script.ClearAreaParams;
 import com.theminespirit.core.script.ClearCampParams;
 import com.theminespirit.core.script.ClimbParams;
 import com.theminespirit.core.script.CollectDropsParams;
@@ -38,7 +37,6 @@ import com.theminespirit.core.script.CrossWaterParams;
 import com.theminespirit.core.script.CullParams;
 import com.theminespirit.core.script.DefendParams;
 import com.theminespirit.core.script.DeliverParams;
-import com.theminespirit.core.script.DigAreaParams;
 import com.theminespirit.core.script.DigDescentParams;
 import com.theminespirit.core.script.DisengageParams;
 import com.theminespirit.core.script.DrinkPotionParams;
@@ -49,7 +47,6 @@ import com.theminespirit.core.script.EscortParams;
 import com.theminespirit.core.script.ExploreParams;
 import com.theminespirit.core.script.FeedParams;
 import com.theminespirit.core.script.FillCraterParams;
-import com.theminespirit.core.script.FillParams;
 import com.theminespirit.core.script.FishingParams;
 import com.theminespirit.core.script.FleeParams;
 import com.theminespirit.core.script.FollowParams;
@@ -270,13 +267,11 @@ public final class SpiritScripts {
         table.put("pillar_down", spirit -> params -> new PillarDownScript(spirit));
         table.put("light_area", spirit -> params -> new LightAreaScript(spirit, LightAreaParams.from(params)));
         PortalRegistrations.register(table);
-        table.put("fill", spirit -> params -> new FillScript(spirit, FillParams.from(params)));
         table.put(
                 "fill_crater",
                 spirit -> params ->
                         new FillCraterScript(spirit, CraterResolver.resolve(spirit, FillCraterParams.from(params))));
-        table.put("clear_area", spirit -> params -> new ClearAreaScript(spirit, ClearAreaParams.from(params)));
-        table.put("dig_area", spirit -> params -> new DigAreaScript(spirit, DigAreaParams.from(params)));
+        EarthScriptRegistrations.register(table);
         table.put("dig_descent", spirit -> params -> new DescentScript(spirit, DigDescentParams.from(params)));
         table.put("safe_mine", spirit -> params -> new SafeMineScript(spirit, SafeMineParams.from(params)));
         table.put(

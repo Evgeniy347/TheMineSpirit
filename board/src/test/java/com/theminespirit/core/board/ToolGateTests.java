@@ -37,10 +37,11 @@ class ToolGateTests {
     }
 
     @Test
-    void table_PickaxeCasesExplicit_ClearMineAndOre() {
+    void table_PickaxeCasesExplicit_ClearHighMineAndOre() {
         assertEquals(
                 Set.of(
                         BoardCase.CLEAR_GROUNDS,
+                        BoardCase.CLEAR_HIGH,
                         BoardCase.BUILD_MINE,
                         BoardCase.MINE_LEFT_ORE,
                         BoardCase.DISMANTLE_SHELTER),

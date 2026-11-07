@@ -33,6 +33,7 @@ class BoardCaseTests {
             "ACTIVITY_SOCIAL",
             "ACTIVITY_UNLOAD",
             "CLEAR_GROUNDS",
+            "CLEAR_HIGH",
             "COLLECT_DROPS",
             "STOCK_CHESTS",
             "CRAFTING_STATION",

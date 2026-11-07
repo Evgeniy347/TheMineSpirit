@@ -25,6 +25,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 final class WorldAreaScan {
     private static final Map<String, Boolean> PLANTS = new HashMap<>();
@@ -124,6 +125,11 @@ final class WorldAreaScan {
         @Override
         public boolean plant(String blockId) {
             return PLANTS.computeIfAbsent(blockId, WorldAreaScan::plant);
+        }
+
+        @Override
+        public int topSolid(int x, int z) {
+            return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
         }
 
         private BlockState state(int x, int y, int z) {

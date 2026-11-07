@@ -81,7 +81,6 @@ public final class TicketPlans {
 
     private static final int MINE_STEPS_SIZE = 3;
     private static final int RELOCATE_CLEAR_RADIUS = 4;
-
     private static final List<BlockCoord> LIGHT_OFFSETS = List.of(
             new BlockCoord(-3, 0, -3), new BlockCoord(3, 0, -3), new BlockCoord(-3, 0, 3), new BlockCoord(3, 0, 3));
 
@@ -146,6 +145,7 @@ public final class TicketPlans {
             case GATHER_MATERIALS ->
                 target.leveling() == null ? TicketStoragePlans.gatherMaterials(target) : RoutePlans.dig(target);
             case CLEAR_GROUNDS -> withLeftovers(GroundsPlan.plan(target), target);
+            case CLEAR_HIGH -> HighClearPlans.plan(target);
             case COLLECT_DROPS -> collectDrops(target);
             case REPAIR_BUILDING -> repairBuilding(target);
             case REPAIR_TOOL -> repairTool(target);

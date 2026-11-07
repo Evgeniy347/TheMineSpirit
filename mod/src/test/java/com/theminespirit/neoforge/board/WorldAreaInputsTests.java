@@ -67,7 +67,7 @@ class WorldAreaInputsTests {
         List<WorldAreaInputs.Placed> placed =
                 List.of(new WorldAreaInputs.Placed(new BlockCoord(2, 64, 1), "oak_fence", "spirit-1"));
 
-        List<GraphSiteFacts.Stray> strays = WorldAreaInputs.strays(found, placed);
+        List<GraphSiteFacts.Stray> strays = WorldAreaInputs.strays(found.strays(), placed);
 
         assertEquals(1, strays.size(), "связные клетки сканера — один кусок лишнего");
         assertEquals(Map.of("oak_fence", 2), strays.get(0).blocks(), "у куска есть тип и количество");

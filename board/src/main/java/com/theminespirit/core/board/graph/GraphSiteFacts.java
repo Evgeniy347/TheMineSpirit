@@ -1,10 +1,33 @@
 package com.theminespirit.core.board.graph;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 public interface GraphSiteFacts {
+    record HighStray(
+            String id,
+            GraphFacts.Position anchor,
+            int height,
+            List<String> stalks,
+            List<GraphFacts.Position> cells,
+            Map<String, Integer> blocks) {
+        public HighStray {
+            Objects.requireNonNull(id, "id высокой подмости не может быть null: по нему живёт карточка");
+            Objects.requireNonNull(anchor, "Точка башни не может быть null: к ней идёт дух");
+            if (height < 0) {
+                throw new IllegalArgumentException("Высота подмости " + height + " отрицательна: башня растёт вверх");
+            }
+            stalks = List.copyOf(Objects.requireNonNull(stalks, "Столбы подмости не могут быть null"));
+            cells = List.copyOf(Objects.requireNonNull(cells, "Клетки столбов не могут быть null"));
+            blocks = Map.copyOf(Objects.requireNonNull(blocks, "Состав столбов не может быть null"));
+            if (cells.isEmpty()) {
+                throw new IllegalArgumentException("Подмость без столбов: убирать нечего");
+            }
+        }
+    }
+
     record Stray(
             String id,
             String type,
@@ -33,7 +56,8 @@ public interface GraphSiteFacts {
             Map<String, Integer> fill,
             Map<String, Integer> floating,
             boolean unknown,
-            int natural) {
+            int natural,
+            List<HighStray> high) {
         public Terrain {
             if (pits < 0 || hanging < 0 || heightDrop < 0 || deepestPit < 0 || traces < 0 || natural < 0) {
                 throw new IllegalArgumentException("Ямы, висящее, перепад, глубина, следы и природное не бывают "
@@ -42,6 +66,7 @@ public interface GraphSiteFacts {
             cut = Map.copyOf(Objects.requireNonNull(cut, "Срезка лота не может быть null"));
             fill = Map.copyOf(Objects.requireNonNull(fill, "Подсыпка лота не может быть null"));
             floating = Map.copyOf(Objects.requireNonNull(floating, "Состав висящего не может быть null"));
+            high = List.copyOf(Objects.requireNonNull(high, "Высокие столбы не могут быть null"));
         }
 
         public Terrain(
@@ -54,7 +79,21 @@ public interface GraphSiteFacts {
                 Map<String, Integer> fill,
                 Map<String, Integer> floating,
                 boolean unknown) {
-            this(pits, hanging, heightDrop, deepestPit, traces, cut, fill, floating, unknown, 0);
+            this(pits, hanging, heightDrop, deepestPit, traces, cut, fill, floating, unknown, 0, List.of());
+        }
+
+        public Terrain(
+                int pits,
+                int hanging,
+                int heightDrop,
+                int deepestPit,
+                int traces,
+                Map<String, Integer> cut,
+                Map<String, Integer> fill,
+                Map<String, Integer> floating,
+                boolean unknown,
+                int natural) {
+            this(pits, hanging, heightDrop, deepestPit, traces, cut, fill, floating, unknown, natural, List.of());
         }
 
         public Terrain(int pits, int hanging, int heightDrop, int deepestPit, int traces) {
@@ -79,6 +118,11 @@ public interface GraphSiteFacts {
 
         public boolean flat() {
             return pits == 0 && hanging == 0 && heightDrop == 0 && traces == 0;
+        }
+
+        public Terrain withHigh(List<HighStray> columns) {
+            return new Terrain(
+                    pits, hanging, heightDrop, deepestPit, traces, cut, fill, floating, unknown, natural, columns);
         }
     }
 

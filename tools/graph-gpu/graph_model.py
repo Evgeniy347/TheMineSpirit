@@ -741,6 +741,8 @@ class State:
         derived = []
         if self.strays:
             derived.append("demolish_stray")
+        if self.terrain.get("high"):
+            derived.append("high_strays")
         if int(self.terrain.get("pits", 0)) > 0 or self.terrain.get("fill"):
             derived.append("backfill")
         if int(self.terrain.get("hanging", 0)) > 0 or self.terrain.get("floating"):

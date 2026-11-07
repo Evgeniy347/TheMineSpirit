@@ -53,6 +53,12 @@ final class TicketDetails {
         if (!target.dropItems().isEmpty()) {
             details.add("drops=" + String.join(",", target.dropItems()));
         }
+        if (target.scaffold() != null) {
+            details.add("scaffold=" + target.scaffold().id());
+            details.add("scaffold_stalks=" + target.scaffold().stalks().size());
+            details.add("scaffold_height=" + target.scaffold().height());
+            details.add("scaffold_blocks=" + target.scaffold().blocks());
+        }
         return List.copyOf(details);
     }
 

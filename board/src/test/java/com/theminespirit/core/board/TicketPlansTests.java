@@ -51,7 +51,6 @@ class TicketPlansTests {
             Arrays.stream(BoardCase.values()).filter(ToolSet::isTool).toList();
 
     private static final int LEGACY_FENCE_HALF = 13;
-
     private static final Map<BoardCase, String> CASE_SCRIPTS = Map.ofEntries(
             Map.entry(BoardCase.FILL_CRATER, "fill"),
             Map.entry(BoardCase.REPAIR_FENCE, "fill"),
@@ -120,6 +119,7 @@ class TicketPlansTests {
                         "bread",
                         1)
                 .withCraft("minecraft:white_bed", 1)
+                .withScaffold(HighClearFixture.SCAFFOLD)
                 .withCount(2);
     }
 
