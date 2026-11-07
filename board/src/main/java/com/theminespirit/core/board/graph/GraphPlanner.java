@@ -367,8 +367,7 @@ public final class GraphPlanner {
             boolean repeat = !made.add(choices.makes(score.getKey()));
             double value = score.getValue() * graph.costs().travelFactor(choices.travelTicks(score.getKey()));
             double adjusted = choices.value(score.getKey(), value, repeat);
-            GraphPlan.Task task = task(
-                    score.getKey(), GraphEvent.priority(graph.events(), score.getKey(), adjusted, graph.maxPriority()));
+            GraphPlan.Task task = task(score.getKey(), GraphEvent.priority(state, graph, score.getKey(), adjusted));
             tasks.add(task);
             station(score.getKey())
                     .filter(ignored -> task.feasible())
@@ -407,7 +406,7 @@ public final class GraphPlanner {
                 known.boardCase(),
                 building,
                 Optional.empty(),
-                GraphFlow.priority(value * graph.decay(), graph.maxPriority()),
+                GraphFlow.priority(value * graph.decay(), GraphPriorities.work(graph)),
                 materials,
                 GraphLack.stocked(graph, state, materials),
                 false,

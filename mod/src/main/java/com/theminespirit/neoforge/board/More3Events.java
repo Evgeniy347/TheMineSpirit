@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.SpiritDamageWatch;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -28,6 +29,7 @@ public final class More3Events {
         if (!(spirit.level() instanceof ServerLevel level)) {
             return;
         }
+        SpiritDamageWatch.note(spirit.getUUID(), event.getSource(), event.getNewDamage(), level.getGameTime());
         BlockPos at = spirit.blockPosition();
         More3Store.get(level)
                 .noteDamage(

@@ -130,6 +130,20 @@ class DigGraphPlannerTests {
 
     private static GraphFacts.Spirit stuck(boolean trapped, boolean stuck, String trap) {
         return new GraphFacts.Spirit(
-                "spirit-1", AT, 20, 20, 300, false, trapped, stuck, null, Map.of(), List.of(), List.of(), trap);
+                "spirit-1",
+                AT,
+                20,
+                Math.max(20, 1f),
+                null,
+                20,
+                300,
+                false,
+                trapped,
+                stuck,
+                null,
+                Map.of(),
+                List.of(),
+                List.of(),
+                trap);
     }
 }

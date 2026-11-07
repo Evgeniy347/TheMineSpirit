@@ -117,6 +117,8 @@ final class AllocationCases {
                 name,
                 new GraphFacts.Position(0, 64, 0),
                 20,
+                Math.max(20, 1f),
+                null,
                 20,
                 300,
                 false,
@@ -125,7 +127,8 @@ final class AllocationCases {
                 null,
                 Map.of(),
                 List.of(),
-                tools);
+                tools,
+                null);
     }
 
     static GraphFacts facts(List<GraphFacts.Spirit> spirits, Map<String, Integer> chest) {

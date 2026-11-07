@@ -31,6 +31,8 @@ public record GraphFacts(
             String id,
             Position position,
             float health,
+            float maxHealth,
+            @Nullable Hurt recentHurt,
             int food,
             int air,
             boolean inWater,
@@ -44,6 +46,10 @@ public record GraphFacts(
         public Spirit {
             Objects.requireNonNull(id, "id духа не может быть null: факт принадлежит конкретному духу");
             Objects.requireNonNull(position, "позиция духа не может быть null: без неё не выбрать работу");
+            if (health < 0 || maxHealth <= 0 || health > maxHealth) {
+                throw new IllegalArgumentException("Здоровье духа " + health + " из " + maxHealth
+                        + ": оно не отрицательно и не больше максимума, максимум положителен");
+            }
             inventory = Map.copyOf(
                     Objects.requireNonNull(inventory, "инвентарь духа не может быть null: пустой — пустая карта"));
             armor = List.copyOf(
@@ -51,26 +57,17 @@ public record GraphFacts(
             tools = List.copyOf(
                     Objects.requireNonNull(tools, "инструменты духа не могут быть null: без них — пустой список"));
         }
+    }
 
-        public Spirit(
-                String id,
-                Position position,
-                float health,
-                int food,
-                int air,
-                boolean inWater,
-                boolean trapped,
-                boolean stuck,
-                @Nullable String activity,
-                Map<String, Integer> inventory,
-                List<Armor> armor,
-                List<Tool> tools) {
-            this(id, position, health, food, air, inWater, trapped, stuck, activity, inventory, armor, tools, null);
-        }
-
-        public Spirit withTrap(String cause) {
-            return new Spirit(
-                    id, position, health, food, air, inWater, true, stuck, activity, inventory, armor, tools, cause);
+    public record Hurt(float amount, @Nullable String source, int ticksAgo) {
+        public Hurt {
+            if (amount < 0) {
+                throw new IllegalArgumentException("Урон " + amount + " отрицателен: нет удара — ноль");
+            }
+            if (ticksAgo < 0) {
+                throw new IllegalArgumentException(
+                        "Возраст урона " + ticksAgo + " отрицателен: неизвестное не задают минусом");
+            }
         }
     }
 

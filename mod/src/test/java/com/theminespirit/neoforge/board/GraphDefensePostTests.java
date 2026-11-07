@@ -12,12 +12,11 @@ import org.junit.jupiter.api.Test;
 class GraphDefensePostTests {
 
     @Test
-    void priority_LifeAboveBoardMaximum_ClampedToHundred() {
+    void priority_LifeAtGraphCeiling_StaysHundred() {
         assertEquals(
                 100,
-                GraphDefensePost.priority(ticket(120)),
-                "Оборона жизни приходит из графа с весом выше 100, а BoardTicket принимает 0..100: без зажима "
-                        + "источник доски падает и защита не ставится");
+                GraphDefensePost.priority(ticket(100)),
+                "Оборона жизни приходит из графа на потолке 100, а BoardTicket принимает 0..100");
     }
 
     @Test

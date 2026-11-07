@@ -1,6 +1,6 @@
 core/board/Board.java	677
 core/board/TicketPlans.java	901
-core/board/graph/GraphPlanner.java	503
+core/board/graph/GraphPlanner.java	502
 core/board/graph/RecipeImport.java	555
 core/board/graph/SupplyGraph.java	388
 core/building/BuildPlanner.java	837

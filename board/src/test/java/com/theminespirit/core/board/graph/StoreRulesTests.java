@@ -56,6 +56,8 @@ class StoreRulesTests {
                 "spirit-1",
                 new GraphFacts.Position(0, 64, 0),
                 20,
+                Math.max(20, 1f),
+                null,
                 18,
                 300,
                 false,
@@ -64,7 +66,8 @@ class StoreRulesTests {
                 null,
                 Map.of("minecraft:oak_log", 3),
                 List.of(),
-                List.of());
+                List.of(),
+                null);
 
         Map<String, Integer> actual = StoreRules.actual(chests, Map.of("spirit-1", spirit));
 

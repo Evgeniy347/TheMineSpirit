@@ -257,6 +257,8 @@ class GearInputsTests {
                 "spirit-1",
                 new GraphFacts.Position(0, 64, 0),
                 20,
+                Math.max(20, 1f),
+                null,
                 18,
                 300,
                 false,
@@ -265,7 +267,8 @@ class GearInputsTests {
                 activity,
                 Map.of(),
                 armor,
-                tools);
+                tools,
+                null);
     }
 
     private static GraphFacts.Chest chest(Map<String, Integer> contents) {
