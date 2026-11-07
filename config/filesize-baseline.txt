@@ -44,7 +44,6 @@ neoforge/crafting/SmeltScript.java	308
 neoforge/demo/DemoSession.java	431
 neoforge/husbandry/HerdSession.java	436
 neoforge/husbandry/HiveSession.java	410
-neoforge/movement/ExploreScript.java	309
 neoforge/repair/RepairScript.java	304
 neoforge/tactics/TacticsService.java	507
 core/board/AnimalLifecycleTests.java	303

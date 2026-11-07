@@ -36,29 +36,24 @@ public final class OutsideGate {
         return settlementRadius;
     }
 
-    public double escortRadius() {
-        return rules.escortRadius();
-    }
-
     public boolean isEvening(double dayFraction) {
         return leash.isEvening(dayFraction);
     }
 
-    public Decision admitExternal(int party, boolean playerAccompanied) {
-        return admitExternal(party, playerAccompanied, false);
+    public Decision admitExternal(int party) {
+        return decide(party, false, "");
     }
 
-    public Decision admitExternal(int party, boolean playerAccompanied, boolean evening) {
-        return decide(party, playerAccompanied, evening, "");
+    public Decision admitExternal(int party, boolean evening) {
+        return decide(party, evening, "");
     }
 
-    public Decision admitExternal(
-            int party, boolean playerAccompanied, boolean evening, @Nullable Point target, @Nullable Point home) {
+    public Decision admitExternal(int party, boolean evening, @Nullable Point target, @Nullable Point home) {
         String boundary = boundary(target, home);
         if (target != null && home != null && distance(target, home) <= settlementRadius) {
             return new Inside("цель " + coordinates(target) + boundary + ": внешней работой не считается");
         }
-        return decide(party, playerAccompanied, evening, boundary);
+        return decide(party, evening, boundary);
     }
 
     private String boundary(@Nullable Point target, @Nullable Point home) {
@@ -71,16 +66,16 @@ public final class OutsideGate {
                 + (distance <= settlementRadius ? "" : ": цель за границей") + ")";
     }
 
-    private Decision decide(int party, boolean playerAccompanied, boolean evening, String boundary) {
+    private Decision decide(int party, boolean evening, String boundary) {
         requireParty(party);
         if (evening) {
             return new Refused(NIGHT_REASON + boundary);
         }
-        if (playerAccompanied || party >= rules.partyMin()) {
+        if (party >= rules.partyMin()) {
             return new Allowed();
         }
-        return new Refused("за границей поселения в одиночку не ходят: нужна группа от " + rules.partyMin()
-                + " духов или реальный игрок рядом" + boundary);
+        return new Refused(
+                "за границей поселения в одиночку не ходят: нужна группа от " + rules.partyMin() + " духов" + boundary);
     }
 
     private static double distance(Point first, Point second) {
