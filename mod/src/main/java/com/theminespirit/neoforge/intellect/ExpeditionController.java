@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.intellect;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.ExpeditionMinePlan;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.intellect.DescentKit;
 import com.theminespirit.core.intellect.Expedition;
@@ -10,9 +11,10 @@ import com.theminespirit.core.intellect.InvitationAnswer;
 import com.theminespirit.core.intellect.InvitationState;
 import com.theminespirit.core.intellect.OutsideRules;
 import com.theminespirit.core.inventory.Stack;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.neoforge.PickaxeCheck;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.InventoryTables;
 import com.theminespirit.neoforge.inventory.StackMapper;
@@ -28,13 +30,10 @@ import org.slf4j.Logger;
 
 public final class ExpeditionController {
     public static final double AGREE_RADIUS = 4.0;
-
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String FOLLOW = "follow";
     private static final String RETURN_HOME = "return_home";
     private static final int PARTNER_RADIUS = 3;
-    private static final Map<String, Object> MINE_PARAMS = Map.of("ore", "any", "count", 8, "radius", 16);
-
     private final Invitation invitation = new Invitation();
     private StockView stock = new StockView(Map.of());
     private Launcher launcher;
@@ -177,15 +176,21 @@ public final class ExpeditionController {
                 .filter(spirit -> spirit.getUUID().equals(leaderId))
                 .findFirst()
                 .orElse(team.get(0));
+        if (!PickaxeCheck.has(leader)) {
+            String reason = "поход в шахту не начат: у лидера " + leader.displayName() + " нет кирки";
+            if (!reason.equals(refusal)) {
+                LOGGER.info("[graph] экспедиция отложена: {}", reason);
+            }
+            refusal = reason;
+            return false;
+        }
+        BlockCoord bottom = new BlockCoord(
+                (int) expedition.target().x(), (int) expedition.target().y(), (int)
+                        expedition.target().z());
         boolean launched = false;
         for (SpiritEntity spirit : team) {
             if (spirit.getUUID().equals(leader.getUUID())) {
-                launched |= launch(
-                        spirit,
-                        "mine_vein",
-                        new SequenceNode(List.of(
-                                new ScriptCall("mine_vein", MINE_PARAMS), new ScriptCall(RETURN_HOME, Map.of()))),
-                        now);
+                launched |= launch(spirit, "expedition", ExpeditionMinePlan.plan(bottom), now);
             } else {
                 launched |= launch(
                         spirit,
@@ -196,7 +201,7 @@ public final class ExpeditionController {
         }
         if (launched) {
             refusal = null;
-            lastDispatch = new Dispatch("mine_vein", List.copyOf(expedition.team()), now);
+            lastDispatch = new Dispatch("expedition", List.copyOf(expedition.team()), now);
             missionTeam = List.copyOf(expedition.team());
             missionLeader = leader.getUUID();
         }

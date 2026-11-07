@@ -33,6 +33,7 @@ public final class DigOutScript implements ScriptInstance {
     private final GotoParams target;
     private final boolean fromPit;
     private final boolean descending;
+    private final DigOutBackfill backfill;
     private final BlockBreaker breaker;
     private final BlockPlacer placer;
     private Direction direction;
@@ -53,6 +54,12 @@ public final class DigOutScript implements ScriptInstance {
         this.descending = target.y() < spirit.blockPosition().getY();
         this.breaker = BlockBreaker.escaping(spirit);
         this.placer = new BlockPlacer(spirit);
+        boolean sealedNow = sealed(level, spirit.blockPosition());
+        this.backfill = new DigOutBackfill(
+                spirit,
+                level,
+                placer,
+                !descending && !sealedNow && target.y() > spirit.blockPosition().getY());
     }
 
     public static boolean sealed(Level level, BlockPos feet) {
@@ -80,7 +87,7 @@ public final class DigOutScript implements ScriptInstance {
                     || state.getBlock() instanceof TrapDoorBlock) {
                 return true;
             }
-            return DigOutScript.passable(level, pos);
+            return DigOutBackfill.passable(level, pos);
         }
 
         @Override
@@ -97,12 +104,6 @@ public final class DigOutScript implements ScriptInstance {
         private static BlockPos pos(BlockCoord cell) {
             return new BlockPos(cell.x(), cell.y(), cell.z());
         }
-    }
-
-    private static boolean passable(Level level, BlockPos pos) {
-        BlockState state = level.getBlockState(pos);
-        return state.getCollisionShape(level, pos).isEmpty()
-                && state.getFluidState().isEmpty();
     }
 
     @Override
@@ -139,6 +140,7 @@ public final class DigOutScript implements ScriptInstance {
                 ? feet.getY() <= target.y() && (open(level, feet) || feet.getY() == target.y())
                 : feet.getY() >= target.y();
         if ((open(level, feet) && !fromPit) || goalReached) {
+            backfill.report();
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
         }
@@ -153,16 +155,17 @@ public final class DigOutScript implements ScriptInstance {
         }
         BlockPos ahead = feet.relative(direction);
         for (BlockPos cell : List.of(feet.above(2), ahead.above(), ahead.above(2))) {
-            if (DigOutObstacle.obstacle(passable(level, cell), water(level, cell))) {
+            if (DigOutObstacle.obstacle(DigOutBackfill.passable(level, cell), DigOutBackfill.water(level, cell))) {
                 return dig(cell);
             }
         }
-        if (passable(level, ahead) || water(level, ahead)) {
+        if (DigOutBackfill.passable(level, ahead) || DigOutBackfill.water(level, ahead)) {
             Optional<String> refusal = placeFloor(ahead);
             if (refusal.isPresent()) {
                 return turnOrFail("пол ступени " + ahead.toShortString() + " не подложить: " + refusal.get());
             }
         }
+        backfill.remember(feet);
         next = ahead.above();
         stepTicks = 0;
         moveTo(next);
@@ -185,6 +188,7 @@ public final class DigOutScript implements ScriptInstance {
 
     private ScriptStatus walkTick(BlockPos feet) {
         if (feet.equals(next)) {
+            backfill.close();
             next = null;
             steps++;
             turns = 0;
@@ -240,10 +244,6 @@ public final class DigOutScript implements ScriptInstance {
             case BlockPlacer.Refused refused -> Optional.of(refused.message());
             case BlockPlacer.Protected refused -> Optional.of(refused.reason());
         };
-    }
-
-    private static boolean water(Level level, BlockPos cell) {
-        return level.getFluidState(cell).is(FluidTags.WATER);
     }
 
     private ScriptStatus turnOrFail(String reason) {
