@@ -113,5 +113,21 @@
       "building": "chests",
       "implemented": true
     }
-  ]
+  ],
+  "events": {
+    "demolish_chest": {
+      "tasks": [
+        {
+          "id": "demolish_chest",
+          "case": "DISMANTLE_SHELTER",
+          "base": 62,
+          "consumes": {},
+          "implemented": true
+        }
+      ],
+      "advice": [
+        "drain_chest_into_warehouse_before_breaking"
+      ]
+    }
+  }
 }

@@ -23,12 +23,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class SchemeBuildGuardTests {
     private static final String CALL = "new PlannedBlock(";
     private static final List<String> EXCEPTIONS = List.of("SUPPORT", "sapling");
-    private static final String DEMOLITION = "PlanDemolition.java";
+    private static final Set<String> DEMOLITION = Set.of("PlanDemolition.java", "ChestDemolition.java");
     private static final String HOW =
             "Правило владельца: все постройки доски (BUILD_*, LIGHTING, STOCK_CHESTS, ограда, "
                     + "улицы) — только стройкой по текстовой схеме (SchemeBuild → build_schematic). Цена поблочного списка: "
@@ -58,8 +59,12 @@ class SchemeBuildGuardTests {
                 "земля ремонта ровности — названное исключение сторожа");
         assertEquals(
                 List.of(),
-                violations(DEMOLITION, "x(new PlannedBlock(cell, StagePlans.AIR));"),
+                violations("PlanDemolition.java", "x(new PlannedBlock(cell, StagePlans.AIR));"),
                 "снос лишнего — не постройка: воздух сноса сторож не трогает");
+        assertEquals(
+                List.of(),
+                violations("ChestDemolition.java", "x(new PlannedBlock(cell, \"minecraft:air\"));"),
+                "снос сундука — разбор, а не постройка: воздух сноса сторож не трогает");
     }
 
     @Test
@@ -102,7 +107,8 @@ class SchemeBuildGuardTests {
         while (at >= 0) {
             String call = text.substring(at, closing(text, at + CALL.length()));
             boolean allowed = EXCEPTIONS.stream().anyMatch(call::contains)
-                    || (DEMOLITION.equals(file) && call.contains("StagePlans.AIR"));
+                    || (DEMOLITION.contains(file)
+                            && (call.contains("StagePlans.AIR") || call.contains("\"minecraft:air\"")));
             if (!allowed) {
                 found.add(file + ":" + SourceFiles.lineOf(text, at) + " " + call);
             }

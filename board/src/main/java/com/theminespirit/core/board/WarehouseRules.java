@@ -18,6 +18,17 @@ public final class WarehouseRules {
         return home;
     }
 
+    public static int builtLevel(BoardLedger ledger) {
+        Objects.requireNonNull(ledger, "Журнал доски не может быть null: уровень склада читается по нему");
+        int built = 0;
+        for (int level = 1; level <= MAX_LEVEL; level++) {
+            if (ledger.has(BoardCase.BUILD_WAREHOUSE, level)) {
+                built = level;
+            }
+        }
+        return built;
+    }
+
     public static int levelOf(String node) {
         Objects.requireNonNull(node, "Узел склада не может быть null: по нему берут уровень");
         int cut = node.lastIndexOf('_');

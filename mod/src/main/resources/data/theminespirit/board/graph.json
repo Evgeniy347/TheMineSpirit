@@ -3307,8 +3307,7 @@
       },
       "requires": [
         "warehouse"
-      ],
-      "optional": true
+      ]
     },
     "warehouse_3": {
       "case": "BUILD_WAREHOUSE",
@@ -3322,8 +3321,7 @@
       },
       "requires": [
         "warehouse_2"
-      ],
-      "optional": true
+      ]
     },
     "warehouse_4": {
       "case": "BUILD_WAREHOUSE",
@@ -3337,8 +3335,7 @@
       },
       "requires": [
         "warehouse_3"
-      ],
-      "optional": true
+      ]
     },
     "barn_2": {
       "case": "BUILD_HOUSE",

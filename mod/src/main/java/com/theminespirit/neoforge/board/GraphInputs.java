@@ -11,6 +11,7 @@ import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolFate;
 import com.theminespirit.core.board.ToolsConfig;
+import com.theminespirit.core.board.WarehouseApproval;
 import com.theminespirit.core.board.WarehouseRules;
 import com.theminespirit.core.board.graph.GraphBuildingMaterials;
 import com.theminespirit.core.board.graph.GraphFacts;
@@ -61,6 +62,9 @@ final class GraphInputs {
         Set<String> events = new LinkedHashSet<>(life.events());
         if (expeditionReady(stock, level)) {
             events.add("expedition_ready");
+        }
+        if (ChestDemolition.pending(level, service)) {
+            events.add(ChestDemolition.EVENT);
         }
         GraphFacts facts = DigInputs.apply(
                 level,
@@ -177,6 +181,10 @@ final class GraphInputs {
         buildings.putAll(planBuilt(level, service, scan, town));
         planStates(town, ledger, graph, buildings);
         FarmBuilt.apply(service, level, scan, ledger, graph, town, buildings);
+        WarehouseApproval.apply(
+                buildings,
+                WarehouseRules.builtLevel(ledger),
+                WarehouseOrderStore.get(level).order());
         return buildings;
     }
 

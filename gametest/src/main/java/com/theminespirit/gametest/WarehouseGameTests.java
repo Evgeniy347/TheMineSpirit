@@ -1,23 +1,33 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.board.ChestPlans;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.inventory.ContainerSnapshot;
+import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.BlockItems;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SchematicResources;
+import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -65,7 +75,11 @@ public final class WarehouseGameTests {
                 new ItemStack(Items.OAK_STAIRS, 1),
                 new ItemStack(Items.TORCH, 1));
         BlockPos anchor = new BlockPos(1, 1, 1);
+        clearRegistry(helper.getLevel());
         SpiritRun run = SpiritRun.launch(helper, spirit, build(helper, "storage_v1", anchor), SETTLE_TICKS);
+        SpiritRun[] drain = new SpiritRun[1];
+        BlockPos[] sourcePos = new BlockPos[1];
+        BlockPos[] warehousePos = new BlockPos[1];
 
         helper.succeedWhen(() -> {
             run.assertStarted();
@@ -109,7 +123,72 @@ public final class WarehouseGameTests {
                     blocked == 0,
                     "Все сундуки склада, включая верхний, обязаны открываться: заблокировано " + blocked + " из "
                             + chests);
+            if (drain[0] == null) {
+                ServerLevel level = helper.getLevel();
+                BlockPos source = new BlockPos(10, 1, 4);
+                BlockPos warehouse = new BlockPos(13, 1, 4);
+                helper.setBlock(source, Blocks.CHEST);
+                helper.setBlock(warehouse, Blocks.CHEST);
+                PlacedBlocksData.get(level).markSpirit(helper.absolutePos(source));
+                ChestBlockEntity sourceChest = (ChestBlockEntity) level.getBlockEntity(helper.absolutePos(source));
+                sourceChest.setItem(0, new ItemStack(Items.DIRT, 5));
+                sourceChest.setItem(1, new ItemStack(Items.OAK_LOG, 3));
+                clearRegistry(level);
+                BlockPos absolute = helper.absolutePos(source);
+                BlockPos deposit = helper.absolutePos(warehouse);
+                ContainerSnapshot snapshot = new ContainerSnapshot(
+                        new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ()),
+                        List.of(new Stack("minecraft:dirt", 0, 5, 64), new Stack("minecraft:oak_log", 0, 3, 64)));
+                TaskNode plan = ChestPlans.demolish(
+                        snapshot,
+                        List.of(new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ())),
+                        new BlockCoord(deposit.getX(), deposit.getY(), deposit.getZ()));
+                drain[0] = SpiritRun.launch(helper, spirit, plan, SETTLE_TICKS);
+                sourcePos[0] = source;
+                warehousePos[0] = warehouse;
+            }
+            helper.assertTrue(
+                    drain[0].started(),
+                    "снос сундука обязан начаться: дух в "
+                            + spirit.blockPosition().toShortString());
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "снос сундука обязан завершиться: статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            ServerLevel level = helper.getLevel();
+            helper.assertTrue(
+                    level.getBlockState(helper.absolutePos(sourcePos[0])).isAir(),
+                    "сундук после выноса вещей обязан быть сломан, осталось "
+                            + level.getBlockState(helper.absolutePos(sourcePos[0])));
+            ChestBlockEntity warehouseChest =
+                    (ChestBlockEntity) level.getBlockEntity(helper.absolutePos(warehousePos[0]));
+            helper.assertTrue(
+                    count(warehouseChest, Items.DIRT) == 5,
+                    "вся грязь обязана оказаться в сундуке склада, фактически " + count(warehouseChest, Items.DIRT));
+            helper.assertTrue(
+                    count(warehouseChest, Items.OAK_LOG) == 3,
+                    "все брёвна обязаны оказаться в сундуке склада, фактически "
+                            + count(warehouseChest, Items.OAK_LOG));
             GameTestFixtures.finish(helper);
         });
+    }
+
+    private static void clearRegistry(ServerLevel level) {
+        SettlementChestStore store = SettlementChestStore.get(level);
+        for (BlockCoord pos : store.chests().all()) {
+            store.forget(new BlockPos(pos.x(), pos.y(), pos.z()));
+        }
+    }
+
+    private static int count(Container container, Item item) {
+        int total = 0;
+        for (int slot = 0; slot < container.getContainerSize(); slot++) {
+            ItemStack stack = container.getItem(slot);
+            if (stack.is(item)) {
+                total += stack.getCount();
+            }
+        }
+        return total;
     }
 }
