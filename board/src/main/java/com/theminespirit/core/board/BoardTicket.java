@@ -22,6 +22,10 @@ public record BoardTicket(
 
     public static final String ALWAYS_CAUSE = "always";
 
+    public boolean fromGraph() {
+        return cause.startsWith("graph:");
+    }
+
     public BoardTicket(
             String id,
             BoardCase boardCase,

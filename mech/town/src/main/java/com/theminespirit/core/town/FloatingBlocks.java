@@ -146,6 +146,10 @@ public final class FloatingBlocks {
         return findings.stream().filter(FloatingBlocks::countedInGraph).toList();
     }
 
+    public static int hangingCount(List<Finding> findings) {
+        return countedInGraph(findings).size();
+    }
+
     public static String pathOf(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: путь берётся из него");
         int colon = blockId.indexOf(':');

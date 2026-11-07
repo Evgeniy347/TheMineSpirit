@@ -22,6 +22,7 @@ public final class SpiritIndex {
 
     private final MinecraftServer server;
     private final Map<UUID, SpiritEntity> spirits = new LinkedHashMap<>();
+    private final TickEntityCache<SpiritEntity> levelCache = new TickEntityCache<>();
     private final Consumer<EntityJoinLevelEvent> joinListener = this::onJoin;
     private final Consumer<EntityLeaveLevelEvent> leaveListener = this::onLeave;
     private long entriesRead;
@@ -94,6 +95,7 @@ public final class SpiritIndex {
             return;
         }
         ensureServerThread();
+        invalidateLevelCache();
         SpiritEntity live = fromLevels(spirit.getUUID());
         if (live != null && !live.equals(spirit)) {
             LOGGER.warn(
@@ -111,6 +113,7 @@ public final class SpiritIndex {
             return;
         }
         ensureServerThread();
+        invalidateLevelCache();
         spirits.remove(spirit.getUUID(), spirit);
     }
 
@@ -120,12 +123,20 @@ public final class SpiritIndex {
     }
 
     private @Nullable SpiritEntity fromLevels(UUID id) {
+        return levelCache.get(id, server.getTickCount(), this::scanLevels).orElse(null);
+    }
+
+    private @Nullable SpiritEntity scanLevels(UUID id) {
         for (ServerLevel level : server.getAllLevels()) {
             if (level.getEntity(id) instanceof SpiritEntity spirit) {
                 return spirit;
             }
         }
         return null;
+    }
+
+    private void invalidateLevelCache() {
+        levelCache.invalidate();
     }
 
     private void ensureServerThread() {

@@ -200,6 +200,31 @@ class DispatchRoundTests {
     }
 
     @Test
+    void why_ManySpiritsWithSameBlocker_GroupsByNameNotDump() {
+        BoardTicket cleanup = new BoardTicket(
+                "demolish:x",
+                BoardCase.DISMANTLE_SHELTER,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER),
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
+        Board board = board(List.of(cleanup));
+        DispatchRound round = new DispatchRound(board, 0);
+        List<DispatchRound.Candidate> spirits = List.of(
+                new DispatchRound.Candidate(new UUID(0, 1), "spirit-1", null, List.of(), FED, SpiritView.free(), true),
+                new DispatchRound.Candidate(new UUID(0, 2), "spirit-2", null, List.of(), FED, SpiritView.free(), true));
+
+        assertEquals(
+                "ждёт духа: в воде или под крышей: до стоянки уборки не дойдёт: spirit-1, spirit-2",
+                round.why(cleanup, spirits),
+                "Одна причина на нескольких духов называется один раз со списком имён: доска из 100 PENDING "
+                        + "не повторяет один и тот же текст");
+    }
+
+    @Test
     void why_AllBusy_SummarizesJobsInsteadOfDump() {
         BoardTicket waiting = ticket("waiting", Optional.empty());
         List<DispatchRound.Candidate> spirits = List.of(

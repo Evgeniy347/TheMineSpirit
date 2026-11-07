@@ -190,6 +190,11 @@ class FloatingBlocksTests {
                 FloatingBlocks.countedInGraph(List.of(world.only(2, 67, 2), world.only(5, 66, 5), world.only(6, 70, 6)))
                         .size(),
                 "Список для [graph] висящее отбрасывает сундук и станции: 2 из 3 находок — висящее");
+        assertEquals(
+                2,
+                FloatingBlocks.hangingCount(List.of(world.only(2, 67, 2), world.only(5, 66, 5), world.only(6, 70, 6))),
+                "Счётчик висящего для /v1/world берётся из того же правила: chest/furnace/crafting_table не "
+                        + "висящие, иначе REST и граф считают по-разному");
     }
 
     private static final class Fake implements FloatingBlocks.World {

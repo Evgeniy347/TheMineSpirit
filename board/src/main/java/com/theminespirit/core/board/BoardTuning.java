@@ -10,6 +10,8 @@ public final class BoardTuning {
 
     public static final int MAX_PENDING = 64;
 
+    public static final int MAX_REPAIR_PENDING = 8;
+
     public static final int CRATER_TERRITORY_RADIUS = 64;
     public static final int CHOP_RADIUS = 100;
 
@@ -52,6 +54,7 @@ public final class BoardTuning {
             "craterTerritoryRadius",
             "chopRadius",
             "maxPending",
+            "maxRepairPending",
             "maxActivePerSpirit",
             "stockReadBudget",
             "stockBlockBudget",
@@ -83,6 +86,10 @@ public final class BoardTuning {
 
     public static int maxPending() {
         return (int) interval("maxPending", MAX_PENDING);
+    }
+
+    public static int maxRepairPending() {
+        return (int) Math.max(0, interval("maxRepairPending", MAX_REPAIR_PENDING));
     }
 
     public static int maxActivePerSpirit() {

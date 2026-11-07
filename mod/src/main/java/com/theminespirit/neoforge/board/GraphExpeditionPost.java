@@ -13,9 +13,12 @@ import com.theminespirit.core.tactics.Point;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
 import com.theminespirit.neoforge.intellect.ExpeditionController;
+import com.theminespirit.neoforge.intellect.SpiritExpeditionMember;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -36,8 +39,15 @@ final class GraphExpeditionPost {
                 Optional.of(post.scan.home()), members.get(0).getUUID());
         ExpeditionController controller =
                 CoordinatorRegistry.get(post.level, key).intellect().expeditions();
-        ExpeditionController.Launcher launcher = (spirit, script, task, now) ->
-                post.launchActivity(spirit, BoardCase.ACTIVITY_EXPEDITION, new ActivityPlans.Plan(script, task));
+        Map<UUID, SpiritEntity> byId = new HashMap<>();
+        for (SpiritEntity spirit : post.spirits) {
+            byId.put(spirit.getUUID(), spirit);
+        }
+        ExpeditionController.Launcher launcher = (id, script, task, now) -> {
+            SpiritEntity spirit = byId.get(id);
+            return spirit != null
+                    && post.launchActivity(spirit, BoardCase.ACTIVITY_EXPEDITION, new ActivityPlans.Plan(script, task));
+        };
         if (controller.active().isEmpty() && !controller.dispatchedRecently(post.now)) {
             BlockCoord bottom =
                     MineDescentBottom.standOf(post.scan.stage().mineEntrance()).orElse(null);
@@ -46,7 +56,8 @@ final class GraphExpeditionPost {
             }
             controller.offer(expedition(post.scan.home(), members, post.now, bottom));
         }
-        controller.update(post.spirits, post.stock, post.now, launcher);
+        controller.update(
+                post.spirits.stream().map(SpiritExpeditionMember::of).toList(), post.stock, post.now, launcher);
         return true;
     }
 
