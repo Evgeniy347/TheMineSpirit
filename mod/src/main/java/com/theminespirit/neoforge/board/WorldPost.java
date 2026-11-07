@@ -12,14 +12,13 @@ import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.town.PitGroups;
 import com.theminespirit.core.town.SettlementScan;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 final class WorldPost {
     static final String REPAIR_NODE = "repair:";
@@ -93,20 +92,27 @@ final class WorldPost {
         if (room == 0) {
             return true;
         }
-        for (BlockCoord at : fresh(
-                found.pits().keySet().stream().sorted(ORDER).toList(),
-                room,
-                cell -> busy(post, "world:backfill:", cell))) {
+        int posted = 0;
+        for (PitGroups.Pit pit : PitGroups.group(found.pits())) {
+            String id = "world:backfill:" + pit.key();
+            if (post.done(id) || post.open(id)) {
+                continue;
+            }
+            if (posted >= room) {
+                break;
+            }
             post.submit(
                     post.ticket(
-                            "world:backfill:" + key(at),
+                            id,
                             BoardCase.FILL_CRATER,
                             Optional.empty(),
                             priority,
                             ticket.id(),
                             post.items(ticket.task())),
-                    TicketTarget.at(at)
-                            .withCraterBlocks(Math.min(found.pits().getOrDefault(at, 0) + 1, CatalogLimits.COUNT_MAX)));
+                    TicketTarget.at(pit.anchor())
+                            .withCraterBlocks(Math.min(pit.blocks(), CatalogLimits.COUNT_MAX))
+                            .withLeveling(LevelRepair.leveling(pit.cells(), List.of())));
+            posted++;
         }
         return true;
     }
@@ -158,11 +164,6 @@ final class WorldPost {
         return posted;
     }
 
-    private static boolean busy(GraphPost post, String prefix, BlockCoord at) {
-        String id = prefix + key(at);
-        return post.done(id) || post.open(id);
-    }
-
     static int room(int open, int batch) {
         return Math.max(0, batch - open);
     }
@@ -181,20 +182,6 @@ final class WorldPost {
             }
         }
         return open;
-    }
-
-    static List<BlockCoord> fresh(List<BlockCoord> sorted, int batch, Predicate<BlockCoord> busy) {
-        List<BlockCoord> fresh = new ArrayList<>();
-        for (BlockCoord at : sorted) {
-            if (fresh.size() >= batch) {
-                break;
-            }
-            if (busy.test(at)) {
-                continue;
-            }
-            fresh.add(at);
-        }
-        return List.copyOf(fresh);
     }
 
     private static String key(BlockCoord at) {
