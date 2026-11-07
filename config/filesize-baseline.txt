@@ -1,4 +1,4 @@
-core/board/Board.java	680
+core/board/Board.java	677
 core/board/TicketPlans.java	901
 core/board/graph/GraphPlanner.java	503
 core/board/graph/RecipeImport.java	555

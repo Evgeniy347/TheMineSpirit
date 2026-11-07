@@ -128,6 +128,29 @@ class ActivityBoardScenarioTests {
         assertTrue(BoardActivities.isActivity(ticket.boardCase()), "Охрана остаётся занятием графа");
     }
 
+    @Test
+    void pendingActivity_UpdatedCrew_KeepsWaitingTicket() {
+        Board board = new Board(() -> 0);
+        String id = "graph:event:expedition_ready:expedition";
+        UUID leader = id("spirit-1");
+        List<UUID> crew = List.of(leader, id("spirit-2"));
+        board.submit(activity(
+                id, BoardCase.ACTIVITY_EXPEDITION, Optional.empty(), List.of(), 100, "mine_vein", "mine", 6000));
+        board.holds().hold(id, "нет команды: нужно 2 духа, рядом 0");
+
+        assertTrue(
+                board.updatePending(activity(
+                        id, BoardCase.ACTIVITY_EXPEDITION, Optional.of(leader), crew, 100, "mine_vein", "mine", 6000)),
+                "Пересчёт графа обновляет ещё не выданное занятие, а не оставляет пустую команду");
+        assertEquals(crew, board.find(id).orElseThrow().executors(), "Доска хранит новую команду похода до выдачи");
+        assertEquals(
+                BoardStatus.PENDING,
+                board.statusOf(id).orElseThrow(),
+                "Обновление ждущего занятия не сбрасывает и не выдаёт его само");
+        board.holds().release(id);
+        assertEquals(BoardOutcome.CLAIMED, board.claim(id, leader, 0), "Обновлённая команда получает поход");
+    }
+
     private static BoardTicket activity(
             String id,
             BoardCase activity,

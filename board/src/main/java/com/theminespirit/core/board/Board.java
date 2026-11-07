@@ -484,7 +484,7 @@ public final class Board {
         List<String> removableIds = new ArrayList<>();
         for (BoardTicket ticket : tickets.values()) {
             if (StageTicket.removable(statuses.get(ticket.id()), ticket.id())
-                    || staleActivity(ticket, statuses.get(ticket.id()), liveCauses)) {
+                    || BoardActivities.stale(ticket, statuses.get(ticket.id()), liveCauses)) {
                 removableIds.add(ticket.id());
             }
         }
@@ -509,6 +509,10 @@ public final class Board {
 
     public Map<UUID, Integer> assignedCounts() {
         return assignments.counts();
+    }
+
+    public boolean updatePending(BoardTicket ticket) {
+        return assignments.updatePending(ticket);
     }
 
     private @Nullable UUID holder(BoardTicket ticket) {
@@ -629,13 +633,6 @@ public final class Board {
                 cancelWithDependants(dependant.id(), cancelled, BoardLog.Event.CANCELLED);
             }
         }
-    }
-
-    private static boolean staleActivity(BoardTicket ticket, @Nullable BoardStatus status, Set<String> liveCauses) {
-        return status == BoardStatus.DONE
-                && BoardActivities.isActivity(ticket.boardCase())
-                && ticket.boardCase() != BoardCase.ACTIVITY_EXTERNAL
-                && !SupplyGate.retains(ticket, liveCauses);
     }
 
     private int evictOverflow(Set<String> liveCauses) {

@@ -40,7 +40,8 @@ final class BoardActivityDesk {
         TicketTarget goal = TicketTarget.at(at).withPlan(request.plan().task());
         BoardOutcome outcome = host.submit(ticket, goal);
         if (outcome == BoardOutcome.DUPLICATE) {
-            targets.putIfAbsent(id, goal);
+            board.updatePending(ticket);
+            targets.put(id, goal);
         }
         if (hold == null || hold.isBlank()) {
             board.holds().release(id);

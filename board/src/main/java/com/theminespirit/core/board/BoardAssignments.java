@@ -58,6 +58,15 @@ final class BoardAssignments {
         return counts;
     }
 
+    boolean updatePending(BoardTicket ticket) {
+        Objects.requireNonNull(ticket, "Билет не может быть null: обновлять нечего");
+        if (statuses.get(ticket.id()) != BoardStatus.PENDING) {
+            return false;
+        }
+        tickets.put(ticket.id(), ticket);
+        return true;
+    }
+
     Optional<BoardCase> occupation(UUID spirit) {
         for (BoardTicket ticket : assignedTo(spirit)) {
             if (BoardActivities.isActivity(ticket.boardCase())) {

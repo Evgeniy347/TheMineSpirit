@@ -44,6 +44,13 @@ public final class BoardActivities {
         return CASES.contains(boardCase);
     }
 
+    public static boolean stale(BoardTicket ticket, @Nullable BoardStatus status, Set<String> liveCauses) {
+        return status == BoardStatus.DONE
+                && isActivity(ticket.boardCase())
+                && ticket.boardCase() != BoardCase.ACTIVITY_EXTERNAL
+                && !SupplyGate.retains(ticket, liveCauses);
+    }
+
     public static Optional<BoardCase> caseOfScript(@Nullable String script) {
         if (script == null || script.isBlank()) {
             return Optional.empty();
