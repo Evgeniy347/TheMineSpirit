@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.graph.GraphCadence;
 import com.theminespirit.core.board.graph.GraphPlan;
@@ -123,7 +124,9 @@ public final class GraphSource {
         for (GraphPlan.Task task : half.plan().tasks()) {
             if (task.implemented() && task.priority() > 0) {
                 GraphTicketIds.ids(task, half.graph())
-                        .forEach(id -> half.service().board().reprioritize(id, task.priority()));
+                        .forEach(id -> half.service()
+                                .board()
+                                .reprioritize(id, Math.min(task.priority(), BoardTuning.MAX_PRIORITY)));
             }
         }
         reporter.report(half.plan(), half.result(), unconnected, freeSpirit(half), half.now());
