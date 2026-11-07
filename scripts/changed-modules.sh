@@ -37,8 +37,12 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-all_modules() {
+raw_modules() {
     sed -nE "s/^[[:space:]]*include[[:space:]]+'(:[^']+)'.*/\1/p" "$MOD_SETTINGS_FILE"
+}
+
+all_modules() {
+    printf '%s\n' "${MODULE_LIST[@]}"
 }
 
 print_module() {
@@ -57,7 +61,7 @@ if [ "$PRINT_ALL" = 1 ]; then
     print_module ":root"
     while IFS= read -r module; do
         [ -n "$module" ] && print_module "$module"
-    done < <(all_modules)
+    done < <(raw_modules)
     exit 0
 fi
 
@@ -138,11 +142,8 @@ map_path() {
     return 0
 }
 
-for path in "${PATHS[@]}"; do
-    map_path "$path"
-done
-
 declare -A DEPS=()
+declare -a MODULE_LIST=()
 # lib: обратный граф — по боевым зависимостям (api/implementation/compileOnly).
 # testImplementation/testFixturesImplementation не тянем: они связывают почти все модули через
 # :test-fixtures и :mod, и --changed превращается в полный прогон. Полный unit в финале/слиянии
@@ -165,11 +166,80 @@ collect_deps() {
         DEPS["$module"]="${DEPS[$module]:-} :api"
     fi
 }
+# lib: граф модулей (список + рёбра) кэшируется: на Windows sed/grep на каждый запуск заметно дороже
+# чтения готового файла. Кэш перестраивается, когда старше settings.gradle, корневого build.gradle,
+# build-logic или build.gradle любого модуля.
+GRAPH_CACHE="build/tmp/changed-modules-graph.cache"
+CACHE_VERSION="1"
 
-collect_deps ":root"
-while IFS= read -r module; do
-    [ -n "$module" ] && collect_deps "$module"
-done < <(all_modules)
+cache_valid() {
+    [ -f "$GRAPH_CACHE" ] || return 1
+    [ "$GRAPH_CACHE" -nt "$MOD_SETTINGS_FILE" ] || return 1
+    [ "$GRAPH_CACHE" -nt build.gradle ] || return 1
+    [ "$GRAPH_CACHE" -nt build-logic/src/main/groovy/theminespirit.module.gradle ] || return 1
+    [ "$GRAPH_CACHE" -nt build-logic/src/main/groovy/theminespirit.java-conventions.gradle ] || return 1
+    local module file
+    for module in "${MODULE_LIST[@]}"; do
+        file="${module#:}"
+        file="${file//:/\/}/build.gradle"
+        [ -f "$file" ] || return 1
+        [ "$GRAPH_CACHE" -nt "$file" ] || return 1
+    done
+    return 0
+}
+
+read_graph_cache() {
+    local line module rest
+    while IFS= read -r line; do
+        case "$line" in
+            "MODULE "*)
+                module="${line#MODULE }"
+                [ -n "$module" ] && MODULE_LIST+=("$module")
+                ;;
+            "DEP "*)
+                read -r module rest <<<"${line#DEP }"
+                DEPS["$module"]=" $rest"
+                ;;
+        esac
+    done <"$GRAPH_CACHE"
+}
+
+build_graph_cache() {
+    MODULE_LIST=()
+    DEPS=()
+    local module tmp
+    while IFS= read -r module; do
+        [ -n "$module" ] && MODULE_LIST+=("$module")
+    done < <(raw_modules)
+    collect_deps ":root"
+    for module in "${MODULE_LIST[@]}"; do
+        collect_deps "$module"
+    done
+    mkdir -p "$(dirname "$GRAPH_CACHE")"
+    tmp="$GRAPH_CACHE.tmp.$$"
+    {
+        printf '# v%s\n' "$CACHE_VERSION"
+        for module in "${MODULE_LIST[@]}"; do
+            printf 'MODULE %s\n' "$module"
+        done
+        for module in ":root" "${MODULE_LIST[@]}"; do
+            [ -n "${DEPS[$module]:-}" ] && printf 'DEP %s%s\n' "$module" "${DEPS[$module]}"
+        done
+    } >"$tmp"
+    mv "$tmp" "$GRAPH_CACHE"
+}
+
+[ -f "$GRAPH_CACHE" ] && read_graph_cache
+if ! cache_valid; then
+    build_graph_cache
+    MODULE_LIST=()
+    DEPS=()
+    read_graph_cache
+fi
+
+for path in "${PATHS[@]}"; do
+    map_path "$path"
+done
 
 # lib: обратный граф транзитивно: если изменился X, перезапускаем тесты всех, кто от X зависит.
 changed=1

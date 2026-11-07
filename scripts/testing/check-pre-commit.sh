@@ -1,17 +1,40 @@
 #!/usr/bin/env bash
+# lib: проверка pre-commit на worktree с заглушкой scripts/test.sh (по умолчанию) — без холодной сборки.
+# CHECK_PRE_COMMIT_REAL=1 гоняет настоящий scripts/test.sh (медленно, для разовой проверки интеграции).
 cd "$(dirname "$0")/../.." || exit 2
 src="$PWD"
 work="$src/TestResults/pre-commit-check"
-clone="$work/clone"
+clone="$work/worktree"
+cleanup() {
+    git -C "$src" worktree remove --force "$clone" >/dev/null 2>&1
+    rm -rf "$work"
+}
+trap cleanup EXIT
 rm -rf "$work"
 mkdir -p "$work"
-git clone -q --no-hardlinks "$src" "$clone" || exit 2
+# lib: worktree вместо полного клона: общий объектный кэш, холодная сборка не нужна.
+git worktree add -q --detach "$clone" HEAD || exit 2
 cp "$src"/scripts/git-hooks/* "$clone/scripts/git-hooks/"
 cd "$clone" || exit 2
-git config core.hooksPath scripts/git-hooks
-git config core.autocrlf input
-git config user.name check
-git config user.email check@example.invalid
+# lib: конфиг через окружение — общий .git worktree не должен менять хуки и автора основной копии.
+export GIT_CONFIG_COUNT=2
+export GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=scripts/git-hooks
+export GIT_CONFIG_KEY_1=core.autocrlf GIT_CONFIG_VALUE_1=input
+export GIT_AUTHOR_NAME=check GIT_AUTHOR_EMAIL=check@example.invalid
+export GIT_COMMITTER_NAME=check GIT_COMMITTER_EMAIL=check@example.invalid
+if [ "${CHECK_PRE_COMMIT_REAL:-0}" != "1" ]; then
+    cat >scripts/test.sh <<'STUB'
+#!/usr/bin/env bash
+# lib: проверка хука не собирает проект: зелёный/красный зонд виден по тексту ProbeTests.
+echo "pre-commit: прогоняю scripts/test.sh unit --changed" >&2
+if grep -q 'fail("' src/test/java/com/theminespirit/ProbeTests.java 2>/dev/null; then
+    echo "STUB unit: красный зонд" >&2
+    exit 1
+fi
+echo "STUB unit: зелёный зонд" >&2
+exit 0
+STUB
+fi
 probe="src/test/java/com/theminespirit/ProbeTests.java"
 mkdir -p "$(dirname "$probe")"
 

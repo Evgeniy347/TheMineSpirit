@@ -188,7 +188,7 @@ gametest/src/main/java/…/gametest/    ← GameTest-классы (:gametest)
 api board tactics content rest ui policy  ← модули логики (карта — docs/research/modules.md)
 mech/*/                               ← механики: farming, forestry, crafting, husbandry, mining, movement, inventory, building, town, small
 guards/src/test/java/                 ← сторожа (:guards, всегда)
-src/test/java/                        ← только отчёты о стоимости тестов корня
+test-fixtures/src/                     ← общие фикстуры и инструменты тестов (:test-fixtures)
 ```
 
 Каждый модуль — настоящий sourceSet (`<модуль>/src/{main,test}/java`), собирается сам, зависит от `:api` и явно

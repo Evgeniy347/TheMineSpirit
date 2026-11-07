@@ -90,4 +90,16 @@ printf '%s\n' "$from_git" | grep -qx ":guards" \
     && ok "git: правка .java добавила :guards" \
     || fail "git: нет :guards"
 
+cache="build/tmp/changed-modules-graph.cache"
+if [ -f "$cache" ]; then
+    before="$(stat -c %Y "$cache" 2>/dev/null || echo x)"
+    bash scripts/changed-modules.sh board/src/main/java/X.java >/dev/null
+    after="$(stat -c %Y "$cache" 2>/dev/null || echo y)"
+    [ "$before" = "$after" ] \
+        && ok "cache: повторный запуск читает граф из кэша" \
+        || fail "cache: граф пересобран без изменения build.gradle"
+else
+    fail "cache: файл графа модулей не создан"
+fi
+
 exit $failed

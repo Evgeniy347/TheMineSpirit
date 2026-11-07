@@ -3,11 +3,15 @@ plugins {
 }
 
 dependencies {
-    testFixturesImplementation project(':api')
     testFixturesImplementation project(':board')
     testFixturesImplementation project(':mech:town')
     testFixturesImplementation platform("org.junit:junit-bom:${junit_version}")
     testFixturesImplementation 'org.junit.jupiter:junit-jupiter-api'
     testFixturesImplementation 'org.junit.platform:junit-platform-launcher'
     testFixturesImplementation "net.jqwik:jqwik:${jqwik_version}"
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    workingDir = rootProject.projectDir
 }
