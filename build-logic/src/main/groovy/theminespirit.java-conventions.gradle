@@ -141,6 +141,14 @@ tasks.named('check') {
     dependsOn tasks.named('staticAnalysis')
 }
 
+// владелец 07.11: SpotBugs, PMD и Checkstyle выключены (время сборки); включить: -Ptheminespirit.analyzers=on
+// или analyzers=on в gradle.properties. Spotless (формат) и Error Prone (в компиляторе) работают всегда.
+if (findProperty('theminespirit.analyzers') != 'on') {
+    tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach { enabled = false }
+    tasks.withType(Pmd).configureEach { enabled = false }
+    tasks.withType(Checkstyle).configureEach { enabled = false }
+}
+
 if (project != rootProject) {
     tasks.withType(Test).configureEach {
         reports.html.outputLocation = rootProject.file("TestResults/${project.name}/html")
