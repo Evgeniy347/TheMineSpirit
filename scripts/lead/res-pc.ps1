@@ -38,3 +38,12 @@ foreach ($p in $all) {
     & taskkill.exe /F /T /PID $p.ProcessId 2>&1 | Out-Null
     "ПК: убит сирота $($p.Name) pid=$($p.ProcessId), жил $([math]::Round($age)) мин: $cmd"
 }
+
+$orphansSh = Join-Path $PSScriptRoot 'orphans-win.sh'
+if (Test-Path $orphansSh) {
+    $bash = Get-Command bash -ErrorAction SilentlyContinue
+    if ($bash) {
+        & $bash.Source $orphansSh 2>$null
+        if ($LASTEXITCODE -ne 0) { "ПК: orphans-win.sh завершился с кодом $LASTEXITCODE" }
+    }
+}

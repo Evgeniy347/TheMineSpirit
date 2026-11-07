@@ -240,6 +240,27 @@ kill_from() {
     for pid in $(cat "$@" 2>/dev/null); do kill -KILL "$pid" 2>/dev/null; done
 }
 
+tree_of() {
+    ps -ef 2>/dev/null | awk -v root="$1" '
+        $2 ~ /^[0-9]+$/ && $3 ~ /^[0-9]+$/ { kids[$3] = kids[$3] " " $2 }
+        END {
+            q[1] = root; head = 1; tail = 1
+            while (head <= tail) {
+                p = q[head++]
+                n = split(kids[p], list, " ")
+                for (k = 1; k <= n; k++) { q[++tail] = list[k]; print list[k] }
+            }
+        }'
+}
+
+test_sh_alive() {
+    local pid
+    for pid in "$@"; do
+        kill -0 "$pid" 2>/dev/null || continue
+        ps -ef 2>/dev/null | awk -v p="$pid" '$2 == p && /scripts\/test\.sh/ { found = 1 } END { exit !found }' && printf '%s ' "$pid"
+    done
+}
+
 run_limited() {
     local limit="$1" pid i=0 start
     shift
@@ -346,6 +367,125 @@ left=$(alive_from "$FAKE_KIDS")$(alive_from "$FAKE_SELF")$(alive_from "$FAKE_WOR
 kill_from "$FAKE_KIDS" "$FAKE_SELF" "$FAKE_WORKER"
 unset THEMINESPIRIT_TEST_HEARTBEAT FAKE_KIDS FAKE_HB FAKE_SELF FAKE_WORKER
 
+mkdir -p "$work/bin/sleep-log"
+cat >"$work/bin/sleep-log/sleep" <<FAKE
+#!/usr/bin/env bash
+printf '%s\n' "\$PPID" >>"$work/sleep-spawns"
+exec /usr/bin/sleep "\$@"
+FAKE
+chmod +x "$work/bin/sleep-log/sleep"
+
+cat >"$work/bin/unit-hold" <<'FAKE'
+#!/usr/bin/env bash
+echo $$ >"${FAKE_SELF:?}"
+sleep "${HOLD_SECONDS:-4}"
+mkdir -p TestResults/unit/xml
+cat >TestResults/unit/xml/TEST-com.example.Hold.xml <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.Hold" tests="1" failures="0" errors="0" skipped="0">
+  <testcase name="test1" classname="com.example.Hold"/>
+</testsuite>
+XML
+echo "BUILD SUCCESSFUL"
+exit 0
+FAKE
+chmod +x "$work/bin/unit-hold"
+
+: >"$work/sleep-spawns"; : >"$work/gradle-hold.pid"
+out=$(PATH="$work/bin/sleep-log:$PATH" HOLD_SECONDS=4 FAKE_SELF="$work/gradle-hold.pid" \
+    THEMINESPIRIT_GRADLEW="$work/bin/unit-hold" bash scripts/test.sh unit 2>&1)
+code=$?
+hold_pid=$(tr -dc '0-9' <"$work/gradle-hold.pid")
+foreign=0
+if [ -n "$hold_pid" ]; then
+    foreign=$(awk -v g="$hold_pid" '$1 + 0 != g + 0' "$work/sleep-spawns" | wc -l | tr -d ' ')
+fi
+[ "$code" = 0 ] && [ -n "$hold_pid" ] && [ "$foreign" = 0 ] \
+    && ok "wait-cpu: ожидание надзора не порождает процессов sleep (внешних: 0), прогон зелёный" \
+    || fail "wait-cpu: код=$code, gradle pid=$hold_pid, внешних sleep=$foreign, вывод: $out"
+
+: >"$FAKE_KIDS"; : >"$FAKE_HB"; : >"$FAKE_SELF"; : >"$FAKE_WORKER"
+FAKE_HANG=1 FAKE_KIDS="$work/kids.pids" FAKE_HB="$work/hb.pid" FAKE_SELF="$work/gradle.pid" \
+    FAKE_WORKER="$work/worker.pid" THEMINESPIRIT_GRADLEW="$work/bin/record-kids" \
+    bash scripts/test.sh unit >"$work/killmain.out" 2>&1 &
+main_pid=$!
+i=0
+while [ "$i" -lt 300 ] && [ ! -s "$work/worker.pid" ]; do sleep 0.1; i=$((i + 1)); done
+kids=$(tree_of "$main_pid")
+kill -KILL "$main_pid" 2>/dev/null
+sleep 0.2
+left=""
+i=0
+while [ "$i" -lt 30 ]; do
+    left=$(test_sh_alive $kids)
+    [ -z "$left" ] && break
+    sleep 0.1; i=$((i + 1))
+done
+[ -z "$left" ] \
+    && ok "kill-main: после SIGKILL main надзор и пульс умирают за ≤3 с" \
+    || fail "kill-main: живы потомки test.sh: [$left]"
+kill_from "$work/gradle.pid" "$work/worker.pid" "$work/kids.pids"
+wait "$main_pid" 2>/dev/null
+
+cat >"$work/bin/hold-launch" <<'FAKE'
+#!/usr/bin/env bash
+"$@" >"$HOLD_OUT" 2>&1 &
+echo $! >"$HOLD_KID"
+sleep 2
+FAKE
+chmod +x "$work/bin/hold-launch"
+: >"$FAKE_SELF"; : >"$FAKE_WORKER"; : >"$work/parent.out"; : >"$work/testsh.pid"
+HOLD_OUT="$work/parent.out" HOLD_KID="$work/testsh.pid" \
+    FAKE_HANG=1 FAKE_KIDS="$work/kids2.pids" FAKE_HB="$work/hb2.pid" \
+    FAKE_SELF="$work/gradle2.pid" FAKE_WORKER="$work/worker2.pid" \
+    THEMINESPIRIT_GRADLEW="$work/bin/record-kids" \
+    bash "$work/bin/hold-launch" bash scripts/test.sh unit >/dev/null 2>&1
+i=0
+while [ "$i" -lt 80 ] && { [ ! -s "$work/testsh.pid" ] || [ ! -s "$work/worker2.pid" ]; }; do
+    sleep 0.1; i=$((i + 1))
+done
+testsh=$(tr -dc '0-9' <"$work/testsh.pid")
+i=0
+while [ "$i" -lt 80 ] && [ -n "$testsh" ] && kill -0 "$testsh" 2>/dev/null; do
+    sleep 0.1; i=$((i + 1))
+done
+orphan_gradle=$(tr -dc '0-9' <"$work/gradle2.pid")
+gradle_alive=0
+[ -n "$orphan_gradle" ] && kill -0 "$orphan_gradle" 2>/dev/null && gradle_alive=1
+if [ -n "$testsh" ] && ! kill -0 "$testsh" 2>/dev/null && [ "$gradle_alive" = 0 ]; then
+    ok "parent-death: осиротевший test.sh погасил себя и gradle (≤8 с)"
+else
+    fail "parent-death: test.sh=$testsh жив=$(kill -0 "$testsh" 2>/dev/null && echo да || echo нет), gradle=$orphan_gradle жив=$gradle_alive"
+fi
+kill_from "$work/gradle2.pid" "$work/worker2.pid" "$work/kids2.pids"
+[ -n "$testsh" ] && kill -KILL "$testsh" 2>/dev/null
+
+cat >"$work/orphans.txt" <<'FIX'
+100	1	0	90	opencode.exe	opencode run --dir F:/repos/minecraft/wt-foo
+101	100	15	80	bash.exe	scripts/opencode-task.sh -f ../oc-results/task-x.msg
+200	101	30	70	bash.exe	scripts/test.sh unit --module guards
+300	999	7700	15	bash.exe	scripts/test.sh unit --module guards --tests *FileSizeGuardTests*
+400	300	120	5	java.exe	java -Dfml.modFolders=x F:/repos/minecraft/wt-activitytickets
+500	101	0	40	sh.exe	./gradlew :board:test
+600	500	40	3	bash.exe	scripts/test.sh gametest
+700	999	30	25	java.exe	java -Dlivedebug.copy=wt-live F:/repos/minecraft/wt-live
+FIX
+out=$(ORPHANS_WIN_LIST="$work/orphans.txt" bash scripts/lead/orphans-win.sh 2>&1)
+code=$?
+[ "$code" = 0 ] && echo "$out" | grep -q "сироты test.sh/gradlew/java: 2" \
+    && echo "$out" | grep -qE '^300[[:space:]]+7700[[:space:]]+15' \
+    && echo "$out" | grep -q "wt-activitytickets" \
+    && ! echo "$out" | grep -qE '^200[[:space:]]' \
+    && ! echo "$out" | grep -qE '^500[[:space:]]' \
+    && ok "orphans-detector: сироты с CPU и worktree перечислены, живой прогон под opencode не тронут" \
+    || fail "orphans-detector: код=$code, вывод: $out"
+if grep -v '^[[:space:]]*#' scripts/lead/orphans-win.sh | grep -Eq 'taskkill|Stop-Process|kill_pid|kill -'; then
+    fail "orphans-detector: детектор не должен убивать (нашёл kill/taskkill/Stop-Process)"
+else
+    ok "orphans-detector: только показывает, kill/taskkill в скрипте нет"
+fi
+
+
 export THEMINESPIRIT_GRADLEW="$work/bin/slow"
 export THEMINESPIRIT_GAMETEST_WARN_SECONDS=1
 export THEMINESPIRIT_GAMETEST_STOP_SECONDS=2
@@ -389,7 +529,7 @@ code=$?
     || fail "gametest-filter: код=$code, args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
 
 out=$(ARGS_FILE="$argsfile" bash scripts/test.sh unit --tests 'com.theminespirit.testing.TestCostReporterTests' 2>&1)
-grep -qx ":test" "$argsfile" && grep -qx -- "--rerun" "$argsfile" \
+grep -qx ":test-fixtures:test" "$argsfile" && grep -qx -- "--rerun" "$argsfile" \
     && ok "unit-rerun: gradle test идёт с --rerun" \
     || fail "unit-rerun: args=$(tr '\n' ' ' <"$argsfile" 2>/dev/null)"
 
@@ -492,6 +632,7 @@ kill $holder 2>/dev/null
     && ok "gametest-busy: код=75, ждёт замок" \
     || fail "gametest-busy: код=$code, вывод: $out"
 rm -rf "$work/tmp/lock.d"
+unset THEMINESPIRIT_GAMETEST_WAIT
 
 cat >"$work/bin/parallel" <<'FAKE'
 #!/usr/bin/env bash
