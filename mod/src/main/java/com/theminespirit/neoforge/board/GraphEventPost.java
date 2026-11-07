@@ -54,6 +54,9 @@ final class GraphEventPost {
             CraftOrders.refresh(post.level);
             return true;
         }
+        if (ChestDemolition.EVENT.equals(ticket.node())) {
+            return ChestDemolition.tick(post, ticket);
+        }
         if (DEMOLITION.contains(ticket.node())) {
             Optional<TownPlan> town = SettlementPlotStore.get(post.level).town();
             town.ifPresent(plan -> PlanDemolition.tick(
