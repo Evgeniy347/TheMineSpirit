@@ -91,7 +91,7 @@ public final class ExpeditionController {
 
     private boolean dispatchMine(List<SpiritEntity> members, Expedition expedition, long now) {
         List<SpiritEntity> team = team(members, expedition);
-        List<String> missing = missingKit(team);
+        List<String> missing = missingKit(team, stock);
         if (!missing.isEmpty()) {
             String reason = "перед спуском в шахту нужен набор: " + String.join(", ", missing);
             if (!reason.equals(refusal)) {
@@ -139,7 +139,7 @@ public final class ExpeditionController {
         return launched;
     }
 
-    private List<String> missingKit(List<SpiritEntity> team) {
+    public static List<String> missingKit(List<SpiritEntity> team, StockView stock) {
         StackMapper mapper = new StackMapper();
         List<Stack> inventory = new ArrayList<>();
         for (SpiritEntity spirit : team) {

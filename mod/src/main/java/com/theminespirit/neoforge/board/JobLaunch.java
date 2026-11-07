@@ -35,13 +35,11 @@ final class JobLaunch {
                 : TicketPlanPick.plan(ticket.boardCase(), ticket.level(), target);
     }
 
-    static void start(ActivityCards cards, SpiritEntity spirit, String ticketId, TaskNode plan) {
-        Objects.requireNonNull(cards, "Карточки занятий не могут быть null: иначе карточка занятия останется");
+    static void start(SpiritEntity spirit, String ticketId, TaskNode plan) {
         Objects.requireNonNull(spirit, "Дух не может быть null: задание стартует у конкретного духа");
         Objects.requireNonNull(plan, "План не может быть null: духу нечего исполнять");
         String prior = spirit.currentActivity().orElse(null);
         boolean background = spirit.runsBackgroundTask();
-        cards.forget(spirit.getUUID());
         spirit.startTask(plan);
         if (background) {
             String script =
@@ -54,9 +52,8 @@ final class JobLaunch {
         }
     }
 
-    static void dropUnclaimed(ActivityCards cards, SpiritEntity spirit, String ticketId, BoardOutcome outcome) {
+    static void dropUnclaimed(SpiritEntity spirit, String ticketId, BoardOutcome outcome) {
         spirit.cancelTask();
-        cards.forget(spirit.getUUID());
         WorkReserveHub.releaseAll(spirit);
         LOGGER.error(
                 "Задание {} не выдано духу {}: {}; задача отменена у духа", ticketId, spirit.displayName(), outcome);

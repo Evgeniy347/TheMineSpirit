@@ -3,7 +3,9 @@ package com.theminespirit.core.rest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.ActivityTickets;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardRules;
@@ -11,6 +13,7 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTiming;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.plan.ScriptCall;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -143,7 +146,7 @@ class BoardTasksTests {
     }
 
     @Test
-    void of_ActivityWithoutJournal_StartsWhenSpiritTookIt() {
+    void of_ActivityWithoutIssue_HidesStartUntilJournal() {
         Board board = new Board(() -> 9000);
         BoardTicket activity = new BoardTicket(
                 "activity:" + SPIRIT,
@@ -159,9 +162,12 @@ class BoardTasksTests {
         BoardTask task =
                 BoardTasks.of(board, activity, BoardStatus.ASSIGNED, new StockView(Map.of()), BoardTiming.NONE);
 
-        assertEquals(5000L, task.startedAt(), "Занятие духа начинается, когда дух его взял, даже без журнала");
+        assertEquals(
+                0L,
+                task.startedAt(),
+                "Занятие — обычное задание доски: без записи выдачи время начала не выдумывается из постановки");
         assertEquals(0L, task.finishedAt(), "Текущее занятие духа не имеет конца");
-        assertEquals(4000L, task.durationTicks(), "Длительность занятия считается от его начала");
+        assertEquals(0L, task.durationTicks(), "Длительность занятия считается от журнальной выдачи");
     }
 
     @Test
@@ -183,5 +189,28 @@ class BoardTasksTests {
 
         assertEquals(7000L, task.startedAt(), "Начало занятия берётся из журнала выдачи");
         assertEquals(2000L, task.durationTicks(), "Длительность занятия считается от журнального начала");
+    }
+
+    @Test
+    void of_ExpeditionWaitingForCrew_ShowsTeamAndReason() {
+        Board board = new Board(() -> 0);
+        UUID leader = UUID.fromString("00000000-0000-0000-0000-0000000000b1");
+        List<UUID> crew = List.of(leader, SPIRIT);
+        String id = "graph:event:expedition_ready:expedition";
+        BoardTicket expedition = ActivityTickets.ticket(new ActivityTickets.Request(
+                new ActivityTickets.Identity(id, BoardCase.ACTIVITY_EXPEDITION, id),
+                new ActivityTickets.Crew(Optional.of(leader), crew),
+                100,
+                0,
+                new ActivityTickets.Plan("mine_vein", "mine", 6000, new ScriptCall("mine_vein", Map.of()))));
+        board.submit(expedition);
+        board.holds().hold(expedition.id(), "нет команды: нужно 2 духа, рядом 1");
+
+        BoardTask task = BoardTasks.of(board, expedition, BoardStatus.PENDING, new StockView(Map.of()));
+
+        assertEquals(crew.stream().map(UUID::toString).toList(), task.executors(), "REST отдаёт всю команду похода");
+        assertTrue(
+                task.waitReason() != null && task.waitReason().contains("нет команды"),
+                "REST показывает причину ожидания похода, а не пустой статус");
     }
 }

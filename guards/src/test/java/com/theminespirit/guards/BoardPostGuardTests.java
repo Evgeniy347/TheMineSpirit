@@ -24,7 +24,8 @@ class BoardPostGuardTests {
             "new BoardTicket(",
             "StageRepair.submit(",
             "DemolitionTickets.submit(",
-            "service.launch(");
+            "service.launch(",
+            "host.submit(");
 
     private static final String GRAPH_POST = "GraphPost.java";
 
@@ -48,7 +49,9 @@ class BoardPostGuardTests {
             "SupplyTickets.java",
             "снабжение по requiredItems уже стоящих билетов: работа выводится из потребности графа, не из порога",
             "SpiritBoardGateway.java",
-            "REST POST /v1/board/tasks — внешний вход стратега; задача приходит от игрока, а не от сторожа");
+            "REST POST /v1/board/tasks — внешний вход стратега; задача приходит от игрока, а не от сторожа",
+            "BoardActivityDesk.java",
+            "занятие графа: id узла, команда и план приходят из GraphPost, доска хранит его как задание");
 
     @Test
     void board_PostsOnlyThroughGraphPost_ExceptDocumentedExecutors() {

@@ -10,6 +10,5 @@ public enum BoardOutcome {
     SPIRIT_PAUSED,
     BLOCKED,
     NOT_FOUND,
-    STAGE_LOCKED,
-    NOT_A_TICKET
+    STAGE_LOCKED
 }

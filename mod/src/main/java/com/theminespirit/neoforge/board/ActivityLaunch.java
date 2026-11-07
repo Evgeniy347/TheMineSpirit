@@ -16,7 +16,7 @@ final class ActivityLaunch {
 
     static boolean launchOrQueue(
             GraphPost post, String key, int priority, BoardCase activity, String script, TaskNode task) {
-        return post.requestActivity(key, priority, activity, script, task);
+        return GraphActivityPost.request(post, key, priority, activity, script, task);
     }
 
     static boolean launchOn(GraphPost post, SpiritEntity spirit, BoardCase activity, String script, TaskNode task) {
@@ -27,12 +27,13 @@ final class ActivityLaunch {
     }
 
     static boolean launchNow(GraphPost post, SpiritEntity spirit, BoardCase activity, String script, TaskNode task) {
-        return !spirit.isRemoved() && start(post, spirit, activity, script, task);
+        return !spirit.isRemoved()
+                && GraphActivityPost.launchNow(post, spirit, activity, new ActivityPlans.Plan(script, task));
     }
 
     private static boolean start(
             GraphPost post, SpiritEntity spirit, BoardCase activity, String script, TaskNode task) {
-        return post.launchActivity(spirit, activity, new ActivityPlans.Plan(script, task));
+        return GraphActivityPost.launch(post, spirit, activity, new ActivityPlans.Plan(script, task));
     }
 
     private static @Nullable SpiritEntity idle(GraphPost post) {

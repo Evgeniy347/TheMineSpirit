@@ -18,7 +18,8 @@ public record BoardTicket(
         String cause,
         List<String> dependsOn,
         Map<String, Integer> requiredItems,
-        List<String> modifiers) {
+        List<String> modifiers,
+        List<UUID> executors) {
 
     public static final String ALWAYS_CAUSE = "always";
 
@@ -32,7 +33,43 @@ public record BoardTicket(
             String cause,
             List<String> dependsOn,
             Map<String, Integer> requiredItems) {
-        this(id, boardCase, assignee, priority, createdAt, level, cause, dependsOn, requiredItems, List.of());
+        this(
+                id,
+                boardCase,
+                assignee,
+                priority,
+                createdAt,
+                level,
+                cause,
+                dependsOn,
+                requiredItems,
+                List.of(),
+                List.of());
+    }
+
+    public BoardTicket(
+            String id,
+            BoardCase boardCase,
+            Optional<UUID> assignee,
+            int priority,
+            long createdAt,
+            int level,
+            String cause,
+            List<String> dependsOn,
+            Map<String, Integer> requiredItems,
+            List<String> modifiers) {
+        this(
+                id,
+                boardCase,
+                assignee,
+                priority,
+                createdAt,
+                level,
+                cause,
+                dependsOn,
+                requiredItems,
+                modifiers,
+                List.of());
     }
 
     public BoardTicket {
@@ -79,6 +116,20 @@ public record BoardTicket(
                         + "наблюдатель показывает ключи, а не пустоту");
             }
         }
+        executors = List.copyOf(Objects.requireNonNull(
+                executors, "executors не может быть null: занятие без команды задают пустым списком"));
+        if (executors.stream().anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException(
+                    "В команде задания '" + id + "' есть null-дух: " + "каждый исполнитель — конкретный участник");
+        }
+        if (!executors.isEmpty() && assignee.isEmpty()) {
+            throw new IllegalArgumentException("У задания '" + id + "' есть команда, но нет лидера: "
+                    + "assignee называет ведущего, executors — остальных участников");
+        }
+        if (executors.size() != executors.stream().distinct().count()) {
+            throw new IllegalArgumentException(
+                    "В команде задания '" + id + "' повторён дух: " + "каждый участник идёт один раз");
+        }
     }
 
     public BoardTicket withPriority(int next) {
@@ -87,7 +138,7 @@ public record BoardTicket(
                     + "]: доска сравнивает задания с ремонтом");
         }
         return new BoardTicket(
-                id, boardCase, assignee, next, createdAt, level, cause, dependsOn, requiredItems, modifiers);
+                id, boardCase, assignee, next, createdAt, level, cause, dependsOn, requiredItems, modifiers, executors);
     }
 
     public BoardTicket withModifier(String modifier) {
@@ -95,7 +146,17 @@ public record BoardTicket(
         List<String> details = new ArrayList<>(modifiers);
         details.add(modifier);
         return new BoardTicket(
-                id, boardCase, assignee, priority, createdAt, level, cause, dependsOn, requiredItems, details);
+                id,
+                boardCase,
+                assignee,
+                priority,
+                createdAt,
+                level,
+                cause,
+                dependsOn,
+                requiredItems,
+                details,
+                executors);
     }
 
     public BoardTicket withFailure(@Nullable String reason) {
@@ -105,14 +166,34 @@ public record BoardTicket(
         List<String> details = new ArrayList<>(modifiers);
         details.add("reason=" + reason);
         return new BoardTicket(
-                id, boardCase, assignee, priority, createdAt, level, cause, dependsOn, requiredItems, details);
+                id,
+                boardCase,
+                assignee,
+                priority,
+                createdAt,
+                level,
+                cause,
+                dependsOn,
+                requiredItems,
+                details,
+                executors);
     }
 
     public boolean sameDetails(BoardTicket other) {
         return level == other.level
                 && cause.equals(other.cause)
                 && dependsOn.equals(other.dependsOn)
-                && requiredItems.equals(other.requiredItems);
+                && requiredItems.equals(other.requiredItems)
+                && executors.equals(other.executors);
+    }
+
+    public boolean teamwork() {
+        return !executors.isEmpty();
+    }
+
+    public boolean inCrew(UUID spirit) {
+        Objects.requireNonNull(spirit, "Дух команды не может быть null: участник — конкретный дух");
+        return assignee.filter(spirit::equals).isPresent() || executors.contains(spirit);
     }
 
     public boolean replacesDone(BoardTicket before, boolean stage) {

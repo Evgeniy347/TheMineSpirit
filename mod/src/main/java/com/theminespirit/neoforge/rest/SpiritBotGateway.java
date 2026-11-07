@@ -258,7 +258,7 @@ public final class SpiritBotGateway implements BotGateway {
         boolean running = spirit.taskStatus()
                 .filter(status -> status == RunStatus.RUNNING)
                 .isPresent();
-        boolean holdsTask = boardTask != null && !boardTask.id().startsWith(BoardActivities.ID_PREFIX);
+        boolean holdsTask = boardTask != null;
         return running || holdsTask ? BotState.BUSY : BotState.IDLE;
     }
 }

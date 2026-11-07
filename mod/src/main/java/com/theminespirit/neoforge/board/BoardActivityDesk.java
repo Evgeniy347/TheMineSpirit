@@ -1,98 +1,93 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.ActivityQueue;
+import com.theminespirit.core.board.ActivityTickets;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
-import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardOutcome;
+import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class BoardActivityDesk {
-    private static final long WAIT_TICKS = 1200;
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private final BoardService host;
     private final Board board;
-    private final ActivityQueue activities = new ActivityQueue();
+    private final Map<String, TicketTarget> targets;
 
-    BoardActivityDesk(BoardService host, Board board) {
-        this.host = Objects.requireNonNull(host, "host не может быть null: карточки занятий живут на доске");
-        this.board = Objects.requireNonNull(board, "board не может быть null: занятость духов видна доске");
+    BoardActivityDesk(BoardService host, Board board, Map<String, TicketTarget> targets) {
+        this.host = Objects.requireNonNull(host, "host не может быть null: занятие ставится доской");
+        this.board = Objects.requireNonNull(board, "board не может быть null: занятие живёт на доске");
+        this.targets = Objects.requireNonNull(targets, "targets не может быть null: цель занятия общая с доской");
     }
 
-    boolean request(
-            List<SpiritEntity> spirits,
-            String key,
-            int priority,
-            BoardCase activity,
-            String script,
-            TaskNode task,
-            long now) {
-        SpiritEntity free = idle(spirits);
-        if (free != null && launch(free, activity, script, task, starter(), now)) {
-            activities.remove(key);
-            return true;
-        }
-        if (activities.offer(key, activity, script, task, priority, now, WAIT_TICKS)) {
-            LOGGER.info("[board] занятие {} ждёт свободного духа (вес {})", key, priority);
-        }
-        return true;
-    }
-
-    void startWaiting(List<SpiritEntity> spirits, long now) {
-        for (ActivityQueue.Request request : activities.due(now)) {
-            SpiritEntity spirit = idle(spirits);
-            if (spirit == null) {
-                return;
-            }
-            if (!launch(spirit, request.activity(), request.script(), request.task(), starter(), now)) {
-                continue;
-            }
-            activities.remove(request.key());
-            LOGGER.info("[board] отложенное занятие {} стартовало у {}", request.key(), spirit.displayName());
-        }
-    }
-
-    boolean launch(
-            SpiritEntity spirit,
-            BoardCase activity,
-            String script,
-            TaskNode task,
-            BoardService.Launcher launcher,
-            long now) {
-        Objects.requireNonNull(spirit, "Дух занятия не может быть null: занятие адресовано конкретному духу");
-        if (!BoardActivities.isActivity(activity)) {
+    boolean post(ActivityTickets.Request request, BlockCoord at, @Nullable String hold) {
+        Objects.requireNonNull(request, "Запрос занятия не может быть null: без него нечего ставить");
+        String id = request.identity().id();
+        if (!BoardActivities.isActivity(request.identity().activity())) {
             throw new IllegalArgumentException(
-                    "Кейс " + activity + " — не занятие: через launch идут только ACTIVITY_*");
+                    "Кейс " + request.identity().activity() + " — не занятие: через эту дверь идут только ACTIVITY_*");
         }
-        if (!launcher.start(spirit, script, task, now)) return false;
-        host.cards.remember(
-                spirit.getUUID(), activity, spirit.taskGeneration(), script, BoardActivities.targetOf(task));
+        BoardTicket ticket = ActivityTickets.ticket(request);
+        TicketTarget goal = TicketTarget.at(at).withPlan(request.plan().task());
+        BoardOutcome outcome = host.submit(ticket, goal);
+        if (outcome == BoardOutcome.DUPLICATE) {
+            board.updatePending(ticket);
+            targets.put(id, goal);
+        }
+        if (hold == null || hold.isBlank()) {
+            board.holds().release(id);
+        } else {
+            board.holds().hold(id, hold);
+        }
+        if (outcome == BoardOutcome.BACKOFF || outcome == BoardOutcome.STAGE_LOCKED) {
+            LOGGER.warn("[board] занятие {} не принято: {}", id, outcome);
+            return false;
+        }
         return true;
     }
 
-    private @Nullable SpiritEntity idle(List<SpiritEntity> spirits) {
-        for (SpiritEntity spirit : spirits) {
-            if (spirit.isRemoved() || !board.assignedTo(spirit.getUUID()).isEmpty()) {
-                continue;
-            }
-            if (!spirit.currentTaskScript().isPresent() || spirit.runsBackgroundTask()) {
-                return spirit;
-            }
+    boolean start(String id, SpiritEntity spirit, TaskNode plan, long now) {
+        Objects.requireNonNull(spirit, "Дух занятия не может быть null: занятие адресовано конкретному духу");
+        BoardTicket ticket = board.find(id).orElse(null);
+        if (ticket == null) {
+            return false;
         }
-        return null;
+        BoardOutcome outcome = board.claim(id, spirit.getUUID(), now);
+        if (outcome != BoardOutcome.CLAIMED && outcome != BoardOutcome.TAKEN_BY_OTHER) {
+            return false;
+        }
+        if (outcome == BoardOutcome.TAKEN_BY_OTHER) {
+            return false;
+        }
+        JobLaunch.start(spirit, id, plan);
+        host.activityIssued(id, spirit.taskGeneration());
+        return true;
     }
 
-    private BoardService.Launcher starter() {
-        return (member, name, task, tick) -> {
-            if (member.isRemoved()) return false;
-            JobLaunch.start(host.cards, member, name, task);
-            return true;
-        };
+    boolean startCrew(String id, SpiritEntity spirit, TaskNode plan) {
+        Objects.requireNonNull(spirit, "Участник команды не может быть null: задание уходит конкретному духу");
+        JobLaunch.start(spirit, id, plan);
+        return true;
+    }
+
+    void hold(String id, @Nullable String reason) {
+        if (reason == null || reason.isBlank()) {
+            board.holds().release(id);
+        } else {
+            board.holds().hold(id, reason);
+        }
+    }
+
+    Optional<BoardTicket> ticket(String id) {
+        return board.find(id);
     }
 }

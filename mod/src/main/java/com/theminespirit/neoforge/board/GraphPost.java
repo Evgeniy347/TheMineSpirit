@@ -8,9 +8,7 @@ import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
-import com.theminespirit.core.board.graph.ActivityPlans;
 import com.theminespirit.core.board.graph.GraphFacts;
-import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphTickets;
@@ -18,13 +16,12 @@ import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.route.RouteResource;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.CraftedItems;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -51,6 +48,7 @@ final class GraphPost {
     final GraphState state;
     final GraphFacts facts;
     final GatherPost demands = new GatherPost(this);
+    GraphTickets.@Nullable Ticket current;
     private final Set<String> waiting = new HashSet<>();
     private @Nullable BlockCoord craft;
 
@@ -79,6 +77,16 @@ final class GraphPost {
     record Site(FirstStepsRunner.StageScan scan, GraphSurroundings.Around around, PetWork pets, GraphState state) {}
 
     boolean post(GraphTickets.Ticket ticket) {
+        Objects.requireNonNull(ticket, "Задание графа не может быть null: без него нечего исполнять");
+        current = ticket;
+        try {
+            return postCurrent(ticket);
+        } finally {
+            current = null;
+        }
+    }
+
+    private boolean postCurrent(GraphTickets.Ticket ticket) {
         GraphPlan.Task task = ticket.task();
         if (MoreAreaPost.handles(ticket.node())) {
             return MoreAreaPost.post(this, ticket);
@@ -219,10 +227,7 @@ final class GraphPost {
     }
 
     Map<String, Integer> items(GraphPlan.Task task) {
-        Map<String, Integer> items = new HashMap<>();
-        task.consumes()
-                .forEach((item, count) -> items.merge(GraphNames.item(graph, item, scan.wood()), count, Integer::sum));
-        return Map.copyOf(items);
+        return GraphTicketFactory.items(this, task);
     }
 
     BoardTicket ticket(String id, BoardCase c, Optional<UUID> a, int p, String cause, Map<String, Integer> req) {
@@ -265,24 +270,6 @@ final class GraphPost {
 
     Set<String> waiting() {
         return waiting;
-    }
-
-    boolean requestActivity(String key, int priority, BoardCase activity, String script, TaskNode task) {
-        return service.requestActivity(spirits, key, priority, activity, script, task, now);
-    }
-
-    boolean launchActivity(SpiritEntity spirit, BoardCase activity, ActivityPlans.Plan plan) {
-        return service.launch(
-                spirit,
-                activity,
-                plan.script(),
-                plan.task(),
-                (member, name, task, tick) -> {
-                    if (member.isRemoved()) return false;
-                    JobLaunch.start(service.cards, member, plan.script(), task);
-                    return true;
-                },
-                now);
     }
 
     private GraphRoutes routes() {

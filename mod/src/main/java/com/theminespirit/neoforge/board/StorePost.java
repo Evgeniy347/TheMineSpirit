@@ -113,7 +113,7 @@ final class StorePost {
     }
 
     private static boolean launch(GraphPost post, SpiritEntity spirit, ActivityPlans.Plan plan) {
-        return post.launchActivity(spirit, BoardCase.ACTIVITY_UNLOAD, plan);
+        return GraphActivityPost.launch(post, spirit, BoardCase.ACTIVITY_UNLOAD, plan);
     }
 
     private static Optional<GraphFacts.Station> furnace(ServerLevel level, GraphFacts facts, boolean withOutput) {

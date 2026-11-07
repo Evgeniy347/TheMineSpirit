@@ -13,7 +13,6 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public final class BoardActivities {
-    public static final String ID_PREFIX = "activity:";
     public static final String TARGET_KEY = "target=";
     public static final Set<BoardCase> CASES = EnumSet.of(
             BoardCase.ACTIVITY_ARM,
@@ -43,6 +42,13 @@ public final class BoardActivities {
 
     public static boolean isActivity(BoardCase boardCase) {
         return CASES.contains(boardCase);
+    }
+
+    public static boolean stale(BoardTicket ticket, @Nullable BoardStatus status, Set<String> liveCauses) {
+        return status == BoardStatus.DONE
+                && isActivity(ticket.boardCase())
+                && ticket.boardCase() != BoardCase.ACTIVITY_EXTERNAL
+                && !SupplyGate.retains(ticket, liveCauses);
     }
 
     public static Optional<BoardCase> caseOfScript(@Nullable String script) {
