@@ -10,7 +10,6 @@ public final class OutsideGate {
 
     private final OutsideRules rules;
     private final int settlementRadius;
-    private final NightLeash leash;
 
     public OutsideGate(OutsideRules rules, int settlementRadius) {
         this.rules = Objects.requireNonNull(
@@ -20,24 +19,11 @@ public final class OutsideGate {
                     "Радиус поселения " + settlementRadius + " меньше 1: с ним ни одна точка не считалась бы своей");
         }
         this.settlementRadius = settlementRadius;
-        this.leash = NightLeash.withDefaultRules();
     }
 
     public static OutsideGate withDefaults() {
         return new OutsideGate(
                 OutsideRules.loadDefault(), NightLeash.withDefaultRules().settlementRadius());
-    }
-
-    public int partyMin() {
-        return rules.partyMin();
-    }
-
-    public int settlementRadius() {
-        return settlementRadius;
-    }
-
-    public boolean isEvening(double dayFraction) {
-        return leash.isEvening(dayFraction);
     }
 
     public Decision admitExternal(int party) {
