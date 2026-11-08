@@ -7,16 +7,19 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
+import com.theminespirit.neoforge.board.BoardStateStore;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -48,6 +51,7 @@ public final class BoardGameTests {
         spirit.getInventory().setItem(1, new ItemStack(Items.STICK, 4));
         helper.setBlock(new BlockPos(2, 1, 2), Blocks.CRAFTING_TABLE);
         BlockCoord home = absolute(helper, new BlockPos(1, 1, 1));
+        TicketTarget target = TicketTarget.at(home).withToolCount(1);
         board.submit(
                 new BoardTicket(
                         PICKAXE_ID,
@@ -59,7 +63,18 @@ public final class BoardGameTests {
                         BoardTicket.ALWAYS_CAUSE,
                         List.of(),
                         Map.of()),
-                TicketTarget.at(home).withToolCount(1));
+                target);
+        assertTargetSurvivesReload(helper, PICKAXE_ID, target);
+        assertTargetSurvivesReload(
+                helper,
+                "world:backfill:test",
+                TicketTarget.at(home)
+                        .withCraterBlocks(3)
+                        .withLeveling(new PlotLeveling(
+                                List.of(),
+                                List.of(new PlotLeveling.Box(
+                                        home.x(), home.y(), home.z(), home.x(), home.y(), home.z())),
+                                PlotLeveling.DEFAULT_BLOCK)));
 
         helper.succeedWhen(() -> {
             helper.assertTrue(
@@ -147,6 +162,20 @@ public final class BoardGameTests {
                 GameTestFixtures.finish(helper);
             }
         });
+    }
+
+    private static void assertTargetSurvivesReload(GameTestHelper helper, String id, TicketTarget target) {
+        BoardStateStore store = new BoardStateStore();
+        store.updateTargets(Map.of(id, target));
+
+        CompoundTag saved = store.save(new CompoundTag(), helper.getLevel().registryAccess());
+        BoardStateStore loaded = BoardStateStore.load(saved, helper.getLevel().registryAccess());
+
+        helper.assertTrue(
+                target.equals(loaded.targets().get(id)),
+                "Цель задания " + id + " обязана пережить сохранение доски: иначе после перезапуска яма "
+                        + "ставится второй раз или продолжение теряет клетки; в NBT "
+                        + loaded.targets().get(id));
     }
 
     private static void drainForeignTickets(BoardService board) {
