@@ -44,9 +44,7 @@ final class GraphTargets {
             SupplyGraph graph,
             long now) {
         double halfLife = graph.costs().choice().failureHalfLife();
-        Set<String> unreachable = way.map(SupplyGraph.Way::id)
-                .map(id -> service.sources.graphUnreachable(id, now, halfLife))
-                .orElse(Set.of());
+        Set<String> unreachable = service.sources.graphUnreachablePoints(now, halfLife);
         double radius = graph.costs().choice().failureTargetRadius();
         Optional<BlockCoord> resource = way.map(SupplyGraph.Way::world).flatMap(around::resource);
         if (resource.isPresent()) {

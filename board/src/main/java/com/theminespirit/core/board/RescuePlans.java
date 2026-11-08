@@ -101,9 +101,12 @@ public final class RescuePlans {
         Objects.requireNonNull(stuck, "Метки застревания не могут быть null: спасение снимает одну из них");
         Objects.requireNonNull(ticket, "Задание спасения не может быть null: по нему находят спасённого");
         if (ticket.boardCase() == BoardCase.RESCUE_SPIRIT) {
-            rescuee(ticket.id())
-                    .or(() -> Optional.ofNullable(holder))
-                    .ifPresent(rescuee -> stuck.release(rescuee, now, "выход выполнен заданием " + ticket.id()));
+            Optional<UUID> rescuee = rescuee(ticket.id()).or(() -> Optional.ofNullable(holder));
+            if (holder != null
+                    && rescuee.filter(spirit -> !holder.equals(spirit)).isPresent()) {
+                stuck.release(holder, now, "помощник дошёл до цели: задание " + ticket.id());
+            }
+            return;
         }
         if (holder != null) {
             stuck.release(holder, now, "дошёл до цели: задание " + ticket.id());
