@@ -230,6 +230,11 @@ final class GraphPost {
         return GraphTicketFactory.items(this, task);
     }
 
+    void submit(GraphTickets.Ticket source, BoardCase boardCase, TicketTarget target, Map<String, Integer> required) {
+        Optional<UUID> owner = source.task().spirit().map(UUID::fromString);
+        submit(ticket(source.id(), boardCase, owner, source.task().priority(), source.id(), required), target);
+    }
+
     BoardTicket ticket(String id, BoardCase c, Optional<UUID> a, int p, String cause, Map<String, Integer> req) {
         return ticket(id, c, a, p, cause, req, List.of());
     }
