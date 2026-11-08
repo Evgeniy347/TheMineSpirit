@@ -60,12 +60,26 @@ final class RescueTicket {
     }
 
     private static Escape dig(ServerLevel level, BlockPos feet, BlockCoord home, boolean open) {
-        BlockCoord goal = open ? home : SurfacePoint.of(level, new BlockCoord(feet.getX(), feet.getY(), feet.getZ()));
+        BlockCoord goal = open
+                ? climbOutPoint(level, feet, home)
+                : SurfacePoint.of(level, new BlockCoord(feet.getX(), feet.getY(), feet.getZ()));
         if (goal.equals(home)) {
             return new Escape(true, digOut(home), "пути нет, копает к дому");
         }
         return new Escape(
                 true, new FallbackNode(List.of(digOut(goal), gotoPoint(home))), "под землёй, копает на поверхность");
+    }
+
+    private static BlockCoord climbOutPoint(ServerLevel level, BlockPos feet, BlockCoord home) {
+        if (home.y() >= feet.getY()) {
+            return home;
+        }
+        int dx = Integer.compare(home.x(), feet.getX()) * 4;
+        int dz = Integer.compare(home.z(), feet.getZ()) * 4;
+        if (dx == 0 && dz == 0) {
+            dx = 4;
+        }
+        return SurfacePoint.of(level, new BlockCoord(feet.getX() + dx, feet.getY(), feet.getZ() + dz));
     }
 
     private static String refusal(boolean open, boolean noPath) {

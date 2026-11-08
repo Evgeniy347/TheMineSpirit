@@ -41,6 +41,7 @@ public final class DigOutScript implements ScriptInstance {
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
     private @Nullable DigOutRoute routeFollow;
+    private boolean routeFallback;
 
     static ScriptFactory factory(SpiritEntity spirit) {
         return params -> new DigOutScript(spirit, GotoParams.from(params), GotoParams.rescue(params));
@@ -146,14 +147,17 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     private boolean followRoute() {
+        if (routeFallback) {
+            return false;
+        }
         if (routeFollow == null) {
             routeFollow = new DigOutRoute(
                     spirit, new BlockCoord(target.x(), target.y(), target.z()), descending, HOME_RADIUS);
         }
         DigOutRoute.State state = routeFollow.tick();
-        if (state == DigOutRoute.State.DESCENT_FAILED) {
+        if (state == DigOutRoute.State.DESCENT_FAILED || state == DigOutRoute.State.NO_ROUTE) {
             routeFollow = null;
-            fail("пути вниз к " + target + " нет: ступени и прыжок не находятся");
+            routeFallback = true;
             return false;
         }
         return state == DigOutRoute.State.RUNNING;
