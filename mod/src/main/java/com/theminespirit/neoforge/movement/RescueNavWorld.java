@@ -34,22 +34,22 @@ public final class RescueNavWorld implements NavWorld {
 
     @Override
     public boolean passable(int x, int y, int z) {
-        return !forbidden(x, y, z) && live.passable(x, y, z);
+        return live.passable(x, y, z);
     }
 
     @Override
     public boolean walkable(int x, int y, int z) {
-        return !forbidden(x, y, z) && live.walkable(x, y, z);
+        return live.walkable(x, y, z);
     }
 
     @Override
     public boolean water(int x, int y, int z) {
-        return !forbidden(x, y, z) && live.water(x, y, z);
+        return live.water(x, y, z);
     }
 
     @Override
     public boolean climbable(int x, int y, int z) {
-        return !forbidden(x, y, z) && live.climbable(x, y, z);
+        return live.climbable(x, y, z);
     }
 
     @Override

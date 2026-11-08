@@ -197,7 +197,9 @@ final class GraphSimulationEvents {
                 facts.strays(),
                 facts.terrain(),
                 facts.stageReqs(),
-                facts.feedback());
+                facts.feedback(),
+                List.of(),
+                List.of());
     }
 
     private static GraphFacts withStrays(GraphFacts facts, List<GraphSiteFacts.Stray> strays) {
@@ -211,7 +213,9 @@ final class GraphSimulationEvents {
                 strays,
                 facts.terrain(),
                 facts.stageReqs(),
-                facts.feedback());
+                facts.feedback(),
+                List.of(),
+                List.of());
     }
 
     private static GraphFacts withTerrain(GraphFacts facts, GraphSiteFacts.Terrain terrain) {
@@ -225,7 +229,9 @@ final class GraphSimulationEvents {
                 facts.strays(),
                 terrain,
                 facts.stageReqs(),
-                facts.feedback());
+                facts.feedback(),
+                List.of(),
+                List.of());
     }
 
     private static GraphFacts withSpirits(GraphFacts facts, UnaryOperator<GraphFacts.Spirit> change) {

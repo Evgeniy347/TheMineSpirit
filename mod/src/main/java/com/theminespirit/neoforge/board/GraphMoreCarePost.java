@@ -21,6 +21,22 @@ final class GraphMoreCarePost {
 
     private GraphMoreCarePost() {}
 
+    static boolean defendPlayer(GraphPost post, GraphTickets.Ticket ticket) {
+        Optional<ServerPlayer> player = nearestPlayer(post);
+        if (player.isEmpty()) {
+            return false;
+        }
+        ServerPlayer target = player.orElseThrow();
+        GraphMorePost.submit(
+                post,
+                ticket,
+                BoardCase.ACTIVITY_DEFEND,
+                TicketTarget.at(coord(target.blockPosition()))
+                        .withBuilding(PLAYER + target.getName().getString()),
+                Map.of());
+        return true;
+    }
+
     static boolean feedPlayer(GraphPost post, GraphTickets.Ticket ticket) {
         Optional<String> food = food(post.stock);
         Optional<ServerPlayer> player = nearestPlayer(post);

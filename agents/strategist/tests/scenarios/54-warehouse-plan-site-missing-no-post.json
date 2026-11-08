@@ -1,0 +1,39 @@
+{
+ "description": "склад нужен, но план не дал plan_site: место не выдумывают, POST нет и причина в журнале",
+ "steps": [
+  {
+   "fake": {
+    "warehouse": {
+     "stage": 2,
+     "required_level": 2,
+     "built_level": 0,
+     "needed": true,
+     "order": null,
+     "plan_site": null
+    }
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "warehouse_posts": 0
+  },
+  {
+   "journal_has": {
+    "event": "warehouse_skipped",
+    "code": "plan_site_missing"
+   }
+  }
+ ],
+ "name": "54-warehouse-plan-site-missing-no-post",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest",
+   "state": "busy"
+  }
+ ]
+}

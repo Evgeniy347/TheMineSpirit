@@ -1,0 +1,34 @@
+{
+  "source": "live-user-test-run/observe25-2026-11-08-0314.md",
+  "spirit3": {
+    "feet": [-177, 70, -506],
+    "plan": "HOUSE",
+    "plan_block": [-177, 72, -506],
+    "block": "minecraft:jungle_planks",
+    "rescue": "яма: край выше на 3: ставит столб"
+  },
+  "spirit6": {
+    "feet": [-178, 66, -519],
+    "plan": "YARD",
+    "plan_block": [-177, 67, -519],
+    "block": "minecraft:jungle_planks",
+    "rescue": "пути нет, копает к дому"
+  },
+  "spirit4": {
+    "feet": [-141, 72, -505],
+    "home": [-171, 69, -489],
+    "pickaxe": false,
+    "no_path": true,
+    "inventory": {
+      "minecraft:dirt": 26,
+      "minecraft:gravel": 4,
+      "minecraft:jungle_planks": 8,
+      "minecraft:stone_axe": 1,
+      "minecraft:stone_hoe": 1,
+      "minecraft:wooden_shovel": 1,
+      "minecraft:oak_fence": 80
+    },
+    "cheap_blocks": 38,
+    "rescue": "невозможен: пути домой нет, а кирки, чтобы прокопать, нет, помощника с достижимым путём нет"
+  }
+}

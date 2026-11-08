@@ -10,7 +10,7 @@ public final class GraphDomainEvents {
     public static Set<String> of(GraphFacts facts, int stage) {
         Set<String> events = new LinkedHashSet<>(GraphWorldEvents.of(facts));
         events.addAll(GearInputs.events(facts, stage));
-        events.addAll(LifeEvents.events(facts, Set.of(), List.of()));
+        events.addAll(LifeEvents.events(Set.of(), facts.threats(), List.of(), facts.players(), GraphLife.DEFAULTS));
         return Set.copyOf(events);
     }
 }

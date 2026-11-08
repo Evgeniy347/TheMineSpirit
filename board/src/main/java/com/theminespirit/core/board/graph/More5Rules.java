@@ -57,6 +57,7 @@ public final class More5Rules {
     public static Set<String> events(Signals signals) {
         Set<String> events = new LinkedHashSet<>();
         add(events, signals.darkCrops() > 0, "more5_crops_dark");
+        add(events, signals.darkCrops() > 0, "more5_crops_dark");
         add(events, signals.darkSaplings() > 0, "more5_saplings_dark");
         add(events, signals.dryCrops() > 0, "more5_crops_dry");
         add(events, signals.unfedGrowth() > 0, "more5_growth_unfed");

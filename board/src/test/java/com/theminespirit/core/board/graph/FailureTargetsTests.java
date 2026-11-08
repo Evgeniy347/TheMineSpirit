@@ -88,6 +88,25 @@ class FailureTargetsTests {
     }
 
     @Test
+    void choose_DeadPointOfAnotherTask_IsSkippedForThisTask() {
+        BlockCoord dead = new BlockCoord(-171, 71, -489);
+        BlockCoord other = new BlockCoord(-150, 70, -480);
+        GraphFailureMemory memory = new GraphFailureMemory();
+        memory.note("event:more2_stage_prep:more2_prepare_stage", FailureTargets.key(dead), "маршрут не найден", 100);
+        memory.note(
+                "event:more6_carry_materials:more6_deposit_materials",
+                FailureTargets.key(dead),
+                "маршрут не найден",
+                110);
+
+        assertEquals(
+                other,
+                FailureTargets.choose(List.of(dead, other), memory.unreachablePoints(110, 1000), 6),
+                "Память неудач штрафует точку, а не задачу: недостижимая цель одной работы не выбирается "
+                        + "другой работой (observe25 B5)");
+    }
+
+    @Test
     void near_MalformedKey_IsIgnored() {
         BlockCoord candidate = new BlockCoord(10, 64, 10);
 

@@ -1,0 +1,44 @@
+{
+ "description": "решение о складе было ниже требуемого уровня: стратег поднимает его до required_level одним POST",
+ "steps": [
+  {
+   "fake": {
+    "warehouse": {
+     "stage": 3,
+     "required_level": 3,
+     "built_level": 1,
+     "needed": true,
+     "order": {
+      "level": 2,
+      "site": "4,64,5",
+      "by": "strategist",
+      "reason": "старое решение"
+     },
+     "plan_site": "4,64,5"
+    }
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "warehouse_posts": 1
+  },
+  {
+   "warehouse_body": {
+    "level": 3,
+    "site": "4,64,5"
+   }
+  }
+ ],
+ "name": "56-warehouse-order-below-required-bumped",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest",
+   "state": "busy"
+  }
+ ]
+}

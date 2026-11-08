@@ -1,63 +1,62 @@
 package com.theminespirit.core.board.graph;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Objects;
 
 public record GraphLife(
-        int damageWindowTicks,
-        double threatRadius,
         double fullPressureMobs,
         double pressureBase,
         double pressureWound,
         double hurtShare,
         double injuryWound,
         double injuryHurt,
-        double weakPlayerSeverity,
-        float weakHealth,
+        double threatRadius,
+        long damageWindowTicks,
+        double weakHealth,
         int weakFood) {
-    public static final GraphLife NONE = new GraphLife(1, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0F, 0);
-
-    static GraphLife parse(JsonNode root) {
-        if (root == null || !root.isObject()) {
-            return NONE;
-        }
-        return new GraphLife(
-                root.path("damageWindowTicks").asInt(200),
-                root.path("threatRadius").asDouble(16.0),
-                root.path("fullPressureMobs").asDouble(1.5),
-                root.path("pressureBase").asDouble(0.4),
-                root.path("pressureWound").asDouble(0.7),
-                root.path("hurtShare").asDouble(0.2),
-                root.path("injuryWound").asDouble(0.8),
-                root.path("injuryHurt").asDouble(0.4),
-                root.path("weakPlayerSeverity").asDouble(0.9),
-                (float) root.path("weakHealth").asDouble(0.35),
-                root.path("weakFood").asInt(6));
-    }
+    public static final GraphLife DEFAULTS = new GraphLife(1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 16.0, 200, 0.35, 6);
 
     public GraphLife {
-        if (damageWindowTicks < 1) {
-            throw new IllegalArgumentException(
-                    "Окно урона " + damageWindowTicks + " тиков: оно положительно, иначе деление на ноль");
-        }
-        if (!(threatRadius > 0) || !(fullPressureMobs > 0)) {
-            throw new IllegalArgumentException("Радиус угрозы " + threatRadius + " и полное давление "
-                    + fullPressureMobs + " обязаны быть положительными: близость нормируется ими");
-        }
         for (var value : new double[] {
-            pressureBase, pressureWound, hurtShare, injuryWound, injuryHurt, weakPlayerSeverity, weakHealth
+            fullPressureMobs, pressureBase, pressureWound, hurtShare, injuryWound, injuryHurt, threatRadius, weakHealth
         }) {
             if (!Double.isFinite(value) || value < 0) {
-                throw new IllegalArgumentException(
-                        "Коэффициент жизни " + value + " отрицателен или не число: опасность не бывает минусом");
+                throw new IllegalArgumentException("Коэффициент формулы жизни " + value
+                        + ": он неотрицателен и конечен, иначе приоритет жизни не посчитать");
             }
         }
-        if (weakHealth > 1) {
-            throw new IllegalArgumentException(
-                    "Порог слабого здоровья " + weakHealth + " больше 1: доля здоровья живёт в [0, 1]");
+        if (fullPressureMobs <= 0 || threatRadius <= 0 || damageWindowTicks <= 0) {
+            throw new IllegalArgumentException("Опорные значения жизни: мобов " + fullPressureMobs + ", радиус "
+                    + threatRadius + ", окно урона " + damageWindowTicks + " — все положительны");
+        }
+        if (weakHealth < 0 || weakHealth > 1) {
+            throw new IllegalArgumentException("Порог слабого игрока " + weakHealth + " вне [0, 1]: это доля здоровья");
         }
         if (weakFood < 0) {
             throw new IllegalArgumentException(
-                    "Порог слабой еды " + weakFood + " отрицателен: голод начинается с нуля");
+                    "Порог еды игрока " + weakFood + " отрицателен: голод начинается с нуля");
         }
+    }
+
+    static GraphLife parse(JsonNode root) {
+        if (root == null || root.isMissingNode() || !root.isObject()) {
+            return DEFAULTS;
+        }
+        return new GraphLife(
+                root.path("fullPressureMobs").asDouble(DEFAULTS.fullPressureMobs()),
+                root.path("pressureBase").asDouble(DEFAULTS.pressureBase()),
+                root.path("pressureWound").asDouble(DEFAULTS.pressureWound()),
+                root.path("hurtShare").asDouble(DEFAULTS.hurtShare()),
+                root.path("injuryWound").asDouble(DEFAULTS.injuryWound()),
+                root.path("injuryHurt").asDouble(DEFAULTS.injuryHurt()),
+                root.path("threatRadius").asDouble(DEFAULTS.threatRadius()),
+                root.path("damageWindowTicks").asLong(DEFAULTS.damageWindowTicks()),
+                root.path("weakHealth").asDouble(DEFAULTS.weakHealth()),
+                root.path("weakFood").asInt(DEFAULTS.weakFood()));
+    }
+
+    public static GraphLife of(SupplyGraph graph) {
+        Objects.requireNonNull(graph, "Граф не может быть null: формула жизни берётся из его данных");
+        return graph.costs().life();
     }
 }

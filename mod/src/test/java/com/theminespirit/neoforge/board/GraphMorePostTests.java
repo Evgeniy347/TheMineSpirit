@@ -54,11 +54,17 @@ class GraphMorePostTests {
             }
         }
 
+        Set<String> actual = new TreeSet<>(MoreActions.cases().keySet());
+        actual.removeIf(id -> !fragment(id));
         assertEquals(
                 expected,
-                new TreeSet<>(MoreActions.cases().keySet()),
+                actual,
                 "Каждый реализованный путь/событие more5/6/7 обязан иметь действие, и наоборот: иначе граф "
                         + "выбирает работу, которую некому исполнить");
+        assertTrue(
+                MoreActions.cases().containsKey("life_protect_player")
+                        && MoreActions.cases().containsKey("life_feed_player"),
+                "Слабость игрока ведёт жизнь: задачи жизни имеют свои действия");
     }
 
     @Test

@@ -138,6 +138,8 @@ class GearFragmentTests {
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
                 reqs,
-                GraphFeedback.none());
+                GraphFeedback.none(),
+                List.of(),
+                List.of());
     }
 }

@@ -1,0 +1,44 @@
+{
+ "description": "план больше не подсказывает plan_site, но склад уже решён: повышение идёт на прежнем месте из order",
+ "steps": [
+  {
+   "fake": {
+    "warehouse": {
+     "stage": 3,
+     "required_level": 3,
+     "built_level": 2,
+     "needed": true,
+     "order": {
+      "level": 2,
+      "site": "7,65,9",
+      "by": "strategist",
+      "reason": "склад второго уровня"
+     },
+     "plan_site": null
+    }
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "warehouse_posts": 1
+  },
+  {
+   "warehouse_body": {
+    "level": 3,
+    "site": "7,65,9"
+   }
+  }
+ ],
+ "name": "58-warehouse-upgrade-keeps-order-site",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest",
+   "state": "busy"
+  }
+ ]
+}

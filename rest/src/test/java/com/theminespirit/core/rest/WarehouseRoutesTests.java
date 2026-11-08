@@ -34,6 +34,22 @@ class WarehouseRoutesTests {
         assertEquals(2, parsed.get("required_level").asInt(), "Этап 2 требует склад второго уровня");
         assertTrue(parsed.get("order").isNull(), "Решения пока нет — order=null: " + response.body());
         assertTrue(parsed.get("materials").has("oak_planks"), "GET называет материалы склада: " + response.body());
+        assertTrue(
+                parsed.has("plan_site"),
+                "GET подсказывает место storage из плана поселения: без него стратег гадает координаты");
+        assertEquals("4,64,5", parsed.get("plan_site").asText(), "plan_site — место storage из плана");
+    }
+
+    @Test
+    void get_NoPlan_WritesNullPlanSite() throws Exception {
+        gateway.with(new WarehouseView(2, 2, 0, true, null, null, Map.of("oak_planks", 40)));
+
+        JsonNode parsed =
+                MAPPER.readTree(send("GET", "/v1/settlement/warehouse", "").body());
+
+        assertTrue(
+                parsed.has("plan_site") && parsed.get("plan_site").isNull(),
+                "Без плана поселения plan_site=null: стратег не должен получать выдуманные координаты");
     }
 
     @Test

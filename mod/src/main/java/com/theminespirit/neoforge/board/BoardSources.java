@@ -26,7 +26,7 @@ public final class BoardSources {
     private final TransferDriftWatch transferDrift = new TransferDriftWatch();
     private final DemandWatch demand = new DemandWatch();
     private final GraphSource graph = new GraphSource();
-    private final RescueReach.Cache rescueReach = new RescueReach.Cache();
+    private final RescueReach.Cache rescueReach = RescueReach.cache();
     private final SourceFailureLog failures = new SourceFailureLog(BoardTuning.logSummaryTicks());
     private final GraphFailureMemory graphFailures = new GraphFailureMemory();
     private final GraphNotes notes = new GraphNotes();
@@ -80,8 +80,8 @@ public final class BoardSources {
         graphFailures.succeed(node, graphTarget(target), now);
     }
 
-    public Set<String> graphUnreachable(String node, long now, double halfLifeTicks) {
-        return graphFailures.unreachableTargets(node, now, halfLifeTicks);
+    public Set<String> graphUnreachablePoints(long now, double halfLifeTicks) {
+        return graphFailures.unreachablePoints(now, halfLifeTicks);
     }
 
     private static String graphTarget(@Nullable TicketTarget target) {

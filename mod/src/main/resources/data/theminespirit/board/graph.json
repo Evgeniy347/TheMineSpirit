@@ -25,6 +25,18 @@
     "failureSoft": 0.5,
     "failureTargetRadius": 6.0
   },
+  "life": {
+    "fullPressureMobs": 1.5,
+    "pressureBase": 0.4,
+    "pressureWound": 0.7,
+    "hurtShare": 0.2,
+    "injuryWound": 0.8,
+    "injuryHurt": 0.4,
+    "threatRadius": 16.0,
+    "damageWindowTicks": 200,
+    "weakHealth": 0.35,
+    "weakFood": 6
+  },
   "tiers": [
     "wooden",
     "stone",
@@ -10436,19 +10448,6 @@
     "ocelot": {
       "perSpirit": 0.5
     }
-  },
-  "life": {
-    "damageWindowTicks": 200,
-    "threatRadius": 16.0,
-    "fullPressureMobs": 1.5,
-    "pressureBase": 0.4,
-    "pressureWound": 0.7,
-    "hurtShare": 0.2,
-    "injuryWound": 0.8,
-    "injuryHurt": 0.4,
-    "weakPlayerSeverity": 0.9,
-    "weakHealth": 0.35,
-    "weakFood": 6
   },
   "costs": {
     "defaultTicks": 100,

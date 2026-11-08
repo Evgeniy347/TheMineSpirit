@@ -7,19 +7,18 @@ import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 
 public final class LifeThreats {
+    public static final long DAMAGE_WINDOW_TICKS = GraphLife.DEFAULTS.damageWindowTicks();
+
     private LifeThreats() {}
 
-    public static int damageWindowTicks() {
-        return tuning().damageWindowTicks();
-    }
-
     public static int priority(GraphFacts facts, GraphEvent event, GraphEvent.Task task, int max) {
-        return priority(facts, event, task, max, tuning());
+        return priority(facts, event, task, max, GraphLife.DEFAULTS);
     }
 
     public static int priority(GraphFacts facts, GraphEvent event, GraphEvent.Task task, int max, GraphLife life) {
         Objects.requireNonNull(event, "Событие жизни не может быть null: приоритет считается по его заданиям");
         Objects.requireNonNull(task, "Задание события не может быть null: у него есть вес");
+        Objects.requireNonNull(life, "Формула жизни не может быть null: коэффициенты приходят из graph.json");
         if (max <= 0) {
             return 0;
         }
@@ -34,12 +33,12 @@ public final class LifeThreats {
     }
 
     public static double severity(GraphFacts facts, String event) {
-        return severity(facts, event, tuning());
+        return severity(facts, event, GraphLife.DEFAULTS);
     }
 
     public static double severity(GraphFacts facts, String event, GraphLife life) {
         Objects.requireNonNull(facts, "Факты жизни не могут быть null: без них нет ни угроз, ни здоровья");
-        Objects.requireNonNull(life, "Коэффициенты жизни не могут быть null: они лежат в graph.json");
+        Objects.requireNonNull(life, "Формула жизни не может быть null: коэффициенты приходят из graph.json");
         return switch (event) {
             case "life_threat" ->
                 Math.max(spiritThreat(facts, life), Math.max(playerThreat(facts, life), injury(facts, life)));
@@ -51,41 +50,21 @@ public final class LifeThreats {
     }
 
     public static double risk(GraphFacts facts, String spiritId) {
-        return risk(facts, spiritId, tuning());
+        return risk(facts, spiritId, GraphLife.DEFAULTS);
     }
 
     public static double risk(GraphFacts facts, String spiritId, GraphLife life) {
         Objects.requireNonNull(spiritId, "id духа не может быть null: риск считается для конкретного духа");
-        Objects.requireNonNull(life, "Коэффициенты жизни не могут быть null: они лежат в graph.json");
         GraphFacts.Spirit spirit = facts.spirits().get(spiritId);
         double deficit = deficit(spirit);
         double hurt = hurt(spirit, life);
         double pressure = pressure(
                 facts,
-                life,
                 threat -> threat.targetKind() == GraphFacts.TargetKind.SPIRIT
-                        && (threat.target() == null || spiritId.equals(threat.target())));
+                        && (threat.target() == null || spiritId.equals(threat.target())),
+                life);
         return clamp(pressure * (life.pressureBase() + life.pressureWound() * deficit)
                 + life.hurtShare() * Math.min(1, hurt));
-    }
-
-    public static boolean weakPlayer(GraphFacts facts) {
-        return weakPlayer(facts, tuning());
-    }
-
-    public static boolean weakPlayer(GraphFacts facts, GraphLife life) {
-        Objects.requireNonNull(facts, "Факты жизни не могут быть null: слабость игрока — факт о мире");
-        Objects.requireNonNull(life, "Коэффициенты жизни не могут быть null: пороги лежат в graph.json");
-        GraphFeedback.Player player = facts.feedback().player();
-        if (!player.near() || player.maxHealth() <= 0) {
-            return false;
-        }
-        double ratio = player.health() / player.maxHealth();
-        return ratio < life.weakHealth() || player.food() <= life.weakFood();
-    }
-
-    private static GraphLife tuning() {
-        return SupplyGraph.current().costs().life();
     }
 
     private static double spiritThreat(GraphFacts facts, GraphLife life) {
@@ -111,8 +90,22 @@ public final class LifeThreats {
     }
 
     private static double playerThreat(GraphFacts facts, GraphLife life) {
-        double pressure = pressure(facts, life, threat -> threat.targetKind() == GraphFacts.TargetKind.PLAYER);
-        return weakPlayer(facts, life) ? Math.max(pressure, clamp(life.weakPlayerSeverity())) : pressure;
+        double pressure = pressure(facts, threat -> threat.targetKind() == GraphFacts.TargetKind.PLAYER, life);
+        double weak = 0;
+        for (GraphFacts.Player player : facts.players()) {
+            if (player.maxHealth() <= 0) {
+                continue;
+            }
+            double share = player.health() / player.maxHealth();
+            if (share >= life.weakHealth() && player.food() > life.weakFood()) {
+                continue;
+            }
+            double hungry = player.food() <= life.weakFood()
+                    ? clamp((life.weakFood() - player.food() + 1) / (double) (life.weakFood() + 1))
+                    : 0;
+            weak = Math.max(weak, Math.max(clamp(1 - share), hungry));
+        }
+        return Math.max(pressure, weak);
     }
 
     private static double injury(GraphFacts facts, GraphLife life) {
@@ -125,7 +118,7 @@ public final class LifeThreats {
         return worst;
     }
 
-    private static double pressure(GraphFacts facts, GraphLife life, Predicate<GraphFacts.Threat> match) {
+    private static double pressure(GraphFacts facts, Predicate<GraphFacts.Threat> match, GraphLife life) {
         double sum = 0;
         for (GraphFacts.Threat threat : facts.threats()) {
             if (!match.test(threat)) {

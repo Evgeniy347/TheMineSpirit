@@ -57,18 +57,16 @@ final class BuildingAudit {
                 0);
     }
 
-    static BuildingAuditInputs.Audit streets(ServerLevel level, FirstStepsRunner.StageScan scan) {
+    static BuildingAuditInputs.Audit streets(ServerLevel level, StageSite site, String fallback) {
         bucket(level);
-        String key = level.dimension().location() + "|streets|" + scan.stage().anchor() + "|" + scan.wood();
+        String key = level.dimension().location() + "|streets|" + site.anchor() + "|" + fallback;
         BuildingAuditInputs.Audit cached = GAPS.get(key);
         if (cached != null) {
             return cached;
         }
-        String wood = BuildingWoodChoice.stored(level, BoardCase.BUILD_STREETS, scan.stage(), scan.wood());
+        String wood = BuildingWoodChoice.stored(level, BoardCase.BUILD_STREETS, site, fallback);
         TaskNode plan = TicketPlans.plan(
-                BoardCase.BUILD_STREETS,
-                1,
-                FirstStepsRunner.targetFor(level, BoardCase.BUILD_STREETS, scan.stage(), wood));
+                BoardCase.BUILD_STREETS, 1, FirstStepsRunner.targetFor(level, BoardCase.BUILD_STREETS, site, wood));
         BuildGap.Gap gap = BuildGap.trace(plan, wood, streetProbe(level), FirstStepsRunner.SCHEMES);
         BuildingAuditInputs.Audit audit =
                 new BuildingAuditInputs.Audit(gap.total(), gap.done(), blocks(gap), Map.of(), 0, gap.unknown());
@@ -76,8 +74,7 @@ final class BuildingAudit {
         return audit;
     }
 
-    static BuildingAuditInputs.Audit clearing(ServerLevel level, FirstStepsRunner.StageScan scan, long now) {
-        StageSite site = scan.stage();
+    static BuildingAuditInputs.Audit clearing(ServerLevel level, StageSite site, long now) {
         for (ColumnMask.Cell column : site.level().cells()) {
             if (!level.isLoaded(new BlockPos(column.x(), site.anchor().y(), column.z()))) {
                 return new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 1);

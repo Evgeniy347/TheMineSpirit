@@ -75,7 +75,8 @@ final class PitRescue {
                 steps.add(gotoPoint(target));
             }
             case STAIRS -> {
-                steps.add(new ScriptCall(DIG_OUT, Map.of("x", target.x(), "y", target.y(), "z", target.z())));
+                steps.add(new ScriptCall(
+                        DIG_OUT, Map.of("x", target.x(), "y", target.y(), "z", target.z(), "rescue", true)));
                 steps.add(gotoPoint(target));
             }
             case IMPOSSIBLE ->
@@ -101,7 +102,7 @@ final class PitRescue {
                 && cell.y() <= feet.getY() + 1;
     }
 
-    private static PitExitPlanner.Supplies supplies(SpiritEntity spirit) {
+    static PitExitPlanner.Supplies supplies(SpiritEntity spirit) {
         Map<String, Integer> counts = CheapBlocks.counts(spirit);
         int blocks = 0;
         for (String id : ToolBreakCost.CHEAP_ORDER) {

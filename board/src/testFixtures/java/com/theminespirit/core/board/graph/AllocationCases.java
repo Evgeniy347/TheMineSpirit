@@ -142,7 +142,9 @@ final class AllocationCases {
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
-                GraphFeedback.none());
+                GraphFeedback.none(),
+                List.of(),
+                List.of());
     }
 
     static GraphFacts noChestFacts(List<GraphFacts.Spirit> spirits) {
@@ -156,6 +158,8 @@ final class AllocationCases {
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
-                GraphFeedback.none());
+                GraphFeedback.none(),
+                List.of(),
+                List.of());
     }
 }

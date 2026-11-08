@@ -140,4 +140,19 @@ class More5FragmentTests {
             }
         }
     }
+
+    @Test
+    void more5PlayerEvent_Removed_LifeKeepsPlayerTasks() {
+        assertFalse(
+                GRAPH.events().containsKey("more5_player_weak"),
+                "Легаси-событие защиты игрока удалено: слабого игрока ведёт жизнь с фактом здоровья (debtlife)");
+        GraphEvent player = GRAPH.events().get("life_threat_player");
+        assertTrue(player.life(), "Жизнь игрока остаётся узлом жизни с потолком 100");
+        assertTrue(
+                player.tasks().stream().anyMatch(task -> "life_protect_player".equals(task.id())),
+                "Защита игрока осталась заданием жизни: " + player.tasks());
+        assertTrue(
+                player.tasks().stream().anyMatch(task -> "life_feed_player".equals(task.id())),
+                "Кормление игрока переехало в жизнь, а не потерялось: " + player.tasks());
+    }
 }

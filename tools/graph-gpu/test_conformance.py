@@ -136,6 +136,39 @@ def test_life_priority():
     print("OK: приоритет жизни считается из фактов и не выходит за 100 в Python")
 
 
+def test_life_player_fact():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    assert graph.costs.life["pressureBase"] == 0.4 and graph.costs.life["injuryWound"] == 0.8,         "Коэффициенты формулы жизни читаются из graph.json, а не зашиты в Python: " + str(graph.costs.life)
+    state = State({
+        "stage": 1,
+        "kits": {"spirit-1": {}},
+        "events": ["life_threat_player"],
+        "facts": {
+            "spirits": {},
+            "threats": [],
+            "players": [{"name": "Steve", "position": {"x": 0, "y": 64, "z": 0},
+                         "health": 4, "maxHealth": 20, "food": 20}],
+        },
+    })
+    tasks = {task["id"]: task for task in plan(graph, state)["tasks"]}
+    defend = tasks.get("event:life_threat_player:life_protect_player")
+    assert defend is not None and 0 < defend["priority"] <= 100,         "Раненый игрок даёт задание жизни protect_player в пределах потолка: " + str(defend)
+    healthy = State({
+        "stage": 1,
+        "kits": {"spirit-1": {}},
+        "events": [],
+        "facts": {
+            "spirits": {},
+            "threats": [],
+            "players": [{"name": "Steve", "position": {"x": 0, "y": 64, "z": 0},
+                         "health": 20, "maxHealth": 20, "food": 20}],
+        },
+    })
+    assert not any(task["id"].startswith("event:life_threat_player:")
+                   for task in plan(graph, healthy)["tasks"]),         "Здоровый игрок без угроз не поднимает жизнь в Python"
+    print("OK: факт здоровья игрока и коэффициенты жизни читаются из данных графа")
+
+
 def dig_inputs(graph, facts):
     state = State({
         "stock": {},
@@ -554,6 +587,8 @@ def test_more5_inputs():
         assert tasks[task_id]["implemented"], "Связанное действие области выдаётся готовым: " + task_id
     water = "event:more5_crops_dry:more5_water_crops"
     assert water in tasks and tasks[water]["implemented"],         "Полив связан с действием и выдаётся готовым: " + water
+    assert "more5_player_weak" not in graph.events, \
+        "Python: легаси-событие защиты игрока удалено, его ведёт life_threat_player"
     print("OK: входы области graphmore5 учитываются в выборе")
 
 
@@ -785,11 +820,11 @@ def test_dead_inputs():
     for way in ("restock_food", "till_soil", "milk_animal"):
         assert way in farm, "Мир фермы обязан вызвать путь '" + way + "': " + str(farm)
     more5 = [step[1] for step in sim_gpu.run(worlds["more5"], limit=1600)["trail"]]
-    for way in ("more5_pickup_wood_drop", "more5_light_mine"):
+    for way in ("more5_light_crops", "more5_pickup_wood_drop", "more5_light_mine"):
         assert any(way in task for task in more5),             "Мир more5 обязан вызвать путь '" + way + "': " + str(more5)
     area = [step[1] for step in sim_gpu.run(worlds["world"], limit=1600)["trail"]]
     repairs = {name for name in worlds["world"].state().events if name.startswith("repair_")}
-    assert repairs and any(task.startswith("event:repair_") for task in area),         "Мир участка обязан вызвать ремонт повреждённой постройки: " + str(sorted(repairs))
+    assert repairs and any(task.startswith("event:repair_") for task in area),             "Мир участка обязан вызвать ремонт повреждённой постройки: " + str(sorted(repairs))
     for name, expected in (("gear", {"gear_kit_mining", "gear_kit_woodcutting",
                                      "gear_kit_farming", "gear_kit_building"}),
                            ("farm", {"crop_dry", "pen_full"}),
@@ -1138,40 +1173,6 @@ def test_best_weights():
     print("OK: в best-weights.json нет исторических auto_*-ключей")
 
 
-def test_life_coefficients():
-    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
-    assert graph.life["weakHealth"] == 0.35 and graph.life["weakFood"] == 6, \
-        "Python обязан читать пороги слабого игрока из graph.json → life: " + str(graph.life)
-    assert graph.life["pressureBase"] == 0.4 and graph.life["hurtShare"] == 0.2, \
-        "Python обязан читать коэффициенты формулы жизни из данных графа: " + str(graph.life)
-    facts = {
-        "spirits": {},
-        "threats": [{
-            "id": "threat-player", "type": "minecraft:zombie", "health": 20, "maxHealth": 20,
-            "position": {"x": 0, "y": 64, "z": 0}, "target": "player", "targetKind": "PLAYER",
-            "distance": 6,
-        }],
-        "feedback": {"player": {"near": True, "health": 4, "maxHealth": 20, "food": 4}},
-    }
-    weak = State({"stage": 1, "kits": {}, "events": [], "facts": facts})
-    weak.apply_life(graph.life)
-    assert "life_threat_player" in weak.events, \
-        "Слабый игрок рядом с угрозой обязан поднять жизнь: " + str(weak.events)
-    calm_facts = copy.deepcopy(facts)
-    calm_facts["feedback"]["player"].update({"health": 20, "food": 18})
-    calm = State({"stage": 1, "kits": {}, "events": [], "facts": calm_facts})
-    calm.apply_life(graph.life)
-    from graph_model import life_severity
-    weak_severity = life_severity(weak, "life_threat_player", graph.life)
-    calm_severity = life_severity(calm, "life_threat_player", graph.life)
-    assert weak_severity > calm_severity, \
-        "Слабый игрок опаснее здорового при той же угрозе: " + str((weak_severity, calm_severity))
-    strong = dict(graph.life, weakPlayerSeverity=1.0)
-    assert life_severity(weak, "life_threat_player", strong) > weak_severity, \
-        "Опасность слабого игрока берётся из коэффициента graph.json → life, а не из кода"
-    print("OK: коэффициенты жизни читаются из graph.json, слабый игрок считается по фактам")
-
-
 def test_conformance():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
@@ -1189,7 +1190,7 @@ if __name__ == "__main__":
     try:
         test_fragments()
         test_life_priority()
-        test_life_coefficients()
+        test_life_player_fact()
         test_dig_inputs()
         test_area_nodes()
         test_store_nodes()

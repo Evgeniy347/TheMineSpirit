@@ -94,16 +94,21 @@ class AbsentOwnersTests {
     }
 
     @Test
-    void sweep_NoPathMarkOfLiveSpirit_Kept() {
+    void sweep_NoPathMarkOfLiveSpirit_KeptUntilTtl() {
         Board board = new Board(() -> 0);
         board.stuck().see(ALIVE, new BlockCoord(1, 2, 3), 0);
         board.stuck().mark(ALIVE, 0, "пути нет: дух замурован");
         AbsentOwners owners = new AbsentOwners();
+        long alive = BoardTuning.STUCK_TTL_TICKS / 2;
 
-        owners.sweep(board, Set.of(ALIVE), AbsentOwners.GRACE_TICKS);
+        owners.sweep(board, Set.of(ALIVE), alive);
 
         assertTrue(
-                board.stuck().of(ALIVE, AbsentOwners.GRACE_TICKS + 1).isPresent(),
-                "Метка живого духа не снимается уборкой отсутствующих: его спасает граф");
+                board.stuck().of(ALIVE, alive + 1).isPresent(),
+                "Метка живого духа не снимается уборкой отсутствующих, пока не истёк её срок: его спасает граф");
+        assertTrue(
+                board.stuck().of(ALIVE, BoardTuning.STUCK_TTL_TICKS).isEmpty(),
+                "После срока метка живого духа истекает сама: иначе idle-дух навсегда выпадает из раздачи "
+                        + "(observe25 B1)");
     }
 }

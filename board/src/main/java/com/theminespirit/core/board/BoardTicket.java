@@ -23,10 +23,6 @@ public record BoardTicket(
 
     public static final String ALWAYS_CAUSE = "always";
 
-    public boolean fromGraph() {
-        return cause.startsWith("graph:");
-    }
-
     public BoardTicket(
             String id,
             BoardCase boardCase,
@@ -134,6 +130,10 @@ public record BoardTicket(
             throw new IllegalArgumentException(
                     "В команде задания '" + id + "' повторён дух: " + "каждый участник идёт один раз");
         }
+    }
+
+    public boolean fromGraph() {
+        return cause.startsWith("graph:");
     }
 
     public BoardTicket withPriority(int next) {

@@ -16,8 +16,8 @@ public record GraphCosts(
         Map<String, Integer> stationCapacity,
         GraphChoice choice,
         GraphLife life) {
-    public static final GraphCosts NONE =
-            new GraphCosts(1, Map.of(), Map.of(), Map.of(), 0, 1, Map.of(), Map.of(), GraphChoice.NEUTRAL);
+    public static final GraphCosts NONE = new GraphCosts(
+            1, Map.of(), Map.of(), Map.of(), 0, 1, Map.of(), Map.of(), GraphChoice.NEUTRAL, GraphLife.DEFAULTS);
 
     public GraphCosts(
             int defaultTicks,
@@ -39,7 +39,7 @@ public record GraphCosts(
                 toolDurability,
                 stationCapacity,
                 choice,
-                GraphLife.NONE);
+                GraphLife.DEFAULTS);
     }
 
     public GraphCosts {
@@ -53,7 +53,8 @@ public record GraphCosts(
                     "Поправки выбора не могут быть null: нейтральные задаёт GraphChoice.NEUTRAL");
         }
         if (life == null) {
-            throw new IllegalArgumentException("Коэффициенты жизни не могут быть null: их читают из graph.json → life");
+            throw new IllegalArgumentException(
+                    "Формула жизни не может быть null: значения по умолчанию — GraphLife.DEFAULTS");
         }
         if (defaultTicks < 1 || travelScaleTicks < 1) {
             throw new IllegalArgumentException("Длительность по умолчанию " + defaultTicks + " и шкала дороги "

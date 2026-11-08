@@ -238,7 +238,9 @@ class StoreGraphTests {
                     List.of(),
                     GraphSiteFacts.Terrain.empty(),
                     stageReqs,
-                    GraphFeedback.none());
+                    GraphFeedback.none(),
+                    List.of(),
+                    List.of());
         }
     }
 }

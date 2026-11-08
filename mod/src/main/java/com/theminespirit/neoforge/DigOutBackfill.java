@@ -18,14 +18,17 @@ final class DigOutBackfill {
     private final Level level;
     private final BlockPlacer placer;
     private final boolean enabled;
+    private final @Nullable DigOutRestore restore;
     private int closed;
     private @Nullable BlockPos previous;
 
-    DigOutBackfill(SpiritEntity spirit, Level level, BlockPlacer placer, boolean enabled) {
+    DigOutBackfill(
+            SpiritEntity spirit, Level level, BlockPlacer placer, boolean enabled, @Nullable DigOutRestore restore) {
         this.spirit = spirit;
         this.level = level;
         this.placer = placer;
         this.enabled = enabled;
+        this.restore = restore;
     }
 
     void remember(BlockPos cell) {
@@ -59,6 +62,9 @@ final class DigOutBackfill {
 
     private void closeCell(BlockPos cell) {
         if (!level.getBlockState(cell).isAir()) {
+            return;
+        }
+        if (restore != null && restore.pending(cell)) {
             return;
         }
         Map<String, Integer> counts = CheapBlocks.counts(spirit);

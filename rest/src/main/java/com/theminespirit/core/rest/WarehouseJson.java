@@ -1,6 +1,7 @@
 package com.theminespirit.core.rest;
 
 import com.theminespirit.core.board.WarehouseOrder;
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
@@ -15,6 +16,7 @@ public final class WarehouseJson {
         body.put("built_level", view.builtLevel());
         body.put("needed", view.needed());
         body.put("order", orderMap(view.order()));
+        body.put("plan_site", view.planSite() == null ? null : coord(view.planSite()));
         body.put("materials", view.materials());
         return RestJson.write(body);
     }
@@ -28,15 +30,17 @@ public final class WarehouseJson {
         return RestJson.write(body);
     }
 
+    private static String coord(BlockCoord at) {
+        return at.x() + "," + at.y() + "," + at.z();
+    }
+
     private static @Nullable Map<String, Object> orderMap(@Nullable WarehouseOrder order) {
         if (order == null) {
             return null;
         }
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("level", order.level());
-        map.put(
-                "site",
-                order.site().x() + "," + order.site().y() + "," + order.site().z());
+        map.put("site", coord(order.site()));
         map.put("by", order.by());
         map.put("reason", order.reason());
         map.put("tick", order.tick());

@@ -95,16 +95,6 @@ class GearStockTests {
     }
 
     private static GraphFacts facts(Map<String, GraphFacts.Spirit> spirits, List<GraphFacts.Chest> chests) {
-        return new GraphFacts(
-                new LinkedHashMap<>(spirits),
-                List.of(),
-                chests,
-                List.of(),
-                Map.of(),
-                Map.of(),
-                List.of(),
-                GraphSiteFacts.Terrain.empty(),
-                new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
-                GraphFeedback.none());
+        return GraphFacts.empty().withSpirits(new LinkedHashMap<>(spirits)).withChests(chests);
     }
 }

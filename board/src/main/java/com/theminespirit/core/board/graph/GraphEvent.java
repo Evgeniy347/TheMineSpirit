@@ -92,11 +92,6 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
     }
 
     static int priority(
-            GraphFacts facts, Map<String, GraphEvent> events, String key, double value, int workMax, int lifeMax) {
-        return priority(facts, events, key, value, workMax, lifeMax, GraphLife.NONE);
-    }
-
-    static int priority(
             GraphFacts facts,
             Map<String, GraphEvent> events,
             String key,

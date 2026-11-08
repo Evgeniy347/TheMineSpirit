@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardLedger;
+import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.WarehouseChests;
 import com.theminespirit.core.board.WarehouseOrder;
 import com.theminespirit.core.board.WarehouseRules;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownPlan;
 import java.util.LinkedHashSet;
@@ -29,14 +29,18 @@ final class WarehouseLocations {
         if (order != null) {
             return Optional.of(order.site());
         }
+        return planSite(level);
+    }
+
+    static Optional<BlockCoord> planSite(ServerLevel level) {
         SettlementPlotStore store = SettlementPlotStore.get(level);
-        Optional<Placement> storage = store.town().flatMap(town -> town.placement(STORAGE));
+        Optional<TownPlan> town = store.town();
         Optional<StageSite> site = store.site();
-        if (storage.isEmpty() || site.isEmpty()) {
+        if (town.isEmpty() || site.isEmpty()) {
             return Optional.empty();
         }
-        Placement place = storage.orElseThrow();
-        return Optional.of(new BlockCoord(place.x(), site.orElseThrow().anchor().y(), place.z()));
+        return StageCatalog.origin(
+                STORAGE, town.orElseThrow(), site.orElseThrow().anchor().y());
     }
 
     static Set<BlockCoord> cells(ServerLevel level, BoardLedger ledger) {
