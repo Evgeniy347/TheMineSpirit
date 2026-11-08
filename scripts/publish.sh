@@ -607,6 +607,7 @@ else
     is_running() { tmux has-session -t "$TMUX_SESSION" 2>/dev/null; }
 fi
 
+# lib: tmux наследует fd 9 — без закрытия замок сборки держится вечно
 exec 9>&-
 
 was_running=false

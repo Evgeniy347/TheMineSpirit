@@ -61,6 +61,48 @@ class CrossMatrixGuardTests {
     }
 
     @Test
+    void matrix_NoPairWithoutReason_IsReported() {
+        String text = CrossMatrixDocument.baseDocument()
+                .replace("| M01 | — | Н |", "| M01 | — | н/п |")
+                .replace("| M02 | Н | — |", "| M02 | н/п | — |");
+
+        assertTrue(
+                CrossMatrixNoPair.issues(text, "").stream()
+                        .anyMatch(issue -> issue.contains("клетка н/п") && issue.contains("без обоснования")),
+                "Сторож ослеп: клетка н/п без строки обоснования обязана попасть в нарушения");
+    }
+
+    @Test
+    void matrix_NoPairReasonForTestedPair_IsReported() {
+        String text = CrossMatrixDocument.baseDocument();
+
+        assertTrue(
+                CrossMatrixNoPair.issues(text, "| 1-2 | причина достаточной длины |\n").stream()
+                        .anyMatch(issue -> issue.contains("обоснование относится к другой паре")),
+                "Сторож ослеп: обоснование н/п для пары с общим тестом обязано попасть в нарушения");
+    }
+
+    @Test
+    void detail_MissingStrength_IsReported() {
+        String text = CrossMatrixDocument.baseDocument().replace("| ОК | полный |", "| ОК |  |");
+
+        assertTrue(
+                CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
+                        .anyMatch(issue -> issue.contains("не размечена силой")),
+                "Сторож ослеп: строка пары без силы полный/слабо обязана попасть в нарушения");
+    }
+
+    @Test
+    void detail_WeakStrength_IsAccepted() {
+        String text = CrossMatrixDocument.baseDocument().replace("| ОК | полный |", "| ОК | слабо |");
+
+        assertTrue(
+                CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
+                        .noneMatch(issue -> issue.contains("силой")),
+                "Сторож ложно срабатывает: отметка «слабо» — законная сила пары");
+    }
+
+    @Test
     void detail_MissingGraphFact_IsReported() {
         String text = CrossMatrixDocument.baseDocument().replace("| граф | механика | ОК |", "|  | механика | ОК |");
 

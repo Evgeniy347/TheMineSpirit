@@ -163,4 +163,39 @@ class CrossRouteStageScenarioTests {
                 plan.task("rescue_spirit").orElseThrow().boardCase(),
                 "Спасение остаётся отдельным кейсом, а не обычной работой");
     }
+
+    @Test
+    void chop_HangingCanopyAfterChop_ClearFloatingAndHouseStayPosted() {
+        GraphWorld world = stageOne();
+        world.built("hut", Built.PLANNED);
+        world.with("oak_log", 0).with("oak_planks", 0).with("dirt", 64);
+        GraphFacts facts = facts(
+                named(spirit("spirit-1"), spirit("spirit-2")),
+                List.of(),
+                List.of(),
+                new GraphSiteFacts.Terrain(
+                        2, 6, 0, 2, 0, Map.of(), Map.of("minecraft:dirt", 4), Map.of("minecraft:oak_leaves", 6)),
+                Map.of());
+        GraphPlan plan = plan(world, facts);
+
+        GraphPlan.Task chop = task(plan, "chop_oak_log");
+        GraphPlan.Task floating = task(plan, "event:clear_floating:clear_floating");
+        GraphPlan.Task backfill = task(plan, "event:backfill:backfill");
+        GraphPlan.Task house = task(plan, "building:hut");
+
+        assertTrue(chop.feasible(), "Брёвен нет — рубка на доске: " + ids(plan));
+        assertTrue(floating.feasible(), "Висящая крона после рубки получает уборку: " + ids(plan));
+        assertTrue(backfill.feasible(), "Яма на участке засыпается рядом с уборкой кроны: " + ids(plan));
+        assertTrue(house.feasible(), "Стройка дома не отменяется уборкой висящего: " + ids(plan));
+        assertFalse(GraphStageGate.lotsReady(facts), "Яма на участке не даёт этапу закрыться, пока засыпка не сделана");
+        assertTrue(
+                scripts(BoardCase.GATHER_MATERIALS, chopTarget()).contains("chop_tree"),
+                "Рубка валит дерево целиком скриптом chop_tree: " + scripts(BoardCase.GATHER_MATERIALS, chopTarget()));
+        assertTrue(
+                scripts(BoardCase.CLEAR_GROUNDS).contains("clear_area"),
+                "Уборка кроны ломает блоки скриптом clear_area: " + scripts(BoardCase.CLEAR_GROUNDS));
+        assertTrue(
+                scripts(BoardCase.BUILD_HOUSE).contains("build_schematic"),
+                "Дом строится схемой build_schematic: " + scripts(BoardCase.BUILD_HOUSE));
+    }
 }
