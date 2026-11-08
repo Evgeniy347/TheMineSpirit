@@ -53,6 +53,22 @@ class BuildingAuditGuardTests {
     }
 
     @Test
+    void incomplete_TwoFields_PointsAtUnfinishedOne() {
+        BuildingAuditInputs.Audit built = new BuildingAuditInputs.Audit(20, 20, Map.of(), Map.of(), 0, 0);
+        BuildingAuditInputs.Audit missing =
+                new BuildingAuditInputs.Audit(20, 10, Map.of("minecraft:farmland", 10), Map.of(), 0, 0);
+
+        assertEquals(
+                1,
+                BuildingAuditInputs.incomplete(List.of(built, missing)),
+                "Ремонт поля целится в неготовую пашню, а не в первую: иначе вторая пашня не будет достроена");
+        assertEquals(
+                0,
+                BuildingAuditInputs.incomplete(List.of(built, built)),
+                "Готовые пашни дают цель первой: любая подходит для повторного аудита");
+    }
+
+    @Test
     void sum_TwoFields_CountsBothAndLetsNeitherMaskTheOther() {
         BuildingAuditInputs.Audit built = new BuildingAuditInputs.Audit(20, 20, Map.of(), Map.of(), 0, 0);
         BuildingAuditInputs.Audit missing =

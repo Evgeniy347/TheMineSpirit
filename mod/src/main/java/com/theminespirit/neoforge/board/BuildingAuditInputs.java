@@ -167,23 +167,33 @@ public final class BuildingAuditInputs {
             Map<String, GraphFacts.Building> facts,
             long now) {
         grouped(plan).forEach((key, places) -> {
-            Placement first = places.get(0);
-            GraphFacts.Position at =
-                    new GraphFacts.Position(first.x(), scan.stage().anchor().y(), first.z());
             boolean built = false;
             List<Audit> audits = new ArrayList<>(places.size());
+            List<GraphFacts.Position> spots = new ArrayList<>(places.size());
             for (Placement place : places) {
                 built |= built(states, key, place.id());
                 GraphFacts.Position spot =
                         new GraphFacts.Position(place.x(), scan.stage().anchor().y(), place.z());
+                spots.add(spot);
                 Optional<StageCatalog.Entry> entry = StageCatalog.entry(place.id());
                 audits.add(entry.map(value -> BuildingAudit.scheme(level, value.scheme(), spot, scan.wood(), now))
                         .orElseGet(() -> BuildingAudit.stageOrchard(level, spot, scan.wood(), now)));
             }
+            GraphFacts.Position at = spots.get(incomplete(audits));
             GraphFacts.Building base = facts.get(key);
             int currentLevel = built || (base != null && base.level() > 0) ? 1 : 0;
             facts.put(key, fact(key, currentLevel, at, sum(audits), built));
         });
+    }
+
+    static int incomplete(List<Audit> audits) {
+        for (int index = 0; index < audits.size(); index++) {
+            Audit audit = audits.get(index);
+            if (audit.unknown() > 0 || audit.done() < audit.total()) {
+                return index;
+            }
+        }
+        return 0;
     }
 
     static Audit sum(List<Audit> audits) {
