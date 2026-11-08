@@ -64,6 +64,15 @@ class TownPlannerLiveTests {
 
     @Test
     void savedLiveTerrain_ReplanWithCurrentRules_PlacesStorage() throws Exception {
+        TownPlan replanned = replannedLive();
+
+        assertTrue(
+                replanned.placement("storage").isPresent(),
+                "На живом рельефе при обмере " + RULES.ground().probeRadius()
+                        + " склад обязан получить лот, не поместилось " + replanned.unplaced());
+    }
+
+    private static TownPlan replannedLive() throws Exception {
         List<String> lines = fixture("/live/warehouselot/terrain.txt").lines().toList();
         String[] head = lines.get(0).split(" ", -1);
         BlockCoord anchor =
@@ -82,12 +91,7 @@ class TownPlannerLiveTests {
                 wet.set(index, water.charAt(rx) != '0');
             }
         }
-        TownPlan replanned = TownPlanner.plan(TerrainGrid.around(anchor, radius, heights, wet), anchor, RULES, STAGES);
-
-        assertTrue(
-                replanned.placement("storage").isPresent(),
-                "На живом рельефе при обмере " + radius + " склад обязан получить лот, не поместилось "
-                        + replanned.unplaced());
+        return TownPlanner.plan(TerrainGrid.around(anchor, radius, heights, wet), anchor, RULES, STAGES);
     }
 
     @Test

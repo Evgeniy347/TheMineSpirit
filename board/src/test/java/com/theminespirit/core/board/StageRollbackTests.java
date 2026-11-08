@@ -211,6 +211,47 @@ class StageRollbackTests {
     }
 
     @Test
+    void plan_JournalAheadOrBehindConfirmedGate_UsesGateStage() {
+        StageRules rules = threeStageRules();
+        BoardLedger ahead = firstStageBuilt();
+        ahead.complete(BoardCase.BUILD_MINE, 2);
+        ahead.complete(BoardCase.BUILD_WAREHOUSE, 2);
+        ahead.notePlan("plaza", 1);
+        ahead.gate(new StageGate(2, Map.of("BUILD_MINE", 2)));
+        StageRollback.World ready = world(Map.of());
+
+        StageRollback.Plan forward = StageRollback.plan(3, rules, BUILDING_STAGES, ahead, ready);
+
+        assertTrue(
+                forward.refused(),
+                "Журнал впереди гейта мира: фактический этап 2, поэтому этап 3 вперёд не ставится, а не «уже стоит»; "
+                        + "иначе ручной откат разойдётся с миром. Отказ: " + forward.refusal());
+        assertEquals(2, forward.previous(), "Прежний этап берётся из подтверждённого гейта мира, а не из журнала");
+
+        BoardLedger behind = firstStageBuilt();
+        behind.gate(new StageGate(2, Map.of("BUILD_MINE", 2)));
+
+        StageRollback.Plan same = StageRollback.plan(2, rules, BUILDING_STAGES, behind, ready);
+
+        assertNull(
+                same.refusal(),
+                "Журнал отстаёт от гейта мира: фактический этап уже 2, откат на него — идемпотентный вызов, а не "
+                        + "шаг вперёд. Отказ: " + same.refusal());
+        assertEquals(2, same.previous(), "Текущий этап поселения — подтверждённый миром, а не журнальный");
+    }
+
+    private static StageRules threeStageRules() {
+        return new StageRules(List.of(
+                new StageRules.Stage(1, Map.of(BoardCase.BUILD_MINE, 1, BoardCase.BUILD_HOUSE, 1)),
+                new StageRules.Stage(
+                        2,
+                        Map.of(BoardCase.BUILD_MINE, 2, BoardCase.BUILD_WAREHOUSE, 2),
+                        List.of("plaza"),
+                        Map.of("plaza", 1)),
+                new StageRules.Stage(3, Map.of(BoardCase.BUILD_WAREHOUSE, 3))));
+    }
+
+    @Test
     void ticketStage_PlanIdOfGraph_MapsToItsStage() {
         StageRules rules = rules();
 

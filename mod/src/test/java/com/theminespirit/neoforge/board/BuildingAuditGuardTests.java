@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.town.Placement;
+import com.theminespirit.core.town.TownFixtures;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -35,7 +37,38 @@ class BuildingAuditGuardTests {
         assertEquals("lighting", BuildingAuditInputs.key("torches"), "свет плана — постройка lighting");
         assertEquals("orchard_oak", BuildingAuditInputs.key("orchard"), "сад плана — дубовый сад");
         assertEquals("field", BuildingAuditInputs.key("field_a"), "пашня плана — постройка field");
+        assertEquals("field", BuildingAuditInputs.key("field_b"), "вторая пашня плана — та же постройка field");
         assertEquals("family_house_a", BuildingAuditInputs.key("family_house_a"), "дом семьи сохраняет своё имя");
+    }
+
+    @Test
+    void grouped_TwoFieldsAndOneFieldId_KeepsBothUnderOneGraphBuilding() {
+        Map<String, List<Placement>> groups = BuildingAuditInputs.grouped(TownFixtures.flatPlan());
+
+        assertEquals(
+                List.of("field_a", "field_b"),
+                groups.get("field").stream().map(Placement::id).toList(),
+                "Пашни плана field_a и field_b обязаны аудироваться обе под graph-id field: иначе последняя "
+                        + "перезаписывает первую и неготовое поле маскирует готовое");
+    }
+
+    @Test
+    void sum_TwoFields_CountsBothAndLetsNeitherMaskTheOther() {
+        BuildingAuditInputs.Audit built = new BuildingAuditInputs.Audit(20, 20, Map.of(), Map.of(), 0, 0);
+        BuildingAuditInputs.Audit missing =
+                new BuildingAuditInputs.Audit(20, 10, Map.of("minecraft:farmland", 10), Map.of(), 0, 0);
+
+        BuildingAuditInputs.Audit sum = BuildingAuditInputs.sum(List.of(built, missing));
+
+        assertEquals(40, sum.total(), "Обе пашни в аудите: иначе одна пашня маскирует другую");
+        assertEquals(
+                10,
+                sum.missingCount(),
+                "Недостача второй пашни видна графу: поле не считается готовым, " + "пока не готовы обе");
+        assertEquals(
+                Map.of("minecraft:farmland", 10),
+                sum.missing(),
+                "Недостача суммируется по обеим пашням, а не берётся от последней");
     }
 
     @Test

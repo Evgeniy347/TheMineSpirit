@@ -131,7 +131,7 @@ public final class StageRollback {
             throw new IllegalArgumentException(
                     "Этап " + target + " вне 1.." + stages + ": этапов поселения всего " + stages);
         }
-        int previous = rules.stageOf(ledger);
+        int previous = ledger.confirmedGate().map(StageGate::stage).orElseGet(() -> rules.stageOf(ledger));
         if (target == previous) {
             return new Plan(previous, target, List.of(), null);
         }
@@ -141,7 +141,8 @@ public final class StageRollback {
                     target,
                     List.of(),
                     "Этап вперёд не ставится: он закрывается постройкой целиком, а этап " + previous + " не закрыт ("
-                            + rules.missingOf(ledger) + ")");
+                            + ledger.confirmedGate().map(StageGate::missing).orElseGet(() -> rules.missingOf(ledger))
+                            + ")");
         }
         List<Mark> forget = new ArrayList<>();
         for (Mark mark : marks(ledger.keys(), rules, buildingStages)) {

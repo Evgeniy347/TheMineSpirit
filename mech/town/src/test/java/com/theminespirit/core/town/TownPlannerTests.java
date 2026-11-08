@@ -213,6 +213,27 @@ class TownPlannerTests {
     }
 
     @Test
+    void plan_AllStageRequirements_PlacedInPlan() {
+        TownPlan plan = plan((x, z) -> 70, (x, z) -> 0);
+        List<String> missing = new ArrayList<>();
+        for (StageRules.Stage stage : StageRules.load().stages()) {
+            List<String> ids = new ArrayList<>(stage.requires().keySet());
+            ids.addAll(stage.optional().keySet());
+            for (String id : ids) {
+                if (plan.placement(id).isEmpty()) {
+                    missing.add("этап " + stage.stage() + ": " + id);
+                }
+            }
+        }
+
+        assertEquals(
+                List.of(),
+                missing,
+                "Каждая обязательная и желательная постройка этапов 1–4 обязана иметь своё место в плане: без "
+                        + "участка аудит не закроет этап и постройка не начнётся; не поместилось " + missing);
+    }
+
+    @Test
     void stages_EveryCatalogEntry_InExactlyOneStage() {
         Set<String> seen = new HashSet<>();
         for (List<String> stage : STAGES) {
