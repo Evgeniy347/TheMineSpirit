@@ -7,7 +7,9 @@
 
 `scripts/publish.sh` (из main, на сервере) делает публикацию целиком:
 
-1. сборка `./gradlew --quiet assemble` и самый свежий `build/libs/theminespirit-*.jar` с проверкой размера;
+1. сборка `./gradlew --quiet assemble` и самый свежий `build/libs/theminespirit-*.jar`; до остановки сервера jar
+   проверяется по содержимому (`META-INF/neoforge.mods.toml` не пуст и содержит `modId`, классов больше 1000),
+   иначе — ОШИБКА и выход без установки и рестарта;
 2. раскладка скриптов и конфигов сервера из `server/` репозитория в `$SERVER_DIR` (scripts, config,
    `server.properties`, списки игроков, `user_jvm_args.txt`, `run.sh`, README; `scripts/server-cleanup.sh` —
    в `/opt/minecraft/scripts`); старый git-снимок на сервере убирается;
