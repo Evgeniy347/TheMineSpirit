@@ -7,10 +7,14 @@ import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.CaseMaterials;
+import com.theminespirit.core.board.ChestPlans;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.WarehouseRules;
 import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ChestSpace;
 import com.theminespirit.core.town.SettlementReach;
@@ -30,6 +34,7 @@ import org.slf4j.Logger;
 
 final class ChestSpaceWatch {
     static final String PREFIX = "chests:";
+    static final String WAREHOUSE_PREFIX = "warehouse_chest:";
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Set<BoardStatus> OPEN =
             EnumSet.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED);
@@ -43,6 +48,9 @@ final class ChestSpaceWatch {
         long now = post.now;
         if (open(service)) {
             return true;
+        }
+        if (WarehouseRules.builtLevel(service.board().ledger()) > 0) {
+            return postWarehouse(post, level, service);
         }
         Optional<Integer> next = nextSlot(level, site);
         if (next.isEmpty()) {
@@ -71,6 +79,36 @@ final class ChestSpaceWatch {
                                 "slot=" + slot),
                         null,
                         ConfigStamp.current()));
+        return true;
+    }
+
+    private static boolean postWarehouse(GraphPost post, ServerLevel level, BoardService service) {
+        List<BlockCoord> free = new ArrayList<>();
+        for (BlockCoord cell : WarehouseLocations.cells(level, service.board().ledger())) {
+            if (level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z())).isAir()) {
+                free.add(cell);
+            }
+        }
+        if (free.isEmpty()) {
+            LOGGER.info("[chests] склад заполнен: новых клеток для сундуков нет — нужен следующий уровень по "
+                    + "решению стратега");
+            return true;
+        }
+        BlockCoord cell = free.get(0);
+        String id = WAREHOUSE_PREFIX + cell.x() + "," + cell.y() + "," + cell.z();
+        TaskNode plan = ChestPlans.placeOne(cell, post.scan.wood());
+        BoardOutcome outcome = post.submit(
+                post.ticket(
+                        id,
+                        BoardCase.STOCK_CHESTS,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.STOCK_CHESTS),
+                        BoardTicket.ALWAYS_CAUSE,
+                        CaseMaterials.need(plan, FirstStepsRunner.materialSource(level))),
+                TicketTarget.at(cell).withPlan(plan));
+        if (outcome == BoardOutcome.ACCEPTED) {
+            LOGGER.info("[chests] {}: новый сундук ставится в клетку склада {}", id, cell);
+        }
         return true;
     }
 
@@ -133,7 +171,7 @@ final class ChestSpaceWatch {
 
     private static boolean open(BoardService service) {
         return service.board().all().stream()
-                .filter(ticket -> ticket.id().startsWith(PREFIX))
+                .filter(ticket -> ticket.id().startsWith(PREFIX) || ticket.id().startsWith(WAREHOUSE_PREFIX))
                 .anyMatch(ticket ->
                         OPEN.contains(service.board().statusOf(ticket.id()).orElse(BoardStatus.DONE)));
     }

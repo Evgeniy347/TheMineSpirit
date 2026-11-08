@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.WarehouseRules;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
@@ -136,6 +137,9 @@ final class GraphMorePost {
     }
 
     private static boolean placeSiteChest(GraphPost post, GraphTickets.Ticket ticket) {
+        if (WarehouseRules.builtLevel(post.service.board().ledger()) > 0) {
+            return true;
+        }
         submit(
                 post,
                 ticket,

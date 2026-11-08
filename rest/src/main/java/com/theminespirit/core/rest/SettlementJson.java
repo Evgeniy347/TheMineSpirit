@@ -41,6 +41,7 @@ public final class SettlementJson {
         map.put("level", requirement.level());
         map.put("closed", requirement.closed());
         map.put("world", requirement.world().name().toLowerCase(Locale.ROOT));
+        map.put("optional", requirement.optional());
         return map;
     }
 }

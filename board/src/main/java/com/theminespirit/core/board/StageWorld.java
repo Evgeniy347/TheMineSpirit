@@ -3,18 +3,6 @@ package com.theminespirit.core.board;
 import java.util.Objects;
 
 public interface StageWorld {
-    StageWorld ANY = new StageWorld() {
-        @Override
-        public boolean built(BoardCase boardCase, int level) {
-            return true;
-        }
-
-        @Override
-        public boolean builtPlan(String id, int level) {
-            return true;
-        }
-    };
-
     boolean built(BoardCase boardCase, int level);
 
     boolean builtPlan(String id, int level);

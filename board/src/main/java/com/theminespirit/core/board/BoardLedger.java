@@ -24,6 +24,10 @@ public final class BoardLedger {
         return gate == null ? SettlementStage.gate(this) : gate;
     }
 
+    public Optional<StageGate> confirmedGate() {
+        return Optional.ofNullable(gate);
+    }
+
     public int stage() {
         return stageGate().stage();
     }

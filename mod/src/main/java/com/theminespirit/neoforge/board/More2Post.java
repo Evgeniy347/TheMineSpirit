@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.MorePlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.WarehouseRules;
 import com.theminespirit.core.board.WoolRules;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.husbandry.Species;
@@ -35,8 +36,13 @@ final class More2Post {
             return handles(ticket.node());
         }
         return switch (ticket.node()) {
-            case "more2_field_chest" ->
+            case "more2_field_chest" -> {
+                if (WarehouseRules.builtLevel(post.service.board().ledger()) > 0) {
+                    yield true;
+                }
                 MoreActions.submit(post, ticket, BoardCase.STOCK_CHESTS, TicketTarget.at(home(post)));
+                yield true;
+            }
             case MORE2_TRAIL -> trail(post, ticket);
             default -> false;
         };

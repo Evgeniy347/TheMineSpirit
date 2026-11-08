@@ -79,7 +79,10 @@ public final class StageRollback {
         Objects.requireNonNull(buildingStages, "Этапы построек не могут быть null: без них не понять, что выше этапа");
         Objects.requireNonNull(ledger, "Журнал доски не может быть null: этап читается по отметкам");
         Objects.requireNonNull(world, "Мир не может быть null: готовность построек проверяется по нему");
-        int stage = rules.stageOf(ledger);
+        Optional<StageGate> confirmed = ledger.confirmedGate();
+        int stage = confirmed.map(StageGate::stage).orElseGet(() -> rules.stageOf(ledger));
+        Map<String, Integer> missing =
+                confirmed.map(StageGate::missing).orElseGet(() -> rules.missingOf(ledger, stage));
         int stages = rules.stages().size();
         List<StageView.Requirement> requirements = new ArrayList<>();
         int shown = Math.min(stage, stages);
@@ -93,7 +96,8 @@ public final class StageRollback {
                             entry.getKey().name(),
                             entry.getValue(),
                             ledger.has(entry.getKey(), entry.getValue()),
-                            world.ready(entry.getKey(), null, entry.getValue()))));
+                            world.ready(entry.getKey(), null, entry.getValue()),
+                            false)));
             current.requires().entrySet().stream()
                     .sorted(Map.Entry.comparingByKey())
                     .forEach(entry -> requirements.add(new StageView.Requirement(
@@ -101,9 +105,19 @@ public final class StageRollback {
                             entry.getKey(),
                             entry.getValue(),
                             ledger.hasPlan(entry.getKey(), entry.getValue()),
-                            world.ready(null, entry.getKey(), entry.getValue()))));
+                            world.ready(null, entry.getKey(), entry.getValue()),
+                            false)));
+            current.optional().entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .forEach(entry -> requirements.add(new StageView.Requirement(
+                            owner,
+                            entry.getKey(),
+                            entry.getValue(),
+                            ledger.hasPlan(entry.getKey(), entry.getValue()),
+                            world.ready(null, entry.getKey(), entry.getValue()),
+                            true)));
         }
-        return new StageView(stage, stages, rules.missingOf(ledger), requirements);
+        return new StageView(stage, stages, missing, requirements);
     }
 
     public static Plan plan(

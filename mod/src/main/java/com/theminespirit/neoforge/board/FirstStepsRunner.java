@@ -11,6 +11,7 @@ import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.GroundsPlan;
 import com.theminespirit.core.board.MaterialSource;
+import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.SchematicMaterials;
 import com.theminespirit.core.board.SettlementFacts;
@@ -556,13 +557,37 @@ public final class FirstStepsRunner {
     }
 
     static Placed audit(ServerLevel level, BoardCase step, StageSite stage, String fallback) {
-        return BuiltAuditCache.of(level, step, stage, fallback);
+        return audit(level, step, 1, stage, fallback);
+    }
+
+    static Placed audit(ServerLevel level, BoardCase step, int buildingLevel, StageSite stage, String fallback) {
+        return BuiltAuditCache.of(level, step, buildingLevel, stage, fallback);
     }
 
     static BuildGap.Gap gap(ServerLevel level, BoardCase step, StageSite stage, String fallback) {
+        return gap(level, step, 1, stage, fallback);
+    }
+
+    static BuildGap.Gap gap(ServerLevel level, BoardCase step, int buildingLevel, StageSite stage, String fallback) {
         String wood = BuildingWoodChoice.stored(level, step, stage, fallback);
         return BuildGap.trace(
-                TicketPlans.plan(step, 1, targetFor(level, step, stage, wood)), wood, probe(level), SCHEMES);
+                TicketPlans.plan(step, buildingLevel, targetFor(level, step, buildingLevel, stage, wood)),
+                wood,
+                probe(level),
+                SCHEMES);
+    }
+
+    private static TicketTarget targetFor(
+            ServerLevel level, BoardCase step, int buildingLevel, StageSite stage, String wood) {
+        if (buildingLevel > 1 && step == BoardCase.BUILD_MINE) {
+            Optional<BlockCoord> bottom = MineDescentBottom.standOf(stage.mineEntrance());
+            if (bottom.isEmpty()) {
+                throw new IllegalStateException(
+                        "Низ спуска шахты не считается: этап уровня " + buildingLevel + " не сверить с миром");
+            }
+            return TicketTarget.at(bottom.orElseThrow());
+        }
+        return targetFor(level, step, stage, wood);
     }
 
     record Placed(int done, int total, int unknown) {

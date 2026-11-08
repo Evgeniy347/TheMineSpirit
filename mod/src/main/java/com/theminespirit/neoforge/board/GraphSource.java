@@ -124,6 +124,12 @@ public final class GraphSource {
             }
         }
         post.flush();
+        StageWorldGate.apply(
+                half.level(),
+                half.service(),
+                half.scan().stage(),
+                half.scan().wood(),
+                half.state().facts());
         for (GraphPlan.Task task : half.plan().tasks()) {
             if (task.implemented() && task.priority() > 0) {
                 for (String id : GraphTicketIds.ids(task, half.graph())) {

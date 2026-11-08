@@ -178,6 +178,67 @@ class SettlementStageTests {
     }
 
     @Test
+    void rules_ClasspathStagesThreeAndFour_SplitMandatoryAndOptional() {
+        StageRules rules = StageRules.load();
+
+        assertEquals(
+                Set.of("player_house", "forge", "bakery", "barracks"),
+                rules.stages().get(2).requires().keySet(),
+                "Третий этап держат жильё, кузница, пекарня и казарма: жильё, ремесло, еда, оборона");
+        assertEquals(
+                Set.of("kennel", "stable", "weaver"),
+                rules.stages().get(2).optional().keySet(),
+                "Псарня, конюшня и ткацкая — желательные: переход не держат. Пасека не в списке: её узел графа "
+                        + "ставит улей, а не схему постройки плана");
+        assertEquals(
+                Set.of("town_hall", "tavern", "infirmary", "training_yard"),
+                rules.stages().get(3).requires().keySet(),
+                "Четвёртый этап держат ратуша, таверна, лазарет и плац");
+        assertEquals(
+                Set.of("enchant_room", "alchemy", "library"),
+                rules.stages().get(3).optional().keySet(),
+                "Чаровальня, алхимия и библиотека — желательные: переход не держат");
+        for (int number = 3; number <= 4; number++) {
+            int stage = number;
+            rules.stages()
+                    .get(stage - 1)
+                    .requires()
+                    .forEach((id, level) ->
+                            assertEquals(1, level, "Этап " + stage + ": '" + id + "' обязателен первого уровня"));
+            rules.stages()
+                    .get(stage - 1)
+                    .optional()
+                    .forEach((id, level) ->
+                            assertEquals(1, level, "Этап " + stage + ": желательная '" + id + "' первого уровня"));
+        }
+    }
+
+    @Test
+    void parse_StageOptional_ParsedSeparately() {
+        String json = "{\"stages\":[{\"stage\":1,\"buildings\":{},\"requires\":{\"barn\":1},"
+                + "\"optional\":{\"apiary\":1}}]}";
+
+        StageRules rules = StageRules.parse(json, "тест");
+
+        assertEquals(Map.of("barn", 1), rules.stages().get(0).requires(), "Обязательная постройка остаётся в requires");
+        assertEquals(
+                Map.of("apiary", 1),
+                rules.stages().get(0).optional(),
+                "Желательная постройка читается отдельно и не попадает в обязательные");
+    }
+
+    @Test
+    void parse_OptionalAlsoMandatory_Rejected() {
+        String json = "{\"stages\":[{\"stage\":1,\"buildings\":{},\"requires\":{\"barn\":1},"
+                + "\"optional\":{\"barn\":1}}]}";
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> StageRules.parse(json, "тест"),
+                "Одна постройка не бывает одновременно обязательной и желательной: переход решает только обязательное");
+    }
+
+    @Test
     void parse_SchemeOfUnknownCase_Rejected() {
         String json = "{\"stages\": [{\"stage\": 1, \"buildings\": {}}], \"schemes\": {\"NO_SUCH\": [\"hut_1\"]}}";
 
