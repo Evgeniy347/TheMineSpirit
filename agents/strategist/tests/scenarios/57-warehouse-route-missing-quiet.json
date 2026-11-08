@@ -1,0 +1,37 @@
+{
+ "description": "старый мод без маршрута склада: стратег отмечает пропуск и работает дальше без alert",
+ "steps": [
+  {
+   "fake": {
+    "warehouse_route": false
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "warehouse_posts": 0
+  },
+  {
+   "journal_has": {
+    "event": "warehouse_skipped",
+    "code": "route_missing"
+   }
+  },
+  {
+   "journal_lacks": {
+    "event": "alert"
+   }
+  }
+ ],
+ "name": "57-warehouse-route-missing-quiet",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest",
+   "state": "busy"
+  }
+ ]
+}

@@ -1,0 +1,43 @@
+{
+ "description": "dry: решение о складе записывается в журнал, но POST на сервер не уходит",
+ "config": {
+  "STRATEGIST_MODE": "dry"
+ },
+ "steps": [
+  {
+   "fake": {
+    "warehouse": {
+     "stage": 2,
+     "required_level": 2,
+     "built_level": 0,
+     "needed": true,
+     "order": null,
+     "plan_site": "4,64,5"
+    }
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "warehouse_posts": 0
+  },
+  {
+   "journal_has": {
+    "event": "warehouse_decision",
+    "dry": true,
+    "outcome": "would_post"
+   }
+  }
+ ],
+ "name": "55-warehouse-dry-does-not-post",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest",
+   "state": "busy"
+  }
+ ]
+}

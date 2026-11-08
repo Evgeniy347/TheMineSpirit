@@ -183,6 +183,33 @@ class FakeRestTests(unittest.TestCase):
         self.fake.plan_route = False
         self.assertEqual(404, call(self.base, "POST", "/v1/plan", {"plan": {}})[0])
 
+    def test_warehouse_GetDefaultNotNeeded_AndSetKnobChangesView(self):
+        status, _, view = call(self.base, "GET", "/v1/settlement/warehouse")
+        self.assertEqual(200, status)
+        self.assertFalse(view["needed"], "по умолчанию склад не требуется: старые сценарии не меняют поведение")
+        self.fake.set_warehouse(needed=True, required_level=2, plan_site="4,64,5")
+        _, _, changed = call(self.base, "GET", "/v1/settlement/warehouse")
+        self.assertTrue(changed["needed"])
+        self.assertEqual("4,64,5", changed["plan_site"], "ручка set_warehouse меняет ответ GET")
+
+    def test_warehouse_PostStoresOrder_AndReplaysSameRequestId(self):
+        body = {"request_id": "3f1c2d3e-0000-4000-8000-000000000000", "level": 2, "site": "4,64,5",
+                "by": "strategist", "reason": "этап 2 требует склад"}
+        status, _, answer = call(self.base, "POST", "/v1/settlement/warehouse", body)
+        self.assertEqual(200, status)
+        self.assertFalse(answer["replay"])
+        _, _, view = call(self.base, "GET", "/v1/settlement/warehouse")
+        self.assertEqual(2, view["order"]["level"], "решение видно в следующем GET: цикл не пошлёт его снова")
+        _, _, replay = call(self.base, "POST", "/v1/settlement/warehouse", body)
+        self.assertTrue(replay["replay"], "тот же request_id с тем же решением — повтор, не ошибка")
+        status, _, conflict = call(self.base, "POST", "/v1/settlement/warehouse", dict(body, level=3))
+        self.assertEqual(409, status, "тот же request_id с другим телом — конфликт")
+        self.assertEqual("conflict", conflict["error"]["code"])
+
+    def test_warehouse_RouteKnob_Gives404(self):
+        self.fake.warehouse_route = False
+        self.assertEqual(404, call(self.base, "GET", "/v1/settlement/warehouse")[0])
+
     def test_rateLimited_Knob_Gives429WithRetryAfterThenRecovers(self):
         self.assertEqual(200, call(self.base, "GET", "/v1/bots")[0])
         self.fake.rate_limited.append(2)
