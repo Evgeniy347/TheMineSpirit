@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
-final class RescueBreach {
+public final class RescueBreach {
     private RescueBreach() {}
 
     static BlockProtection.Decision allow(SpiritEntity spirit, BlockPos pos, BlockState state, boolean rescue) {
@@ -36,7 +36,7 @@ final class RescueBreach {
         return new BlockProtection.Allowed();
     }
 
-    private static boolean breakable(BlockState state) {
+    public static boolean breakable(BlockState state) {
         return !state.hasBlockEntity()
                 && !(state.getBlock() instanceof DoorBlock)
                 && !(state.getBlock() instanceof FenceGateBlock)

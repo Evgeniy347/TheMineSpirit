@@ -16,6 +16,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
 import com.theminespirit.neoforge.policy.PlanBreachData;
+import com.theminespirit.neoforge.policy.RescueBreach;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -88,6 +89,7 @@ public final class DigOutGameTests {
         UUID breachSpirit = UUID.randomUUID();
         PlanBreachData breach = new PlanBreachData();
         breach.record(breachCell, "minecraft:jungle_planks", breachSpirit, 100);
+        breach.record(breachCell.above(), "minecraft:jungle_planks", breachSpirit, 100);
         PlanBreachData loaded = PlanBreachData.load(
                 breach.save(new CompoundTag(), helper.getLevel().registryAccess()),
                 helper.getLevel().registryAccess());
@@ -100,6 +102,18 @@ public final class DigOutGameTests {
         helper.assertTrue(
                 loaded.clear(breachCell) && loaded.breach(breachCell) == null,
                 "Заделанная клетка снимается с учёта пролома");
+        helper.assertTrue(
+                RescueBreach.breakable(Blocks.JUNGLE_PLANKS.defaultBlockState()),
+                "Клетку плана из досок для самоспасения ломать можно");
+        helper.assertFalse(
+                RescueBreach.breakable(Blocks.CHEST.defaultBlockState()),
+                "Сундук в клетке плана не ломается: это чужая вещь, а не стена");
+        helper.assertFalse(
+                RescueBreach.breakable(Blocks.OAK_DOOR.defaultBlockState()),
+                "Дверь в клетке плана не ломается при самоспасении");
+        helper.assertFalse(
+                RescueBreach.breakable(Blocks.OAK_FENCE_GATE.defaultBlockState()),
+                "Ворота в клетке плана не ломаются при самоспасении");
         helper.succeedWhen(() -> {
             BlockPos current = spirit.blockPosition();
             helper.assertTrue(
