@@ -56,7 +56,6 @@ guards/GameTestTimeoutGuardTests.java	484
 guards/ProductionCommentGuardTests.java	575
 guards/SucceedWhenReturnGuardTests.java	343
 neoforge/BlockBreaker.java	393
-neoforge/BuildSchematicScript.java	680
 neoforge/ChopTreeScript.java	343
 neoforge/ClearAreaSession.java	541
 neoforge/DescentSession.java	359
