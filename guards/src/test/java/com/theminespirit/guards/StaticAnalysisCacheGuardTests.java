@@ -15,6 +15,9 @@ class StaticAnalysisCacheGuardTests {
             Path.of("build-logic", "src", "main", "groovy", "theminespirit.java-conventions.gradle");
     private static final Path GAMETEST = Path.of("gametest", "build.gradle");
     private static final Path CACHE_SCRIPT = Path.of("scripts", "testing", "check-static-analysis-cache.sh");
+    private static final Path TEST_SCRIPT = Path.of("scripts", "test.sh");
+    private static final Path PRE_COMMIT = Path.of("scripts", "git-hooks", "pre-commit");
+    private static final Path NIGHTLY = Path.of("scripts", "nightly-analyzers.sh");
 
     @Test
     void gradleProperties_WithCachingOn_KeepSharedBuildCache() throws IOException {
@@ -79,6 +82,43 @@ class StaticAnalysisCacheGuardTests {
                 gametest.contains("dependsOn tasks.named('compileJava')"),
                 "У spotbugsMain :gametest должен быть явный dependsOn compileJava: classDirs из одного "
                         + "destinationDirectory больше не несут встроенной зависимости, и Gradle валит граф");
+    }
+
+    @Test
+    void normalCycle_HeavyAnalyzers_AreNotRequested() throws IOException {
+        String properties = read(PROPERTIES);
+        String conventions = read(CONVENTIONS);
+        String test = read(TEST_SCRIPT);
+        String hook = read(PRE_COMMIT);
+
+        assertTrue(
+                properties.contains("theminespirit.analyzers=off"),
+                "Ночной прогон и приёмка включают SpotBugs/PMD/Checkstyle флагом -Ptheminespirit.analyzers=on, "
+                        + "а обычная сборка обязана оставаться быстрой: в gradle.properties нужен "
+                        + "theminespirit.analyzers=off (владелец 07.11, анализаторы ≤30% времени)");
+        assertTrue(
+                conventions.contains("findProperty('theminespirit.analyzers') != 'on'"),
+                "Без выключения по умолчанию SpotBugs/PMD/Checkstyle снова попадают в каждый check и съедают "
+                        + "57–81% времени (docs/research/analyzers-cost.md)");
+        assertTrue(
+                test.contains("formatCheck"),
+                "scripts/test.sh обязан гонять в обычном цикле только формат Spotless (formatCheck): "
+                        + "Error Prone живёт в компиляторе, тяжёлые анализаторы — ночью и на приёмке");
+        assertFalse(
+                test.contains("staticAnalysis"),
+                "scripts/test.sh снова зовёт staticAnalysis/staticAnalysisFast: это Checkstyle, PMD, SpotBugs "
+                        + "в обычном цикле — красный по времени и против правила 30%");
+        assertFalse(
+                hook.contains("analyzers=on")
+                        || hook.contains("spotbugs")
+                        || hook.contains("pmdMain")
+                        || hook.contains("checkstyle"),
+                "pre-commit не должен включать SpotBugs/PMD/Checkstyle: он зовёт scripts/test.sh, а тяжёлый "
+                        + "анализ — дело ночного прогона");
+        assertTrue(
+                Files.isRegularFile(NIGHTLY),
+                "Нет scripts/nightly-analyzers.sh: полный набор анализаторов и тестов по main тогда негде "
+                        + "запускать, и находки анализаторов останутся незамеченными");
     }
 
     @Test
