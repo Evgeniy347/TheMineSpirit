@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.StageSite;
@@ -9,8 +10,10 @@ import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 public final class PlotCellStructure {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static @Nullable StageSite cachedSite;
     private static @Nullable String cachedRulesHash;
     private static @Nullable Plan cachedPlan;
@@ -41,6 +44,7 @@ public final class PlotCellStructure {
                 cached = PlotPlanBlocks.of(site);
             } catch (RuntimeException failure) {
                 cachedPlan = null;
+                LOGGER.error("План построек этапа не собран для проверки клетки защиты: {}", failure.getMessage());
                 return new Plan(Map.of());
             }
             cachedPlan = cached;
