@@ -132,8 +132,8 @@ public final class BuildingAuditInputs {
                 BuildingAudit.first(level, scan, BoardCase.CRAFT_FURNACE));
         put(facts, "fence", states, scan.stage().anchor(), BuildingAudit.first(level, scan, BoardCase.BUILD_FENCE));
         put(facts, "lighting", states, scan.stage().anchor(), BuildingAudit.first(level, scan, BoardCase.LIGHTING));
-        put(facts, "streets", states, scan.stage().anchor(), BuildingAudit.streets(level, scan));
-        put(facts, "clearing", states, scan.stage().anchor(), BuildingAudit.clearing(level, scan, now));
+        put(facts, "streets", states, scan.stage().anchor(), BuildingAudit.streets(level, scan.stage(), scan.wood()));
+        put(facts, "clearing", states, scan.stage().anchor(), BuildingAudit.clearing(level, scan.stage(), now));
         put(
                 facts,
                 "orchard_oak",
