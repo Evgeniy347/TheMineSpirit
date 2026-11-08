@@ -80,8 +80,8 @@ public final class BoardSources {
         graphFailures.succeed(node, graphTarget(target), now);
     }
 
-    public Set<String> graphUnreachable(String node, long now, double halfLifeTicks) {
-        return graphFailures.unreachableTargets(node, now, halfLifeTicks);
+    public Set<String> graphUnreachablePoints(long now, double halfLifeTicks) {
+        return graphFailures.unreachablePoints(now, halfLifeTicks);
     }
 
     private static String graphTarget(@Nullable TicketTarget target) {

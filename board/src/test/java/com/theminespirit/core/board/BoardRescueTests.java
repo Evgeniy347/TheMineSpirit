@@ -19,7 +19,7 @@ class BoardRescueTests {
     private static final EatNeed FED = new EatNeed(20, 20, 20, 20);
 
     @Test
-    void rescue_HelperCompletes_ReleasesRescueeMark() {
+    void rescue_HelperCompletes_KeepsRescueeMarkUntilEscapeSeen() {
         long[] now = {1000};
         Board board = new Board(() -> now[0]);
         stuck(board, RESCUEE, "маршрут не найден: цель BlockCoord[x=-171, y=71, z=-489]");
@@ -31,10 +31,14 @@ class BoardRescueTests {
                 "Свободный помощник берёт спасение: сам застрявший выйти не может");
         assertTrue(board.complete(rescue.id()), "Выполненное спасение закрывает задание");
 
-        assertFalse(
+        assertTrue(
                 board.stuck().isStuck(RESCUEE, now[0] + 1),
-                "Спасение снимает метку с того, кого спасли, а не с помощника: иначе застрявший "
-                        + "навсегда остаётся без работы (observe23 A)");
+                "Закрытие задания само по себе не подтверждает выход: метка спасённого держится, пока "
+                        + "наблюдение не покажет его на поверхности (observe25 B6)");
+        board.stuck().see(RESCUEE, new BlockCoord(AT.x() + 3, AT.y() + 4, AT.z()), now[0] + 2, true);
+        assertFalse(
+                board.stuck().isStuck(RESCUEE, now[0] + 2),
+                "Наблюдённый выход снимает метку: иначе спасённый навсегда остаётся без работы (observe23 A)");
     }
 
     @Test
@@ -63,7 +67,7 @@ class BoardRescueTests {
     }
 
     @Test
-    void dispatch_NoPathSpiritAfterTtl_DistantWorkRefused() {
+    void dispatch_NoPathSpiritAfterTtl_TakesWorkAgain() {
         long[] now = {1000};
         Board board = new Board(() -> now[0]);
         stuck(board, RESCUEE, "маршрут не найден: цель BlockCoord[x=-171, y=71, z=-489]");
@@ -84,12 +88,12 @@ class BoardRescueTests {
         Optional<DispatchRound.Candidate> chosen = round.choose(gather, List.of(candidate(RESCUEE, "spirit-2")));
 
         assertTrue(
-                chosen.isEmpty(),
-                "«Пути нет» — факт о духе, а не тайм-аут: дух без пути домой не получает дальнюю работу, "
-                        + "пока не вышел или его не спасли (observe23 B)");
-        assertTrue(
+                chosen.isPresent(),
+                "Устаревшая метка «пути нет» не держит духа вечно: после срока он снова берёт работу, "
+                        + "а повторный провал поставит свежую метку (observe25 B1)");
+        assertFalse(
                 round.why(gather, List.of(candidate(RESCUEE, "spirit-2"))).contains("не двигается"),
-                "Причина ожидания честно говорит, что дух не двигается, а не «нет духов»");
+                "Причина выбора больше не называет духа недвижимым: метка истекла");
     }
 
     @Test
@@ -125,6 +129,64 @@ class BoardRescueTests {
                 Optional.of(BoardStatus.PENDING),
                 board.statusOf(first.id()),
                 "Переоткрытое спасение снова стоит в очереди доски");
+    }
+
+    @Test
+    void rescue_PrematureCompletion_KeepsMarkAndReopensForRetry() {
+        long[] now = {1000};
+        Board board = new Board(() -> now[0]);
+        stuck(board, RESCUEE, "маршрут не найден: цель BlockCoord[x=-171, y=71, z=-489]");
+        BoardTicket rescue = rescue(RESCUEE, "graph:rescue_spirit@1000");
+        board.submit(rescue);
+        board.claim(rescue.id(), RESCUEE, now[0]);
+
+        assertTrue(board.complete(rescue.id()), "Спасение закрылось по отчёту задачи, но выход не наблюдён");
+        assertTrue(
+                board.stuck().isStuck(RESCUEE, now[0]),
+                "Пока дух не показан на поверхности, метка держится: иначе он снова берёт обычную "
+                        + "работу из пещеры и падает обратно (observe25 B6)");
+        assertTrue(
+                board.reopen(rescue.id()),
+                "Граф переоткрывает закрытое спасение, пока метка жива: выход повторяется, а не бросается");
+
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(rescue(RESCUEE, "graph:rescue_spirit@1000")),
+                "Тот же эпизод снова ставится на доску после переоткрытия");
+        assertEquals(
+                BoardOutcome.CLAIMED,
+                board.claim(rescue.id(), RESCUEE, now[0]),
+                "Дух снова берёт собственное спасение: обычная работа ему по-прежнему закрыта");
+    }
+
+    @Test
+    void waitReason_MovedInsidePit_NamesCurrentPosition() {
+        long[] now = {1000};
+        Board board = new Board(() -> now[0]);
+        stuck(board, RESCUEE, "провал движения");
+        BlockCoord moved = new BlockCoord(AT.x() + 3, AT.y() - 2, AT.z() + 1);
+        now[0] += 40;
+        board.stuck().see(RESCUEE, moved, now[0]);
+        BoardTicket gather = new BoardTicket(
+                "graph:make:jungle_log",
+                BoardCase.GATHER_MATERIALS,
+                Optional.of(RESCUEE),
+                BoardRules.priorityOf(BoardCase.GATHER_MATERIALS),
+                now[0],
+                1,
+                "graph:make:jungle_log",
+                List.of(),
+                Map.of());
+        board.submit(gather);
+
+        String why = BoardWhy.waitReason(board, gather, new StockView(Map.of()), now[0])
+                .orElseThrow();
+
+        assertTrue(
+                why.contains(moved.toString()),
+                "waitReason называет текущее место духа, а не устаревшую точку постановки метки " + "(observe25 B15): "
+                        + why);
+        assertFalse(why.contains(AT.toString()), "Старые координаты в причине ожидания не показываются: " + why);
     }
 
     private static BoardTicket rescue(UUID spirit, String cause) {
