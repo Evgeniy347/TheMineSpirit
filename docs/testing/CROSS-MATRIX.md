@@ -86,7 +86,7 @@
 | 3-20 | `ChopToolGraphTests.case70_AxeBroke_TicketStaysWithSpiritAndSameTree` | тот же билет рубки остаётся за духом | поломка топора не отдаёт дерево другому | ОК |
 | 4-6 | `CleanupCasesTests.cleanup_FillDirtInStock_DoesNotDigAgain` | засыпка берёт землю со склада | новая добыча земли не ставится | ОК |
 | 4-9 | `GraphPlannerTests.plan_NoIronPickaxe_LowersMineCoal` | железная кирка поднимает крафт и топит шахту | шахта ждёт инструмент, а не копает руками | ОК |
-| 4-14 | `CrossLifeWorkScenarioTests.hunger_NoFoodInStock_GraphSendsHungrySpiritToMine` | еды нет: eat невыполним, mine_coal 54 первый | голодный дух получает шахту | НЕ ОК |
+| 4-14 | `CrossHungerScenarioTests.hunger_NoFoodInStock_HungrySpiritGetsFoodNotMine` | еды нет: `event:hungry:hunt` 60 выше `mine_coal` 54, без источника `event:hungry:wait_food` 56 выше шахты | голодный дух охотится или ждёт, сытый получает шахту | ОК |
 | 4-16 | `CrossSettlementScenarioTests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool` | tool_worn без наковальни невыполним | изношенная кирка продолжает шахту | ОК |
 | 4-18 | `CrossSettlementScenarioTests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | тьма шахты → mine_coal 82 первым | уголь добывается шахтой | ОК |
 | 4-20 | `GraphPlannerTests.plan_NoCoal_PostsMineAndCharcoal` | `mine_coal` и `smelt_charcoal` | уголь добывается, затем жжётся | ОК |
@@ -108,7 +108,7 @@
 | 7-20 | `CleanupCasesTests.cleanup_StrayFence_PostsDemolition` | лишний забор → `demolish_stray` | кейс сноса разбирает забор | ОК |
 | 7-23 | `ChestClearanceTests.decide_NonEmptyFullWarehouseWithMaterials_AddsChestFirst` | задача сноса/выноса ждёт места | склад решает: сначала добавить сундук, потом нести | ОК |
 | 8-9 | `StoreGraphTests.plan_ToolMinimumShortage_PostsCraft` | минимум инструмента → крафт | крафт пополняет склад | ОК |
-| 8-14 | `CrossLifeWorkScenarioTests.hunger_FoodInChest_EatOutranksMineAndGoesToHungrySpirit` | еда в сундуке: eat 55 выше mine 54 | поесть достаётся голодному | ОК |
+| 8-14 | `CrossHungerScenarioTests.hunger_FoodInChest_EatOutranksMineAndGoesToHungrySpirit` | еда в сундуке: eat 55 выше mine 54 | поесть достаётся голодному | ОК |
 | 8-19 | `StoreGraphTests.plan_CarriedItemsWithFreeChest_PostsDeliver` | несомое и свободный сундук → доставка | социальная доставка кладёт предмет | ОК |
 | 8-23 | `CrossSupplyScenarioTests.storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace` | склад переполнен → building:warehouse и store_space | стройка склада и раскладка `deposit` | ОК |
 | 9-11 | `FarmGraphTests.plan_SheepInSheepPen_ShearingIsWork` | овца в загоне → стрижка | инструмент стрижёт овцу | ОК |
@@ -128,7 +128,7 @@
 | 12-17 | `CrossSettlementScenarioTests.combat_BrokenFenceUnderRaid_DefendOutranksFenceRepair` | defend 100 выше ремонта забора 61 | бой раньше забора | ОК |
 | 12-20 | `CrossLifeWorkScenarioTests.chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted` | защита жизни получает потолок 100 | механика боя выполняется скриптом `defend` | ОК |
 | 13-20 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_GraphPostsRetreatButDispatchKeepsBuilderBusy` | retreat на доске, стройка не снята | доска не бросает работу ради бегства | НЕ ОК |
-| 14-20 | `CrossLifeWorkScenarioTests.hunger_NoFoodInStock_GraphSendsHungrySpiritToMine` | на доске только шахта, еды нет | голодный дух копает вместо еды | НЕ ОК |
+| 14-20 | `CrossHungerScenarioTests.hunger_NoFoodInStock_HungrySpiritGetsFoodNotMine` | голодный дух: добыча еды (охота/рыбалка) выше шахты, без источника — ожидание выше шахты | голодный дух не копает, сытый копает | ОК |
 | 15-20 | `GraphNightDefenseTests.plan_NightAndFarTree_DoesNotGiveDistantGather` | ночью далёкая рубка не выдаётся | граф и NightLeash согласованы | ОК |
 | 16-17 | `CrossSettlementScenarioTests.combat_BrokenFenceUnderRaid_DefendOutranksFenceRepair` | repair_fence выполним рядом с боем | ремонт ставит схему забора | ОК |
 | 16-20 | `GraphRepairPlannerTests.repair_MoreMissing_RaisesWeight` | больше недостачи — выше вес ремонта | ремонт поднимается в очереди графа | ОК |
@@ -153,9 +153,6 @@
 
 ## Техдолг (найдено отметкой «НЕ ОК», не чинится здесь)
 
-- **14-4, 14-20** (`CrossLifeWorkScenarioTests.hunger_NoFoodInStock_GraphSendsHungrySpiritToMine`): голодный дух
-  при пустом складе получает `mine_coal`, потому что `event:hungry:eat` невыполним и не ставится на доску.
-  Цена: дух копает и голодает, хотя рядом может быть еда/сбор. Предложение: узел «добыть еду» выше шахты.
 - **13-3** (`CrossFleeScenarioTests.flee_WhileChopping_GraphKeepsChopAndRetreatWaits`): рубящий дух так же не
   берёт `retreat`; рубка остаётся ASSIGNED. Та же причина, что ниже.
 - **13-5, 13-20** (`CrossLifeWorkScenarioTests.flee_WhileBuilding_GraphPostsRetreatButDispatchKeepsBuilderBusy`):
@@ -171,7 +168,7 @@
 
 | что | вердикт | действие |
 |---|---|---|
-| 14-4, 14-20: голодный дух при пустом складе копает шахту | **править** (высокий) | узел «добыть еду» (сбор/охота/урожай) выше `mine_coal`, пока еды нет; при отсутствии любого источника еды — ждать, а не копать; сценарий уже есть, станет зелёным |
+| 14-4, 14-20: голодный дух при пустом складе копает шахту | **сделано** (crossfood) | узел «добыть еду»: `hunger` ставит охоту/рыбалку выше `mine_coal`, без источника — ожидание; сценарий переписан, `ОК` |
 | 13-3, 13-5, 13-20: занятый рубкой/стройкой дух не берёт `retreat` | **править, но после мирного этапа** (владелец: бой в конец очереди) | вытеснение активной задачи по приоритету жизни; тесты уже зафиксированы (поменять ожидание), потом сценарии с мобом и несколькими духами |
 | 2-5: `pillar` ждёт `trail_clean`, первый прогон даёт только `rescue` | **не править** | но связать с B2 (observe25, rescue×план): тот же узел, проверять при задаче `obsrescue` |
 | матрица: 186 пар «Н» из 276 | **уточнить** | часть пар физически не пересекается (например M17×M24, M19×M18). Пометить `н/п` с коротким обоснованием, чтобы осталось реально нужное (оценка 60–80 пар), и вести «Н» только по ним |

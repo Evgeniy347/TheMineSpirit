@@ -121,8 +121,7 @@ final class FarmHerd {
         }
         int count = Math.min(Math.max(1, ticket.count()), wild);
         TicketTarget target = TicketTarget.at(home).withSpecies(Species.SHEEP).withCount(count);
-        FarmPost.submit(
-                post, ticket.id(), BoardCase.HUNT_WILD_SHEEP, ticket.task().priority(), target, Map.of());
+        post.submit(ticket, BoardCase.HUNT_WILD_SHEEP, target, Map.of());
         return true;
     }
 

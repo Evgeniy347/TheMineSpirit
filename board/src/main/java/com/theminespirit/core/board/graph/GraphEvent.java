@@ -15,6 +15,9 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
             int base,
             Map<String, Integer> consumes,
             @Nullable String building,
+            @Nullable String world,
+            @Nullable String onlyWhenEmpty,
+            @Nullable String owner,
             boolean implemented) {
         public Task {
             consumes = Map.copyOf(consumes);
@@ -41,7 +44,10 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
                         BoardCase.valueOf(task.path("case").asText()),
                         task.path("base").asInt(),
                         counts(task.path("consumes")),
-                        task.hasNonNull("building") ? task.path("building").asText() : null,
+                        text(task, "building"),
+                        text(task, "world"),
+                        text(task, "onlyWhenEmpty"),
+                        text(task, "owner"),
                         task.path("implemented").asBoolean(true)));
             }
             List<String> advice = new ArrayList<>();
@@ -101,5 +107,9 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
         node.properties()
                 .forEach(entry -> counts.put(entry.getKey(), entry.getValue().asInt()));
         return counts;
+    }
+
+    private static @Nullable String text(JsonNode node, String field) {
+        return node.hasNonNull(field) ? node.path(field).asText() : null;
     }
 }

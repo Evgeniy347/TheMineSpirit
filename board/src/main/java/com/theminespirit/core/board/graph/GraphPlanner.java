@@ -265,7 +265,7 @@ public final class GraphPlanner {
             }
             for (GraphEvent.Task task : event.tasks()) {
                 String key = EVENT + name + ":" + task.id();
-                flow.root(key, GraphEventFacts.weight(state, task));
+                flow.root(key, GraphEventFacts.weight(graph, state, task));
                 for (Map.Entry<String, Integer> input :
                         GraphEventFacts.consumes(state, task).entrySet()) {
                     if (count(input.getKey()) < input.getValue()) {
@@ -441,7 +441,7 @@ public final class GraphPlanner {
                     key,
                     event.boardCase(),
                     event.id(),
-                    Optional.empty(),
+                    GraphEventFacts.owner(state, event),
                     priority,
                     GraphEventFacts.consumes(state, event),
                     GraphEventFacts.feasible(graph, state, event),
