@@ -27,10 +27,21 @@ public final class RescuePlans {
         NONE,
         PIT,
         WALK,
-        DIG
+        DIG,
+        BRIDGE
     }
 
-    public record Situation(boolean pit, boolean steps, boolean tool, boolean open, boolean noPath) {}
+    public record Situation(boolean pit, boolean steps, boolean tool, boolean open, boolean noPath, int blocks) {
+        public Situation {
+            if (blocks < 0) {
+                throw new IllegalArgumentException("Блоков для моста " + blocks + ": отрицательный запас не бывает");
+            }
+        }
+
+        public Situation(boolean pit, boolean steps, boolean tool, boolean open, boolean noPath) {
+            this(pit, steps, tool, open, noPath, 0);
+        }
+    }
 
     public enum Mode {
         SELF,
@@ -102,6 +113,7 @@ public final class RescuePlans {
         Objects.requireNonNull(ticket, "Задание спасения не может быть null: по нему находят спасённого");
         if (ticket.boardCase() == BoardCase.RESCUE_SPIRIT) {
             Optional<UUID> rescuee = rescuee(ticket.id()).or(() -> Optional.ofNullable(holder));
+            rescuee.ifPresent(spirit -> stuck.rescued(spirit, now));
             if (holder != null
                     && rescuee.filter(spirit -> !holder.equals(spirit)).isPresent()) {
                 stuck.release(holder, now, "помощник дошёл до цели: задание " + ticket.id());
@@ -117,10 +129,24 @@ public final class RescuePlans {
         if (situation.pit()) {
             return situation.steps() || situation.tool() ? Self.PIT : Self.NONE;
         }
-        if (situation.open() && !situation.noPath()) {
+        if (situation.open() && situation.noPath() && situation.blocks() > 0) {
+            return Self.BRIDGE;
+        }
+        if (situation.open()) {
             return Self.WALK;
         }
         return situation.tool() ? Self.DIG : Self.NONE;
+    }
+
+    public static TaskNode bridge(BlockCoord from, BlockCoord home, int blocks) {
+        Objects.requireNonNull(from, "Точка духа не может быть null: от неё считается длина моста");
+        Objects.requireNonNull(home, "Дом не может быть null: мост ведёт к поселению");
+        if (blocks < 1) {
+            throw new IllegalArgumentException("Блоков для моста " + blocks + ": мост без материала не начать");
+        }
+        int span = Math.max(Math.abs(home.x() - from.x()), Math.abs(home.z() - from.z()));
+        int length = Math.max(1, Math.min(Math.min(span, blocks), CatalogLimits.BRIDGE_LENGTH_MAX));
+        return new ScriptCall("bridge", Map.of("x", home.x(), "y", home.y(), "z", home.z(), "length", length));
     }
 
     public static Optional<TaskNode> plan(BoardCase boardCase, TicketTarget target) {
@@ -197,7 +223,7 @@ public final class RescuePlans {
     }
 
     private static ScriptCall digOut(BlockCoord point) {
-        return new ScriptCall("dig_out", Map.of("x", point.x(), "y", point.y(), "z", point.z()));
+        return new ScriptCall("dig_out", Map.of("x", point.x(), "y", point.y(), "z", point.z(), "rescue", true));
     }
 
     private static TaskNode selfPlan(SelfEscape.Plan rescue) {

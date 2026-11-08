@@ -122,7 +122,9 @@ final class GraphWorld {
                 facts.strays(),
                 facts.terrain(),
                 facts.stageReqs(),
-                facts.feedback());
+                facts.feedback(),
+                facts.players(),
+                facts.planBreaches());
         return this;
     }
 

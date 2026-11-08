@@ -13,14 +13,11 @@ class RescueNavWorldTests {
     private static final BlockCoord PLAN = new BlockCoord(1, 64, 0);
 
     @Test
-    void passable_PlanCell_WalkAllowedBreakBlocked() {
+    void passable_PlanCell_StaysWalkable() {
         RescueNavWorld world = new RescueNavWorld(new Open(), START, PLAN::equals);
 
-        assertTrue(
-                world.passable(PLAN.x(), PLAN.y(), PLAN.z()),
-                "По клетке чужого плана можно пройти: запрет проходимости запирал духа в доме и отдавал "
-                        + "NONE после 1–3 узлов (observe25 B4)");
-        assertTrue(world.walkable(PLAN.x(), PLAN.y(), PLAN.z()), "По чужому плану можно шагать");
+        assertTrue(world.passable(PLAN.x(), PLAN.y(), PLAN.z()), "Клетка чужого плана проходима: это ходьба, не ломка");
+        assertTrue(world.walkable(PLAN.x(), PLAN.y(), PLAN.z()), "По чужому плану можно шагать, не меняя мир");
         assertEquals(
                 NavActionCosts.COST_INF,
                 world.breakTicks(PLAN.x(), PLAN.y(), PLAN.z()),

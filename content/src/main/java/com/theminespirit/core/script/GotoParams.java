@@ -18,6 +18,11 @@ public record GotoParams(int x, int y, int z) {
                 ScriptArgs.requireInt(params, "z"));
     }
 
+    public static boolean rescue(Map<String, Object> params) {
+        Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
+        return Boolean.TRUE.equals(params.get("rescue"));
+    }
+
     private static void checkCoordinate(String name, int value, int limit) {
         if (value < -limit || value > limit) {
             throw new IllegalArgumentException(

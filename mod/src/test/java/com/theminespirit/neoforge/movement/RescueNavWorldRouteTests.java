@@ -12,26 +12,40 @@ import com.theminespirit.core.navigation.NavSegmentedSession;
 import com.theminespirit.core.navigation.NavSettings;
 import com.theminespirit.core.navigation.NavWorld;
 import com.theminespirit.core.observation.BlockCoord;
-import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
 class RescueNavWorldRouteTests {
     private static final BlockCoord START = new BlockCoord(0, 64, 0);
     private static final BlockCoord PLAN = new BlockCoord(1, 64, 0);
-    private static final BlockCoord GOAL = new BlockCoord(2, 64, 0);
+    private static final BlockCoord GOAL = new BlockCoord(16, 64, 0);
 
     @Test
-    void route_ForeignPlanCell_BreakBlockedWalkAllowed() {
+    void passable_ForeignPlanCell_StaysWalkableButUnbreakable() {
         NavWorld world = RescueNavWorld.route(new Open(), START, GOAL, PLAN::equals);
 
         assertTrue(
                 world.passable(PLAN.x(), PLAN.y(), PLAN.z()),
-                "Общий маршрут не запирает проход через чужой план: иначе дух в доме не выходит и получает "
-                        + "NONE после 1–3 узлов (observe25 B4)");
+                "Клетка чужого плана проходима, если она воздух: иначе дух, стоящий внутри плана, не находит "
+                        + "даже соседнюю клетку (observe25 B4)");
+        assertTrue(world.walkable(PLAN.x(), PLAN.y() - 1, PLAN.z()), "По плану можно идти, не меняя мир");
         assertEquals(
                 NavActionCosts.COST_INF,
                 world.breakTicks(PLAN.x(), PLAN.y(), PLAN.z()),
-                "Ломать чужой план по-прежнему нельзя: самоспасение не снимает стену постройки (debtnav, п.6)");
+                "Ломать чужой план по-прежнему нельзя: охрана плана остаётся у ломки, а не у ходьбы");
+    }
+
+    @Test
+    void plan_RouteInsideBuildingFootprint_IsFound() {
+        NavWorld world =
+                RescueNavWorld.route(new Open(), START, GOAL, cell -> insidePlan(cell.x(), cell.y(), cell.z()));
+
+        NavSegmentedRoute route = session(world).step(Long.MAX_VALUE);
+
+        assertEquals(
+                NavSearchStatus.FOUND,
+                route.status(),
+                "Маршрут с ровного места внутри плана находится: раньше все соседние клетки плана считались "
+                        + "стеной, и A* отдавал NONE после одного узла (observe25 B4)");
     }
 
     @Test
@@ -50,26 +64,18 @@ class RescueNavWorldRouteTests {
                 "Вход в план — цель задания: его нельзя запирать запретом клеток (debtnav, п.6)");
     }
 
-    @Test
-    void route_SpiritInsideForeignHouse_ReachesYardWalk() {
-        Predicate<BlockCoord> house = cell ->
-                cell.x() >= -2 && cell.x() <= 3 && cell.z() >= -2 && cell.z() <= 2 && cell.y() >= 63 && cell.y() <= 65;
-        NavWorld world = RescueNavWorld.route(new Open(), START, GOAL, house);
-        NavSegmentedSession session = new NavSegmentedSession(
-                new NavContext(world, new NavSettings(10_000, 10_000, 200_000, 50, 3, 12, 2, 20, 2, false, false), 0),
+    private static boolean insidePlan(int x, int y, int z) {
+        return x >= -8 && x <= 8 && z >= -8 && z <= 8 && y >= 64 && y <= 66;
+    }
+
+    private static NavSegmentedSession session(NavWorld world) {
+        return new NavSegmentedSession(
+                new NavContext(world, new NavSettings(10_000, 10_000, 200_000, 50, 3, 12, 2, 20, 2, false, false), 64),
                 START,
-                new NavGoalNear(GOAL.x(), GOAL.y(), GOAL.z(), 0),
+                new NavGoalNear(GOAL.x(), GOAL.y(), GOAL.z(), 1),
                 32,
                 6,
                 0.5);
-
-        NavSegmentedRoute route = session.step(Long.MAX_VALUE);
-
-        assertEquals(
-                NavSearchStatus.FOUND,
-                route.status(),
-                "дух стоит в чужом доме (клетки плана вокруг), цель — двор: маршрут обязан выйти, а не "
-                        + "отдать NONE после 1 узла, как в observe25 B4 (spirit-1 в (-176,72,-510))");
     }
 
     private static final class Open implements NavWorld {

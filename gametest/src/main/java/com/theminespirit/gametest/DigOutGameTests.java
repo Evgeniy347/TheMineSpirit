@@ -15,6 +15,8 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
+import com.theminespirit.neoforge.policy.PlanBreachData;
+import com.theminespirit.neoforge.policy.RescueBreach;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -59,6 +62,12 @@ public final class DigOutGameTests {
             }
         }
         pockets.forEach(cells -> cells.forEach(cell -> helper.setBlock(cell, Blocks.AIR)));
+        List<BlockPos> planks = new ArrayList<>();
+        for (List<BlockPos> cells : pockets) {
+            BlockPos plank = cells.get(0).above(2);
+            helper.setBlock(plank, Blocks.JUNGLE_PLANKS);
+            planks.add(plank);
+        }
         List<SpiritEntity> spirits = new ArrayList<>();
         List<String> tickets = new ArrayList<>();
         List<Integer> starts = new ArrayList<>();
@@ -95,6 +104,35 @@ public final class DigOutGameTests {
             starts.add(feet.getY());
         }
 
+        BlockPos breachCell = new BlockPos(-177, 72, -506);
+        UUID breachSpirit = UUID.randomUUID();
+        PlanBreachData breach = new PlanBreachData();
+        breach.record(breachCell, "minecraft:jungle_planks", breachSpirit, 100);
+        breach.record(breachCell.above(), "minecraft:jungle_planks", breachSpirit, 100);
+        PlanBreachData loaded = PlanBreachData.load(
+                breach.save(new CompoundTag(), helper.getLevel().registryAccess()),
+                helper.getLevel().registryAccess());
+        helper.assertTrue(
+                loaded.breach(breachCell) != null
+                        && "minecraft:jungle_planks"
+                                .equals(loaded.breach(breachCell).blockId())
+                        && breachSpirit.equals(loaded.breach(breachCell).spirit()),
+                "Пролом плана переживает сохранение мира тем же блоком и духом");
+        helper.assertTrue(
+                loaded.clear(breachCell) && loaded.breach(breachCell) == null,
+                "Заделанная клетка снимается с учёта пролома");
+        helper.assertTrue(
+                RescueBreach.breakable(Blocks.JUNGLE_PLANKS.defaultBlockState()),
+                "Клетку плана из досок для самоспасения ломать можно");
+        helper.assertFalse(
+                RescueBreach.breakable(Blocks.CHEST.defaultBlockState()),
+                "Сундук в клетке плана не ломается: это чужая вещь, а не стена");
+        helper.assertFalse(
+                RescueBreach.breakable(Blocks.OAK_DOOR.defaultBlockState()),
+                "Дверь в клетке плана не ломается при самоспасении");
+        helper.assertFalse(
+                RescueBreach.breakable(Blocks.OAK_FENCE_GATE.defaultBlockState()),
+                "Ворота в клетке плана не ломаются при самоспасении");
         helper.succeedWhen(() -> {
             for (int index = 0; index < spirits.size(); index++) {
                 SpiritEntity spirit = spirits.get(index);
@@ -117,6 +155,11 @@ public final class DigOutGameTests {
                                 .stuck()
                                 .isStuck(spirit.getUUID(), board.board().now()),
                         "выполненный выход снимает метку «не двигается» по факту, а не по тайм-ауту");
+                helper.assertTrue(
+                        helper.getBlockState(planks.get(index)).is(Blocks.JUNGLE_PLANKS),
+                        "Разбор при выходе временный: сломанная доска плана обязана вернуться на место после "
+                                + "спасения, иначе в постройке остаётся дыра (observe25 B2); в клетке "
+                                + planks.get(index) + " сейчас " + helper.getBlockState(planks.get(index)));
             }
             spirits.forEach(SpiritEntity::discard);
             GameTestFixtures.finish(helper, 16);

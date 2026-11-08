@@ -78,7 +78,9 @@ class CrossSettlementScenarioTests {
                         Map.of("minecraft:chest", 1))),
                 GraphSiteFacts.Terrain.empty(),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
-                GraphFeedback.none());
+                GraphFeedback.none(),
+                List.of(),
+                List.of());
         GraphPlan plan = plan(world, facts);
 
         GraphPlan.Task demolition = task(plan, "event:demolish_stray:demolish_stray");

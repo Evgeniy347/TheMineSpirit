@@ -14,9 +14,33 @@ public record GraphCosts(
         int travelScaleTicks,
         Map<String, Integer> toolDurability,
         Map<String, Integer> stationCapacity,
-        GraphChoice choice) {
-    public static final GraphCosts NONE =
-            new GraphCosts(1, Map.of(), Map.of(), Map.of(), 0, 1, Map.of(), Map.of(), GraphChoice.NEUTRAL);
+        GraphChoice choice,
+        GraphLife life) {
+    public static final GraphCosts NONE = new GraphCosts(
+            1, Map.of(), Map.of(), Map.of(), 0, 1, Map.of(), Map.of(), GraphChoice.NEUTRAL, GraphLife.DEFAULTS);
+
+    public GraphCosts(
+            int defaultTicks,
+            Map<String, Integer> caseTicks,
+            Map<String, Integer> wayTicks,
+            Map<String, Integer> wayUses,
+            int ticksPerBlock,
+            int travelScaleTicks,
+            Map<String, Integer> toolDurability,
+            Map<String, Integer> stationCapacity,
+            GraphChoice choice) {
+        this(
+                defaultTicks,
+                caseTicks,
+                wayTicks,
+                wayUses,
+                ticksPerBlock,
+                travelScaleTicks,
+                toolDurability,
+                stationCapacity,
+                choice,
+                GraphLife.DEFAULTS);
+    }
 
     public GraphCosts {
         caseTicks = Map.copyOf(caseTicks);
@@ -27,6 +51,10 @@ public record GraphCosts(
         if (choice == null) {
             throw new IllegalArgumentException(
                     "Поправки выбора не могут быть null: нейтральные задаёт GraphChoice.NEUTRAL");
+        }
+        if (life == null) {
+            throw new IllegalArgumentException(
+                    "Формула жизни не может быть null: значения по умолчанию — GraphLife.DEFAULTS");
         }
         if (defaultTicks < 1 || travelScaleTicks < 1) {
             throw new IllegalArgumentException("Длительность по умолчанию " + defaultTicks + " и шкала дороги "
@@ -78,6 +106,7 @@ public record GraphCosts(
                 costs.path("travelScaleTicks").asInt(1200),
                 GraphEvent.counts(costs.path("toolDurability")),
                 GraphEvent.counts(costs.path("stationCapacity")),
-                GraphChoice.parse(root.path("choice")));
+                GraphChoice.parse(root.path("choice")),
+                GraphLife.parse(root.path("life")));
     }
 }

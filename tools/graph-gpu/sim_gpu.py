@@ -274,7 +274,7 @@ MORE3_EVENTS = (
 )
 
 MORE5_EVENTS = (
-    "more5_player_weak", "more5_crops_dark", "more5_saplings_dark", "more5_crops_dry",
+    "more5_crops_dark", "more5_saplings_dark", "more5_crops_dry",
     "more5_growth_unfed", "more5_fuel_low", "more5_build_shortage", "more5_mob_broken",
     "more5_route_blocked", "more5_chest_far", "more5_mine_dark", "more5_wood_drops",
 )

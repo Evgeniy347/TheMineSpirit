@@ -50,7 +50,9 @@ final class CrossScene {
                 List.of(),
                 terrain,
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
-                GraphFeedback.none());
+                GraphFeedback.none(),
+                List.of(),
+                List.of());
     }
 
     static GraphFacts facts(Map<String, GraphFacts.Spirit> spirits) {

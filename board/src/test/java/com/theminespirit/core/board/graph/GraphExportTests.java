@@ -52,6 +52,27 @@ class GraphExportTests {
                     plan.notices().stream().map(GraphPlan.Notice::building).toList());
             cases.add(entry);
         }
+        GraphWorld weak = GraphWorld.empty().event("life_threat_player");
+        weak.facts = weak.facts.withPlayers(
+                List.of(new GraphFacts.Player("Steve", new GraphFacts.Position(0, 64, 0), 4.0F, 20.0F, 4)));
+        GraphPlan weakPlan = weak.plan();
+        Map<String, Object> weakEntry = new LinkedHashMap<>();
+        weakEntry.put("mutations", List.of("weak_player_fact"));
+        weakEntry.put("state", GraphStateJson.state(weak.state()));
+        List<Map<String, Object>> weakTasks = new ArrayList<>();
+        for (GraphPlan.Task task : weakPlan.tasks()) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", task.id());
+            row.put("priority", task.priority());
+            row.put("feasible", task.feasible());
+            row.put("chance", task.chance());
+            weakTasks.add(row);
+        }
+        weakEntry.put("tasks", weakTasks);
+        weakEntry.put(
+                "notices",
+                weakPlan.notices().stream().map(GraphPlan.Notice::building).toList());
+        cases.add(weakEntry);
         Files.createDirectories(OUT.getParent());
         Files.copy(
                 Path.of("mod/src/main/resources/" + SupplyGraph.RESOURCE),
