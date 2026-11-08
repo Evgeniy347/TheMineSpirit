@@ -54,6 +54,7 @@ public final class SettlementWarehouseService {
                 built,
                 built < Math.max(required, planned),
                 order,
+                WarehouseLocations.planSite(level).orElse(null),
                 UpgradePlan.materials(WarehouseRules.scheme(levelOfMaterials)));
     }
 

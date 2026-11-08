@@ -13,7 +13,8 @@ SCHEMA = 1
 
 
 def default_state() -> dict:
-    return {"schema": SCHEMA, "cycle": 0, "active": {}, "pending": {}, "guard": {}, "alerts": {}}
+    return {"schema": SCHEMA, "cycle": 0, "active": {}, "pending": {}, "guard": {}, "alerts": {},
+            "warehouse_checked": 0}
 
 
 @dataclass
