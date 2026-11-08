@@ -39,7 +39,9 @@ class WorldReportTests {
                 new GraphSiteFacts.Terrain(
                         2, 4, 3, 5, 1, Map.of("minecraft:dirt", 2), Map.of("minecraft:dirt", 2), Map.of(), false, 9),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
-                GraphFeedback.none());
+                GraphFeedback.none(),
+                List.of(),
+                List.of());
 
         WorldReport report = WorldReport.of(facts);
 

@@ -72,6 +72,7 @@ final class BoardDispatchDesk {
     }
 
     void reconcile(List<SpiritEntity> spirits, boolean census) {
+        BoardPositionWatch.observe(board, spirits, board.now());
         WaitRefresh.tick(board, spirits, targets, host.stock(), crafters, board.now());
         if (!census) return;
     }

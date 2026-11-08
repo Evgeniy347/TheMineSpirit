@@ -3,7 +3,10 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.BuildGap;
+import com.theminespirit.core.board.FillIndex;
 import com.theminespirit.core.board.LevelRepair;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.TicketTarget;
@@ -11,15 +14,18 @@ import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.town.PitGroups;
+import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.SettlementScan;
+import com.theminespirit.neoforge.policy.PlanBreachData;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.jspecify.annotations.Nullable;
+import net.minecraft.core.BlockPos;
 
 final class WorldPost {
     static final String REPAIR_NODE = "repair:";
@@ -69,7 +75,8 @@ final class WorldPost {
                 new StageRepair.Gap(
                         gap.shortage(),
                         gap.total(),
-                        need(post.graph, ticket.task().consumes(), post.scan.wood())));
+                        need(post.graph, ticket.task().consumes(), post.scan.wood())),
+                step == BoardCase.BUILD_PLACED ? id : null);
         return StageAudit.keeps(outcome);
     }
 
@@ -79,7 +86,11 @@ final class WorldPost {
         return switch (ticket.node()) {
             case "backfill" -> holes(post, ticket, found, priority);
             case "level_lot" -> lot(post, ticket, found, priority);
-            case "restore_trace" -> traces(post, ticket, found, priority);
+            case "restore_trace" -> {
+                boolean plan = breaches(post);
+                boolean trace = traces(post, ticket, found, priority);
+                yield plan || trace;
+            }
             default -> false;
         };
     }
@@ -93,9 +104,10 @@ final class WorldPost {
         if (room == 0) {
             return true;
         }
+        FillIndex fills = openFills(post);
         int posted = 0;
         for (PitGroups.Pit pit : PitGroups.group(found.pits())) {
-            String id = covering(post, pit);
+            String id = fills.covering(pit.cells()).orElse(null);
             if (id == null) {
                 id = "world:backfill:" + pit.key();
                 if (post.done(id)) {
@@ -124,29 +136,25 @@ final class WorldPost {
         return true;
     }
 
-    private static @Nullable String covering(GraphPost post, PitGroups.Pit pit) {
+    private static FillIndex openFills(GraphPost post) {
+        Map<String, PlotLeveling> fills = new LinkedHashMap<>();
         for (var ticket : post.service.board().all()) {
             if (!ticket.id().startsWith("world:backfill:")) {
                 continue;
             }
             var status = post.service.board().statusOf(ticket.id()).orElse(null);
-            if (status == null
-                    || status == BoardStatus.DONE
-                    || status == BoardStatus.CANCELLED
-                    || post.service.targetOf(ticket.id()).isEmpty()) {
+            if (status == null || status == BoardStatus.DONE || status == BoardStatus.CANCELLED) {
                 continue;
             }
-            var target = post.service.targetOf(ticket.id()).orElseThrow();
-            if (target.leveling() == null) {
-                continue;
-            }
-            for (var box : target.leveling().fill()) {
-                if (PitGroups.overlaps(pit.cells(), box)) {
-                    return ticket.id();
-                }
+            PlotLeveling leveling = post.service
+                    .targetOf(ticket.id())
+                    .map(TicketTarget::leveling)
+                    .orElse(null);
+            if (leveling != null) {
+                fills.put(ticket.id(), leveling);
             }
         }
-        return null;
+        return FillIndex.of(fills);
     }
 
     private static boolean lot(GraphPost post, GraphTickets.Ticket ticket, SettlementScan.Strays found, int priority) {
@@ -164,6 +172,42 @@ final class WorldPost {
                 post.ticket(id, BoardCase.REPAIR_BUILDING, Optional.empty(), priority, ticket.id(), Map.of()),
                 TicketTarget.at(first).withLeveling(LevelRepair.leveling(List.of(), extras)));
         return true;
+    }
+
+    private static boolean breaches(GraphPost post) {
+        PlanBreachData data = PlanBreachData.get(post.level);
+        boolean posted = false;
+        for (Map.Entry<BlockPos, PlanBreachData.Breach> entry : data.open().entrySet()) {
+            BlockPos pos = entry.getKey();
+            if (!post.level.getBlockState(pos).isAir()) {
+                data.clear(pos);
+                continue;
+            }
+            String id = "world:plan_breach:" + key(new BlockCoord(pos.getX(), pos.getY(), pos.getZ())) + ":"
+                    + entry.getValue().tick();
+            if (post.open(id)) {
+                posted = true;
+                continue;
+            }
+            post.submit(
+                    post.ticket(
+                            id,
+                            BoardCase.REPAIR_BUILDING,
+                            Optional.empty(),
+                            BoardTuning.MAX_PRIORITY,
+                            BoardTicket.ALWAYS_CAUSE,
+                            Map.of()),
+                    TicketTarget.at(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()))
+                            .withPlan(new ScriptCall(
+                                    "place_block",
+                                    Map.of(
+                                            "block", entry.getValue().blockId(),
+                                            "x", pos.getX(),
+                                            "y", pos.getY(),
+                                            "z", pos.getZ()))));
+            posted = true;
+        }
+        return posted;
     }
 
     private static boolean traces(

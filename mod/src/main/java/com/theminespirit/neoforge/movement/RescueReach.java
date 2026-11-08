@@ -110,6 +110,10 @@ public final class RescueReach {
             return generation;
         }
 
+        public String readyEvent() {
+            return "rescue_reach:" + generation;
+        }
+
         private void remember(Probe probe, Verdict verdict, long now) {
             verdicts.put(probe.key, new Entry(verdict, now));
             generation++;
@@ -139,9 +143,10 @@ public final class RescueReach {
         }
     }
 
+    // lib: класс — пространство имён вложенных типов (Cache, Verdict, Key); PMD
+    // MissingStaticMethodInNonInstantiatableClass видит private-конструктор без статических методов и считает
+    // класс недоделанным. Фабрика даёт Cache явно и не открывает экземпляр RescueReach.
     public static Cache cache() {
         return new Cache();
     }
-
-    private RescueReach() {}
 }

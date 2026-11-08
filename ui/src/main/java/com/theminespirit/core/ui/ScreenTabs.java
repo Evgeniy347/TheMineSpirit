@@ -3,7 +3,7 @@ package com.theminespirit.core.ui;
 import java.util.Locale;
 
 public final class ScreenTabs {
-    public static final int WIDTH = 64;
+    public static final int WIDTH = 56;
     public static final int HEIGHT = 16;
     public static final int GAP = 2;
     public static final int TOP = 2;
@@ -12,7 +12,8 @@ public final class ScreenTabs {
         BOARD(0),
         PLAN(1),
         MINE(2),
-        CRAFT(3);
+        CRAFT(3),
+        TREE(4);
 
         private final int slot;
 

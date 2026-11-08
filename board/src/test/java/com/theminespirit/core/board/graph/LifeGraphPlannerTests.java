@@ -77,7 +77,7 @@ class LifeGraphPlannerTests {
 
         assertEquals(
                 GraphWorld.GRAPH.maxPriority(),
-                plan.priority("event:life_threat_player:protect_player"),
+                plan.priority("event:life_threat_player:life_protect_player"),
                 "Два моба у игрока — защита игрока на потолке: " + plan.tasks());
     }
 

@@ -27,6 +27,7 @@ import com.theminespirit.neoforge.movement.PathNetworkService;
 import com.theminespirit.neoforge.net.BoardViewChannel;
 import com.theminespirit.neoforge.net.BuildFingerprint;
 import com.theminespirit.neoforge.net.ModProtocolHandshake;
+import com.theminespirit.neoforge.net.SettlementTreeChannel;
 import com.theminespirit.neoforge.net.TownMapChannel;
 import com.theminespirit.neoforge.policy.PolicyEvents;
 import com.theminespirit.neoforge.respawn.SpiritRespawnService;
@@ -50,6 +51,7 @@ public final class TheMineSpirit {
         ModEntities.register(modEventBus);
         ModProtocolHandshake.register(modEventBus);
         BoardViewChannel.register(modEventBus);
+        SettlementTreeChannel.register(modEventBus);
         TownMapChannel.register(modEventBus);
         TerminalMenus.register(modEventBus);
         CraftTerminalChannel.register(modEventBus);

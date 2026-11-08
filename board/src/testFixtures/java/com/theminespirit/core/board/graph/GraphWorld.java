@@ -23,8 +23,8 @@ final class GraphWorld {
     final Map<String, Map<String, Integer>> materials = new HashMap<>();
     final Map<String, Integer> stations = new HashMap<>();
     final Map<String, Integer> distances = new HashMap<>();
-    final Set<String> world = new HashSet<>(
-            Set.of("tree:oak", "tree:jungle", "sand", "clay", "animals", "flower:poppy", "flower:dandelion", "soil"));
+    final Set<String> world = new HashSet<>(Set.of(
+            "tree:oak", "tree:jungle", "sand", "clay", "animals", "water", "flower:poppy", "flower:dandelion", "soil"));
     GraphFacts facts = GraphFacts.empty();
 
     static GraphWorld empty() {
@@ -122,7 +122,9 @@ final class GraphWorld {
                 facts.strays(),
                 facts.terrain(),
                 facts.stageReqs(),
-                facts.feedback());
+                facts.feedback(),
+                facts.players(),
+                facts.planBreaches());
         return this;
     }
 

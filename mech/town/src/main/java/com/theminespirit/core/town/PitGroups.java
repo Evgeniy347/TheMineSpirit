@@ -116,11 +116,11 @@ public final class PitGroups {
         while (parent[root] != root) {
             root = parent[root];
         }
-        int at = index;
-        while (parent[at] != at) {
-            int next = parent[at];
-            parent[at] = root;
-            at = next;
+        int current = index;
+        while (parent[current] != current) {
+            int next = parent[current];
+            parent[current] = root;
+            current = next;
         }
         return root;
     }

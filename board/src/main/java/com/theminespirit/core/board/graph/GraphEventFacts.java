@@ -1,7 +1,9 @@
 package com.theminespirit.core.board.graph;
 
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class GraphEventFacts {
     private GraphEventFacts() {}
@@ -19,6 +21,12 @@ public final class GraphEventFacts {
     }
 
     public static boolean feasible(SupplyGraph graph, GraphState state, GraphEvent.Task task) {
+        if (task.world() != null && !state.world().contains(task.world())) {
+            return false;
+        }
+        if (task.onlyWhenEmpty() != null && GraphLack.count(graph, state, task.onlyWhenEmpty()) > 0) {
+            return false;
+        }
         return GraphLack.stocked(graph, state, consumes(state, task))
                 && (task.building() == null || repairTarget(state, task.building()));
     }
@@ -31,9 +39,28 @@ public final class GraphEventFacts {
         return fact != null && !fact.unknown() && fact.auditPercent() > 0;
     }
 
-    public static int weight(GraphState state, GraphEvent.Task task) {
+    public static boolean applies(SupplyGraph graph, GraphState state, GraphEvent.Task task) {
+        if (task.world() != null && !state.world().contains(task.world())) {
+            return false;
+        }
+        return task.onlyWhenEmpty() == null || GraphLack.count(graph, state, task.onlyWhenEmpty()) == 0;
+    }
+
+    public static Optional<String> owner(GraphState state, GraphEvent.Task task) {
+        if (!"hungriest".equals(task.owner())) {
+            return Optional.empty();
+        }
+        return state.facts().spirits().values().stream()
+                .min(Comparator.comparingInt(GraphFacts.Spirit::food).thenComparing(GraphFacts.Spirit::id))
+                .map(GraphFacts.Spirit::id);
+    }
+
+    public static int weight(SupplyGraph graph, GraphState state, GraphEvent.Task task) {
         Objects.requireNonNull(state, "Состояние графа не может быть null: из него берут долю недостающего");
         Objects.requireNonNull(task, "Задание события не может быть null: у него есть вес");
+        if (!applies(graph, state, task)) {
+            return 0;
+        }
         if (task.building() == null) {
             return task.base();
         }

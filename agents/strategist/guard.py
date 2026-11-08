@@ -64,6 +64,10 @@ def request_id(bot: str, cycle: int, plan_fingerprint: str) -> str:
     return str(uuid.uuid5(REQUEST_NAMESPACE, f"{bot}|{cycle}|{plan_fingerprint}"))
 
 
+def warehouse_request_id(level: int, site: str) -> str:
+    return str(uuid.uuid5(REQUEST_NAMESPACE, f"warehouse|{level}|{site}"))
+
+
 class Guard:
     def __init__(self, config: Config, data: dict | None = None):
         self.config = config

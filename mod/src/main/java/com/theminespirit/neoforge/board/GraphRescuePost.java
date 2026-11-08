@@ -52,6 +52,10 @@ final class GraphRescuePost {
             BlockPos feet = spirit.blockPosition();
             BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
             RescueTicket.Escape escape = RescueTicket.escape(post.level, spirit, home, noPath(mark));
+            if (escape.self() && post.service.board().stuck().relapsed(id, at, post.now)) {
+                escape = new RescueTicket.Escape(
+                        false, null, "повторное падение в ту же ловушку после спасения: самоспасение не перебираем");
+            }
             int failures = post.service.board().ticketFailures(ticketId);
             HelperChoice helper = !escape.self() || failures > 0
                     ? helper(post, fact.id(), at)

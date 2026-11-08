@@ -83,10 +83,8 @@ public final class StockReader {
             ContainerAccess.Open open = ContainerAccess.open(level, at);
             if (open instanceof ContainerAccess.Opened container) {
                 StackMapper mapper = new StackMapper();
-                for (Stack stack : mapper.map(container.container())) {
-                    if (stack != null) {
-                        add(chests, stack);
-                    }
+                for (Stack stack : mapper.mapPresent(container.container())) {
+                    add(chests, stack);
                 }
                 for (int slot = 0; slot < container.container().getContainerSize(); slot++) {
                     addPotion(chests, container.container().getItem(slot));

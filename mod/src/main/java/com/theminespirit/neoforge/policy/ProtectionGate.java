@@ -55,12 +55,32 @@ public final class ProtectionGate {
     }
 
     public BlockProtection.Decision checkBreakOrEscape(BlockPos pos, BlockState state, boolean escaping) {
+        return checkBreakOrEscape(pos, state, escaping, false);
+    }
+
+    public BlockProtection.Decision checkBreakOrEscape(
+            BlockPos pos, BlockState state, boolean escaping, boolean rescue) {
         BlockPos feet = spirit.blockPosition();
-        if (escaping
-                && SelfRescue.mayBreakAtFeet(
-                        new BlockCoord(pos.getX(), pos.getY(), pos.getZ()),
-                        new BlockCoord(feet.getX(), feet.getY(), feet.getZ()))) {
-            return new BlockProtection.Allowed();
+        if (escaping) {
+            BlockCoord target = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+            BlockCoord standing = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
+            if (rescue) {
+                BlockProtection.Decision outside = RescueBreach.allow(spirit, pos, state, true);
+                if (outside instanceof BlockProtection.Allowed) {
+                    return outside;
+                }
+                if (!RescueBreach.breakable(state)) {
+                    return new BlockProtection.Refused(
+                            PolicyId.PROTECTED_ZONE,
+                            "клетка " + pos.toShortString() + " — сундук, дверь или люк: для самоспасения не ломается");
+                }
+            }
+            if (SelfRescue.mayBreakAtFeet(target, standing)) {
+                return new BlockProtection.Allowed();
+            }
+            if (SelfRescue.mayBreakEscaping(target, standing) && RescueBreach.breakable(state)) {
+                return new BlockProtection.Allowed();
+            }
         }
         return decide(
                 pos, state, false, false, PlanBuilding.NONE, PlotProtection.Action.BREAK, PlotProtection.Ground.NONE);
@@ -325,7 +345,7 @@ public final class ProtectionGate {
         return ids;
     }
 
-    private static String blockId(BlockState state) {
+    static String blockId(BlockState state) {
         return BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
     }
 }

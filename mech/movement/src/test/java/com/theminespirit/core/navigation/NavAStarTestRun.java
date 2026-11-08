@@ -1,17 +1,15 @@
-// lib: Из Baritone (github.com/cabaletta/baritone, pathing/calc/AStarPathFinder.java), лицензия LGPL-3.0.
 package com.theminespirit.core.navigation;
 
 import java.util.function.LongSupplier;
 
-public final class NavAStarSearch {
-    private NavAStarSearch() {}
+final class NavAStarTestRun {
+    private NavAStarTestRun() {}
 
-    public static NavResult plan(NavContext context, int startX, int startY, int startZ, NavGoal goal) {
+    static NavResult plan(NavContext context, int startX, int startY, int startZ, NavGoal goal) {
         return plan(context, startX, startY, startZ, goal, NavFavoring.EMPTY, System::nanoTime);
     }
 
-    public static NavResult plan(
-            NavContext context, int startX, int startY, int startZ, NavGoal goal, NavFavoring favoring) {
+    static NavResult plan(NavContext context, int startX, int startY, int startZ, NavGoal goal, NavFavoring favoring) {
         return plan(context, startX, startY, startZ, goal, favoring, System::nanoTime);
     }
 

@@ -183,6 +183,22 @@ class PitExitPlannerTests {
     }
 
     @Test
+    void plan_PitUnderPlanCeiling_ChoosesStairsNotPillar() {
+        PitTestWorld world = PitTestWorld.pit(4, 0, PitExitPlanner.Kind.SOFT);
+        BlockCoord ceiling = new BlockCoord(FEET.x(), FEET.y() + 2, FEET.z());
+        world.set(ceiling, PitExitPlanner.Kind.HARD);
+
+        PitExitPlanner.Plan plan = PitExitPlanner.plan(FEET, world, new PitExitPlanner.Supplies(3, false));
+
+        assertEquals(
+                PitExitPlanner.Method.STAIRS,
+                plan.method(),
+                "Над головой пол постройки плана (" + ceiling + "): столб упрётся в потолок и даст нулевой прогресс "
+                        + "(observe25 B2: pillar_up 0 за 3600 тиков). Нужна лестница, а не pillar_up");
+        assertTrue(plan.possible(), "Потолок над ямой не отменяет выход: дух обязан выбраться лестницей");
+    }
+
+    @Test
     void plan_PitInsideBuildingPlan_LeavesRestoreList() {
         PitExitPlanner.Plan plan =
                 PitExitPlanner.plan(FEET, PitTestWorld.indoorPit(), new PitExitPlanner.Supplies(0, false));
@@ -190,6 +206,22 @@ class PitExitPlannerTests {
         assertFalse(
                 plan.restore().isEmpty(),
                 "Яма внутри плана постройки: за духом остаётся список клеток на засыпку, а не дыра в полу");
+    }
+
+    @Test
+    void escapeRestore_BodyCells_SkippedOthersReturned() {
+        assertTrue(
+                EscapeRestore.blockedByBody(FEET, FEET),
+                "Клетку под ногами нельзя закладывать обратно: дух замурует себя при возврате разбора");
+        assertTrue(
+                EscapeRestore.blockedByBody(new BlockCoord(FEET.x(), FEET.y() + 1, FEET.z()), FEET),
+                "Клетку головы нельзя закладывать обратно: возврат блока задохнул бы духа");
+        assertFalse(
+                EscapeRestore.blockedByBody(new BlockCoord(FEET.x(), FEET.y() + 2, FEET.z()), FEET),
+                "Клетку над головой возвращают: после выхода она уже за спиной, и разбор не оставляет следа");
+        assertFalse(
+                EscapeRestore.blockedByBody(new BlockCoord(FEET.x() + 1, FEET.y(), FEET.z()), FEET),
+                "Сломанную клетку в стороне возвращают: она не мешает стоять и не оставляет дыры");
     }
 
     @Test

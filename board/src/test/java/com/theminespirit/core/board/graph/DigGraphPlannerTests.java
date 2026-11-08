@@ -121,7 +121,9 @@ class DigGraphPlannerTests {
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
-                GraphFeedback.none());
+                GraphFeedback.none(),
+                List.of(),
+                List.of());
     }
 
     private static GraphFacts.Spirit spirit(boolean trapped, String trap) {

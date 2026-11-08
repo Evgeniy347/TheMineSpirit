@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.mining.ClearOrder;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -239,5 +240,84 @@ class FillScenarioTests {
                 "Слои по 100 при партии 256 — порции 200 и 100: слой не рвётся пополам");
         assertEquals(
                 300, FillOrder.volume(layers), "Объём порций совпадает с объёмом подсыпки: лишнего блока не берут");
+    }
+
+    @Test
+    void district_BuildFillAndClearAtOnce_ThreeSpiritsFinishWithoutLeftovers() {
+        DistrictWorld world = new DistrictWorld();
+        world.floor(0, 0, 30, 30, 63);
+        BlockCoord building = new BlockCoord(24, 64, 24);
+        world.place(List.of(building));
+
+        List<BlockCoord> pit = new ArrayList<>();
+        for (int y = 64; y <= 65; y++) {
+            for (int x = 10; x <= 12; x++) {
+                for (int z = 10; z <= 12; z++) {
+                    pit.add(new BlockCoord(x, y, z));
+                }
+            }
+        }
+        List<BlockCoord> debris = new ArrayList<>(List.of(
+                new BlockCoord(20, 64, 20),
+                new BlockCoord(20, 65, 20),
+                new BlockCoord(20, 66, 20),
+                new BlockCoord(21, 64, 20)));
+        world.place(debris);
+        BlockCoord pillarBase = new BlockCoord(16, 64, 16);
+        List<BlockCoord> pillar = PillarPlan.plan(4).stream()
+                .map(cell -> new BlockCoord(pillarBase.x() + cell.x(), pillarBase.y() + cell.y(), pillarBase.z()))
+                .toList();
+        List<BlockCoord> dismantle = PillarPlan.dismantle(4).stream()
+                .map(cell -> new BlockCoord(pillarBase.x() + cell.x(), pillarBase.y() + cell.y(), pillarBase.z()))
+                .toList();
+
+        FillOrder.Plan fill = FillOrder.fill(pit, Set.of(new BlockCoord(13, 64, 13)), world, ANCHOR);
+        assertTrue(fill.complete(), "Засыпка ямы заблокирована: " + fill.blocked());
+
+        int filled = 0;
+        int built = 0;
+        while (filled < fill.cells().size() || built < pillar.size() || !debris.isEmpty()) {
+            if (filled < fill.cells().size()) {
+                BlockCoord cell = fill.cells().get(filled++);
+                assertFalse(world.solid(cell), "Засыпка ставит блок в уже занятую клетку " + cell);
+                assertTrue(
+                        world.solid(new BlockCoord(cell.x(), cell.y() - 1, cell.z())),
+                        "Блок засыпки " + cell + " поставлен в воздух без опоры");
+                world.place(List.of(cell));
+            }
+            if (built < pillar.size()) {
+                BlockCoord cell = pillar.get(built++);
+                assertFalse(world.solid(cell), "Стойка ставится в занятую клетку " + cell);
+                assertTrue(
+                        world.solid(new BlockCoord(cell.x(), cell.y() - 1, cell.z())),
+                        "Блок стойки " + cell + " висит без опоры: дух не поставит его честно");
+                world.place(List.of(cell));
+            }
+            if (!debris.isEmpty()) {
+                List<BlockCoord> top = ClearOrder.topmost(debris, world::solid);
+                assertFalse(top.isEmpty(), "Расчистка не нашла верхний блок в куче " + debris);
+                BlockCoord removed = top.get(0);
+                world.remove(removed);
+                debris.remove(removed);
+            }
+            assertTrue(world.solid(building), "Стройка по соседству повреждена расчисткой или засыпкой");
+        }
+
+        for (BlockCoord cell : dismantle) {
+            assertTrue(world.solid(cell), "Разбор стойки не нашёл блок " + cell + ": временная опора осталась");
+            world.remove(cell);
+        }
+
+        assertTrue(FillOrder.filled(pit, world), "Яма не засыпана до конца: аудит мира не закроет работу");
+        assertTrue(debris.isEmpty(), "Куча расчищена не вся: " + debris);
+        for (BlockCoord cell : pillar) {
+            assertFalse(world.solid(cell), "Временный блок стойки " + cell + " остался в мире после разбора");
+        }
+        assertTrue(world.solid(building), "Постройка поселения цела: соседние работы её не задели");
+        for (int x = 0; x <= 30; x++) {
+            for (int z = 0; z <= 30; z++) {
+                assertTrue(world.solid(new BlockCoord(x, 63, z)), "Пол участка " + x + "," + z + " разобран");
+            }
+        }
     }
 }

@@ -47,7 +47,8 @@ final class RescueTicket {
         }
         boolean tool = PickaxeCheck.has(spirit);
         boolean open = DigOutScript.open(level, feet);
-        RescuePlans.Self method = RescuePlans.self(new RescuePlans.Situation(false, false, tool, open, noPath));
+        int blocks = PitRescue.supplies(spirit).blocks();
+        RescuePlans.Self method = RescuePlans.self(new RescuePlans.Situation(false, false, tool, open, noPath, blocks));
         return switch (method) {
             case PIT ->
                 throw new IllegalStateException("Яма без плана выхода: PitRescue обязан назвать способ подъёма");
@@ -55,12 +56,21 @@ final class RescueTicket {
                 new Escape(
                         true, new FallbackNode(List.of(gotoPoint(home), digOut(home))), "путь домой есть, идёт пешком");
             case DIG -> dig(level, feet, home, open);
-            case NONE -> new Escape(false, null, refusal(open, noPath));
+            case BRIDGE ->
+                new Escape(
+                        true,
+                        new FallbackNode(List.of(
+                                RescuePlans.bridge(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), home, blocks),
+                                digOut(home))),
+                        "пути домой нет, кирки нет: мостит к поселению своими блоками (" + blocks + ")");
+            case NONE -> new Escape(false, null, refusal(open, noPath, blocks));
         };
     }
 
     private static Escape dig(ServerLevel level, BlockPos feet, BlockCoord home, boolean open) {
-        BlockCoord goal = open ? home : SurfacePoint.of(level, new BlockCoord(feet.getX(), feet.getY(), feet.getZ()));
+        BlockCoord goal = open
+                ? climbOutPoint(level, feet, home)
+                : SurfacePoint.of(level, new BlockCoord(feet.getX(), feet.getY(), feet.getZ()));
         if (goal.equals(home)) {
             return new Escape(true, digOut(home), "пути нет, копает к дому");
         }
@@ -68,12 +78,24 @@ final class RescueTicket {
                 true, new FallbackNode(List.of(digOut(goal), gotoPoint(home))), "под землёй, копает на поверхность");
     }
 
-    private static String refusal(boolean open, boolean noPath) {
+    private static BlockCoord climbOutPoint(ServerLevel level, BlockPos feet, BlockCoord home) {
+        if (home.y() >= feet.getY()) {
+            return home;
+        }
+        int dx = Integer.compare(home.x(), feet.getX()) * 4;
+        int dz = Integer.compare(home.z(), feet.getZ()) * 4;
+        if (dx == 0 && dz == 0) {
+            dx = 4;
+        }
+        return SurfacePoint.of(level, new BlockCoord(feet.getX() + dx, feet.getY(), feet.getZ() + dz));
+    }
+
+    private static String refusal(boolean open, boolean noPath, int blocks) {
         if (!open) {
             return "под землёй нужна кирка, чтобы выйти";
         }
         if (noPath) {
-            return "пути домой нет, а кирки, чтобы прокопать, нет";
+            return "пути домой нет, а кирки и блоков для моста нет (" + blocks + ")";
         }
         return "выход не найден: нет ступеней и кирки";
     }
@@ -83,6 +105,6 @@ final class RescueTicket {
     }
 
     private static ScriptCall digOut(BlockCoord goal) {
-        return new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z()));
+        return new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z(), "rescue", true));
     }
 }

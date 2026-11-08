@@ -77,6 +77,23 @@ class GraphStoreFarmFragmentsTests {
     }
 
     @Test
+    void farmFragment_DirtWithoutSeeds_StillPlansWheatFieldAndSeedGathering() {
+        GraphPlan plan = GraphWorld.settled()
+                .built("wheat_field", GraphState.Built.PLANNED)
+                .with("dirt", 8)
+                .with("wheat_seeds", 0)
+                .plan();
+
+        assertTrue(
+                plan.tasks().stream().anyMatch(task -> "building:wheat_field".equals(task.id())),
+                "Грядка этапа 1 не строится сама собой: при наличии земли она становится заданием, "
+                        + "даже если семян ещё нет — их добудет граф: " + plan.tasks());
+        assertTrue(
+                plan.tasks().stream().anyMatch(task -> task.id().startsWith("gather_seeds")),
+                "Нехватку семян грядка заказывает через граф, а не ждёт их случайно: " + plan.tasks());
+    }
+
+    @Test
     void farmFragment_FarmEvents_AreDeclared() {
         for (String event :
                 List.of("crop_ready", "crop_dry", "field_empty", "animal_starving", "pen_full", "orchard_empty")) {

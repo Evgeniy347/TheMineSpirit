@@ -46,6 +46,45 @@ class StageRollbackTests {
     }
 
     @Test
+    void view_ConfirmedGateSnapshot_ReportsLiveWorldMissing() {
+        BoardLedger ledger = new BoardLedger();
+        ledger.complete(BoardCase.BUILD_MINE, 1);
+        ledger.complete(BoardCase.BUILD_HOUSE, 1);
+        ledger.gate(new StageGate(1, Map.of("BUILD_HOUSE", 1, "BUILD_MINE", 1)));
+        StageRollback.World world = world(Map.of(
+                "BUILD_HOUSE:1", StageRollback.Readiness.READY,
+                "BUILD_MINE:1", StageRollback.Readiness.READY));
+
+        StageView view = StageRollback.view(rules(), BUILDING_STAGES, ledger, world);
+
+        assertNull(
+                view.missing().get("BUILD_HOUSE"),
+                "Дом закрыт журналом и готов по миру — его нет в нехватке: снимок гейта не выдаётся за "
+                        + "текущий аудит (observe25 B13). Нехватка: " + view.missing());
+        assertNull(
+                view.missing().get("BUILD_MINE"),
+                "Шахта закрыта и готова по миру — её тоже нет в нехватке: " + view.missing());
+    }
+
+    @Test
+    void view_ClosedButWorldNotReady_StaysInMissing() {
+        BoardLedger ledger = new BoardLedger();
+        ledger.complete(BoardCase.BUILD_MINE, 1);
+        ledger.complete(BoardCase.BUILD_HOUSE, 1);
+        ledger.gate(new StageGate(1, Map.of()));
+        StageRollback.World world = world(Map.of(
+                "BUILD_HOUSE:1", StageRollback.Readiness.READY,
+                "BUILD_MINE:1", StageRollback.Readiness.NOT_READY));
+
+        StageView view = StageRollback.view(rules(), BUILDING_STAGES, ledger, world);
+
+        assertEquals(
+                1,
+                view.missing().get("BUILD_MINE"),
+                "Журнал закрыл шахту, но мир не готов — это текущая нехватка, а не закрытая строка: " + view.missing());
+    }
+
+    @Test
     void view_StageTwo_ListsEarlierStageDriftAndCurrentStageMissing() {
         BoardLedger ledger = firstStageBuilt();
         StageRollback.World world = world(Map.of(

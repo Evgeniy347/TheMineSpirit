@@ -15,6 +15,9 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
             int base,
             Map<String, Integer> consumes,
             @Nullable String building,
+            @Nullable String world,
+            @Nullable String onlyWhenEmpty,
+            @Nullable String owner,
             boolean implemented) {
         public Task {
             consumes = Map.copyOf(consumes);
@@ -31,6 +34,36 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
         this(name, tasks, push, advice, false);
     }
 
+    static Map<String, GraphEvent> withRepairs(
+            Map<String, GraphEvent> events, Map<String, SupplyGraph.Building> buildings) {
+        GraphEvent template = events.get("building_damaged");
+        if (template == null || template.tasks().isEmpty()) {
+            return events;
+        }
+        Map<String, GraphEvent> repaired = new LinkedHashMap<>(events);
+        for (String id : buildings.keySet()) {
+            String name = GraphWorldEvents.REPAIR + id;
+            if (repaired.containsKey(name)) {
+                continue;
+            }
+            List<Task> tasks = new ArrayList<>();
+            for (Task task : template.tasks()) {
+                tasks.add(new Task(
+                        "repair:" + id,
+                        task.boardCase(),
+                        task.base(),
+                        task.consumes(),
+                        id,
+                        task.world(),
+                        task.onlyWhenEmpty(),
+                        task.owner(),
+                        task.implemented()));
+            }
+            repaired.put(name, new GraphEvent(name, tasks, template.push(), template.advice(), template.life()));
+        }
+        return repaired;
+    }
+
     static Map<String, GraphEvent> parse(JsonNode root) {
         Map<String, GraphEvent> events = new LinkedHashMap<>();
         root.path("events").properties().forEach(entry -> {
@@ -41,7 +74,10 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
                         BoardCase.valueOf(task.path("case").asText()),
                         task.path("base").asInt(),
                         counts(task.path("consumes")),
-                        task.hasNonNull("building") ? task.path("building").asText() : null,
+                        text(task, "building"),
+                        text(task, "world"),
+                        text(task, "onlyWhenEmpty"),
+                        text(task, "owner"),
                         task.path("implemented").asBoolean(true)));
             }
             List<String> advice = new ArrayList<>();
@@ -59,11 +95,24 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
     }
 
     static int priority(GraphState state, SupplyGraph graph, String key, double value) {
-        return priority(state.facts(), graph.events(), key, value, GraphPriorities.work(graph), graph.maxPriority());
+        return priority(
+                state.facts(),
+                graph.events(),
+                key,
+                value,
+                GraphPriorities.work(graph),
+                graph.maxPriority(),
+                graph.costs().life());
     }
 
     static int priority(
-            GraphFacts facts, Map<String, GraphEvent> events, String key, double value, int workMax, int lifeMax) {
+            GraphFacts facts,
+            Map<String, GraphEvent> events,
+            String key,
+            double value,
+            int workMax,
+            int lifeMax,
+            GraphLife life) {
         if (key.startsWith("event:")) {
             int start = "event:".length();
             int end = key.indexOf(':', start);
@@ -76,7 +125,7 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
                         .findFirst()
                         .orElse(null);
                 if (task != null) {
-                    return LifeThreats.priority(facts, event, task, lifeMax);
+                    return LifeThreats.priority(facts, event, task, lifeMax, life);
                 }
             }
         }
@@ -88,5 +137,9 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
         node.properties()
                 .forEach(entry -> counts.put(entry.getKey(), entry.getValue().asInt()));
         return counts;
+    }
+
+    private static @Nullable String text(JsonNode node, String field) {
+        return node.hasNonNull(field) ? node.path(field).asText() : null;
     }
 }

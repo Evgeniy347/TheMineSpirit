@@ -8,7 +8,6 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.CaseMaterials;
-import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.GroundsPlan;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.MineDescentBottom;
@@ -136,7 +135,7 @@ public final class FirstStepsRunner {
                 .orElseThrow(() -> new IllegalStateException(
                         "Участок обмерен, а места этапа 1 нет: план поселения не сохранился в мире"));
         BlockCoord home = new BlockCoord(
-                stage.anchor().x(), homeY(spirits), stage.anchor().z());
+                stage.anchor().x(), SettlementHome.y(spirits), stage.anchor().z());
         String wood = woodOf(level, home, stock);
         StoneSite site = new StoneSite(home, wood, stage);
         Scan scan = buildFacts(level, site, stock, service, world);
@@ -652,7 +651,7 @@ public final class FirstStepsRunner {
 
     public static Optional<SettlementPlot> plotOf(
             ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
-        List<BlockCoord> homes = homes(spirits);
+        List<BlockCoord> homes = SettlementHome.homes(spirits);
         SettlementPlotStore store = SettlementPlotStore.get(level);
         BlockCoord center = SettlementPlot.center(homes);
         TownPlan town = TownSurvey.town(level, service, store, center, now);
@@ -673,39 +672,11 @@ public final class FirstStepsRunner {
                 kept = PlotHeights.remeasured(service, store, level, kept, area, feet, now);
             }
             kept = PlotHeights.markLeveled(service, store, kept);
-            return Optional.of(checkedWood(level, service, store, kept, now));
+            return Optional.of(PlotWood.checked(level, service, store, kept, now));
         }
         String wood = SettlementWood.survey(level, center, service.stock().available());
         int above = SettlementGround.waterAbove(level, area);
         return Optional.of(PlotHeights.surveyed(
                 service, store, new PlotHeights.Draft(area, center, homes.size(), wood, above), feet, now));
-    }
-
-    private static SettlementPlot checkedWood(
-            ServerLevel level, BoardService service, SettlementPlotStore store, SettlementPlot plot, long now) {
-        if (service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1)) {
-            return plot;
-        }
-        Optional<String> ruled =
-                SettlementWood.biomeRules(service.stock().available(), SettlementWood.biomeAt(level, plot.anchor()));
-        if (ruled.isEmpty() || ruled.get().equals(plot.wood())) {
-            return plot;
-        }
-        SettlementPlot fixed = plot.withWood(ruled.get());
-        store.fix(fixed);
-        LOGGER.info(
-                "[plot] порода плана {} → {}: запас брёвен меньше 16 — решает биом (INC-62)",
-                plot.wood(),
-                fixed.wood());
-        service.journal().recordEntry(SettlementLevel.journalEntry(fixed, now, ConfigStamp.current()));
-        return fixed;
-    }
-
-    private static int homeY(List<SpiritEntity> spirits) {
-        return SettlementPlot.center(homes(spirits)).y();
-    }
-
-    private static List<BlockCoord> homes(List<SpiritEntity> spirits) {
-        return spirits.stream().flatMap(spirit -> spirit.home().stream()).toList();
     }
 }

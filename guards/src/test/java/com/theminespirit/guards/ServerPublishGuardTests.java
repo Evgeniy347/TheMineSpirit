@@ -17,6 +17,9 @@ import org.junit.jupiter.api.Test;
 
 class ServerPublishGuardTests {
     private static final Path PUBLISH = Path.of("scripts/publish.sh");
+    private static final Path NIGHTLY = Path.of("scripts/nightly-analyzers.sh");
+    private static final Path CHECK = Path.of("scripts/testing/check-publish.sh");
+    private static final Path LEAD = Path.of("docs/LEAD-AGENT.md");
     private static final Path SERVER = Path.of("server");
     private static final List<String> SERVER_SCRIPTS = List.of(
             "scripts/common.sh",
@@ -56,6 +59,37 @@ class ServerPublishGuardTests {
     }
 
     @Test
+    void publishScript_RejectsBrokenJar_BeforeInstall() throws IOException {
+        String script = read(PUBLISH);
+        assertTrue(
+                script.contains("verify_mod_jar") && script.contains("META-INF/neoforge.mods.toml"),
+                "publish.sh не проверяет содержимое jar: 08.11 в 0.1.3253 уехал jar с пустым "
+                        + "META-INF/neoforge.mods.toml, сервер не стартовал («Missing ModLoader»), простой ~20 мин. "
+                        + "Как надо: verify_mod_jar — непустой mods.toml с modId и больше 1000 классов");
+        int verified = script.indexOf("jar не прошёл проверку содержимого");
+        int installed = script.indexOf("echo \"Установка мода в");
+        assertTrue(
+                verified > 0 && installed > 0 && verified < installed,
+                "Проверка jar в publish.sh должна стоять до установки (и до остановки сервера): иначе битый jar "
+                        + "снова уедет в mods/ и уронит сервер");
+        assertTrue(
+                Files.isRegularFile(CHECK),
+                "Нет scripts/testing/check-publish.sh: нечем проверить, что негодный jar не доходит до установки");
+        String check = read(CHECK);
+        for (String scenario : List.of("пуст (0 байт)", "не объявляет modId", "классов 1000", "--sync", "негоден")) {
+            assertTrue(
+                    check.contains(scenario),
+                    "Проверка check-publish.sh потеряла опыт «" + scenario + "»: пустой/без modId/без классов jar, "
+                            + "граница 1000 классов и --sync не должны расходиться по клиентам");
+        }
+        String lead = read(LEAD);
+        assertTrue(
+                lead.contains("neoforge.mods.toml") && lead.contains("1000"),
+                "docs/LEAD-AGENT.md → «Слияние и выкладка» обязана называть, что проверяется в jar перед установкой: "
+                        + "непустой neoforge.mods.toml с modId и больше 1000 классов");
+    }
+
+    @Test
     void serverFiles_LiveInModRepo_ArePresent() {
         List<String> missing = new ArrayList<>();
         for (String relative : REQUIRED_FILES) {
@@ -90,6 +124,54 @@ class ServerPublishGuardTests {
                 script.contains("hang-watch.sh") && script.contains("crontab"),
                 "publish.sh не ставит cron сторожа зависания: server/scripts/hang-watch.sh доедет до сервера, "
                         + "но не запустится по расписанию, и зависший сервер снова никто не заметит");
+    }
+
+    @Test
+    void publishScript_NightlyAnalyzers_AreDeployedAndScheduled() throws IOException {
+        String script = read(PUBLISH);
+        assertTrue(
+                script.contains("nightly-analyzers.sh"),
+                "publish.sh обязан раскладывать scripts/nightly-analyzers.sh на сервер, как server-cleanup.sh: "
+                        + "иначе ночной полный прогон анализаторов не доедет до сервера");
+        assertTrue(
+                script.contains("install_nightly_analyzers_cron") && script.contains("0 3 * * *"),
+                "publish.sh не ставит cron ночного анализатора на 03:00: скрипт на сервере есть, но сам не "
+                        + "запускается, и находки SpotBugs/PMD/Checkstyle никто не увидит");
+        assertTrue(
+                script.contains("BUILD_LOCK") && script.contains("acquire_build_lock"),
+                "Публикация и ночная сборка должны делить один замок: иначе в 03:00 они соберут одновременно "
+                        + "и отнимут процессор у живого сервера");
+    }
+
+    @Test
+    void nightlyScript_FullAnalyzes_CleanTreeNoPublication() throws IOException {
+        String nightly = read(NIGHTLY);
+        assertTrue(
+                nightly.contains("-Ptheminespirit.analyzers=on") && nightly.contains(" check"),
+                "Ночной прогон обязан включать полный набор анализаторов и тесты: check с "
+                        + "-Ptheminespirit.analyzers=on");
+        assertTrue(
+                nightly.contains("--offline"),
+                "На сервере Gradle работает из офлайн-кэша (init-скрипт zz-offline-publish.gradle): без --offline "
+                        + "сборка полезет в сеть и может зависнуть");
+        assertTrue(
+                nightly.contains("git clone") && nightly.contains("git") && nightly.contains("clean -qfdx"),
+                "Ночная сборка идёт в отдельном чистом checkout: рабочие деревья сервера (the-mine-spirit) "
+                        + "трогать нельзя");
+        assertTrue(
+                nightly.contains("nice") && nightly.contains("ionice"),
+                "На машине живой сервер игры: сборка обязана идти с низким приоритетом (nice/ionice)");
+        assertTrue(
+                nightly.contains("flock") && nightly.contains("NIGHTLY_STATE"),
+                "Нужны замок против одновременной публикации/сборки и sha последнего проверенного коммита: "
+                        + "без них ночной прогон повторяет одну и ту же сборку");
+        assertTrue(
+                nightly.contains("NIGHTLY_STATUS") && nightly.contains("NIGHTLY_LOG"),
+                "Результат обязан попадать в краткий лог и статус-файл: иначе находки анализаторов никто не найдёт");
+        String code = nightly.replaceAll("(?m)^\\s*#.*$", "");
+        assertFalse(
+                code.contains("publish.sh") || code.contains("world-snapshot.sh") || code.contains("stop.sh"),
+                "Ночной анализатор не публикует мод и не перезапускает сервер: только сборка и отчёт");
     }
 
     @Test

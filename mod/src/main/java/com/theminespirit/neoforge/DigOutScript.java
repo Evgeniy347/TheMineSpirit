@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.engine.ScriptFactory;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.movement.DigOutObstacle;
@@ -14,11 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.DoorBlock;
-import net.minecraft.world.level.block.FenceGateBlock;
-import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
@@ -40,32 +37,43 @@ public final class DigOutScript implements ScriptInstance {
     private Direction direction;
     private BlockPos next;
     private boolean breaking;
-    private @Nullable String restoreId;
     private int stepTicks;
     private int steps;
     private int turns;
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
     private @Nullable DigOutRoute routeFollow;
+    private boolean routeFallback;
+    private final DigOutRestore restore;
+
+    static ScriptFactory factory(SpiritEntity spirit) {
+        return params -> new DigOutScript(spirit, GotoParams.from(params), GotoParams.rescue(params));
+    }
 
     public DigOutScript(SpiritEntity spirit, GotoParams target) {
+        this(spirit, target, false);
+    }
+
+    public DigOutScript(SpiritEntity spirit, GotoParams target, boolean rescue) {
         this.spirit = spirit;
         this.level = spirit.level();
         this.target = target;
         this.fromPit = open(level, spirit.blockPosition());
         this.descending = target.y() < spirit.blockPosition().getY();
-        this.breaker = BlockBreaker.escaping(spirit);
+        this.breaker = BlockBreaker.escaping(spirit, rescue);
         this.placer = new BlockPlacer(spirit, PlotProtection.Ground.NONE);
+        this.restore = new DigOutRestore(spirit, level);
         boolean sealedNow = sealed(level, spirit.blockPosition());
         this.backfill = new DigOutBackfill(
                 spirit,
                 level,
                 placer,
-                !descending && !sealedNow && target.y() > spirit.blockPosition().getY());
+                !descending && !sealedNow && target.y() > spirit.blockPosition().getY(),
+                restore);
     }
 
     public static boolean sealed(Level level, BlockPos feet) {
-        return SealedSpace.sealed(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), new SealedView(level));
+        return SealedSpace.sealed(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), new DigOutSealedView(level));
     }
 
     public static boolean embedded(SpiritEntity spirit) {
@@ -74,38 +82,6 @@ public final class DigOutScript implements ScriptInstance {
 
     public static boolean open(Level level, BlockPos cell) {
         return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cell.getX(), cell.getZ()) <= cell.getY();
-    }
-
-    private record SealedView(Level level) implements SealedSpace.View {
-        @Override
-        public boolean passable(BlockCoord cell) {
-            BlockPos pos = pos(cell);
-            if (!level.isLoaded(pos)) {
-                return false;
-            }
-            BlockState state = level.getBlockState(pos);
-            if (state.getBlock() instanceof DoorBlock
-                    || state.getBlock() instanceof FenceGateBlock
-                    || state.getBlock() instanceof TrapDoorBlock) {
-                return true;
-            }
-            return DigOutBackfill.passable(level, pos);
-        }
-
-        @Override
-        public boolean swimmable(BlockCoord cell) {
-            BlockPos pos = pos(cell);
-            return level.isLoaded(pos) && level.getFluidState(pos).is(FluidTags.WATER);
-        }
-
-        @Override
-        public boolean sky(BlockCoord cell) {
-            return open(level, pos(cell));
-        }
-
-        private static BlockPos pos(BlockCoord cell) {
-            return new BlockPos(cell.x(), cell.y(), cell.z());
-        }
     }
 
     @Override
@@ -118,9 +94,10 @@ public final class DigOutScript implements ScriptInstance {
         }
         if (embedded(spirit) && !breaking) {
             BlockPos feet = spirit.blockPosition();
-            restoreId = BlockStates.idOf(level.getBlockState(feet));
+            BlockState inside = level.getBlockState(feet);
             BlockBreaker.Begin begin = breaker.begin(feet);
             if (begin instanceof BlockBreaker.Started) {
+                restore.remember(feet, inside);
                 breaking = true;
                 return ScriptStatus.RUNNING;
             }
@@ -144,6 +121,8 @@ public final class DigOutScript implements ScriptInstance {
                 : feet.getY() >= target.y();
         if ((open(level, feet) && !fromPit) || goalReached) {
             backfill.report();
+            restore.returnSpoil();
+            PlanBreachRestore.restore(spirit, level, placer, feet);
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
         }
@@ -168,8 +147,7 @@ public final class DigOutScript implements ScriptInstance {
                 return turnOrFail("пол ступени " + ahead.toShortString() + " не подложить: " + refusal.get());
             }
         }
-        backfill.remember(feet, restoreId);
-        restoreId = null;
+        backfill.remember(feet);
         next = ahead.above();
         stepTicks = 0;
         moveTo(next);
@@ -177,14 +155,17 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     private boolean followRoute() {
+        if (routeFallback) {
+            return false;
+        }
         if (routeFollow == null) {
             routeFollow = new DigOutRoute(
                     spirit, new BlockCoord(target.x(), target.y(), target.z()), descending, HOME_RADIUS);
         }
         DigOutRoute.State state = routeFollow.tick();
-        if (state == DigOutRoute.State.DESCENT_FAILED) {
+        if (state == DigOutRoute.State.DESCENT_FAILED || state == DigOutRoute.State.NO_ROUTE) {
             routeFollow = null;
-            fail("пути вниз к " + target + " нет: ступени и прыжок не находятся");
+            routeFallback = true;
             return false;
         }
         return state == DigOutRoute.State.RUNNING;
@@ -225,8 +206,10 @@ public final class DigOutScript implements ScriptInstance {
         if (!level.getBlockState(cell).getFluidState().isEmpty()) {
             return turnOrFail("в проходе жидкость в " + cell.toShortString());
         }
+        BlockState before = level.getBlockState(cell);
         return switch (breaker.begin(cell)) {
             case BlockBreaker.Started ignored -> {
+                restore.remember(cell, before);
                 breaking = true;
                 yield ScriptStatus.RUNNING;
             }
@@ -269,6 +252,7 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     private ScriptStatus fail(String reason) {
+        restore.returnSpoil();
         failureReason = reason;
         outcome = ScriptStatus.FAILED;
         return outcome;
@@ -290,6 +274,7 @@ public final class DigOutScript implements ScriptInstance {
             breaking = false;
         }
         spirit.getNavigation().stop();
+        restore.returnSpoil();
     }
 
     @Override

@@ -79,6 +79,35 @@ class GraphLifeCasesTests {
     }
 
     @Test
+    void plan_HungryFoodTasks_NameSourceAndOwner() {
+        GraphEvent hungry = GraphWorld.GRAPH.events().get("hungry");
+
+        assertTrue(hungry != null, "Событие голода объявлено в графе");
+        GraphEvent.Task hunt = hungry.tasks().stream()
+                .filter(task -> "hunt".equals(task.id()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Нет задания охоты в голоде: " + hungry.tasks()));
+        GraphEvent.Task fish = hungry.tasks().stream()
+                .filter(task -> "fish".equals(task.id()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Нет задания рыбалки в голоде: " + hungry.tasks()));
+        GraphEvent.Task wait = hungry.tasks().stream()
+                .filter(task -> "wait_food".equals(task.id()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Нет ожидания еды в голоде: " + hungry.tasks()));
+
+        assertEquals(BoardCase.HUNT_WILD_SHEEP, hunt.boardCase(), "Охота — существующая механика добычи мяса");
+        assertEquals("animals", hunt.world(), "Охота требует животных в округе: без них источник не выдумывается");
+        assertEquals("food", hunt.onlyWhenEmpty(), "Еду добывают только пока еды нет: иначе она важнее поесть");
+        assertEquals("hungriest", hunt.owner(), "Добычу еды граф адресует самому голодному духу");
+        assertEquals(BoardCase.FISH, fish.boardCase(), "Рыбалка — существующая механика добычи еды");
+        assertEquals("water", fish.world(), "Рыбалка требует воды в округе");
+        assertEquals(BoardCase.ACTIVITY_SENSE, wait.boardCase(), "Без источника дух ждёт на месте, а не копает");
+        assertEquals("food", wait.onlyWhenEmpty(), "Ждать еду есть смысл только пока еды нет");
+        assertEquals("hungriest", wait.owner(), "Ожидание адресовано голодному духу, а не сытому");
+    }
+
+    @Test
     void plan_IdleSpirit_GetsStandAndScanNotRunAround() {
         GraphWorld world = GraphWorld.empty().event("more6_spirit_idle");
         GraphPlan plan = world.plan();

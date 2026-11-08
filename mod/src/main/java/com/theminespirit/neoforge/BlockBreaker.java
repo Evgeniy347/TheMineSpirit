@@ -71,6 +71,7 @@ public final class BlockBreaker {
 
     private final SpiritEntity spirit;
     private final boolean escaping;
+    private final boolean rescue;
     private BlockPos pos;
     private BlockState state;
     private Choice choice;
@@ -86,16 +87,17 @@ public final class BlockBreaker {
     private PlotProtection.Ground ground = PlotProtection.Ground.NONE;
 
     public BlockBreaker(SpiritEntity spirit) {
-        this(spirit, false);
+        this(spirit, false, false);
     }
 
-    private BlockBreaker(SpiritEntity spirit, boolean escaping) {
+    private BlockBreaker(SpiritEntity spirit, boolean escaping, boolean rescue) {
         this.spirit = spirit;
         this.escaping = escaping;
+        this.rescue = rescue;
     }
 
-    public static BlockBreaker escaping(SpiritEntity spirit) {
-        return new BlockBreaker(spirit, true);
+    public static BlockBreaker escaping(SpiritEntity spirit, boolean rescue) {
+        return new BlockBreaker(spirit, true, rescue);
     }
 
     public Begin begin(BlockPos target) {
@@ -173,7 +175,8 @@ public final class BlockBreaker {
         if (hardness < 0) {
             return new Refused(
                     RefuseReason.UNBREAKABLE,
-                    "блок " + blockId(targetState) + " в " + target.toShortString() + " неразрушим: " + hardness);
+                    "блок " + BreakNames.blockId(targetState) + " в " + target.toShortString() + " неразрушим: "
+                            + hardness);
         }
         if (reachLimited) {
             double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(target));
@@ -194,7 +197,7 @@ public final class BlockBreaker {
             case DEMOLISH -> spirit.protectionGate().checkDemolish(target, targetState);
             case REPAIR -> spirit.protectionGate().checkRepair(target, targetState);
             case EXCAVATE -> spirit.protectionGate().checkExcavate(target, targetState);
-            case BREAK, CHOP -> spirit.protectionGate().checkBreakOrEscape(target, targetState, escaping);
+            case BREAK, CHOP -> spirit.protectionGate().checkBreakOrEscape(target, targetState, escaping, rescue);
         };
         if (decision instanceof BlockProtection.Refused refused) {
             return new Protected(refused.policy(), refused.reason());
@@ -211,14 +214,14 @@ public final class BlockBreaker {
         forcedSlot = requestedSlot;
         choice = ToolChoice.best(options, reserve, MiningTables.repairTiers());
         if (ToolChoice.shouldRefuseForLackOfTool(choice, options)) {
-            return new Refused(RefuseReason.NEED_TOOL, needToolReason(targetState));
+            return new Refused(RefuseReason.NEED_TOOL, BreakNames.needToolReason(targetState));
         }
         boolean pickaxeBlock =
                 targetState.requiresCorrectToolForDrops() && targetState.is(BlockTags.MINEABLE_WITH_PICKAXE);
         if (ToolChoice.refusesHandDig(choice, options, pickaxeBlock, escaping)) {
             return new Refused(
                     RefuseReason.NEED_TOOL,
-                    "нужна кирка для " + blockId(targetState)
+                    "нужна кирка для " + BreakNames.blockId(targetState)
                             + ": руками без дропа не копаем — кирки нет, дух не замурован");
         }
         tool = choice.slot() == ToolChoice.HAND
@@ -363,12 +366,6 @@ public final class BlockBreaker {
         return bestSlot;
     }
 
-    private static String needToolReason(BlockState targetState) {
-        String kind = RequiredTier.kindOf(targetState);
-        String what = kind.isEmpty() ? "нужен инструмент" : "нужен инструмент (" + kind + ")";
-        return what + " для " + blockId(targetState) + ": подходящий есть, но изношен, запасного в инвентаре нет";
-    }
-
     private void showCrack(Level level, int stage) {
         int clamped = Math.min(MAX_STAGE, stage);
         if (clamped != crackStage) {
@@ -421,9 +418,5 @@ public final class BlockBreaker {
             case EXCAVATE -> PlotProtection.Ground.PLAN_EXCAVATE;
             case BREAK, HARVEST, CHOP, CHOP_HARVEST -> PlotProtection.Ground.NONE;
         };
-    }
-
-    private static String blockId(BlockState blockState) {
-        return BuiltInRegistries.BLOCK.getKey(blockState.getBlock()).toString();
     }
 }

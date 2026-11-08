@@ -9,7 +9,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -26,6 +28,11 @@ class SpotBugsDetectorConfigGuardTests {
     private static final Pattern DETECTOR =
             Pattern.compile("^\\|\\s*`([A-Za-z0-9_]+)`\\s*\\|.*\\|\\s*да\\s*\\|\\s*$", Pattern.MULTILINE);
     private static final Pattern QUOTED = Pattern.compile("'([^']+)'");
+    private static final Pattern STATIC_SYNCHRONIZED = Pattern.compile("\\bstatic\\s+synchronized\\b");
+    private static final Pattern COORDINATE_MIDPOINT =
+            Pattern.compile("\\(\\s*([A-Za-z_]\\w*[XZ])\\s*\\+\\s*([A-Za-z_]\\w*[XZ])\\s*\\)\\s*/\\s*2\\b");
+    private static final Pattern EQUALS_STRING_LITERAL =
+            Pattern.compile("([A-Za-z_$][\\w$]*|\\)|\\])\\s*\\.equals\\(\\s*\"");
 
     @Test
     void omittedVisitors_ConfigAndReport_Match() {
@@ -80,6 +87,92 @@ class SpotBugsDetectorConfigGuardTests {
                 excludePatterns(read(EXCLUDE)),
                 "Набор исключений SpotBugs изменился: ослаблять его ради скорости запрещено, отключай детектор "
                         + "целиком в omitVisitors с причиной");
+    }
+
+    @Test
+    void productionSources_StaticSynchronizedMethods_AreAbsent() {
+        List<String> offenders = new ArrayList<>();
+        SourceFiles.allMain()
+                .forEach((file, text) -> offenders.addAll(
+                        matches(STATIC_SYNCHRONIZED, SourceFiles.withoutTextBlocks(text), file.toString())));
+
+        assertEquals(
+                List.of(),
+                offenders,
+                "static synchronized держит замок класса: поток, ждущий его, останавливает весь сервер, а "
+                        + "синхронизация висит на публичном API, куда может войти кто угодно. SpotBugs ловил это "
+                        + "как USO_UNSAFE_STATIC_METHOD_SYNCHRONIZATION (BuildSquadRegistry, WorkReserveHub, "
+                        + "PolicyConfig, b1523e0f). Как надо: private static final Object LOCK и synchronized (LOCK) "
+                        + "внутри метода. Нарушители (файл:строка)");
+    }
+
+    @Test
+    void productionSources_CoordinateMidpoint_SummedInLong() {
+        List<String> offenders = new ArrayList<>();
+        SourceFiles.allMain()
+                .forEach((file, text) -> offenders.addAll(
+                        matches(COORDINATE_MIDPOINT, SourceFiles.withoutTextBlocks(text), file.toString())));
+
+        assertEquals(
+                List.of(),
+                offenders,
+                "Середина двух координат X/Z считается как (a + b) / 2 в int: сумма переполняется, центр уезжает "
+                        + "за край мира, и поиск идёт не там. SpotBugs ловил это как "
+                        + "IM_AVERAGE_COMPUTATION_COULD_OVERFLOW (TreeSupport, FloatingScan, b003b3b2). Как надо: "
+                        + "(int) (((long) a + b) / 2). Нарушители (файл:строка)");
+    }
+
+    @Test
+    void sources_StringComparison_PutsLiteralFirst() {
+        List<String> offenders = new ArrayList<>();
+        List<Map<Path, String>> roots = List.of(SourceFiles.allMain(), SourceFiles.allTests());
+        for (Map<Path, String> sources : roots) {
+            sources.forEach((file, text) ->
+                    offenders.addAll(equalsLiteralFindings(SourceFiles.withoutTextBlocks(text), file.toString())));
+        }
+
+        assertEquals(
+                List.of(),
+                offenders,
+                "Сравнение переменной с литералом через variable.equals(\"…\") падает с NPE, если переменная null, "
+                        + "и прячет проверку от читателя. PMD нашёл так 209 мест (LiteralsFirstInComparisons). "
+                        + "Как надо: \"литерал\".equals(variable) — null-safe и читается как вопрос «равно ли». "
+                        + "Нарушители (файл:строка)");
+    }
+
+    @Test
+    void analyzerFindingsPatterns_Violations_AreDetected() {
+        assertEquals(
+                List.of("Sample.java:2"),
+                matches(
+                        STATIC_SYNCHRONIZED,
+                        "class Sample {\n    static synchronized void run() { }\n}\n",
+                        "Sample.java"),
+                "Сторож ослеп: static synchronized обязан попадать в нарушители");
+        assertEquals(
+                List.of(),
+                matches(STATIC_SYNCHRONIZED, "static void run() { synchronized (LOCK) { } }", "Sample.java"),
+                "Сторож ложно срабатывает: замок-объект — правильная форма");
+        assertEquals(
+                List.of("Sample.java:1"),
+                matches(COORDINATE_MIDPOINT, "int mid = (minX + maxX) / 2;", "Sample.java"),
+                "Сторож ослеп: середина координат без long обязана попадать в нарушители");
+        assertEquals(
+                List.of(),
+                matches(COORDINATE_MIDPOINT, "int mid = (int) (((long) minX + maxX) / 2);", "Sample.java"),
+                "Сторож ложно срабатывает: сумма в long переполнения не даёт");
+        assertEquals(
+                List.of("Sample.java:1"),
+                equalsLiteralFindings("ticket.id().equals(\"x\")", "Sample.java"),
+                "Сторож ослеп: variable.equals(\"…\") обязан находиться");
+        assertEquals(
+                List.of(),
+                equalsLiteralFindings("\"x\".equals(ticket.id())", "Sample.java"),
+                "Сторож ложно срабатывает: литерал слева — правильная форма");
+        assertEquals(
+                List.of(),
+                equalsLiteralFindings("Objects.equals(\"x\", ticket.id())", "Sample.java"),
+                "Сторож ложно срабатывает: Objects.equals принимает литерал первым аргументом");
     }
 
     @Test
@@ -153,6 +246,27 @@ class SpotBugsDetectorConfigGuardTests {
             }
         }
         return patterns;
+    }
+
+    static List<String> matches(Pattern pattern, String text, String file) {
+        List<String> found = new ArrayList<>();
+        Matcher matcher = pattern.matcher(text);
+        while (matcher.find()) {
+            found.add(file + ":" + SourceFiles.lineOf(text, matcher.start()));
+        }
+        return found;
+    }
+
+    static List<String> equalsLiteralFindings(String text, String file) {
+        List<String> found = new ArrayList<>();
+        Matcher matcher = EQUALS_STRING_LITERAL.matcher(text);
+        while (matcher.find()) {
+            // lib: Objects.equals("литерал", value) — статический вызов, а не сравнение с переменной: не нарушение.
+            if (!"Objects".equals(matcher.group(1))) {
+                found.add(file + ":" + SourceFiles.lineOf(text, matcher.start()));
+            }
+        }
+        return found;
     }
 
     private static String stripComments(String text) {

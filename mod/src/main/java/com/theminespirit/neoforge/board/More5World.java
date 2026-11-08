@@ -13,7 +13,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.level.block.CropBlock;
@@ -23,7 +22,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
 final class More5World {
-    private static final int PLAYER_COMBAT_RADIUS = 16;
     private static final int GROW_RADIUS = 16;
     private static final int GROW_BELOW = 2;
     private static final int GROW_ABOVE = 3;
@@ -72,9 +70,7 @@ final class More5World {
                 More5Rules.CHEST_WORK_RADIUS);
         int darkMine = More5Inputs.darkMineCells(darkAroundMine(level, facts));
         int wood = More5Rules.woodDrops(around.drops().keySet(), saplings(graph));
-        int weak = weakPlayers(level, facts);
         return new More5Rules.Signals(
-                weak,
                 growth.darkCrops(),
                 growth.darkSaplings(),
                 growth.dryCrops(),
@@ -95,41 +91,6 @@ final class More5World {
                 .filter(entry -> entry.getValue() == GraphState.Built.BUILT)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
-    }
-
-    private static int weakPlayers(ServerLevel level, GraphFacts facts) {
-        if (facts.threats().isEmpty()) {
-            return 0;
-        }
-        int weak = 0;
-        for (ServerPlayer player : level.players()) {
-            if (!inCombat(facts.threats(), player)) {
-                continue;
-            }
-            float max = player.getMaxHealth();
-            float ratio = max > 0 ? player.getHealth() / max : 1.0F;
-            if (More5Rules.weakPlayer(ratio, player.getFoodData().getFoodLevel(), true)) {
-                weak++;
-            }
-        }
-        return weak;
-    }
-
-    private static boolean inCombat(List<GraphFacts.Threat> threats, ServerPlayer player) {
-        BlockPos at = player.blockPosition();
-        long limit = (long) PLAYER_COMBAT_RADIUS * PLAYER_COMBAT_RADIUS;
-        for (GraphFacts.Threat threat : threats) {
-            if (threat.targetKind() == GraphFacts.TargetKind.PLAYER) {
-                return true;
-            }
-            long dx = (long) threat.position().x() - at.getX();
-            long dy = (long) threat.position().y() - at.getY();
-            long dz = (long) threat.position().z() - at.getZ();
-            if (dx * dx + dy * dy + dz * dz <= limit) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static Growth growth(ServerLevel level, BlockCoord home, boolean boneMeal) {

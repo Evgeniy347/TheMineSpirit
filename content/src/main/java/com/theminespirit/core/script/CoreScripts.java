@@ -12,7 +12,6 @@ import com.theminespirit.core.mining.PickaxeTiers;
 import com.theminespirit.core.mining.SafeMineMode;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.perception.MemoryType;
-import com.theminespirit.core.reload.DataTables;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -708,7 +707,7 @@ public final class CoreScripts {
                         "herd_check",
                         "сосчитать стадо",
                         List.of(
-                                ParamSpec.enumeration(SPECIES, false, herdCheckValues(), Species.ALL),
+                                ParamSpec.enumeration(SPECIES, false, CoreScriptValues.herdCheckValues(), Species.ALL),
                                 ParamSpec.integer(
                                         RADIUS,
                                         false,
@@ -775,7 +774,9 @@ public final class CoreScripts {
                                         CatalogLimits.FISH_RADIUS_MIN,
                                         CatalogLimits.FISH_RADIUS_MAX,
                                         CatalogLimits.FISH_RADIUS_DEFAULT)),
-                        List.of("в инвентаре есть удочка", "в радиусе есть открытая вода не меньше " + waterAreaText()),
+                        List.of(
+                                "в инвентаре есть удочка",
+                                "в радиусе есть открытая вода не меньше " + CoreScriptValues.waterAreaText()),
                         List.of(
                                 "рыба поймана по таблице добычи с учётом зачарований удочки",
                                 "прочность удочки потрачена")),
@@ -930,7 +931,8 @@ public final class CoreScripts {
                                         "z",
                                         true,
                                         -CatalogLimits.WORLD_HORIZONTAL_LIMIT,
-                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT)),
+                                        CatalogLimits.WORLD_HORIZONTAL_LIMIT),
+                                ParamSpec.bool("rescue", false, false)),
                         List.of("дух замурован: воздуха к поверхности нет"),
                         List.of("дух под открытым небом или на высоте точки")),
                 spec(
@@ -1347,12 +1349,6 @@ public final class CoreScripts {
         return new ScriptSpec(id, summary, params, preconditions, effects, requires);
     }
 
-    private static List<String> herdCheckValues() {
-        List<String> values = new ArrayList<>(Species.names());
-        values.add(Species.ALL);
-        return List.copyOf(values);
-    }
-
     private static ParamSpec stationRadius() {
         return ParamSpec.integer(
                 RADIUS,
@@ -1369,10 +1365,5 @@ public final class CoreScripts {
                 CatalogLimits.CONTAINER_RADIUS_MIN,
                 CatalogLimits.CONTAINER_RADIUS_MAX,
                 CatalogLimits.CONTAINER_RADIUS_DEFAULT);
-    }
-
-    private static String waterAreaText() {
-        var data = DataTables.INSTANCE.fishing().current();
-        return data.minWidth() + "x" + data.minWidth() + " глубиной " + data.minDepth();
     }
 }

@@ -81,7 +81,7 @@ class GraphFailureMemoryTests {
     }
 
     @Test
-    void unreachableTargets_NoPathAndNotReached_OnlyThoseAreMarked() {
+    void unreachablePoints_NoPathAndNotReached_OnlyThoseAreCollected() {
         GraphFailureMemory memory = new GraphFailureMemory();
 
         memory.note("chop_jungle_log", "1,64,1", "маршрут не найден", 100);
@@ -92,13 +92,26 @@ class GraphFailureMemoryTests {
 
         assertEquals(
                 Set.of("1,64,1", "2,64,2"),
-                memory.unreachableTargets("chop_jungle_log", 100, 1000),
+                memory.unreachablePoints(100, 1000),
                 "Недостижимы только «нет пути» и «не дошёл»: чанк, материал и прочее не исключают цель");
         memory.succeed("chop_jungle_log", "1,64,1", 110);
+        assertEquals(Set.of("2,64,2"), memory.unreachablePoints(110, 1000), "Успех цели убирает её из недостижимых");
+    }
+
+    @Test
+    void unreachablePoints_DifferentNodes_CollectPointsForAllTasks() {
+        GraphFailureMemory memory = new GraphFailureMemory();
+
+        memory.note("event:more2_stage_prep:more2_prepare_stage", "-171,71,-489", "маршрут не найден", 100);
+        memory.note("event:more6_carry_materials:more6_deposit_materials", "-171,71,-489", "маршрут не найден", 110);
+        memory.note("chop_jungle_log", "1,64,1", "не хватило материала", 120);
+        memory.note("mine_coal", "", "маршрут не найден", 130);
+
         assertEquals(
-                Set.of("2,64,2"),
-                memory.unreachableTargets("chop_jungle_log", 110, 1000),
-                "Успех цели убирает её из недостижимых");
+                Set.of("-171,71,-489"),
+                memory.unreachablePoints(130, 1000),
+                "Недостижимая точка помнится сама по себе, а не только под задачей: иначе смена задания "
+                        + "забывает провал и карусель повторяется (observe25 B5)");
     }
 
     @Test
@@ -152,6 +165,14 @@ class GraphFailureMemoryTests {
                 "event:more2_shortage:more2_gather",
                 GraphFailureMemory.node("first:build_streets", "graph:event:more2_shortage:more2_gather"),
                 "Причина билета мимо графа называет узел графа");
+        assertEquals(
+                "event:more2_shortage:more2_gather",
+                GraphFailureMemory.node("graph:make:dirt", "graph:event:more2_shortage:more2_gather"),
+                "Причина графа главнее id: память неудач адресуется узлом, который назвал провал");
+        assertEquals(
+                "make:dirt",
+                GraphFailureMemory.node("graph:make:dirt", "always"),
+                "Причина мимо графа не перекрывает id: без узла в причине память остаётся на билете");
         assertEquals(
                 "rescue_spirit",
                 GraphFailureMemory.node("rescue:c48663b4-da59-43d9-9804-81a680580300", "graph:rescue_spirit@29454474"),

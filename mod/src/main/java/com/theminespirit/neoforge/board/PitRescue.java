@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.movement.PitExitPlanner;
+import com.theminespirit.core.movement.PitWalkOut;
 import com.theminespirit.core.movement.SurfaceLevel;
 import com.theminespirit.core.movement.ToolBreakCost;
 import com.theminespirit.core.observation.BlockCoord;
@@ -11,25 +12,16 @@ import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.PickaxeCheck;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.movement.CheapBlocks;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
-import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 final class PitRescue {
     private static final int SURFACE_RADIUS = 3;
-    private static final int EXIT_RADIUS = 6;
-    private static final int STEP_UP = 1;
-    private static final int SAFE_DROP = 3;
-    private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
     private static final String GOTO = "goto";
     private static final String DIG_OUT = "dig_out";
     private static final String PILLAR = "pillar_up";
@@ -56,50 +48,7 @@ final class PitRescue {
     }
 
     private static boolean walkOut(Level level, BlockPos feet) {
-        PitExitPlanner.World view = new PitWorldView(level);
-        int startX = feet.getX();
-        int startZ = feet.getZ();
-        OptionalInt start = PitExitPlanner.groundY(startX, startZ, feet.getY(), view);
-        if (start.isEmpty()) {
-            return false;
-        }
-        Set<Long> seen = new HashSet<>();
-        Deque<int[]> queue = new ArrayDeque<>();
-        int[] origin = {startX, startZ, start.getAsInt()};
-        seen.add(key(0, 0));
-        queue.add(origin);
-        while (!queue.isEmpty()) {
-            int[] cell = queue.poll();
-            for (int[] side : SIDES) {
-                int nx = cell[0] + side[0];
-                int nz = cell[1] + side[1];
-                OptionalInt ground = PitExitPlanner.groundY(nx, nz, cell[2], view);
-                if (ground.isEmpty()) {
-                    continue;
-                }
-                int climb = ground.getAsInt() - cell[2];
-                boolean walkable = climb <= STEP_UP && climb >= -SAFE_DROP;
-                if (!walkable) {
-                    continue;
-                }
-                int ndx = nx - startX;
-                int ndz = nz - startZ;
-                if (Math.abs(ndx) >= EXIT_RADIUS || Math.abs(ndz) >= EXIT_RADIUS) {
-                    if (DigOutScript.open(level, new BlockPos(nx, ground.getAsInt(), nz))) {
-                        return true;
-                    }
-                    continue;
-                }
-                if (seen.add(key(ndx, ndz))) {
-                    queue.add(new int[] {nx, nz, ground.getAsInt()});
-                }
-            }
-        }
-        return false;
-    }
-
-    private static long key(int dx, int dz) {
-        return (((long) dx) << 32) ^ (dz & 0xffffffffL);
+        return PitWalkOut.exists(new PitWalkOutView(level), feet.getX(), feet.getZ(), feet.getY());
     }
 
     static Optional<PitExitPlanner.Plan> trapped(SpiritEntity spirit) {
@@ -126,7 +75,8 @@ final class PitRescue {
                 steps.add(gotoPoint(target));
             }
             case STAIRS -> {
-                steps.add(new ScriptCall(DIG_OUT, Map.of("x", target.x(), "y", target.y(), "z", target.z())));
+                steps.add(new ScriptCall(
+                        DIG_OUT, Map.of("x", target.x(), "y", target.y(), "z", target.z(), "rescue", true)));
                 steps.add(gotoPoint(target));
             }
             case IMPOSSIBLE ->
@@ -152,7 +102,7 @@ final class PitRescue {
                 && cell.y() <= feet.getY() + 1;
     }
 
-    private static PitExitPlanner.Supplies supplies(SpiritEntity spirit) {
+    static PitExitPlanner.Supplies supplies(SpiritEntity spirit) {
         Map<String, Integer> counts = CheapBlocks.counts(spirit);
         int blocks = 0;
         for (String id : ToolBreakCost.CHEAP_ORDER) {

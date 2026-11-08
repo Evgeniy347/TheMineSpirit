@@ -18,11 +18,27 @@ public record GraphFacts(
         List<Stray> strays,
         Terrain terrain,
         StageReqs stageReqs,
-        GraphFeedback feedback) {
+        GraphFeedback feedback,
+        List<Player> players,
+        List<Position> planBreaches) {
     public enum Reach {
         UNKNOWN,
         PATH,
         NO_PATH
+    }
+
+    public record Player(String name, Position position, float health, float maxHealth, int food) {
+        public Player {
+            Objects.requireNonNull(name, "Имя игрока не может быть null: факт принадлежит конкретному игроку");
+            Objects.requireNonNull(position, "Позиция игрока не может быть null: без неё нет угрозы рядом");
+            if (health < 0 || maxHealth <= 0 || health > maxHealth) {
+                throw new IllegalArgumentException("Здоровье игрока " + health + " из " + maxHealth
+                        + ": оно не отрицательно и не больше максимума, максимум положителен");
+            }
+            if (food < 0) {
+                throw new IllegalArgumentException("Еда игрока " + food + " отрицательна: голод начинается с нуля");
+            }
+        }
     }
 
     public record Position(int x, int y, int z) {}
@@ -228,6 +244,10 @@ public record GraphFacts(
         Objects.requireNonNull(terrain, "Рельеф не может быть null: ровный задают Terrain.empty()");
         Objects.requireNonNull(stageReqs, "Требования этапа не могут быть null: без требований — пустая карта");
         Objects.requireNonNull(feedback, "Обратная связь мира не может быть null: без неё — feedback.none()");
+        players =
+                List.copyOf(Objects.requireNonNull(players, "Игроки не могут быть null: без игроков — пустой список"));
+        planBreaches = List.copyOf(
+                Objects.requireNonNull(planBreaches, "Проломы плана не могут быть null: без них — пустой список"));
     }
 
     public static GraphFacts empty() {
@@ -241,40 +261,36 @@ public record GraphFacts(
                 List.of(),
                 Terrain.empty(),
                 new StageReqs(Map.of(), Map.of()),
-                GraphFeedback.none());
+                GraphFeedback.none(),
+                List.of(),
+                List.of());
     }
 
     public GraphFacts withChests(List<Chest> known) {
-        return new GraphFacts(
-                spirits, threats, known, resources, stations, buildings, strays, terrain, stageReqs, feedback);
+        return GraphFactsCopies.chests(this, known);
     }
 
     public GraphFacts withThreats(List<Threat> known) {
-        return new GraphFacts(
-                spirits, known, chests, resources, stations, buildings, strays, terrain, stageReqs, feedback);
+        return GraphFactsCopies.threats(this, known);
     }
 
     public GraphFacts withSpirits(Map<String, Spirit> known) {
-        return new GraphFacts(
-                known, threats, chests, resources, stations, buildings, strays, terrain, stageReqs, feedback);
+        return GraphFactsCopies.spirits(this, known);
     }
 
     public GraphFacts withFeedback(GraphFeedback known) {
-        return new GraphFacts(
-                spirits, threats, chests, resources, stations, buildings, strays, terrain, stageReqs, known);
+        return GraphFactsCopies.feedback(this, known);
     }
 
     public GraphFacts withWorld(GraphWorldFacts world) {
-        return new GraphFacts(
-                spirits,
-                threats,
-                chests,
-                resources,
-                stations,
-                world.buildings(),
-                world.strays(),
-                world.terrain(),
-                stageReqs,
-                feedback);
+        return GraphFactsCopies.world(this, world);
+    }
+
+    public GraphFacts withPlayers(List<Player> known) {
+        return GraphFactsCopies.players(this, known);
+    }
+
+    public GraphFacts withPlanBreaches(List<Position> known) {
+        return GraphFactsCopies.planBreaches(this, known);
     }
 }

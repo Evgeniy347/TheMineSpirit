@@ -152,6 +152,7 @@ class StuckStageLiveTests {
     void rescueTicket_StuckSpirit_IssuedThroughBoard() throws IOException {
         JsonNode bot = bot(read("bots.json"), "spirit-3");
         UUID spirit = UUID.fromString(bot.get("id").asText());
+        BlockCoord at = point(bot.get("position"));
         long now = bot.get("tick").asLong();
         Board board = new Board(() -> now);
         BoardTicket rescue = new BoardTicket(
@@ -179,9 +180,14 @@ class StuckStageLiveTests {
                 board.claim(rescue.id(), spirit, now),
                 "Claim спасения проходит через путь доски, несмотря на метку застревания");
         assertTrue(board.complete(rescue.id()), "Успешное спасение закрывает задание");
-        assertFalse(
+        assertTrue(
                 board.stuck().isStuck(spirit, now),
-                "Успешное спасение снимает метку «застрял»: дух снова получает обычные задания (observe15 B1)");
+                "Закрытие задания не выдаёт себя за выход: метка держится до наблюдённой поверхности "
+                        + "(observe25 B6)");
+        board.stuck().see(spirit, new BlockCoord(at.x() + 4, at.y() + 6, at.z()), now + 1, true);
+        assertFalse(
+                board.stuck().isStuck(spirit, now + 1),
+                "Наблюдённый выход снимает метку «застрял»: дух снова получает обычные задания (observe15 B1)");
     }
 
     @Test
@@ -221,11 +227,12 @@ class StuckStageLiveTests {
         assertTrue(exit.isPresent(), "Задание выхода выдаётся самому застрявшему духу, а не ждёт спасения извне");
         assertEquals(BoardOutcome.CLAIMED, board.claim(rescue.id(), spirit, now), "Выход выдаётся через claim доски");
         assertTrue(board.complete(rescue.id()), "Выполненный выход закрывает задание");
-        assertFalse(board.stuck().isStuck(spirit, now), "Выполненный выход снимает метку «не двигается» по факту");
         assertTrue(
-                board.stuck().drainChanges().stream()
-                        .anyMatch(change -> !change.marked() && change.reason().contains("rescue:" + spirit)),
-                "Снятие метки после выхода попадает в лог изменений с причиной");
+                board.stuck().isStuck(spirit, now),
+                "Метка держится после закрытия задания: выход подтверждает только наблюдение поверхности "
+                        + "(observe25 B6)");
+        board.stuck().see(spirit, new BlockCoord(0, 0, 0), now + 1, true);
+        assertFalse(board.stuck().isStuck(spirit, now + 1), "Наблюдённый выход снимает метку «не двигается» по факту");
     }
 
     private static DispatchRound.Candidate candidate(UUID id, String name) {

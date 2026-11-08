@@ -29,7 +29,7 @@ public final class NavSegmentedPlanner {
         boolean found = goal.isInGoal(start.x(), start.y(), start.z());
         while (!found && segments < maxSegments) {
             BlockCoord before = at;
-            NavResult result = NavAStarSearch.plan(context, at.x(), at.y(), at.z(), goal, favoring);
+            NavResult result = runSearch(context, at, goal, favoring);
             nodes += result.nodes();
             NavPath path = result.path();
             if (path == null) {
@@ -53,6 +53,15 @@ public final class NavSegmentedPlanner {
                 found ? NavSearchStatus.FOUND : segments == 0 ? NavSearchStatus.FAILURE : NavSearchStatus.SEGMENT;
         return new NavSegmentedRoute(
                 status, positions, segments, nodes, (System.nanoTime() - started) / 1_000_000L, at);
+    }
+
+    private static NavResult runSearch(NavContext context, BlockCoord start, NavGoal goal, NavFavoring favoring) {
+        NavAStarSession session = new NavAStarSession(context, start.x(), start.y(), start.z(), goal, favoring);
+        NavResult result;
+        do {
+            result = session.step(Long.MAX_VALUE);
+        } while (result == null);
+        return result;
     }
 
     private static void append(List<BlockCoord> positions, NavPath segment, BlockCoord expectedStart) {

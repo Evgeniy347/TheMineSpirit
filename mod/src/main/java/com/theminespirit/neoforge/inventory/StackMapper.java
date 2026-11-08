@@ -18,6 +18,17 @@ public final class StackMapper {
         return stacks;
     }
 
+    public List<Stack> mapPresent(Container container) {
+        List<Stack> stacks = new ArrayList<>(container.getContainerSize());
+        for (int slot = 0; slot < container.getContainerSize(); slot++) {
+            Stack stack = of(container.getItem(slot));
+            if (stack != null) {
+                stacks.add(stack);
+            }
+        }
+        return stacks;
+    }
+
     public Stack of(ItemStack stack) {
         if (stack.isEmpty()) {
             return null;

@@ -24,6 +24,8 @@ class GraphFactsCopyGuardTests {
             "withChests", GraphFacts::chests,
             "withFeedback", GraphFacts::feedback,
             "withWorld", GraphFactsCopyGuardTests::world,
+            "withPlayers", GraphFacts::players,
+            "withPlanBreaches", GraphFacts::planBreaches,
             "withStations", GraphFacts::stations,
             "withStageReqs", GraphFacts::stageReqs);
 
@@ -83,13 +85,13 @@ class GraphFactsCopyGuardTests {
         List<Constructor<?>> constructors =
                 Arrays.stream(GraphFacts.class.getConstructors()).toList();
         assertEquals(
-                List.of(10),
+                List.of(12),
                 constructors.stream().map(Constructor::getParameterCount).toList(),
-                "У GraphFacts есть конструктор не на все 10 компонентов: короткий конструктор подставляет "
-                        + "feedback = none(), и память неудач молча не доходит до графа. Компоненты задают все "
-                        + "десять, явно.");
+                "У GraphFacts есть конструктор не на все 12 компонентов: короткий конструктор подставляет "
+                        + "пустые игроки/проломы, и факты мира молча не доходят до графа. Компоненты задают все "
+                        + "двенадцать, явно.");
         assertEquals(
-                10,
+                12,
                 GraphFacts.class.getRecordComponents().length,
                 "Компоненты GraphFacts читаются рефлексией: сторож перечисляет их и сверяет каждую копию");
     }
@@ -184,6 +186,8 @@ class GraphFactsCopyGuardTests {
                         new GraphFeedback.Clock(true, true, false, 13000),
                         new GraphFeedback.Player(new GraphFacts.Position(1, 64, 1), true, true, true, false),
                         List.of(new GraphFeedback.Failure(
-                                "make:dirt", "0,64,0", 2, GraphFeedback.Cause.NO_PATH, 100, 1.5))));
+                                "make:dirt", "0,64,0", 2, GraphFeedback.Cause.NO_PATH, 100, 1.5))),
+                List.of(new GraphFacts.Player("Steve", new GraphFacts.Position(1, 64, 1), 20, 20, 20)),
+                List.of(new GraphFacts.Position(2, 64, 2)));
     }
 }

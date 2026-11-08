@@ -45,7 +45,7 @@ class NavAStarCacheTests {
     }
 
     private static NavResult plan(NavContext context, int targetX) {
-        return NavAStarSearch.plan(context, 0, 1, 0, new NavGoalBlock(targetX, 1, 0));
+        return NavAStarTestRun.plan(context, 0, 1, 0, new NavGoalBlock(targetX, 1, 0));
     }
 
     private static NavContext context(NavWorld world) {

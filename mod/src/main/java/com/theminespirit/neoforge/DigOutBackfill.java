@@ -2,7 +2,6 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.movement.WaterCrossingPlanner;
-import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.movement.CheapBlocks;
 import java.util.Map;
 import java.util.Optional;
@@ -19,34 +18,30 @@ final class DigOutBackfill {
     private final Level level;
     private final BlockPlacer placer;
     private final boolean enabled;
+    private final @Nullable DigOutRestore restore;
     private int closed;
     private @Nullable BlockPos previous;
-    private @Nullable String previousId;
 
-    DigOutBackfill(SpiritEntity spirit, Level level, BlockPlacer placer, boolean enabled) {
+    DigOutBackfill(
+            SpiritEntity spirit, Level level, BlockPlacer placer, boolean enabled, @Nullable DigOutRestore restore) {
         this.spirit = spirit;
         this.level = level;
         this.placer = placer;
         this.enabled = enabled;
+        this.restore = restore;
     }
 
     void remember(BlockPos cell) {
-        remember(cell, null);
-    }
-
-    void remember(BlockPos cell, @Nullable String blockId) {
         previous = cell;
-        previousId = blockId;
     }
 
     void close() {
         if (!enabled || previous == null) {
             return;
         }
-        closeCell(previous, previousId);
-        closeCell(previous.above(), null);
+        closeCell(previous);
+        closeCell(previous.above());
         previous = null;
-        previousId = null;
     }
 
     void report() {
@@ -65,20 +60,20 @@ final class DigOutBackfill {
         return level.getFluidState(cell).is(FluidTags.WATER);
     }
 
-    private void closeCell(BlockPos cell, @Nullable String preferred) {
+    private void closeCell(BlockPos cell) {
         if (!level.getBlockState(cell).isAir()) {
             return;
         }
+        if (restore != null && restore.pending(cell)) {
+            return;
+        }
         Map<String, Integer> counts = CheapBlocks.counts(spirit);
-        Optional<String> blockId = preferred != null && counts.getOrDefault(preferred, 0) > 0
-                ? Optional.of(preferred)
-                : WaterCrossingPlanner.cheapestAvailable(counts);
+        Optional<String> blockId = WaterCrossingPlanner.cheapestAvailable(counts);
         if (blockId.isEmpty()) {
             return;
         }
         String id = blockId.get();
-        BlockPlacer writer = preferred == null ? placer : new BlockPlacer(spirit, PlotProtection.Ground.PLAN_BUILD);
-        if (writer.begin(cell, BlockStates.stateFor(id), id) instanceof BlockPlacer.Started) {
+        if (placer.begin(cell, BlockStates.stateFor(id), id) instanceof BlockPlacer.Started) {
             closed++;
         }
     }
