@@ -153,6 +153,14 @@ class GraphFailureMemoryTests {
                 GraphFailureMemory.node("first:build_streets", "graph:event:more2_shortage:more2_gather"),
                 "Причина билета мимо графа называет узел графа");
         assertEquals(
+                "event:more2_shortage:more2_gather",
+                GraphFailureMemory.node("graph:make:dirt", "graph:event:more2_shortage:more2_gather"),
+                "Причина графа главнее id: память неудач адресуется узлом, который назвал провал");
+        assertEquals(
+                "make:dirt",
+                GraphFailureMemory.node("graph:make:dirt", "always"),
+                "Причина мимо графа не перекрывает id: без узла в причине память остаётся на билете");
+        assertEquals(
                 "rescue_spirit",
                 GraphFailureMemory.node("rescue:c48663b4-da59-43d9-9804-81a680580300", "graph:rescue_spirit@29454474"),
                 "Тик эпизода в причине спасения не дробит память неудач: узел остаётся rescue_spirit");

@@ -4,6 +4,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardState;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.TicketTarget;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -25,10 +26,11 @@ public final class BoardStateStore extends SavedData {
     public static final String NAME = "theminespirit_board";
 
     private static final String VERSION_KEY = "Version";
-    private static final int VERSION = 2;
+    private static final int VERSION = 3;
     private static final String ENTRIES_KEY = "Entries";
     private static final String LEDGER_KEY = "Ledger";
     private static final String BUILD_KEY = "Build";
+    static final String TARGETS_KEY = "Targets";
     private static final String ID_KEY = "Id";
     private static final String CASE_KEY = "Case";
     private static final String PRIORITY_KEY = "Priority";
@@ -46,6 +48,7 @@ public final class BoardStateStore extends SavedData {
     private static final String FAILURES_KEY = "Failures";
 
     private BoardState state = BoardState.empty();
+    private Map<String, TicketTarget> targets = Map.of();
     private String build = "";
 
     public BoardStateStore() {}
@@ -78,6 +81,7 @@ public final class BoardStateStore extends SavedData {
         BoardStateNbt.Parts parts =
                 version >= 2 ? BoardStateNbt.read(tag) : new BoardStateNbt.Parts(List.of(), List.of(), List.of());
         store.state = new BoardState(restored, ledger, parts.blocked(), parts.pauses(), parts.stuck());
+        store.targets = version >= 3 ? BoardTargetsNbt.read(tag) : Map.of();
         store.build = tag.getString(BUILD_KEY);
         return store;
     }
@@ -96,6 +100,7 @@ public final class BoardStateStore extends SavedData {
         }
         tag.put(LEDGER_KEY, marks);
         BoardStateNbt.write(tag, state);
+        tag.put(TARGETS_KEY, BoardTargetsNbt.write(targets));
         tag.putString(BUILD_KEY, build);
         return tag;
     }
@@ -113,10 +118,22 @@ public final class BoardStateStore extends SavedData {
         return state;
     }
 
+    public Map<String, TicketTarget> targets() {
+        return targets;
+    }
+
     public void update(BoardState next) {
         Objects.requireNonNull(next, "Снимок доски не может быть null: сохранять нечего");
         if (!state.equals(next)) {
             state = next;
+            setDirty();
+        }
+    }
+
+    public void updateTargets(Map<String, TicketTarget> next) {
+        Objects.requireNonNull(next, "Цели доски не могут быть null: пустые задают пустой картой");
+        if (!targets.equals(next)) {
+            targets = Map.copyOf(next);
             setDirty();
         }
     }

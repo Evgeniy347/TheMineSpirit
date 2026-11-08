@@ -1,25 +1,17 @@
 package com.theminespirit.neoforge;
 
-import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildKey;
-import com.theminespirit.core.building.BuildPhase;
 import com.theminespirit.core.building.BuildPlanCursor;
 import com.theminespirit.core.building.BuildPlanner;
 import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.BuildSquad;
-import com.theminespirit.core.building.BuildTuning;
-import com.theminespirit.core.building.CellPartition;
 import com.theminespirit.core.building.ReachPlanner;
 import com.theminespirit.core.building.Schematic;
-import com.theminespirit.core.building.SchematicActions;
-import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SchematicWood;
 import com.theminespirit.core.building.SchemeFilter;
-import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.engine.ConditionRegistry;
-import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
@@ -44,9 +36,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 
 final class BuildSchematicScript implements ScriptInstance {
     static final int MAX_OWN_CRAFTS = 8;
@@ -56,10 +46,8 @@ final class BuildSchematicScript implements ScriptInstance {
     static final int WALK_MARGIN = 6;
     static final int MAX_PLAN_TOP_UPS = 8;
     private static final int SITE_NETWORK_RING = 6;
-    private static final int MAX_PLAN_TRIP_RETRIES = 2;
-    private static final int HARD_APPROACH_PATH_BUILDS = 4;
+    static final int MAX_PLAN_TRIP_RETRIES = 2;
 
-    private static final Logger LOGGER = LogUtils.getLogger();
     final SpiritEntity spirit;
     final Level level;
     final SchematicSite site;
@@ -124,13 +112,15 @@ final class BuildSchematicScript implements ScriptInstance {
     long planStands;
     long planTrips;
     int planDeviations;
-    private final BlockPlacer placer;
-    private Set<BlockCoord> ownShare = Set.of();
-    private long squadVersion = -1;
-    private BlockCoord approachStand;
-    private long lastPlaceTick = Long.MIN_VALUE / 2;
-    private final SchematicPlanPhase planPhase;
-    private final SchematicResult report;
+    final BlockPlacer placer;
+    Set<BlockCoord> ownShare = Set.of();
+    long squadVersion = -1;
+    BlockCoord approachStand;
+    long lastPlaceTick = Long.MIN_VALUE / 2;
+    final SchematicPlanPhase planPhase;
+    final SchematicResult report;
+    final SchematicPlacement placement;
+    private final SchematicWorkPhase workPhase;
 
     BuildSchematicScript(SpiritEntity spirit, BuildSchematicParams params) {
         this(
@@ -159,6 +149,8 @@ final class BuildSchematicScript implements ScriptInstance {
         this.squad = BuildSquadRegistry.join(level, buildKey, spirit.getUUID());
         this.planPhase = new SchematicPlanPhase(this);
         this.report = new SchematicResult(this);
+        this.placement = new SchematicPlacement(this);
+        this.workPhase = new SchematicWorkPhase(this);
         if (level instanceof ServerLevel server) {
             PathNetworkService.beginSite(server, buildKey, site.networkBox(SITE_NETWORK_RING), site.doorCells());
         }
@@ -166,465 +158,19 @@ final class BuildSchematicScript implements ScriptInstance {
 
     @Override
     public ScriptStatus tick() {
-        if (outcome != ScriptStatus.RUNNING) {
-            return outcome;
-        }
-        if (spirit.isRemoved()) {
-            return report.fail("дух исчез во время стройки по схеме");
-        }
-        ticks++;
-        if (pit.stalled(ticks, placed, cleared, trips)) {
-            pit.stalledReport(feet(), placed, cleared, trips, blocked);
-        }
-        refreshShare();
-        if (supplyRunner != null) {
-            RunStatus supply = supplyRunner.tick();
-            if (supply == RunStatus.RUNNING) {
-                return ScriptStatus.RUNNING;
-            }
-            if (supply != RunStatus.SUCCEEDED) {
-                LOGGER.info(
-                        "Стройка {}: заход {} за материалами закончился {}: {}; дух {}",
-                        buildKey,
-                        trips,
-                        supply,
-                        supplyRunner.failureReason().orElse("причина не названа"),
-                        feet());
-                if (planFetch != null && planFetchRetries < MAX_PLAN_TRIP_RETRIES) {
-                    planFetchRetries++;
-                    retryFetch = planFetch;
-                }
-            }
-            supplyRunner = null;
-            planFetch = null;
-            blocked.clear();
-            refusals.clear();
-            standsRetried = false;
-        }
-        if (breaking != null) {
-            return breakTick();
-        }
-        List<ScriptCall> walkThenFetch = supplyWalk;
-        if (walkThenFetch != null) {
-            if (approach.isActive() && approach.tick() == Approach.State.MOVING) {
-                return ScriptStatus.RUNNING;
-            }
-            approach.cancel();
-            supplyWalk = null;
-            return startSupply(walkThenFetch);
-        }
-        if (approach.isActive()) {
-            return approachTick();
-        }
-        return planTick();
-    }
-
-    private ScriptStatus approachTick() {
-        switch (approach.tick()) {
-            case MOVING -> {
-                return ScriptStatus.RUNNING;
-            }
-            case ARRIVED -> {
-                excludedStands.add(approachStand);
-                if (spirit.pathBuilds() - approachPathMark >= HARD_APPROACH_PATH_BUILDS) {
-                    pit.hardApproach(
-                            approachStand,
-                            approach.refusal(),
-                            approach.networkNote(),
-                            spirit.pathBuilds() - approachPathMark,
-                            "дошёл");
-                }
-            }
-            case STUCK, TIMEOUT -> {
-                excludedStands.add(approachStand);
-                lastRefusal = "стоянка " + approachStand + " недостижима: "
-                        + (approach.refusal() == null ? "путь не найден" : approach.refusal());
-                pit.hardApproach(
-                        approachStand,
-                        approach.refusal(),
-                        approach.networkNote(),
-                        spirit.pathBuilds() - approachPathMark,
-                        "срыв");
-            }
-        }
-        approach.cancel();
-        approachStand = null;
-        return planTick();
-    }
-
-    private ScriptStatus breakTick() {
-        BlockBreaker.Progress progress = breaker.tick();
-        if (progress == BlockBreaker.Progress.BREAKING) {
-            return ScriptStatus.RUNNING;
-        }
-        if (progress == BlockBreaker.Progress.BROKEN) {
-            cleared++;
-            removals.removed(breakingId, breaking);
-        }
-        breaking = null;
-        excludedStands.clear();
-        return ScriptStatus.RUNNING;
-    }
-
-    private ScriptStatus planTick() {
-        List<BlockCoord> clear = new ArrayList<>(site.toClear());
-        clear.removeIf(blocked::containsKey);
-        if (!clear.isEmpty()) {
-            return clearStep(clear);
-        }
-        if (ticks - lastPlaceTick < BuildPace.intervalTicks(spirit)) {
-            return ScriptStatus.RUNNING;
-        }
-        if (!planChecked) {
-            planPhase.startPlan();
-        }
-        CompletableFuture<BuildPlanner.Plan> pending = planPending;
-        if (pending != null) {
-            if (ticks == planStartTick) {
-                return ScriptStatus.RUNNING;
-            }
-            planPhase.acceptPlan(pending);
-        }
-        Optional<ScriptStatus> planned = planPhase.step();
-        if (planned.isPresent()) {
-            return planned.get();
-        }
-        List<Schematic.PlacedEntry> missing = new ArrayList<>();
-        List<Schematic.PlacedEntry> unsupplied = new ArrayList<>();
-        boolean waitingForeign = false;
-        for (Schematic.PlacedEntry entry : site.primaries()) {
-            if (SchematicActions.isDecorFlower(entry.block())) {
-                continue;
-            }
-            if (site.matches(entry) && site.secondPartMatches(entry)) {
-                continue;
-            }
-            if (blocked.containsKey(entry.pos())) {
-                continue;
-            }
-            if (reservations.foreign(entry.pos(), spirit.getUUID())) {
-                waitingForeign = true;
-                continue;
-            }
-            if (site.rightBlockWrongState(entry)) {
-                site.repairState(entry);
-                return ScriptStatus.RUNNING;
-            }
-            if (BlockItems.hasBlockItem(entry.block())
-                    && !SchematicActions.isActionPlaced(entry.block())
-                    && BlockItems.countIn(spirit.getInventory(), entry.block()) == 0) {
-                unsupplied.add(entry);
-                continue;
-            }
-            missing.add(entry);
-        }
-        Set<Schematic.PlacedEntry> now = phaseNow(missing, unsupplied);
-        missing.retainAll(now);
-        unsupplied.retainAll(now);
-        if (!unsupplied.isEmpty()) {
-            missing.removeIf(entry -> !site.supported(entry));
-        }
-        if (missing.isEmpty() && !unsupplied.isEmpty()) {
-            return report.noMaterial(unsupplied.get(0).block(), null);
-        }
-        if (missing.isEmpty()) {
-            return waitingForeign && ++finishWaits <= MAX_FINISH_WAITS ? ScriptStatus.RUNNING : report.finish();
-        }
-        List<Schematic.PlacedEntry> main = new ArrayList<>();
-        List<Schematic.PlacedEntry> entrances = new ArrayList<>();
-        for (Schematic.PlacedEntry entry : missing) {
-            (SchematicBlocks.isEntranceBlock(entry.block()) ? entrances : main).add(entry);
-        }
-        boolean lastStep = main.isEmpty();
-        if (lastStep && unsupplied.stream().anyMatch(entry -> !SchematicBlocks.isEntranceBlock(entry.block()))) {
-            return report.noMaterial(unsupplied.get(0).block(), null);
-        }
-        List<Schematic.PlacedEntry> targets = ownFirst(lastStep ? entrances : main);
-        return placeStep(targets, lastStep);
-    }
-
-    private ScriptStatus clearStep(List<BlockCoord> clear) {
-        SpiritReach reach = SpiritReach.current();
-        ReachPlanner.World world = clearWorld();
-        for (BlockCoord cell : ReachPlanner.workableNow(reach, feet(), clear, world)) {
-            BlockBreaker.Begin begin = breaker.begin(SchematicSite.toPos(cell), BlockBreaker.Intent.DEMOLISH, false);
-            switch (begin) {
-                case BlockBreaker.Started ignored -> {
-                    breaking = cell;
-                    breakingId = BlockStates.idOf(level.getBlockState(SchematicSite.toPos(cell)));
-                    return ScriptStatus.RUNNING;
-                }
-                case BlockBreaker.Protected refused -> blocked.put(cell, "очистка запрещена: " + refused.reason());
-                case BlockBreaker.Refused refused -> {
-                    if (refused.reason() != BlockBreaker.RefuseReason.AIR && !BreakSight.retryable(refused.reason())) {
-                        blocked.put(cell, "очистка не удалась: " + refused.message());
-                    }
-                }
-            }
-        }
-        return moveTowards(clear, world, false);
-    }
-
-    private Set<Schematic.PlacedEntry> phaseNow(
-            List<Schematic.PlacedEntry> missing, List<Schematic.PlacedEntry> unsupplied) {
-        if (bottomY == Integer.MAX_VALUE) {
-            for (Schematic.PlacedEntry entry : site.primaries()) {
-                bottomY = Math.min(bottomY, entry.pos().y());
-            }
-        }
-        List<Schematic.PlacedEntry> unfinished = new ArrayList<>(missing);
-        unfinished.addAll(unsupplied);
-        List<Schematic.PlacedEntry> now = BuildPhase.current(
-                unfinished,
-                entry -> entry.pos().y() - bottomY,
-                entry -> BuildPhase.rough(entry.block()) && site.supported(entry));
-        int band = now.size() == unfinished.size()
-                ? -1
-                : BuildPhase.band(now.get(0).pos().y() - bottomY);
-        int rank = band < 0 ? Integer.MAX_VALUE : band;
-        if (rank > highestBand) {
-            highestBand = rank;
-            blocked.clear();
-            refusals.clear();
-            standsRetried = false;
-        }
-        phaseBand = band;
-        return new HashSet<>(now);
-    }
-
-    private ScriptStatus placeStep(List<Schematic.PlacedEntry> targets, boolean lastStep) {
-        Map<BlockCoord, Schematic.PlacedEntry> byCell = new LinkedHashMap<>();
-        for (Schematic.PlacedEntry entry : targets) {
-            byCell.put(entry.pos(), entry);
-        }
-        List<BlockCoord> cells = List.copyOf(byCell.keySet());
-        ReachPlanner.World world = placeWorld(byCell, lastStep);
-        boolean mayPlaceHere = !lastStep || site.outsideFootprint(feet());
-        List<Schematic.PlacedEntry> trapping = new ArrayList<>();
-        boolean overlapped = false;
-        if (mayPlaceHere) {
-            for (BlockCoord cell : ReachPlanner.workableNow(SpiritReach.current(), feet(), cells, world)) {
-                Schematic.PlacedEntry entry = byCell.get(cell);
-                if (site.overlaps(entry, spirit.getBoundingBox())) {
-                    overlapped = true;
-                    continue;
-                }
-                if (!site.keepsRetreat(feet(), List.of(entry))) {
-                    trapping.add(entry);
-                    retreatRefusals++;
-                    continue;
-                }
-                Optional<ScriptStatus> placedNow = placeOne(entry);
-                if (placedNow.isPresent()) {
-                    return placedNow.get();
-                }
-            }
-        }
-        if (trapping.isEmpty() && overlapped) {
-            if (++centring <= MAX_CENTRING_TICKS) {
-                BlockCoord here = feet();
-                spirit.getNavigation().stop();
-                spirit.getMoveControl().setWantedPosition(here.x() + 0.5, spirit.getY(), here.z() + 0.5, 1.0);
-                return ScriptStatus.RUNNING;
-            }
-            centring = 0;
-            excludedStands.add(feet());
-            return moveTowards(cells, world, lastStep);
-        }
-        if (trapping.isEmpty()) {
-            return moveTowards(cells, world, lastStep);
-        }
-        List<BlockCoord> trapped = new ArrayList<>();
-        for (Schematic.PlacedEntry entry : trapping) {
-            trapped.add(entry.pos());
-        }
-        ReachPlanner.World safeWorld = retreatWorld(world, trapping);
-        if (BuildStandPath.choose(
-                        trapped, safeWorld, excludedStands, new HashSet<>(site.schemeCells()), lastStep, feet())
-                .isEmpty()) {
-            LOGGER.warn(
-                    "Стройка '{}': блок {} запирает духа, а стоянки с путём наружу нет — ставлю с места",
-                    buildKey,
-                    trapped.get(0));
-            return placeOne(trapping.get(0)).orElse(ScriptStatus.RUNNING);
-        }
-        return moveTowards(trapped, safeWorld, lastStep);
-    }
-
-    private ReachPlanner.World retreatWorld(ReachPlanner.World world, List<Schematic.PlacedEntry> trapping) {
-        return new ReachPlanner.World() {
-            @Override
-            public boolean ready(BlockCoord cell) {
-                return world.ready(cell);
-            }
-
-            @Override
-            public boolean standable(BlockCoord feet) {
-                return world.standable(feet) && site.keepsRetreat(feet, trapping);
-            }
-        };
+        return workPhase.tick();
     }
 
     Optional<ScriptStatus> placeOne(Schematic.PlacedEntry entry) {
-        if (SchematicActions.isFluidPlaced(entry.block())) return waterOne(entry);
-        BlockCoord cell = entry.pos();
-        BlockCoord weed = SchematicWild.entryWeed(level, breaker, entry);
-        if (weed != null) {
-            breaking = weed;
-            breakingId = BlockStates.idOf(level.getBlockState(SchematicSite.toPos(weed)));
-            return Optional.of(ScriptStatus.RUNNING);
-        }
-        if (BuildMakeWay.selfIn(spirit, cell)) {
-            lastRefusal = "строитель стоит в клетке " + cell + " — сначала отойти";
-            return BuildMakeWay.outsideStand(site, feet()).map(this::beginApproach);
-        }
-        if (!BuildMakeWay.clear(spirit, level, site, buildKey, cell)) {
-            lastRefusal = "клетку " + cell + " занимает живое существо: сначала отойти";
-            return Optional.empty();
-        }
-        reservations.reserve(cell, spirit.getUUID());
-        BlockPlacer.Begin begin = placer.begin(SchematicSite.toPos(cell), site.wanted(entry), entry.block());
-        reservations.release(cell, spirit.getUUID());
-        switch (begin) {
-            case BlockPlacer.Started started -> {
-                if (!entry.text().isBlank()) {
-                    SignTexts.write(level, started.pos(), entry.text());
-                }
-                placed++;
-                centring = 0;
-                tally.placed(entry.block());
-                lastPlaceTick = ticks;
-                refusals.remove(cell);
-                excludedStands.clear();
-                standsRetried = false;
-                return Optional.of(ScriptStatus.RUNNING);
-            }
-            case BlockPlacer.Protected refused -> {
-                blocked.put(cell, "запрещено: " + refused.reason());
-                lastRefusal = "запрещено: " + refused.reason();
-                return Optional.empty();
-            }
-            case BlockPlacer.Refused refused -> {
-                lastRefusal = refused.reason() + ": " + refused.message();
-                if (refused.reason() == BlockPlacer.RefuseReason.NO_MATERIAL) {
-                    return Optional.of(report.noMaterial(entry.block(), refused.message()));
-                }
-                int attempts = refusals.merge(cell, 1, Integer::sum);
-                if (attempts >= BuildTuning.MAX_CONSECUTIVE_SKIPS) {
-                    blocked.put(cell, lastRefusal);
-                }
-                return Optional.empty();
-            }
-        }
-    }
-
-    private Optional<ScriptStatus> waterOne(Schematic.PlacedEntry entry) {
-        BuildWater.Plan water = BuildWater.plan(spirit, site, entry, buildKey);
-        if (water.task().isEmpty()) {
-            blocked.put(entry.pos(), water.reason());
-            lastRefusal = water.reason();
-            return Optional.empty();
-        }
-        approach.cancel();
-        approachStand = null;
-        supplyRunner = TaskRunner.start(
-                water.task().orElseThrow(), SpiritScripts.registryFor(spirit), ConditionRegistry.of(Map.of()));
-        return Optional.of(ScriptStatus.RUNNING);
-    }
-
-    private ScriptStatus moveTowards(List<BlockCoord> cells, ReachPlanner.World base, boolean outsideOnly) {
-        Set<BlockCoord> occupied = SchematicWalkways.free(site.primaries(), site.schemeCells());
-        Optional<Set<BlockCoord>> reachable = site.walkable(feet(), WALK_MARGIN);
-        boolean walkKnown = site.networkBox(WALK_MARGIN).contains(feet()) && reachable.isPresent();
-        ReachPlanner.World world = walkKnown ? BuildStandPath.walkableOnly(base, reachable.orElseThrow()) : base;
-        Optional<BlockCoord> stand = BuildStandPath.choose(cells, world, excludedStands, occupied, outsideOnly, feet());
-        if (stand.isEmpty()) {
-            Set<BlockCoord> blockers = SchematicWalkways.free(site.primaries(), site.standBlockers());
-            stand = BuildStandPath.choose(cells, world, excludedStands, blockers, outsideOnly, feet());
-        }
-        if (stand.isEmpty() && !standsRetried && !excludedStands.isEmpty()) {
-            standsRetried = true;
-            excludedStands.clear();
-            stand = BuildStandPath.choose(cells, world, excludedStands, occupied, outsideOnly, feet());
-        }
-        if (stand.isEmpty()) {
-            for (BlockCoord cell : cells) {
-                blocked.putIfAbsent(
-                        cell,
-                        "ни с одной стоянки не дотянуться" + (outsideOnly ? " снаружи постройки" : "")
-                                + (walkKnown ? " пешком от " + feet() : "")
-                                + (lastRefusal.isBlank() ? "" : "; " + lastRefusal));
-            }
-            return ScriptStatus.RUNNING;
-        }
-        return beginApproach(stand.get());
-    }
-
-    ScriptStatus beginApproach(BlockCoord stand) {
-        approachStand = stand;
-        pit.descent(feet(), stand);
-        approachPathMark = spirit.pathBuilds();
-        standsChosen++;
-        if (site.onRoof(stand)) {
-            roofStands++;
-        }
-        approach.beginWithRoutes(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
-        return ScriptStatus.RUNNING;
-    }
-
-    private ReachPlanner.World clearWorld() {
-        return new ReachPlanner.World() {
-            @Override
-            public boolean ready(BlockCoord cell) {
-                return true;
-            }
-
-            @Override
-            public boolean standable(BlockCoord feet) {
-                return site.standable(feet);
-            }
-        };
+        return placement.placeOne(entry);
     }
 
     ReachPlanner.World placeWorld(Map<BlockCoord, Schematic.PlacedEntry> byCell, boolean outsideOnly) {
-        return new ReachPlanner.World() {
-            @Override
-            public boolean ready(BlockCoord cell) {
-                Schematic.PlacedEntry entry = byCell.get(cell);
-                return entry != null && site.freeForPlacing(entry) && site.supported(entry);
-            }
-
-            @Override
-            public boolean standable(BlockCoord feet) {
-                return site.standable(feet) && (!outsideOnly || site.outsideFootprint(feet));
-            }
-        };
+        return placement.placeWorld(byCell, outsideOnly);
     }
 
-    private List<Schematic.PlacedEntry> ownFirst(List<Schematic.PlacedEntry> targets) {
-        List<Schematic.PlacedEntry> own = new ArrayList<>();
-        List<Schematic.PlacedEntry> others = new ArrayList<>();
-        for (Schematic.PlacedEntry entry : targets) {
-            (ownShare.contains(entry.pos()) ? own : others).add(entry);
-        }
-        own.addAll(others);
-        return own;
-    }
-
-    private void refreshShare() {
-        if (squad.slotOf(spirit.getUUID()) < 0) {
-            squad.join(spirit.getUUID());
-        }
-        if (squad.version() == squadVersion) {
-            return;
-        }
-        squadVersion = squad.version();
-        Set<BlockCoord> share = new HashSet<>();
-        for (Schematic.PlacedEntry entry :
-                CellPartition.split(site.primaries(), squad.size()).get(squad.slotOf(spirit.getUUID()))) {
-            share.add(entry.pos());
-        }
-        ownShare = Set.copyOf(share);
+    ScriptStatus beginApproach(BlockCoord stand) {
+        return placement.beginApproach(stand);
     }
 
     ScriptStatus startSupply(List<ScriptCall> steps) {
