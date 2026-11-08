@@ -101,52 +101,92 @@ class StuckSpiritsTests {
     }
 
     @Test
-    void of_NoPathMark_SurvivesTtlUntilMovement() {
+    void of_NoPathMark_ExpiresByTtl() {
         StuckSpirits stuck = new StuckSpirits();
         stuck.see(SPIRIT, AT, 100);
         stuck.mark(SPIRIT, 140, "маршрут не найден: цель BlockCoord[x=-171, y=71, z=-489]");
-        long after = 140 + BoardTuning.STUCK_TTL_TICKS + 1;
+        long before = 140 + BoardTuning.STUCK_TTL_TICKS - 1;
+        long after = 140 + BoardTuning.STUCK_TTL_TICKS;
 
-        assertTrue(
-                stuck.isStuck(SPIRIT, after),
-                "«Пути нет» — состояние на входе графа, а не провал на время: дух без пути домой остаётся "
-                        + "застрявшим, пока не сдвинулся или его не спасли (observe23 B)");
-        stuck.see(SPIRIT, new BlockCoord(AT.x() + 7, AT.y(), AT.z()), after + 1, true);
+        assertTrue(stuck.isStuck(SPIRIT, before), "До предела метка «пути нет» держится: дух не выпадает из графа");
         assertFalse(
-                stuck.isStuck(SPIRIT, after + 1),
-                "Выход на поверхность снимает факт «пути нет»: маршрут появился или духа вывели");
+                stuck.isStuck(SPIRIT, after),
+                "«Пути нет» истекает по времени, как и любая метка: иначе дух навсегда исключён из работы "
+                        + "(observe25 B1)");
+        List<StuckSpirits.Change> changes = stuck.drainChanges();
+        assertEquals(2, changes.size(), "Постановка и истечение пишутся в лог: " + changes);
+        assertTrue(
+                changes.get(1).reason().contains("пути нет"),
+                "Причина истечения называет, что метка была про отсутствие пути: "
+                        + changes.get(1).reason());
     }
 
     @Test
-    void mark_MovementThenNoPath_UpgradesToPersistentFact() {
+    void mark_MovementThenNoPath_UpgradesAndExpires() {
         StuckSpirits stuck = new StuckSpirits();
         stuck.see(SPIRIT, AT, 100);
         stuck.mark(SPIRIT, 140, "провал движения");
         stuck.mark(SPIRIT, 160, "застрял: маршрут не найден");
+        long after = 140 + BoardTuning.STUCK_TTL_TICKS;
 
-        assertTrue(
-                stuck.isStuck(SPIRIT, 140 + BoardTuning.STUCK_TTL_TICKS + 1),
-                "Поздний провал «маршрут не найден» делает метку фактом: иначе она истечёт и дух снова "
-                        + "получит работу вдали от дома (observe23 B)");
+        assertTrue(stuck.of(SPIRIT, 159).orElseThrow().noPath(), "Позднее «маршрут не найден» делает метку фактом");
+        assertFalse(
+                stuck.isStuck(SPIRIT, after),
+                "Но и факт «пути нет» не вечен: по пределу метка снимается (observe25 B1)");
     }
 
     @Test
-    void of_OldMark_ExpiresInsteadOfBlockingForever() {
+    void see_NoPathCellMoved_ReleasesMark() {
         StuckSpirits stuck = new StuckSpirits();
         stuck.see(SPIRIT, AT, 100);
-        stuck.mark(SPIRIT, 140, "провал движения");
+        stuck.mark(SPIRIT, 140, "маршрут не найден");
         stuck.drainChanges();
 
-        assertTrue(
-                stuck.isStuck(SPIRIT, 140 + BoardTuning.STUCK_TTL_TICKS - 1),
-                "До предела метка держится: выход ещё можно поставить");
-        assertFalse(
-                stuck.isStuck(SPIRIT, 140 + BoardTuning.STUCK_TTL_TICKS),
-                "По пределу метка снимается: застрявший дух не выпадает из графа навсегда (observe22)");
+        stuck.see(SPIRIT, new BlockCoord(AT.x() + 1, AT.y(), AT.z()), 200);
+
+        assertFalse(stuck.isStuck(SPIRIT, 200), "Дух сдвинулся с места метки — «пути нет» перепроверяют");
         List<StuckSpirits.Change> changes = stuck.drainChanges();
-        assertEquals(1, changes.size(), "Истечение метки пишется в лог: " + changes);
+        assertEquals(1, changes.size(), "Снятие по смене позиции пишется в лог: " + changes);
         assertTrue(
-                changes.get(0).reason().startsWith("истекла"),
-                "Причина истечения названа честно: " + changes.get(0).reason());
+                changes.get(0).reason().contains("сдвинулся"),
+                "Причина называет смену позиции: " + changes.get(0).reason());
+    }
+
+    @Test
+    void see_NoPathCellSame_KeepsMark() {
+        StuckSpirits stuck = new StuckSpirits();
+        stuck.see(SPIRIT, AT, 100);
+        stuck.mark(SPIRIT, 140, "маршрут не найден: цель BlockCoord[x=-171, y=71, z=-489]");
+        stuck.drainChanges();
+
+        stuck.see(SPIRIT, AT, 240, true);
+
+        assertTrue(
+                stuck.isStuck(SPIRIT, 240),
+                "Проверка «на поверхности» не снимает «пути нет»: иначе метка ставится и снимается в том же "
+                        + "тике, а дух каждые 15 секунд получает новую задачу (observe25 B5)");
+        assertTrue(stuck.drainChanges().isEmpty(), "Снятия не было — лог не пополняется");
+    }
+
+    @Test
+    void restore_NoPathMark_DoesNotSurviveRestart() {
+        StuckSpirits stuck = new StuckSpirits();
+        stuck.see(SPIRIT, AT, 100);
+        stuck.mark(SPIRIT, 140, "маршрут не найден");
+        List<BoardState.Stuck> snapshot = stuck.snapshot();
+        stuck.drainChanges();
+
+        StuckSpirits restarted = new StuckSpirits();
+        restarted.restore(snapshot, 20_000);
+
+        assertFalse(
+                restarted.isStuck(SPIRIT, 20_001),
+                "Метка не переживает рестарт: после загрузки дух снова получает работу, а не ждёт спасения "
+                        + "навсегда (observe25 B1)");
+        List<StuckSpirits.Change> changes = restarted.drainChanges();
+        assertEquals(1, changes.size(), "Сброс метки при загрузке виден в логе: " + changes);
+        assertTrue(
+                changes.get(0).reason().contains("не переживает рестарт"),
+                "Причина сброса названа честно: " + changes.get(0).reason());
     }
 }

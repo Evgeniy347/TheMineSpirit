@@ -63,7 +63,7 @@ class BoardRescueTests {
     }
 
     @Test
-    void dispatch_NoPathSpiritAfterTtl_DistantWorkRefused() {
+    void dispatch_NoPathSpiritAfterTtl_GetsWorkAgain() {
         long[] now = {1000};
         Board board = new Board(() -> now[0]);
         stuck(board, RESCUEE, "маршрут не найден: цель BlockCoord[x=-171, y=71, z=-489]");
@@ -84,12 +84,25 @@ class BoardRescueTests {
         Optional<DispatchRound.Candidate> chosen = round.choose(gather, List.of(candidate(RESCUEE, "spirit-2")));
 
         assertTrue(
-                chosen.isEmpty(),
-                "«Пути нет» — факт о духе, а не тайм-аут: дух без пути домой не получает дальнюю работу, "
-                        + "пока не вышел или его не спасли (observe23 B)");
+                chosen.isPresent(),
+                "«Пути нет» истекает по времени: после предела дух снова получает работу, иначе все задачи "
+                        + "висят вечно (observe25 B1)");
+    }
+
+    @Test
+    void restore_NoPathMark_SpiritGetsWorkAfterRestart() {
+        long[] now = {1000};
+        Board board = new Board(() -> now[0]);
+        stuck(board, RESCUEE, "маршрут не найден: цель BlockCoord[x=-171, y=71, z=-489]");
+        BoardState snapshot = board.snapshot();
+
+        Board restarted = new Board(() -> now[0]);
+        restarted.restore(snapshot);
+
         assertTrue(
-                round.why(gather, List.of(candidate(RESCUEE, "spirit-2"))).contains("не двигается"),
-                "Причина ожидания честно говорит, что дух не двигается, а не «нет духов»");
+                restarted.availableTo(RESCUEE, BoardCase.GATHER_MATERIALS, now[0]),
+                "Сохранённая метка не переживает загрузку: дух снова получает работу, а не стоит idle "
+                        + "до спасения, которое не приходит (observe25 B1)");
     }
 
     @Test

@@ -36,8 +36,6 @@ public final class StuckSpirits {
     private final Map<UUID, BlockCoord> seen = new LinkedHashMap<>();
     private final Map<UUID, Stuck> stuck = new LinkedHashMap<>();
     private final List<Change> changes = new ArrayList<>();
-    private boolean rebasePending;
-    private long restoredAt;
 
     public void see(UUID spirit, BlockCoord at) {
         see(spirit, at, 0, false);
@@ -55,9 +53,20 @@ public final class StuckSpirits {
         if (known == null) {
             return;
         }
-        if (escaped) {
+        if (escaped && !known.noPath()) {
             stuck.remove(spirit);
             note(spirit, at, now, false, "вышел на поверхность: с " + at + " (метка с тика " + known.since() + ")");
+            return;
+        }
+        if (known.noPath() && known.at() != null && !at.equals(known.at())) {
+            stuck.remove(spirit);
+            note(
+                    spirit,
+                    at,
+                    now,
+                    false,
+                    "сдвинулся с места метки " + known.at() + " на " + at
+                            + ": «пути нет» перепроверяют с новой клетки");
             return;
         }
         if (known.at() == null) {
@@ -90,19 +99,19 @@ public final class StuckSpirits {
         if (now < 0) {
             throw new IllegalArgumentException("Тик " + now + " отрицателен: застревание читается только вперёд");
         }
-        rebase(now);
         Stuck known = stuck.get(spirit);
         if (known == null) {
             return Optional.empty();
         }
-        if (now > known.since() && !known.noPath() && now - known.since() >= BoardTuning.STUCK_TTL_TICKS) {
+        if (now > known.since() && now - known.since() >= BoardTuning.STUCK_TTL_TICKS) {
             stuck.remove(spirit);
             note(
                     spirit,
                     known.at(),
                     now,
                     false,
-                    "истекла: " + BoardTuning.STUCK_TTL_TICKS + " тиков без выхода из ловушки");
+                    "истекла: " + BoardTuning.STUCK_TTL_TICKS + " тиков без выхода из ловушки"
+                            + (known.noPath() ? " (в том числе «пути нет»: метка не вечная)" : ""));
             return Optional.empty();
         }
         return Optional.of(known);
@@ -151,23 +160,16 @@ public final class StuckSpirits {
         seen.clear();
         stuck.clear();
         for (BoardState.Stuck state : states) {
-            stuck.put(state.spirit(), new Stuck(state.at(), state.since(), state.noPath()));
             if (state.at() != null) {
                 seen.put(state.spirit(), state.at());
             }
-        }
-        rebasePending = !states.isEmpty();
-        restoredAt = now;
-    }
-
-    private void rebase(long now) {
-        if (!rebasePending || now <= restoredAt) {
-            return;
-        }
-        rebasePending = false;
-        for (Map.Entry<UUID, Stuck> entry : new LinkedHashMap<>(stuck).entrySet()) {
-            Stuck state = entry.getValue();
-            stuck.put(entry.getKey(), new Stuck(state.at(), now, state.noPath()));
+            note(
+                    state.spirit(),
+                    state.at(),
+                    now,
+                    false,
+                    "сброшена при загрузке: метка застревания не переживает рестарт (была с тика " + state.since()
+                            + ")");
         }
     }
 

@@ -103,7 +103,7 @@ class AbsentOwnersTests {
         owners.sweep(board, Set.of(ALIVE), AbsentOwners.GRACE_TICKS);
 
         assertTrue(
-                board.stuck().of(ALIVE, AbsentOwners.GRACE_TICKS + 1).isPresent(),
-                "Метка живого духа не снимается уборкой отсутствующих: его спасает граф");
+                board.stuck().of(ALIVE, BoardTuning.STUCK_TTL_TICKS - 1).isPresent(),
+                "Метка живого духа не снимается уборкой отсутствующих: его спасает граф до истечения метки");
     }
 }

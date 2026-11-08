@@ -21,7 +21,7 @@ class TransferStuckLiveTests {
     private static final EatNeed FED = new EatNeed(20, 20, 20, 20);
 
     @Test
-    void restore_StuckMarkOldSession_RebasesTickToRestart() throws IOException {
+    void restore_StuckMarkOldSession_DroppedOnRestart() throws IOException {
         JsonNode bots = MAPPER.readTree(Files.readString(DIR.resolve("bots.json"), StandardCharsets.UTF_8));
         UUID spirit = UUID.fromString(bot(bots, "spirit-3").get("id").asText());
         long old = 23_625_631L;
@@ -35,12 +35,10 @@ class TransferStuckLiveTests {
         restored.restore(snapshot);
         clock[0] = restart;
 
-        long since = restored.stuck().of(spirit, restart).orElseThrow().since();
-        assertEquals(
-                restart,
-                since,
-                "Тик застревания после перезапуска — текущий, а не из прошлой сессии: иначе waitReason "
-                        + "показывает «с тика " + old + "» при state_since_tick " + restart + " (observe16 N3)");
+        assertTrue(
+                restored.stuck().of(spirit, restart).isEmpty(),
+                "Метка прошлой сессии не восстанавливается: после рестарта дух снова получает работу и "
+                        + "сам перепроверяет путь (observe25 B1)");
     }
 
     @Test
