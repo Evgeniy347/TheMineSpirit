@@ -5,8 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.graph.GraphCadence;
 import com.theminespirit.core.navigation.NavWorld;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -66,16 +68,24 @@ class RescueReachCacheTests {
     }
 
     @Test
-    void cache_CompletedVerdict_AdvancesGeneration() {
+    void cache_CompletedVerdict_WakesGraphCadenceInSameTick() {
         RescueReach.Cache cache = new RescueReach.Cache();
-        long before = cache.generation();
-        cache.request(FLAT, cell -> false, HELPER, FROM, TARGET, 0);
-        finish(cache, 0);
+        GraphCadence cadence = new GraphCadence();
+        Set<String> before = Set.of(cache.readyEvent());
+        assertTrue(cadence.due(100, before), "Первый прогон графа идёт сразу: вход ещё не запоминался");
+        cadence.finished(100, before);
+        assertFalse(cadence.due(110, before), "Между прогонами граф спит: вход не менялся, а 600 тиков не прошло");
+        cache.request(FLAT, cell -> false, HELPER, FROM, TARGET, 110);
+        assertFalse(
+                cadence.due(120, Set.of(cache.readyEvent())),
+                "Пока вердикта нет, событие «вердикт готов» не меняется: граф не просыпается зря");
+        finish(cache, 120);
 
         assertTrue(
-                cache.generation() > before,
-                "Готовый вердикт меняет поколение кэша: граф обязан проснуться и выдать помощника, а не ждать "
-                        + "следующего цикла до 600 тиков (debtnav, п.2)");
+                cadence.due(120, Set.of(cache.readyEvent())),
+                "Готовый вердикт меняет событие «вердикт готов» (поколение " + cache.generation()
+                        + "): граф обязан проснуться в тот же тик и выдать помощника, а не ждать следующего цикла "
+                        + "до 600 тиков (debtnav, п.2)");
     }
 
     @Test
