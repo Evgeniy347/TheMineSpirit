@@ -7,6 +7,7 @@ import com.theminespirit.core.movement.SealedSpace;
 import com.theminespirit.core.movement.WaterCrossingPlanner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
+import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.movement.CheapBlocks;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ public final class DigOutScript implements ScriptInstance {
     private Direction direction;
     private BlockPos next;
     private boolean breaking;
+    private @Nullable String restoreId;
     private int stepTicks;
     private int steps;
     private int turns;
@@ -53,7 +55,7 @@ public final class DigOutScript implements ScriptInstance {
         this.fromPit = open(level, spirit.blockPosition());
         this.descending = target.y() < spirit.blockPosition().getY();
         this.breaker = BlockBreaker.escaping(spirit);
-        this.placer = new BlockPlacer(spirit);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.NONE);
         boolean sealedNow = sealed(level, spirit.blockPosition());
         this.backfill = new DigOutBackfill(
                 spirit,
@@ -116,6 +118,7 @@ public final class DigOutScript implements ScriptInstance {
         }
         if (embedded(spirit) && !breaking) {
             BlockPos feet = spirit.blockPosition();
+            restoreId = BlockStates.idOf(level.getBlockState(feet));
             BlockBreaker.Begin begin = breaker.begin(feet);
             if (begin instanceof BlockBreaker.Started) {
                 breaking = true;
@@ -165,7 +168,8 @@ public final class DigOutScript implements ScriptInstance {
                 return turnOrFail("пол ступени " + ahead.toShortString() + " не подложить: " + refusal.get());
             }
         }
-        backfill.remember(feet);
+        backfill.remember(feet, restoreId);
+        restoreId = null;
         next = ahead.above();
         stepTicks = 0;
         moveTo(next);

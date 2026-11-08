@@ -55,15 +55,16 @@ guards/GameTestIsolationGuardTests.java	352
 guards/GameTestTimeoutGuardTests.java	484
 guards/ProductionCommentGuardTests.java	575
 guards/SucceedWhenReturnGuardTests.java	343
-neoforge/BlockBreaker.java	417
+neoforge/BlockBreaker.java	429
 neoforge/BlockPlacer.java	321
 neoforge/BuildSchematicScript.java	681
 neoforge/ChopTreeScript.java	343
 neoforge/ClearAreaSession.java	541
 neoforge/DescentSession.java	360
+neoforge/DigOutScript.java	302
 neoforge/DropCollector.java	471
 neoforge/FarmSession.java	688
-neoforge/FillSession.java	468
+neoforge/FillSession.java	469
 neoforge/HarvestSession.java	747
 neoforge/MineBuildScript.java	520
 neoforge/SafeMineSession.java	505
@@ -73,7 +74,7 @@ neoforge/SpiritScripts.java	384
 neoforge/TreeChop.java	302
 neoforge/WorldScanner.java	306
 neoforge/board/BoardService.java	353
-neoforge/board/FirstStepsRunner.java	686
+neoforge/board/FirstStepsRunner.java	711
 neoforge/board/TransferWatch.java	569
 neoforge/crafting/CraftScript.java	384
 neoforge/crafting/SmeltScript.java	308

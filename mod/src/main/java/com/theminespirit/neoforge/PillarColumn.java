@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.movement.CellCentering;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.town.PlotProtection;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -58,7 +59,7 @@ final class PillarColumn {
         this.baseX = feet.getX();
         this.baseY = feet.getY();
         this.baseZ = feet.getZ();
-        this.placer = new BlockPlacer(spirit);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.NONE);
     }
 
     static PillarColumn throughWater(SpiritEntity spirit, String blockId) {

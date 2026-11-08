@@ -8,6 +8,7 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.PlotProtection;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -79,7 +80,7 @@ public final class FillSession {
         this.safety = new LevelSafetyView(level);
         this.standView = new FillStands(spirit, level, blockId, region, safety);
         this.terrain = new FillTerrain(level, spirit, wanted, region);
-        this.placer = new BlockPlacer(spirit);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.NONE);
         this.approach = new Approach(spirit);
         this.reservations = BuildReservationHub.forLevel(level);
         replan();

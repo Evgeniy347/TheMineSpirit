@@ -58,7 +58,7 @@ public final class BlockPlacer {
     private final PlotProtection.Ground ground;
 
     public BlockPlacer(SpiritEntity spirit) {
-        this(spirit, PlotProtection.Ground.NONE);
+        this(spirit, PlotProtection.Ground.PLAN_BUILD);
     }
 
     public BlockPlacer(SpiritEntity spirit, PlotProtection.Ground ground) {

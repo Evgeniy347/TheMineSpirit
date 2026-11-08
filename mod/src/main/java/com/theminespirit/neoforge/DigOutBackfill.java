@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.movement.WaterCrossingPlanner;
+import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.movement.CheapBlocks;
 import java.util.Map;
 import java.util.Optional;
@@ -20,6 +21,7 @@ final class DigOutBackfill {
     private final boolean enabled;
     private int closed;
     private @Nullable BlockPos previous;
+    private @Nullable String previousId;
 
     DigOutBackfill(SpiritEntity spirit, Level level, BlockPlacer placer, boolean enabled) {
         this.spirit = spirit;
@@ -29,16 +31,22 @@ final class DigOutBackfill {
     }
 
     void remember(BlockPos cell) {
+        remember(cell, null);
+    }
+
+    void remember(BlockPos cell, @Nullable String blockId) {
         previous = cell;
+        previousId = blockId;
     }
 
     void close() {
         if (!enabled || previous == null) {
             return;
         }
-        closeCell(previous);
-        closeCell(previous.above());
+        closeCell(previous, previousId);
+        closeCell(previous.above(), null);
         previous = null;
+        previousId = null;
     }
 
     void report() {
@@ -57,17 +65,20 @@ final class DigOutBackfill {
         return level.getFluidState(cell).is(FluidTags.WATER);
     }
 
-    private void closeCell(BlockPos cell) {
+    private void closeCell(BlockPos cell, @Nullable String preferred) {
         if (!level.getBlockState(cell).isAir()) {
             return;
         }
         Map<String, Integer> counts = CheapBlocks.counts(spirit);
-        Optional<String> blockId = WaterCrossingPlanner.cheapestAvailable(counts);
+        Optional<String> blockId = preferred != null && counts.getOrDefault(preferred, 0) > 0
+                ? Optional.of(preferred)
+                : WaterCrossingPlanner.cheapestAvailable(counts);
         if (blockId.isEmpty()) {
             return;
         }
         String id = blockId.get();
-        if (placer.begin(cell, BlockStates.stateFor(id), id) instanceof BlockPlacer.Started) {
+        BlockPlacer writer = preferred == null ? placer : new BlockPlacer(spirit, PlotProtection.Ground.PLAN_BUILD);
+        if (writer.begin(cell, BlockStates.stateFor(id), id) instanceof BlockPlacer.Started) {
             closed++;
         }
     }

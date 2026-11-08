@@ -7,8 +7,10 @@ import com.theminespirit.core.mining.ToolChoice.Choice;
 import com.theminespirit.core.mining.ToolChoice.ToolOption;
 import com.theminespirit.core.mining.ToolReserve;
 import com.theminespirit.core.mining.ToolSuffix;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.PolicyId;
+import com.theminespirit.core.policy.SelfRescue;
 import com.theminespirit.core.tactics.adapter.Visibility;
 import com.theminespirit.core.town.PlotProtection;
 import java.util.ArrayList;
@@ -81,6 +83,7 @@ public final class BlockBreaker {
     private String brokenToolSuffix = "";
     private int forcedSlot = NO_FORCED_SLOT;
     private Intent intent = Intent.BREAK;
+    private PlotProtection.Ground ground = PlotProtection.Ground.NONE;
 
     public BlockBreaker(SpiritEntity spirit) {
         this(spirit, false);
@@ -147,6 +150,15 @@ public final class BlockBreaker {
     Begin begin(BlockPos target, Intent intent, boolean reachLimited, boolean leavesPass) {
         cancel();
         this.intent = intent;
+        this.ground = groundFor(intent);
+        if (escaping) {
+            BlockPos feet = spirit.blockPosition();
+            if (SelfRescue.mayBreakAtFeet(
+                    new BlockCoord(target.getX(), target.getY(), target.getZ()),
+                    new BlockCoord(feet.getX(), feet.getY(), feet.getZ()))) {
+                this.ground = PlotProtection.Ground.SELF_RESCUE;
+            }
+        }
         Level level = spirit.level();
         if (level.getChunkSource().getChunkNow(target.getX() >> 4, target.getZ() >> 4) == null) {
             return new Refused(
@@ -374,7 +386,7 @@ public final class BlockBreaker {
         boolean wearsTool = broken.getDestroySpeed(level, brokenPos) != 0.0F;
         finish();
         if (level instanceof ServerLevel server) {
-            BreakNotice.broken(server, brokenPos, broken, spirit, intent.name(), ground(intent));
+            BreakNotice.broken(server, brokenPos, broken, spirit, intent.name(), ground);
         }
         level.destroyBlock(brokenPos, false, spirit);
         spirit.hunger().onBlockBroken();
@@ -402,7 +414,7 @@ public final class BlockBreaker {
         active = false;
     }
 
-    private static PlotProtection.Ground ground(Intent intent) {
+    private static PlotProtection.Ground groundFor(Intent intent) {
         return switch (intent) {
             case DEMOLISH -> PlotProtection.Ground.PLAN_DEMOLISH;
             case REPAIR -> PlotProtection.Ground.REPAIR;
