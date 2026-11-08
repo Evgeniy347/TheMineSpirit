@@ -161,6 +161,8 @@ class CycleRunner:
                 and order["level"] >= required:
             return
         site = view.get("plan_site")
+        if (not isinstance(site, str) or not _coord(site)) and isinstance(order, dict):
+            site = order.get("site")
         if not isinstance(site, str) or not _coord(site):
             rt.log("warehouse_skipped", cycle=cycle,
                    reason="план не дал plan_site: место склада неизвестно", code="plan_site_missing")
