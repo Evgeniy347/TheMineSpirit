@@ -14,7 +14,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 final class CrossMatrixDocument {
     static final Path DOC = Path.of("docs/testing/CROSS-MATRIX.md");
@@ -29,8 +28,8 @@ final class CrossMatrixDocument {
 
     private CrossMatrixDocument() {}
 
-    static List<String> check() {
-        return violations(read(DOC), testSources());
+    static List<String> check(Map<String, String> sources) {
+        return violations(read(DOC), sources);
     }
 
     static List<String> violations(String text, Map<String, String> sources) {
@@ -112,6 +111,12 @@ final class CrossMatrixDocument {
             }
             if (!Set.of("ОК", "НЕ ОК").contains(detail.get("mark"))) {
                 found.add("пара " + pair + " без отметки ОК/НЕ ОК: " + detail.get("mark"));
+            }
+        }
+        for (Map.Entry<String, String> cell : states(text).entrySet()) {
+            if ("Е".equals(cell.getValue())
+                    && details(text).stream().noneMatch(row -> cell.getKey().equals(row.get("pair")))) {
+                found.add("клетка Е пары " + cell.getKey() + " без строки в таблице пар");
             }
         }
         for (String ref : references(text)) {
@@ -248,8 +253,12 @@ final class CrossMatrixDocument {
         Map<String, String> states = new TreeMap<>();
         for (Map.Entry<String, List<String>> row : matrix(text).entrySet()) {
             for (int index = 0; index < row.getValue().size(); index++) {
-                String pair = Integer.parseInt(row.getKey().substring(1)) + "-" + (index + 1);
-                states.put(pair, row.getValue().get(index));
+                int mechanic = Integer.parseInt(row.getKey().substring(1));
+                String pair = Math.min(mechanic, index + 1) + "-" + Math.max(mechanic, index + 1);
+                states.merge(
+                        pair,
+                        row.getValue().get(index),
+                        (first, second) -> "Е".equals(first) || "Е".equals(second) ? "Е" : first);
             }
         }
         return states;
@@ -279,22 +288,5 @@ final class CrossMatrixDocument {
         } catch (IOException e) {
             throw new UncheckedIOException("Сторож не смог прочитать " + path, e);
         }
-    }
-
-    private static Map<String, String> testSources() {
-        Map<String, String> sources = new TreeMap<>();
-        for (Path root : SourceFiles.moduleTestRoots()) {
-            try (Stream<Path> files = Files.walk(root)) {
-                for (Path file : files.filter(Files::isRegularFile)
-                        .filter(path -> path.toString().endsWith("Tests.java"))
-                        .toList()) {
-                    String name = file.getFileName().toString().replace(".java", "");
-                    sources.put(name, read(file));
-                }
-            } catch (IOException e) {
-                throw new UncheckedIOException("Сторож не смог собрать тесты из " + root, e);
-            }
-        }
-        return sources;
     }
 }

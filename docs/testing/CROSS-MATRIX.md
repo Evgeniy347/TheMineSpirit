@@ -68,81 +68,81 @@
 
 | пара | тест | граф дал | механика сделала | отметка |
 |---|---|---|---|---|
-| 2-1 | `CrossLifeWorkScenarioTests.pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill` | дух в клетке получает `dig_out` | выход — действие `dig_out`, без телепорта | ОК |
+| 1-2 | `CrossLifeWorkScenarioTests.pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill` | дух в клетке получает `dig_out` | выход — действие `dig_out`, без телепорта | ОК |
+| 1-6 | `FillScenarioTests.fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether` | две ямы — две задачи засыпки | два духа кладут слои и держат опору | ОК |
+| 1-7 | `DemolishPlanTests.plan_DemolishUnreachableTop_ClearsBottomUpWithoutGoto` | задание сноса без прямого подхода сверху | разбор идёт снизу вверх, без телепорта | ОК |
 | 2-5 | `CrossLifeWorkScenarioTests.pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill` | rescue 98, repair hut 78, backfill выполним | спасатель `clear_area`, ремонт `build_schematic` | ОК |
 | 2-6 | `CrossLifeWorkScenarioTests.pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill` | backfill выполним при застрявшем духе | засыпка `fill` не ждёт спасения | ОК |
 | 2-8 | `CrossRouteStageScenarioTests.pit_WaterAtBottom_BridgeWaitsForTraceAndThenUsesPlanks` | bridge требует trail_clean, затем 8 досок | мост тратит доски, дом ждёт | ОК |
 | 2-20 | `CrossLifeWorkScenarioTests.pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill` | спасение выше ремонта хижины | граф ставит rescue первым | ОК |
+| 2-24 | `BoardRestartStateLiveTests.restore_StuckMarkAndCasePause_SurviveServerRestart` | метка застревания и пауза кейса на доске | после рестарта дух не получает работу | ОК |
 | 3-6 | `GraphTreeCasesTests.terrain_HangingAfterChop_ClearFloatingPosted` | после рубки `event:clear_floating` | уборка висящей кроны | ОК |
 | 3-8 | `StoreGraphTests.plan_GroupMinimumShortage_PostsChop` | минимум `#logs` 80 → `chop_oak_log` | рубка валит дерево, склад ждёт | ОК |
 | 3-9 | `ChopToolGraphTests.case68_LogsToPlanksTableAxe_ThenChopWithAxe` | доски → верстак → деревянный топор → chop | крафт идёт до рубки, рубит топором | ОК |
 | 3-12 | `CrossLifeWorkScenarioTests.chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted` | defend 100 выше рубки, defend первым билетом | защита `defend`, затем `chop_tree` | ОК |
 | 3-15 | `GraphNightDefenseTests.plan_NightAndFarTree_DoesNotGiveDistantGather` | ночью нет далёкой добычи | NightLeash не пускает духа за радиус | ОК |
 | 3-20 | `ChopToolGraphTests.case70_AxeBroke_TicketStaysWithSpiritAndSameTree` | тот же билет рубки остаётся за духом | поломка топора не отдаёт дерево другому | ОК |
+| 4-6 | `CleanupCasesTests.cleanup_FillDirtInStock_DoesNotDigAgain` | засыпка берёт землю со склада | новая добыча земли не ставится | ОК |
 | 4-9 | `GraphPlannerTests.plan_NoIronPickaxe_LowersMineCoal` | железная кирка поднимает крафт и топит шахту | шахта ждёт инструмент, а не копает руками | ОК |
+| 4-14 | `CrossLifeWorkScenarioTests.hunger_NoFoodInStock_GraphSendsHungrySpiritToMine` | еды нет: eat невыполним, mine_coal 54 первый | голодный дух получает шахту | НЕ ОК |
+| 4-16 | `CrossSettlementScenarioTests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool` | tool_worn без наковальни невыполним | изношенная кирка продолжает шахту | ОК |
+| 4-18 | `CrossSettlementScenarioTests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | тьма шахты → mine_coal 82 первым | уголь добывается шахтой | ОК |
 | 4-20 | `GraphPlannerTests.plan_NoCoal_PostsMineAndCharcoal` | `mine_coal` и `smelt_charcoal` | уголь добывается, затем жжётся | ОК |
+| 5-6 | `CrossSettlementScenarioTests.fill_PitOnHouseLot_FillAndBuildStayPostedTogether` | backfill и building:hut выполнимы вместе | fill кладёт землю, build_schematic строит дом | ОК |
 | 5-7 | `BuildPlanCasesTests.plan_StrayBesidePlannedHouse_DemolishesOnlyStray` | лишний забор → `demolish_stray` | снос убирает только чужое, дом не трогает | ОК |
 | 5-9 | `StageOneAcceptanceTests.plan_FencePart_CraftsFromOwnWoodInsteadOfWithdraw` | деталь забора крафтится из своего дерева | крафт закрывает нехватку без похода в сундук | ОК |
+| 5-11 | `FarmGraphTests.plan_PenAbsentAtStageTwo_GraphDemandsPen` | на этапе 2 нет загона → стройка загона | животноводство ждёт постройку | ОК |
+| 5-13 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_GraphPostsRetreatButDispatchKeepsBuilderBusy` | retreat есть в графе, но стройка остаётся ASSIGNED | занятый строитель не берёт бегство | НЕ ОК |
+| 5-15 | `CrossLifeWorkScenarioTests.night_FarChopAndNearBuild_NoDistantChoppingButBuildStays` | ночью `building:hut` выполним | стройка на участке продолжается | ОК |
 | 5-16 | `GraphRepairPlannerTests.repair_DamagedHut_ConsumesExactlyMissingItems` | ремонт заказывает ровно недостающее | ремонт строит схему из недостающих блоков | ОК |
+| 5-18 | `RepairPlanTests.target_LightingPlan_NoRepairScheme` | свет в плане этапа | ремонт света идёт без схемы постройки | ОК |
 | 5-21 | `GraphStageGateTests.building_MissingBlocks_NotReady` | аудит видит недостачу блоков | этап не закрыт, стройка не готова | ОК |
-| 6-1 | `FillScenarioTests.fill_TwoPitsTwoSpirits_LayersSupportFluidAndAuditTogether` | две ямы — две задачи засыпки | два духа кладут слои и держат опору | ОК |
-| 6-4 | `CleanupCasesTests.cleanup_FillDirtInStock_DoesNotDigAgain` | засыпка берёт землю со склада | новая добыча земли не ставится | ОК |
-| 6-5 | `CrossSettlementScenarioTests.fill_PitOnHouseLot_FillAndBuildStayPostedTogether` | backfill и building:hut выполнимы вместе | fill кладёт землю, build_schematic строит дом | ОК |
+| 5-23 | `CrossSupplyScenarioTests.storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace` | граф ставит склад и место | склад строится схемой, а не чинтом | ОК |
+| 5-24 | `CrossRouteStageScenarioTests.chunks_UnknownLot_NoBlindRebuildButKnownRepairStays` | неизвестный дом не даёт building/repair | стройка не идёт вслепую | ОК |
 | 6-7 | `FloatingCleanupTests.decide_EmptyChestWithYard_IsRemoved` | `clear_floating` для пустого сундука | снос сундука идёт уборкой висящего | ОК |
 | 6-20 | `LevelRepairScenarioTests.progress_LevelingRepair_CountsCutAndFillCells` | `level_lot` и засыпка ямы на участке | срезка и засыпка считаются послойно | ОК |
-| 7-1 | `DemolishPlanTests.plan_DemolishUnreachableTop_ClearsBottomUpWithoutGoto` | задание сноса без прямого подхода сверху | разбор идёт снизу вверх, без телепорта | ОК |
+| 6-21 | `GraphStageGateTests.lots_CutOrFill_NotReady` | яма/насыпь на участке — этап не готов | выравнивание блокирует закрытие | ОК |
 | 7-8 | `CrossSettlementScenarioTests.demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking` | demolish_stray для непустого сундука | withdraw → deposit → clear_area | ОК |
 | 7-20 | `CleanupCasesTests.cleanup_StrayFence_PostsDemolition` | лишний забор → `demolish_stray` | кейс сноса разбирает забор | ОК |
 | 7-23 | `ChestClearanceTests.decide_NonEmptyFullWarehouseWithMaterials_AddsChestFirst` | задача сноса/выноса ждёт места | склад решает: сначала добавить сундук, потом нести | ОК |
 | 8-9 | `StoreGraphTests.plan_ToolMinimumShortage_PostsCraft` | минимум инструмента → крафт | крафт пополняет склад | ОК |
+| 8-14 | `CrossLifeWorkScenarioTests.hunger_FoodInChest_EatOutranksMineAndGoesToHungrySpirit` | еда в сундуке: eat 55 выше mine 54 | поесть достаётся голодному | ОК |
 | 8-19 | `StoreGraphTests.plan_CarriedItemsWithFreeChest_PostsDeliver` | несомое и свободный сундук → доставка | социальная доставка кладёт предмет | ОК |
+| 8-23 | `CrossSupplyScenarioTests.storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace` | склад переполнен → building:warehouse и store_space | стройка склада и раскладка `deposit` | ОК |
+| 9-11 | `FarmGraphTests.plan_SheepInSheepPen_ShearingIsWork` | овца в загоне → стрижка | инструмент стрижёт овцу | ОК |
 | 9-12 | `CrossSupplyScenarioTests.combat_WoundedWithoutArmor_FightsBeforeCraftingArmor` | craft_armor в графе | крафт брони идёт действием `craft` | ОК |
+| 9-16 | `CrossSettlementScenarioTests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool` | наковальня + слиток → repair_tool выполним | ремонт идёт действием `repair_tool` | ОК |
+| 9-18 | `CrossSettlementScenarioTests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | уголь → craft_torch выполним | крафт факела идёт после угля | ОК |
+| 9-19 | `BrewGraphPlannerTests.ways_StageThreeBrewing_RequireGlassBottlesAndFuel` | варка требует бутылки и топливо | крафт бутылок и топлива идёт до варки | ОК |
 | 9-20 | `GraphPlannerTests.plan_NoTorches_RaisesCoalWays` | нет факелов → угольные пути | крафт тянет уголь и палки | ОК |
+| 10-11 | `CrossSettlementScenarioTests.husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing` | gather_seeds 97 выше feed 33 и plant 29 | сбор семян идёт до кормления и посева | ОК |
 | 10-14 | `CrossSettlementScenarioTests.husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing` | plant_crop невыполним без семян | посев ждёт семена, а не выдумывает урожай | ОК |
 | 10-20 | `FarmGraphTests.plan_StringsStocked_WeaveWoolIsWork` | нить есть → `weave_wool` | ферма/крафт делают шерсть | ОК |
-| 11-5 | `FarmGraphTests.plan_PenAbsentAtStageTwo_GraphDemandsPen` | на этапе 2 нет загона → стройка загона | животноводство ждёт постройку | ОК |
-| 11-9 | `FarmGraphTests.plan_SheepInSheepPen_ShearingIsWork` | овца в загоне → стрижка | инструмент стрижёт овцу | ОК |
-| 11-10 | `CrossSettlementScenarioTests.husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing` | gather_seeds 97 выше feed 33 и plant 29 | сбор семян идёт до кормления и посева | ОК |
 | 11-14 | `CrossSettlementScenarioTests.husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing` | feed_animals невыполним без урожая | кормление ждёт еду, голод не растёт молча | ОК |
 | 11-20 | `HerdCapPlannerTests.plan_PerSpiritHerdCap_CullRaisedBySpiritCountNotFixedNumber` | потолок стада растёт от числа духов | граф ставит забой лишних | ОК |
 | 12-14 | `LifeGraphPlannerTests.plan_ManySpiritsAndMobs_LifeAtCeilingOnlyForAggroTargets` | голод и мобы → приоритеты жизни | еда и защита не выходят за потолок | ОК |
+| 12-15 | `CrossLifeWorkScenarioTests.night_ThreatAtWounded_DefendAboveSleepAndGuard` | defend 100 > sleep 84 > guard 55 | ночью бой выше сна и охраны | ОК |
+| 12-16 | `CrossSupplyScenarioTests.combat_WoundedWithoutArmor_FightsBeforeCraftingArmor` | defend 100 выше craft_armor 39 | раненый сначала отбивается | ОК |
+| 12-17 | `CrossSettlementScenarioTests.combat_BrokenFenceUnderRaid_DefendOutranksFenceRepair` | defend 100 выше ремонта забора 61 | бой раньше забора | ОК |
 | 12-20 | `CrossLifeWorkScenarioTests.chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted` | защита жизни получает потолок 100 | механика боя выполняется скриптом `defend` | ОК |
-| 13-5 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_GraphPostsRetreatButDispatchKeepsBuilderBusy` | retreat есть в графе, но стройка остаётся ASSIGNED | занятый строитель не берёт бегство | НЕ ОК |
 | 13-20 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_GraphPostsRetreatButDispatchKeepsBuilderBusy` | retreat на доске, стройка не снята | доска не бросает работу ради бегства | НЕ ОК |
-| 14-4 | `CrossLifeWorkScenarioTests.hunger_NoFoodInStock_GraphSendsHungrySpiritToMine` | еды нет: eat невыполним, mine_coal 54 первый | голодный дух получает шахту | НЕ ОК |
-| 14-8 | `CrossLifeWorkScenarioTests.hunger_FoodInChest_EatOutranksMineAndGoesToHungrySpirit` | еда в сундуке: eat 55 выше mine 54 | поесть достаётся голодному | ОК |
 | 14-20 | `CrossLifeWorkScenarioTests.hunger_NoFoodInStock_GraphSendsHungrySpiritToMine` | на доске только шахта, еды нет | голодный дух копает вместо еды | НЕ ОК |
-| 15-5 | `CrossLifeWorkScenarioTests.night_FarChopAndNearBuild_NoDistantChoppingButBuildStays` | ночью `building:hut` выполним | стройка на участке продолжается | ОК |
-| 15-12 | `CrossLifeWorkScenarioTests.night_ThreatAtWounded_DefendAboveSleepAndGuard` | defend 100 > sleep 84 > guard 55 | ночью бой выше сна и охраны | ОК |
 | 15-20 | `GraphNightDefenseTests.plan_NightAndFarTree_DoesNotGiveDistantGather` | ночью далёкая рубка не выдаётся | граф и NightLeash согласованы | ОК |
-| 16-4 | `CrossSettlementScenarioTests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool` | tool_worn без наковальни невыполним | изношенная кирка продолжает шахту | ОК |
-| 16-9 | `CrossSettlementScenarioTests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool` | наковальня + слиток → repair_tool выполним | ремонт идёт действием `repair_tool` | ОК |
-| 16-12 | `CrossSupplyScenarioTests.combat_WoundedWithoutArmor_FightsBeforeCraftingArmor` | defend 100 выше craft_armor 39 | раненый сначала отбивается | ОК |
+| 16-17 | `CrossSettlementScenarioTests.combat_BrokenFenceUnderRaid_DefendOutranksFenceRepair` | repair_fence выполним рядом с боем | ремонт ставит схему забора | ОК |
 | 16-20 | `GraphRepairPlannerTests.repair_MoreMissing_RaisesWeight` | больше недостачи — выше вес ремонта | ремонт поднимается в очереди графа | ОК |
-| 17-12 | `CrossSettlementScenarioTests.combat_BrokenFenceUnderRaid_DefendOutranksFenceRepair` | defend 100 выше ремонта забора 61 | бой раньше забора | ОК |
-| 17-16 | `CrossSettlementScenarioTests.combat_BrokenFenceUnderRaid_DefendOutranksFenceRepair` | repair_fence выполним рядом с боем | ремонт ставит схему забора | ОК |
+| 16-21 | `GraphStageRepairSelectionTests.stageTwo_Pens_AreChosenByGraphNotByWatcher` | этап 2 выбирает ремонт загонов графом | ремонт выполняет выбранный узел | ОК |
+| 16-24 | `CrossRouteStageScenarioTests.chunks_UnknownLot_NoBlindRebuildButKnownRepairStays` | неизвестное не чинится, известный забор чинится | ремонт идёт только по известному аудиту | ОК |
 | 17-20 | `BuildGapFenceTests.need_PartialFence_AsksOnlyRemainingCraft` | нехватка забора считается графом | крафт добирает только остаток | ОК |
-| 18-4 | `CrossSettlementScenarioTests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | тьма шахты → mine_coal 82 первым | уголь добывается шахтой | ОК |
-| 18-5 | `RepairPlanTests.target_LightingPlan_NoRepairScheme` | свет в плане этапа | ремонт света идёт без схемы постройки | ОК |
-| 18-9 | `CrossSettlementScenarioTests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | уголь → craft_torch выполним | крафт факела идёт после угля | ОК |
 | 18-20 | `CrossSettlementScenarioTests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | уголь → факел → свет по шагам | порядок графа совпадает с действиями | ОК |
-| 19-9 | `BrewGraphPlannerTests.ways_StageThreeBrewing_RequireGlassBottlesAndFuel` | варка требует бутылки и топливо | крафт бутылок и топлива идёт до варки | ОК |
 | 19-20 | `BrewGraphPlannerTests.plan_StageThreePotionFullLine_Feasible` | полная линия зелья на этапе 3 выполнима | алхимия варит по цепочке | ОК |
 | 19-22 | `CrossSupplyScenarioTests.social_PlayerNearAndExpedition_ExpeditionOutranksGuard` | expedition 69 выше guard 57 | поход `follow` раньше патруля | ОК |
-| 21-6 | `GraphStageGateTests.lots_CutOrFill_NotReady` | яма/насыпь на участке — этап не готов | выравнивание блокирует закрытие | ОК |
-| 21-16 | `GraphStageRepairSelectionTests.stageTwo_Pens_AreChosenByGraphNotByWatcher` | этап 2 выбирает ремонт загонов графом | ремонт выполняет выбранный узел | ОК |
-| 21-20 | `GraphStageGateTests.simulate_StageTwoBaseline_ReachesStageThree` | симуляция графа проходит этап 2 | стройка и аудит закрывают этап | ОК |
+| 20-21 | `GraphStageGateTests.simulate_StageTwoBaseline_ReachesStageThree` | симуляция графа проходит этап 2 | стройка и аудит закрывают этап | ОК |
+| 20-22 | `CrossSupplyScenarioTests.social_PlayerNearAndExpedition_ExpeditionOutranksGuard` | поход и охрана — разные узлы графа | механики не смешиваются в одну карточку | ОК |
+| 20-23 | `WarehouseGraphNoticeTests.plan_WarehouseMissingAtStageTwo_StillAsksStrategist` | нет склада — граф просит стратега | уведомление уходит в REST, стройка ждёт | ОК |
+| 20-24 | `BuildGapUnloadedTests.trace_ChunksNotLoaded_UnknownInsteadOfMissing` | незагруженный чанк — «неизвестно» | недостача не выдумывается, граф ждёт | ОК |
 | 21-23 | `WarehouseChainScenarioTests.stageTwoStage_StrategistOrder_MakesWarehouseTask` | заказ стратега на этапе 2 → склад | стройка склада идёт по заказу | ОК |
-| 22-20 | `CrossSupplyScenarioTests.social_PlayerNearAndExpedition_ExpeditionOutranksGuard` | поход и охрана — разные узлы графа | механики не смешиваются в одну карточку | ОК |
-| 23-5 | `CrossSupplyScenarioTests.storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace` | граф ставит склад и место | склад строится схемой, а не чинтом | ОК |
-| 23-8 | `CrossSupplyScenarioTests.storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace` | склад переполнен → building:warehouse и store_space | стройка склада и раскладка `deposit` | ОК |
-| 23-20 | `WarehouseGraphNoticeTests.plan_WarehouseMissingAtStageTwo_StillAsksStrategist` | нет склада — граф просит стратега | уведомление уходит в REST, стройка ждёт | ОК |
-| 23-22 | `WarehouseChainScenarioTests.stageTwoStage_StrategistOrder_MakesWarehouseTask` | заказ стратега и поход/склад | склад строится по узлу, а не по порогу | ОК |
-| 24-2 | `BoardRestartStateLiveTests.restore_StuckMarkAndCasePause_SurviveServerRestart` | метка застревания и пауза кейса на доске | после рестарта дух не получает работу | ОК |
-| 24-5 | `CrossRouteStageScenarioTests.chunks_UnknownLot_NoBlindRebuildButKnownRepairStays` | неизвестный дом не даёт building/repair | стройка не идёт вслепую | ОК |
-| 24-16 | `CrossRouteStageScenarioTests.chunks_UnknownLot_NoBlindRebuildButKnownRepairStays` | неизвестное не чинится, известный забор чинится | ремонт идёт только по известному аудиту | ОК |
-| 24-20 | `BuildGapUnloadedTests.trace_ChunksNotLoaded_UnknownInsteadOfMissing` | незагруженный чанк — «неизвестно» | недостача не выдумывается, граф ждёт | ОК |
-| 24-21 | `GraphStageGateTests.building_UnknownChunks_NotReady` | неизвестные чанки не закрывают постройку | этап ждёт аудита, а не «наверное, готово» | ОК |
+| 21-24 | `GraphStageGateTests.building_UnknownChunks_NotReady` | неизвестные чанки не закрывают постройку | этап ждёт аудита, а не «наверное, готово» | ОК |
+| 22-23 | `WarehouseChainScenarioTests.stageTwoStage_StrategistOrder_MakesWarehouseTask` | заказ стратега и поход/склад | склад строится по узлу, а не по порогу | ОК |
 ## Итог
 
 Механик — 24, неупорядоченных пар — 24·23/2 = 276. Общий тест есть у 75 пар, частично — 14, к доработке — 187.
