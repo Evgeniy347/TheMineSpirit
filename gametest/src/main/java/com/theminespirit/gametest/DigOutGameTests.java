@@ -59,6 +59,12 @@ public final class DigOutGameTests {
             }
         }
         pockets.forEach(cells -> cells.forEach(cell -> helper.setBlock(cell, Blocks.AIR)));
+        List<BlockPos> planks = new ArrayList<>();
+        for (List<BlockPos> cells : pockets) {
+            BlockPos plank = cells.get(0).above(2);
+            helper.setBlock(plank, Blocks.JUNGLE_PLANKS);
+            planks.add(plank);
+        }
         List<SpiritEntity> spirits = new ArrayList<>();
         List<String> tickets = new ArrayList<>();
         List<Integer> starts = new ArrayList<>();
@@ -117,6 +123,11 @@ public final class DigOutGameTests {
                                 .stuck()
                                 .isStuck(spirit.getUUID(), board.board().now()),
                         "выполненный выход снимает метку «не двигается» по факту, а не по тайм-ауту");
+                helper.assertTrue(
+                        helper.getBlockState(planks.get(index)).is(Blocks.JUNGLE_PLANKS),
+                        "Разбор при выходе временный: сломанная доска плана обязана вернуться на место после "
+                                + "спасения, иначе в постройке остаётся дыра (observe25 B2); в клетке "
+                                + planks.get(index) + " сейчас " + helper.getBlockState(planks.get(index)));
             }
             spirits.forEach(SpiritEntity::discard);
             GameTestFixtures.finish(helper, 16);

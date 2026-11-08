@@ -101,7 +101,7 @@ final class PitRescue {
                 && cell.y() <= feet.getY() + 1;
     }
 
-    private static PitExitPlanner.Supplies supplies(SpiritEntity spirit) {
+    static PitExitPlanner.Supplies supplies(SpiritEntity spirit) {
         Map<String, Integer> counts = CheapBlocks.counts(spirit);
         int blocks = 0;
         for (String id : ToolBreakCost.CHEAP_ORDER) {
