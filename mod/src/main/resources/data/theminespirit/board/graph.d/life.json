@@ -48,7 +48,8 @@
     "life_threat_player": {
       "life": true,
       "tasks": [
-        {"id": "protect_player", "case": "ACTIVITY_DEFEND", "base": 124, "consumes": {}}
+        {"id": "life_protect_player", "case": "ACTIVITY_DEFEND", "base": 124, "consumes": {}},
+        {"id": "life_feed_player", "case": "EAT_TO_FULL", "base": 117, "consumes": {"food": 1}}
       ],
       "advice": ["protect_player"]
     },

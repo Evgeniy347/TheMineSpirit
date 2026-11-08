@@ -15,6 +15,7 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
+import com.theminespirit.neoforge.policy.PlanBreachData;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,6 +23,7 @@ import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -82,6 +84,22 @@ public final class DigOutGameTests {
                         Map.of()),
                 TicketTarget.at(at).withPlan(plan));
 
+        BlockPos breachCell = new BlockPos(-177, 72, -506);
+        UUID breachSpirit = UUID.randomUUID();
+        PlanBreachData breach = new PlanBreachData();
+        breach.record(breachCell, "minecraft:jungle_planks", breachSpirit, 100);
+        PlanBreachData loaded = PlanBreachData.load(
+                breach.save(new CompoundTag(), helper.getLevel().registryAccess()),
+                helper.getLevel().registryAccess());
+        helper.assertTrue(
+                loaded.breach(breachCell) != null
+                        && "minecraft:jungle_planks"
+                                .equals(loaded.breach(breachCell).blockId())
+                        && breachSpirit.equals(loaded.breach(breachCell).spirit()),
+                "Пролом плана переживает сохранение мира тем же блоком и духом");
+        helper.assertTrue(
+                loaded.clear(breachCell) && loaded.breach(breachCell) == null,
+                "Заделанная клетка снимается с учёта пролома");
         helper.succeedWhen(() -> {
             BlockPos current = spirit.blockPosition();
             helper.assertTrue(

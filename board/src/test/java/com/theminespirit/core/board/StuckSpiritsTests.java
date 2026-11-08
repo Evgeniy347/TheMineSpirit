@@ -169,6 +169,43 @@ class StuckSpiritsTests {
     }
 
     @Test
+    void rescued_ReturnToSamePit_Relapses() {
+        StuckSpirits stuck = new StuckSpirits();
+        stuck.see(SPIRIT, AT, 100);
+        stuck.mark(SPIRIT, 140, "провал движения");
+        stuck.rescued(SPIRIT, 200);
+
+        assertTrue(
+                stuck.relapsed(SPIRIT, new BlockCoord(AT.x() + 2, AT.y(), AT.z()), 400),
+                "Дух снова в той же ловушке после спасения: память неудач не даёт крутить self-rescue "
+                        + "по кругу (observe25 B6)");
+    }
+
+    @Test
+    void rescued_FarFromPit_NoRelapse() {
+        StuckSpirits stuck = new StuckSpirits();
+        stuck.see(SPIRIT, AT, 100);
+        stuck.mark(SPIRIT, 140, "провал движения");
+        stuck.rescued(SPIRIT, 200);
+
+        assertFalse(
+                stuck.relapsed(SPIRIT, new BlockCoord(AT.x() + 40, AT.y(), AT.z()), 400),
+                "Издалека это новый случай, а не возврат в ту же ловушку: память не запирает духа навсегда");
+    }
+
+    @Test
+    void rescued_AfterWindow_NoRelapse() {
+        StuckSpirits stuck = new StuckSpirits();
+        stuck.see(SPIRIT, AT, 100);
+        stuck.mark(SPIRIT, 140, "провал движения");
+        stuck.rescued(SPIRIT, 200);
+
+        assertFalse(
+                stuck.relapsed(SPIRIT, AT, 200 + 12_001),
+                "Окно памяти конечно: спустя время попытку спасения можно повторить");
+    }
+
+    @Test
     void restore_NoPathMark_DoesNotSurviveRestart() {
         StuckSpirits stuck = new StuckSpirits();
         stuck.see(SPIRIT, AT, 100);

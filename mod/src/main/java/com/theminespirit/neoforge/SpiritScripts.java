@@ -265,7 +265,7 @@ public final class SpiritScripts {
 
     private static void putBuildingMiningAndAcquire(Map<String, Function<SpiritEntity, ScriptFactory>> table) {
         table.put("place_block", spirit -> params -> new PlaceBlockScript(spirit, PlaceBlockParams.from(params)));
-        table.put("dig_out", spirit -> params -> new DigOutScript(spirit, GotoParams.from(params)));
+        table.put("dig_out", DigOutScript::factory);
         table.put("pillar_up", spirit -> params -> new PillarUpScript(spirit, PillarUpParams.from(params)));
         table.put("pillar_down", spirit -> params -> new PillarDownScript(spirit));
         table.put("light_area", spirit -> params -> new LightAreaScript(spirit, LightAreaParams.from(params)));

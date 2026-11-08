@@ -100,7 +100,7 @@ class RescuePlansTests {
         List<ScriptCall> calls = new ArrayList<>();
         collectCalls(plan, calls);
         assertEquals(
-                Map.of("x", home.x(), "y", home.y(), "z", home.z()),
+                Map.of("x", home.x(), "y", home.y(), "z", home.z(), "rescue", true),
                 calls.get(0).params(),
                 "спуск ведёт к дому на земле, а не к крыше");
     }

@@ -83,6 +83,6 @@ final class RescueTicket {
     }
 
     private static ScriptCall digOut(BlockCoord goal) {
-        return new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z()));
+        return new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z(), "rescue", true));
     }
 }

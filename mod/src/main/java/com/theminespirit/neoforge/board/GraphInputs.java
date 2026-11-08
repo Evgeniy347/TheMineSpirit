@@ -23,9 +23,7 @@ import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.route.RouteMarker;
 import com.theminespirit.core.board.route.RoutePlan;
-import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.StockCatalog;
-import com.theminespirit.core.night.NightLeash;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairCalculator;
@@ -60,7 +58,7 @@ final class GraphInputs {
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
         LifeInputs.Input life = LifeInputs.of(level, spirits, around.events());
         Set<String> events = new LinkedHashSet<>(life.events());
-        if (expeditionReady(stock, level)) {
+        if (ExpeditionGate.ready(stock, level)) {
             events.add("expedition_ready");
         }
         if (ChestDemolition.pending(level, service)) {
@@ -71,6 +69,8 @@ final class GraphInputs {
                 spirits,
                 GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around)
                         .withThreats(life.threats())
+                        .withPlayers(LifeInputs.players(level))
+                        .withPlanBreaches(GraphFactInputs.planBreaches(level))
                         .withChests(GraphFactInputs.chestFacts(StockReader.chests(level)))
                         .withFeedback(GraphWorldFeedbackInputs.of(level, spirits, scan.home(), service))
                         .withWorld(WorldAreaInputs.of(
@@ -115,18 +115,6 @@ final class GraphInputs {
         GraphState more5 = More5World.apply(more4, level, graph, scan, around);
         GraphState more7 = More7Inputs.apply(more5, level, graph, scan);
         return More6Inputs.apply(more7, level, around, scan);
-    }
-
-    private static boolean expeditionReady(StockView stock, ServerLevel level) {
-        IntellectTuning tuning = IntellectTuning.loadDefault();
-        double day = Math.floorMod(level.getDayTime(), 24000L) / 24000.0;
-        if (level.isNight() || NightLeash.withDefaultRules().isEvening(day)) {
-            return false;
-        }
-        int ore = stock.available().getOrDefault("cobblestone", 0)
-                + stock.available().getOrDefault("raw_iron", 0);
-        int iron = stock.available().getOrDefault("iron_ingot", 0);
-        return ore < tuning.oreTarget() || iron < tuning.ironTarget();
     }
 
     static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {

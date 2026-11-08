@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.engine.ScriptFactory;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.movement.DigOutObstacle;
@@ -13,12 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.DoorBlock;
-import net.minecraft.world.level.block.FenceGateBlock;
-import net.minecraft.world.level.block.TrapDoorBlock;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -46,13 +42,21 @@ public final class DigOutScript implements ScriptInstance {
     private String failureReason;
     private @Nullable DigOutRoute routeFollow;
 
+    static ScriptFactory factory(SpiritEntity spirit) {
+        return params -> new DigOutScript(spirit, GotoParams.from(params), GotoParams.rescue(params));
+    }
+
     public DigOutScript(SpiritEntity spirit, GotoParams target) {
+        this(spirit, target, false);
+    }
+
+    public DigOutScript(SpiritEntity spirit, GotoParams target, boolean rescue) {
         this.spirit = spirit;
         this.level = spirit.level();
         this.target = target;
         this.fromPit = open(level, spirit.blockPosition());
         this.descending = target.y() < spirit.blockPosition().getY();
-        this.breaker = BlockBreaker.escaping(spirit);
+        this.breaker = BlockBreaker.escaping(spirit, rescue);
         this.placer = new BlockPlacer(spirit);
         boolean sealedNow = sealed(level, spirit.blockPosition());
         this.backfill = new DigOutBackfill(
@@ -72,38 +76,6 @@ public final class DigOutScript implements ScriptInstance {
 
     public static boolean open(Level level, BlockPos cell) {
         return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cell.getX(), cell.getZ()) <= cell.getY();
-    }
-
-    private record SealedView(Level level) implements SealedSpace.View {
-        @Override
-        public boolean passable(BlockCoord cell) {
-            BlockPos pos = pos(cell);
-            if (!level.isLoaded(pos)) {
-                return false;
-            }
-            BlockState state = level.getBlockState(pos);
-            if (state.getBlock() instanceof DoorBlock
-                    || state.getBlock() instanceof FenceGateBlock
-                    || state.getBlock() instanceof TrapDoorBlock) {
-                return true;
-            }
-            return DigOutBackfill.passable(level, pos);
-        }
-
-        @Override
-        public boolean swimmable(BlockCoord cell) {
-            BlockPos pos = pos(cell);
-            return level.isLoaded(pos) && level.getFluidState(pos).is(FluidTags.WATER);
-        }
-
-        @Override
-        public boolean sky(BlockCoord cell) {
-            return open(level, pos(cell));
-        }
-
-        private static BlockPos pos(BlockCoord cell) {
-            return new BlockPos(cell.x(), cell.y(), cell.z());
-        }
     }
 
     @Override
@@ -141,6 +113,7 @@ public final class DigOutScript implements ScriptInstance {
                 : feet.getY() >= target.y();
         if ((open(level, feet) && !fromPit) || goalReached) {
             backfill.report();
+            PlanBreachRestore.restore(spirit, level, placer, feet);
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
         }

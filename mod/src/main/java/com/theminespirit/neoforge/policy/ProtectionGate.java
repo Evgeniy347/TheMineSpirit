@@ -49,12 +49,22 @@ public final class ProtectionGate {
     }
 
     public BlockProtection.Decision checkBreakOrEscape(BlockPos pos, BlockState state, boolean escaping) {
+        return checkBreakOrEscape(pos, state, escaping, false);
+    }
+
+    public BlockProtection.Decision checkBreakOrEscape(
+            BlockPos pos, BlockState state, boolean escaping, boolean rescue) {
         BlockPos feet = spirit.blockPosition();
-        if (escaping
-                && SelfRescue.mayBreakAtFeet(
-                        new BlockCoord(pos.getX(), pos.getY(), pos.getZ()),
-                        new BlockCoord(feet.getX(), feet.getY(), feet.getZ()))) {
-            return new BlockProtection.Allowed();
+        if (escaping) {
+            BlockProtection.Decision outside = RescueBreach.allow(spirit, pos, state, rescue);
+            if (outside instanceof BlockProtection.Allowed) {
+                return outside;
+            }
+            if (SelfRescue.mayBreakAtFeet(
+                    new BlockCoord(pos.getX(), pos.getY(), pos.getZ()),
+                    new BlockCoord(feet.getX(), feet.getY(), feet.getZ()))) {
+                return new BlockProtection.Allowed();
+            }
         }
         return decideBreak(pos, state, false, false, PlanBuilding.NONE);
     }
@@ -81,14 +91,14 @@ public final class ProtectionGate {
         return harvestPlanCell(PlacedBlocksData.get(level).isSpiritMarked(pos), inPlan(level, coord));
     }
 
-    private static boolean inPlan(ServerLevel level, BlockCoord coord) {
+    static boolean inPlan(ServerLevel level, BlockCoord coord) {
         return SettlementPlotStore.get(level)
                 .site()
                 .map(site -> site.planCell(coord.x(), coord.y(), coord.z()))
                 .orElse(false);
     }
 
-    private static boolean mineCell(ServerLevel level, BlockCoord coord) {
+    static boolean mineCell(ServerLevel level, BlockCoord coord) {
         return SettlementPlotStore.get(level)
                 .site()
                 .map(site -> site.mineColumn(coord.x(), coord.z()) || site.minePassage(coord.x(), coord.z()))
@@ -271,7 +281,7 @@ public final class ProtectionGate {
         return ids;
     }
 
-    private static String blockId(BlockState state) {
+    static String blockId(BlockState state) {
         return BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
     }
 }

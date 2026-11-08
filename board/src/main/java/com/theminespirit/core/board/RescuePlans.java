@@ -101,9 +101,10 @@ public final class RescuePlans {
         Objects.requireNonNull(stuck, "Метки застревания не могут быть null: спасение снимает одну из них");
         Objects.requireNonNull(ticket, "Задание спасения не может быть null: по нему находят спасённого");
         if (ticket.boardCase() == BoardCase.RESCUE_SPIRIT) {
-            rescuee(ticket.id())
-                    .or(() -> Optional.ofNullable(holder))
-                    .ifPresent(rescuee -> stuck.release(rescuee, now, "выход выполнен заданием " + ticket.id()));
+            rescuee(ticket.id()).or(() -> Optional.ofNullable(holder)).ifPresent(rescuee -> {
+                stuck.rescued(rescuee, now);
+                stuck.release(rescuee, now, "выход выполнен заданием " + ticket.id());
+            });
         }
         if (holder != null) {
             stuck.release(holder, now, "дошёл до цели: задание " + ticket.id());
@@ -114,7 +115,7 @@ public final class RescuePlans {
         if (situation.pit()) {
             return situation.steps() || situation.tool() ? Self.PIT : Self.NONE;
         }
-        if (situation.open() && !situation.noPath()) {
+        if (situation.open()) {
             return Self.WALK;
         }
         return situation.tool() ? Self.DIG : Self.NONE;
@@ -194,7 +195,7 @@ public final class RescuePlans {
     }
 
     private static ScriptCall digOut(BlockCoord point) {
-        return new ScriptCall("dig_out", Map.of("x", point.x(), "y", point.y(), "z", point.z()));
+        return new ScriptCall("dig_out", Map.of("x", point.x(), "y", point.y(), "z", point.z(), "rescue", true));
     }
 
     private static TaskNode selfPlan(SelfEscape.Plan rescue) {

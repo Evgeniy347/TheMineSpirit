@@ -41,8 +41,8 @@ final class GraphMorePost {
             return GraphFluidPost.post(post, ticket, key);
         }
         return switch (key) {
-            case "more5_defend_player" -> GraphMoreCarePost.defendPlayer(post, ticket);
-            case "more5_feed_player" -> GraphMoreCarePost.feedPlayer(post, ticket);
+            case "life_protect_player" -> GraphMoreCarePost.defendPlayer(post, ticket);
+            case "life_feed_player" -> GraphMoreCarePost.feedPlayer(post, ticket);
             case "more5_light_crops" -> GraphMoreCarePost.light(post, ticket, post.scan.home());
             case "more5_light_saplings" ->
                 GraphMoreCarePost.light(post, ticket, post.scan.stage().orchardOrigin());
