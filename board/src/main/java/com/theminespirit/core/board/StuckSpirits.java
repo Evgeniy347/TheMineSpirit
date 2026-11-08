@@ -50,7 +50,7 @@ public final class StuckSpirits {
     public void see(UUID spirit, BlockCoord at, long now, boolean escaped) {
         Objects.requireNonNull(spirit, "Дух не может быть null: позиция наблюдается у конкретного духа");
         Objects.requireNonNull(at, "Позиция не может быть null: по ней видно, сдвинулся ли дух");
-        seen.put(spirit, at);
+        BlockCoord before = seen.put(spirit, at);
         Stuck known = stuck.get(spirit);
         if (known == null) {
             return;
@@ -62,6 +62,10 @@ public final class StuckSpirits {
         }
         if (known.at() == null) {
             stuck.put(spirit, new Stuck(at, known.since(), known.noPath()));
+            return;
+        }
+        if (before != null && !before.equals(at)) {
+            stuck.put(spirit, new Stuck(at, now > 0 ? now : known.since(), known.noPath()));
         }
     }
 

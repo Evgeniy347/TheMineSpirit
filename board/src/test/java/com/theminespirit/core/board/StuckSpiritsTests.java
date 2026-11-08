@@ -14,6 +14,34 @@ class StuckSpiritsTests {
     private static final BlockCoord AT = new BlockCoord(-188, 67, -516);
 
     @Test
+    void see_SpiritMoved_RefreshesCoordinateAndMovementTick() {
+        StuckSpirits stuck = new StuckSpirits();
+        BlockCoord first = new BlockCoord(-179, 64, -522);
+        BlockCoord moved = new BlockCoord(-178, 66, -519);
+        stuck.see(SPIRIT, first, 100);
+        stuck.mark(SPIRIT, 140, "пути нет");
+
+        stuck.see(SPIRIT, moved, 900);
+
+        StuckSpirits.Stuck known = stuck.of(SPIRIT, 900).orElseThrow();
+        assertEquals(moved, known.at(), "waitReason обязан называть текущую клетку духа, а не старую (observe25 B15)");
+        assertEquals(900, known.since(), "«не двигается с тика» — последнее движение, а не момент постановки метки");
+    }
+
+    @Test
+    void see_SpiritStandsStill_KeepsMovementTick() {
+        StuckSpirits stuck = new StuckSpirits();
+        stuck.see(SPIRIT, AT, 100);
+        stuck.mark(SPIRIT, 140, "пути нет");
+
+        stuck.see(SPIRIT, AT, 900);
+
+        assertTrue(
+                stuck.of(SPIRIT, 900).orElseThrow().since() == 140,
+                "Стоящий дух не выдаёт остановку за движение: тик метки не сдвигается без сдвига клетки");
+    }
+
+    @Test
     void mark_WithReason_RecordsChangeAndTick() {
         StuckSpirits stuck = new StuckSpirits();
         stuck.see(SPIRIT, AT, 100);

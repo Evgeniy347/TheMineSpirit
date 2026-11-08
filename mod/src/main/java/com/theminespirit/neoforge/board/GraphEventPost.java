@@ -35,6 +35,9 @@ final class GraphEventPost {
         if ("expedition".equals(ticket.node())) {
             return GraphExpeditionPost.post(post, ticket);
         }
+        if ("replant_orchard".equals(ticket.node())) {
+            return new GraphHarvestPost(post).replantOrchard(ticket, ticket.task());
+        }
         if (FarmPost.event(post, ticket)) {
             return true;
         }

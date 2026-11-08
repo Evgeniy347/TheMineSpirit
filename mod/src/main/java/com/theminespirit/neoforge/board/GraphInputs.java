@@ -7,8 +7,6 @@ import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.StockView;
-import com.theminespirit.core.board.TicketPlans;
-import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolFate;
 import com.theminespirit.core.board.ToolsConfig;
 import com.theminespirit.core.board.WarehouseApproval;
@@ -26,7 +24,6 @@ import com.theminespirit.core.board.route.RoutePlan;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.StockCatalog;
 import com.theminespirit.core.night.NightLeash;
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairCalculator;
 import com.theminespirit.core.repair.RepairData;
@@ -179,26 +176,13 @@ final class GraphInputs {
         }
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
         buildings.putAll(planBuilt(level, service, scan, town));
-        planStates(town, ledger, graph, buildings);
+        PlanStatesInputs.apply(level, scan, town, ledger, graph, buildings);
         FarmBuilt.apply(service, level, scan, ledger, graph, town, buildings);
         WarehouseApproval.apply(
                 buildings,
                 WarehouseRules.builtLevel(ledger),
                 WarehouseOrderStore.get(level).order());
         return buildings;
-    }
-
-    private static void planStates(
-            Optional<TownPlan> town, BoardLedger ledger, SupplyGraph graph, Map<String, Built> buildings) {
-        town.ifPresent(plan -> plan.placements()
-                .forEach(place -> StageCatalog.graphId(place.id()).ifPresent(id -> {
-                    SupplyGraph.Building building = graph.buildings().get(id);
-                    if (building == null || buildings.containsKey(id)) {
-                        return;
-                    }
-                    boolean built = ledger.has(building.boardCase(), WarehouseRules.levelOf(building.id()));
-                    buildings.put(id, built ? Built.BUILT : Built.PLANNED);
-                })));
     }
 
     private static Map<String, Built> planBuilt(
@@ -216,7 +200,7 @@ final class GraphInputs {
                 continue;
             }
             Optional<Boolean> world = town.isPresent()
-                    ? worldBuilt(level, scan, town.orElseThrow(), entry.orElseThrow())
+                    ? PlanStatesInputs.worldBuilt(level, scan, town.orElseThrow(), entry.orElseThrow())
                     : Optional.empty();
             boolean built = ledger.hasPlan(id, 1) || world.orElse(false);
             if (world.orElse(false)) {
@@ -225,23 +209,6 @@ final class GraphInputs {
             states.put(id, built ? Built.BUILT : Built.PLANNED);
         }
         return states;
-    }
-
-    private static Optional<Boolean> worldBuilt(
-            ServerLevel level, FirstStepsRunner.StageScan scan, TownPlan town, StageCatalog.Entry entry) {
-        Optional<BlockCoord> origin =
-                StageCatalog.origin(entry.id(), town, scan.stage().anchor().y());
-        if (origin.isEmpty()) {
-            return Optional.of(false);
-        }
-        TicketTarget target =
-                TicketTarget.at(origin.orElseThrow()).withScheme(entry.scheme()).withBuilding(entry.id());
-        FirstStepsRunner.Placed placed =
-                FirstStepsRunner.placedBlocks(level, TicketPlans.plan(BoardCase.BUILD_PLACED, 1, target), scan.wood());
-        if (!placed.confident()) {
-            return Optional.empty();
-        }
-        return Optional.of(placed.total() > 0 && placed.done() == placed.total());
     }
 
     private static Map<String, Map<String, Integer>> materials(

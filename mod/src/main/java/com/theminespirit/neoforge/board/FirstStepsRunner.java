@@ -8,14 +8,12 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.CaseMaterials;
-import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.GroundsPlan;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.SchematicMaterials;
 import com.theminespirit.core.board.SettlementFacts;
-import com.theminespirit.core.board.SettlementLevel;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
@@ -35,12 +33,9 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.PlotLeveling;
-import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
-import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownSnapshot;
 import com.theminespirit.neoforge.OwnWood;
 import com.theminespirit.neoforge.SchematicResources;
@@ -57,7 +52,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.IntBinaryOperator;
 import java.util.stream.Stream;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -95,7 +89,6 @@ public final class FirstStepsRunner {
             EnumSet.of(BoardCase.BUILD_FENCE, BoardCase.BUILD_HOUSE, BoardCase.LIGHTING, BoardCase.STOCK_CHESTS);
     private static final String FIRST_PREFIX = "first:";
     private static final String MINECRAFT = "minecraft:";
-    private static final long PLAN_WARN_EVERY = 600;
     private static final int EXPAND_DEPTH = 4;
 
     private FirstStepsRunner() {}
@@ -128,7 +121,7 @@ public final class FirstStepsRunner {
         if (spirits.stream().noneMatch(spirit -> spirit.home().isPresent())) {
             return Optional.empty();
         }
-        if (plotOf(level, service, spirits, now).isEmpty()) {
+        if (StagePlotPick.plotOf(level, service, spirits, now).isEmpty()) {
             return Optional.empty();
         }
         StageSite stage = SettlementPlotStore.get(level)
@@ -136,7 +129,7 @@ public final class FirstStepsRunner {
                 .orElseThrow(() -> new IllegalStateException(
                         "Участок обмерен, а места этапа 1 нет: план поселения не сохранился в мире"));
         BlockCoord home = new BlockCoord(
-                stage.anchor().x(), homeY(spirits), stage.anchor().z());
+                stage.anchor().x(), StagePlotPick.homeY(spirits), stage.anchor().z());
         String wood = woodOf(level, home, stock);
         StoneSite site = new StoneSite(home, wood, stage);
         Scan scan = buildFacts(level, site, stock, service, world);
@@ -648,64 +641,5 @@ public final class FirstStepsRunner {
             }
         }
         return tools;
-    }
-
-    public static Optional<SettlementPlot> plotOf(
-            ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
-        List<BlockCoord> homes = homes(spirits);
-        SettlementPlotStore store = SettlementPlotStore.get(level);
-        BlockCoord center = SettlementPlot.center(homes);
-        TownPlan town = TownSurvey.town(level, service, store, center, now);
-        Optional<ColumnMask> draft = SettlementLevel.finalArea(town);
-        if (draft.isEmpty()) {
-            if (now % PLAN_WARN_EVERY != 0) {
-                return Optional.empty();
-            }
-            LOGGER.warn("[plot] нет финального этапа у {}: не поместилось {}", center, town.unplaced());
-            return Optional.empty();
-        }
-        ColumnMask area = draft.orElseThrow();
-        IntBinaryOperator feet = SettlementGround.feet(level, center.y());
-        Optional<SettlementPlot> stored = store.plot();
-        if (stored.isPresent() && stored.orElseThrow().covers(center)) {
-            SettlementPlot kept = stored.orElseThrow();
-            if (!store.levelMarked()) {
-                kept = PlotHeights.remeasured(service, store, level, kept, area, feet, now);
-            }
-            kept = PlotHeights.markLeveled(service, store, kept);
-            return Optional.of(checkedWood(level, service, store, kept, now));
-        }
-        String wood = SettlementWood.survey(level, center, service.stock().available());
-        int above = SettlementGround.waterAbove(level, area);
-        return Optional.of(PlotHeights.surveyed(
-                service, store, new PlotHeights.Draft(area, center, homes.size(), wood, above), feet, now));
-    }
-
-    private static SettlementPlot checkedWood(
-            ServerLevel level, BoardService service, SettlementPlotStore store, SettlementPlot plot, long now) {
-        if (service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1)) {
-            return plot;
-        }
-        Optional<String> ruled =
-                SettlementWood.biomeRules(service.stock().available(), SettlementWood.biomeAt(level, plot.anchor()));
-        if (ruled.isEmpty() || ruled.get().equals(plot.wood())) {
-            return plot;
-        }
-        SettlementPlot fixed = plot.withWood(ruled.get());
-        store.fix(fixed);
-        LOGGER.info(
-                "[plot] порода плана {} → {}: запас брёвен меньше 16 — решает биом (INC-62)",
-                plot.wood(),
-                fixed.wood());
-        service.journal().recordEntry(SettlementLevel.journalEntry(fixed, now, ConfigStamp.current()));
-        return fixed;
-    }
-
-    private static int homeY(List<SpiritEntity> spirits) {
-        return SettlementPlot.center(homes(spirits)).y();
-    }
-
-    private static List<BlockCoord> homes(List<SpiritEntity> spirits) {
-        return spirits.stream().flatMap(spirit -> spirit.home().stream()).toList();
     }
 }

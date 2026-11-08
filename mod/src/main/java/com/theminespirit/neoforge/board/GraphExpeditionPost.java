@@ -36,7 +36,7 @@ final class GraphExpeditionPost {
     static boolean post(GraphPost post, GraphTickets.Ticket ticket) {
         List<SpiritEntity> members = new ArrayList<>();
         for (SpiritEntity spirit : post.spirits) {
-            if (!spirit.isRemoved()) {
+            if (!spirit.isRemoved() && !ActivityLaunch.stuck(post, spirit)) {
                 members.add(spirit);
             }
         }
@@ -103,7 +103,7 @@ final class GraphExpeditionPost {
     }
 
     private static boolean launch(GraphPost post, String id, List<UUID> crew, SpiritEntity spirit, TaskNode task) {
-        if (spirit.isRemoved()) {
+        if (spirit.isRemoved() || ActivityLaunch.stuck(post, spirit)) {
             return false;
         }
         Optional<UUID> leader = crew.isEmpty() ? Optional.empty() : Optional.of(crew.get(0));

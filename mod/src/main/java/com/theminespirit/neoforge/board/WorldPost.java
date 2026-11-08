@@ -70,7 +70,8 @@ final class WorldPost {
                 new StageRepair.Gap(
                         gap.shortage(),
                         gap.total(),
-                        need(post.graph, ticket.task().consumes(), post.scan.wood())));
+                        need(post.graph, ticket.task().consumes(), post.scan.wood())),
+                step == BoardCase.BUILD_PLACED ? id : null);
         return StageAudit.keeps(outcome);
     }
 
