@@ -5,7 +5,6 @@ import java.util.Map;
 
 public final class MoreActions {
     private static final Map<String, BoardCase> CASES = Map.ofEntries(
-            Map.entry("more5_defend_player", BoardCase.ACTIVITY_DEFEND),
             Map.entry("more5_feed_player", BoardCase.ACTIVITY_SOCIAL),
             Map.entry("more5_light_crops", BoardCase.LIGHTING),
             Map.entry("more5_light_saplings", BoardCase.LIGHTING),

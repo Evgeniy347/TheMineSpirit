@@ -45,7 +45,29 @@ public record GraphFeedback(Clock clock, Player player, List<Failure> failures) 
             boolean near,
             boolean holdingBlock,
             boolean usingItem,
-            boolean digging) {
+            boolean digging,
+            float health,
+            float maxHealth,
+            int food) {
+        public Player(
+                GraphFacts.@Nullable Position position,
+                boolean near,
+                boolean holdingBlock,
+                boolean usingItem,
+                boolean digging) {
+            this(position, near, holdingBlock, usingItem, digging, 0, 0, 0);
+        }
+
+        public Player {
+            if (health < 0 || maxHealth < 0 || health > maxHealth) {
+                throw new IllegalArgumentException("Здоровье игрока " + health + " из " + maxHealth
+                        + ": оно не отрицательно и не больше максимума");
+            }
+            if (food < 0) {
+                throw new IllegalArgumentException("Еда игрока " + food + " отрицательна: голод начинается с нуля");
+            }
+        }
+
         public static Player none() {
             return new Player(null, false, false, false, false);
         }

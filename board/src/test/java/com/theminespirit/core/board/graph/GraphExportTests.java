@@ -33,25 +33,9 @@ class GraphExportTests {
             List<GraphMutations.Mutation> combo =
                     GraphChaos.combo(random, 1 + random.nextInt(4), GraphMutations.exported());
             GraphWorld world = GraphChaos.apply(bases.get(index % bases.size()), combo);
-            GraphPlan plan = world.plan();
-            Map<String, Object> entry = new LinkedHashMap<>();
-            entry.put("mutations", GraphChaos.names(combo));
-            entry.put("state", GraphStateJson.state(world.state()));
-            List<Map<String, Object>> tasks = new ArrayList<>();
-            for (GraphPlan.Task task : plan.tasks()) {
-                Map<String, Object> row = new LinkedHashMap<>();
-                row.put("id", task.id());
-                row.put("priority", task.priority());
-                row.put("feasible", task.feasible());
-                row.put("chance", task.chance());
-                tasks.add(row);
-            }
-            entry.put("tasks", tasks);
-            entry.put(
-                    "notices",
-                    plan.notices().stream().map(GraphPlan.Notice::building).toList());
-            cases.add(entry);
+            cases.add(caseEntry(world, GraphChaos.names(combo)));
         }
+        cases.add(lifeCase());
         Files.createDirectories(OUT.getParent());
         Files.copy(
                 Path.of("mod/src/main/resources/" + SupplyGraph.RESOURCE),
@@ -59,6 +43,56 @@ class GraphExportTests {
                 StandardCopyOption.REPLACE_EXISTING);
         new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValue(OUT.toFile(), cases);
         assertTrue(Files.size(OUT) > 0, "Контрольные случаи графа для Python-модели записаны в " + OUT);
+    }
+
+    private static Map<String, Object> lifeCase() {
+        GraphFacts facts = GraphFacts.empty()
+                .withThreats(List.of(new GraphFacts.Threat(
+                        "threat-player",
+                        "minecraft:zombie",
+                        20,
+                        20,
+                        new GraphFacts.Position(0, 64, 0),
+                        "player",
+                        GraphFacts.TargetKind.PLAYER,
+                        true,
+                        true,
+                        null,
+                        6,
+                        null,
+                        0.2)))
+                .withFeedback(new GraphFeedback(
+                        GraphFeedback.Clock.unknown(),
+                        new GraphFeedback.Player(
+                                new GraphFacts.Position(0, 64, 0), true, false, false, false, 4, 20, 4),
+                        List.of()));
+        return caseEntry(
+                GraphWorld.settled()
+                        .world("more:player_near")
+                        .event("more:player_near")
+                        .facts(facts),
+                "life:weak_player");
+    }
+
+    private static Map<String, Object> caseEntry(GraphWorld world, String mutations) {
+        GraphPlan plan = world.plan();
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("mutations", mutations);
+        entry.put("state", GraphStateJson.state(world.state()));
+        List<Map<String, Object>> tasks = new ArrayList<>();
+        for (GraphPlan.Task task : plan.tasks()) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", task.id());
+            row.put("priority", task.priority());
+            row.put("feasible", task.feasible());
+            row.put("chance", task.chance());
+            tasks.add(row);
+        }
+        entry.put("tasks", tasks);
+        entry.put(
+                "notices",
+                plan.notices().stream().map(GraphPlan.Notice::building).toList());
+        return entry;
     }
 
     @Test

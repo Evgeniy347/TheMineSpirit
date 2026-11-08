@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 class More5FragmentTests {
     private static final SupplyGraph GRAPH = SupplyGraph.loadDefault();
     private static final List<String> EVENTS = List.of(
-            "more5_player_weak",
             "more5_crops_dark",
             "more5_saplings_dark",
             "more5_crops_dry",
@@ -23,8 +22,6 @@ class More5FragmentTests {
             "more5_mine_dark",
             "more5_wood_drops");
     private static final List<String> WAYS = List.of(
-            "more5_defend_player",
-            "more5_feed_player",
             "more5_light_crops",
             "more5_light_saplings",
             "more5_water_crops",
@@ -42,8 +39,6 @@ class More5FragmentTests {
             "more5_pickup_wood_drop",
             "more5_plant_sapling");
     private static final List<String> IMPLEMENTED = List.of(
-            "more5_defend_player",
-            "more5_feed_player",
             "more5_light_crops",
             "more5_light_saplings",
             "more5_water_crops",
@@ -62,8 +57,6 @@ class More5FragmentTests {
             "more5_plant_sapling");
     private static final List<String> STUBS = List.of();
     private static final List<String> ITEMS = List.of(
-            "more5:player_guard",
-            "more5:player_fed",
             "more5:growth_lit",
             "more5:growth_watered",
             "more5:growth_fed",
@@ -146,18 +139,5 @@ class More5FragmentTests {
                                 "Задание " + task.id() + " требует неизвестный узел: " + node));
             }
         }
-    }
-
-    @Test
-    void more5PlayerEvent_FragmentLoad_StaysWithinOrdinaryCeiling() {
-        GraphEvent player = GRAPH.events().get("more5_player_weak");
-        GraphPlan plan = GraphWorld.empty().event("more5_player_weak").plan();
-
-        assertFalse(player.life(), "Событие игрока в бою — обычное, потолок 100 оставлен только жизни");
-        assertTrue(
-                player.tasks().stream().allMatch(task -> task.base() > 0), "У заданий защиты игрока есть вес события");
-        assertTrue(
-                plan.tasks().stream().allMatch(task -> task.priority() <= GraphPriorities.work(GRAPH)),
-                "Задания обычного события не выходят за потолок 99: " + plan.tasks());
     }
 }

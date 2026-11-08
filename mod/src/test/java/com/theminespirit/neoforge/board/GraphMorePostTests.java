@@ -47,9 +47,6 @@ class GraphMorePostTests {
             }
         }
         for (GraphEvent event : GRAPH.events().values()) {
-            if (!fragment(event.name())) {
-                continue;
-            }
             for (GraphEvent.Task task : event.tasks()) {
                 if (task.implemented() && fragment(task.id())) {
                     expected.add(task.id());

@@ -499,19 +499,18 @@ def test_more6_inputs():
     print("OK: входы области more6 учитываются в выборе")
 
 
-MORE5_EVENTS = ("more5_player_weak", "more5_crops_dark", "more5_saplings_dark",
+MORE5_EVENTS = ("more5_crops_dark", "more5_saplings_dark",
                 "more5_crops_dry", "more5_growth_unfed", "more5_fuel_low",
                 "more5_build_shortage", "more5_mob_broken", "more5_route_blocked",
                 "more5_chest_far", "more5_mine_dark", "more5_wood_drops")
-MORE5_WAYS = ("more5_defend_player", "more5_feed_player",
-              "more5_light_crops", "more5_light_saplings", "more5_water_crops",
+MORE5_WAYS = ("more5_light_crops", "more5_light_saplings", "more5_water_crops",
               "more5_fertilize_growth", "more5_gather_fuel", "more5_make_charcoal",
               "more5_gather_build_material", "more5_craft_build_material",
               "more5_restore_block", "more5_bridge_route",
               "more5_place_site_chest", "more5_carry_to_site", "more5_light_mine",
               "more5_craft_mine_torch", "more5_pickup_wood_drop", "more5_plant_sapling")
 MORE5_IMPLEMENTED = {
-    "more5_defend_player", "more5_feed_player", "more5_light_crops",
+    "more5_light_crops",
     "more5_light_saplings", "more5_water_crops", "more5_fertilize_growth", "more5_gather_fuel",
     "more5_make_charcoal", "more5_gather_build_material",
     "more5_craft_build_material", "more5_restore_block", "more5_bridge_route",
@@ -527,7 +526,7 @@ def test_more5_nodes():
     for way in MORE5_WAYS:
         assert graph.way(way) is not None, "Python-модель не видит путь области graphmore5: " + way
         assert graph.implemented(way) == (way in MORE5_IMPLEMENTED),             "Путь области graphmore5 либо связан с действием, либо честно помечен заглушкой: " + way
-    for item in ("more5:player_guard", "more5:growth_lit", "more5:fuel_ready",
+    for item in ("more5:growth_lit", "more5:fuel_ready",
                  "more5:build_supply", "more5:block_restored", "more5:route_opened",
                  "more5:site_chest", "more5:mine_lit", "more5:wood_drop"):
         assert item in graph.items and graph.items[item].base > 0, \
@@ -549,16 +548,12 @@ def test_more5_inputs():
         prefix = "event:" + event + ":"
         assert any(task.startswith(prefix) for task in tasks), \
             "Python: событие области graphmore5 не даёт задания: " + event
-    for task_id in ("event:more5_player_weak:more5_defend_player",
-                    "event:more5_crops_dark:more5_light_crops",
+    for task_id in ("event:more5_crops_dark:more5_light_crops",
                     "event:more5_wood_drops:more5_pickup_wood_drop"):
         assert task_id in tasks, "Python: нет ожидаемого задания области graphmore5: " + task_id
         assert tasks[task_id]["implemented"], "Связанное действие области выдаётся готовым: " + task_id
     water = "event:more5_crops_dry:more5_water_crops"
     assert water in tasks and tasks[water]["implemented"],         "Полив связан с действием и выдаётся готовым: " + water
-    defend = tasks["event:more5_player_weak:more5_defend_player"]["priority"]
-    assert 0 < defend <= 100, \
-        "Python: защита игрока не выходит за потолок доски: " + str(defend)
     print("OK: входы области graphmore5 учитываются в выборе")
 
 
@@ -668,8 +663,8 @@ def test_more7_inputs():
 def test_baseline_trail():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     outcome = sim_gpu.run(sim_gpu.baselines(graph)[0], limit=4000)
-    assert outcome["steps"] == 84 and outcome["ticks"] == 59220, \
-        "Пустой мир обязан повторить Java (84 шага, 59 220 тиков), а не решение линейной системы: " \
+    assert outcome["steps"] == 88 and outcome["ticks"] == 59680, \
+        "Пустой мир обязан повторить Java (88 шагов, 59 680 тиков), а не решение линейной системы: " \
         + str((outcome["steps"], outcome["ticks"]))
     print("OK: пустой мир совпадает с Java (расходящийся поток решается итерациями)")
 
@@ -790,12 +785,11 @@ def test_dead_inputs():
     for way in ("restock_food", "till_soil", "milk_animal"):
         assert way in farm, "Мир фермы обязан вызвать путь '" + way + "': " + str(farm)
     more5 = [step[1] for step in sim_gpu.run(worlds["more5"], limit=1600)["trail"]]
-    for way in ("more5_defend_player", "more5_pickup_wood_drop", "more5_light_mine"):
+    for way in ("more5_pickup_wood_drop", "more5_light_mine"):
         assert any(way in task for task in more5),             "Мир more5 обязан вызвать путь '" + way + "': " + str(more5)
     area = [step[1] for step in sim_gpu.run(worlds["world"], limit=1600)["trail"]]
-    repairs = {name for name in graph.events if name.startswith("repair_")}
-    for name in repairs:
-        assert any(task.startswith("event:" + name + ":") for task in area),             "Мир участка обязан вызвать ремонт '" + name + "'"
+    repairs = {name for name in worlds["world"].state().events if name.startswith("repair_")}
+    assert repairs and any(task.startswith("event:repair_") for task in area),         "Мир участка обязан вызвать ремонт повреждённой постройки: " + str(sorted(repairs))
     for name, expected in (("gear", {"gear_kit_mining", "gear_kit_woodcutting",
                                      "gear_kit_farming", "gear_kit_building"}),
                            ("farm", {"crop_dry", "pen_full"}),
@@ -1144,6 +1138,40 @@ def test_best_weights():
     print("OK: в best-weights.json нет исторических auto_*-ключей")
 
 
+def test_life_coefficients():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    assert graph.life["weakHealth"] == 0.35 and graph.life["weakFood"] == 6, \
+        "Python обязан читать пороги слабого игрока из graph.json → life: " + str(graph.life)
+    assert graph.life["pressureBase"] == 0.4 and graph.life["hurtShare"] == 0.2, \
+        "Python обязан читать коэффициенты формулы жизни из данных графа: " + str(graph.life)
+    facts = {
+        "spirits": {},
+        "threats": [{
+            "id": "threat-player", "type": "minecraft:zombie", "health": 20, "maxHealth": 20,
+            "position": {"x": 0, "y": 64, "z": 0}, "target": "player", "targetKind": "PLAYER",
+            "distance": 6,
+        }],
+        "feedback": {"player": {"near": True, "health": 4, "maxHealth": 20, "food": 4}},
+    }
+    weak = State({"stage": 1, "kits": {}, "events": [], "facts": facts})
+    weak.apply_life(graph.life)
+    assert "life_threat_player" in weak.events, \
+        "Слабый игрок рядом с угрозой обязан поднять жизнь: " + str(weak.events)
+    calm_facts = copy.deepcopy(facts)
+    calm_facts["feedback"]["player"].update({"health": 20, "food": 18})
+    calm = State({"stage": 1, "kits": {}, "events": [], "facts": calm_facts})
+    calm.apply_life(graph.life)
+    from graph_model import life_severity
+    weak_severity = life_severity(weak, "life_threat_player", graph.life)
+    calm_severity = life_severity(calm, "life_threat_player", graph.life)
+    assert weak_severity > calm_severity, \
+        "Слабый игрок опаснее здорового при той же угрозе: " + str((weak_severity, calm_severity))
+    strong = dict(graph.life, weakPlayerSeverity=1.0)
+    assert life_severity(weak, "life_threat_player", strong) > weak_severity, \
+        "Опасность слабого игрока берётся из коэффициента graph.json → life, а не из кода"
+    print("OK: коэффициенты жизни читаются из graph.json, слабый игрок считается по фактам")
+
+
 def test_conformance():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
@@ -1161,6 +1189,7 @@ if __name__ == "__main__":
     try:
         test_fragments()
         test_life_priority()
+        test_life_coefficients()
         test_dig_inputs()
         test_area_nodes()
         test_store_nodes()

@@ -208,8 +208,8 @@ def _better_in_chests(spirit, chests, gear):
     return False
 
 
-def _life_events(state):
-    """LifeEvents.events: угрозы и их цель поднимают полосу жизни."""
+def _life_events(state, life=None):
+    """LifeEvents.events: угрозы, их цель и слабый игрок поднимают полосу жизни."""
     threats = state.threats
     events = []
     if threats:
@@ -316,14 +316,19 @@ def priority(score, maximum):
     return int(min(maximum, math.floor(maximum * (1.0 - math.exp(-score / maximum)) + 0.5)))
 
 
-DAMAGE_WINDOW_TICKS = 200
-THREAT_RADIUS = 16.0
-FULL_PRESSURE_MOBS = 1.5
-PRESSURE_BASE = 0.4
-PRESSURE_WOUND = 0.7
-HURT_SHARE = 0.2
-INJURY_WOUND = 0.8
-INJURY_HURT = 0.4
+LIFE_DEFAULTS = {
+    "damageWindowTicks": 200,
+    "threatRadius": 16.0,
+    "fullPressureMobs": 1.5,
+    "pressureBase": 0.4,
+    "pressureWound": 0.7,
+    "hurtShare": 0.2,
+    "injuryWound": 0.8,
+    "injuryHurt": 0.4,
+    "weakPlayerSeverity": 0.9,
+    "weakHealth": 0.35,
+    "weakFood": 6,
+}
 
 
 def _clamp01(value):
@@ -339,37 +344,53 @@ def _spirit_deficit(spirit):
     return _clamp01(1.0 - float(spirit.get("health", 0)) / maximum)
 
 
-def _spirit_hurt(spirit):
+def _spirit_hurt(spirit, life=None):
     if spirit is None:
         return 0.0
+    life = dict(LIFE_DEFAULTS, **(life or {}))
     maximum = float(spirit.get("maxHealth", spirit.get("health", 0)))
     hurt = spirit.get("recentHurt")
     if maximum <= 0 or not hurt:
         return 0.0
-    freshness = _clamp01(1.0 - int(hurt.get("ticksAgo", 0)) / float(DAMAGE_WINDOW_TICKS))
+    freshness = _clamp01(1.0 - int(hurt.get("ticksAgo", 0)) / float(life["damageWindowTicks"]))
     return _clamp01(float(hurt.get("amount", 0)) / maximum) * freshness
 
 
-def _threat_pressure(threats, match):
-    total = sum(_clamp01(1.0 - int(threat.get("distance", 0)) / THREAT_RADIUS)
+def _threat_pressure(threats, match, life=None):
+    life = dict(LIFE_DEFAULTS, **(life or {}))
+    total = sum(_clamp01(1.0 - int(threat.get("distance", 0)) / float(life["threatRadius"]))
                 for threat in threats if match(threat))
-    return min(1.0, total / FULL_PRESSURE_MOBS)
+    return min(1.0, total / float(life["fullPressureMobs"]))
 
 
-def life_risk(state, spirit_id):
+def _weak_player(state, life=None):
+    life = dict(LIFE_DEFAULTS, **(life or {}))
+    player = state.player or {}
+    if not player.get("near", False) or float(player.get("maxHealth", 0)) <= 0:
+        return False
+    ratio = float(player.get("health", 0)) / float(player.get("maxHealth", 1))
+    return ratio < float(life["weakHealth"]) or int(player.get("food", 0)) <= int(life["weakFood"])
+
+
+def life_risk(state, spirit_id, life=None):
     """LifeThreats.risk: здоровье, свежий урон и мобы, сагренные именно на этого духа."""
+    life = dict(LIFE_DEFAULTS, **(life or {}))
     spirit = state.spirit_facts.get(spirit_id)
     deficit = _spirit_deficit(spirit)
-    hurt = _spirit_hurt(spirit)
+    hurt = _spirit_hurt(spirit, life)
     pressure = _threat_pressure(
         state.threats,
         lambda threat: threat.get("targetKind") == "SPIRIT"
-        and (threat.get("target") is None or threat.get("target") == spirit_id))
-    return _clamp01(pressure * (PRESSURE_BASE + PRESSURE_WOUND * deficit) + HURT_SHARE * min(1.0, hurt))
+        and (threat.get("target") is None or threat.get("target") == spirit_id),
+        life)
+    return _clamp01(pressure * (float(life["pressureBase"]) + float(life["pressureWound"]) * deficit)
+                    + float(life["hurtShare"]) * min(1.0, hurt))
 
 
-def life_severity(state, event):
+def life_severity(state, event, life=None):
     """LifeThreats.severity: опасность события жизни из фактов мира."""
+    life = dict(LIFE_DEFAULTS, **(life or {}))
+
     def spirit_threat():
         targets = set(state.spirit_facts)
         any_spirit = False
@@ -381,14 +402,15 @@ def life_severity(state, event):
                 targets.add(threat.get("target"))
         if not targets and any_spirit:
             targets.add("")
-        return max((life_risk(state, target) for target in targets), default=0.0)
+        return max((life_risk(state, target, life) for target in targets), default=0.0)
 
     def player_threat():
-        return _threat_pressure(state.threats, lambda threat: threat.get("targetKind") == "PLAYER")
+        pressure = _threat_pressure(state.threats, lambda threat: threat.get("targetKind") == "PLAYER", life)
+        return max(pressure, _clamp01(float(life["weakPlayerSeverity"]))) if _weak_player(state, life) else pressure
 
     def injury():
-        return max((_clamp01(INJURY_WOUND * _spirit_deficit(spirit)
-                             + INJURY_HURT * min(1.0, _spirit_hurt(spirit)))
+        return max((_clamp01(float(life["injuryWound"]) * _spirit_deficit(spirit)
+                             + float(life["injuryHurt"]) * min(1.0, _spirit_hurt(spirit, life)))
                     for spirit in state.spirit_facts.values()), default=0.0)
 
     if event == "life_threat":
@@ -402,11 +424,11 @@ def life_severity(state, event):
     return 0.0
 
 
-def life_priority(state, event, tasks, task, maximum):
+def life_priority(state, event, tasks, task, maximum, life=None):
     if maximum <= 0 or not tasks:
         return 0
     top = max(int(item.get("base", 0)) for item in tasks)
-    severity = life_severity(state, event)
+    severity = life_severity(state, event, life)
     if top <= 0 or severity <= 0:
         return 0
     share = _clamp01(float(task.get("base", 0)) / top)
@@ -651,6 +673,8 @@ class Graph:
         self.build_start_share = float(data.get("buildStartShare", 1.0))
         self.max_priority = int(data.get("maxPriority", 100))
         self.work_priority = self.max_priority - 1 if self.max_priority > 0 else self.max_priority
+        self.life = dict(LIFE_DEFAULTS)
+        self.life.update(data.get("life") or {})
         self.tiers = list(data.get("tiers") or [])
         kit = data.get("kit") or {}
         self.kit_tiers = dict(kit.get("tiers") or {})
@@ -673,6 +697,7 @@ class Graph:
                 "advice": list(event.get("advice") or []),
                 "life": bool(event.get("life", False)),
             }
+        self._derive_repairs()
         self.groups = {k: list(v) for k, v in (data.get("groups") or {}).items()}
         self.triggers = [dict(t) for t in (data.get("triggers") or [])]
         self.herd_caps = {k: HerdCap(v) for k, v in (data.get("herdCaps") or {}).items()}
@@ -691,6 +716,23 @@ class Graph:
         for way in self.ways:
             self._way_by_id.setdefault(way.id, way)
         self.costs = Costs(data, data.get("ways") or [])
+
+    def _derive_repairs(self):
+        """GraphEvent.withRepairs: шаблон building_damaged даёт событие каждой постройке без своего repair_<id>."""
+        template = self.events.get("building_damaged")
+        if not template or not template["tasks"]:
+            return
+        for building in self.buildings:
+            name = "repair_" + building
+            if name in self.events:
+                continue
+            self.events[name] = {
+                "tasks": [dict(task, id="repair:" + building, building=building)
+                          for task in template["tasks"]],
+                "push": dict(template["push"]),
+                "advice": list(template["advice"]),
+                "life": bool(template["life"]),
+            }
 
     @classmethod
     def load(cls, path):
@@ -841,7 +883,7 @@ class State:
             if (int(building.get("damage", 0)) > 0 or int(building.get("wrong", 0)) > 0
                     or 0 < percent < 100):
                 derived.append("repair_" + building_id)
-        derived.extend(_life_events(self))
+        derived.extend(_life_events(self, getattr(self, "life", None)))
         derived.extend(_gear_events(self))
         for name in derived:
             if name not in self.events:
@@ -864,6 +906,12 @@ class State:
                     self.world.append(tag)
         if self.failures and "more:failures_repeat" not in self.world:
             self.world.append("more:failures_repeat")
+
+    def apply_life(self, life):
+        """Подставляет коэффициенты жизни из graph.json и добавляет событие слабого игрока."""
+        self.life = dict(life or {})
+        if self.threats and _weak_player(self, self.life) and "life_threat_player" not in self.events:
+            self.events.append("life_threat_player")
 
     def copy(self):
         return State({
@@ -1650,7 +1698,7 @@ class Planner:
             if task is None:
                 raise KeyError("Событие " + parts[1] + " задания не описано в графе")
             if event.get("life", False):
-                prio = life_priority(state, parts[1], event["tasks"], task, graph.max_priority)
+                prio = life_priority(state, parts[1], event["tasks"], task, graph.max_priority, graph.life)
             consumes = self.event_consumes(task)
             building = task.get("building")
             fact = None if building is None else state.building_facts.get(building)
@@ -1696,4 +1744,5 @@ class Planner:
 
 
 def plan(graph, state):
+    state.apply_life(graph.life)
     return Planner(graph, state).plan()

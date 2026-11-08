@@ -17,6 +17,14 @@ public final class LifeEvents {
 
     private LifeEvents() {}
 
+    public static Set<String> events(GraphFacts facts, Set<String> base, List<Condition> conditions) {
+        Set<String> events = new LinkedHashSet<>(events(base, facts.threats(), conditions));
+        if (!facts.threats().isEmpty() && LifeThreats.weakPlayer(facts)) {
+            events.add("life_threat_player");
+        }
+        return events;
+    }
+
     public static Set<String> events(Set<String> base, List<GraphFacts.Threat> threats, List<Condition> conditions) {
         Set<String> events = new LinkedHashSet<>(base);
         if (!threats.isEmpty()) {

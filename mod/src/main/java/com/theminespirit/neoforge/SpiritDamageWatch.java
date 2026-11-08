@@ -23,13 +23,13 @@ public final class SpiritDamageWatch {
         }
         HITS.entrySet()
                 .removeIf(entry ->
-                        now < entry.getValue().at() || now - entry.getValue().at() > LifeThreats.DAMAGE_WINDOW_TICKS);
+                        now < entry.getValue().at() || now - entry.getValue().at() > LifeThreats.damageWindowTicks());
         Entity attacker = source.getEntity();
         String from = attacker == null
                 ? source.getMsgId()
                 : BuiltInRegistries.ENTITY_TYPE.getKey(attacker.getType()).toString();
         Hit before = HITS.get(spirit);
-        float total = before == null || now - before.at() > LifeThreats.DAMAGE_WINDOW_TICKS
+        float total = before == null || now - before.at() > LifeThreats.damageWindowTicks()
                 ? amount
                 : before.amount() + amount;
         HITS.put(spirit, new Hit(total, from, now));
@@ -37,7 +37,7 @@ public final class SpiritDamageWatch {
 
     public static GraphFacts.@Nullable Hurt recent(UUID spirit, long now) {
         Hit hit = HITS.get(spirit);
-        if (hit == null || now < hit.at() || now - hit.at() > LifeThreats.DAMAGE_WINDOW_TICKS) {
+        if (hit == null || now < hit.at() || now - hit.at() > LifeThreats.damageWindowTicks()) {
             return null;
         }
         return new GraphFacts.Hurt(hit.amount(), hit.source(), (int) (now - hit.at()));

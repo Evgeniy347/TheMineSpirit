@@ -1,10 +1,77 @@
 package com.theminespirit.core.board.graph;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class GraphCostsTests {
+    @Test
+    void life_DefaultGraph_ReadsCoefficientsFromData() {
+        GraphLife life = GraphWorld.GRAPH.costs().life();
+
+        assertEquals(200, life.damageWindowTicks(), "Окно урона жизни лежит в graph.json → life");
+        assertEquals(16.0, life.threatRadius(), "Радиус угрозы жизни лежит в graph.json → life");
+        assertEquals(1.5, life.fullPressureMobs(), "Полное давление мобов лежит в graph.json → life");
+        assertEquals(0.4, life.pressureBase(), "Базовое давление раны лежит в данных графа");
+        assertEquals(0.7, life.pressureWound(), "Вклад раны в давление лежит в данных графа");
+        assertEquals(0.2, life.hurtShare(), "Доля свежего урона лежит в данных графа");
+        assertEquals(0.8, life.injuryWound(), "Вес жизни раненого духа лежит в данных графа");
+        assertEquals(0.4, life.injuryHurt(), "Вес свежего урона духа лежит в данных графа");
+        assertEquals(0.9, life.weakPlayerSeverity(), "Опасность слабого игрока лежит в данных графа");
+        assertEquals(0.35F, life.weakHealth(), "Порог слабого здоровья игрока лежит в данных графа");
+        assertEquals(6, life.weakFood(), "Порог слабой еды игрока лежит в данных графа");
+    }
+
+    @Test
+    void life_NegativeOrZeroCoefficient_Rejected() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new GraphLife(200, 16, 1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 0.9, 1.2F, 6),
+                "Доля здоровья больше 1 не бывает: порог живёт в [0, 1]");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new GraphLife(0, 16, 1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 0.9, 0.35F, 6),
+                "Нулевое окно урона ломает деление: оно положительно");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new GraphLife(200, 0, 1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 0.9, 0.35F, -1),
+                "Отрицательный порог еды отвергается: голод начинается с нуля");
+    }
+
+    @Test
+    void life_CustomCoefficients_ChangeWeakPlayerEvent() {
+        GraphFacts facts = GraphFacts.empty()
+                .withThreats(List.of(new GraphFacts.Threat(
+                        "threat-1",
+                        "minecraft:zombie",
+                        20,
+                        20,
+                        new GraphFacts.Position(0, 64, 0),
+                        "player",
+                        GraphFacts.TargetKind.PLAYER,
+                        true,
+                        true,
+                        null,
+                        2,
+                        null,
+                        0.2)))
+                .withFeedback(new GraphFeedback(
+                        GraphFeedback.Clock.unknown(),
+                        new GraphFeedback.Player(null, true, false, false, false, 20, 20, 4),
+                        List.of()));
+
+        assertTrue(LifeThreats.weakPlayer(facts), "Голодный игрок рядом с угрозой — слабый по данным graph.json");
+        assertTrue(
+                LifeThreats.weakPlayer(facts, new GraphLife(200, 16, 1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 0.9, 0.35F, 6)),
+                "Свой порог еды 6 делает голодного игрока слабым");
+        assertTrue(
+                !LifeThreats.weakPlayer(facts, new GraphLife(200, 16, 1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 0.9, 0.35F, 2)),
+                "С порогом еды 2 тот же игрок уже не слабый: числа берутся из данных");
+    }
+
     @Test
     void plan_FarJungle_RanksBelowNearOak() {
         GraphWorld world = GraphWorld.settled().with("oak_log", 0).with("jungle_log", 0);

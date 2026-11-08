@@ -12,13 +12,10 @@ public final class More5Rules {
     public static final int ROUTE_FLUID_WIDTH = 2;
     public static final int CHEST_WORK_RADIUS = 24;
     public static final int MINE_DARK_MIN = 4;
-    private static final float WEAK_HEALTH = 0.35F;
-    private static final int WEAK_FOOD = 6;
     private static final int FUEL_FLOOR = 16;
     private static final int FUEL_PER_FURNACE = 8;
 
     public record Signals(
-            int weakPlayers,
             int darkCrops,
             int darkSaplings,
             int dryCrops,
@@ -34,7 +31,6 @@ public final class More5Rules {
             int woodDrops) {
         public Signals {
             for (Map.Entry<String, Integer> count : Map.ofEntries(
-                            Map.entry("слабых игроков", weakPlayers),
                             Map.entry("тёмных грядок", darkCrops),
                             Map.entry("тёмных саженцев", darkSaplings),
                             Map.entry("сухих грядок", dryCrops),
@@ -60,7 +56,6 @@ public final class More5Rules {
 
     public static Set<String> events(Signals signals) {
         Set<String> events = new LinkedHashSet<>();
-        add(events, signals.weakPlayers() > 0, "more5_player_weak");
         add(events, signals.darkCrops() > 0, "more5_crops_dark");
         add(events, signals.darkSaplings() > 0, "more5_saplings_dark");
         add(events, signals.dryCrops() > 0, "more5_crops_dry");
@@ -73,19 +68,6 @@ public final class More5Rules {
         add(events, signals.darkMineCells() > 0, "more5_mine_dark");
         add(events, signals.woodDrops() > 0, "more5_wood_drops");
         return Set.copyOf(events);
-    }
-
-    public static boolean weakPlayer(float healthRatio, int food, boolean inCombat) {
-        if (!inCombat) {
-            return false;
-        }
-        if (healthRatio < 0 || healthRatio > 1) {
-            throw new IllegalArgumentException("Доля здоровья " + healthRatio + " вне [0, 1]: её считают делением");
-        }
-        if (food < 0) {
-            throw new IllegalArgumentException("Еда игрока " + food + " отрицательна: голод начинается с нуля");
-        }
-        return healthRatio < WEAK_HEALTH || food <= WEAK_FOOD;
     }
 
     public static int fuelTarget(int furnaces) {

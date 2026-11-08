@@ -31,6 +31,28 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
         this(name, tasks, push, advice, false);
     }
 
+    static Map<String, GraphEvent> withRepairs(
+            Map<String, GraphEvent> events, Map<String, SupplyGraph.Building> buildings) {
+        GraphEvent template = events.get("building_damaged");
+        if (template == null || template.tasks().isEmpty()) {
+            return events;
+        }
+        Map<String, GraphEvent> repaired = new LinkedHashMap<>(events);
+        for (String id : buildings.keySet()) {
+            String name = GraphWorldEvents.REPAIR + id;
+            if (repaired.containsKey(name)) {
+                continue;
+            }
+            List<Task> tasks = new ArrayList<>();
+            for (Task task : template.tasks()) {
+                tasks.add(new Task(
+                        "repair:" + id, task.boardCase(), task.base(), task.consumes(), id, task.implemented()));
+            }
+            repaired.put(name, new GraphEvent(name, tasks, template.push(), template.advice(), template.life()));
+        }
+        return repaired;
+    }
+
     static Map<String, GraphEvent> parse(JsonNode root) {
         Map<String, GraphEvent> events = new LinkedHashMap<>();
         root.path("events").properties().forEach(entry -> {
@@ -59,11 +81,29 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
     }
 
     static int priority(GraphState state, SupplyGraph graph, String key, double value) {
-        return priority(state.facts(), graph.events(), key, value, GraphPriorities.work(graph), graph.maxPriority());
+        return priority(
+                state.facts(),
+                graph.events(),
+                key,
+                value,
+                GraphPriorities.work(graph),
+                graph.maxPriority(),
+                graph.costs().life());
     }
 
     static int priority(
             GraphFacts facts, Map<String, GraphEvent> events, String key, double value, int workMax, int lifeMax) {
+        return priority(facts, events, key, value, workMax, lifeMax, GraphLife.NONE);
+    }
+
+    static int priority(
+            GraphFacts facts,
+            Map<String, GraphEvent> events,
+            String key,
+            double value,
+            int workMax,
+            int lifeMax,
+            GraphLife life) {
         if (key.startsWith("event:")) {
             int start = "event:".length();
             int end = key.indexOf(':', start);
@@ -76,7 +116,7 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
                         .findFirst()
                         .orElse(null);
                 if (task != null) {
-                    return LifeThreats.priority(facts, event, task, lifeMax);
+                    return LifeThreats.priority(facts, event, task, lifeMax, life);
                 }
             }
         }

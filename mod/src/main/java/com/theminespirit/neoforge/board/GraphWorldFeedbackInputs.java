@@ -50,7 +50,14 @@ final class GraphWorldFeedbackInputs {
             boolean usingItem = player.isUsingItem();
             boolean digging = player.swinging && !hand.isEmpty() && hand.getItem() instanceof DiggerItem;
             return new GraphFeedback.Player(
-                    new GraphFacts.Position(at.getX(), at.getY(), at.getZ()), true, holdingBlock, usingItem, digging);
+                    new GraphFacts.Position(at.getX(), at.getY(), at.getZ()),
+                    true,
+                    holdingBlock,
+                    usingItem,
+                    digging,
+                    player.getHealth(),
+                    player.getMaxHealth(),
+                    player.getFoodData().getFoodLevel());
         }
         return GraphFeedback.Player.none();
     }
