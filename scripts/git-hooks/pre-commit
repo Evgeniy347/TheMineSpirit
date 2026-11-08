@@ -22,7 +22,7 @@ echo "pre-commit: в коммите есть изменения в src/ или �
 
 # GIT_* из окружения хука не нужны сборке и могут увести её git-команды в чужой индекс.
 mkdir -p TestResults/logs
-env -u GIT_INDEX_FILE -u GIT_DIR -u GIT_WORK_TREE -u GIT_PREFIX bash scripts/test.sh unit --changed --fast-analyzers >"TestResults/logs/pre-commit-latest.log" 2>&1
+env -u GIT_INDEX_FILE -u GIT_DIR -u GIT_WORK_TREE -u GIT_PREFIX bash scripts/test.sh unit --changed >"TestResults/logs/pre-commit-latest.log" 2>&1
 code=$?
 
 if [ -n "$unstaged" ]; then
@@ -34,7 +34,7 @@ fi
 
 if [ "$code" -ne 0 ]; then
     cat >&2 <<EOF
-Коммит отклонён: scripts/test.sh unit --fast-analyzers красный (код $code).
+Коммит отклонён: scripts/test.sh unit --changed красный (код $code).
 $(cat TestResults/logs/pre-commit-latest.log)
 Почему: красный коммит ломает бисекцию (git bisect попадает на нерабочее состояние) и scripts/prove-red.sh
 (он ждёт зелёный на самом коммите), а ревью смотрит на непроверенное.

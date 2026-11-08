@@ -1,0 +1,38 @@
+{
+ "description": "склад не нужен: стратег не трогает решение, POST нет",
+ "steps": [
+  {
+   "fake": {
+    "warehouse": {
+     "stage": 1,
+     "required_level": 1,
+     "built_level": 1,
+     "needed": false,
+     "order": null,
+     "plan_site": "4,64,5"
+    }
+   }
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "warehouse_posts": 0
+  },
+  {
+   "journal_lacks": {
+    "event": "warehouse_decision"
+   }
+  }
+ ],
+ "name": "53-warehouse-not-needed-no-post",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest",
+   "state": "busy"
+  }
+ ]
+}

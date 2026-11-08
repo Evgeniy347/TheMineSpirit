@@ -45,6 +45,8 @@
 - В конце каждого блока — запись в `TestResults/progress.md`: что сделано (хэши), принятые решения, что дальше.
   Новый заход (после сжатия или новой сессией) начинается с чтения `progress.md`, а не с перечитывания проекта.
 - Тесты — только через `scripts/test.sh` (`unit` / `gametest`). Красный прогон не коммитится.
+  В обычном цикле анализаторов только Spotless и Error Prone; полный набор (SpotBugs, PMD, Checkstyle) — ночью
+  на сервере (`scripts/nightly-analyzers.sh`, статус `/opt/minecraft/logs/nightly-analyzers.status`) и на приёмке.
 - Итерации — `scripts/test.sh unit --changed` (затронутые модули и `:guards`) или `unit --module <м>`; полный `unit`
   и `gametest --full` — один раз в финале, не на каждой правке.
 - Поиск по всему диску запрещён: не запускай `find / …`, `grep -r … /` — процесс живёт часами после смерти

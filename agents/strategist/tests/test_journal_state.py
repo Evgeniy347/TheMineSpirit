@@ -145,7 +145,8 @@ class JournalTests(unittest.TestCase):
 
     def test_events_Catalogue_MatchesChecklist(self):
         self.assertEqual({"cycle_start", "bot_skipped", "observed", "decision", "rejected", "posted", "task_state",
-                          "task_done", "brain_failure", "alert"}, set(EVENTS))
+                          "task_done", "brain_failure", "alert", "warehouse_decision", "warehouse_skipped"},
+                         set(EVENTS))
         self.assertEqual(1, journal_module.SCHEMA)
 
 

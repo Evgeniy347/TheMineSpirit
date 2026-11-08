@@ -121,13 +121,13 @@ export THEMINESPIRIT_GRADLEW="$work/bin/unit-static-fail"
 export FAKE_ARGS_FILE="$work/static-args"
 out=$(bash scripts/test.sh unit 2>&1)
 code=$?
-[ "$code" = 1 ] && echo "$out" | grep -q "FAIL static: 3 тестов зелёные"     && echo "$out" | grep -q "spotlessJavaCheck"     && grep -q "staticAnalysis --continue" "$work/static-args"     && ok "unit-static-fail: полный прогон гоняет staticAnalysis, красный анализатор при зелёных тестах — код=1"     || fail "unit-static-fail: код=$code, аргументы: $(cat "$work/static-args" 2>/dev/null), вывод: $out"
+[ "$code" = 1 ] && echo "$out" | grep -q "FAIL static: 3 тестов зелёные"     && echo "$out" | grep -q "spotlessJavaCheck"     && grep -q "formatCheck --continue" "$work/static-args"     && ok "unit-static-fail: полный прогон гоняет formatCheck, красный формат при зелёных тестах — код=1"     || fail "unit-static-fail: код=$code, аргументы: $(cat "$work/static-args" 2>/dev/null), вывод: $out"
 out=$(bash scripts/test.sh unit --tests '*TestCostReporterTests*' 2>&1)
-grep -q "staticAnalysis" "$work/static-args"     && fail "unit-static-fail: прогон с --tests не должен гонять staticAnalysis: $(cat "$work/static-args")"     || ok "unit-static-fail: прогон с --tests идёт без анализаторов"
+grep -q "formatCheck" "$work/static-args"     && fail "unit-static-fail: прогон с --tests не должен гонять formatCheck: $(cat "$work/static-args")"     || ok "unit-static-fail: прогон с --tests идёт без анализаторов"
 out=$(bash scripts/test.sh unit --fast-analyzers 2>&1)
-grep -q "staticAnalysisFast --continue" "$work/static-args" \
-    && ! grep -qE -- "spotbugs|pmd" "$work/static-args" \
-    && ok "unit-fast-analyzers: хук гоняет staticAnalysisFast без SpotBugs/PMD" \
+grep -q "formatCheck --continue" "$work/static-args" \
+    && ! grep -qE -- "spotbugs|pmd|checkstyle|staticAnalysis" "$work/static-args" \
+    && ok "unit-fast-analyzers: хук гоняет только formatCheck без SpotBugs/PMD/Checkstyle" \
     || fail "unit-fast-analyzers: аргументы: $(cat "$work/static-args" 2>/dev/null)"
 unset FAKE_ARGS_FILE
 
@@ -566,8 +566,8 @@ code=$?
 
 out=$(ARGS_FILE="$module_args" bash scripts/test.sh unit --module board --fast-analyzers 2>&1)
 code=$?
-[ "$code" = 0 ] && grep -qx ":board:staticAnalysisFast" "$module_args" \
-    && ! grep -qx ":guards:staticAnalysisFast" "$module_args" \
+[ "$code" = 0 ] && grep -qx ":board:formatCheck" "$module_args" \
+    && ! grep -qx ":guards:formatCheck" "$module_args" \
     && ok "unit-module-fast: анализаторы только у выбранного модуля" \
     || fail "unit-module-fast: код=$code, args=$(tr '\n' ' ' <"$module_args" 2>/dev/null)"
 

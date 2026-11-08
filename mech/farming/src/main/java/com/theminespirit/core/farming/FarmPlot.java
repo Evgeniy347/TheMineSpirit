@@ -47,7 +47,7 @@ public record FarmPlot(int minX, int minZ, int maxX, int maxZ) {
     }
 
     public BlockCoord center(int groundY) {
-        return new BlockCoord((minX + maxX) / 2, groundY, (minZ + maxZ) / 2);
+        return new BlockCoord((int) (((long) minX + maxX) / 2), groundY, (int) (((long) minZ + maxZ) / 2));
     }
 
     public int searchRadius(int groundY) {

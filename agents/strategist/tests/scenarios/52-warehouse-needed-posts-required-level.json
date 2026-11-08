@@ -1,0 +1,65 @@
+{
+ "description": "этап требует склад, решения ещё нет: стратег ставит уровень и место из плана одним POST, повторный цикл не дублирует",
+ "steps": [
+  {
+   "fake": {
+    "warehouse": {
+     "stage": 2,
+     "required_level": 2,
+     "built_level": 0,
+     "needed": true,
+     "order": null,
+     "plan_site": "4,64,5"
+    }
+   }
+  },
+  {
+   "cycle": true
+  },
+  {
+   "expect": [
+    {
+     "warehouse_posts": 1
+    },
+    {
+     "warehouse_body": {
+      "level": 2,
+      "site": "4,64,5",
+      "by": "strategist"
+     }
+    },
+    {
+     "journal_has": {
+      "event": "warehouse_decision",
+      "dry": false,
+      "outcome": "posted",
+      "level": 2,
+      "site": "4,64,5"
+     }
+    }
+   ]
+  },
+  {
+   "cycle": true
+  }
+ ],
+ "expect": [
+  {
+   "warehouse_posts": 1
+  },
+  {
+   "brain_calls": 0
+  },
+  {
+   "posts": 0
+  }
+ ],
+ "name": "52-warehouse-needed-posts-required-level",
+ "bots": [
+  {
+   "id": "forest",
+   "world": "forest",
+   "state": "busy"
+  }
+ ]
+}

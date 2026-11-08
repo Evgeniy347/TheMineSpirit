@@ -43,7 +43,7 @@ public final class SpiritExpeditionMember implements ExpeditionMember {
 
     @Override
     public List<Stack> inventory() {
-        return ExpeditionKit.present(MAPPER.map(spirit.getInventory()));
+        return MAPPER.mapPresent(spirit.getInventory());
     }
 
     @Override

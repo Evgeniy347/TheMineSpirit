@@ -26,7 +26,7 @@ public final class BoardSources {
     private final TransferDriftWatch transferDrift = new TransferDriftWatch();
     private final DemandWatch demand = new DemandWatch();
     private final GraphSource graph = new GraphSource();
-    private final RescueReach.Cache rescueReach = new RescueReach.Cache();
+    private final RescueReach.Cache rescueReach = RescueReach.cache();
     private final SourceFailureLog failures = new SourceFailureLog(BoardTuning.logSummaryTicks());
     private final GraphFailureMemory graphFailures = new GraphFailureMemory();
     private final GraphNotes notes = new GraphNotes();

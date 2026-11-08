@@ -20,7 +20,7 @@ class RescueReachCacheTests {
 
     @Test
     void cache_SameHelperAndTarget_KeepsVerdictDespiteNewWorld() {
-        RescueReach.Cache cache = new RescueReach.Cache();
+        RescueReach.Cache cache = RescueReach.cache();
         cache.request(FLAT, cell -> false, HELPER, FROM, TARGET, 100);
         finish(cache, 100);
 
