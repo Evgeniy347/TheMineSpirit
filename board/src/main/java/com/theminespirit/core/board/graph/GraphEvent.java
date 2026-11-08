@@ -49,7 +49,15 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
             List<Task> tasks = new ArrayList<>();
             for (Task task : template.tasks()) {
                 tasks.add(new Task(
-                        "repair:" + id, task.boardCase(), task.base(), task.consumes(), id, task.implemented()));
+                        "repair:" + id,
+                        task.boardCase(),
+                        task.base(),
+                        task.consumes(),
+                        id,
+                        task.world(),
+                        task.onlyWhenEmpty(),
+                        task.owner(),
+                        task.implemented()));
             }
             repaired.put(name, new GraphEvent(name, tasks, template.push(), template.advice(), template.life()));
         }

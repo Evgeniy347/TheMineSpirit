@@ -40,28 +40,28 @@
 
 | | M01 | M02 | M03 | M04 | M05 | M06 | M07 | M08 | M09 | M10 | M11 | M12 | M13 | M14 | M15 | M16 | M17 | M18 | M19 | M20 | M21 | M22 | M23 | M24 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| M01 | — | Е | Н | Н | Ч | Е | Е | Н | Н | Н | Н | Ч | Н | Н | Н | Н | Ч | Н | Н | Н | Н | Н | Н | Н |
+| M01 | — | Е | Е | Н | Е | Е | Е | Е | Е | Е | Е | Ч | Е | Е | Н | Е | Е | Е | Н | Н | Н | Е | Н | Н |
 | M02 | Е | — | Н | Н | Е | Е | Н | Е | Ч | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Е | Н | Н | Н | Е |
-| M03 | Н | Н | — | Н | Н | Е | Н | Е | Е | Н | Н | Е | Е | Н | Е | Н | Н | Н | Н | Е | Н | Н | Н | Н |
-| M04 | Н | Н | Н | — | Н | Е | Н | Н | Е | Н | Н | Н | Н | Е | Н | Е | Н | Е | Н | Е | Н | Ч | Н | Н |
-| M05 | Ч | Е | Н | Н | — | Е | Е | Н | Е | Н | Е | Н | Е | Н | Е | Е | Н | Е | Н | Н | Е | Н | Е | Е |
-| M06 | Е | Е | Е | Е | Е | — | Е | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Е | Е | Н | Н | Н |
-| M07 | Е | Н | Н | Н | Е | Е | — | Е | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Е | Н | Н | Е | Н |
-| M08 | Н | Е | Е | Н | Н | Н | Е | — | Е | Н | Ч | Н | Н | Е | Н | Н | Н | Н | Е | Н | Н | Н | Е | Н |
-| M09 | Н | Ч | Е | Е | Е | Н | Н | Е | — | Н | Е | Е | Н | Н | Н | Е | Н | Е | Е | Е | Н | Н | Н | Н |
-| M10 | Н | Н | Н | Н | Н | Н | Н | Н | Н | — | Е | Н | Н | Е | Н | Н | Н | Н | Н | Е | Н | Н | Н | Н |
-| M11 | Н | Н | Н | Н | Е | Н | Н | Ч | Е | Е | — | Н | Н | Е | Н | Н | Н | Н | Н | Е | Н | Н | Н | Н |
-| M12 | Ч | Н | Е | Н | Н | Н | Н | Н | Е | Н | Н | — | Ч | Е | Е | Е | Е | Н | Н | Е | Н | Н | Н | Н |
-| M13 | Н | Н | Е | Н | Е | Н | Н | Н | Н | Н | Н | Ч | — | Н | Н | Н | Н | Н | Н | Е | Н | Н | Н | Н |
-| M14 | Н | Н | Н | Е | Н | Н | Н | Е | Н | Е | Е | Е | Н | — | Н | Н | Н | Н | Н | Е | Н | Н | Н | Н |
-| M15 | Н | Н | Е | Н | Е | Н | Н | Н | Н | Н | Н | Е | Н | Н | — | Н | Н | Н | Н | Е | Н | Н | Н | Н |
-| M16 | Н | Н | Н | Е | Е | Н | Н | Н | Е | Н | Н | Е | Н | Н | Н | — | Е | Н | Н | Е | Е | Н | Н | Е |
-| M17 | Ч | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Е | Н | Н | Н | Е | — | Н | Н | Е | Н | Н | Н | Н |
-| M18 | Н | Н | Н | Е | Е | Н | Н | Н | Е | Н | Н | Н | Н | Н | Н | Н | Н | — | Н | Е | Н | Н | Н | Н |
-| M19 | Н | Н | Н | Н | Н | Н | Н | Е | Е | Н | Н | Н | Н | Н | Н | Н | Н | Н | — | Е | Н | Е | Н | Н |
+| M03 | Е | Н | — | Н | Н | Е | Н | Е | Е | Н | Н | Е | Е | Н | Е | Н | Н | Н | Н | Е | Н | Н | Н | Н |
+| M04 | Н | Н | Н | — | Н | Е | Н | Н | Е | Н | Н | Е | Е | Е | Н | Е | Н | Е | Е | Е | Н | Ч | Н | Н |
+| M05 | Е | Е | Н | Н | — | Е | Е | Н | Е | Н | Е | Е | Е | Е | Е | Е | Е | Е | Н | Н | Е | Н | Е | Е |
+| M06 | Е | Е | Е | Е | Е | — | Е | Н | Н | Н | Н | Е | Н | Н | Н | Н | Е | Н | Н | Е | Е | Н | Н | Н |
+| M07 | Е | Н | Н | Н | Е | Е | — | Е | Н | Н | Н | Е | Е | Н | Н | Н | Е | Н | Н | Е | Н | Н | Е | Н |
+| M08 | Е | Е | Е | Н | Н | Н | Е | — | Е | Н | Ч | Н | Н | Е | Н | Н | Н | Н | Е | Н | Н | Н | Е | Н |
+| M09 | Е | Ч | Е | Е | Е | Н | Н | Е | — | Н | Е | Е | Н | Н | Н | Е | Н | Е | Е | Е | Н | Н | Н | Н |
+| M10 | Е | Н | Н | Н | Н | Н | Н | Н | Н | — | Е | Н | Н | Е | Н | Н | Н | Н | Н | Е | Н | Н | Н | Н |
+| M11 | Е | Н | Н | Н | Е | Н | Н | Ч | Е | Е | — | Н | Н | Е | Н | Н | Н | Н | Н | Е | Н | Н | Н | Н |
+| M12 | Ч | Н | Е | Е | Е | Е | Е | Н | Е | Н | Н | — | Ч | Е | Е | Е | Е | Е | Е | Е | Н | Н | Н | Н |
+| M13 | Е | Н | Е | Е | Е | Н | Е | Н | Н | Н | Н | Ч | — | Е | Н | Н | Н | Н | Е | Е | Н | Н | Н | Н |
+| M14 | Е | Н | Н | Е | Е | Н | Н | Е | Н | Е | Е | Е | Е | — | Е | Е | Н | Н | Н | Е | Н | Н | Н | Н |
+| M15 | Н | Н | Е | Н | Е | Н | Н | Н | Н | Н | Н | Е | Н | Е | — | Н | Н | Н | Н | Е | Н | Н | Н | Н |
+| M16 | Е | Н | Н | Е | Е | Н | Н | Н | Е | Н | Н | Е | Н | Е | Н | — | Е | Н | Н | Е | Е | Н | Н | Е |
+| M17 | Е | Н | Н | Н | Е | Е | Е | Н | Н | Н | Н | Е | Н | Н | Н | Е | — | Н | Н | Е | Н | Е | Н | Н |
+| M18 | Е | Н | Н | Е | Е | Н | Н | Н | Е | Н | Н | Е | Н | Н | Н | Н | Н | — | Н | Е | Н | Н | Н | Н |
+| M19 | Н | Н | Н | Е | Н | Н | Н | Е | Е | Н | Н | Е | Е | Н | Н | Н | Н | Н | — | Е | Н | Е | Н | Н |
 | M20 | Н | Е | Е | Е | Н | Е | Е | Н | Е | Е | Е | Е | Е | Е | Е | Е | Е | Е | Е | — | Е | Е | Е | Е |
 | M21 | Н | Н | Н | Н | Е | Е | Н | Н | Н | Н | Н | Н | Н | Н | Н | Е | Н | Н | Н | Е | — | Н | Е | Е |
-| M22 | Н | Н | Н | Ч | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Е | Е | Н | — | Е | Н |
+| M22 | Е | Н | Н | Ч | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Е | Н | Е | Е | Н | — | Е | Н |
 | M23 | Н | Н | Н | Н | Е | Н | Е | Е | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Е | Е | Е | — | Н |
 | M24 | Н | Е | Н | Н | Е | Н | Н | Н | Н | Н | Н | Н | Н | Н | Н | Е | Н | Н | Н | Е | Е | Н | Н | — |
 
@@ -81,7 +81,7 @@
 | 3-8 | `StoreGraphTests.plan_GroupMinimumShortage_PostsChop` | минимум `#logs` 80 → `chop_oak_log` | рубка валит дерево, склад ждёт | ОК |
 | 3-9 | `ChopToolGraphTests.case68_LogsToPlanksTableAxe_ThenChopWithAxe` | доски → верстак → деревянный топор → chop | крафт идёт до рубки, рубит топором | ОК |
 | 3-12 | `CrossLifeWorkScenarioTests.chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted` | defend 100 выше рубки, defend первым билетом | защита `defend`, затем `chop_tree` | ОК |
-| 3-13 | `CrossFleeScenarioTests.flee_WhileChopping_GraphKeepsChopAndRetreatWaits` | retreat есть, chop остаётся ASSIGNED | рубящий дух не берёт бегство | НЕ ОК |
+| 3-13 | `CrossFleeScenarioTests.flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard` | retreat 100 вытесняет рубку, рубка возвращается PENDING | рубящий дух уходит от мобов, дерево берёт другой | ОК |
 | 3-15 | `GraphNightDefenseTests.plan_NightAndFarTree_DoesNotGiveDistantGather` | ночью нет далёкой добычи | NightLeash не пускает духа за радиус | ОК |
 | 3-20 | `ChopToolGraphTests.case70_AxeBroke_TicketStaysWithSpiritAndSameTree` | тот же билет рубки остаётся за духом | поломка топора не отдаёт дерево другому | ОК |
 | 4-6 | `CleanupCasesTests.cleanup_FillDirtInStock_DoesNotDigAgain` | засыпка берёт землю со склада | новая добыча земли не ставится | ОК |
@@ -89,12 +89,13 @@
 | 4-14 | `CrossHungerScenarioTests.hunger_NoFoodInStock_HungrySpiritGetsFoodNotMine` | еды нет: `event:hungry:hunt` 60 выше `mine_coal` 54, без источника `event:hungry:wait_food` 56 выше шахты | голодный дух охотится или ждёт, сытый получает шахту | ОК |
 | 4-16 | `CrossSettlementScenarioTests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool` | tool_worn без наковальни невыполним | изношенная кирка продолжает шахту | ОК |
 | 4-18 | `CrossSettlementScenarioTests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | тьма шахты → mine_coal 82 первым | уголь добывается шахтой | ОК |
+| 4-19 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | guard 57 выше mine_coal 48 | охрана `patrol` важнее шахты, но обе на доске | ОК |
 | 4-20 | `GraphPlannerTests.plan_NoCoal_PostsMineAndCharcoal` | `mine_coal` и `smelt_charcoal` | уголь добывается, затем жжётся | ОК |
 | 5-6 | `CrossSettlementScenarioTests.fill_PitOnHouseLot_FillAndBuildStayPostedTogether` | backfill и building:hut выполнимы вместе | fill кладёт землю, build_schematic строит дом | ОК |
 | 5-7 | `BuildPlanCasesTests.plan_StrayBesidePlannedHouse_DemolishesOnlyStray` | лишний забор → `demolish_stray` | снос убирает только чужое, дом не трогает | ОК |
 | 5-9 | `StageOneAcceptanceTests.plan_FencePart_CraftsFromOwnWoodInsteadOfWithdraw` | деталь забора крафтится из своего дерева | крафт закрывает нехватку без похода в сундук | ОК |
 | 5-11 | `FarmGraphTests.plan_PenAbsentAtStageTwo_GraphDemandsPen` | на этапе 2 нет загона → стройка загона | животноводство ждёт постройку | ОК |
-| 5-13 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_GraphPostsRetreatButDispatchKeepsBuilderBusy` | retreat есть в графе, но стройка остаётся ASSIGNED | занятый строитель не берёт бегство | НЕ ОК |
+| 5-13 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard` | retreat 100 вытесняет стройку, стройка возвращается PENDING | строитель уходит от мобов, хижину достраивает другой | ОК |
 | 5-15 | `CrossLifeWorkScenarioTests.night_FarChopAndNearBuild_NoDistantChoppingButBuildStays` | ночью `building:hut` выполним | стройка на участке продолжается | ОК |
 | 5-16 | `GraphRepairPlannerTests.repair_DamagedHut_ConsumesExactlyMissingItems` | ремонт заказывает ровно недостающее | ремонт строит схему из недостающих блоков | ОК |
 | 5-18 | `RepairPlanTests.target_LightingPlan_NoRepairScheme` | свет в плане этапа | ремонт света идёт без схемы постройки | ОК |
@@ -127,7 +128,7 @@
 | 12-16 | `CrossSupplyScenarioTests.combat_WoundedWithoutArmor_FightsBeforeCraftingArmor` | defend 100 выше craft_armor 39 | раненый сначала отбивается | ОК |
 | 12-17 | `CrossSettlementScenarioTests.combat_BrokenFenceUnderRaid_DefendOutranksFenceRepair` | defend 100 выше ремонта забора 61 | бой раньше забора | ОК |
 | 12-20 | `CrossLifeWorkScenarioTests.chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted` | защита жизни получает потолок 100 | механика боя выполняется скриптом `defend` | ОК |
-| 13-20 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_GraphPostsRetreatButDispatchKeepsBuilderBusy` | retreat на доске, стройка не снята | доска не бросает работу ради бегства | НЕ ОК |
+| 13-20 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard` | retreat 100 вытесняет стройку, стройка возвращается PENDING | строитель уходит от мобов, хижину достраивает другой | ОК |
 | 14-20 | `CrossHungerScenarioTests.hunger_NoFoodInStock_HungrySpiritGetsFoodNotMine` | голодный дух: добыча еды (охота/рыбалка) выше шахты, без источника — ожидание выше шахты | голодный дух не копает, сытый копает | ОК |
 | 15-20 | `GraphNightDefenseTests.plan_NightAndFarTree_DoesNotGiveDistantGather` | ночью далёкая рубка не выдаётся | граф и NightLeash согласованы | ОК |
 | 16-17 | `CrossSettlementScenarioTests.combat_BrokenFenceUnderRaid_DefendOutranksFenceRepair` | repair_fence выполним рядом с боем | ремонт ставит схему забора | ОК |
@@ -145,34 +146,55 @@
 | 21-23 | `WarehouseChainScenarioTests.stageTwoStage_StrategistOrder_MakesWarehouseTask` | заказ стратега на этапе 2 → склад | стройка склада идёт по заказу | ОК |
 | 21-24 | `GraphStageGateTests.building_UnknownChunks_NotReady` | неизвестные чанки не закрывают постройку | этап ждёт аудита, а не «наверное, готово» | ОК |
 | 22-23 | `WarehouseChainScenarioTests.stageTwoStage_StrategistOrder_MakesWarehouseTask` | заказ стратега и поход/склад | склад строится по узлу, а не по порогу | ОК |
+| 1-3 | `CrossRouteStageScenarioTests.movement_WorkCards_MoveToTargetThenAct` | `chop_oak_log` ставится графом | рубка идёт `goto` → `chop_tree`, а не рубит издалека | ОК |
+| 1-5 | `CrossRouteStageScenarioTests.movement_WorkCards_MoveToTargetThenAct` | `building:hut` на этапе | стройка идёт `goto` → `build_schematic` | ОК |
+| 1-8 | `CrossRouteStageScenarioTests.movement_WorkCards_MoveToTargetThenAct` | `store_space` и доставка | склад идёт `goto` → `deposit`/`unload` | ОК |
+| 1-9 | `CrossRouteStageScenarioTests.movement_WorkCards_MoveToTargetThenAct` | крафт по нехватке | крафт идёт `goto` → `craft` | ОК |
+| 1-10 | `CrossRouteStageScenarioTests.movement_WorkCards_MoveToTargetThenAct` | ферма ставит работу | посев идёт `goto` → `plant_crop`/`till` | ОК |
+| 1-11 | `CrossRouteStageScenarioTests.movement_WorkCards_MoveToTargetThenAct` | животноводство ставит работу | кормление идёт `goto` → `feed`/`milk` | ОК |
+| 1-13 | `CrossRouteStageScenarioTests.movement_WorkCards_MoveToTargetThenAct` | `event:life_threat:retreat` | бегство выполняет `retreat` действием отхода | ОК |
+| 1-14 | `CrossRouteStageScenarioTests.movement_WorkCards_MoveToTargetThenAct` | голод поднимает еду | еда начинается с `goto` → `withdraw`, а не ест из воздуха | ОК |
+| 1-16 | `CrossRouteStageScenarioTests.movement_WorkCards_MoveToTargetThenAct` | броня ставится в крафт/надевание | надевание идёт `goto` → `withdraw` → `equip` | ОК |
+| 1-17 | `CrossRouteStageScenarioTests.movement_WorkCards_MoveToTargetThenAct` | `repair:fence` при проломе | забор идёт `goto` → `fill` | ОК |
+| 1-18 | `CrossRouteStageScenarioTests.movement_WorkCards_MoveToTargetThenAct` | свет ставится при тьме | свет идёт `goto` → `place_block` | ОК |
+| 1-22 | `CrossRouteStageScenarioTests.movement_WorkCards_MoveToTargetThenAct` | `event:expedition_ready:expedition` | поход выполняет `follow` | ОК |
+| 4-12 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | defend 100 выше mine_coal 48 | шахта выполняется `mine_vein`, но ждёт боя | ОК |
+| 4-13 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | retreat 96 выше mine_coal 48 | дух бросает шахту ради отхода | ОК |
+| 5-12 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | defend 100 выше building:hut 54 | стройка остаётся `build_schematic`, но после боя | ОК |
+| 5-14 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | `event:hungry:eat` 55 выше hut 54 | голодный ест `eat` раньше стройки | ОК |
+| 5-17 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | repair:fence 61 выше hut 54 | забор чинится `fill` раньше стройки | ОК |
+| 6-12 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | defend 100 выше backfill 42 | засыпка `fill` ждёт боя | ОК |
+| 6-17 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | repair:fence 61 выше backfill 42 | забор чинится раньше засыпки | ОК |
+| 7-12 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | defend 100 выше demolish_stray 45 | снос `clear_area` ждёт боя | ОК |
+| 7-13 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | retreat 96 выше demolish_stray 45 | дух бросает снос ради отхода | ОК |
+| 7-17 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | repair:fence 61 выше demolish_stray 45 | забор чинится раньше сноса | ОК |
+| 12-18 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | defend 100 выше craft_torch 46 | свет ставится `place_block`, но после боя | ОК |
+| 12-19 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | defend 100 выше guard 57 | охрана `patrol` ждёт боя | ОК |
+| 13-14 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | retreat 96 выше event:life_threat:eat 86 | голодный сперва уходит от мобов, потом ест | ОК |
+| 13-19 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | retreat 96 выше guard 57 | бегство выше охраны поселения | ОК |
+| 14-15 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | life eat 86 выше sleep 84 | голодный ест раньше сна | ОК |
+| 14-16 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | arm 92 выше life eat 86 | раненый надевает броню `equip` раньше еды | ОК |
+| 17-22 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | expedition 69 выше repair:fence 61 | поход `follow` раньше ремонта забора | ОК |
+
 ## Итог
 
-Механик — 24, неупорядоченных пар — 24·23/2 = 276. Общий тест есть у 76 пар, частично — 14, к доработке — 186.
-В этой задаче добавлены крупные парные сценарии (`CrossLifeWorkScenarioTests`, `CrossSettlementScenarioTests`,
-`CrossRouteStageScenarioTests`): 35 новых пар, несколько духов и разное состояние в одной модели мира.
+Механик — 24, неупорядоченных пар — 24·23/2 = 276. Общий тест есть у 106 пар, частично — 14, к доработке — 156.
+Крупные парные сценарии — `CrossLifeWorkScenarioTests`, `CrossSettlementScenarioTests`, `CrossRouteStageScenarioTests`.
 
-## Техдолг (найдено отметкой «НЕ ОК», не чинится здесь)
+## Техдолг
 
-- **13-3** (`CrossFleeScenarioTests.flee_WhileChopping_GraphKeepsChopAndRetreatWaits`): рубящий дух так же не
-  берёт `retreat`; рубка остаётся ASSIGNED. Та же причина, что ниже.
-- **13-5, 13-20** (`CrossLifeWorkScenarioTests.flee_WhileBuilding_GraphPostsRetreatButDispatchKeepsBuilderBusy`):
-  `retreat` есть в графе, но занятый стройкой дух не берёт его: доска держит одну активную задачу и не
-  вытесняет стройку. Цена: дух продолжает строить под мобами. Предложение: вытеснение по приоритету жизни.
-- **2-5 (наблюдение)**: узел `pillar` из ямы требует `trail_clean`, поэтому первый прогон графа даёт только
-  `rescue`; выход появляется со следующего прогона. Это не «НЕ ОК» (следующий прогон решает), но сценарий
-  зависит от порядка прогонов — проверять при пересчёте весов.
+- **13-3, 13-5, 13-20 — сделано (debtlife/crossfix)**: `DispatchRound` отдаёт `ACTIVITY_RETREAT` занятому
+  духу, если бегство выше его работы по приоритету; вытесненная работа возвращается на доску (`PENDING`),
+  мод снимает её запуск (`BoardSettlementDesk.displace`). Сценарии:
+  `CrossFleeScenarioTests.flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard`,
+  `CrossLifeWorkScenarioTests.flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard`.
+- **2-5 (наблюдение)**: узел `pillar` из ямы требует `trail_clean`, поэтому первый прогон даёт только
+  `restore_trace`; выход появляется со второго прогона — закреплено
+  `CrossRouteStageScenarioTests.pit_PillarNeedsTrailClean_SecondRunOpensExit`.
 
 ## Отметки главного агента (08.11, ревью)
 
-Общая оценка: документ адекватный, честный (покрытие названо конкретными тестами, баги не спрятаны). Замечания:
-
-| что | вердикт | действие |
-|---|---|---|
-| 14-4, 14-20: голодный дух при пустом складе копает шахту | **сделано** (crossfood) | узел «добыть еду»: `hunger` ставит охоту/рыбалку выше `mine_coal`, без источника — ожидание; сценарий переписан, `ОК` |
-| 13-3, 13-5, 13-20: занятый рубкой/стройкой дух не берёт `retreat` | **править, но после мирного этапа** (владелец: бой в конец очереди) | вытеснение активной задачи по приоритету жизни; тесты уже зафиксированы (поменять ожидание), потом сценарии с мобом и несколькими духами |
-| 2-5: `pillar` ждёт `trail_clean`, первый прогон даёт только `rescue` | **не править** | но связать с B2 (observe25, rescue×план): тот же узел, проверять при задаче `obsrescue` |
-| матрица: 186 пар «Н» из 276 | **уточнить** | часть пар физически не пересекается (например M17×M24, M19×M18). Пометить `н/п` с коротким обоснованием, чтобы осталось реально нужное (оценка 60–80 пар), и вести «Н» только по ним |
-| ячейки «Е» (76) | **частично слабые** | многие «Е» — юнит-тест одной механики, где вторая лишь упомянута (напр. 10-20, 9-19). Для них нужна отметка «слабо» и сценарий в следующей партии; в первую очередь пары из живых багов observe25 (метки noPath × задачи, яма × план, висящее × рубка, аудит × ремонт) |
-| сторож `CrossMatrixGuardTests` | **оставить** | проверка ссылок на существующие тесты — то, что нужно |
-
-Следующая партия (задача после `obspath`): 1) разметить `н/п` и «слабо»; 2) 30 пар из списка выше крупными сценариями (несколько духов, мобы, разное состояние); 3) каждую строку «граф дал / механика сделала» вести так же.
+Документ честный: покрытие названо тестами. Решено: 14-4/14-20 и 13-3/13-5/13-20 **сделано** (crossfood, crossfix);
+2-5 **не править**, связать с obsrescue; матрицу **уточнить** — `н/п` с обоснованием, «Н» только по реальным парам,
+«слабо» для формальных «Е» (напр. 10-20, 9-19); сторож `CrossMatrixGuardTests` **оставить**.
+Следующая партия: разметка `н/п`/«слабо» и ещё 30 пар крупными сценариями.
