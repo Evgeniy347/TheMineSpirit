@@ -179,6 +179,45 @@ tasks.named('jar', Jar) {
     destinationDirectory = rootProject.layout.buildDirectory.dir('libs')
 }
 
+// lib: сборка сама не отдаёт негодный jar: 08.11 в 0.1.3253 уехал jar с пустым META-INF/neoforge.mods.toml
+// (сервер: «Missing ModLoader»). Задача не кэшируется, поэтому проверяет и jar, восстановленный из кэша.
+def verifyModJar = tasks.register('verifyModJar') {
+    group = 'verification'
+    description = 'Проверяет jar мода: непустой META-INF/neoforge.mods.toml с modId и классы'
+    dependsOn tasks.named('jar')
+    def archive = tasks.named('jar', Jar).flatMap { it.archiveFile }
+    def expectedId = mod_id
+    def minClasses = (project.findProperty('theminespirit.verifyJarMinClasses') ?: '1000').toString().toInteger()
+    inputs.file(archive)
+    outputs.upToDateWhen { false }
+    doLast {
+        def file = archive.get().asFile
+        def zip = new java.util.zip.ZipFile(file)
+        try {
+            def entry = zip.getEntry('META-INF/neoforge.mods.toml')
+            if (entry == null || entry.size <= 0) {
+                throw new GradleException("В ${file.name} нет непустого META-INF/neoforge.mods.toml: " +
+                        "сервер ответит «Missing ModLoader». Лечение: ./gradlew clean assemble (кэш/гонка сборки)")
+            }
+            def text = zip.getInputStream(entry).getText('UTF-8')
+            if (!text.contains("modId=\"${expectedId}\"")) {
+                throw new GradleException("В ${file.name} META-INF/neoforge.mods.toml не объявляет " +
+                        "modId=\"${expectedId}\": сервер не загрузит мод")
+            }
+            def classes = java.util.Collections.list(zip.entries()).count { it.name.endsWith('.class') }
+            if (classes <= minClasses) {
+                throw new GradleException("В ${file.name} классов ${classes}, а нужно больше ${minClasses}: " +
+                        "jar собран неполным, публиковать нельзя")
+            }
+        } finally {
+            zip.close()
+        }
+    }
+}
+tasks.named('assemble') {
+    dependsOn verifyModJar
+}
+
 def modTestThreads =
         (System.getenv('THEMINESPIRIT_TEST_THREADS') ?: "${Math.max(1, Math.min(5, Runtime.runtime.availableProcessors() - 1))}")
 tasks.named('test', Test) {

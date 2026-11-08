@@ -12,6 +12,8 @@ import org.jspecify.annotations.Nullable;
 
 public final class StuckSpirits {
     private static final int MAX_CHANGES = 64;
+    private static final long RESCUE_RELAPSE_TICKS = 12_000;
+    private static final int RESCUE_RELAPSE_RADIUS = 8;
 
     public record Stuck(@Nullable BlockCoord at, long since, boolean noPath) {
         public Stuck(@Nullable BlockCoord at, long since) {
@@ -33,8 +35,20 @@ public final class StuckSpirits {
         }
     }
 
+    public record Rescue(@Nullable BlockCoord at, long tick, int count) {
+        public Rescue {
+            if (tick < 0) {
+                throw new IllegalArgumentException("Тик спасения " + tick + " отрицателен: время идёт вперёд");
+            }
+            if (count < 1) {
+                throw new IllegalArgumentException("Число спасений " + count + " меньше одного: запись о спасении");
+            }
+        }
+    }
+
     private final Map<UUID, BlockCoord> seen = new LinkedHashMap<>();
     private final Map<UUID, Stuck> stuck = new LinkedHashMap<>();
+    private final Map<UUID, Rescue> rescues = new LinkedHashMap<>();
     private final List<Change> changes = new ArrayList<>();
 
     public void see(UUID spirit, BlockCoord at) {
@@ -49,6 +63,7 @@ public final class StuckSpirits {
         Objects.requireNonNull(spirit, "Дух не может быть null: позиция наблюдается у конкретного духа");
         Objects.requireNonNull(at, "Позиция не может быть null: по ней видно, сдвинулся ли дух");
         seen.put(spirit, at);
+        forgetDistantRescue(spirit, at);
         Stuck known = stuck.get(spirit);
         if (known == null) {
             return;
@@ -99,7 +114,8 @@ public final class StuckSpirits {
                     known.at(),
                     now,
                     false,
-                    "истекла: " + BoardTuning.STUCK_TTL_TICKS + " тиков без выхода из ловушки");
+                    "истекла: " + BoardTuning.STUCK_TTL_TICKS + " тиков без выхода из ловушки"
+                            + (known.noPath() ? " (в том числе «пути нет»: метка не вечная)" : ""));
             return Optional.empty();
         }
         return Optional.of(known);
@@ -120,6 +136,30 @@ public final class StuckSpirits {
         if (known != null) {
             note(spirit, known.at(), now, false, reason);
         }
+    }
+
+    public void rescued(UUID spirit, long now) {
+        Objects.requireNonNull(spirit, "Дух не может быть null: спасение адресное");
+        Stuck known = stuck.get(spirit);
+        Rescue previous = rescues.get(spirit);
+        rescues.put(
+                spirit,
+                new Rescue(known == null ? null : known.at(), now, previous == null ? 1 : previous.count() + 1));
+    }
+
+    public boolean relapsed(UUID spirit, @Nullable BlockCoord at, long now) {
+        Objects.requireNonNull(spirit, "Дух не может быть null: память спасений адресная");
+        Rescue known = rescues.get(spirit);
+        if (known == null || now < known.tick() || now - known.tick() > RESCUE_RELAPSE_TICKS) {
+            return false;
+        }
+        if (known.at() == null || at == null) {
+            return true;
+        }
+        int dx = Math.abs(known.at().x() - at.x());
+        int dy = Math.abs(known.at().y() - at.y());
+        int dz = Math.abs(known.at().z() - at.z());
+        return dx <= RESCUE_RELAPSE_RADIUS && dy <= RESCUE_RELAPSE_RADIUS && dz <= RESCUE_RELAPSE_RADIUS;
     }
 
     public List<Change> drainChanges() {
@@ -150,6 +190,7 @@ public final class StuckSpirits {
         }
         seen.clear();
         stuck.clear();
+        rescues.clear();
         for (BoardState.Stuck state : states) {
             boolean stale = state.since() > now || now - state.since() >= BoardTuning.STUCK_TTL_TICKS;
             if (stale) {
@@ -172,5 +213,19 @@ public final class StuckSpirits {
     public void clear() {
         seen.clear();
         stuck.clear();
+        rescues.clear();
+    }
+
+    private void forgetDistantRescue(UUID spirit, BlockCoord at) {
+        Rescue known = rescues.get(spirit);
+        if (known == null || known.at() == null) {
+            return;
+        }
+        int dx = Math.abs(known.at().x() - at.x());
+        int dy = Math.abs(known.at().y() - at.y());
+        int dz = Math.abs(known.at().z() - at.z());
+        if (dx > RESCUE_RELAPSE_RADIUS * 2 || dy > RESCUE_RELAPSE_RADIUS * 2 || dz > RESCUE_RELAPSE_RADIUS * 2) {
+            rescues.remove(spirit);
+        }
     }
 }

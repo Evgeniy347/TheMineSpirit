@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Test;
 class ServerPublishGuardTests {
     private static final Path PUBLISH = Path.of("scripts/publish.sh");
     private static final Path NIGHTLY = Path.of("scripts/nightly-analyzers.sh");
+    private static final Path CHECK = Path.of("scripts/testing/check-publish.sh");
+    private static final Path LEAD = Path.of("docs/LEAD-AGENT.md");
     private static final Path SERVER = Path.of("server");
     private static final List<String> SERVER_SCRIPTS = List.of(
             "scripts/common.sh",
@@ -54,6 +56,37 @@ class ServerPublishGuardTests {
         all.addAll(SERVER_FILES);
         all.addAll(SERVER_CONFIGS);
         REQUIRED_FILES = List.copyOf(all);
+    }
+
+    @Test
+    void publishScript_RejectsBrokenJar_BeforeInstall() throws IOException {
+        String script = read(PUBLISH);
+        assertTrue(
+                script.contains("verify_mod_jar") && script.contains("META-INF/neoforge.mods.toml"),
+                "publish.sh не проверяет содержимое jar: 08.11 в 0.1.3253 уехал jar с пустым "
+                        + "META-INF/neoforge.mods.toml, сервер не стартовал («Missing ModLoader»), простой ~20 мин. "
+                        + "Как надо: verify_mod_jar — непустой mods.toml с modId и больше 1000 классов");
+        int verified = script.indexOf("jar не прошёл проверку содержимого");
+        int installed = script.indexOf("echo \"Установка мода в");
+        assertTrue(
+                verified > 0 && installed > 0 && verified < installed,
+                "Проверка jar в publish.sh должна стоять до установки (и до остановки сервера): иначе битый jar "
+                        + "снова уедет в mods/ и уронит сервер");
+        assertTrue(
+                Files.isRegularFile(CHECK),
+                "Нет scripts/testing/check-publish.sh: нечем проверить, что негодный jar не доходит до установки");
+        String check = read(CHECK);
+        for (String scenario : List.of("пуст (0 байт)", "не объявляет modId", "классов 1000", "--sync", "негоден")) {
+            assertTrue(
+                    check.contains(scenario),
+                    "Проверка check-publish.sh потеряла опыт «" + scenario + "»: пустой/без modId/без классов jar, "
+                            + "граница 1000 классов и --sync не должны расходиться по клиентам");
+        }
+        String lead = read(LEAD);
+        assertTrue(
+                lead.contains("neoforge.mods.toml") && lead.contains("1000"),
+                "docs/LEAD-AGENT.md → «Слияние и выкладка» обязана называть, что проверяется в jar перед установкой: "
+                        + "непустой neoforge.mods.toml с modId и больше 1000 классов");
     }
 
     @Test

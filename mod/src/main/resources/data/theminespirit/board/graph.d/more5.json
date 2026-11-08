@@ -25,8 +25,6 @@
     ]
   },
   "items": {
-    "more5:player_guard": {"xmin": 0, "k": 1, "base": 17, "stage": 1},
-    "more5:player_fed": {"xmin": 0, "k": 1, "base": 15, "stage": 1},
     "more5:growth_lit": {"xmin": 0, "k": 1, "base": 11, "stage": 1},
     "more5:growth_watered": {"xmin": 0, "k": 1, "base": 11, "stage": 1},
     "more5:growth_fed": {"xmin": 0, "k": 1, "base": 12, "stage": 1},
@@ -41,10 +39,6 @@
     "more5:sapling_planted": {"xmin": 0, "k": 1, "base": 11, "stage": 1}
   },
   "ways": [
-    {"id": "more5_defend_player", "case": "ACTIVITY_DEFEND", "makes": "more5:player_guard",
-     "yield": 1, "weight": 3.424444721, "ticks": 100, "implemented": true, "todo": "more5_defend_player"},
-    {"id": "more5_feed_player", "case": "EAT_TO_FULL", "makes": "more5:player_fed",
-     "yield": 1, "weight": 1.38964694, "ticks": 80, "consumes": {"food": 1}, "implemented": true, "todo": "more5_feed_player"},
     {"id": "more5_light_crops", "case": "LIGHTING", "makes": "more5:growth_lit",
      "yield": 1, "weight": 1.152862116, "ticks": 100, "consumes": {"torch": 1}, "implemented": true, "todo": "more5_light_crops"},
     {"id": "more5_light_saplings", "case": "LIGHTING", "makes": "more5:growth_lit",
@@ -79,14 +73,6 @@
      "yield": 1, "weight": 1.775624931, "ticks": 100, "consumes": {"#saplings": 1}, "implemented": true, "todo": "more5_plant_sapling"}
   ],
   "events": {
-    "more5_player_weak": {
-      "tasks": [
-        {"id": "more5_defend_player", "case": "ACTIVITY_DEFEND", "base": 126, "consumes": {}, "implemented": true},
-        {"id": "more5_feed_player", "case": "EAT_TO_FULL", "base": 117, "consumes": {"food": 1}, "implemented": true}
-      ],
-      "push": {"more5:player_guard": 20, "more5:player_fed": 12, "food": 10},
-      "advice": ["protect_and_feed_player_first"]
-    },
     "more5_crops_dark": {
       "tasks": [
         {"id": "more5_light_crops", "case": "LIGHTING", "base": 58, "consumes": {"torch": 1}, "implemented": true}

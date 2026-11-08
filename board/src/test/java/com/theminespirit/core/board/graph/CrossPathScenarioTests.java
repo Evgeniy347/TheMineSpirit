@@ -87,7 +87,9 @@ class CrossPathScenarioTests {
                 List.of(),
                 new GraphSiteFacts.Terrain(2, 0, 0, 2, 0, Map.of(), Map.of("minecraft:dirt", 4), Map.of(), true),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
-                GraphFeedback.none());
+                GraphFeedback.none(),
+                List.of(),
+                List.of());
         GraphPlan plan = plan(world, facts);
 
         assertFalse(

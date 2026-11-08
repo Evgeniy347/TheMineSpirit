@@ -20,7 +20,9 @@ final class PlanCaseFacts {
                 strays,
                 terrain,
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
-                GraphFeedback.none());
+                GraphFeedback.none(),
+                List.of(),
+                List.of());
     }
 
     static GraphFacts.Building building(

@@ -41,7 +41,9 @@ class CrossFarmSupplyScenarioTests {
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
-                GraphFeedback.none());
+                GraphFeedback.none(),
+                List.of(),
+                List.of());
         GraphPlan plan = plan(world, facts);
 
         GraphPlan.Task shear = task(plan, "shear");
@@ -182,7 +184,9 @@ class CrossFarmSupplyScenarioTests {
                         "stray:oak_fence@1,69,1", "oak_fence", new GraphFacts.Position(1, 69, 1), "spirit-1")),
                 GraphSiteFacts.Terrain.empty(),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
-                GraphFeedback.none());
+                GraphFeedback.none(),
+                List.of(),
+                List.of());
         GraphPlan plan = plan(world, facts);
 
         GraphPlan.Task repairHut = task(plan, "event:repair_hut:repair:hut");
@@ -217,7 +221,9 @@ class CrossFarmSupplyScenarioTests {
                 List.of(),
                 facts.terrain(),
                 facts.stageReqs(),
-                facts.feedback());
+                facts.feedback(),
+                facts.players(),
+                facts.planBreaches());
         assertTrue(
                 GraphStageGate.buildingReady(repaired, "hut"),
                 "После аудита 100 % и снятия лишнего этап видит готовую хижину");

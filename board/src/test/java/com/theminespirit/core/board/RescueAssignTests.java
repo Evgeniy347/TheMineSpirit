@@ -112,19 +112,20 @@ class RescueAssignTests {
     }
 
     @Test
-    void self_SurfaceNoPathWithTool_Dig() {
+    void self_SurfaceNoPathWithTool_WalkOtherRoute() {
         assertEquals(
-                RescuePlans.Self.DIG,
+                RescuePlans.Self.WALK,
                 RescuePlans.self(new RescuePlans.Situation(false, false, true, true, true)),
-                "Пути нет, но кирка есть: дух прокладывает выход к дому сам");
+                "На поверхности путь ищут заново другим маршрутом: кирка нужна под землёй, а не на земле");
     }
 
     @Test
-    void self_NoPathWithoutTool_None() {
+    void self_SurfaceNoPathWithoutTool_WalkOtherRoute() {
         assertEquals(
-                RescuePlans.Self.NONE,
+                RescuePlans.Self.WALK,
                 RescuePlans.self(new RescuePlans.Situation(false, false, false, true, true)),
-                "Пути нет и прокопать нечем: сам не выйдет, нужен свободный помощник (observe23 A)");
+                "Потерянный на поверхности дух без кирки возвращается другим маршрутом, а не объявляется "
+                        + "невозможным (observe25 B3)");
     }
 
     @Test

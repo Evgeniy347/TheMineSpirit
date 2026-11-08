@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.LifeEvents;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -10,6 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -35,7 +37,31 @@ public final class LifeInputs {
     public static Input of(ServerLevel level, List<SpiritEntity> spirits, Set<String> baseEvents) {
         List<GraphFacts.Threat> threats = threats(level, spirits);
         List<LifeEvents.Condition> conditions = conditions(spirits);
-        return new Input(threats, LifeEvents.events(baseEvents, threats, conditions));
+        List<GraphFacts.Player> players = players(level);
+        return new Input(
+                threats,
+                LifeEvents.events(
+                        baseEvents,
+                        threats,
+                        conditions,
+                        players,
+                        DataTables.INSTANCE.graph().current().costs().life()));
+    }
+
+    public static List<GraphFacts.Player> players(ServerLevel level) {
+        List<GraphFacts.Player> players = new ArrayList<>();
+        for (ServerPlayer player : level.players()) {
+            players.add(new GraphFacts.Player(
+                    player.getGameProfile().getName(),
+                    new GraphFacts.Position(
+                            player.blockPosition().getX(),
+                            player.blockPosition().getY(),
+                            player.blockPosition().getZ()),
+                    player.getHealth(),
+                    player.getMaxHealth(),
+                    player.getFoodData().getFoodLevel()));
+        }
+        return List.copyOf(players);
     }
 
     public static List<GraphFacts.Threat> threats(ServerLevel level, List<SpiritEntity> spirits) {

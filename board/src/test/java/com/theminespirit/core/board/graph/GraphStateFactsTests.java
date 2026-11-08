@@ -172,7 +172,9 @@ class GraphStateFactsTests {
                 strays,
                 GraphSiteFacts.Terrain.empty(),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
-                GraphFeedback.none());
+                GraphFeedback.none(),
+                List.of(),
+                List.of());
         strays.add(new GraphSiteFacts.Stray("s", "wall", new GraphFacts.Position(0, 0, 0), null));
 
         assertEquals(List.of(), facts.strays(), "Список лишних построек копируется");
@@ -206,6 +208,8 @@ class GraphStateFactsTests {
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
-                GraphFeedback.none());
+                GraphFeedback.none(),
+                List.of(),
+                List.of());
     }
 }

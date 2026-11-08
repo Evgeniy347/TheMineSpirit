@@ -75,7 +75,8 @@ final class PitRescue {
                 steps.add(gotoPoint(target));
             }
             case STAIRS -> {
-                steps.add(new ScriptCall(DIG_OUT, Map.of("x", target.x(), "y", target.y(), "z", target.z())));
+                steps.add(new ScriptCall(
+                        DIG_OUT, Map.of("x", target.x(), "y", target.y(), "z", target.z(), "rescue", true)));
                 steps.add(gotoPoint(target));
             }
             case IMPOSSIBLE ->

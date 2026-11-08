@@ -71,6 +71,29 @@ class LifeEventsTests {
         assertFalse(events.contains("life_threat_player"), "Игрок не цель — защита игрока не поднимается: " + events);
     }
 
+    @Test
+    void events_WeakPlayerFact_AddsPlayerThreat() {
+        Set<String> events =
+                LifeEvents.events(Set.of(), List.of(), List.of(), List.of(player(4.0F, 20)), GraphLife.DEFAULTS);
+
+        assertTrue(
+                events.contains("life_threat_player"),
+                "Факт здоровья игрока сам поднимает жизнь: легаси-событие more5_player_weak больше не нужно: "
+                        + events);
+    }
+
+    @Test
+    void events_HealthyPlayerFact_NoPlayerThreat() {
+        Set<String> events =
+                LifeEvents.events(Set.of(), List.of(), List.of(), List.of(player(20.0F, 20)), GraphLife.DEFAULTS);
+
+        assertFalse(events.contains("life_threat_player"), "Здоровый игрок без угроз не поднимает жизнь: " + events);
+    }
+
+    private static GraphFacts.Player player(float health, int food) {
+        return new GraphFacts.Player("Steve", AT, health, 20.0F, food);
+    }
+
     private static GraphFacts.Threat threat(GraphFacts.TargetKind kind, boolean targetingSelf) {
         return new GraphFacts.Threat(
                 "threat-1",
