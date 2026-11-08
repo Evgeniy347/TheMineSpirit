@@ -475,6 +475,9 @@ else
     is_running() { tmux has-session -t "$TMUX_SESSION" 2>/dev/null; }
 fi
 
+# замок сборки не должен утечь в tmux-сервер через унаследованный fd 9 (иначе он держится вечно)
+exec 9>&-
+
 was_running=false
 if is_running; then
     was_running=true
