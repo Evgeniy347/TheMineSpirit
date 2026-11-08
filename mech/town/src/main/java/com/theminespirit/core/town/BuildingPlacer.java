@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 final class BuildingPlacer {
     private static final long QUARTER_PENALTY = 1_000_000L;
@@ -119,8 +120,9 @@ final class BuildingPlacer {
     private Optional<Placement> best(TownEntry entry, String id, int stage) {
         int[] blockedSum = prefix(blocked());
         Placement seed = seeds.get(stage);
-        int targetX = seed == null ? centerX : seed.centerX();
-        int targetZ = seed == null ? centerZ : seed.centerZ();
+        int[] target = target(entry, seed);
+        int targetX = target[0];
+        int targetZ = target[1];
         Placement best = null;
         long bestScore = Long.MAX_VALUE;
         boolean square = entry.width() == entry.depth();
@@ -156,6 +158,18 @@ final class BuildingPlacer {
             }
         }
         return Optional.ofNullable(best);
+    }
+
+    private int[] target(TownEntry entry, @Nullable Placement seed) {
+        int shift = rules.streets().blockSize();
+        return switch (entry.quarter()) {
+            case NW -> new int[] {centerX - shift, centerZ - shift};
+            case NE -> new int[] {centerX + shift, centerZ - shift};
+            case SW -> new int[] {centerX - shift, centerZ + shift};
+            case SE -> new int[] {centerX + shift, centerZ + shift};
+            case ANY, CENTER ->
+                new int[] {seed == null ? centerX : seed.centerX(), seed == null ? centerZ : seed.centerZ()};
+        };
     }
 
     private Optional<Placement.Facing> facing(int x, int z, int w, int d) {

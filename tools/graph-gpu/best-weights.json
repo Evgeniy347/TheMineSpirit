@@ -1192,8 +1192,6 @@
       "more4:pet_guarded": 0.6438395973900619,
       "more4:rare_kept": 0.6438395973900619,
       "more4:caution": 0.6438395973900619,
-      "more5:player_guard": 0.6438395973900619,
-      "more5:player_fed": 0.6438395973900619,
       "more5:growth_lit": 0.6438395973900619,
       "more5:growth_watered": 0.6438395973900619,
       "more5:growth_fed": 0.6438395973900619,
@@ -1924,8 +1922,6 @@
       "more4_sort_rare": 0.9442721313466288,
       "more4_feed_hungry": 0.8983959262385389,
       "more4_rest_injured": 0.973750473439786,
-      "more5_defend_player": 0.8725006745927402,
-      "more5_feed_player": 1.0889210195171688,
       "more5_light_crops": 0.7567489295528004,
       "more5_light_saplings": 0.7567489295528004,
       "more5_water_crops": 0.8470526350786106,
@@ -2018,7 +2014,6 @@
       "more4_rare_found": 1.0568191698560463,
       "more4_rare_mixed": 1.0568191698560463,
       "more4_caution": 1.0568191698560463,
-      "more5_player_weak": 1.0769877166464,
       "more5_crops_dark": 1.0769877166464,
       "more5_saplings_dark": 1.0769877166464,
       "more5_crops_dry": 1.0769877166464,
@@ -3153,8 +3148,6 @@
       "more4:pet_guarded": 10,
       "more4:rare_kept": 11,
       "more4:caution": 12,
-      "more5:player_guard": 11,
-      "more5:player_fed": 10,
       "more5:growth_lit": 7,
       "more5:growth_watered": 7,
       "more5:growth_fed": 8,
@@ -3885,8 +3878,6 @@
       "more4_sort_rare": 1.990191972,
       "more4_feed_hungry": 0.656882069,
       "more4_rest_injured": 1.048141695,
-      "more5_defend_player": 2.987830329,
-      "more5_feed_player": 1.513215763,
       "more5_light_crops": 0.872427172,
       "more5_light_saplings": 0.79656394,
       "more5_water_crops": 1.139398346,
@@ -4093,10 +4084,6 @@
       "more4_caution": {
         "more4_feed_hungry": 63,
         "more4_rest_injured": 59
-      },
-      "more5_player_weak": {
-        "more5_defend_player": 128,
-        "more5_feed_player": 118
       },
       "more5_crops_dark": {
         "more5_light_crops": 62
