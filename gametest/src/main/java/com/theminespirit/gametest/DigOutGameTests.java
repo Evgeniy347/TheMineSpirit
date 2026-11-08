@@ -10,8 +10,10 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.neoforge.BlockPlacer;
 import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.PlanBreachRestore;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
@@ -68,6 +70,21 @@ public final class DigOutGameTests {
         BlockCoord goal = new BlockCoord(home.getX(), home.getY(), home.getZ());
         UUID id = spirit.getUUID();
         long now = helper.getLevel().getGameTime();
+        BlockPos restorerAt = helper.absolutePos(new BlockPos(8, TOP + 1, 5));
+        SpiritEntity restorer = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(8, TOP + 1, 5));
+        restorer.setPos(restorerAt.getX() + 0.5, restorerAt.getY(), restorerAt.getZ() + 0.5);
+        restorer.getInventory().setItem(0, new ItemStack(Items.JUNGLE_PLANKS, 4));
+        BlockPos restoredCell = restorerAt.east();
+        helper.getLevel().setBlockAndUpdate(restoredCell, Blocks.AIR.defaultBlockState());
+        PlanBreachData.get(helper.getLevel()).record(restoredCell, "minecraft:jungle_planks", restorer.getUUID(), now);
+        PlanBreachRestore.restore(restorer, helper.getLevel(), new BlockPlacer(restorer), restorer.blockPosition());
+        helper.assertTrue(
+                helper.getLevel().getBlockState(restoredCell).is(Blocks.JUNGLE_PLANKS),
+                "Пролом плана заделан тем же блоком (jungle_planks): клетка снова часть дома");
+        helper.assertTrue(
+                PlanBreachData.get(helper.getLevel()).breach(restoredCell) == null,
+                "Заделанный пролом снимается с учёта: задание восстановления не остаётся на доске");
+        restorer.discard();
         String ticket = "rescue:" + id;
         board.board().stuck().see(id, at, now);
         board.board().stuck().mark(id, now, "сцена: дух замурован в яме");
