@@ -20,16 +20,11 @@ import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.TacticsEngine;
 import com.theminespirit.core.tactics.TacticsMemory;
 import com.theminespirit.core.tactics.adapter.CoreFactCollector;
-import com.theminespirit.core.tactics.adapter.DecisionFacts;
-import com.theminespirit.core.tactics.adapter.DecisionJournal;
-import com.theminespirit.core.tactics.adapter.DecisionObservation;
 import com.theminespirit.core.tactics.adapter.DecisionOrder;
 import com.theminespirit.core.tactics.adapter.DecisionRecord;
-import com.theminespirit.core.tactics.adapter.DecisionText;
 import com.theminespirit.core.tactics.adapter.ExecutionResult;
 import com.theminespirit.core.tactics.adapter.ForcedRetreat;
 import com.theminespirit.core.tactics.adapter.IntentActionExecutor;
-import com.theminespirit.core.tactics.adapter.OrdersBuilder;
 import com.theminespirit.core.tactics.adapter.RetreatCommitment;
 import com.theminespirit.core.tactics.adapter.RetreatPlan;
 import com.theminespirit.core.tactics.adapter.RetreatPlanner;
@@ -41,7 +36,6 @@ import com.theminespirit.core.tactics.adapter.TacticsTrace;
 import com.theminespirit.core.tactics.adapter.TargetDesignation;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -53,7 +47,7 @@ import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 
 public final class TacticsService {
-    public static final CombatMode DEFAULT_MODE = CombatMode.DEFENSIVE;
+    public static final CombatMode DEFAULT_MODE = TacticsOrders.DEFAULT;
     public static final double RETURN_ARRIVAL = 1.5;
     public static final int FAILURE_BACKOFF_TICKS = 100;
     public static final int DECISIONS_IN_CHAT = 5;
@@ -68,16 +62,13 @@ public final class TacticsService {
     private final CoreFactCollector situations = new CoreFactCollector(settings);
     private final IntentActionExecutor intents = new IntentActionExecutor();
     private final TacticsSchedule schedule = new TacticsSchedule(settings.evalIntervalTicks());
-    private final DecisionJournal journal =
-            new DecisionJournal(settings.journalCapacity(), settings.journalMaxPerSecond());
     private final TacticsRally rally;
     private final Approach approach;
     private final CombatActuator combat;
     private final RetreatExecutor retreating;
 
-    private CombatMode ordered = DEFAULT_MODE;
-    private Optional<OrdersBuilder.Zone> zone = Optional.empty();
-    private Optional<UUID> ward = Optional.empty();
+    private final TacticsOrders orders;
+    private final TacticsMetrics metrics;
 
     private TacticsMemory memory;
     private RetreatTracker retreat = RetreatTracker.IDLE;
@@ -88,7 +79,6 @@ public final class TacticsService {
     private RetreatMethod planMethod = RetreatMethod.NONE;
     private TacticsAction action = TacticsAction.IDLE;
     private final TacticsReturn returnWalk;
-    private final TacticsDirectives directives;
     private String targetId;
     private String shootTargetId;
     private boolean active;
@@ -99,16 +89,10 @@ public final class TacticsService {
     private long suspendedUntil = Long.MIN_VALUE;
     private RetreatExecutor.Progress progress = RetreatExecutor.Progress.DONE;
 
-    private int stepCalls;
-    private int blockReads;
-    private int entityQueries;
-    private int failures;
-    private String lastFailure;
-    private String restoreFailure;
-
     public TacticsService(SpiritEntity spirit) {
         this.spirit = spirit;
-        this.directives = new TacticsDirectives(this);
+        this.orders = new TacticsOrders(this);
+        this.metrics = new TacticsMetrics(settings.journalCapacity(), settings.journalMaxPerSecond());
         this.rally = new TacticsRally(spirit);
         this.approach = new Approach(spirit);
         this.combat = new CombatActuator(spirit, approach);
@@ -138,8 +122,7 @@ public final class TacticsService {
             }
             execute();
         } catch (RuntimeException error) {
-            failures++;
-            lastFailure = error.toString();
+            metrics.failed(error);
             suspendedUntil = now + FAILURE_BACKOFF_TICKS;
             release();
             LOGGER.error(
@@ -165,69 +148,59 @@ public final class TacticsService {
     }
 
     public void setCombatMode(CombatMode mode) {
-        if (mode == null) {
-            throw new IllegalArgumentException("Режим боя = null: допустимы " + Arrays.toString(CombatMode.values()));
-        }
-        ordered = mode;
-        forced = true;
-        if (mode == CombatMode.PASSIVE) {
-            spirit.setTarget(null);
-        }
+        orders.setMode(mode);
     }
 
     public CombatMode combatMode() {
-        return ordered;
+        return orders.mode();
     }
 
     public void setGuardZone(BlockCoord center, double radius) {
-        zone = Optional.of(new OrdersBuilder.Zone(new Point(center.x() + 0.5, center.y(), center.z() + 0.5), radius));
-        forced = true;
+        orders.zone(center, radius);
     }
 
     public void clearGuardZone() {
-        zone = Optional.empty();
-        forced = true;
+        orders.clearZone();
     }
 
     public void setWard(UUID id) {
-        ward = Optional.ofNullable(id);
-        forced = true;
+        orders.ward(id);
     }
 
     public void applyDirective(CombatDirective directive) {
-        directives.apply(directive, DirectiveOwner.SCRIPT);
+        orders.applyDirective(directive, DirectiveOwner.SCRIPT);
     }
 
     public void applyDirective(CombatDirective directive, DirectiveOwner owner) {
-        directives.apply(directive, owner);
+        orders.applyDirective(directive, owner);
     }
 
     public boolean clearDirective() {
-        return directives.clear(DirectiveOwner.SCRIPT);
+        return orders.clearDirective(DirectiveOwner.SCRIPT);
     }
 
     public boolean clearDirective(DirectiveOwner owner) {
-        return directives.clear(owner);
+        return orders.clearDirective(owner);
     }
 
     public Optional<CombatDirective> activeDirective() {
-        return directives.active();
+        return orders.directives().active();
     }
 
     public void holdDirective() {
-        directives.hold();
+        orders.holdDirective();
     }
 
     public boolean directiveHeld() {
-        return directives.held();
+        return orders.directives().held();
     }
 
     public void setForcedTarget(LivingEntity target) {
-        directives.setTarget(target);
+        orders.setForcedTarget(target);
     }
 
     void setOrdered(CombatMode mode) {
-        ordered = mode;
+        orders.restoreMode(mode);
     }
 
     void markForced() {
@@ -235,11 +208,7 @@ public final class TacticsService {
     }
 
     public boolean hasState() {
-        return memory != null
-                || ordered != DEFAULT_MODE
-                || zone.isPresent()
-                || ward.isPresent()
-                || retreat.retreating();
+        return memory != null || orders.hasState() || retreat.retreating();
     }
 
     public boolean wantsControl() {
@@ -277,27 +246,27 @@ public final class TacticsService {
     }
 
     public int stepCalls() {
-        return stepCalls;
+        return metrics.stepCalls();
     }
 
     public int blockReads() {
-        return blockReads;
+        return metrics.blockReads();
     }
 
     public int entityQueries() {
-        return entityQueries;
+        return metrics.entityQueries();
     }
 
     public int failures() {
-        return failures;
+        return metrics.failures();
     }
 
     public Optional<String> lastFailure() {
-        return Optional.ofNullable(lastFailure);
+        return metrics.lastFailure();
     }
 
     public Optional<String> restoreFailure() {
-        return Optional.ofNullable(restoreFailure);
+        return metrics.restoreFailure();
     }
 
     public Optional<String> explain() {
@@ -305,7 +274,7 @@ public final class TacticsService {
     }
 
     public List<DecisionRecord> decisions(int limit) {
-        return journal.last(limit);
+        return metrics.decisions(limit);
     }
 
     public Optional<HelpCall> helpCall() {
@@ -317,42 +286,47 @@ public final class TacticsService {
     }
 
     public StoredTactics snapshot() {
-        return new StoredTactics(ordered, zone, ward.map(UUID::toString), Optional.ofNullable(memory), retreat);
+        return new StoredTactics(
+                orders.mode(), orders.zone(), orders.ward().map(UUID::toString), Optional.ofNullable(memory), retreat);
     }
 
     public void restore(StoredTactics stored) {
-        ordered = stored.ordered();
-        zone = stored.zone();
-        ward = stored.ward().map(UUID::fromString);
+        orders.restoreMode(stored.ordered());
+        orders.zone(stored.zone());
+        orders.ward(stored.ward().map(UUID::fromString).orElse(null));
         memory = stored.memory().orElse(null);
         retreat = stored.retreat();
-        directives.resetHeld();
+        orders.directives().resetHeld();
         forced = true;
     }
 
     public void failRestore(String reason) {
-        restoreFailure = reason;
+        metrics.failRestore(reason);
     }
 
     private void evaluate(long now, boolean byEvent) {
         TacticsInputs inputs = new TacticsInputs(
-                ordered, zone, ward, ticksSince(lastHurtTick), ticksSince(combat.lastStrikeTick()), designatedTarget());
+                orders.mode(),
+                orders.zone(),
+                orders.ward(),
+                ticksSince(lastHurtTick),
+                ticksSince(combat.lastStrikeTick()),
+                designatedTarget());
         WorldFactCollector.Collected collected = collector.collect(spirit, inputs);
-        blockReads += collected.blockReads();
-        entityQueries += collected.entityQueries();
+        metrics.step(collected.blockReads(), collected.entityQueries());
         Situation situation = situations.collect(collected.context());
         if (memory == null) {
-            memory = TacticsMemory.initial(ordered, now, situation.self().hpFraction());
+            memory = TacticsMemory.initial(orders.mode(), now, situation.self().hpFraction());
         }
         TacticalOutcome next = ENGINE.step(situation, memory, now);
-        stepCalls++;
         schedule.evaluated(now, byEvent);
         memory = next.memory();
-        next = ForcedRetreat.apply(next, directives.current(), directives.method());
+        next = ForcedRetreat.apply(
+                next, orders.directives().current(), orders.directives().method());
         retreat = RetreatCommitment.next(retreat, next, now, settings);
         result = intents.execute(next, collected.context());
         Optional<EnemyFact> designated = TargetDesignation.pick(next, collected.context());
-        Optional<LivingEntity> forcedTarget = directives.livingTarget();
+        Optional<LivingEntity> forcedTarget = orders.directives().livingTarget();
         if (forcedTarget.isPresent()) {
             targetId = designated.map(EnemyFact::id).orElse(null);
             spirit.setTarget(forcedTarget.get());
@@ -382,27 +356,21 @@ public final class TacticsService {
     }
 
     private void journalDecision(long now, TacticalOutcome next, Situation situation) {
-        DecisionOrder order = DecisionOrder.of(ordered, zone.isPresent(), ward.map(UUID::toString), activeDirective());
-        journal.offer(new DecisionObservation(
-                        now,
-                        spirit.getUUID().toString(),
-                        spirit.displayName(),
-                        next,
-                        Optional.ofNullable(targetId),
-                        order,
-                        DecisionFacts.of(situation)))
-                .ifPresent(record -> LOGGER.info("{}", DecisionText.format(record)));
+        DecisionOrder order = DecisionOrder.of(
+                orders.mode(), orders.zone().isPresent(), orders.ward().map(UUID::toString), activeDirective());
+        metrics.journalDecision(
+                now, spirit.getUUID().toString(), spirit.displayName(), next, targetId, order, situation);
     }
 
     private Optional<LivingEntity> designatedTarget() {
-        return directives.livingTarget();
+        return orders.directives().livingTarget();
     }
 
     private boolean engages(Optional<EnemyFact> designated) {
-        if (ordered == CombatMode.PASSIVE) {
+        if (orders.mode() == CombatMode.PASSIVE) {
             return false;
         }
-        if (TacticsConfig.loadDefault().modes().of(ordered).initiates()) {
+        if (TacticsConfig.loadDefault().modes().of(orders.mode()).initiates()) {
             return true;
         }
         return spirit.getLastHurtByMob() != null
@@ -424,8 +392,8 @@ public final class TacticsService {
 
     private Optional<RetreatPlan> planFor(WorldFactCollector.Collected collected, Situation situation) {
         BlockPos feet = spirit.blockPosition();
-        Optional<Point> retreatPoint = directives.point().isPresent()
-                ? directives.point()
+        Optional<Point> retreatPoint = orders.directives().point().isPresent()
+                ? orders.directives().point()
                 : SafePointChoice.nearest(situation.self().pos(), collected.home(), collected.camp());
         RetreatPlanner.Input input = new RetreatPlanner.Input(
                 situation.self().pos(),
@@ -449,8 +417,9 @@ public final class TacticsService {
             progress = retreating.step(plan.get(), entity(shootTargetId));
             return;
         }
-        LivingEntity target = directives.target() != null && directives.target().isAlive()
-                ? directives.target()
+        LivingEntity target = orders.directives().target() != null
+                        && orders.directives().target().isAlive()
+                ? orders.directives().target()
                 : entity(targetId).orElse(null);
         if (outcome.decision() == TacticalOption.FIGHT && target != null) {
             active = true;
@@ -465,10 +434,10 @@ public final class TacticsService {
             return;
         }
         if (outcome.decision() == TacticalOption.IGNORE
-                && !directives.held()
+                && !orders.directives().held()
                 && returnWalk.due(spirit.level().getGameTime())) {
             active = true;
-            action = zone.isPresent() ? TacticsAction.GUARD : TacticsAction.RETURN;
+            action = orders.zone().isPresent() ? TacticsAction.GUARD : TacticsAction.RETURN;
             returnWalk.walk(returnWalk.point());
             return;
         }

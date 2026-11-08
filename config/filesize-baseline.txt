@@ -79,4 +79,4 @@ neoforge/demo/DemoSession.java	431
 neoforge/husbandry/HerdSession.java	436
 neoforge/husbandry/HiveSession.java	410
 neoforge/repair/RepairScript.java	304
-neoforge/tactics/TacticsService.java	507
+neoforge/tactics/TacticsService.java	476
