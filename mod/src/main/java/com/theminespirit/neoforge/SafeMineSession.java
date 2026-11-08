@@ -16,6 +16,7 @@ import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.core.script.SafeMineParams;
+import com.theminespirit.core.town.PlotProtection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -92,7 +93,7 @@ public final class SafeMineSession {
         this.level = spirit.level();
         this.safety = new LevelSafetyView(level);
         this.breaker = new BlockBreaker(spirit);
-        this.placer = new BlockPlacer(spirit);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.PLAN_BUILD);
         this.approach = new Approach(spirit);
         this.reservations = BuildReservationHub.forLevel(level);
         BlockPos feet = spirit.blockPosition();
@@ -290,7 +291,7 @@ public final class SafeMineSession {
                 complete();
                 return;
             }
-            BlockBreaker.Begin begin = breaker.begin(pos);
+            BlockBreaker.Begin begin = breaker.beginExcavate(pos);
             if (begin instanceof BlockBreaker.Started) {
                 state = State.BREAK;
                 return;

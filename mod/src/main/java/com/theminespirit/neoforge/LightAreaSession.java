@@ -10,6 +10,7 @@ import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.script.LightAreaParams;
+import com.theminespirit.core.town.PlotProtection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +64,7 @@ public final class LightAreaSession {
         this.level = spirit.level();
         this.params = Objects.requireNonNull(params, "Параметры не могут быть null: без них неизвестна область");
         this.safety = new LevelSafetyView(level);
-        this.placer = new BlockPlacer(spirit);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.PLAN_BUILD);
         this.approach = new Approach(spirit);
     }
 

@@ -9,6 +9,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.script.StripLogParams;
 import com.theminespirit.core.tactics.adapter.Visibility;
+import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.blocks.BlockReach;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -191,6 +192,7 @@ public final class StripLogScript implements ScriptInstance {
     private void breakStripped(BlockPos pos, BlockState stripped, ItemStack axe) {
         BlockEntity blockEntity = level.getBlockEntity(pos);
         ServerLevel server = (ServerLevel) level;
+        BreakNotice.broken(server, pos, stripped, spirit, "STRIP", PlotProtection.Ground.NONE);
         level.destroyBlock(pos, false, spirit);
         stripped.getBlock().playerDestroy(server, presser(), pos, stripped, blockEntity, axe);
         if (axe.isDamageableItem()) {

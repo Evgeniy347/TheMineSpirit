@@ -149,3 +149,4 @@ mech/mining/com/theminespirit/core/mining/ToolSuffixTests.java
 mech/mining/com/theminespirit/core/mining/UnreachableCellsTests.java
 mech/mining/com/theminespirit/core/mining/VeinWalkerProperties.java
 mech/mining/com/theminespirit/core/mining/VeinWalkerTests.java
+mech/building/com/theminespirit/core/building/SchematicUpgradeTests.java # снятие старых клеток схемы N→N+1: отдельная геометрия, сюита засыпки её не проверяет

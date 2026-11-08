@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-class PlotEditLogGuardTests {
+class PlotBreakLogGuardTests {
     private static final Map<String, String> HOOKS = hooks();
 
     @Test
@@ -24,7 +24,7 @@ class PlotEditLogGuardTests {
                 offenders(HOOKS, texts),
                 "Ломка блока у постройки без записи в лог делает повреждение хижины нерасследуемым: в observe11 "
                         + "дом потерял 12% блоков, а в логе не было ни строки, кто и что сломал. Как надо: ломающий "
-                        + "дух идёт через BreakNotice.broken, игрок и взрыв — через PlotEditLog.broken в PolicyEvents. "
+                        + "дух идёт через BreakNotice.broken, игрок и взрыв — через PlotBreakLog.brokenBy в PolicyEvents. "
                         + "Нарушители");
     }
 
@@ -71,7 +71,7 @@ class PlotEditLogGuardTests {
     private static Map<String, String> hooks() {
         Map<String, String> hooks = new LinkedHashMap<>();
         hooks.put("neoforge/BlockBreaker.java", "BreakNotice.broken(");
-        hooks.put("neoforge/policy/PolicyEvents.java", "PlotEditLog.broken(");
+        hooks.put("neoforge/policy/PolicyEvents.java", "PlotBreakLog.brokenBy(");
         return Map.copyOf(hooks);
     }
 }
