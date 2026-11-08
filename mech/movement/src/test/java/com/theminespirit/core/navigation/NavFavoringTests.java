@@ -46,7 +46,7 @@ class NavFavoringTests {
         NavContext context = new NavContext(world, NavSettings.defaults(), 64);
 
         NavResult result =
-                NavAStarSearch.plan(context, 0, 1, 0, new NavGoalBlock(8, 1, 0), NavFavoring.of(previous, 0.5));
+                NavAStarTestRun.plan(context, 0, 1, 0, new NavGoalBlock(8, 1, 0), NavFavoring.of(previous, 0.5));
 
         assertTrue(
                 result.path().positions().stream().anyMatch(cell -> cell.z() == 3),

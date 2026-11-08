@@ -4,6 +4,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BuildGap;
+import com.theminespirit.core.board.FillIndex;
 import com.theminespirit.core.board.LevelRepair;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.TicketTarget;
@@ -13,13 +14,13 @@ import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.town.PitGroups;
+import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.SettlementScan;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.jspecify.annotations.Nullable;
 
 final class WorldPost {
     static final String REPAIR_NODE = "repair:";
@@ -93,9 +94,10 @@ final class WorldPost {
         if (room == 0) {
             return true;
         }
+        FillIndex fills = openFills(post);
         int posted = 0;
         for (PitGroups.Pit pit : PitGroups.group(found.pits())) {
-            String id = covering(post, pit);
+            String id = fills.covering(pit.cells()).orElse(null);
             if (id == null) {
                 id = "world:backfill:" + pit.key();
                 if (post.done(id)) {
@@ -124,29 +126,25 @@ final class WorldPost {
         return true;
     }
 
-    private static @Nullable String covering(GraphPost post, PitGroups.Pit pit) {
+    private static FillIndex openFills(GraphPost post) {
+        Map<String, PlotLeveling> fills = new LinkedHashMap<>();
         for (var ticket : post.service.board().all()) {
             if (!ticket.id().startsWith("world:backfill:")) {
                 continue;
             }
             var status = post.service.board().statusOf(ticket.id()).orElse(null);
-            if (status == null
-                    || status == BoardStatus.DONE
-                    || status == BoardStatus.CANCELLED
-                    || post.service.targetOf(ticket.id()).isEmpty()) {
+            if (status == null || status == BoardStatus.DONE || status == BoardStatus.CANCELLED) {
                 continue;
             }
-            var target = post.service.targetOf(ticket.id()).orElseThrow();
-            if (target.leveling() == null) {
-                continue;
-            }
-            for (var box : target.leveling().fill()) {
-                if (PitGroups.overlaps(pit.cells(), box)) {
-                    return ticket.id();
-                }
+            PlotLeveling leveling = post.service
+                    .targetOf(ticket.id())
+                    .map(TicketTarget::leveling)
+                    .orElse(null);
+            if (leveling != null) {
+                fills.put(ticket.id(), leveling);
             }
         }
-        return null;
+        return FillIndex.of(fills);
     }
 
     private static boolean lot(GraphPost post, GraphTickets.Ticket ticket, SettlementScan.Strays found, int priority) {

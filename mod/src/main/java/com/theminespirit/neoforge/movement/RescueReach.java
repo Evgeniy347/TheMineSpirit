@@ -110,6 +110,10 @@ public final class RescueReach {
             return generation;
         }
 
+        public String readyEvent() {
+            return "rescue_reach:" + generation;
+        }
+
         private void remember(Probe probe, Verdict verdict, long now) {
             verdicts.put(probe.key, new Entry(verdict, now));
             generation++;

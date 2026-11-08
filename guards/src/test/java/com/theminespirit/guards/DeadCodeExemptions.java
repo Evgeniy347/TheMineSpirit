@@ -10,10 +10,6 @@ final class DeadCodeExemptions {
                     "Генератор graph-recipes.json (export-задача): рецепты импортируются при генерации, "
                             + "в игре читается готовый файл; TestResults/task.md"),
             new Exemption(
-                    "core/navigation/NavAStarSearch.java|class|<top>#NavAStarSearch",
-                    "Синхронный plan — эталонный API навигации для тестов; в игре путь считает NavAStarSession "
-                            + "порциями вне тика графа (debtnav, п.2)"),
-            new Exemption(
                     "neoforge/SpiritEntity.java|method|SpiritEntity#setChild",
                     "Заготовка под открытую задачу: todo.md → «Дети»"),
             new Exemption(

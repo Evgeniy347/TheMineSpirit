@@ -157,7 +157,7 @@ public final class GraphFailureMemory {
     }
 
     public static @Nullable String node(String ticketId, @Nullable String cause) {
-        String raw = ticketId.startsWith(GraphTickets.PREFIX) ? ticketId : cause;
+        String raw = cause != null && cause.startsWith(GraphTickets.PREFIX) ? cause : ticketId;
         if (raw == null || !raw.startsWith(GraphTickets.PREFIX)) {
             return null;
         }
