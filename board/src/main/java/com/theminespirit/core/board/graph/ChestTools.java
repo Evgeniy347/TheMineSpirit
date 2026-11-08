@@ -13,13 +13,12 @@ final class ChestTools {
     static Set<String> covered(SupplyGraph graph, GraphState state) {
         Set<String> covered = new HashSet<>();
         for (String kind : graph.kit().kinds()) {
-            int target = graph.rank(graph.kit().tier(kind, state.stage()));
-            int have = count(graph, state, kind, target);
+            int have = count(graph, state, kind);
             if (have <= 0) {
                 continue;
             }
             List<String> lacking = state.kits().keySet().stream()
-                    .filter(spirit -> state.tier(spirit, kind) < target)
+                    .filter(spirit -> state.tier(spirit, kind) < 0)
                     .sorted()
                     .toList();
             for (int index = 0; index < Math.min(have, lacking.size()); index++) {
@@ -29,10 +28,7 @@ final class ChestTools {
         return Set.copyOf(covered);
     }
 
-    private static int count(SupplyGraph graph, GraphState state, String kind, int target) {
-        if (target < 0) {
-            return 0;
-        }
+    private static int count(SupplyGraph graph, GraphState state, String kind) {
         int count = 0;
         for (GraphFacts.Chest chest : state.facts().chests()) {
             for (Map.Entry<String, Integer> item : chest.contents().entrySet()) {
@@ -45,7 +41,7 @@ final class ChestTools {
                     continue;
                 }
                 int split = name.indexOf('_');
-                if (name.substring(split + 1).equals(kind) && graph.rank(name.substring(0, split)) >= target) {
+                if (split > 0 && name.substring(split + 1).equals(kind) && graph.rank(name.substring(0, split)) >= 0) {
                     count += item.getValue();
                 }
             }

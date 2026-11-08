@@ -75,6 +75,7 @@ public final class StuckSpirits {
         }
         if (known.at() == null || !known.at().equals(at)) {
             stuck.put(spirit, new Stuck(at, known.since(), known.noPath()));
+            return;
         }
     }
 
