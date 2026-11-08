@@ -18,7 +18,8 @@ final class LiveNavWorld implements NavWorld {
         FALLING,
         WATER,
         LAVA,
-        BEDROCK
+        BEDROCK,
+        OBSTACLE
     }
 
     private final Map<BlockCoord, Kind> cells = new HashMap<>();
@@ -26,9 +27,13 @@ final class LiveNavWorld implements NavWorld {
     private LiveNavWorld() {}
 
     static LiveNavWorld live() throws IOException {
-        try (InputStream stream = LiveNavWorld.class.getResourceAsStream("/live/pit-warehouse-0611.live")) {
+        return live("/live/pit-warehouse-0611.live");
+    }
+
+    static LiveNavWorld live(String resource) throws IOException {
+        try (InputStream stream = LiveNavWorld.class.getResourceAsStream(resource)) {
             if (stream == null) {
-                throw new IllegalStateException("Нет живой фикстуры ямы: /live/pit-warehouse-0611.live");
+                throw new IllegalStateException("Нет живой фикстуры: " + resource);
             }
             LiveNavWorld world = new LiveNavWorld();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {

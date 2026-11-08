@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.movement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.navigation.NavActionCosts;
@@ -14,11 +13,14 @@ class RescueNavWorldTests {
     private static final BlockCoord PLAN = new BlockCoord(1, 64, 0);
 
     @Test
-    void passable_PlanCell_Blocked() {
+    void passable_PlanCell_WalkAllowedBreakBlocked() {
         RescueNavWorld world = new RescueNavWorld(new Open(), START, PLAN::equals);
 
-        assertFalse(world.passable(PLAN.x(), PLAN.y(), PLAN.z()), "Клетка чужого плана непроходима для спасения");
-        assertFalse(world.walkable(PLAN.x(), PLAN.y(), PLAN.z()), "По чужому плану нельзя и шагать");
+        assertTrue(
+                world.passable(PLAN.x(), PLAN.y(), PLAN.z()),
+                "По клетке чужого плана можно пройти: запрет проходимости запирал духа в доме и отдавал "
+                        + "NONE после 1–3 узлов (observe25 B4)");
+        assertTrue(world.walkable(PLAN.x(), PLAN.y(), PLAN.z()), "По чужому плану можно шагать");
         assertEquals(
                 NavActionCosts.COST_INF,
                 world.breakTicks(PLAN.x(), PLAN.y(), PLAN.z()),

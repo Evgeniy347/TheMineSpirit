@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.function.LongSupplier;
 import org.jspecify.annotations.Nullable;
 
@@ -27,6 +28,8 @@ public final class NavAStarSession {
     private final int startY;
     private final int startZ;
     private final int referenceY;
+    private final boolean escapeStart;
+    private final int escapeFall;
     private final LongSupplier clock;
     private final long started;
     private final Map<Long, NavNode> nodes = new HashMap<>();
@@ -59,7 +62,17 @@ public final class NavAStarSession {
         this.startX = startX;
         this.startY = startY;
         this.startZ = startZ;
-        this.referenceY = referenceFor(goal, startY);
+        OptionalInt escapeLanding = NavPillarEscape.isolated(context.world(), startX, startY, startZ)
+                ? NavPillarEscape.landingBelow(
+                        context.world(),
+                        startX,
+                        startY,
+                        startZ,
+                        context.settings().maxWaterFall())
+                : OptionalInt.empty();
+        this.escapeStart = escapeLanding.isPresent();
+        this.escapeFall = escapeLanding.isPresent() ? startY - escapeLanding.getAsInt() : 0;
+        this.referenceY = referenceFor(goal, startY, escapeLanding);
         this.clock = Objects.requireNonNull(clock, "Часы поиска не могут быть null");
         this.started = clock.getAsLong();
         NavNode start = nodeAt(startX, startY, startZ);
@@ -132,12 +145,23 @@ public final class NavAStarSession {
         }
         for (int[] direction : FALL_DIRECTIONS) {
             move.reset(current.x, current.y, current.z);
-            NavMoveCosts.fall(context, current.x, current.y, current.z, direction[0], direction[1], move);
+            NavMoveCosts.fall(
+                    context, current.x, current.y, current.z, direction[0], direction[1], groundFall(current), move);
             relax(current, move);
             move.reset(current.x, current.y, current.z);
             NavMoveCosts.jump(context, current.x, current.y, current.z, direction[0], direction[1], move);
             relax(current, move);
         }
+    }
+
+    private boolean onEscapeStart(NavNode node) {
+        return escapeStart && node.x == startX && node.y == startY && node.z == startZ;
+    }
+
+    private int groundFall(NavNode node) {
+        return onEscapeStart(node)
+                ? Math.max(context.settings().maxFall(), escapeFall)
+                : context.settings().maxFall();
     }
 
     private void relax(NavNode current, NavMoveResult candidate) {
@@ -217,9 +241,10 @@ public final class NavAStarSession {
         return reachable;
     }
 
-    static int referenceFor(NavGoal goal, int startY) {
+    static int referenceFor(NavGoal goal, int startY, OptionalInt escapeLanding) {
         Integer goalY = goal.goalY();
-        return goalY == null ? startY : goalY;
+        int reference = goalY == null ? startY : goalY;
+        return escapeLanding.isPresent() ? Math.min(reference, escapeLanding.getAsInt()) : reference;
     }
 
     private NavNode nodeAt(int x, int y, int z) {

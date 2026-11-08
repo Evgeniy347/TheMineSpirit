@@ -1,10 +1,18 @@
 package com.theminespirit.neoforge.movement;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.navigation.NavActionCosts;
+import com.theminespirit.core.navigation.NavContext;
+import com.theminespirit.core.navigation.NavGoalNear;
+import com.theminespirit.core.navigation.NavSearchStatus;
+import com.theminespirit.core.navigation.NavSegmentedRoute;
+import com.theminespirit.core.navigation.NavSegmentedSession;
+import com.theminespirit.core.navigation.NavSettings;
 import com.theminespirit.core.navigation.NavWorld;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
 class RescueNavWorldRouteTests {
@@ -13,13 +21,17 @@ class RescueNavWorldRouteTests {
     private static final BlockCoord GOAL = new BlockCoord(2, 64, 0);
 
     @Test
-    void route_ForeignPlanCell_BlockedForAnyRoute() {
+    void route_ForeignPlanCell_BreakBlockedWalkAllowed() {
         NavWorld world = RescueNavWorld.route(new Open(), START, GOAL, PLAN::equals);
 
-        assertFalse(
+        assertTrue(
                 world.passable(PLAN.x(), PLAN.y(), PLAN.z()),
-                "Общий маршрут, а не только спасение, не заходит в чужую клетку плана: иначе самоспасение "
-                        + "ломает стену постройки (debtnav, п.6)");
+                "Общий маршрут не запирает проход через чужой план: иначе дух в доме не выходит и получает "
+                        + "NONE после 1–3 узлов (observe25 B4)");
+        assertEquals(
+                NavActionCosts.COST_INF,
+                world.breakTicks(PLAN.x(), PLAN.y(), PLAN.z()),
+                "Ломать чужой план по-прежнему нельзя: самоспасение не снимает стену постройки (debtnav, п.6)");
     }
 
     @Test
@@ -36,6 +48,28 @@ class RescueNavWorldRouteTests {
         assertTrue(
                 world.passable(PLAN.x(), PLAN.y(), PLAN.z()),
                 "Вход в план — цель задания: его нельзя запирать запретом клеток (debtnav, п.6)");
+    }
+
+    @Test
+    void route_SpiritInsideForeignHouse_ReachesYardWalk() {
+        Predicate<BlockCoord> house = cell ->
+                cell.x() >= -2 && cell.x() <= 3 && cell.z() >= -2 && cell.z() <= 2 && cell.y() >= 63 && cell.y() <= 65;
+        NavWorld world = RescueNavWorld.route(new Open(), START, GOAL, house);
+        NavSegmentedSession session = new NavSegmentedSession(
+                new NavContext(world, new NavSettings(10_000, 10_000, 200_000, 50, 3, 12, 2, 20, 2, false, false), 0),
+                START,
+                new NavGoalNear(GOAL.x(), GOAL.y(), GOAL.z(), 0),
+                32,
+                6,
+                0.5);
+
+        NavSegmentedRoute route = session.step(Long.MAX_VALUE);
+
+        assertEquals(
+                NavSearchStatus.FOUND,
+                route.status(),
+                "дух стоит в чужом доме (клетки плана вокруг), цель — двор: маршрут обязан выйти, а не "
+                        + "отдать NONE после 1 узла, как в observe25 B4 (spirit-1 в (-176,72,-510))");
     }
 
     private static final class Open implements NavWorld {
