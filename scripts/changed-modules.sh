@@ -92,6 +92,13 @@ map_path() {
     esac
     case "$path" in *.java) select_module ":guards" ;; esac
     case "$path" in
+        config/filesize-baseline.txt|config/comment-baseline.txt)
+            # lib: списки исключений сторожа размера и комментариев читает только :guards — полный прогон не нужен.
+            select_module ":guards"
+            return 0
+            ;;
+    esac
+    case "$path" in
         config/*|build-logic/*|gradle/*|gradle.properties|settings.gradle|build.gradle|gradlew|gradlew.bat)
             select_module ":root"
             while IFS= read -r module; do

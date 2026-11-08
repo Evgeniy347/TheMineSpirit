@@ -325,18 +325,23 @@ wait_ready() {
 write_debug_env() {
     local dir="$1" name="$2" pid="$3"
     local jars
-    local classes
+    local classes=""
     local mod
     local module_root
     local module_dir
-    classes="$(win_path "$REPO/$MOD_MAIN_DIR")"
+    local out
+    local win
     for module_root in ${MOD_MODULE_MAIN_ROOTS//,/ }; do
-        module_dir="$(win_path "$REPO/$module_root")"
+        module_dir="${module_root%/src/main/java}"
+        out="$REPO/$module_dir/build/classes/java/main"
+        [ -d "$out" ] || continue
+        win="$(win_path "$out")"
         case ";$classes;" in
-            *";$module_dir;"*) continue ;;
+            *";$win;"*) continue ;;
         esac
-        classes="$classes;$module_dir"
+        classes="${classes:+$classes;}$win"
     done
+    [ -n "$classes" ] || die "нет собранных классов модулей: ./gradlew assemble"
     jars="$classes"
     for mod in "$dir"/mods/*.jar; do
         [ -f "$mod" ] || continue
