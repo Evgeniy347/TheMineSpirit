@@ -273,6 +273,7 @@ class FakeRestTests(unittest.TestCase):
         self.assertEqual(4242.0, self.fake.requests[-1]["fake_t"])
 
     def test_delayNext_Knob_MakesResponseSlow(self):
+        call(self.base, "GET", "/v1/bots")
         started = time.monotonic()
         call(self.base, "GET", "/v1/bots")
         fast = time.monotonic() - started
