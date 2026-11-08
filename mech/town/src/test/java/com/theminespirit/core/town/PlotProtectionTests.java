@@ -193,7 +193,7 @@ class PlotProtectionTests {
             String text = PlotProtection.basisText(ground);
             assertEquals(
                     ground == PlotProtection.Ground.NONE,
-                    text.equals("без основания"),
+                    "без основания".equals(text),
                     "Текст основания обязан отличать отсутствие основания от законной причины: " + ground);
         }
     }

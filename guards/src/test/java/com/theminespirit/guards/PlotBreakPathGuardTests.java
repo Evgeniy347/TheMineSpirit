@@ -41,8 +41,8 @@ class PlotBreakPathGuardTests {
                     offenders.add(file + ": " + found);
                     continue;
                 }
-                if (!file.equals(SINGLE_POINT)
-                        && !file.equals(DEMO)
+                if (!SINGLE_POINT.equals(file)
+                        && !DEMO.equals(file)
                         && !source.getValue().contains("BreakNotice.broken(")) {
                     offenders.add(file + ": " + found + " без BreakNotice.broken — поломка мимо журнала");
                 }
@@ -95,7 +95,7 @@ class PlotBreakPathGuardTests {
         if (found.isEmpty() || !ALLOWED.contains(file)) {
             return List.of();
         }
-        if (file.equals(SINGLE_POINT) || file.equals(DEMO) || text.contains("BreakNotice.broken(")) {
+        if (SINGLE_POINT.equals(file) || DEMO.equals(file) || text.contains("BreakNotice.broken(")) {
             return List.of();
         }
         return List.of(file + ": " + found + " без BreakNotice.broken — поломка мимо журнала");

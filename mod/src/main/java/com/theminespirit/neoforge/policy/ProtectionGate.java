@@ -179,19 +179,20 @@ public final class ProtectionGate {
                 && UnprotectService.of(server.getServer()).covers(dimension, coord, System.currentTimeMillis());
         String id = blockId(state);
         StageSite site = site(level);
+        PlotProtection.Ground effective = ground;
         if (site != null
                 && tended
                 && site.protectionBuilding(coord.x(), coord.y(), coord.z()) == PlanBuilding.ORCHARD) {
-            ground = PlotProtection.Ground.ORCHARD_CARE;
+            effective = PlotProtection.Ground.ORCHARD_CARE;
         }
         if (unprotectArea) {
-            ground = PlotProtection.Ground.PLAYER_COMMAND;
+            effective = PlotProtection.Ground.PLAYER_COMMAND;
         }
         boolean structure = level instanceof ServerLevel server && PlotCellStructure.isStructure(server, pos);
-        PlotProtection.Decision plot = PlotProtection.check(site, coord, action, ground, ownBuilding, structure);
+        PlotProtection.Decision plot = PlotProtection.check(site, coord, action, effective, ownBuilding, structure);
         if (plot instanceof PlotProtection.Refused refused) {
             if (level instanceof ServerLevel server) {
-                PlotBreakLog.refused(server, pos, spirit, action.name(), ground, refused.reason());
+                PlotBreakLog.refused(server, pos, spirit, action.name(), effective, refused.reason());
             }
             return new BlockProtection.Refused(PolicyId.PROTECTED_BLOCKS, refused.reason());
         }

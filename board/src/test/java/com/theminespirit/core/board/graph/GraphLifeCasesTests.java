@@ -57,7 +57,7 @@ class GraphLifeCasesTests {
                         + ids(plan));
         assertTrue(
                 tickets(world.state()).post().stream()
-                        .anyMatch(ticket -> ticket.task().id().equals(EAT)),
+                        .anyMatch(ticket -> EAT.equals(ticket.task().id())),
                 "Голодный дух получает задание доски «поесть»: "
                         + tickets(world.state()).post());
     }
@@ -73,7 +73,7 @@ class GraphLifeCasesTests {
                         + ids(plan));
         assertTrue(
                 tickets(world.state()).post().stream()
-                        .anyMatch(ticket -> ticket.task().id().equals(RETURN)),
+                        .anyMatch(ticket -> RETURN.equals(ticket.task().id())),
                 "Вечером дух получает задание доски «вернуться домой»: "
                         + tickets(world.state()).post());
     }

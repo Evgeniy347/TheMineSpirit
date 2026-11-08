@@ -139,5 +139,9 @@ public final class RescueReach {
         }
     }
 
+    public static Cache cache() {
+        return new Cache();
+    }
+
     private RescueReach() {}
 }
