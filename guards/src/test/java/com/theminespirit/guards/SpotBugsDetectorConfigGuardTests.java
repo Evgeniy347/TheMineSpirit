@@ -28,6 +28,11 @@ class SpotBugsDetectorConfigGuardTests {
     private static final Pattern DETECTOR =
             Pattern.compile("^\\|\\s*`([A-Za-z0-9_]+)`\\s*\\|.*\\|\\s*да\\s*\\|\\s*$", Pattern.MULTILINE);
     private static final Pattern QUOTED = Pattern.compile("'([^']+)'");
+    private static final Pattern STATIC_SYNCHRONIZED = Pattern.compile("\\bstatic\\s+synchronized\\b");
+    private static final Pattern COORDINATE_MIDPOINT =
+            Pattern.compile("\\(\\s*([A-Za-z_]\\w*[XZ])\\s*\\+\\s*([A-Za-z_]\\w*[XZ])\\s*\\)\\s*/\\s*2\\b");
+    private static final Pattern EQUALS_STRING_LITERAL =
+            Pattern.compile("([A-Za-z_$][\\w$]*|\\)|\\])\\s*\\.equals\\(\\s*\"");
 
     @Test
     void omittedVisitors_ConfigAndReport_Match() {
@@ -83,12 +88,6 @@ class SpotBugsDetectorConfigGuardTests {
                 "Набор исключений SpotBugs изменился: ослаблять его ради скорости запрещено, отключай детектор "
                         + "целиком в omitVisitors с причиной");
     }
-
-    private static final Pattern STATIC_SYNCHRONIZED = Pattern.compile("\\bstatic\\s+synchronized\\b");
-    private static final Pattern COORDINATE_MIDPOINT =
-            Pattern.compile("\\(\\s*([A-Za-z_]\\w*[XZ])\\s*\\+\\s*([A-Za-z_]\\w*[XZ])\\s*\\)\\s*/\\s*2\\b");
-    private static final Pattern EQUALS_STRING_LITERAL =
-            Pattern.compile("([A-Za-z_$][\\w$]*|\\)|\\])\\s*\\.equals\\(\\s*\"");
 
     @Test
     void productionSources_StaticSynchronizedMethods_AreAbsent() {

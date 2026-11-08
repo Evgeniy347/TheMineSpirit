@@ -31,22 +31,23 @@ final class LiveNavWorld implements NavWorld {
                 throw new IllegalStateException("Нет живой фикстуры ямы: /live/pit-warehouse-0611.live");
             }
             LiveNavWorld world = new LiveNavWorld();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.isBlank() || line.startsWith("#") || line.startsWith("feet")) {
-                    continue;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.isBlank() || line.startsWith("#") || line.startsWith("feet")) {
+                        continue;
+                    }
+                    StringTokenizer parts = new StringTokenizer(line);
+                    if (parts.countTokens() != 4) {
+                        throw new IllegalArgumentException("Строка живой фикстуры ямы не из четырёх полей: " + line);
+                    }
+                    world.cells.put(
+                            new BlockCoord(
+                                    Integer.parseInt(parts.nextToken()),
+                                    Integer.parseInt(parts.nextToken()),
+                                    Integer.parseInt(parts.nextToken())),
+                            Kind.valueOf(parts.nextToken()));
                 }
-                StringTokenizer parts = new StringTokenizer(line);
-                if (parts.countTokens() != 4) {
-                    throw new IllegalArgumentException("Строка живой фикстуры ямы не из четырёх полей: " + line);
-                }
-                world.cells.put(
-                        new BlockCoord(
-                                Integer.parseInt(parts.nextToken()),
-                                Integer.parseInt(parts.nextToken()),
-                                Integer.parseInt(parts.nextToken())),
-                        Kind.valueOf(parts.nextToken()));
             }
             return world;
         }
