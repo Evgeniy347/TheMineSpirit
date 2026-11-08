@@ -31,7 +31,8 @@ final class GraphTicketIds {
             SupplyGraph.Building damaged =
                     graph.buildings().get(task.makes().substring(WorldPost.REPAIR_NODE.length()));
             if (damaged != null) {
-                return List.of(RepairPlan.PREFIX + damaged.boardCase().name().toLowerCase(Locale.ROOT));
+                String suffix = damaged.boardCase() == BoardCase.BUILD_PLACED ? ":" + damaged.id() : "";
+                return List.of(RepairPlan.PREFIX + damaged.boardCase().name().toLowerCase(Locale.ROOT) + suffix);
             }
         }
         return List.of(id, id + GraphPost.PART);

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.BoardCase;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -55,6 +56,27 @@ class WorldFragmentTests {
                     task.base() >= 50 && task.base() <= 100,
                     "Стартовый вес ремонта разумен: " + building + " = " + task.base());
         }
+    }
+
+    @Test
+    void planBuilding_Damaged_GetsItsOwnRepairTicket() {
+        SupplyGraph graph = SupplyGraph.loadDefault();
+        GraphFacts facts = PlanCaseFacts.facts(
+                Map.of("alchemy", PlanCaseFacts.building("alchemy", 60, 40, Map.of("oak_planks", 40), false)),
+                List.of(),
+                GraphSiteFacts.Terrain.empty());
+
+        GraphPlan plan = PlanCaseFacts.plan(GraphWorld.settled(), facts);
+        GraphPlan.Task repair = PlanCaseFacts.task(plan, "event:repair_alchemy:repair:alchemy");
+
+        assertTrue(
+                graph.events().containsKey("repair_alchemy"),
+                "Повреждённая постройка плана без своего события получает repair_<id> из общего шаблона");
+        assertTrue(
+                repair.feasible(), "Аудит мира говорит «повреждена» — ремонт обязан быть выполнимым: " + plan.tasks());
+        assertTrue(
+                repair.priority() > 0,
+                "Ремонт повреждённой постройки не нулевой: иначе доска его не выдаст (observe25 B9)");
     }
 
     @Test

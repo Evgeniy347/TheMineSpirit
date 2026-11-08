@@ -34,6 +34,28 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
         this(name, tasks, push, advice, false);
     }
 
+    static Map<String, GraphEvent> withRepairs(
+            Map<String, GraphEvent> events, Map<String, SupplyGraph.Building> buildings) {
+        GraphEvent template = events.get("building_damaged");
+        if (template == null || template.tasks().isEmpty()) {
+            return events;
+        }
+        Map<String, GraphEvent> repaired = new LinkedHashMap<>(events);
+        for (String id : buildings.keySet()) {
+            String name = GraphWorldEvents.REPAIR + id;
+            if (repaired.containsKey(name)) {
+                continue;
+            }
+            List<Task> tasks = new ArrayList<>();
+            for (Task task : template.tasks()) {
+                tasks.add(new Task(
+                        "repair:" + id, task.boardCase(), task.base(), task.consumes(), id, task.implemented()));
+            }
+            repaired.put(name, new GraphEvent(name, tasks, template.push(), template.advice(), template.life()));
+        }
+        return repaired;
+    }
+
     static Map<String, GraphEvent> parse(JsonNode root) {
         Map<String, GraphEvent> events = new LinkedHashMap<>();
         root.path("events").properties().forEach(entry -> {

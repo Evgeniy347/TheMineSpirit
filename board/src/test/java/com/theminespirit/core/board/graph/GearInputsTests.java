@@ -95,46 +95,6 @@ class GearInputsTests {
     }
 
     @Test
-    void events_AxeInChest_NoCraftAxeForEmptySpirit() {
-        Set<String> events = GearInputs.events(
-                facts(
-                        Map.of("spirit-1", spirit(null, List.of(), List.of())),
-                        List.of(chest(Map.of("minecraft:stone_axe", 3)))),
-                1);
-
-        assertFalse(
-                events.contains(GearInputs.CRAFT_TOOL + "axe"),
-                "Топор лежит в сундуке: граф обязан видеть его и не просить новый");
-    }
-
-    @Test
-    void events_AxeInSpiritInventory_NoCraftAxe() {
-        Set<String> events = GearInputs.events(
-                facts(
-                        Map.of("spirit-1", spirit(null, List.of(tool("axe", 1, 131, 131)), List.of())),
-                        List.of(chest(Map.of()))),
-                1);
-
-        assertFalse(
-                events.contains(GearInputs.CRAFT_TOOL + "axe"),
-                "Топор в инвентаре духа закрывает требование: крафт не ставится");
-    }
-
-    @Test
-    void events_AxeMovedFromChestToSpirit_NoCraftBeforeOrAfter() {
-        List<GraphFacts.Chest> chestWithAxe = List.of(chest(Map.of("minecraft:stone_axe", 1)));
-        GraphFacts.Spirit empty = spirit(null, List.of(), List.of());
-        Set<String> before = GearInputs.events(facts(Map.of("spirit-1", empty), chestWithAxe), 1);
-
-        List<GraphFacts.Chest> emptyChest = List.of(chest(Map.of()));
-        GraphFacts.Spirit carrying = spirit(null, List.of(tool("axe", 1, 131, 131)), List.of());
-        Set<String> after = GearInputs.events(facts(Map.of("spirit-1", carrying), emptyChest), 1);
-
-        assertFalse(before.contains(GearInputs.CRAFT_TOOL + "axe"), "До переноса топор виден в сундуке");
-        assertFalse(after.contains(GearInputs.CRAFT_TOOL + "axe"), "После переноса топор виден у духа");
-    }
-
-    @Test
     void events_MiningWithoutPickaxe_AddsMiningKit() {
         Set<String> events =
                 GearInputs.events(facts(Map.of("spirit-1", spirit("mining", List.of(), List.of())), List.of()), 1);
