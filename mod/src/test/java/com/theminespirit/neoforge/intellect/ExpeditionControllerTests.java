@@ -29,7 +29,6 @@ class ExpeditionControllerTests {
         private final List<Stack> inventory;
         private final boolean pickaxe;
         private boolean removed;
-        private String script;
 
         private Member(UUID id, String name, List<Stack> inventory, boolean pickaxe) {
             this.id = id;
@@ -55,7 +54,7 @@ class ExpeditionControllerTests {
 
         @Override
         public Optional<String> currentScript() {
-            return Optional.ofNullable(script);
+            return Optional.empty();
         }
 
         @Override

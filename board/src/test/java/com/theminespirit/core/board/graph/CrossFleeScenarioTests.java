@@ -1,7 +1,14 @@
 package com.theminespirit.core.board.graph;
 
-import static com.theminespirit.core.board.graph.CrossActions.*;
-import static com.theminespirit.core.board.graph.CrossScene.*;
+import static com.theminespirit.core.board.graph.CrossActions.boardTicket;
+import static com.theminespirit.core.board.graph.CrossActions.id;
+import static com.theminespirit.core.board.graph.CrossScene.FED;
+import static com.theminespirit.core.board.graph.CrossScene.facts;
+import static com.theminespirit.core.board.graph.CrossScene.named;
+import static com.theminespirit.core.board.graph.CrossScene.spirit;
+import static com.theminespirit.core.board.graph.CrossScene.stageOne;
+import static com.theminespirit.core.board.graph.CrossScene.threat;
+import static com.theminespirit.core.board.graph.CrossScene.tickets;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

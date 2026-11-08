@@ -22,8 +22,8 @@ import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
 final class SchematicPlacement {
-    private static final Logger LOGGER = LogUtils.getLogger();
     static final int HARD_APPROACH_PATH_BUILDS = 4;
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private final BuildSchematicScript host;
 

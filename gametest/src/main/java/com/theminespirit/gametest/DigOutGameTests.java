@@ -54,85 +54,14 @@ public final class DigOutGameTests {
         GameTestFixtures.reset(helper, 16);
         BoardService board = BoardRegistry.get(helper.getLevel());
         board.board().restore(new BoardState(List.of(), Set.of()));
-        for (int x = 0; x <= 10; x++) {
-            for (int y = 1; y <= TOP; y++) {
-                for (int z = 0; z <= 10; z++) {
-                    helper.setBlock(new BlockPos(x, y, z), Blocks.STONE);
-                }
-            }
-        }
-        pockets.forEach(cells -> cells.forEach(cell -> helper.setBlock(cell, Blocks.AIR)));
-        List<BlockPos> planks = new ArrayList<>();
-        for (List<BlockPos> cells : pockets) {
-            BlockPos plank = cells.get(0).above(2);
-            helper.setBlock(plank, Blocks.JUNGLE_PLANKS);
-            planks.add(plank);
-        }
+        List<BlockPos> planks = prepareArena(helper, pockets);
         List<SpiritEntity> spirits = new ArrayList<>();
         List<String> tickets = new ArrayList<>();
         List<Integer> starts = new ArrayList<>();
         for (List<BlockPos> cells : pockets) {
-            BlockPos feetRelative = cells.get(0);
-            SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), feetRelative);
-            spirit.getInventory().setItem(0, new ItemStack(Items.WOODEN_PICKAXE));
-            spirit.getInventory().setItem(1, new ItemStack(Items.COBBLESTONE, 48));
-            BlockPos home = helper.absolutePos(new BlockPos(8, TOP + 1, 5));
-            spirit.setHome(new BlockCoord(home.getX(), home.getY(), home.getZ()));
-            BlockPos feet = spirit.blockPosition();
-            BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-            BlockCoord goal = new BlockCoord(home.getX(), home.getY(), home.getZ());
-            UUID id = spirit.getUUID();
-            long now = helper.getLevel().getGameTime();
-            String ticket = "rescue:" + id;
-            board.board().stuck().see(id, at, now);
-            board.board().stuck().mark(id, now, "сцена: дух замурован в яме");
-            TaskNode plan = new ScriptCall("dig_out", Map.of("x", goal.x(), "y", goal.y(), "z", goal.z()));
-            board.submit(
-                    new BoardTicket(
-                            ticket,
-                            BoardCase.RESCUE_SPIRIT,
-                            Optional.of(id),
-                            BoardRules.priorityOf(BoardCase.RESCUE_SPIRIT),
-                            now,
-                            1,
-                            BoardTicket.ALWAYS_CAUSE,
-                            List.of(),
-                            Map.of()),
-                    TicketTarget.at(at).withPlan(plan));
-            spirits.add(spirit);
-            tickets.add(ticket);
-            starts.add(feet.getY());
+            spirits.add(spawnInPocket(helper, board, cells, tickets, starts));
         }
-
-        BlockPos breachCell = new BlockPos(-177, 72, -506);
-        UUID breachSpirit = UUID.randomUUID();
-        PlanBreachData breach = new PlanBreachData();
-        breach.record(breachCell, "minecraft:jungle_planks", breachSpirit, 100);
-        breach.record(breachCell.above(), "minecraft:jungle_planks", breachSpirit, 100);
-        PlanBreachData loaded = PlanBreachData.load(
-                breach.save(new CompoundTag(), helper.getLevel().registryAccess()),
-                helper.getLevel().registryAccess());
-        helper.assertTrue(
-                loaded.breach(breachCell) != null
-                        && "minecraft:jungle_planks"
-                                .equals(loaded.breach(breachCell).blockId())
-                        && breachSpirit.equals(loaded.breach(breachCell).spirit()),
-                "Пролом плана переживает сохранение мира тем же блоком и духом");
-        helper.assertTrue(
-                loaded.clear(breachCell) && loaded.breach(breachCell) == null,
-                "Заделанная клетка снимается с учёта пролома");
-        helper.assertTrue(
-                RescueBreach.breakable(Blocks.JUNGLE_PLANKS.defaultBlockState()),
-                "Клетку плана из досок для самоспасения ломать можно");
-        helper.assertFalse(
-                RescueBreach.breakable(Blocks.CHEST.defaultBlockState()),
-                "Сундук в клетке плана не ломается: это чужая вещь, а не стена");
-        helper.assertFalse(
-                RescueBreach.breakable(Blocks.OAK_DOOR.defaultBlockState()),
-                "Дверь в клетке плана не ломается при самоспасении");
-        helper.assertFalse(
-                RescueBreach.breakable(Blocks.OAK_FENCE_GATE.defaultBlockState()),
-                "Ворота в клетке плана не ломаются при самоспасении");
+        assertBreachStore(helper);
         helper.succeedWhen(() -> {
             for (int index = 0; index < spirits.size(); index++) {
                 SpiritEntity spirit = spirits.get(index);
@@ -164,5 +93,93 @@ public final class DigOutGameTests {
             spirits.forEach(SpiritEntity::discard);
             GameTestFixtures.finish(helper, 16);
         });
+    }
+
+    private static List<BlockPos> prepareArena(GameTestHelper helper, List<List<BlockPos>> pockets) {
+        for (int x = 0; x <= 10; x++) {
+            for (int y = 1; y <= TOP; y++) {
+                for (int z = 0; z <= 10; z++) {
+                    helper.setBlock(new BlockPos(x, y, z), Blocks.STONE);
+                }
+            }
+        }
+        pockets.forEach(cells -> cells.forEach(cell -> helper.setBlock(cell, Blocks.AIR)));
+        List<BlockPos> planks = new ArrayList<>();
+        for (List<BlockPos> cells : pockets) {
+            BlockPos plank = cells.get(0).above(2);
+            helper.setBlock(plank, Blocks.JUNGLE_PLANKS);
+            planks.add(plank);
+        }
+        return planks;
+    }
+
+    private static SpiritEntity spawnInPocket(
+            GameTestHelper helper,
+            BoardService board,
+            List<BlockPos> cells,
+            List<String> tickets,
+            List<Integer> starts) {
+        BlockPos feetRelative = cells.get(0);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), feetRelative);
+        spirit.getInventory().setItem(0, new ItemStack(Items.WOODEN_PICKAXE));
+        spirit.getInventory().setItem(1, new ItemStack(Items.COBBLESTONE, 48));
+        BlockPos home = helper.absolutePos(new BlockPos(8, TOP + 1, 5));
+        spirit.setHome(new BlockCoord(home.getX(), home.getY(), home.getZ()));
+        BlockPos feet = spirit.blockPosition();
+        BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
+        BlockCoord goal = new BlockCoord(home.getX(), home.getY(), home.getZ());
+        UUID id = spirit.getUUID();
+        long now = helper.getLevel().getGameTime();
+        String ticket = "rescue:" + id;
+        board.board().stuck().see(id, at, now);
+        board.board().stuck().mark(id, now, "сцена: дух замурован в яме");
+        TaskNode plan = new ScriptCall("dig_out", Map.of("x", goal.x(), "y", goal.y(), "z", goal.z()));
+        board.submit(
+                new BoardTicket(
+                        ticket,
+                        BoardCase.RESCUE_SPIRIT,
+                        Optional.of(id),
+                        BoardRules.priorityOf(BoardCase.RESCUE_SPIRIT),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
+                TicketTarget.at(at).withPlan(plan));
+        tickets.add(ticket);
+        starts.add(feet.getY());
+        return spirit;
+    }
+
+    private static void assertBreachStore(GameTestHelper helper) {
+        BlockPos breachCell = new BlockPos(-177, 72, -506);
+        UUID breachSpirit = UUID.randomUUID();
+        PlanBreachData breach = new PlanBreachData();
+        breach.record(breachCell, "minecraft:jungle_planks", breachSpirit, 100);
+        breach.record(breachCell.above(), "minecraft:jungle_planks", breachSpirit, 100);
+        PlanBreachData loaded = PlanBreachData.load(
+                breach.save(new CompoundTag(), helper.getLevel().registryAccess()),
+                helper.getLevel().registryAccess());
+        helper.assertTrue(
+                loaded.breach(breachCell) != null
+                        && "minecraft:jungle_planks"
+                                .equals(loaded.breach(breachCell).blockId())
+                        && breachSpirit.equals(loaded.breach(breachCell).spirit()),
+                "Пролом плана переживает сохранение мира тем же блоком и духом");
+        helper.assertTrue(
+                loaded.clear(breachCell) && loaded.breach(breachCell) == null,
+                "Заделанная клетка снимается с учёта пролома");
+        helper.assertTrue(
+                RescueBreach.breakable(Blocks.JUNGLE_PLANKS.defaultBlockState()),
+                "Клетку плана из досок для самоспасения ломать можно");
+        helper.assertFalse(
+                RescueBreach.breakable(Blocks.CHEST.defaultBlockState()),
+                "Сундук в клетке плана не ломается: это чужая вещь, а не стена");
+        helper.assertFalse(
+                RescueBreach.breakable(Blocks.OAK_DOOR.defaultBlockState()),
+                "Дверь в клетке плана не ломается при самоспасении");
+        helper.assertFalse(
+                RescueBreach.breakable(Blocks.OAK_FENCE_GATE.defaultBlockState()),
+                "Ворота в клетке плана не ломаются при самоспасении");
     }
 }

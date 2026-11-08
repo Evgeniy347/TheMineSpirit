@@ -1,10 +1,29 @@
 package com.theminespirit.core.board.graph;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 class GraphCostsTests {
+    @Test
+    void life_Formula_ReadFromGraphDataNotDefaults() throws IOException {
+        GraphLife shipped = SupplyGraph.loadDefault().costs().life();
+        assertEquals(1.5, shipped.fullPressureMobs(), "Множитель мобов формулы жизни берётся из graph.json");
+        assertEquals(0.4, shipped.pressureBase(), "Базовое давление формулы жизни берётся из graph.json");
+        assertEquals(0.7, shipped.pressureWound(), "Ранение формулы жизни берётся из graph.json");
+        assertEquals(0.2, shipped.hurtShare(), "Свежий урон формулы жизни берётся из graph.json");
+
+        GraphLife tuned = GraphLife.parse(new ObjectMapper().readTree("{\"pressureBase\":0.9}"));
+        assertEquals(0.9, tuned.pressureBase(), "Значение из данных графа важнее встроенной константы");
+        assertEquals(
+                GraphLife.DEFAULTS.pressureWound(),
+                tuned.pressureWound(),
+                "Недостающее поле формулы жизни остаётся значением по умолчанию");
+    }
+
     @Test
     void plan_FarJungle_RanksBelowNearOak() {
         GraphWorld world = GraphWorld.settled().with("oak_log", 0).with("jungle_log", 0);

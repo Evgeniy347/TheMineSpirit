@@ -68,7 +68,6 @@ public final class StageConfirmation {
         }
         if (streak >= confirmations) {
             stage = observed;
-            candidate = observed;
             streak = 0;
         }
         return stage;
