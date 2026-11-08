@@ -11,6 +11,8 @@ SERVER_FILES="$MOD_DIR/server"
 JAR_DIR="$MOD_DIR/$MOD_JAR_DIR"
 WORLD_BACKUPS="${WORLD_BACKUPS:-/opt/minecraft/backups/world}"
 CLEANUP_SCRIPT_DIR="${CLEANUP_SCRIPT_DIR:-/opt/minecraft/scripts}"
+BUILD_LOCK="${BUILD_LOCK:-/opt/minecraft/tmp/build.lock}"
+BUILD_LOCK_WAIT="${BUILD_LOCK_WAIT:-1800}"
 
 assume_yes=false
 dry_run=false
@@ -146,7 +148,17 @@ deploy_server_files() {
         fi
         chmod 755 "$CLEANUP_SCRIPT_DIR/server-cleanup.sh"
     fi
+    if [ -f "$MOD_DIR/scripts/nightly-analyzers.sh" ]; then
+        if ! cp -f "$MOD_DIR/scripts/nightly-analyzers.sh" "$CLEANUP_SCRIPT_DIR/nightly-analyzers.sh"; then
+            echo "ОШИБКА: не скопировать nightly-analyzers.sh в $CLEANUP_SCRIPT_DIR" >&2
+            return 1
+        fi
+        chmod 755 "$CLEANUP_SCRIPT_DIR/nightly-analyzers.sh"
+    fi
     if ! install_hang_watch_cron; then
+        return 1
+    fi
+    if ! install_nightly_analyzers_cron; then
         return 1
     fi
     echo "Скрипты и конфиги сервера разложены: $files → $SERVER_DIR"
@@ -175,6 +187,47 @@ install_hang_watch_cron() {
         return 1
     fi
     echo "cron сторожа зависания поставлен: раз в минуту"
+}
+
+install_nightly_analyzers_cron() {
+    local script="$CLEANUP_SCRIPT_DIR/nightly-analyzers.sh"
+    local line current
+    if ! command -v crontab >/dev/null 2>&1; then
+        echo "ВНИМАНИЕ: crontab не найден — ночной анализатор не поставлен в cron" >&2
+        return 0
+    fi
+    if [ ! -x "$script" ]; then
+        echo "ВНИМАНИЕ: нет $script — ночной анализатор не поставлен в cron" >&2
+        return 0
+    fi
+    # lib: 03:00 — ночью, до уборки (04:25) и утренней работы людей; скрипт сам пишет лог и статус.
+    line="0 3 * * * $script >/dev/null 2>&1"
+    current="$(crontab -l 2>/dev/null || true)"
+    if printf '%s\n' "$current" | grep -Fq "$script"; then
+        echo "cron ночного анализатора уже стоит: $script"
+        return 0
+    fi
+    if ! {
+        [ -z "$current" ] || printf '%s\n' "$current"
+        printf '%s\n' "$line"
+    } | crontab -; then
+        echo "ОШИБКА: не поставить cron ночного анализатора ($script)" >&2
+        return 1
+    fi
+    echo "cron ночного анализатора поставлен: раз в сутки в 03:00"
+}
+
+acquire_build_lock() {
+    if ! command -v flock >/dev/null 2>&1; then
+        return 0
+    fi
+    mkdir -p "$(dirname "$BUILD_LOCK")"
+    exec 9>"$BUILD_LOCK"
+    if ! flock -w "$BUILD_LOCK_WAIT" 9; then
+        echo "ОШИБКА: замок сборки $BUILD_LOCK занят дольше $BUILD_LOCK_WAIT с (ночной анализатор?)" >&2
+        return 1
+    fi
+    return 0
 }
 
 snapshot_world() {
@@ -358,7 +411,7 @@ if $dry_run; then
     echo "Режим --dry-run: ниже план, изменения не вносятся."
     echo "  1. сборка мода: ./gradlew --quiet assemble (без тестов — решение владельца 25.10)"
     echo "  2. поиск $MOD_JAR_DIR/theminespirit-*.jar (кроме -sources/-javadoc), берётся самый свежий"
-    echo "  3. раскладка скриптов и конфигов сервера: $SERVER_FILES → $SERVER_DIR (cron сторожа зависания)"
+    echo "  3. раскладка скриптов и конфигов сервера: $SERVER_FILES → $SERVER_DIR (cron сторожа зависания и ночного анализатора)"
     if [ "$mode" = full ]; then
         echo "  4. снимок мира: $SERVER_DIR/scripts/world-snapshot.sh publish-<версия>"
     else
@@ -380,6 +433,10 @@ if $dry_run; then
     fi
     echo "Изменения не вносились."
     exit 0
+fi
+
+if ! acquire_build_lock; then
+    exit 1
 fi
 
 cd "$MOD_DIR"

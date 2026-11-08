@@ -29,9 +29,9 @@
 ## Сборка
 
 - `-Xlint:all -Werror`: предупреждение — ошибка; `@SuppressWarnings` — точечно, с причиной рядом.
-- Анализаторы роняют полный `scripts/test.sh unit` и `check`: Error Prone и NullAway — в каждой компиляции
-  (полная ×4), Spotless, Checkstyle, PMD, SpotBugs — `staticAnalysis`, ArchUnit — в unit. Хук pre-commit гоняет
-  только быстрые (`staticAnalysisFast`: Spotless, Checkstyle), SpotBugs и PMD — при приёмке. Выключенные правила и
+- Error Prone и NullAway — в каждой компиляции (полная ×4), Spotless — в обычном цикле (`formatCheck`, хук
+  pre-commit), ArchUnit — в unit. Полный набор (`staticAnalysis`: Spotless, Checkstyle, PMD, SpotBugs) — приёмка
+  `-Ptheminespirit.analyzers=on` и ночной `scripts/nightly-analyzers.sh` по main. Выключенные правила и
   причины — `build.gradle` и `config/`, точечных подавлений нет; формат чинит `./gradlew spotlessApply`.
 - В `core` null — только через `@Nullable` (JSpecify); полные таблицы читаются через
   `Lookup.present`, сообщение исключения — `ErrorText.of`.

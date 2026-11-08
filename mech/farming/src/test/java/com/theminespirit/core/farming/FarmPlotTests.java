@@ -46,6 +46,17 @@ class FarmPlotTests {
     }
 
     @Test
+    void center_FarCoordinates_DoesNotOverflowInt() {
+        FarmPlot plot = FarmPlot.of(1_500_000_000, 1_500_000_000, 1_500_000_010, 1_500_000_010);
+
+        assertEquals(
+                new BlockCoord(1_500_000_005, 64, 1_500_000_005),
+                plot.center(64),
+                "Середина грядки дальних координат считается через long: сумма двух int в (minX + maxX) / 2 "
+                        + "переполняется, центр уезжает за край мира и поиск воды идёт не там");
+    }
+
+    @Test
     void searchRadius_FromCenter_CoversFarthestCorner() {
         FarmPlot plot = FarmPlot.of(0, 0, 4, 4);
 

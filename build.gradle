@@ -47,6 +47,24 @@ tasks.named('test', Test) {
     reports.junitXml.outputLocation = file('TestResults/unit/xml')
 }
 
+tasks.named('formatCheck') {
+    dependsOn ':test-fixtures:formatCheck'
+    dependsOn ':guards:formatCheck', ':api:formatCheck'
+    dependsOn ':board:formatCheck'
+    dependsOn ':tactics:formatCheck'
+    dependsOn ':content:formatCheck'
+    dependsOn ':rest:formatCheck'
+    dependsOn ':ui:formatCheck'
+    dependsOn ':policy:formatCheck'
+    dependsOn ':mod:formatCheck', ':gametest:formatCheck'
+    dependsOn ':mech:mining:formatCheck', ':mech:movement:formatCheck', ':mech:inventory:formatCheck'
+    dependsOn ':mech:farming:formatCheck'
+    dependsOn ':mech:forestry:formatCheck'
+    dependsOn ':mech:crafting:formatCheck'
+    dependsOn ':mech:husbandry:formatCheck'
+    dependsOn ':mech:small:formatCheck', ':mech:building:formatCheck', ':mech:town:formatCheck'
+}
+
 tasks.named('staticAnalysisFast') {
     dependsOn ':test-fixtures:staticAnalysisFast'
     dependsOn ':guards:staticAnalysisFast', ':api:staticAnalysisFast'

@@ -50,9 +50,9 @@ final class PitTestWorld implements PitExitPlanner.World {
             if (stream == null) {
                 throw new IllegalStateException("Нет живой фикстуры ямы: /live/pit-warehouse-0611.live");
             }
-            lines = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))
-                    .lines()
-                    .toList();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+                lines = reader.lines().toList();
+            }
         }
         PitTestWorld world = new PitTestWorld();
         for (String line : lines) {
