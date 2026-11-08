@@ -51,6 +51,9 @@ public final class PlotBreakLog {
             return;
         }
         boolean refusal = !reason.isEmpty();
+        if (!refusal && !PlotCellStructure.isStructure(level, pos)) {
+            return;
+        }
         String subject = refusal ? reason : basis;
         String key =
                 pos.getX() + "," + pos.getY() + "," + pos.getZ() + "|" + (refusal ? "refuse|" : "break|") + subject;

@@ -22,6 +22,7 @@ import com.theminespirit.neoforge.BuildPlanOwner;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.PlotBreakLog;
+import com.theminespirit.neoforge.board.PlotCellStructure;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -186,7 +187,8 @@ public final class ProtectionGate {
         if (unprotectArea) {
             ground = PlotProtection.Ground.PLAYER_COMMAND;
         }
-        PlotProtection.Decision plot = PlotProtection.check(site, coord, action, ground, ownBuilding);
+        boolean structure = level instanceof ServerLevel server && PlotCellStructure.isStructure(server, pos);
+        PlotProtection.Decision plot = PlotProtection.check(site, coord, action, ground, ownBuilding, structure);
         if (plot instanceof PlotProtection.Refused refused) {
             if (level instanceof ServerLevel server) {
                 PlotBreakLog.refused(server, pos, spirit, action.name(), ground, refused.reason());

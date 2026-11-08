@@ -72,6 +72,38 @@ class PlotProtectionTests {
     }
 
     @Test
+    void check_NaturalGroundInPlan_LevelingBreakAllowedButHarvestRefused() {
+        BlockCoord ground = new BlockCoord(
+                SITE.houseOrigin().x(), SITE.anchor().y(), SITE.houseOrigin().z());
+
+        assertInstanceOf(
+                PlotProtection.Allowed.class,
+                PlotProtection.check(
+                        SITE,
+                        ground,
+                        PlotProtection.Action.BREAK,
+                        PlotProtection.Ground.NONE,
+                        PlanBuilding.NONE,
+                        false),
+                "Выравнивание площадки снимает природный грунт в клетке плана: иначе участок не расчистить");
+        assertInstanceOf(
+                PlotProtection.Refused.class,
+                PlotProtection.check(
+                        SITE,
+                        ground,
+                        PlotProtection.Action.HARVEST,
+                        PlotProtection.Ground.NONE,
+                        PlanBuilding.NONE,
+                        false),
+                "Сбор грунта не имеет права брать даже природную клетку плана: под домом появляется яма");
+        assertInstanceOf(
+                PlotProtection.Refused.class,
+                PlotProtection.check(
+                        SITE, ground, PlotProtection.Action.BREAK, PlotProtection.Ground.NONE, PlanBuilding.NONE, true),
+                "Поставленный блок постройки выравнивание не снимает: это уже стена, а не грунт");
+    }
+
+    @Test
     void check_DemolishOwnHouse_Allowed() {
         BlockCoord cell = SITE.houseOrigin();
 

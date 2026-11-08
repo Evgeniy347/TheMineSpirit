@@ -65,7 +65,7 @@ neoforge/DigOutScript.java	302
 neoforge/DropCollector.java	471
 neoforge/FarmSession.java	688
 neoforge/FillSession.java	469
-neoforge/HarvestSession.java	747
+neoforge/HarvestSession.java	748
 neoforge/MineBuildScript.java	520
 neoforge/SafeMineSession.java	505
 neoforge/SchematicSite.java	401
@@ -81,6 +81,6 @@ neoforge/crafting/SmeltScript.java	308
 neoforge/demo/DemoSession.java	431
 neoforge/husbandry/HerdSession.java	436
 neoforge/husbandry/HiveSession.java	410
-neoforge/policy/ProtectionGate.java	328
+neoforge/policy/ProtectionGate.java	330
 neoforge/repair/RepairScript.java	304
 neoforge/tactics/TacticsService.java	507

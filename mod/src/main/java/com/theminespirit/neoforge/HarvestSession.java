@@ -511,8 +511,9 @@ public final class HarvestSession {
         }
         BlockPos feet = spirit.blockPosition();
         boolean inReach = SpiritReach.reachable(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), currentTarget);
-        BlockBreaker.Begin begin =
-                inReach ? breaker.beginAnyDistance(toPos(currentTarget)) : breaker.begin(toPos(currentTarget));
+        BlockBreaker.Begin begin = inReach
+                ? breaker.beginAnyDistance(toPos(currentTarget), true)
+                : breaker.begin(toPos(currentTarget), true);
         if (begin instanceof BlockBreaker.Protected) {
             protectedSkipped++;
             currentTarget = null;
