@@ -81,11 +81,15 @@ final class CrossActions {
     }
 
     static BoardTicket boardTicket(GraphTickets.Ticket ticket) {
+        return boardTicket(ticket, Optional.empty());
+    }
+
+    static BoardTicket boardTicket(GraphTickets.Ticket ticket, Optional<UUID> assignee) {
         return ToolGate.withTool(
                 new BoardTicket(
                         ticket.id(),
                         ticket.task().boardCase(),
-                        Optional.empty(),
+                        assignee,
                         ticket.task().priority(),
                         0,
                         1,

@@ -13,9 +13,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 final class GraphEventPost {
     private static final String EAT = "eat";
+    private static final String WAIT_FOOD = "wait_food";
     private static final String ORDER = "craft_player_order";
     private static final Set<String> DEMOLITION = Set.of("demolish_stray", "clear_floating");
     private static final Set<String> COLLECT = Set.of("collect_drops", "collect_saplings");
@@ -35,8 +37,18 @@ final class GraphEventPost {
         if ("expedition".equals(ticket.node())) {
             return GraphExpeditionPost.post(post, ticket);
         }
+        if ("replant_orchard".equals(ticket.node())) {
+            return new GraphHarvestPost(post).replantOrchard(ticket, ticket.task());
+        }
         if (FarmPost.event(post, ticket)) {
             return true;
+        }
+        if (ticket.task().boardCase() == BoardCase.HUNT_WILD_SHEEP
+                || ticket.task().boardCase() == BoardCase.FISH) {
+            return FarmPost.way(post, ticket, ticket.task());
+        }
+        if (WAIT_FOOD.equals(ticket.node())) {
+            return wait(post, ticket);
         }
         if (StorePost.event(post, ticket)) {
             return true;
@@ -120,6 +132,20 @@ final class GraphEventPost {
     private static boolean hungry(GraphPost post, GraphTickets.Ticket ticket) {
         GraphFood.post(post, ticket.id(), ticket.task().priority());
         FarmPost.eat(post, ticket);
+        return true;
+    }
+
+    private static boolean wait(GraphPost post, GraphTickets.Ticket ticket) {
+        Optional<UUID> owner = ticket.task().spirit().map(UUID::fromString);
+        post.submit(
+                post.ticket(
+                        ticket.id(),
+                        BoardCase.ACTIVITY_SENSE,
+                        owner,
+                        ticket.task().priority(),
+                        ticket.id(),
+                        Map.of()),
+                TicketTarget.at(post.scan.home()));
         return true;
     }
 

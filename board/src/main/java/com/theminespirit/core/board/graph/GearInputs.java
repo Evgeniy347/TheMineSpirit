@@ -153,7 +153,7 @@ public final class GearInputs {
             Map<String, Integer> best = bestTools(spirit);
             required.forEach((kind, tier) -> {
                 int rank = settings.rank(tier);
-                if (rank >= 0 && best.getOrDefault(kind, -1) < rank && chestTools.getOrDefault(kind, -1) < rank) {
+                if (rank >= 0 && best.getOrDefault(kind, -1) < rank && chestTools.getOrDefault(kind, -1) < 0) {
                     events.add(CRAFT_TOOL + kind);
                 }
             });
@@ -174,7 +174,7 @@ public final class GearInputs {
                                 String tier = required.get(kind);
                                 return tier != null
                                         && bestTools(spirit).getOrDefault(kind, -1) < settings.rank(tier)
-                                        && chestTools.getOrDefault(kind, -1) < settings.rank(tier);
+                                        && chestTools.getOrDefault(kind, -1) < 0;
                             }));
             if (lacks) {
                 events.add(KIT + kit.getKey());
