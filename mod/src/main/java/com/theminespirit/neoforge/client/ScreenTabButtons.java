@@ -42,6 +42,7 @@ final class ScreenTabButtons {
             case BOARD -> new BoardScreen();
             case PLAN -> new TownMapScreen();
             case MINE -> new MineMapScreen();
+            case TREE -> new SettlementTreeScreen();
             case CRAFT ->
                 throw new IllegalStateException(
                         "Вкладку «Крафт» открывает сервер (меню с сеткой), а не клиентский экран");

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.net.BoardViewChannel;
 import com.theminespirit.neoforge.net.MineMapChannel;
+import com.theminespirit.neoforge.net.SettlementTreeChannel;
 import com.theminespirit.neoforge.net.TownMapChannel;
 import com.theminespirit.neoforge.terminal.CraftTerminalChannel;
 import com.theminespirit.neoforge.terminal.TerminalMenus;
@@ -23,6 +24,12 @@ public final class TheMineSpiritClient {
     static final String CATEGORY = "key.categories." + ModIdentity.MOD_ID;
     static final KeyMapping OPEN_BOARD = new KeyMapping(
             "key." + ModIdentity.MOD_ID + ".board",
+            KeyConflictContext.IN_GAME,
+            InputConstants.Type.KEYSYM,
+            InputConstants.KEY_K,
+            CATEGORY);
+    static final KeyMapping OPEN_TREE = new KeyMapping(
+            "key." + ModIdentity.MOD_ID + ".tree",
             KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM,
             InputConstants.KEY_J,
@@ -67,6 +74,11 @@ public final class TheMineSpiritClient {
                 screen.show(reply);
             }
         });
+        SettlementTreeChannel.onClientReply(tree -> {
+            if (Minecraft.getInstance().screen instanceof SettlementTreeScreen screen) {
+                screen.show(tree);
+            }
+        });
     }
 
     private static void registerScreens(RegisterMenuScreensEvent event) {
@@ -75,10 +87,16 @@ public final class TheMineSpiritClient {
 
     private static void registerKeys(RegisterKeyMappingsEvent event) {
         event.register(OPEN_BOARD);
+        event.register(OPEN_TREE);
     }
 
     private static void onClientTick(ClientTickEvent.Post ignoredEvent) {
         Minecraft minecraft = Minecraft.getInstance();
+        while (OPEN_TREE.consumeClick()) {
+            if (minecraft.screen == null && minecraft.player != null) {
+                minecraft.setScreen(new SettlementTreeScreen());
+            }
+        }
         while (OPEN_BOARD.consumeClick()) {
             if (minecraft.screen == null && minecraft.player != null) {
                 minecraft.setScreen(new BoardScreen());
