@@ -216,9 +216,19 @@ def _life_events(state):
         events.append("life_threat")
     if any(threat.get("targetKind") == "SPIRIT" for threat in threats):
         events.append("life_threat_spirit")
-    if any(threat.get("targetKind") == "PLAYER" for threat in threats):
+    if any(threat.get("targetKind") == "PLAYER" for threat in threats) or any(
+            weak_player(player, getattr(state, "life", None)) for player in getattr(state, "players", ())):
         events.append("life_threat_player")
     return events
+
+
+def weak_player(player, life=None):
+    life = life or DEFAULT_LIFE
+    maximum = float(player.get("maxHealth", player.get("health", 0)) or 0)
+    if maximum <= 0:
+        return False
+    return (float(player.get("health", 0)) / maximum < float(life.get("weakHealth", WEAK_HEALTH))
+            or int(player.get("food", 20)) <= int(life.get("weakFood", WEAK_FOOD)))
 
 
 def _gear_events(state):
@@ -324,6 +334,24 @@ PRESSURE_WOUND = 0.7
 HURT_SHARE = 0.2
 INJURY_WOUND = 0.8
 INJURY_HURT = 0.4
+WEAK_HEALTH = 0.35
+WEAK_FOOD = 6
+DEFAULT_LIFE = {
+    "fullPressureMobs": FULL_PRESSURE_MOBS,
+    "pressureBase": PRESSURE_BASE,
+    "pressureWound": PRESSURE_WOUND,
+    "hurtShare": HURT_SHARE,
+    "injuryWound": INJURY_WOUND,
+    "injuryHurt": INJURY_HURT,
+    "threatRadius": THREAT_RADIUS,
+    "damageWindowTicks": DAMAGE_WINDOW_TICKS,
+    "weakHealth": WEAK_HEALTH,
+    "weakFood": WEAK_FOOD,
+}
+
+
+def _life(state, name):
+    return float((getattr(state, "life", None) or DEFAULT_LIFE).get(name, DEFAULT_LIFE[name]))
 
 
 def _clamp01(value):
@@ -350,22 +378,27 @@ def _spirit_hurt(spirit):
     return _clamp01(float(hurt.get("amount", 0)) / maximum) * freshness
 
 
-def _threat_pressure(threats, match):
-    total = sum(_clamp01(1.0 - int(threat.get("distance", 0)) / THREAT_RADIUS)
+def _threat_pressure(threats, match, life=None):
+    radius = float((life or DEFAULT_LIFE).get("threatRadius", THREAT_RADIUS))
+    total = sum(_clamp01(1.0 - int(threat.get("distance", 0)) / radius)
                 for threat in threats if match(threat))
-    return min(1.0, total / FULL_PRESSURE_MOBS)
+    return min(1.0, total / float((life or DEFAULT_LIFE).get("fullPressureMobs", FULL_PRESSURE_MOBS)))
 
 
 def life_risk(state, spirit_id):
     """LifeThreats.risk: здоровье, свежий урон и мобы, сагренные именно на этого духа."""
+    life = getattr(state, "life", None) or DEFAULT_LIFE
     spirit = state.spirit_facts.get(spirit_id)
     deficit = _spirit_deficit(spirit)
     hurt = _spirit_hurt(spirit)
     pressure = _threat_pressure(
         state.threats,
         lambda threat: threat.get("targetKind") == "SPIRIT"
-        and (threat.get("target") is None or threat.get("target") == spirit_id))
-    return _clamp01(pressure * (PRESSURE_BASE + PRESSURE_WOUND * deficit) + HURT_SHARE * min(1.0, hurt))
+        and (threat.get("target") is None or threat.get("target") == spirit_id),
+        life)
+    return _clamp01(pressure * (float(life.get("pressureBase", PRESSURE_BASE))
+                                + float(life.get("pressureWound", PRESSURE_WOUND)) * deficit)
+                    + float(life.get("hurtShare", HURT_SHARE)) * min(1.0, hurt))
 
 
 def life_severity(state, event):
@@ -383,12 +416,28 @@ def life_severity(state, event):
             targets.add("")
         return max((life_risk(state, target) for target in targets), default=0.0)
 
+    life = getattr(state, "life", None) or DEFAULT_LIFE
+
     def player_threat():
-        return _threat_pressure(state.threats, lambda threat: threat.get("targetKind") == "PLAYER")
+        pressure = _threat_pressure(state.threats, lambda threat: threat.get("targetKind") == "PLAYER", life)
+        weak = 0.0
+        for player in getattr(state, "players", ()):
+            maximum = float(player.get("maxHealth", player.get("health", 0)) or 0)
+            if maximum <= 0:
+                continue
+            share = float(player.get("health", 0)) / maximum
+            if share >= float(life.get("weakHealth", WEAK_HEALTH))                     and int(player.get("food", 20)) > int(life.get("weakFood", WEAK_FOOD)):
+                continue
+            hungry = 0.0
+            if int(player.get("food", 20)) <= int(life.get("weakFood", WEAK_FOOD)):
+                hungry = _clamp01((int(life.get("weakFood", WEAK_FOOD)) - int(player.get("food", 20)) + 1)
+                                  / float(int(life.get("weakFood", WEAK_FOOD)) + 1))
+            weak = max(weak, max(_clamp01(1.0 - share), hungry))
+        return max(pressure, weak)
 
     def injury():
-        return max((_clamp01(INJURY_WOUND * _spirit_deficit(spirit)
-                             + INJURY_HURT * min(1.0, _spirit_hurt(spirit)))
+        return max((_clamp01(float(life.get("injuryWound", INJURY_WOUND)) * _spirit_deficit(spirit)
+                             + float(life.get("injuryHurt", INJURY_HURT)) * min(1.0, _spirit_hurt(spirit)))
                     for spirit in state.spirit_facts.values()), default=0.0)
 
     if event == "life_threat":
@@ -456,11 +505,13 @@ class Costs:
 
     __slots__ = ("default_ticks", "case_ticks", "way_ticks", "way_uses",
                  "ticks_per_block", "travel_scale_ticks", "tool_durability",
-                 "station_capacity", "choice")
+                 "station_capacity", "choice", "life")
 
     def __init__(self, data, ways):
         costs = data.get("costs")
         self.choice = Choice(data.get("choice"))
+        self.life = dict(DEFAULT_LIFE)
+        self.life.update(data.get("life") or {})
         if costs is None:
             self.default_ticks = 1
             self.case_ticks = {}
@@ -815,6 +866,7 @@ class State:
         feedback = dict(self.facts.get("feedback") or {})
         self.clock = dict(feedback.get("clock") or {})
         self.player = dict(feedback.get("player") or {})
+        self.players = list(self.facts.get("players") or [])
         self.failures = list(feedback.get("failures") or [])
         self._derive_world_events()
 
@@ -956,6 +1008,8 @@ class Planner:
             raise ValueError("Граф и состояние обязательны")
         self.graph = graph
         self.state = state
+        state.life = graph.costs.life
+        state.events = list(state.events)
         self.flow = Flow()
         self.expanded = set()
         self.notices = {}

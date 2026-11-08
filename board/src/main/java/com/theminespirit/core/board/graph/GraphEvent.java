@@ -59,11 +59,24 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
     }
 
     static int priority(GraphState state, SupplyGraph graph, String key, double value) {
-        return priority(state.facts(), graph.events(), key, value, GraphPriorities.work(graph), graph.maxPriority());
+        return priority(
+                state.facts(),
+                graph.events(),
+                key,
+                value,
+                GraphPriorities.work(graph),
+                graph.maxPriority(),
+                graph.costs().life());
     }
 
     static int priority(
-            GraphFacts facts, Map<String, GraphEvent> events, String key, double value, int workMax, int lifeMax) {
+            GraphFacts facts,
+            Map<String, GraphEvent> events,
+            String key,
+            double value,
+            int workMax,
+            int lifeMax,
+            GraphLife life) {
         if (key.startsWith("event:")) {
             int start = "event:".length();
             int end = key.indexOf(':', start);
@@ -76,7 +89,7 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
                         .findFirst()
                         .orElse(null);
                 if (task != null) {
-                    return LifeThreats.priority(facts, event, task, lifeMax);
+                    return LifeThreats.priority(facts, event, task, lifeMax, life);
                 }
             }
         }

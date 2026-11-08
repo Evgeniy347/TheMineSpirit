@@ -15,12 +15,14 @@ import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.SpiritDamageWatch;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.policy.PlanBreachData;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
@@ -46,7 +48,15 @@ public final class GraphFactInputs {
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
                 stageReqs(service, service.board().ledger().stage()),
-                GraphFeedback.none());
+                GraphFeedback.none(),
+                List.of(),
+                List.of());
+    }
+
+    static List<GraphFacts.Position> planBreaches(ServerLevel level) {
+        return PlanBreachData.get(level).open().keySet().stream()
+                .map(pos -> new GraphFacts.Position(pos.getX(), pos.getY(), pos.getZ()))
+                .toList();
     }
 
     private static Map<String, GraphFacts.Spirit> spiritFacts(

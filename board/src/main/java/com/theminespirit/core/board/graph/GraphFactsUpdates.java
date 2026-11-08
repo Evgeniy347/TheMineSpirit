@@ -16,7 +16,9 @@ public final class GraphFactsUpdates {
                 base.strays(),
                 base.terrain(),
                 base.stageReqs(),
-                base.feedback());
+                base.feedback(),
+                base.players(),
+                base.planBreaches());
     }
 
     public static GraphFacts withStageReqs(GraphFacts base, GraphSiteFacts.StageReqs reqs) {
@@ -30,6 +32,8 @@ public final class GraphFactsUpdates {
                 base.strays(),
                 base.terrain(),
                 reqs,
-                base.feedback());
+                base.feedback(),
+                base.players(),
+                base.planBreaches());
     }
 }

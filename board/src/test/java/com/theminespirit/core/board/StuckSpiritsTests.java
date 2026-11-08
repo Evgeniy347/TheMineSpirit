@@ -204,22 +204,39 @@ class StuckSpiritsTests {
     }
 
     @Test
-    void of_OldMark_ExpiresInsteadOfBlockingForever() {
+    void rescued_ReturnToSamePit_Relapses() {
         StuckSpirits stuck = new StuckSpirits();
         stuck.see(SPIRIT, AT, 100);
         stuck.mark(SPIRIT, 140, "провал движения");
-        stuck.drainChanges();
+        stuck.rescued(SPIRIT, 200);
 
         assertTrue(
-                stuck.isStuck(SPIRIT, 140 + BoardTuning.STUCK_TTL_TICKS - 1),
-                "До предела метка держится: выход ещё можно поставить");
+                stuck.relapsed(SPIRIT, new BlockCoord(AT.x() + 2, AT.y(), AT.z()), 400),
+                "Дух снова в той же ловушке после спасения: память неудач не даёт крутить self-rescue "
+                        + "по кругу (observe25 B6)");
+    }
+
+    @Test
+    void rescued_FarFromPit_NoRelapse() {
+        StuckSpirits stuck = new StuckSpirits();
+        stuck.see(SPIRIT, AT, 100);
+        stuck.mark(SPIRIT, 140, "провал движения");
+        stuck.rescued(SPIRIT, 200);
+
         assertFalse(
-                stuck.isStuck(SPIRIT, 140 + BoardTuning.STUCK_TTL_TICKS),
-                "По пределу метка снимается: застрявший дух не выпадает из графа навсегда (observe22)");
-        List<StuckSpirits.Change> changes = stuck.drainChanges();
-        assertEquals(1, changes.size(), "Истечение метки пишется в лог: " + changes);
-        assertTrue(
-                changes.get(0).reason().startsWith("истекла"),
-                "Причина истечения названа честно: " + changes.get(0).reason());
+                stuck.relapsed(SPIRIT, new BlockCoord(AT.x() + 40, AT.y(), AT.z()), 400),
+                "Издалека это новый случай, а не возврат в ту же ловушку: память не запирает духа навсегда");
+    }
+
+    @Test
+    void rescued_AfterWindow_NoRelapse() {
+        StuckSpirits stuck = new StuckSpirits();
+        stuck.see(SPIRIT, AT, 100);
+        stuck.mark(SPIRIT, 140, "провал движения");
+        stuck.rescued(SPIRIT, 200);
+
+        assertFalse(
+                stuck.relapsed(SPIRIT, AT, 200 + 12_001),
+                "Окно памяти конечно: спустя время попытку спасения можно повторить");
     }
 }

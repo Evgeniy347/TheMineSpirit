@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.engine.ScriptFactory;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.movement.DigOutObstacle;
@@ -41,15 +42,24 @@ public final class DigOutScript implements ScriptInstance {
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
     private @Nullable DigOutRoute routeFollow;
+    private boolean routeFallback;
     private final DigOutRestore restore;
 
+    static ScriptFactory factory(SpiritEntity spirit) {
+        return params -> new DigOutScript(spirit, GotoParams.from(params), GotoParams.rescue(params));
+    }
+
     public DigOutScript(SpiritEntity spirit, GotoParams target) {
+        this(spirit, target, false);
+    }
+
+    public DigOutScript(SpiritEntity spirit, GotoParams target, boolean rescue) {
         this.spirit = spirit;
         this.level = spirit.level();
         this.target = target;
         this.fromPit = open(level, spirit.blockPosition());
         this.descending = target.y() < spirit.blockPosition().getY();
-        this.breaker = BlockBreaker.escaping(spirit);
+        this.breaker = BlockBreaker.escaping(spirit, rescue);
         this.placer = new BlockPlacer(spirit);
         this.restore = new DigOutRestore(spirit, level);
         boolean sealedNow = sealed(level, spirit.blockPosition());
@@ -111,6 +121,7 @@ public final class DigOutScript implements ScriptInstance {
         if ((open(level, feet) && !fromPit) || goalReached) {
             backfill.report();
             restore.returnSpoil();
+            PlanBreachRestore.restore(spirit, level, placer, feet);
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
         }
@@ -143,14 +154,17 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     private boolean followRoute() {
+        if (routeFallback) {
+            return false;
+        }
         if (routeFollow == null) {
             routeFollow = new DigOutRoute(
                     spirit, new BlockCoord(target.x(), target.y(), target.z()), descending, HOME_RADIUS);
         }
         DigOutRoute.State state = routeFollow.tick();
-        if (state == DigOutRoute.State.DESCENT_FAILED) {
+        if (state == DigOutRoute.State.DESCENT_FAILED || state == DigOutRoute.State.NO_ROUTE) {
             routeFollow = null;
-            fail("пути вниз к " + target + " нет: ступени и прыжок не находятся");
+            routeFallback = true;
             return false;
         }
         return state == DigOutRoute.State.RUNNING;

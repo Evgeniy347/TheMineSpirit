@@ -26,6 +26,9 @@ final class DigOperations {
             }
             push.push(null, DigFacts.TRAIL_CLEAN, base(graph, DigFacts.TRAIL_CLEAN));
         }
+        if (!state.facts().planBreaches().isEmpty()) {
+            push.push(null, DigFacts.TRAIL_CLEAN, base(graph, DigFacts.TRAIL_CLEAN));
+        }
     }
 
     private static double base(SupplyGraph graph, String node) {
