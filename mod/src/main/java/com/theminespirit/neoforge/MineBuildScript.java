@@ -20,6 +20,7 @@ import com.theminespirit.core.mining.MineOres;
 import com.theminespirit.core.mining.MinePlan;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.PlotProtection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -95,7 +96,7 @@ final class MineBuildScript implements ScriptInstance {
         this.level = spirit.level();
         this.safety = new LevelSafetyView(level);
         this.breaker = new BlockBreaker(spirit);
-        this.placer = new BlockPlacer(spirit);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.PLAN_BUILD);
         this.approach = new Approach(spirit);
         this.stepWalker = new MineStepWalker(approach, safety);
         this.plan = new ArrayList<>(MinePlan.order(MinePlan.columns(layout.floors(), layout.air()), layout.entrance()));
@@ -407,7 +408,8 @@ final class MineBuildScript implements ScriptInstance {
 
     private void startBreak(BlockCoord cell, OptionalInt slot) {
         BlockPos pos = toPos(cell);
-        BlockBreaker.Begin begin = slot.isPresent() ? breaker.beginWithSlot(pos, slot.getAsInt()) : breaker.begin(pos);
+        BlockBreaker.Begin begin =
+                slot.isPresent() ? breaker.beginWithSlot(pos, slot.getAsInt()) : breaker.beginExcavate(pos);
         if (begin instanceof BlockBreaker.Started) {
             breaking = true;
             return;

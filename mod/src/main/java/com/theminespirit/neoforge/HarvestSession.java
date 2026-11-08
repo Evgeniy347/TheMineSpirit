@@ -24,6 +24,9 @@ import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.town.PlanBuilding;
+import com.theminespirit.core.town.PlotProtection;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
@@ -443,7 +446,7 @@ public final class HarvestSession {
             if (!tunnelTried.add(candidate)) {
                 continue;
             }
-            MineTunnel.Plan plan = MineTunnel.plan(candidate, origin, safety, radius);
+            MineTunnel.Plan plan = MineTunnel.plan(candidate, origin, safety, radius, this::protectedCell);
             tunnel = VeinTunnelSession.start(spirit, candidate, plan, safety);
             if (tunnel != null) {
                 state = State.TUNNEL;
@@ -722,6 +725,20 @@ public final class HarvestSession {
             return currentTarget;
         }
         return lastUnreachable;
+    }
+
+    private boolean protectedCell(BlockCoord cell) {
+        return level instanceof ServerLevel server
+                && SettlementPlotStore.get(server)
+                        .site()
+                        .map(site -> PlotProtection.check(
+                                        site,
+                                        cell,
+                                        PlotProtection.Action.DIG,
+                                        PlotProtection.Ground.NONE,
+                                        PlanBuilding.NONE)
+                                instanceof PlotProtection.Refused)
+                        .orElse(false);
     }
 
     private static BlockPos toPos(BlockCoord coord) {

@@ -8,6 +8,7 @@ import com.theminespirit.core.crafting.Stations;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.CraftParams;
+import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.BlockPlacer;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.PlacementJournal;
@@ -288,7 +289,7 @@ public final class CraftScript implements ScriptInstance {
             return fail("place: '" + params.item() + "' не блок — ставить нечего");
         }
         int left = Math.min(crafted, spirit.getInventory().countItem(blockItem));
-        BlockPlacer placer = new BlockPlacer(spirit);
+        BlockPlacer placer = new BlockPlacer(spirit, PlotProtection.Ground.PLAN_BUILD);
         BlockState state = blockItem.getBlock().defaultBlockState();
         String id = "minecraft:" + ItemIds.normalize(params.item());
         BlockPos origin = spirit.blockPosition();

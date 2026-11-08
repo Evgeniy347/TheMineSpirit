@@ -10,6 +10,7 @@ import com.theminespirit.core.mining.ToolSuffix;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.tactics.adapter.Visibility;
+import com.theminespirit.core.town.PlotProtection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -44,7 +45,9 @@ public final class BlockBreaker {
         HARVEST,
         CHOP,
         CHOP_HARVEST,
-        DEMOLISH
+        DEMOLISH,
+        REPAIR,
+        EXCAVATE
     }
 
     public enum RefuseReason {
@@ -77,6 +80,7 @@ public final class BlockBreaker {
     private boolean toolBroke;
     private String brokenToolSuffix = "";
     private int forcedSlot = NO_FORCED_SLOT;
+    private Intent intent = Intent.BREAK;
 
     public BlockBreaker(SpiritEntity spirit) {
         this(spirit, false);
@@ -124,6 +128,14 @@ public final class BlockBreaker {
         return begin(target, tended ? Intent.CHOP_HARVEST : Intent.CHOP, false, true);
     }
 
+    public Begin beginRepair(BlockPos target) {
+        return begin(target, Intent.REPAIR, true);
+    }
+
+    public Begin beginExcavate(BlockPos target) {
+        return begin(target, Intent.EXCAVATE, true);
+    }
+
     private static Intent intent(boolean tended, boolean demolish) {
         return demolish ? Intent.DEMOLISH : tended ? Intent.HARVEST : Intent.BREAK;
     }
@@ -134,6 +146,7 @@ public final class BlockBreaker {
 
     Begin begin(BlockPos target, Intent intent, boolean reachLimited, boolean leavesPass) {
         cancel();
+        this.intent = intent;
         Level level = spirit.level();
         if (level.getChunkSource().getChunkNow(target.getX() >> 4, target.getZ() >> 4) == null) {
             return new Refused(
@@ -167,6 +180,8 @@ public final class BlockBreaker {
         BlockProtection.Decision decision = switch (intent) {
             case HARVEST, CHOP_HARVEST -> spirit.protectionGate().checkHarvest(target, targetState);
             case DEMOLISH -> spirit.protectionGate().checkDemolish(target, targetState);
+            case REPAIR -> spirit.protectionGate().checkRepair(target, targetState);
+            case EXCAVATE -> spirit.protectionGate().checkExcavate(target, targetState);
             case BREAK, CHOP -> spirit.protectionGate().checkBreakOrEscape(target, targetState, escaping);
         };
         if (decision instanceof BlockProtection.Refused refused) {
@@ -359,7 +374,7 @@ public final class BlockBreaker {
         boolean wearsTool = broken.getDestroySpeed(level, brokenPos) != 0.0F;
         finish();
         if (level instanceof ServerLevel server) {
-            BreakNotice.broken(server, brokenPos, broken, spirit);
+            BreakNotice.broken(server, brokenPos, broken, spirit, intent.name(), ground(intent));
         }
         level.destroyBlock(brokenPos, false, spirit);
         spirit.hunger().onBlockBroken();
@@ -385,6 +400,15 @@ public final class BlockBreaker {
             crackStage = NO_STAGE;
         }
         active = false;
+    }
+
+    private static PlotProtection.Ground ground(Intent intent) {
+        return switch (intent) {
+            case DEMOLISH -> PlotProtection.Ground.PLAN_DEMOLISH;
+            case REPAIR -> PlotProtection.Ground.REPAIR;
+            case EXCAVATE -> PlotProtection.Ground.PLAN_EXCAVATE;
+            case BREAK, HARVEST, CHOP, CHOP_HARVEST -> PlotProtection.Ground.NONE;
+        };
     }
 
     private static String blockId(BlockState blockState) {

@@ -210,7 +210,7 @@ public final class DescentWidenSession {
                 complete();
                 return;
             }
-            BlockBreaker.Begin begin = breaker.begin(pos);
+            BlockBreaker.Begin begin = breaker.beginExcavate(pos);
             if (begin instanceof BlockBreaker.Started) {
                 state = State.BREAK;
                 return;

@@ -77,4 +77,28 @@ class Observe10VeinTunnelTests {
                         && coal.y() - current.y() >= -3,
                 "Стоянка " + current + " слишком далеко от угля " + coal + ": рукой не достать, добыча не начнётся");
     }
+
+    @Test
+    void tunnel_ProtectedCellOnDirectPath_RouteBypassesItOrRefuses() throws IOException {
+        Observe10Window view = Observe10Window.load("vein-coal.json");
+        BlockCoord feet = view.spirit();
+        BlockCoord coal = view.target();
+        MineTunnel.Plan direct = MineTunnel.plan(coal, feet, view, MineTunnel.MAX_STEPS);
+        assertTrue(direct.found(), "Живой уголь обязан иметь прямой проход: иначе тест не проверяет обход");
+        BlockCoord blocked = direct.steps().get(0).stand();
+
+        MineTunnel.Plan rerouted = MineTunnel.plan(coal, feet, view, MineTunnel.MAX_STEPS, blocked::equals);
+
+        if (rerouted.found()) {
+            for (MineTunnel.Step step : rerouted.steps()) {
+                assertFalse(
+                        blocked.equals(step.stand()) || step.dig().contains(blocked),
+                        "Проход к руде обязан обходить защищённую клетку " + blocked + ", а не ломать её");
+            }
+        } else {
+            assertTrue(
+                    rerouted.refusal().contains("постройки"),
+                    "Если обойти защищённую клетку нельзя, отказ обязан называть постройку: " + rerouted.refusal());
+        }
+    }
 }

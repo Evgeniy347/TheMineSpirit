@@ -147,10 +147,6 @@ public record StageSite(
         return streets.contains(x, z);
     }
 
-    public boolean gatherProtected(int x, int y, int z) {
-        return planCell(x, y, z) || streetColumn(x, z);
-    }
-
     public boolean planCell(int x, int y, int z) {
         if (y > anchor.y() + BUILDING_HEIGHT) {
             return false;
@@ -218,6 +214,53 @@ public record StageSite(
                 || orchard.covers(x, z)
                 || extraOrchardCell(x, z)
                 || (levelColumn(x, z) && y < anchor.y());
+    }
+
+    public boolean protectionCell(int x, int y, int z) {
+        if (planCell(x, y, z) || orchardTree(x, y, z)) {
+            return true;
+        }
+        if (y < anchor.y() - 1 || y > anchor.y() + BUILDING_HEIGHT) {
+            return false;
+        }
+        return streetColumn(x, z) || fenceStrip.contains(x, z);
+    }
+
+    public PlanBuilding protectionBuilding(int x, int y, int z) {
+        if (!protectionCell(x, y, z)) {
+            return PlanBuilding.NONE;
+        }
+        if (minePlan(x, z)) {
+            return PlanBuilding.MINE;
+        }
+        if (hut.covers(x, z)) {
+            return PlanBuilding.HOUSE;
+        }
+        if (yard.covers(x, z)) {
+            return PlanBuilding.YARD;
+        }
+        if (orchard.covers(x, z) || extraOrchardCell(x, z) || orchardTree(x, y, z)) {
+            return PlanBuilding.ORCHARD;
+        }
+        if (ringPost(x, z) || fenceStrip.contains(x, z)) {
+            return PlanBuilding.FENCE;
+        }
+        if (streetColumn(x, z)) {
+            return PlanBuilding.STREET;
+        }
+        return PlanBuilding.NONE;
+    }
+
+    public String protectionArea(int x, int y, int z) {
+        return switch (protectionBuilding(x, y, z)) {
+            case HOUSE -> "дом";
+            case YARD -> "двор";
+            case ORCHARD -> "сад";
+            case MINE -> "шахта";
+            case FENCE -> "ограда";
+            case STREET -> "улица";
+            case NONE -> "план поселения";
+        };
     }
 
     private boolean extraOrchardCell(int x, int z) {

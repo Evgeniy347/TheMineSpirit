@@ -7,6 +7,9 @@ import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.PolicyId;
+import com.theminespirit.core.town.PlotProtection;
+import com.theminespirit.core.town.StageSite;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.List;
 import java.util.Objects;
@@ -52,9 +55,16 @@ public final class BlockPlacer {
     public record Protected(PolicyId policy, String reason) implements Begin {}
 
     private final SpiritEntity spirit;
+    private final PlotProtection.Ground ground;
 
     public BlockPlacer(SpiritEntity spirit) {
+        this(spirit, PlotProtection.Ground.NONE);
+    }
+
+    public BlockPlacer(SpiritEntity spirit, PlotProtection.Ground ground) {
         this.spirit = Objects.requireNonNull(spirit, "Дух не может быть null: без него неизвестно, кто ставит");
+        this.ground =
+                Objects.requireNonNull(ground, "Основание постановки не может быть null: без него не отличить стройку");
     }
 
     public Begin begin(BlockPos target, BlockState state, String blockId) {
@@ -100,6 +110,11 @@ public final class BlockPlacer {
         if (spirit.protectionGate().checkPlace(target) instanceof BlockProtection.Refused refused) {
             return new Protected(refused.policy(), refused.reason());
         }
+        PlotProtection.Decision plot =
+                PlotProtection.check(site(level), cell, PlotProtection.Action.PLACE, ground, BuildPlanOwner.of(spirit));
+        if (plot instanceof PlotProtection.Refused refused) {
+            return new Protected(PolicyId.PROTECTED_BLOCKS, refused.reason());
+        }
         if (action) {
             return SchematicActions.isTilled(blockId)
                     ? farmland(spirit, level, target)
@@ -142,6 +157,12 @@ public final class BlockPlacer {
             SettlementChestWatch.placed(server, target, level.getBlockState(target));
         }
         return new Started(target.immutable());
+    }
+
+    private static @Nullable StageSite site(Level level) {
+        return level instanceof ServerLevel server
+                ? SettlementPlotStore.get(server).site().orElse(null)
+                : null;
     }
 
     private static boolean replaceable(BlockState state) {

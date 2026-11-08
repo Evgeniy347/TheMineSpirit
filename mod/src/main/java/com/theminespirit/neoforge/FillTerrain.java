@@ -2,10 +2,14 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.FillOrder;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.StageSite;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -25,7 +29,7 @@ final class FillTerrain implements FillOrder.World {
     }
 
     FillOrder.Plan plan(BlockCoord anchor) {
-        return FillOrder.fill(List.copyOf(region), occupiedByOthers(), this, anchor);
+        return FillOrder.fill(List.copyOf(activeRegion()), occupiedByOthers(), this, anchor);
     }
 
     @Override
@@ -48,7 +52,19 @@ final class FillTerrain implements FillOrder.World {
     }
 
     boolean complete() {
-        return FillOrder.filled(region, this);
+        return FillOrder.filled(activeRegion(), this);
+    }
+
+    private Set<BlockCoord> activeRegion() {
+        StageSite site = level instanceof ServerLevel server
+                ? SettlementPlotStore.get(server).site().orElse(null)
+                : null;
+        if (site == null) {
+            return region;
+        }
+        return region.stream()
+                .filter(cell -> !site.protectionCell(cell.x(), cell.y(), cell.z()))
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     void countRead() {

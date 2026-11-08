@@ -160,7 +160,7 @@ final class GatherTargets implements HarvestTargets {
 
     private boolean plannedBySettlement(BlockPos pos) {
         StageSite site = settlement;
-        return site != null && site.gatherProtected(pos.getX(), pos.getY(), pos.getZ());
+        return site != null && site.protectionCell(pos.getX(), pos.getY(), pos.getZ());
     }
 
     private boolean forbiddenBySettlement(BlockPos pos) {
