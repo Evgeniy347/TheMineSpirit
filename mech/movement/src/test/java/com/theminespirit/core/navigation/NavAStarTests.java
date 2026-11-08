@@ -73,8 +73,8 @@ class NavAStarTests {
         NavTestWorld world = NavTestWorld.flat(0).air(4, 0, 0);
         NavSettings settings = settings(100_000, 10_000, true);
         NavContext context = new NavContext(world, settings, 64);
-        NavResult down = NavAStarSearch.plan(context, 0, 1, 0, new NavGoalBlock(4, 0, 0));
-        NavResult up = NavAStarSearch.plan(context, 4, 0, 0, new NavGoalBlock(8, 1, 0));
+        NavResult down = NavAStarTestRun.plan(context, 0, 1, 0, new NavGoalBlock(4, 0, 0));
+        NavResult up = NavAStarTestRun.plan(context, 4, 0, 0, new NavGoalBlock(8, 1, 0));
 
         assertEquals(NavSearchStatus.FOUND, down.status(), "яма глубиной 1 проходится вниз");
         assertEquals(0, down.end().y(), "путь спускается в яму");
@@ -105,7 +105,7 @@ class NavAStarTests {
         AtomicLong now = new AtomicLong();
         LongSupplier clock = () -> now.addAndGet(1_000_000L);
         NavSettings timed = new NavSettings(5, 5, 100_000, 50, 3, 12, 2, 20, 2, true, true);
-        NavResult result = NavAStarSearch.plan(
+        NavResult result = NavAStarTestRun.plan(
                 new NavContext(NavTestWorld.flat(0), timed, 64), 0, 1, 0, new NavGoalBlock(500, 1, 0), clock);
 
         assertFalse(result.found(), "по сроку цель не достигается");
@@ -225,7 +225,7 @@ class NavAStarTests {
     }
 
     private static NavResult plan(NavTestWorld world, int blocks, NavSettings settings, NavGoal goal) {
-        return NavAStarSearch.plan(new NavContext(world, settings, blocks), 0, 1, 0, goal);
+        return NavAStarTestRun.plan(new NavContext(world, settings, blocks), 0, 1, 0, goal);
     }
 
     private static NavSettings settings(int maxNodes, long timeoutMs, boolean canBreak) {
@@ -237,6 +237,6 @@ class NavAStarTests {
     }
 
     private static NavResult planAt(NavTestWorld world, BlockCoord start, NavSettings settings, NavGoal goal) {
-        return NavAStarSearch.plan(new NavContext(world, settings, 0), start.x(), start.y(), start.z(), goal);
+        return NavAStarTestRun.plan(new NavContext(world, settings, 0), start.x(), start.y(), start.z(), goal);
     }
 }

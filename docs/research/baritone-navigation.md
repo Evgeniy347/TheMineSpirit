@@ -106,7 +106,7 @@
 
 | Baritone | Наше | Что изменено |
 |---|---|---|
-| `AStarPathFinder`, `AbstractNodeCostSearch` | `NavAStarSearch` | один класс; без `Helper`/рендера/настроек Baritone, бюджет из `NavSettings` |
+| `AStarPathFinder`, `AbstractNodeCostSearch` | `NavAStarSession` | один класс, поиск порциями; без `Helper`/рендера/настроек Baritone, бюджет из `NavSettings` |
 | `PathNode` | `NavNode` | без `BetterBlockPos`/`SettingsUtil`, ключ позиции свой |
 | `IOpenSet`, `BinaryHeapOpenSet` | `NavOpenSet`, `NavBinaryHeapOpenSet` | без комментариев и отладочных полей |
 | `ActionCosts` | `NavActionCosts` | числа и таблица падений как есть |
@@ -141,7 +141,7 @@
 4. **Исполнитель:** `Movement*`-аналоги (состояние, ломка, постановка, вода, лестница), таймаут хода,
    проверка изменения мира; сюда же столб и копание вниз.
 5. **Асинхронность:** снимок загруженных чанков, поиск вне серверного потока, отмена по смене старта/мира.
-6. **Встраивание:** `Approach` — ваниль 32 → тропа → `NavAStarSearch` с бюджетом; удаление телепортов.
+6. **Встраивание:** `Approach` — ваниль 32 → тропа → `NavAStarSession` с бюджетом; удаление телепортов.
 7. **Тропы и физическая тропа:** `TrailTrack` + `BreadcrumbTrail`; физическая тропа — только по решению владельца.
 
 ### Духам не нужно
