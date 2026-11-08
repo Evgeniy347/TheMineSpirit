@@ -16,6 +16,7 @@ import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class CrossLifeWorkScenarioTests {
@@ -124,14 +125,15 @@ class CrossLifeWorkScenarioTests {
                 .filter(ticket -> ticket.id().endsWith(":retreat"))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Нет бегства в графе: " + dangerTickets.post()));
-        board.submit(boardTicket(retreat));
+        board.submit(boardTicket(retreat, Optional.of(id("spirit-2"))));
 
         DispatchRound.Candidate builder = new DispatchRound.Candidate(
                 id("spirit-2"), "spirit-2", "build_schematic", List.of(), FED, SpiritView.free(), false, List.of());
         DispatchRound round = new DispatchRound(board, 0);
 
         assertTrue(
-                round.choose(boardTicket(retreat), List.of(builder)).isPresent(),
+                round.choose(boardTicket(retreat, Optional.of(id("spirit-2"))), List.of(builder))
+                        .isPresent(),
                 "Жизнь выше стройки: занятый дух бросает хижину и уходит от мобов");
         assertEquals(
                 List.of(build.id()),
@@ -144,8 +146,10 @@ class CrossLifeWorkScenarioTests {
                 board.statusOf(build.id()).orElseThrow(),
                 "Стройка больше не держится за убегающим духом: её возьмёт другой или он сам после бегства");
         assertTrue(
-                round.refusal(boardTicket(retreat), builder).isEmpty(),
-                "После вытеснения строитель свободен для бегства: " + round.refusal(boardTicket(retreat), builder));
+                round.refusal(boardTicket(retreat, Optional.of(id("spirit-2"))), builder)
+                        .isEmpty(),
+                "После вытеснения строитель свободен для бегства: "
+                        + round.refusal(boardTicket(retreat, Optional.of(id("spirit-2"))), builder));
     }
 
     @Test

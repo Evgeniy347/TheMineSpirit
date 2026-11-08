@@ -12,6 +12,7 @@ import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.SpiritView;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class CrossFleeScenarioTests {
@@ -43,7 +44,7 @@ class CrossFleeScenarioTests {
                 .filter(ticket -> ticket.id().endsWith(":retreat"))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Нет бегства в графе: " + dangerTickets.post()));
-        board.submit(boardTicket(retreat));
+        board.submit(boardTicket(retreat, Optional.of(id("spirit-1"))));
 
         DispatchRound.Candidate chopper = new DispatchRound.Candidate(
                 id("spirit-1"), "spirit-1", "chop_tree", List.of(), FED, SpiritView.free(), false, List.of());
@@ -59,7 +60,8 @@ class CrossFleeScenarioTests {
                 dangerTickets.post().stream().anyMatch(ticket -> ticket.node().startsWith("chop_")),
                 "Рубка не исчезает из графа при угрозе: " + dangerTickets.post());
         assertTrue(
-                round.choose(boardTicket(retreat), List.of(chopper)).isPresent(),
+                round.choose(boardTicket(retreat, Optional.of(id("spirit-1"))), List.of(chopper))
+                        .isPresent(),
                 "Бегство выше работы: рубящий дух бросает дерево и уходит от мобов");
         assertEquals(
                 List.of(chop.id()),
@@ -72,7 +74,9 @@ class CrossFleeScenarioTests {
                 board.statusOf(chop.id()).orElseThrow(),
                 "Рубка больше не держится за убегающим духом: её возьмёт другой или он сам после бегства");
         assertTrue(
-                round.refusal(boardTicket(retreat), chopper).isEmpty(),
-                "После вытеснения дух свободен для бегства: " + round.refusal(boardTicket(retreat), chopper));
+                round.refusal(boardTicket(retreat, Optional.of(id("spirit-1"))), chopper)
+                        .isEmpty(),
+                "После вытеснения дух свободен для бегства: "
+                        + round.refusal(boardTicket(retreat, Optional.of(id("spirit-1"))), chopper));
     }
 }

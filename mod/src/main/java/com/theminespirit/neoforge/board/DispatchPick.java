@@ -59,8 +59,11 @@ final class DispatchPick {
         String supply = target == null ? null : target.supplyItem();
         if (ticket.assignee().isPresent()) {
             DispatchRound.Candidate own = candidates.get(ticket.assignee().orElseThrow());
-            if (own != null && round.fits(ticket, own, supply)) {
-                return entities.get(own.id());
+            if (own != null) {
+                Optional<DispatchRound.Candidate> chosen = round.choose(ticket, List.of(own), supply);
+                if (chosen.isPresent()) {
+                    return entities.get(chosen.orElseThrow().id());
+                }
             }
             boolean stuck = own != null
                     && round.board().stuck().isStuck(own.id(), round.board().now());
