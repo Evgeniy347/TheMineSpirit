@@ -27,10 +27,21 @@ public final class RescuePlans {
         NONE,
         PIT,
         WALK,
-        DIG
+        DIG,
+        BRIDGE
     }
 
-    public record Situation(boolean pit, boolean steps, boolean tool, boolean open, boolean noPath) {}
+    public record Situation(boolean pit, boolean steps, boolean tool, boolean open, boolean noPath, int blocks) {
+        public Situation {
+            if (blocks < 0) {
+                throw new IllegalArgumentException("Блоков для моста " + blocks + ": отрицательный запас не бывает");
+            }
+        }
+
+        public Situation(boolean pit, boolean steps, boolean tool, boolean open, boolean noPath) {
+            this(pit, steps, tool, open, noPath, 0);
+        }
+    }
 
     public enum Mode {
         SELF,
@@ -120,7 +131,24 @@ public final class RescuePlans {
         if (situation.open() && !situation.noPath()) {
             return Self.WALK;
         }
-        return situation.tool() ? Self.DIG : Self.NONE;
+        if (situation.tool()) {
+            return Self.DIG;
+        }
+        if (situation.open() && situation.noPath() && situation.blocks() > 0) {
+            return Self.BRIDGE;
+        }
+        return Self.NONE;
+    }
+
+    public static TaskNode bridge(BlockCoord from, BlockCoord home, int blocks) {
+        Objects.requireNonNull(from, "Точка духа не может быть null: от неё считается длина моста");
+        Objects.requireNonNull(home, "Дом не может быть null: мост ведёт к поселению");
+        if (blocks < 1) {
+            throw new IllegalArgumentException("Блоков для моста " + blocks + ": мост без материала не начать");
+        }
+        int span = Math.max(Math.abs(home.x() - from.x()), Math.abs(home.z() - from.z()));
+        int length = Math.max(1, Math.min(Math.min(span, blocks), CatalogLimits.BRIDGE_LENGTH_MAX));
+        return new ScriptCall("bridge", Map.of("x", home.x(), "y", home.y(), "z", home.z(), "length", length));
     }
 
     public static Optional<TaskNode> plan(BoardCase boardCase, TicketTarget target) {

@@ -51,7 +51,7 @@ public final class ProtectionGate {
     public BlockProtection.Decision checkBreakOrEscape(BlockPos pos, BlockState state, boolean escaping) {
         BlockPos feet = spirit.blockPosition();
         if (escaping
-                && SelfRescue.mayBreakAtFeet(
+                && SelfRescue.mayBreakEscaping(
                         new BlockCoord(pos.getX(), pos.getY(), pos.getZ()),
                         new BlockCoord(feet.getX(), feet.getY(), feet.getZ()))) {
             return new BlockProtection.Allowed();
@@ -79,6 +79,11 @@ public final class ProtectionGate {
 
     private static boolean harvestProtectsPlan(ServerLevel level, BlockPos pos, BlockCoord coord) {
         return harvestPlanCell(PlacedBlocksData.get(level).isSpiritMarked(pos), inPlan(level, coord));
+    }
+
+    public static boolean planCell(Level level, BlockPos pos) {
+        return level instanceof ServerLevel server
+                && inPlan(server, new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
     }
 
     private static boolean inPlan(ServerLevel level, BlockCoord coord) {
