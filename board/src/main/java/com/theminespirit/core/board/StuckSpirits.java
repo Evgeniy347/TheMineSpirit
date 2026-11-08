@@ -68,23 +68,12 @@ public final class StuckSpirits {
         if (known == null) {
             return;
         }
-        if (escaped && !known.noPath()) {
+        if (escaped) {
             stuck.remove(spirit);
             note(spirit, at, now, false, "вышел на поверхность: с " + at + " (метка с тика " + known.since() + ")");
             return;
         }
-        if (known.noPath() && known.at() != null && !at.equals(known.at())) {
-            stuck.remove(spirit);
-            note(
-                    spirit,
-                    at,
-                    now,
-                    false,
-                    "сдвинулся с места метки " + known.at() + " на " + at
-                            + ": «пути нет» перепроверяют с новой клетки");
-            return;
-        }
-        if (known.at() == null) {
+        if (known.at() == null || !known.at().equals(at)) {
             stuck.put(spirit, new Stuck(at, known.since(), known.noPath()));
         }
     }
@@ -196,20 +185,28 @@ public final class StuckSpirits {
     }
 
     public void restore(List<BoardState.Stuck> states, long now) {
+        if (now < 0) {
+            throw new IllegalArgumentException("Тик загрузки " + now + " отрицателен: метки читаются только вперёд");
+        }
         seen.clear();
         stuck.clear();
         rescues.clear();
         for (BoardState.Stuck state : states) {
+            boolean stale = state.since() > now || now - state.since() >= BoardTuning.STUCK_TTL_TICKS;
+            if (stale) {
+                note(
+                        state.spirit(),
+                        state.at(),
+                        now,
+                        false,
+                        "истекла до загрузки: метка с тика " + state.since() + " старше " + BoardTuning.STUCK_TTL_TICKS
+                                + " тиков");
+                continue;
+            }
+            stuck.put(state.spirit(), new Stuck(state.at(), state.since(), state.noPath()));
             if (state.at() != null) {
                 seen.put(state.spirit(), state.at());
             }
-            note(
-                    state.spirit(),
-                    state.at(),
-                    now,
-                    false,
-                    "сброшена при загрузке: метка застревания не переживает рестарт (была с тика " + state.since()
-                            + ")");
         }
     }
 

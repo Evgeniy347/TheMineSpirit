@@ -25,14 +25,58 @@ class ChestPlansTests {
 
         List<String> scripts = calls.stream().map(ScriptCall::script).toList();
         assertEquals(
-                List.of("withdraw", "deposit", "withdraw", "deposit", "clear_area"),
+                List.of("withdraw", "withdraw", "deposit", "deposit", "clear_area"),
                 scripts,
-                "Непустой сундук: каждый предмет вынесен в склад, и только потом сломан: " + scripts);
+                "Непустой сундук: все предметы вынесены в склад одним заходом, и только потом сломан: " + scripts);
+        assertTrue(
+                scripts.indexOf("deposit") > scripts.lastIndexOf("withdraw"),
+                "Сначала забирают всё из сундука, потом несут на склад: иначе лишние ходки на каждый тип: " + scripts);
         assertEquals(
                 "10,64,10",
                 calls.get(0).params().get("container"),
                 "Забирают именно из этого сундука, а не из ближайшего");
-        assertEquals("warehouse", calls.get(1).params().get("container"), "Вещи кладут в склад поселения");
+        assertEquals("warehouse", calls.get(2).params().get("container"), "Вещи кладут в склад поселения");
+    }
+
+    @Test
+    void demolish_ManyItemTypes_PacksOneChestVisitBeforeWarehouse() {
+        List<Stack> stacks = new ArrayList<>();
+        for (int index = 0; index < 20; index++) {
+            stacks.add(new Stack("item_" + index, 0, 4, 64));
+        }
+
+        List<ScriptCall> calls = calls(ChestPlans.demolish(snapshot(stacks.toArray(Stack[]::new)), List.of(CHEST)));
+
+        List<String> scripts = calls.stream().map(ScriptCall::script).toList();
+        assertEquals(
+                20,
+                scripts.stream().filter("withdraw"::equals).count(),
+                "20 типов забирают за один заход к сундуку: " + scripts);
+        assertEquals("withdraw", scripts.get(19), "Все 20 заборов идут подряд, до первого похода на склад: " + scripts);
+        assertEquals("deposit", scripts.get(20), "После забора — перенос на склад: " + scripts);
+        assertEquals(
+                41,
+                scripts.size(),
+                "На 20 типов — 20 заборов, 20 переносов и один слом, а не поход на каждый тип: " + scripts);
+    }
+
+    @Test
+    void demolish_MoveLargerThanScriptLimit_SplitsButKeepsBothPhases() {
+        ContainerSnapshot chest = snapshot(
+                new Stack("dirt", 0, 64, 64),
+                new Stack("dirt", 1, 64, 64),
+                new Stack("dirt", 2, 64, 64),
+                new Stack("dirt", 3, 64, 64),
+                new Stack("dirt", 4, 44, 64));
+
+        List<ScriptCall> calls = calls(ChestPlans.demolish(chest, List.of(CHEST)));
+
+        List<String> scripts = calls.stream().map(ScriptCall::script).toList();
+        assertEquals(
+                List.of("withdraw", "withdraw", "deposit", "deposit", "clear_area"),
+                scripts,
+                "300 грязи не влезают в предел скрипта 256: два забора и два переноса, фазы не перемешиваются: "
+                        + scripts);
     }
 
     @Test

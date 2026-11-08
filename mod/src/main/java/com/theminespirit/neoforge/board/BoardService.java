@@ -38,6 +38,7 @@ public final class BoardService {
     private static final Logger LOGGER = LogUtils.getLogger();
     public final BoardSources sources;
     final BoardNotices notices = new BoardNotices();
+    final BoardTicketDesk tickets;
     private final Board board;
     private final JournalService journal;
     private final @Nullable BoardStateStore store;
@@ -47,7 +48,6 @@ public final class BoardService {
     private final BoardHerdDesk herd;
     private final BoardSupplyDesk supply;
     private final BoardDispatchDesk dispatch;
-    final BoardTicketDesk tickets;
     private Set<String> liveCauses = Set.of();
     private long lastRebuild = -1;
 

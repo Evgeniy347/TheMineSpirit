@@ -50,7 +50,7 @@ class LifeGraphPlannerTests {
                 "Полоса жизни не поднимает обычные работы выше потолка 99: " + plan.tasks());
         assertTrue(
                 plan.tasks().stream()
-                        .filter(task -> !task.id().equals(DEFEND))
+                        .filter(task -> !DEFEND.equals(task.id()))
                         .allMatch(task -> task.priority() <= plan.priority(DEFEND)),
                 "Защита жизни выше остальных заданий: " + plan.tasks());
     }

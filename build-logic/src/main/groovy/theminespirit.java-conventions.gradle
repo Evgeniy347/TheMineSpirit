@@ -126,10 +126,16 @@ tasks.named('spotbugsTestFixtures') {
     sourceDirs.setFrom()
 }
 
+tasks.register('formatCheck') {
+    group = 'verification'
+    description = 'Только формат Spotless: единственный анализатор обычного цикла вместе с Error Prone'
+    dependsOn tasks.named('spotlessCheck')
+}
+
 tasks.register('staticAnalysisFast') {
     group = 'verification'
-    description = 'Быстрые анализаторы: формат (Spotless), Checkstyle — без SpotBugs и PMD'
-    dependsOn tasks.named('spotlessCheck')
+    description = 'Формат (Spotless) и Checkstyle: для приёмки, не для обычного цикла'
+    dependsOn tasks.named('formatCheck')
     dependsOn tasks.named('checkstyleMain'), tasks.named('checkstyleTest')
 }
 

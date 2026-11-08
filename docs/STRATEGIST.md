@@ -18,9 +18,11 @@
 
 ## Склад — решение стратега
 
-Новое строительство склада и повышение его уровня (до 4) решает стратегический ИИ, а не граф по своей
-инициативе: `GET /v1/settlement/warehouse` показывает `needed`, `required_level`, текущее `order` и материалы,
-`POST /v1/settlement/warehouse` задаёт `level` и `site` (место внутри плана). Мод и граф исполняют решение:
+Новое строительство склада и повышение его уровня (до 4) решает стратег, а не граф по своей
+инициативе: `GET /v1/settlement/warehouse` показывает `needed`, `required_level`, текущее `order`, `plan_site`
+(место `storage` из плана) и материалы, `POST /v1/settlement/warehouse` задаёт `level` и `site` (место внутри плана).
+Цикл стратега берёт `required_level` и `plan_site`, если склад нужен, а решения на этот уровень нет или оно ниже;
+`plan_site` нет — берётся место прежнего `order`, иначе решение откладывается; в dry — `would_post`, старый мод без маршрута — тихий пропуск. Мод и граф исполняют решение:
 ставят задание доски, снабжают материалами и строят по схеме. Снос лишних сундуков после постройки склада — узел
 графа `demolish_chest`: вещи сначала выносятся в сундуки склада, пустой сундук только тогда ломается; полный склад
 сначала получает новый сундук в своей клетке, иначе снос ждёт. Пока склада нет (этап 1), временные сундуки двора
@@ -30,10 +32,12 @@
 
 1. `GET /v1/capabilities`, `GET /v1/bots` (контракт — объект `{"bots": [...]}`); неотправленные решения прошлого запуска досылаются с тем
    же `request_id`, если не старше `STRATEGIST_PENDING_TTL`, нет `PAUSE`, дух жив.
-2. Для каждого `idle` духа (занятых и мёртвых не трогает никогда; при файле `PAUSE` новых задач нет):
+2. `GET /v1/settlement/warehouse` не чаще интервала цикла: нужен склад и решения на требуемый уровень нет — `POST`
+   с `required_level` и `plan_site`; `PAUSE`, нет `plan_site`, dry — без отправки (журнал объясняет).
+3. Для каждого `idle` духа (занятых и мёртвых не трогает никогда; при файле `PAUSE` новых задач нет):
    страж (пауза духа, лимиты вызовов модели и задач — до наблюдения) → `POST /v1/bots/{id}/observe` → промпт → мозг → разбор ответа → локальная проверка плана → `POST /v1/plan` →
    (при отказе проверки — один повтор с текстом ошибки) → страж → свежий `GET /v1/bots/{id}` → `POST /v1/bots/{id}/tasks`.
-3. Отслеживание раз в 10 с: `GET /v1/tasks/{id}` до `succeeded|failed|cancelled`; `404` — исход `lost`; 30 мин — `DELETE`, исход `timeout`.
+4. Отслеживание раз в 10 с: `GET /v1/tasks/{id}` до `succeeded|failed|cancelled`; `404` — исход `lost`; 30 мин — `DELETE`, исход `timeout`.
 
 Ответ модели — один JSON: `{"reason","goal","plan"}` или `{"reason","skip":true}`. Отправляются только скрипты из `GET /v1/capabilities`
 и из белого списка `agents/strategist/policy.json`, ≤ 32 узлов, ≤ 8 шагов в корне; `goto` не дальше `max_goto_distance` (256) блоков по
@@ -118,7 +122,7 @@
 ## Журнал и состояние
 
 `STRATEGIST_HOME/journal.jsonl`: строка на событие, поля `schema, ts, cycle, event, bot, model, prompt_sha, reason, plan, request_id,
-task_id, outcome`. События: `cycle_start, bot_skipped, observed, decision, rejected, posted, task_state, task_done, brain_failure, alert`.
+task_id, outcome`. События: `cycle_start, bot_skipped, observed, decision, rejected, posted, task_state, task_done, brain_failure, alert, warehouse_decision, warehouse_skipped`.
 Ответ модели усечён до 4 КиБ; ротация 10 МиБ × 5 файлов. При отказе разбора ответа модели сырой вывод opencode и время ответа
 сохраняются в `STRATEGIST_HOME/runs/failed-*` для разбора. Примеры: `grep '"event":"rejected"' journal.jsonl | tail`, `scripts/strategist.sh status`.
 `state.json` (активные и неотправленные задачи, счётчики стража) пишется атомарно; повреждённый файл переименовывается в

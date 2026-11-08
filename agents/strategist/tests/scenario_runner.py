@@ -145,7 +145,10 @@ class ScenarioRun:
                 self.fake.vanish_on_task_post = set(value)
             elif key == "busy_after_observe":
                 self.fake.busy_after_observe = set(value)
-            elif key in ("tasks_route", "plan_route", "plan_error", "task_post_lose_response", "drop_connection_next", "bots_as_list"):
+            elif key == "warehouse":
+                self.fake.set_warehouse(**value)
+            elif key in ("tasks_route", "plan_route", "plan_error", "task_post_lose_response", "drop_connection_next",
+                         "bots_as_list", "warehouse_route"):
                 setattr(self.fake, key, value)
             elif key in ("task_post_errors", "server_errors", "rate_limited", "observe_errors", "bot_get_errors"):
                 getattr(self.fake, key).extend([tuple(v) if isinstance(v, list) else v for v in value])
@@ -171,6 +174,20 @@ class ScenarioRun:
         if actual != expected:
             self.fail(when, f"POST /tasks получено {actual}, ожидалось {expected}; запросы: "
                       f"{[(r['path'], r['status']) for r in self.task_posts()]}")
+
+    def check_warehouse_posts(self, expected, when):
+        actual = len(self.fake.requests_to("POST", "/v1/settlement/warehouse"))
+        if actual != expected:
+            self.fail(when, f"POST /v1/settlement/warehouse получено {actual}, ожидалось {expected}; запросы: "
+                      f"{[(r['path'], r['status'], r['body']) for r in self.fake.requests_to('POST', '/v1/settlement/warehouse')]}")
+
+    def check_warehouse_body(self, expected, when):
+        posts = self.fake.requests_to("POST", "/v1/settlement/warehouse")
+        if len(posts) != 1:
+            self.fail(when, f"для проверки тела нужно ровно одно решение о складе, а их {len(posts)}")
+        for field, value in expected.items():
+            if posts[0]["body"].get(field) != value:
+                self.fail(when, f"поле {field} решения о складе {posts[0]['body'].get(field)!r}, ожидалось {value!r}")
 
     def check_tasks_created(self, expected, when):
         if len(self.fake.tasks) != expected:

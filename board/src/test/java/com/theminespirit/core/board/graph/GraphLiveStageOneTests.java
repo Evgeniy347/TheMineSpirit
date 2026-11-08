@@ -51,6 +51,15 @@ class GraphLiveStageOneTests {
                 "Этап 1 обходит висящее: " + steps);
         assertTrue(steps.size() <= 200, "Этап 1 зациклился: " + steps.size() + " заданий");
         assertTrue(maxRepeat(steps) <= 60, "Одно задание повторяется без продвижения: " + maxRepeat(steps));
+        assertTrue(
+                outcome.ticks() <= 10 * 60 * 1200,
+                String.format(
+                        "Поселение из снимка с четырьмя духами не уложилось в 10 минут игрового времени: %d тиков "
+                                + "на %d заданий",
+                        outcome.ticks(), steps.size()));
+        assertTrue(
+                outcome.ticks() > 0,
+                "Симуляция закрыла этап за нуль тиков: время работ не учитывается, аудит мира бессмыслен");
     }
 
     private static int firstPickaxe(List<String> steps) {

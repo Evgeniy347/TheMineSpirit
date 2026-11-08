@@ -24,10 +24,10 @@ import org.slf4j.Logger;
 final class BoardTicketDesk {
     private static final Logger LOGGER = LogUtils.getLogger();
 
+    final BuildProgressSnapshots progress = new BuildProgressSnapshots();
     private final BoardService host;
     private final Board board;
     private final Map<String, TicketTarget> targets;
-    final BuildProgressSnapshots progress = new BuildProgressSnapshots();
     private final Map<UUID, String> orphans = new HashMap<>();
 
     BoardTicketDesk(BoardService host, Board board, Map<String, TicketTarget> targets) {

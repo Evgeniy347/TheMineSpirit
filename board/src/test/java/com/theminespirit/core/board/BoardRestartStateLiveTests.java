@@ -23,7 +23,7 @@ class BoardRestartStateLiveTests {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Test
-    void restore_StuckMarkAndCasePause_DroppedButCasePauseKept() throws IOException {
+    void restore_StuckMarkAndCasePause_SurviveServerRestart() throws IOException {
         JsonNode boardJson = read("board.json");
         JsonNode bots = read("bots.json");
         JsonNode second = bot(bots, "spirit-2");
@@ -41,10 +41,10 @@ class BoardRestartStateLiveTests {
         Board restored = new Board(() -> clock[0]);
         restored.restore(board.snapshot());
 
-        assertFalse(
+        assertTrue(
                 restored.stuck().isStuck(spirit, clock[0]),
-                "Метка «застрял» не переживает перезапуск сервера: иначе дух навсегда исключён из работы "
-                        + "(observe25 B1)");
+                "Метка «застрял» обязана пережить перезапуск сервера: иначе дух снова получает задания "
+                        + "и падает (observe14 A7/N22)");
         assertFalse(
                 restored.availableTo(spirit, BoardCase.GATHER_MATERIALS, clock[0]),
                 "Пауза кейса после провала обязана пережить перезапуск: иначе сразу после старта задание снова "

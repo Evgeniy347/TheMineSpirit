@@ -15,6 +15,7 @@ import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -42,6 +43,7 @@ public final class DigOutScript implements ScriptInstance {
     private String failureReason;
     private @Nullable DigOutRoute routeFollow;
     private boolean routeFallback;
+    private final DigOutRestore restore;
 
     static ScriptFactory factory(SpiritEntity spirit) {
         return params -> new DigOutScript(spirit, GotoParams.from(params), GotoParams.rescue(params));
@@ -59,16 +61,18 @@ public final class DigOutScript implements ScriptInstance {
         this.descending = target.y() < spirit.blockPosition().getY();
         this.breaker = BlockBreaker.escaping(spirit, rescue);
         this.placer = new BlockPlacer(spirit);
+        this.restore = new DigOutRestore(spirit, level);
         boolean sealedNow = sealed(level, spirit.blockPosition());
         this.backfill = new DigOutBackfill(
                 spirit,
                 level,
                 placer,
-                !descending && !sealedNow && target.y() > spirit.blockPosition().getY());
+                !descending && !sealedNow && target.y() > spirit.blockPosition().getY(),
+                restore);
     }
 
     public static boolean sealed(Level level, BlockPos feet) {
-        return SealedSpace.sealed(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), new SealedView(level));
+        return SealedSpace.sealed(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), new DigOutSealedView(level));
     }
 
     public static boolean embedded(SpiritEntity spirit) {
@@ -89,8 +93,10 @@ public final class DigOutScript implements ScriptInstance {
         }
         if (embedded(spirit) && !breaking) {
             BlockPos feet = spirit.blockPosition();
+            BlockState inside = level.getBlockState(feet);
             BlockBreaker.Begin begin = breaker.begin(feet);
             if (begin instanceof BlockBreaker.Started) {
+                restore.remember(feet, inside);
                 breaking = true;
                 return ScriptStatus.RUNNING;
             }
@@ -114,6 +120,7 @@ public final class DigOutScript implements ScriptInstance {
                 : feet.getY() >= target.y();
         if ((open(level, feet) && !fromPit) || goalReached) {
             backfill.report();
+            restore.returnSpoil();
             PlanBreachRestore.restore(spirit, level, placer, feet);
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
@@ -198,8 +205,10 @@ public final class DigOutScript implements ScriptInstance {
         if (!level.getBlockState(cell).getFluidState().isEmpty()) {
             return turnOrFail("в проходе жидкость в " + cell.toShortString());
         }
+        BlockState before = level.getBlockState(cell);
         return switch (breaker.begin(cell)) {
             case BlockBreaker.Started ignored -> {
+                restore.remember(cell, before);
                 breaking = true;
                 yield ScriptStatus.RUNNING;
             }
@@ -242,6 +251,7 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     private ScriptStatus fail(String reason) {
+        restore.returnSpoil();
         failureReason = reason;
         outcome = ScriptStatus.FAILED;
         return outcome;
@@ -263,6 +273,7 @@ public final class DigOutScript implements ScriptInstance {
             breaking = false;
         }
         spirit.getNavigation().stop();
+        restore.returnSpoil();
     }
 
     @Override

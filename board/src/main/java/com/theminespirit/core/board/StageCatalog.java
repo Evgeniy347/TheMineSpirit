@@ -72,6 +72,34 @@ public final class StageCatalog {
         return graphBuilding(planId).map(SupplyGraph.Building::id);
     }
 
+    public static Optional<DemoBuildings.Building> catalog(String planId) {
+        Objects.requireNonNull(planId, "id постройки плана не может быть null: по нему ищут семью каталога");
+        return catalogBuilding(planId);
+    }
+
+    public static Optional<String> scheme(String planId, int level) {
+        Objects.requireNonNull(planId, "id постройки плана не может быть null: по нему ищут схему уровня");
+        if (level < 1) {
+            throw new IllegalArgumentException(
+                    "Уровень " + level + " у постройки '" + planId + "': схемы уровней начинаются с первого");
+        }
+        return catalogBuilding(planId)
+                .flatMap(building -> building.levels().stream()
+                        .filter(value -> value.level() == level)
+                        .map(DemoBuildings.Level::scheme)
+                        .findFirst());
+    }
+
+    public static int maxLevel(String planId) {
+        Objects.requireNonNull(planId, "id постройки плана не может быть null: по нему ищут высший уровень");
+        return catalogBuilding(planId)
+                .map(building -> building.levels().stream()
+                        .mapToInt(DemoBuildings.Level::level)
+                        .max()
+                        .orElse(0))
+                .orElse(0);
+    }
+
     public static Optional<String> planId(String ticketId) {
         Objects.requireNonNull(ticketId, "id задания не может быть null: по нему ищут постройку плана");
         if (!ticketId.startsWith(GRAPH_BUILDING) || ticketId.length() == GRAPH_BUILDING.length()) {

@@ -62,9 +62,9 @@ public final class ChestPlans {
         }
         String target = deposit == null ? WAREHOUSE : coord(deposit);
         List<TaskNode> steps = new ArrayList<>();
-        for (ChestClearance.Move move : ChestClearance.moves(chest)) {
+        List<ChestClearance.Move> moves = ChestClearance.moves(chest);
+        for (ChestClearance.Move move : moves) {
             for (int left = move.count(); left > 0; left -= CatalogLimits.COUNT_MAX) {
-                int batch = Math.min(left, CatalogLimits.COUNT_MAX);
                 steps.add(new ScriptCall(
                         WITHDRAW,
                         Map.of(
@@ -73,9 +73,13 @@ public final class ChestPlans {
                                 ITEM,
                                 move.item(),
                                 COUNT,
-                                batch,
+                                Math.min(left, CatalogLimits.COUNT_MAX),
                                 RADIUS,
                                 CatalogLimits.CONTAINER_RADIUS_DEFAULT)));
+            }
+        }
+        for (ChestClearance.Move move : moves) {
+            for (int left = move.count(); left > 0; left -= CatalogLimits.COUNT_MAX) {
                 steps.add(new ScriptCall(
                         DEPOSIT,
                         Map.of(
@@ -84,7 +88,7 @@ public final class ChestPlans {
                                 ITEM,
                                 move.item(),
                                 COUNT,
-                                batch,
+                                Math.min(left, CatalogLimits.COUNT_MAX),
                                 RADIUS,
                                 CatalogLimits.CONTAINER_RADIUS_DEFAULT,
                                 "leftover",

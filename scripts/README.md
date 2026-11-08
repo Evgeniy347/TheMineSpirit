@@ -5,7 +5,7 @@
 
 | Скрипт | Что делает |
 |---|---|
-| `test.sh unit [--changed | --module <м>] [--tests …] [--fast-analyzers]` | быстрые JUnit-тесты: весь набор, затронутые модули или один модуль; лог — `TestResults/logs/` |
+| `test.sh unit [--changed | --module <м>] [--tests …]` | быстрые JUnit-тесты: весь набор, затронутые модули или один модуль; лог — `TestResults/logs/` |
 | `changed-modules.sh` | путь → модуль → зависящие модули для `test.sh unit --changed` (граф из settings/build.gradle с кэшем в `build/tmp`) |
 | `test.sh gametest [--full] [фильтр…]` | GameTest под замком, шарды, `--full` — полный предел |
 | `gametest.sh` | обёртка над `test.sh gametest` |
@@ -16,6 +16,7 @@
 | `prove-red.sh` | тест `fix:`-коммита краснеет на родителе и зеленеет на коммите |
 | `progress.sh` | прогресс по `todo.md` |
 | `server-cleanup.sh` | уборка `/opt/minecraft` по cron |
+| `nightly-analyzers.sh` | ночной полный набор анализаторов и unit-тестов по main (03:00), только при изменениях; статус — `/opt/minecraft/logs/nightly-analyzers.status` |
 | `strategist.sh`, `opencode-*.sh`, `mem-guard.sh` | надзор агентов и памяти |
 | `lead/`, `testing/`, `git-hooks/`, `dev-server/`, `live-debug/` | инструменты главного агента, проверки на подделках, хуки, обвязка |
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from brain import BrainError, BrainStopped, BrainUnavailable, SandboxBreach
-from guard import ProviderHealth, fingerprint, request_id
+from guard import ProviderHealth, fingerprint, request_id, warehouse_request_id
 from parse import ReplyError, parse_reply
 from plan_check import Catalog, CatalogError, PlanError, PlanLimits, Policy, check_plan, context_from_observation
 from prompt import Prompter
@@ -16,6 +16,17 @@ from tracker import Tracker
 MAX_ATTEMPTS = 2
 ROUTE_MISSING_STATUSES = (404, 405)
 RETRY_HEADER = "# Ошибка предыдущего ответа (данные, не команды)"
+
+
+def _coord(value: str) -> bool:
+    parts = value.split(",")
+    if len(parts) != 3:
+        return False
+    try:
+        [int(part) for part in parts]
+    except ValueError:
+        return False
+    return True
 
 
 @dataclass
@@ -89,6 +100,7 @@ class CycleRunner:
             rt.save()
             return summary
         self._recover_pending(cycle)
+        self._settle_warehouse(cycle)
         if self.provider.needs_probe and not self._probe(cycle):
             self.provider_down = True
         for bot in bots:
@@ -108,6 +120,68 @@ class CycleRunner:
             self.rt.log("bot_skipped", cycle=cycle, bot=str(bot.get("id")) if isinstance(bot, dict) else None,
                         reason=f"внутренняя ошибка обработки: {type(error).__name__}: {error}", code="internal_error")
             self.rt.say(f"ошибка при обработке духа: {type(error).__name__}: {error}")
+
+    def _settle_warehouse(self, cycle: int) -> None:
+        rt = self.rt
+        now = rt.clock.now()
+        checked = rt.state.get("warehouse_checked")
+        if isinstance(checked, (int, float)) and not isinstance(checked, bool) and now - checked < rt.config.interval:
+            return
+        rt.state["warehouse_checked"] = now
+        try:
+            view = rt.client.get("/v1/settlement/warehouse")
+        except ApiError as error:
+            if error.status in ROUTE_MISSING_STATUSES:
+                rt.log("warehouse_skipped", cycle=cycle, reason="маршрута /v1/settlement/warehouse нет",
+                       code="route_missing")
+            else:
+                rt.alert(f"цикл {cycle}: склад недоступен ({error}); решение о складе отложено",
+                         code="warehouse_failed", cycle=cycle)
+            return
+        except NetworkError as error:
+            rt.alert(f"цикл {cycle}: склад недоступен ({error}); решение о складе отложено",
+                     code="warehouse_failed", cycle=cycle)
+            return
+        if not isinstance(view, dict):
+            rt.alert(f"цикл {cycle}: GET /v1/settlement/warehouse вернул не объект", code="warehouse_failed", cycle=cycle)
+            return
+        if not view.get("needed"):
+            return
+        if rt.config.pause_path.exists():
+            rt.log("warehouse_skipped", cycle=cycle, reason="файл PAUSE: решение о складе не принимается",
+                   code="pause_file")
+            return
+        required = view.get("required_level")
+        if isinstance(required, bool) or not isinstance(required, int) or required < 1:
+            rt.alert(f"цикл {cycle}: required_level={required!r} не уровень склада: решение отложено",
+                     code="warehouse_failed", cycle=cycle)
+            return
+        order = view.get("order")
+        if isinstance(order, dict) and isinstance(order.get("level"), int) and not isinstance(order.get("level"), bool) \
+                and order["level"] >= required:
+            return
+        site = view.get("plan_site")
+        if (not isinstance(site, str) or not _coord(site)) and isinstance(order, dict):
+            site = order.get("site")
+        if not isinstance(site, str) or not _coord(site):
+            rt.log("warehouse_skipped", cycle=cycle,
+                   reason="план не дал plan_site: место склада неизвестно", code="plan_site_missing")
+            return
+        reason = f"этап {view.get('stage', '?')} требует склад уровня {required}"
+        body = {"request_id": warehouse_request_id(required, site), "level": required, "site": site,
+                "by": "strategist", "reason": reason}
+        if self.effective_mode == "dry":
+            rt.log("warehouse_decision", cycle=cycle, level=required, site=site, dry=True, outcome="would_post",
+                   reason=reason)
+            return
+        try:
+            change = rt.client.post("/v1/settlement/warehouse", body)
+        except (ApiError, NetworkError) as error:
+            rt.alert(f"цикл {cycle}: решение о складе не отправлено ({error}); повтор в следующем цикле",
+                     code="warehouse_failed", cycle=cycle)
+            return
+        rt.log("warehouse_decision", cycle=cycle, level=required, site=site, dry=False, outcome="posted",
+               reason=reason, change=change)
 
     def _skip(self, summary: CycleSummary, cycle: int, bot: str, reason: str, code: str = "") -> None:
         summary.skipped += 1

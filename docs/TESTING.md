@@ -31,8 +31,8 @@
   обратный граф по боевым зависимостям), плюс `:guards` при любой правке `.java`. `docs/**`, `tools/**`, `scripts/**` — ничего.
 - `scripts/test.sh unit --module <м>` (`board`, `mech:farming`, `root`) — только этот модуль: чужие модули не собираются
   и не анализируются. `--tests <фильтр>` сам находит модули по именам тестовых классов.
-- Статанализаторы — не в итерации: хук pre-commit гоняет `unit --changed --fast-analyzers` (Spotless/Checkstyle только
-  затронутых модулей); SpotBugs/PMD — полный `unit` в финале исполнителя и при слиянии.
+- Обычный цикл — только формат: хук pre-commit гоняет `unit --changed` (Spotless затронутых модулей), Error Prone
+  живёт в компиляторе. SpotBugs, PMD и Checkstyle — ночной прогон по main и приёмка с `-Ptheminespirit.analyzers=on`.
 - Полный `unit` и `gametest --full` — один раз в финале, а не после каждой правки.
 
 ## Крупные сценарии вместо мелких тестов (владелец 07.11)
@@ -44,7 +44,9 @@
 - Мир — модель в памяти (быстро, без Minecraft); живые случаи — фикстуры из снимка мира.
 - Новый баг — не новый тест-одиночка: найди сценарий этой механики и укрупни его (добавь духа, клетку, шаг,
   проверку), чтобы он краснел на баге. Новый файл теста — только если сценария механики ещё нет.
-- Мелкие тесты-дубли того же правила при укрупнении удаляй; число тестов — не цель.
+- Мелкие тесты-дубли того же правила при укрупнении удаляй; число тестов — не цель. Новый файл теста рядом
+  с сюитой механики — только с обоснованием (сторож `ScenarioSuiteGuardTests`, baseline —
+  `guards/src/test/resources/scenario-baseline.txt`).
 - GameTest: сложную механику, которую модель мира не проверяет честно (физика, падение, жидкость, несколько
   духов в настоящем мире), добавляй шагом в существующую сцену своей области, а не новой сценой; мелочь туда не
   неси. Нужно ли — решает исполнитель по сложности задачи.
@@ -122,6 +124,12 @@
   сборки — отдельный бюджет 300/600 с (`стоп: подготовка сборки`) — замер общего набора 23.10 — 182–217 с.
 - **Анализаторы SpotBugs, PMD, Checkstyle выключены (владелец 07.11)** ради скорости: `theminespirit.analyzers=off` в `gradle.properties`;
   включить на один прогон — `-Ptheminespirit.analyzers=on`. Spotless (формат) и Error Prone (компилятор) работают всегда.
-- Анализаторы: в хуке pre-commit — компилятор с Error Prone/NullAway, Spotless, Checkstyle (`--fast-analyzers`);
-  SpotBugs и PMD — приёмка перед слиянием (`scripts/test.sh unit` без флага, `check`).
+- **Полный набор — ночью на сервере.** `scripts/nightly-analyzers.sh` (cron ставит `publish.sh`, 03:00) собирает main
+  в отдельном чистом checkout: Spotless, Checkstyle, PMD, SpotBugs и все unit-тесты, но только если main менялся
+  с прошлой проверки (sha — `/opt/minecraft/nightly/last-checked-sha`). Статус — `/opt/minecraft/logs/nightly-analyzers.status`,
+  краткий лог — `/opt/minecraft/logs/nightly-analyzers.log`, полный вывод Gradle — `nightly-analyzers-build.log`.
+  Находка → сначала быстрый сторож в `:guards`, если правило проверяемо текстом; тяжёлые анализаторы в обычный
+  цикл не возвращаются. Ручной полный прогон: `./gradlew check -Ptheminespirit.analyzers=on`.
+- Стили: Spotless (palantir-java-format) — формат каждого коммита; Checkstyle (`config/checkstyle/checkstyle.xml`) —
+  стиль и пределы; PMD (`config/pmd/*.xml`) — errorprone/bestpractices; SpotBugs — байткод (null, синхронизация, потоки).
 - Покрытие — `./gradlew jacocoTestReport` (`TestResults/coverage/`), отчёт, не гейт.

@@ -59,6 +59,10 @@ usage() {
   --module <м>      только модуль (:board, mech:farming, root); повторяемый
   --tests <фильтр>  тесты под фильтр; модули ищутся по исходникам тестов, чужие не собираются
 
+Обычный цикл проверяет только формат Spotless (Error Prone — в компиляторе). SpotBugs, PMD и Checkstyle
+запускаются ночным прогоном по main и приёмкой с -Ptheminespirit.analyzers=on; --fast-analyzers оставлен
+для совместимости и ничего не меняет.
+
 Мир GameTest всегда засеян: по умолчанию сид 0, поэтому место сетки тестов и случайность мира повторяются
 от прогона к прогону; --seed N выбирает другой повторяемый мир (и пересоздаёт его), сид пишется в лог
 строкой [scene].
@@ -112,7 +116,6 @@ UNIT_TEST_PATTERNS=()
 GAMETEST_FILTERS=()
 GAMETEST_FULL=0
 GAMETEST_SEED=""
-UNIT_FAST_ANALYZERS=0
 UNIT_CHANGED=0
 UNIT_MODULES=()
 UNIT_SUBSET=0
@@ -141,7 +144,7 @@ while [ $# -gt 0 ]; do
             ;;
         --fast-analyzers)
             [ "$MODE" = "unit" ] || { echo "--fast-analyzers только для режима unit" >&2; usage; }
-            UNIT_FAST_ANALYZERS=1
+            # lib: флаг оставлен для старых вызовов; unit и так гоняет только формат Spotless.
             shift
             ;;
         --changed)
@@ -1093,12 +1096,12 @@ if [ "$MODE" = "unit" ]; then
                 UNIT_TARGETS+=("$unit_module:test")
             fi
         done
-        if [ "$UNIT_FAST_ANALYZERS" = 1 ] && [ ${#UNIT_TESTS[@]} -eq 0 ]; then
+        if [ ${#UNIT_TESTS[@]} -eq 0 ]; then
             for unit_module in "${UNIT_MODULES[@]}"; do
                 if [ "$unit_module" = ":root" ]; then
-                    UNIT_EXTRA+=(:spotlessCheck :checkstyleMain :checkstyleTest)
+                    UNIT_EXTRA+=(:spotlessCheck)
                 else
-                    UNIT_EXTRA+=("$unit_module:staticAnalysisFast")
+                    UNIT_EXTRA+=("$unit_module:formatCheck")
                 fi
             done
             UNIT_EXTRA+=(--continue)
@@ -1107,11 +1110,7 @@ if [ "$MODE" = "unit" ]; then
     else
         UNIT_TARGETS=(:test)
         if [ ${#UNIT_TESTS[@]} -eq 0 ]; then
-            if [ "$UNIT_FAST_ANALYZERS" = 1 ]; then
-                UNIT_EXTRA=(staticAnalysisFast --continue)
-            else
-                UNIT_EXTRA=(staticAnalysis --continue)
-            fi
+            UNIT_EXTRA=(formatCheck --continue)
         fi
     fi
 

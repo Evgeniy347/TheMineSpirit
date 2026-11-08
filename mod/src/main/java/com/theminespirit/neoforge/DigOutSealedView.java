@@ -10,7 +10,13 @@ import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
-record SealedView(Level level) implements SealedSpace.View {
+final class DigOutSealedView implements SealedSpace.View {
+    private final Level level;
+
+    DigOutSealedView(Level level) {
+        this.level = level;
+    }
+
     @Override
     public boolean passable(BlockCoord cell) {
         BlockPos pos = pos(cell);
@@ -37,7 +43,7 @@ record SealedView(Level level) implements SealedSpace.View {
         return DigOutScript.open(level, pos(cell));
     }
 
-    static BlockPos pos(BlockCoord cell) {
+    private static BlockPos pos(BlockCoord cell) {
         return new BlockPos(cell.x(), cell.y(), cell.z());
     }
 }

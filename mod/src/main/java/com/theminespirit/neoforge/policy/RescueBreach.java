@@ -15,17 +15,23 @@ import net.minecraft.world.level.block.state.BlockState;
 public final class RescueBreach {
     private RescueBreach() {}
 
+    public static boolean breakable(BlockState state) {
+        return !state.hasBlockEntity()
+                && !(state.getBlock() instanceof DoorBlock)
+                && !(state.getBlock() instanceof FenceGateBlock)
+                && !(state.getBlock() instanceof TrapDoorBlock)
+                && !(state.getBlock() instanceof BedBlock);
+    }
+
     static BlockProtection.Decision allow(SpiritEntity spirit, BlockPos pos, BlockState state, boolean rescue) {
         if (!rescue || !(spirit.level() instanceof ServerLevel server)) {
             return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, "не спасение");
         }
-        BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-        BlockProtection.Decision outside = spirit.protectionGate().checkTravel(coord);
-        if (outside instanceof BlockProtection.Refused) {
-            return outside;
+        if (!ProtectionGate.inPlan(server, new BlockCoord(pos.getX(), pos.getY(), pos.getZ()))) {
+            return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, "не клетка плана");
         }
-        if (!ProtectionGate.inPlan(server, coord) || ProtectionGate.mineCell(server, coord) || !breakable(state)) {
-            return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, "не клетка плана для спасения");
+        if (!breakable(state)) {
+            return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, "сундук, дверь или люк не ломаются");
         }
         PlanBreachData.get(server)
                 .record(
@@ -34,13 +40,5 @@ public final class RescueBreach {
                         spirit.getUUID(),
                         spirit.level().getGameTime());
         return new BlockProtection.Allowed();
-    }
-
-    public static boolean breakable(BlockState state) {
-        return !state.hasBlockEntity()
-                && !(state.getBlock() instanceof DoorBlock)
-                && !(state.getBlock() instanceof FenceGateBlock)
-                && !(state.getBlock() instanceof TrapDoorBlock)
-                && !(state.getBlock() instanceof BedBlock);
     }
 }

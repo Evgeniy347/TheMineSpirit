@@ -87,6 +87,12 @@ class FakeRest:
         self.vanish_on_task_post: set = set()
         self.bot_get_errors: list = []
         self.task_post_lose_response = 0
+        self.warehouse = {
+            "stage": 1, "required_level": 1, "built_level": 1, "needed": False, "order": None,
+            "plan_site": "0,64,0", "materials": {},
+        }
+        self.warehouse_route = True
+        self.warehouse_by_request_id: dict[str, str] = {}
         self.clock = None
         self.tick = 1000
         self._lock = threading.RLock()
@@ -109,6 +115,10 @@ class FakeRest:
     def set_observation(self, bot_id: str, observation: dict) -> None:
         with self._lock:
             self.observations[bot_id] = observation
+
+    def set_warehouse(self, **fields) -> None:
+        with self._lock:
+            self.warehouse.update(fields)
 
     def set_state(self, bot_id: str, state: str) -> None:
         with self._lock:
@@ -244,6 +254,13 @@ class FakeRest:
             return self._post_task(parts[1], body)
         if parts == ["plan"] and method == "POST":
             return self._plan(body)
+        if parts == ["settlement", "warehouse"]:
+            if not self.warehouse_route:
+                return 404, error_body("not_found", "Путь /v1/settlement/warehouse не найден"), {}
+            if method == "GET":
+                return 200, dict(self.warehouse), {}
+            if method in ("POST", "PUT"):
+                return self._post_warehouse(body)
         if len(parts) == 2 and parts[0] == "tasks" and method == "GET":
             return self._get_task(parts[1])
         if len(parts) == 2 and parts[0] == "tasks" and method == "DELETE":
@@ -282,6 +299,24 @@ class FakeRest:
         if self.plan_error:
             return 422, error_body("invalid_plan", self.plan_error), {}
         return 200, {"valid": True}, {}
+
+    def _post_warehouse(self, body):
+        if not isinstance(body, dict):
+            return 400, error_body("invalid_request", "Тело решения о складе должно быть объектом"), {}
+        for field in ("request_id", "level", "site", "by", "reason"):
+            if not body.get(field):
+                return 400, error_body("invalid_request", f"Не задано поле {field}"), {"field": field}
+        fingerprint = json.dumps({k: body.get(k) for k in ("level", "site", "by", "reason")}, sort_keys=True)
+        known = self.warehouse_by_request_id.get(body["request_id"])
+        if known is not None:
+            if known != fingerprint:
+                return 409, error_body("conflict", f"request_id {body['request_id']} уже использован с другим телом"), {}
+            return 200, {"level": body["level"], "site": body["site"], "replay": True}, {}
+        self.warehouse_by_request_id[body["request_id"]] = fingerprint
+        self.warehouse["order"] = {
+            "level": body["level"], "site": body["site"], "by": body["by"], "reason": body["reason"], "tick": 1000,
+        }
+        return 200, {"level": body["level"], "site": body["site"], "replay": False}, {}
 
     def _post_task(self, bot_id: str, body):
         if self.task_post_errors:

@@ -1,6 +1,7 @@
 package com.theminespirit.core.rest;
 
 import com.theminespirit.core.board.WarehouseOrder;
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
@@ -11,6 +12,7 @@ public record WarehouseView(
         int builtLevel,
         boolean needed,
         @Nullable WarehouseOrder order,
+        @Nullable BlockCoord planSite,
         Map<String, Integer> materials) {
     public WarehouseView {
         if (stage < 1 || requiredLevel < 1) {

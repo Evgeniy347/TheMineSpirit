@@ -3,7 +3,7 @@ import random
 import unittest
 
 from config import from_env
-from guard import Guard, ProviderHealth, fingerprint, request_id
+from guard import Guard, ProviderHealth, fingerprint, request_id, warehouse_request_id
 
 HOUR = 3600
 T0 = 1_800_000_000.0
@@ -47,6 +47,14 @@ class FingerprintTests(unittest.TestCase):
         self.assertNotEqual(first, request_id("spirit_2", 7, fp))
         self.assertNotEqual(first, request_id("spirit_1", 8, fp))
         self.assertNotEqual(first, request_id("spirit_1", 7, fingerprint(PLAN_B)))
+
+    def test_warehouseRequestId_StableForSameLevelAndSite_DiffersOtherwise(self):
+        first = warehouse_request_id(2, "4,64,5")
+        self.assertEqual(first, warehouse_request_id(2, "4,64,5"),
+                         "повтор решения о складе после обрыва обязан дать тот же request_id")
+        self.assertEqual(5, len(first.split("-")), "request_id склада — UUID")
+        self.assertNotEqual(first, warehouse_request_id(3, "4,64,5"), "другой уровень — другое решение")
+        self.assertNotEqual(first, warehouse_request_id(2, "4,64,6"), "другое место — другое решение")
 
 
 class TaskRateTests(unittest.TestCase):

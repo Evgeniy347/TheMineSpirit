@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 class ServerPublishGuardTests {
     private static final Path PUBLISH = Path.of("scripts/publish.sh");
+    private static final Path NIGHTLY = Path.of("scripts/nightly-analyzers.sh");
     private static final Path SERVER = Path.of("server");
     private static final List<String> SERVER_SCRIPTS = List.of(
             "scripts/common.sh",
@@ -90,6 +91,54 @@ class ServerPublishGuardTests {
                 script.contains("hang-watch.sh") && script.contains("crontab"),
                 "publish.sh не ставит cron сторожа зависания: server/scripts/hang-watch.sh доедет до сервера, "
                         + "но не запустится по расписанию, и зависший сервер снова никто не заметит");
+    }
+
+    @Test
+    void publishScript_NightlyAnalyzers_AreDeployedAndScheduled() throws IOException {
+        String script = read(PUBLISH);
+        assertTrue(
+                script.contains("nightly-analyzers.sh"),
+                "publish.sh обязан раскладывать scripts/nightly-analyzers.sh на сервер, как server-cleanup.sh: "
+                        + "иначе ночной полный прогон анализаторов не доедет до сервера");
+        assertTrue(
+                script.contains("install_nightly_analyzers_cron") && script.contains("0 3 * * *"),
+                "publish.sh не ставит cron ночного анализатора на 03:00: скрипт на сервере есть, но сам не "
+                        + "запускается, и находки SpotBugs/PMD/Checkstyle никто не увидит");
+        assertTrue(
+                script.contains("BUILD_LOCK") && script.contains("acquire_build_lock"),
+                "Публикация и ночная сборка должны делить один замок: иначе в 03:00 они соберут одновременно "
+                        + "и отнимут процессор у живого сервера");
+    }
+
+    @Test
+    void nightlyScript_FullAnalyzes_CleanTreeNoPublication() throws IOException {
+        String nightly = read(NIGHTLY);
+        assertTrue(
+                nightly.contains("-Ptheminespirit.analyzers=on") && nightly.contains(" check"),
+                "Ночной прогон обязан включать полный набор анализаторов и тесты: check с "
+                        + "-Ptheminespirit.analyzers=on");
+        assertTrue(
+                nightly.contains("--offline"),
+                "На сервере Gradle работает из офлайн-кэша (init-скрипт zz-offline-publish.gradle): без --offline "
+                        + "сборка полезет в сеть и может зависнуть");
+        assertTrue(
+                nightly.contains("git clone") && nightly.contains("git") && nightly.contains("clean -qfdx"),
+                "Ночная сборка идёт в отдельном чистом checkout: рабочие деревья сервера (the-mine-spirit) "
+                        + "трогать нельзя");
+        assertTrue(
+                nightly.contains("nice") && nightly.contains("ionice"),
+                "На машине живой сервер игры: сборка обязана идти с низким приоритетом (nice/ionice)");
+        assertTrue(
+                nightly.contains("flock") && nightly.contains("NIGHTLY_STATE"),
+                "Нужны замок против одновременной публикации/сборки и sha последнего проверенного коммита: "
+                        + "без них ночной прогон повторяет одну и ту же сборку");
+        assertTrue(
+                nightly.contains("NIGHTLY_STATUS") && nightly.contains("NIGHTLY_LOG"),
+                "Результат обязан попадать в краткий лог и статус-файл: иначе находки анализаторов никто не найдёт");
+        String code = nightly.replaceAll("(?m)^\\s*#.*$", "");
+        assertFalse(
+                code.contains("publish.sh") || code.contains("world-snapshot.sh") || code.contains("stop.sh"),
+                "Ночной анализатор не публикует мод и не перезапускает сервер: только сборка и отчёт");
     }
 
     @Test

@@ -100,15 +100,18 @@ public final class GraphFailureMemory {
         return recent(node, target, now, DEFAULT_HALF_LIFE_TICKS);
     }
 
-    public Set<String> unreachableTargets(String node, long now, double halfLifeTicks) {
-        Objects.requireNonNull(node, "Узел памяти не может быть null: недостижимость адресная");
-        Set<String> targets = new TreeSet<>();
+    public Set<String> unreachablePoints(long now, double halfLifeTicks) {
+        Set<String> points = new TreeSet<>();
         for (GraphFeedback.Failure failure : facts(now, halfLifeTicks)) {
-            if (failure.node().equals(node) && unreachable(failure.cause()) && failure.weight() > 0) {
-                targets.add(failure.target());
+            if (unreachable(failure.cause()) && !failure.target().isEmpty()) {
+                points.add(failure.target());
             }
         }
-        return Set.copyOf(targets);
+        return Set.copyOf(points);
+    }
+
+    public Set<String> unreachablePoints(long now) {
+        return unreachablePoints(now, DEFAULT_HALF_LIFE_TICKS);
     }
 
     public boolean isEmpty() {

@@ -96,13 +96,15 @@ public final class PitExitPlanner {
                 return new Plan(Method.WALK, exit, 0, List.of(), List.of(), "край на шаг выше: выходит пешком");
             }
             if (rise > 0 && supplies.blocks() >= rise && exit.y() >= surface - 1) {
-                return new Plan(
-                        Method.PILLAR,
-                        exit,
-                        rise,
-                        List.of(),
-                        List.of(),
-                        "край выше на " + rise + ": ставит столб из своих блоков");
+                if (columnClear(feet, rise, world)) {
+                    return new Plan(
+                            Method.PILLAR,
+                            exit,
+                            rise,
+                            List.of(),
+                            List.of(),
+                            "край выше на " + rise + ": ставит столб из своих блоков");
+                }
             }
         }
 
@@ -117,6 +119,15 @@ public final class PitExitPlanner {
                 List.of(),
                 List.of(),
                 "нет прохода: стены не режутся, лава или бедрок вокруг");
+    }
+
+    private static boolean columnClear(BlockCoord feet, int rise, World world) {
+        for (int dy = 0; dy <= rise; dy++) {
+            if (!passable(world.at(new BlockCoord(feet.x(), feet.y() + dy, feet.z())))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static Set<BlockCoord> protect(Set<BlockCoord> occupied) {

@@ -56,13 +56,23 @@ public final class ProtectionGate {
             BlockPos pos, BlockState state, boolean escaping, boolean rescue) {
         BlockPos feet = spirit.blockPosition();
         if (escaping) {
-            BlockProtection.Decision outside = RescueBreach.allow(spirit, pos, state, rescue);
-            if (outside instanceof BlockProtection.Allowed) {
-                return outside;
+            BlockCoord target = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+            BlockCoord standing = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
+            if (rescue) {
+                BlockProtection.Decision outside = RescueBreach.allow(spirit, pos, state, true);
+                if (outside instanceof BlockProtection.Allowed) {
+                    return outside;
+                }
+                if (!RescueBreach.breakable(state)) {
+                    return new BlockProtection.Refused(
+                            PolicyId.PROTECTED_ZONE,
+                            "клетка " + pos.toShortString() + " — сундук, дверь или люк: для самоспасения не ломается");
+                }
             }
-            if (SelfRescue.mayBreakAtFeet(
-                    new BlockCoord(pos.getX(), pos.getY(), pos.getZ()),
-                    new BlockCoord(feet.getX(), feet.getY(), feet.getZ()))) {
+            if (SelfRescue.mayBreakAtFeet(target, standing)) {
+                return new BlockProtection.Allowed();
+            }
+            if (SelfRescue.mayBreakEscaping(target, standing) && RescueBreach.breakable(state)) {
                 return new BlockProtection.Allowed();
             }
         }
@@ -98,7 +108,7 @@ public final class ProtectionGate {
                 .orElse(false);
     }
 
-    static boolean mineCell(ServerLevel level, BlockCoord coord) {
+    private static boolean mineCell(ServerLevel level, BlockCoord coord) {
         return SettlementPlotStore.get(level)
                 .site()
                 .map(site -> site.mineColumn(coord.x(), coord.z()) || site.minePassage(coord.x(), coord.z()))
