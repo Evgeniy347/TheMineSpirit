@@ -14,7 +14,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class SettlementScanTests {
-    private static final int LEVEL = 70;
+    static final int LEVEL = 70;
     private static final String ORIGIN = "test-settlement-scan.json";
 
     @Test
@@ -185,14 +185,14 @@ class SettlementScanTests {
         return SettlementScan.scan(area.cells(), LEVEL, rules(), world);
     }
 
-    private static BlockProtection rules() {
+    static BlockProtection rules() {
         String json = "{\"deny\": [\"bedrock\"], \"natural\": [\"stone\", \"dirt\", \"short_grass\"], "
-                + "\"strays\": [\"*_fence\", \"cobblestone\"], \"buildingThreshold\": 6, "
+                + "\"strays\": [\"*_fence\", \"*torch\", \"cobblestone\"], \"buildingThreshold\": 6, "
                 + "\"maxUnprotectVolume\": 4096}";
         return ProtectionConfig.parse(json, ORIGIN);
     }
 
-    private static final class Fake implements SettlementScan.World {
+    static final class Fake implements SettlementScan.World {
         private final Map<BlockCoord, String> blocks = new HashMap<>();
         private final Set<BlockCoord> planned = new HashSet<>();
         private final Set<BlockCoord> player = new HashSet<>();
@@ -201,6 +201,7 @@ class SettlementScanTests {
         private final Set<String> plants = new HashSet<>();
         private final Set<ColumnMask.Cell> lots = new HashSet<>();
         private final Map<ColumnMask.Cell, Integer> dug = new HashMap<>();
+        long reads;
 
         void put(int x, int y, int z, String id) {
             blocks.put(new BlockCoord(x, y, z), id);
@@ -231,12 +232,14 @@ class SettlementScanTests {
 
         @Override
         public boolean open(int x, int y, int z) {
+            reads++;
             String id = blocks.getOrDefault(new BlockCoord(x, y, z), y < LEVEL ? "minecraft:stone" : "minecraft:air");
             return "minecraft:air".equals(id) || "minecraft:water".equals(id);
         }
 
         @Override
         public String blockId(int x, int y, int z) {
+            reads++;
             return blocks.getOrDefault(new BlockCoord(x, y, z), y < LEVEL ? "minecraft:stone" : "minecraft:air");
         }
 
