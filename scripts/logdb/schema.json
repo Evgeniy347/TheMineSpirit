@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "common": ["id", "ts", "tick", "build", "source"],
+  "causes": [
+    "place", "break", "restore", "refuse",
+    "done", "failed", "blocked", "unblocked", "cancelled", "reopened", "detached",
+    "chosen", "infeasible",
+    "no_path", "no_material", "no_tool", "out_of_reach", "chunk_not_loaded", "no_support",
+    "occupied", "protected", "timeout", "target_gone",
+    "death", "respawn", "stuck", "rescue_start", "rescue_done", "rescue_failed",
+    "take", "deposit", "pickup", "drop", "craft", "consume", "transfer",
+    "version", "restart", "queue_overflow", "unknown"
+  ],
+  "event_values": {
+    "block_changes": ["break", "place", "restore", "refuse"],
+    "deaths": ["death", "respawn"],
+    "task_events": ["POSTED", "ASSIGNED", "DONE", "FAILED", "BLOCKED", "UNBLOCKED", "REOPENED", "DETACHED", "CANCELLED"],
+    "stuck": ["mark", "clear", "rescue_start", "rescue_done", "rescue_failed"],
+    "item_moves": ["take", "deposit", "pickup", "drop", "craft", "consume", "transfer"]
+  },
+  "tables": {
+    "block_changes": {
+      "columns": {
+        "actor_type": {"type": "text", "required": true},
+        "actor": {"type": "text", "required": true},
+        "ticket": {"type": "text"},
+        "action": {"type": "text", "required": true, "values": "block_changes"},
+        "block_before": {"type": "text", "required": true},
+        "block_after": {"type": "text", "required": true},
+        "x": {"type": "integer", "required": true},
+        "y": {"type": "integer", "required": true},
+        "z": {"type": "integer", "required": true},
+        "basis": {"type": "text"},
+        "cause": {"type": "text", "cause": true},
+        "reason": {"type": "text"}
+      },
+      "indexes": [["x", "z", "y", "ts"]]
+    },
+    "deaths": {
+      "columns": {
+        "event": {"type": "text", "required": true, "values": "deaths"},
+        "spirit": {"type": "text", "required": true},
+        "spirit_id": {"type": "text"},
+        "x": {"type": "integer", "required": true},
+        "y": {"type": "integer", "required": true},
+        "z": {"type": "integer", "required": true},
+        "cause": {"type": "text", "required": true, "cause": true},
+        "reason": {"type": "text"},
+        "killer": {"type": "text"},
+        "inventory": {"type": "text"},
+        "ticket": {"type": "text"},
+        "script": {"type": "text"},
+        "respawn_x": {"type": "integer"},
+        "respawn_y": {"type": "integer"},
+        "respawn_z": {"type": "integer"},
+        "respawn_ts": {"type": "integer"},
+        "recovered": {"type": "integer"}
+      },
+      "indexes": [["spirit", "ts"], ["x", "z", "y", "ts"]]
+    },
+    "task_events": {
+      "columns": {
+        "ticket": {"type": "text", "required": true},
+        "board_case": {"type": "text", "required": true},
+        "event": {"type": "text", "required": true, "values": "task_events"},
+        "spirit": {"type": "text"},
+        "spirit_id": {"type": "text"},
+        "priority": {"type": "integer"},
+        "attempts": {"type": "integer"},
+        "cause": {"type": "text", "cause": true},
+        "reason": {"type": "text"},
+        "missing": {"type": "text"},
+        "target_x": {"type": "integer"},
+        "target_y": {"type": "integer"},
+        "target_z": {"type": "integer"},
+        "source_node": {"type": "text"}
+      },
+      "indexes": [["ticket", "ts"], ["spirit", "ts"], ["board_case", "event", "ts"]]
+    },
+    "graph_decisions": {
+      "columns": {
+        "node": {"type": "text", "required": true},
+        "spirit": {"type": "text", "required": true},
+        "spirit_id": {"type": "text"},
+        "priority": {"type": "integer", "required": true},
+        "feasible": {"type": "integer", "required": true},
+        "chosen": {"type": "integer", "required": true},
+        "next_node": {"type": "text"},
+        "why": {"type": "text"},
+        "cause": {"type": "text", "cause": true}
+      },
+      "indexes": [["spirit", "ts"]]
+    },
+    "routes": {
+      "columns": {
+        "spirit": {"type": "text", "required": true},
+        "spirit_id": {"type": "text"},
+        "purpose": {"type": "text", "required": true},
+        "from_x": {"type": "integer", "required": true},
+        "from_y": {"type": "integer", "required": true},
+        "from_z": {"type": "integer", "required": true},
+        "to_x": {"type": "integer", "required": true},
+        "to_y": {"type": "integer", "required": true},
+        "to_z": {"type": "integer", "required": true},
+        "status": {"type": "text", "required": true},
+        "nodes": {"type": "integer"},
+        "ms": {"type": "integer"},
+        "end_x": {"type": "integer"},
+        "end_y": {"type": "integer"},
+        "end_z": {"type": "integer"},
+        "reason": {"type": "text"},
+        "cause": {"type": "text", "cause": true}
+      },
+      "indexes": [["spirit", "ts"]]
+    },
+    "stuck": {
+      "columns": {
+        "spirit": {"type": "text", "required": true},
+        "spirit_id": {"type": "text"},
+        "event": {"type": "text", "required": true, "values": "stuck"},
+        "x": {"type": "integer"},
+        "y": {"type": "integer"},
+        "z": {"type": "integer"},
+        "method": {"type": "text"},
+        "helper": {"type": "text"},
+        "reason": {"type": "text"},
+        "cause": {"type": "text", "cause": true},
+        "since_tick": {"type": "integer"}
+      },
+      "indexes": [["spirit", "ts"], ["x", "z", "y", "ts"]]
+    },
+    "item_moves": {
+      "columns": {
+        "spirit": {"type": "text", "required": true},
+        "spirit_id": {"type": "text"},
+        "action": {"type": "text", "required": true, "values": "item_moves"},
+        "item": {"type": "text", "required": true},
+        "count": {"type": "integer", "required": true},
+        "container_x": {"type": "integer"},
+        "container_y": {"type": "integer"},
+        "container_z": {"type": "integer"},
+        "ticket": {"type": "text"}
+      },
+      "indexes": [["spirit", "ts"], ["item", "ts"]]
+    },
+    "spirit_samples": {
+      "columns": {
+        "spirit": {"type": "text", "required": true},
+        "spirit_id": {"type": "text"},
+        "x": {"type": "integer", "required": true},
+        "y": {"type": "integer", "required": true},
+        "z": {"type": "integer", "required": true},
+        "state": {"type": "text", "required": true},
+        "script": {"type": "text"},
+        "ticket": {"type": "text"},
+        "food": {"type": "integer"},
+        "health": {"type": "real"}
+      },
+      "indexes": [["spirit", "ts"], ["x", "z", "ts"], ["x", "z", "y", "ts"]]
+    },
+    "server_health": {
+      "columns": {
+        "mspt": {"type": "real", "required": true},
+        "worst_mspt": {"type": "real"},
+        "players": {"type": "integer", "required": true},
+        "source_failures": {"type": "integer"},
+        "pending": {"type": "integer"},
+        "active": {"type": "integer"},
+        "blocked": {"type": "integer"},
+        "board_ms": {"type": "integer"},
+        "prune_ms": {"type": "integer"},
+        "tickets": {"type": "integer"},
+        "event": {"type": "text"}
+      },
+      "indexes": []
+    },
+    "messages": {
+      "columns": {
+        "level": {"type": "text", "required": true},
+        "tag": {"type": "text"},
+        "class": {"type": "text"},
+        "text": {"type": "text", "required": true}
+      },
+      "indexes": []
+    }
+  },
+  "types": {
+    "block_change": "block_changes",
+    "death": "deaths",
+    "task_event": "task_events",
+    "graph_decision": "graph_decisions",
+    "route": "routes",
+    "stuck": "stuck",
+    "item_move": "item_moves",
+    "spirit_sample": "spirit_samples",
+    "server_health": "server_health",
+    "message": "messages"
+  }
+}

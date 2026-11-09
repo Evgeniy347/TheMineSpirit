@@ -15,9 +15,11 @@ class PlotBreakPathGuardTests {
     private static final Set<String> REMOVALS =
             Set.of("destroyBlock(", "removeBlock(", "Blocks.AIR.defaultBlockState()");
     private static final String SINGLE_POINT = "neoforge/BlockBreaker.java";
+    private static final String SPIRIT_POINT = "neoforge/SpiritBlocks.java";
     private static final String DEMO = "neoforge/demo/DemoSession.java";
     private static final Set<String> ALLOWED = Set.of(
             SINGLE_POINT,
+            SPIRIT_POINT,
             DEMO,
             "neoforge/PillarDismantler.java",
             "neoforge/FarmNetherWartScript.java",
@@ -42,6 +44,7 @@ class PlotBreakPathGuardTests {
                     continue;
                 }
                 if (!SINGLE_POINT.equals(file)
+                        && !SPIRIT_POINT.equals(file)
                         && !DEMO.equals(file)
                         && !source.getValue().contains("BreakNotice.broken(")) {
                     offenders.add(file + ": " + found + " без BreakNotice.broken — поломка мимо журнала");
@@ -95,7 +98,10 @@ class PlotBreakPathGuardTests {
         if (found.isEmpty() || !ALLOWED.contains(file)) {
             return List.of();
         }
-        if (SINGLE_POINT.equals(file) || DEMO.equals(file) || text.contains("BreakNotice.broken(")) {
+        if (SINGLE_POINT.equals(file)
+                || SPIRIT_POINT.equals(file)
+                || DEMO.equals(file)
+                || text.contains("BreakNotice.broken(")) {
             return List.of();
         }
         return List.of(file + ": " + found + " без BreakNotice.broken — поломка мимо журнала");

@@ -41,15 +41,16 @@ public final class BoardService {
     final BoardTicketDesk tickets;
     private final Board board;
     private final JournalService journal;
-    private final @Nullable BoardStateStore store;
+    final @Nullable BoardStateStore store;
     private final CraterProfiles craters = new CraterProfiles(64);
-    private final Map<String, TicketTarget> targets = new HashMap<>();
+    final Map<String, TicketTarget> targets = new HashMap<>();
     private long lastActivity;
     private final BoardHerdDesk herd;
     private final BoardSupplyDesk supply;
     private final BoardDispatchDesk dispatch;
     private Set<String> liveCauses = Set.of();
     private long lastRebuild = -1;
+    private final BoardBuildMeter meter = new BoardBuildMeter();
 
     public BoardService(
             Board board, HerdCycles animals, StockReader stockReader, BoardSources sources, JournalService journal) {
@@ -125,7 +126,7 @@ public final class BoardService {
     public static BoardService create(ServerLevel level) {
         LongSupplier now = level::getGameTime;
         JournalService journal = JournalService.inWorld(level.getServer());
-        Board board = TransitionEvents.create(now, journal);
+        Board board = TransitionEvents.create(now, journal, level);
         return new BoardService(
                 board,
                 new HerdCycles(board),
@@ -162,7 +163,10 @@ public final class BoardService {
     }
 
     public void rebuild(ServerLevel level, long now) {
+        meter.rebuildStart();
+        meter.pruneStart();
         board.prune(now, liveCauses);
+        meter.pruneEnd();
         Set<String> alive = new HashSet<>();
         for (BoardTicket ticket : board.all()) {
             alive.add(ticket.id());
@@ -176,8 +180,8 @@ public final class BoardService {
         supply.ensure(level, this, spirits, now);
         StockView unreserved = parts.free(BoardReserve.items(board));
         Set<String> live = sources.tick(level, this, spirits, unreserved, now);
-        live.addAll(liveHerdCauses(level));
-        live.addAll(liveDropCauses(level));
+        live.addAll(herd.liveCauses(level));
+        live.addAll(herd.liveDropCauses(level));
         liveCauses = live;
         if (!sources.failedRound()) {
             board.retain(live, now);
@@ -188,25 +192,23 @@ public final class BoardService {
         dispatch.reconcile(spirits, true);
         dispatch.releaseDeadHolders(level, spirits, now);
         dispatch.dropAbsentOwners(spirits, now);
-        flushBlockNotes();
+        flushBlockNotes(level);
         lastRebuild = now;
         journal.flush(JournalService.FLUSH_BUDGET);
-        persist();
+        BoardPersistence.persist(this);
+        meter.rebuildEnd();
+    }
+
+    public BoardBuildMeter meter() {
+        return meter;
     }
 
     public void close() {
-        journal.flushAll();
-        persist();
-    }
-
-    private void persist() {
-        if (store != null) {
-            BoardTargetsNbt.persist(store, board.snapshot(), targets, sources);
-        }
+        BoardPersistence.close(this);
     }
 
     void persistBoard() {
-        persist();
+        BoardPersistence.persistBoard(this);
     }
 
     Map<String, Long> supplyClosed() {
@@ -229,16 +231,8 @@ public final class BoardService {
         herd.captureFailed(captureId);
     }
 
-    private Set<String> liveDropCauses(ServerLevel level) {
-        return herd.liveDropCauses(level);
-    }
-
     public Set<UUID> capturedAnimals(Species species) {
         return herd.capturedAnimals(species);
-    }
-
-    public Set<String> liveHerdCauses(ServerLevel level) {
-        return herd.liveCauses(level);
     }
 
     public Optional<TicketTarget> targetOf(String ticketId) {
@@ -251,7 +245,7 @@ public final class BoardService {
             dispatch.submitted();
             targets.put(ticket.id(), target);
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
-            persist();
+            BoardPersistence.persist(this);
         } else if (outcome == BoardOutcome.DUPLICATE) {
             targets.putIfAbsent(ticket.id(), target);
         }
@@ -262,7 +256,7 @@ public final class BoardService {
         BoardOutcome outcome = board.submit(ticket);
         if (outcome == BoardOutcome.ACCEPTED) {
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
-            persist();
+            BoardPersistence.persist(this);
         }
         return outcome;
     }
@@ -324,8 +318,8 @@ public final class BoardService {
         return tickets.resetForNewRules();
     }
 
-    void flushBlockNotes() {
-        notices.blocks(board, journal, stock(), board.now());
+    void flushBlockNotes(ServerLevel level) {
+        notices.blocks(level, board, journal, stock(), board.now());
     }
 
     public TicketTarget targetOf(String ticketId, List<SpiritEntity> spirits) {

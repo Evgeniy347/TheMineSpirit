@@ -1,8 +1,10 @@
 package com.theminespirit.neoforge.tactics;
 
+import com.theminespirit.neoforge.SpiritBlocks;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -77,7 +79,8 @@ public final class SpiritGear {
             if (!stack.is(Items.WATER_BUCKET)) {
                 continue;
             }
-            if (!spirit.level().setBlock(pos, Blocks.WATER.defaultBlockState(), 3)) {
+            if (!SpiritBlocks.place(
+                    (ServerLevel) spirit.level(), pos, Blocks.WATER.defaultBlockState(), spirit, "POUR_WATER")) {
                 return false;
             }
             spirit.getInventory().setItem(slot, new ItemStack(Items.BUCKET));

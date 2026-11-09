@@ -16,7 +16,10 @@ import com.theminespirit.core.board.RescuePlans;
 import com.theminespirit.core.board.StatusNote;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.log.LogCause;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.log.SpiritLog;
+import com.theminespirit.neoforge.log.SpiritWorldLog;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -29,7 +32,7 @@ final class BoardNotices {
     private final PendingStall pending = new PendingStall();
     private final BlockNoteLog blockNotes = new BlockNoteLog(BoardTuning.logSummaryTicks());
 
-    void blocks(Board board, JournalService journal, StockView stock, long now) {
+    void blocks(ServerLevel level, Board board, JournalService journal, StockView stock, long now) {
         Set<String> alive = new HashSet<>();
         for (BoardTicket ticket : board.all()) {
             alive.add(ticket.id());
@@ -37,6 +40,7 @@ final class BoardNotices {
         blockNotes.retain(alive);
         for (BoardLogEntry entry : board.drainBlocks()) {
             journal.recordEntry(entry);
+            SpiritLog.taskEntry(level, entry);
             blockNotes.observe(entry, now).ifPresent(summary -> {
                 if (summary.changed()) {
                     LOGGER.info(BoardNoticeText.line(board, entry, stock, now));
@@ -52,6 +56,7 @@ final class BoardNotices {
     }
 
     void assigned(Board board, BoardTicket ticket, TicketTarget target, String chosen, SpiritEntity spirit) {
+        SpiritLog.taskAssigned((ServerLevel) spirit.level(), ticket, target, spirit);
         if (ticket.boardCase() == BoardCase.RESCUE_SPIRIT) {
             rescueClaimed(ticket, spirit);
         }
@@ -73,6 +78,16 @@ final class BoardNotices {
             LOGGER.info("[rescue] {} назначен на задание {}", helper.displayName(), ticket.id());
             return;
         }
+        SpiritWorldLog.stuck(
+                (ServerLevel) helper.level(),
+                rescuee,
+                "rescue_start",
+                null,
+                "board",
+                helper.displayName(),
+                RescuePlans.claimNote(helper.getUUID(), rescuee, helper.displayName(), name(helper, rescuee)),
+                LogCause.RESCUE_START,
+                helper.level().getGameTime());
         LOGGER.info(
                 "[rescue] {}: {}",
                 RescuePlans.claimNote(helper.getUUID(), rescuee, helper.displayName(), name(helper, rescuee)),

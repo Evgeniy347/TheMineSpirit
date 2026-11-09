@@ -178,7 +178,7 @@ final class SchematicWorkPhase {
                 continue;
             }
             if (host.site.rightBlockWrongState(entry)) {
-                host.site.repairState(entry);
+                host.site.repairState(entry, host.spirit);
                 return ScriptStatus.RUNNING;
             }
             if (BlockItems.hasBlockItem(entry.block())

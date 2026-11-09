@@ -155,7 +155,6 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [opencode.json](opencode.json) | настройки opencode в проекте |
 
 ## Скрипты
-
 | Скрипт | Назначение |
 |---|---|
 | [scripts/test.sh](scripts/test.sh) | единственный запуск тестов: `unit [--tests …]`, `gametest [пачка…]`; лог — `TestResults/logs/`, замок GameTest и пределы — в шапке скрипта; коды 0/1/2/75/124; карта скриптов — [scripts/README.md](scripts/README.md) |
@@ -168,6 +167,7 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [scripts/nightly-analyzers.sh](scripts/nightly-analyzers.sh), [scripts/python-bin.sh](scripts/python-bin.sh) | ночной полный прогон по main (03:00, cron ставит `publish.sh`): Spotless, Checkstyle, PMD, SpotBugs и unit-тесты в отдельном чистом checkout, только при изменениях; статус — `/opt/minecraft/logs/nightly-analyzers.status`; `python-bin.sh` — один выбор python для `publish.sh`, ночного прогона и проверок |
 | [scripts/live-debug.sh](scripts/live-debug.sh), [scripts/live-debug/](scripts/live-debug/), [scripts/dev-server.sh](scripts/dev-server.sh), [scripts/dev-server/](scripts/dev-server/) | живая отладка: копия сервера на ПК, замок, hotswap, eval, брейкпоинты; [docs/LIVE-DEBUG.md](docs/LIVE-DEBUG.md) |
 | [scripts/progress.sh](scripts/progress.sh) | прогресс плана: «сделано N» из `todo.md` + открытые пункты |
+| [scripts/logq.sh](scripts/logq.sh), [scripts/logdb/](scripts/logdb/), `scripts/logdb/fixtures/`, `scripts/logdb/tests/` | база логов: `cell`, `spirit`, `ticket`, `failures`, `blocks`, `deaths`, `stuck`, `items`, `where`, `health`, `text`, `sql`, `schema`; загрузчик JSONL и старых логов, схема в `scripts/logdb/schema.json` |
 | [scripts/opencode-task.sh](scripts/opencode-task.sh), [scripts/opencode-start.sh](scripts/opencode-start.sh) | исполнитель opencode с надзором (ПК / сервер в tmux) |
 | [scripts/opencode-status.sh](scripts/opencode-status.sh), [scripts/opencode-status-notify.sh](scripts/opencode-status-notify.sh) | статус исполнителя; сводка в Telegram раз в 5 мин |
 | [scripts/opencode-pick-model.sh](scripts/opencode-pick-model.sh) | выбор бесплатной модели opencode по свежим сбоям и загрузке |
