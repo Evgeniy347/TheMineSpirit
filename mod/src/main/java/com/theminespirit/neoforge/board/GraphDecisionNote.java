@@ -7,6 +7,7 @@ import com.theminespirit.core.board.graph.GraphFailureText;
 import com.theminespirit.core.board.graph.GraphNotes;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphState;
+import java.util.List;
 import org.slf4j.Logger;
 
 final class GraphDecisionNote {
@@ -14,14 +15,37 @@ final class GraphDecisionNote {
     private final GraphNotes notes = new GraphNotes();
     private GraphDecisions decisions = GraphDecisions.empty();
 
-    void note(GraphPlan plan, long now) {
-        decisions = GraphExplain.of(plan, now);
+    void note(GraphPlan plan, long now, List<GraphDecisions.Vital> vital) {
+        decisions = new GraphDecisions(now, GraphExplain.of(plan, now).decisions(), vital);
         if (!notes.due("decisions", now)) {
             return;
         }
         for (GraphDecisions.Row row : decisions.decisions()) {
             LOGGER.info("[graph] решение: {}", row.line());
         }
+        vitalLine(vital);
+    }
+
+    private void vitalLine(List<GraphDecisions.Vital> vital) {
+        List<GraphDecisions.Vital> broken =
+                vital.stream().filter(row -> !row.doing().isBlank()).toList();
+        if (vital.isEmpty()) {
+            return;
+        }
+        String needs = vital.stream()
+                .map(row -> row.spirit() + " — " + row.reason() + (row.task().isBlank() ? "" : " (" + row.task() + ")"))
+                .toList()
+                .toString();
+        if (broken.isEmpty()) {
+            LOGGER.info("[graph] нужды живы, обычной работы при них нет: {}", needs);
+            return;
+        }
+        LOGGER.warn(
+                "[graph] нужда жива, а дух делает не-жизненную работу: {}; нужды: {}",
+                broken.stream()
+                        .map(row -> row.spirit() + " — " + row.need() + " вместо " + row.doing())
+                        .toList(),
+                needs);
     }
 
     void noteFailures(GraphState state, long now) {

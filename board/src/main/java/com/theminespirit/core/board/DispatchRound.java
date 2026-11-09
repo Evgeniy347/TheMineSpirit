@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.board.graph.VitalNeeds;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -22,10 +23,11 @@ public final class DispatchRound {
             EatNeed eat,
             SpiritView view,
             boolean wet,
-            List<String> stockTools) {
+            List<String> stockTools,
+            Map<String, String> needs) {
         public Candidate(
                 UUID id, String name, @Nullable String busyWith, List<String> items, EatNeed eat, SpiritView view) {
-            this(id, name, busyWith, items, eat, view, false, List.of());
+            this(id, name, busyWith, items, eat, view, false, List.of(), Map.of());
         }
 
         public Candidate(
@@ -36,7 +38,19 @@ public final class DispatchRound {
                 EatNeed eat,
                 SpiritView view,
                 boolean wet) {
-            this(id, name, busyWith, items, eat, view, wet, List.of());
+            this(id, name, busyWith, items, eat, view, wet, List.of(), Map.of());
+        }
+
+        public Candidate(
+                UUID id,
+                String name,
+                @Nullable String busyWith,
+                List<String> items,
+                EatNeed eat,
+                SpiritView view,
+                boolean wet,
+                List<String> stockTools) {
+            this(id, name, busyWith, items, eat, view, wet, stockTools, Map.of());
         }
 
         public Candidate {
@@ -47,6 +61,8 @@ public final class DispatchRound {
             Objects.requireNonNull(view, "Состояние духа выдачи не может быть null: по нему решают применимость");
             stockTools = List.copyOf(Objects.requireNonNull(
                     stockTools, "Инструменты склада не могут быть null: пустой склад задают пустым списком"));
+            needs = Map.copyOf(Objects.requireNonNull(
+                    needs, "Живые нужды духа не могут быть null: у сытого и здорового — пустая карта"));
         }
     }
 
@@ -117,6 +133,10 @@ public final class DispatchRound {
                         + ": ждёт выход из ловушки (граф ставит rescue)");
             }
         }
+        Optional<String> vital = VitalGate.refusal(ticket, spirit.needs(), VitalNeeds.needs());
+        if (vital.isPresent()) {
+            return vital;
+        }
         if (spirit.busyWith() != null && !preemption.freed(spirit.id())) {
             return Optional.of("занят: " + spirit.busyWith());
         }
@@ -186,7 +206,8 @@ public final class DispatchRound {
         if (!reason.startsWith("занят: ") && !reason.startsWith("держит ")) {
             return false;
         }
-        Optional<BoardTicket> released = preemption.displace(ticket, spirit, board);
+        Optional<BoardTicket> released =
+                preemption.displace(ticket, spirit, board, VitalGate.satisfies(ticket.id(), spirit.needs()));
         if (released.isEmpty()) {
             return false;
         }

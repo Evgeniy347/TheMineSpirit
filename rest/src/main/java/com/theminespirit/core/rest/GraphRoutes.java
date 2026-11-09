@@ -33,6 +33,17 @@ public final class GraphRoutes {
             rows.add(out);
         }
         body.put("decisions", rows);
+        List<Map<String, Object>> vital = new ArrayList<>(decisions.vital().size());
+        for (GraphDecisions.Vital row : decisions.vital()) {
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("spirit", row.spirit());
+            out.put("need", row.need());
+            out.put("reason", row.reason());
+            out.put("task", row.task());
+            out.put("doing", row.doing());
+            vital.add(out);
+        }
+        body.put("vital", vital);
         return RestJson.write(body);
     }
 }

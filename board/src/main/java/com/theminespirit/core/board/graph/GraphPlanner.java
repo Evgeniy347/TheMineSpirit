@@ -275,6 +275,7 @@ public final class GraphPlanner {
             }
             event.push().forEach((node, weight) -> boost(node, weight, name));
             event.advice().forEach(rule -> advice.add(new GraphPlan.Advice(name, rule)));
+            VitalPaths.note(graph, state, name, event, notices);
         }
     }
 
@@ -295,11 +296,7 @@ public final class GraphPlanner {
     }
 
     private void standing() {
-        for (SupplyGraph.Building building : graph.buildings().values()) {
-            if (state.built(building.id()) == Built.BUILT) {
-                building.advice().forEach(rule -> advice.add(new GraphPlan.Advice(building.id(), rule)));
-            }
-        }
+        GraphStanding.collect(graph, state, advice);
     }
 
     private void boost(String node, int weight, String event) {
