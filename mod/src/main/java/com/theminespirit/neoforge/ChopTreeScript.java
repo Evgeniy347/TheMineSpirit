@@ -11,7 +11,6 @@ import com.theminespirit.core.forestry.NotATree;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeDetection;
 import com.theminespirit.core.forestry.TreeShape;
-import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.script.ChopTreeParams;
@@ -25,12 +24,6 @@ import org.slf4j.Logger;
 
 public final class ChopTreeScript implements ScriptInstance {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final String CHOPPED_KEY = "chopped";
-    private static final String STANDING_KEY = "standingLogs";
-    private static final String PROTECTED_KEY = "protectedLogs";
-    private static final String PLANTED_KEY = "plantedSaplings";
-    private static final String SKIPPED_KEY = "skippedCells";
-    private static final String LACKED_KEY = "lackedSaplings";
 
     private final SpiritEntity spirit;
     private final ChopTreeParams params;
@@ -94,67 +87,28 @@ public final class ChopTreeScript implements ScriptInstance {
 
     @Override
     public Map<String, Object> saveState() {
-        return Map.of(
-                CHOPPED_KEY,
-                chopped,
-                STANDING_KEY,
-                standingLogs,
-                PROTECTED_KEY,
-                protectedLogs,
-                PLANTED_KEY,
-                plantedSaplings,
-                SKIPPED_KEY,
-                skippedCells,
-                LACKED_KEY,
-                lackedSaplings);
+        return ChopTreeSaved.save(new ChopTreeSaved.Values(
+                chopped, standingLogs, protectedLogs, plantedSaplings, skippedCells, lackedSaplings));
     }
 
     @Override
     public void restoreState(Map<String, Object> state) {
-        chopped = readCount(state, CHOPPED_KEY, params.count(), chopped);
-        standingLogs = readCount(state, STANDING_KEY, Integer.MAX_VALUE, standingLogs);
-        protectedLogs = readCount(state, PROTECTED_KEY, Integer.MAX_VALUE, protectedLogs);
-        plantedSaplings = readCount(state, PLANTED_KEY, Integer.MAX_VALUE, plantedSaplings);
-        skippedCells = readCount(state, SKIPPED_KEY, Integer.MAX_VALUE, skippedCells);
-        Object lacked = state.get(LACKED_KEY);
-        if (lacked != null) {
-            if (!(lacked instanceof Boolean flag)) {
-                throw new IllegalArgumentException("Состояние chop_tree: '" + LACKED_KEY + "' = " + lacked
-                        + ", а ожидалось булево значение: снимок задачи повреждён или записан другой версией мода, "
-                        + "проверьте его");
-            }
-            lackedSaplings = flag;
-        }
-    }
-
-    private static int readCount(Map<String, Object> state, String key, int bound, int previous) {
-        Object saved = state.get(key);
-        if (saved == null) {
-            return previous;
-        }
-        if (!(saved instanceof Number number) || number.intValue() < 0 || number.intValue() > bound) {
-            throw new IllegalArgumentException("Состояние chop_tree: '" + key + "' = " + saved
-                    + ", а ожидалось целое число от 0 до " + bound
-                    + ": снимок задачи повреждён или записан другой версией мода, проверьте его");
-        }
-        return number.intValue();
+        ChopTreeSaved.Values saved = ChopTreeSaved.restore(
+                state,
+                params.count(),
+                new ChopTreeSaved.Values(
+                        chopped, standingLogs, protectedLogs, plantedSaplings, skippedCells, lackedSaplings));
+        chopped = saved.chopped();
+        standingLogs = saved.standingLogs();
+        protectedLogs = saved.protectedLogs();
+        plantedSaplings = saved.plantedSaplings();
+        skippedCells = saved.skippedCells();
+        lackedSaplings = saved.lackedSaplings();
     }
 
     public String summary() {
-        StringBuilder text = new StringBuilder("срублено деревьев ")
-                .append(chopped)
-                .append(" из ")
-                .append(params.count());
-        if (standingLogs > 0) {
-            text.append("; оставлено брёвен: ").append(standingLogs);
-        }
-        if (protectedLogs > 0) {
-            text.append("; пропущено защищённых: ").append(protectedLogs);
-        }
-        if (params.replant()) {
-            text.append("; replant: ").append(replantText());
-        }
-        return text.toString();
+        return ChopTreeText.summary(
+                params, chopped, standingLogs, protectedLogs, plantedSaplings, skippedCells, lackedSaplings);
     }
 
     @Override
@@ -311,21 +265,14 @@ public final class ChopTreeScript implements ScriptInstance {
         return ScriptStatus.RUNNING;
     }
 
-    private String replantText() {
-        if (lackedSaplings) {
-            return "нет саженцев" + (plantedSaplings > 0 ? ", посажено " + plantedSaplings : "");
-        }
-        String text = "посажено " + plantedSaplings;
-        return skippedCells > 0 ? text + ", клеток пропущено " + skippedCells : text;
-    }
-
     private ScriptStatus outOfTrees() {
         int far = search.nearestFarDistance();
         String beyond = far < 0
                 ? ""
                 : "; ближайшее дерево к поселению " + far + " блоков при пределе " + search.maxDistance()
                         + " — посадите саженцы и дождитесь их роста";
-        return fail("срублено деревьев " + chopped + " из " + params.count() + ": деревья породы " + speciesText()
+        return fail("срублено деревьев " + chopped + " из " + params.count() + ": деревья породы "
+                + ChopTreeText.speciesText(params)
                 + " в радиусе " + search.maxDistance() + " от поселения закончились (отвергнуто не-деревьев: "
                 + rejected + ", недоступных: " + unreachable + ", пропущено защищённых: " + protectedLogs + ")"
                 + beyond);
@@ -335,9 +282,5 @@ public final class ChopTreeScript implements ScriptInstance {
         cancel();
         failureReason = reason;
         return ScriptStatus.FAILED;
-    }
-
-    private String speciesText() {
-        return params.species().size() == 1 ? params.species().get(0).id() : TreeSpecies.ANY;
     }
 }

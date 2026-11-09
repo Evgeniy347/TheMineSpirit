@@ -22,11 +22,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.block.Blocks;
 
 public final class RepairScript implements ScriptInstance {
@@ -79,7 +76,7 @@ public final class RepairScript implements ScriptInstance {
 
     private Plan decide(SpiritInventory inventory) {
         IdFilter filter = IdFilter.of(List.of(params.item()));
-        int toolSlot = findMostWorn(inventory, filter);
+        int toolSlot = RepairInventory.mostWorn(inventory, filter);
         if (toolSlot < 0) {
             fail(noDamagedToolReason(inventory, filter));
             return null;
@@ -91,13 +88,14 @@ public final class RepairScript implements ScriptInstance {
             return null;
         }
         int durability = maxDurability - tool.getDamageValue();
-        String itemId = itemId(tool);
-        boolean enchanted = isEnchanted(tool);
-        int secondSlot = findSecondDamaged(inventory, filter, tool.getItem(), toolSlot);
+        String itemId = RepairInventory.itemId(tool);
+        boolean enchanted = RepairInventory.isEnchanted(tool);
+        int secondSlot = RepairInventory.secondDamaged(inventory, filter, tool.getItem(), toolSlot);
         int percent = RepairData.loadDefault().maxDurabilityPercent();
         boolean damaged = RepairCalculator.damagedEnoughToRepair(durability, maxDurability, percent);
         Optional<String> material = RepairMaterials.materialFor(itemId);
-        boolean materialAvailable = material.isPresent() && countMaterial(inventory, material.orElseThrow()) > 0;
+        boolean materialAvailable =
+                material.isPresent() && RepairInventory.countMaterial(inventory, material.orElseThrow()) > 0;
         RepairMethod method = RepairCalculator.chooseMethod(
                 RepairCosts.defaults(),
                 new RepairCalculator.Availability(materialAvailable, secondSlot >= 0, enchanted, damaged));
@@ -127,7 +125,7 @@ public final class RepairScript implements ScriptInstance {
         if (!anvilSearch.done()) {
             return ScriptStatus.RUNNING;
         }
-        if (plan.secondSlot() >= 0 && !isEnchanted(inventory.getItem(plan.toolSlot()))) {
+        if (plan.secondSlot() >= 0 && !RepairInventory.isEnchanted(inventory.getItem(plan.toolSlot()))) {
             return grindstone(inventory);
         }
         return fail("нет наковальни поблизости: чинить материалом негде");
@@ -138,12 +136,12 @@ public final class RepairScript implements ScriptInstance {
         if (material.isEmpty()) {
             return fail("материал ремонта '" + plan.materialItem() + "' отсутствует в реестре");
         }
-        if (countMaterial(inventory, plan.materialItem()) < 1) {
+        if (RepairInventory.countMaterial(inventory, plan.materialItem()) < 1) {
             return fail("нет материала '" + plan.materialItem() + "' для ремонта '" + params.item() + "'");
         }
         int repaired = RepairCalculator.anvilResult(
                 plan.durability(), plan.maxDurability(), RepairCalculator.ANVIL_REPAIR_PERCENT);
-        consumeMaterial(inventory, material.orElseThrow(), 1);
+        RepairInventory.consumeMaterial(inventory, material.orElseThrow(), 1);
         inventory.getItem(plan.toolSlot()).setDamageValue(plan.maxDurability() - repaired);
         this.result = new ScriptResult.Data(Map.of(
                 "item", params.item(),
@@ -174,42 +172,8 @@ public final class RepairScript implements ScriptInstance {
         return succeed();
     }
 
-    private int findMostWorn(SpiritInventory inventory, IdFilter filter) {
-        int slot = -1;
-        int worst = 0;
-        for (int index = 0; index < inventory.getContainerSize(); index++) {
-            ItemStack stack = inventory.getItem(index);
-            if (stack.isEmpty() || stack.getDamageValue() <= 0 || !filter.matches(itemId(stack))) {
-                continue;
-            }
-            if (stack.getDamageValue() > worst) {
-                worst = stack.getDamageValue();
-                slot = index;
-            }
-        }
-        return slot;
-    }
-
-    private int findSecondDamaged(SpiritInventory inventory, IdFilter filter, Item item, int exclude) {
-        for (int index = 0; index < inventory.getContainerSize(); index++) {
-            if (index == exclude) {
-                continue;
-            }
-            ItemStack stack = inventory.getItem(index);
-            if (stack.isEmpty()
-                    || stack.getDamageValue() <= 0
-                    || !stack.is(item)
-                    || !filter.matches(itemId(stack))
-                    || isEnchanted(stack)) {
-                continue;
-            }
-            return index;
-        }
-        return -1;
-    }
-
     private String noDamagedToolReason(SpiritInventory inventory, IdFilter filter) {
-        if (hasEnchantedDamaged(inventory, filter)) {
+        if (RepairInventory.hasEnchantedDamaged(inventory, filter)) {
             return "зачарованный предмет '" + params.item() + "' в точиле потеряет чары: так его не чинить";
         }
         return "в инвентаре нет повреждённого предмета '" + params.item() + "'";
@@ -233,49 +197,6 @@ public final class RepairScript implements ScriptInstance {
             return "нет ни материала ремонта, ни второго такого же повреждённого предмета '" + params.item() + "'";
         }
         return "предмет '" + params.item() + "' починить нечем";
-    }
-
-    private boolean hasEnchantedDamaged(SpiritInventory inventory, IdFilter filter) {
-        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
-            ItemStack stack = inventory.getItem(slot);
-            if (!stack.isEmpty() && stack.getDamageValue() > 0 && filter.matches(itemId(stack)) && isEnchanted(stack)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private int countMaterial(SpiritInventory inventory, String materialItem) {
-        int total = 0;
-        for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
-            ItemStack stack = inventory.getItem(slot);
-            if (!stack.isEmpty() && materialItem.equals(itemId(stack))) {
-                total += stack.getCount();
-            }
-        }
-        return total;
-    }
-
-    private void consumeMaterial(SpiritInventory inventory, Item item, int count) {
-        int left = count;
-        for (int slot = 0; slot < inventory.getContainerSize() && left > 0; slot++) {
-            ItemStack stack = inventory.getItem(slot);
-            if (stack.isEmpty() || !stack.is(item)) {
-                continue;
-            }
-            int taken = Math.min(left, stack.getCount());
-            inventory.removeItem(slot, taken);
-            left -= taken;
-        }
-    }
-
-    private boolean isEnchanted(ItemStack stack) {
-        ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-        return !enchantments.isEmpty();
-    }
-
-    private String itemId(ItemStack stack) {
-        return BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
     }
 
     @Override

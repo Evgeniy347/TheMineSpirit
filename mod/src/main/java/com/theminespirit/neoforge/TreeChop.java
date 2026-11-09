@@ -43,7 +43,7 @@ final class TreeChop {
     private TreeSpecies species;
     private ChopPlan plan;
     private DropCollector collector;
-    private Replanter replanter;
+    private ChopReplant planting;
     private Phase phase;
     private int planIndex;
     private int standingLogs;
@@ -134,8 +134,8 @@ final class TreeChop {
         if (collector != null) {
             collector.cancel();
         }
-        if (replanter != null) {
-            replanter.cancel();
+        if (planting != null) {
+            planting.cancel();
         }
     }
 
@@ -149,8 +149,8 @@ final class TreeChop {
         if (collector != null) {
             collector.suspend();
         }
-        if (replanter != null) {
-            replanter.suspend();
+        if (planting != null) {
+            planting.suspend();
         }
     }
 
@@ -271,24 +271,20 @@ final class TreeChop {
     }
 
     private ChopOutcome startReplant() {
-        int baseY = tree.base().y();
-        List<BlockPos> cells = tree.logs().stream()
-                .filter(log -> log.y() == baseY)
-                .map(TreeChop::toPos)
-                .toList();
-        replanter = new Replanter(spirit, species, cells, view, !orchard);
+        planting = new ChopReplant(spirit, species, view, !orchard);
+        planting.begin(tree, tree.base().y());
         phase = Phase.REPLANT;
         return ChopOutcome.running();
     }
 
     private ChopOutcome replant() {
-        if (replanter.tick() == Replanter.State.RUNNING) {
+        if (!planting.tick()) {
             return ChopOutcome.running();
         }
-        plantedSaplings += replanter.planted();
-        skippedCells += replanter.skipped();
-        lackedSaplings |= replanter.lackedSaplings();
-        replanter = null;
+        plantedSaplings += planting.planted();
+        skippedCells += planting.skipped();
+        lackedSaplings |= planting.lackedSaplings();
+        planting = null;
         return finish();
     }
 
