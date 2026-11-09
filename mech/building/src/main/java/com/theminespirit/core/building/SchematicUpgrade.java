@@ -13,6 +13,16 @@ public final class SchematicUpgrade {
     private SchematicUpgrade() {}
 
     public static List<BlockCoord> extraPositions(
+            Schematic previous, Schematic next, BlockCoord origin, BuildRotation rotation) {
+        Objects.requireNonNull(previous, "Старая схема не может быть null: по ней видно, что снимать");
+        List<BlockCoord> cells = new ArrayList<>();
+        for (Schematic.PlacedEntry entry : previous.entries(origin, rotation)) {
+            cells.add(entry.pos());
+        }
+        return extraPositions(cells, next, origin, rotation);
+    }
+
+    public static List<BlockCoord> extraPositions(
             Collection<BlockCoord> previous, Schematic next, BlockCoord nextOrigin, BuildRotation nextRotation) {
         Objects.requireNonNull(previous, "Старые клетки не могут быть null: без них нечего снимать");
         Objects.requireNonNull(next, "Новая схема не может быть null: по ней видно, что остаётся защищённым");

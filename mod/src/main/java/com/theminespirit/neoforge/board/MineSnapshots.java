@@ -24,16 +24,18 @@ public final class MineSnapshots {
     }
 
     public static Optional<MineGeometry> geometry(ServerLevel level) {
-        return layout(level).map(found -> MineGeometry.of(found, TicketPlans.MINE_TUNNEL_SIZE));
+        return SettlementPlotStore.liveSite(level).flatMap(MineSnapshots::geometry);
     }
 
-    private static Optional<MineLayout> layout(ServerLevel level) {
-        Optional<StageSite> site = SettlementPlotStore.liveSite(level);
+    public static Optional<MineGeometry> geometry(StageSite stage) {
+        return layout(stage).map(found -> MineGeometry.of(found, TicketPlans.MINE_TUNNEL_SIZE));
+    }
+
+    private static Optional<MineLayout> layout(StageSite stage) {
         Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(TicketPlans.MINE_DESCENT_SCHEME);
-        if (site.isEmpty() || preset.isEmpty()) {
+        if (preset.isEmpty()) {
             return Optional.empty();
         }
-        StageSite stage = site.orElseThrow();
         Preset descent = preset.orElseThrow();
         return Optional.of(MineLayout.place(
                 descent.schematic(),

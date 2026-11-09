@@ -1,11 +1,13 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +21,9 @@ final class TorchPlans {
     private static final String RADIUS = "radius";
     private static final int TORCHES_PER_CRAFT = 4;
     private static final String WAIT = "wait";
+    private static final String BLOCK = "block";
+    private static final List<BlockCoord> LIGHT_OFFSETS = List.of(
+            new BlockCoord(-3, 0, -3), new BlockCoord(3, 0, -3), new BlockCoord(-3, 0, 3), new BlockCoord(3, 0, 3));
     private static final List<String> LEFTOVERS = List.of(
             "minecraft:stick",
             "minecraft:*_planks",
@@ -58,6 +63,23 @@ final class TorchPlans {
                 new ScriptCall(ACQUIRE, Map.of(ITEM, "minecraft:stick", COUNT, crafts)),
                 new ScriptCall(
                         CRAFT, Map.of(ITEM, TORCH, COUNT, torches, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));
+    }
+
+    static TaskNode lighting(TicketTarget target) {
+        List<BlockCoord> torches = LIGHT_OFFSETS.stream()
+                .map(offset -> new BlockCoord(
+                        target.target().x() + offset.x(),
+                        target.target().y(),
+                        target.target().z() + offset.z()))
+                .toList();
+        List<TaskNode> steps = new ArrayList<>(torches.size() + 4);
+        steps.add(TicketPlans.gotoTarget(target));
+        steps.addAll(supply(torches.size()));
+        for (BlockCoord torch : torches) {
+            steps.add(new ScriptCall(
+                    "place_block", Map.of(BLOCK, TORCH, "x", torch.x(), "y", torch.y(), "z", torch.z())));
+        }
+        return new SequenceNode(steps);
     }
 
     static TaskNode plan(TicketTarget target) {

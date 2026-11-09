@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.husbandry;
 
 import com.theminespirit.core.board.HiveRules;
+import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.BlockBreaker;
 import com.theminespirit.neoforge.BlockPlacer;
 import com.theminespirit.neoforge.BlockStates;
@@ -62,7 +63,7 @@ final class HiveSmoke {
     }
 
     void fire() {
-        BlockPlacer placer = new BlockPlacer(session.spirit);
+        BlockPlacer placer = new BlockPlacer(session.spirit, PlotProtection.Ground.NONE);
         BlockPlacer.Begin begin = placer.begin(session.fireSpot, BlockStates.stateFor(CAMPFIRE_ID), CAMPFIRE_ID);
         if (begin instanceof BlockPlacer.Started) {
             if (!CampfireBlock.isSmokeyPos(session.level, session.hive)) {

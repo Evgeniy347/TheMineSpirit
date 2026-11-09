@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.demo;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.BuildingType;
 import com.theminespirit.core.engine.RunStatus;
@@ -29,6 +30,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class DemoSession {
@@ -47,6 +49,8 @@ final class DemoSession {
     private final SpiritEntity spirit;
     private final List<DemoPlan> plans;
     private final UUID owner;
+    private final @Nullable DemoPlan site;
+
     private int index;
     private int round;
     private List<BlockPos> chests = List.of();
@@ -54,10 +58,15 @@ final class DemoSession {
     private final DemoStock stock;
 
     DemoSession(ServerLevel level, SpiritEntity spirit, List<DemoPlan> plans, UUID owner) {
+        this(level, spirit, plans, owner, null);
+    }
+
+    DemoSession(ServerLevel level, SpiritEntity spirit, List<DemoPlan> plans, UUID owner, @Nullable DemoPlan site) {
         this.level = level;
         this.spirit = spirit;
         this.plans = List.copyOf(plans);
         this.owner = owner;
+        this.site = site;
         this.stock = new DemoStock(level, spirit);
     }
 
@@ -77,7 +86,7 @@ final class DemoSession {
 
     void begin() {
         holdChunks();
-        prepare(plans.get(0));
+        prepare(site != null ? site : plans.get(0));
         spirit.startTask(node(0, stock.withdrawals(plans.get(0), chests)));
     }
 
@@ -94,7 +103,9 @@ final class DemoSession {
             placeWithoutItem(plans.get(index));
             if (index + 1 < plans.size()) {
                 index++;
-                prepare(plans.get(index));
+                if (site == null) {
+                    prepare(plans.get(index));
+                }
                 spirit.startTask(node(index, stock.withdrawals(plans.get(index), chests)));
                 return true;
             }
@@ -145,18 +156,24 @@ final class DemoSession {
 
     private void holdChunks() {
         for (DemoPlan plan : plans) {
-            var platform = plan.placement().platform();
-            for (int cx = platform.minX() >> 4; cx <= platform.maxX() >> 4; cx++) {
-                for (int cz = platform.minZ() >> 4; cz <= platform.maxZ() >> 4; cz++) {
-                    ChunkPos pos = new ChunkPos(cx, cz);
-                    if (!held.contains(pos)) {
-                        held.add(pos);
-                        level.getChunkSource().addRegionTicket(DEMO_TICKET, pos, TICKET_DISTANCE, pos, true);
-                    }
+            hold(plan.placement().platform());
+        }
+        if (site != null) {
+            hold(site.placement().platform());
+        }
+        LOGGER.info("Демо-стройка: дух {} держит чанков {} на время сессии", spirit.getStringUUID(), held.size());
+    }
+
+    private void hold(BuildBox platform) {
+        for (int cx = platform.minX() >> 4; cx <= platform.maxX() >> 4; cx++) {
+            for (int cz = platform.minZ() >> 4; cz <= platform.maxZ() >> 4; cz++) {
+                ChunkPos pos = new ChunkPos(cx, cz);
+                if (!held.contains(pos)) {
+                    held.add(pos);
+                    level.getChunkSource().addRegionTicket(DEMO_TICKET, pos, TICKET_DISTANCE, pos, true);
                 }
             }
         }
-        LOGGER.info("Демо-стройка: дух {} держит чанков {} на время сессии", spirit.getStringUUID(), held.size());
     }
 
     private void releaseChunks() {
