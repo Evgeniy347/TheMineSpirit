@@ -25,13 +25,17 @@ public final class ModLog {
             if (log != null) {
                 return;
             }
-            Path root = Objects.requireNonNull(
-                    server.getWorldPath(LevelResource.ROOT).getParent(),
-                    "У папки мира нет родителя: неизвестно, куда писать logs/events");
-            Path logs = root.resolve("logs");
+            Path logs = logsDirectory(server.getWorldPath(LevelResource.ROOT));
             build = BuildFingerprint.version();
             log = new EventLog(logs.resolve("events"), build, source);
         }
+    }
+
+    static Path logsDirectory(Path worldPath) {
+        Path root = Objects.requireNonNull(
+                worldPath.toAbsolutePath().normalize().getParent(),
+                "У папки мира нет родителя: неизвестно, куда писать logs/events");
+        return root.resolve("logs");
     }
 
     public static boolean active() {

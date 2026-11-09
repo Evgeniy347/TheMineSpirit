@@ -167,7 +167,7 @@ def spirit(target, args):
         if task.get("assignee") == bot["id"] and task["status"] != "DONE":
             print("  задание %s %s %s: %s" % (task["id"][:50], task["status"], task.get("effectivePriority"), str(task.get("waitReason"))[:110]))
     print("журнал:")
-    rows = target.logq(["spirit", bot["name"], "--since", "1h", "--limit", str(args.lines)])
+    rows = target.logq(["--limit", str(args.lines), "spirit", bot["name"], "--since", "1h"])
     if rows:
         for row in rows:
             print("  %s %-14s %s" % (
@@ -186,7 +186,7 @@ def slice_cmd(target, args):
 
 
 def loops(target, args):
-    rows = target.logq(["failures", "--since", "30d", "--limit", str(args.lines)])
+    rows = target.logq(["--limit", str(args.lines), "failures", "--since", "30d"])
     if rows:
         total = sum(int(row.get("n") or 0) for row in rows)
         print("провалов %d за 30 дней" % total)
@@ -214,7 +214,7 @@ def loops(target, args):
 
 
 def log_cmd(target, args):
-    rows = target.logq(["grep", args.pattern, "--limit", str(args.lines), "--since", "24h"])
+    rows = target.logq(["--limit", str(args.lines), "grep", args.pattern, "--since", "24h"])
     for row in rows:
         print("%s %-12s %s" % (stamp(row.get("ts")), row.get("type") or "-", (row.get("summary") or "")[:460]))
 
