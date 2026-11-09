@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.log.LogCause;
-import com.theminespirit.core.tactics.adapter.Visibility;
 import com.theminespirit.neoforge.log.SpiritLog;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -24,11 +23,6 @@ public final class SpiritBlocks {
 
     public static boolean destroy(ServerLevel level, BlockPos pos, boolean drop, SpiritEntity spirit, String basis) {
         BlockState before = level.getBlockState(pos);
-        if (BreakSight.visible(spirit, pos, false) != Visibility.CLEAR) {
-            SpiritLog.blockRefused(
-                    level, spirit, pos, "break", basis, "блок не виден из глаз духа: ломать сквозь стену нельзя");
-            return false;
-        }
         boolean changed = level.destroyBlock(pos, drop, spirit);
         SpiritLog.block(
                 level,
