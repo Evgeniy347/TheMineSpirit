@@ -8,7 +8,6 @@ REST="${LIVE_DEBUG_REST:-http://$HOST:8765}"
 AGENT="${LIVE_DEBUG_AGENT:-${USER:-agent}}"
 TTL="${LIVE_DEBUG_TTL:-14400}"
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
-. "$REPO/scripts/module-paths.sh"
 SRC="$REPO/scripts/live-debug"
 OUT="$REPO/build/live-debug/classes"
 SERVER_DIR="/opt/minecraft/server"
@@ -117,22 +116,6 @@ win_path() {
     else
         printf '%s' "$1"
     fi
-}
-
-listed_paths() {
-    local out="" part
-    local old_ifs="$IFS"
-    IFS=';'
-    for part in $1; do
-        [ -n "$part" ] || continue
-        if [ -z "$out" ]; then
-            out="$(win_path "$part")"
-        else
-            out="$out;$(win_path "$part")"
-        fi
-    done
-    IFS="$old_ifs"
-    printf '%s' "$out"
 }
 
 classes_arg() {

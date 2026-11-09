@@ -49,7 +49,7 @@ core/tactics/TacticsConfigTests.java	370
 core/task/TaskReconcilerTests.java	368
 core/task/TaskRegistryTests.java	312
 gametest/DemoAuditGameTests.java	1101
-gametest/GameTestFilter.java	327
+gametest/GameTestFilter.java	305
 gametest/GameTestFixtures.java	354
 gametest/HouseMovementGameTests.java	365
 gametest/RestFixture.java	310
