@@ -1,18 +1,27 @@
 package com.theminespirit.neoforge.board;
 
-import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class GraphStockNote {
-    private static final Logger LOGGER = LogUtils.getLogger();
+    private static final Logger LOGGER = LoggerFactory.getLogger(GraphStockNote.class);
     private static final String AXE = "_axe";
     private static final String MINECRAFT = "minecraft:";
+    private static final List<String> TIER_ORDER = List.of("wooden", "stone", "iron", "diamond", "netherite", "golden");
+    private static final Map<String, String> TIER_NAMES = Map.of(
+            "wooden", "деревянных",
+            "stone", "каменных",
+            "iron", "железных",
+            "diamond", "алмазных",
+            "netherite", "незеритовых",
+            "golden", "золотых");
     private static String last = "";
 
     private GraphStockNote() {}
@@ -26,35 +35,95 @@ final class GraphStockNote {
     }
 
     static String line(GraphFacts facts, List<SpiritEntity> spirits) {
-        int chestAxes = 0;
+        Map<String, Integer> chestAxes = new LinkedHashMap<>();
         for (GraphFacts.Chest chest : facts.chests()) {
-            chestAxes += axes(chest.contents());
+            axes(chest.contents(), chestAxes);
         }
-        int inventoryAxes = 0;
-        int handAxes = 0;
+        Map<String, Integer> inventoryAxes = new LinkedHashMap<>();
+        Map<String, Integer> handAxes = new LinkedHashMap<>();
         for (SpiritEntity spirit : spirits) {
             for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
-                if (isAxe(spirit.getInventory().getItem(slot))) {
-                    inventoryAxes += spirit.getInventory().getItem(slot).getCount();
+                ItemStack stack = spirit.getInventory().getItem(slot);
+                if (isAxe(stack)) {
+                    add(
+                            inventoryAxes,
+                            BuiltInRegistries.ITEM.getKey(stack.getItem()).toString(),
+                            stack.getCount());
                 }
             }
             if (spirit.mainHandOwned() && isAxe(spirit.getMainHandItem())) {
-                handAxes += spirit.getMainHandItem().getCount();
+                ItemStack stack = spirit.getMainHandItem();
+                add(handAxes, BuiltInRegistries.ITEM.getKey(stack.getItem()).toString(), stack.getCount());
             }
         }
-        int axes = chestAxes + inventoryAxes + handAxes;
-        return "[graph] запасы: сундуков " + facts.chests().size() + ", топоров " + axes + " (сундуки " + chestAxes
-                + ", духи " + inventoryAxes + ", в руках " + handAxes + ")";
+        return line(facts.chests().size(), chestAxes, inventoryAxes, handAxes);
     }
 
-    private static int axes(Map<String, Integer> contents) {
-        int total = 0;
-        for (Map.Entry<String, Integer> entry : contents.entrySet()) {
-            if (entry.getValue() > 0 && isAxe(entry.getKey())) {
-                total += entry.getValue();
-            }
+    static String line(
+            int chests,
+            Map<String, Integer> chestAxes,
+            Map<String, Integer> inventoryAxes,
+            Map<String, Integer> handAxes) {
+        int chestCount = sum(chestAxes);
+        int inventoryCount = sum(inventoryAxes);
+        int handCount = sum(handAxes);
+        int axes = chestCount + inventoryCount + handCount;
+        StringBuilder line = new StringBuilder("[graph] запасы: сундуков ")
+                .append(chests)
+                .append(", топоров ")
+                .append(axes)
+                .append(" (сундуки ")
+                .append(chestCount)
+                .append(", духи ")
+                .append(inventoryCount)
+                .append(", в руках ")
+                .append(handCount);
+        Map<String, Integer> tiers = new LinkedHashMap<>(chestAxes);
+        inventoryAxes.forEach((tier, count) -> tiers.merge(tier, count, Integer::sum));
+        handAxes.forEach((tier, count) -> tiers.merge(tier, count, Integer::sum));
+        appendTiers(line, tiers);
+        return line.append(")").toString();
+    }
+
+    private static void appendTiers(StringBuilder line, Map<String, Integer> tiers) {
+        List<String> shown = TIER_ORDER.stream()
+                .filter(tier -> tiers.getOrDefault(tier, 0) > 0)
+                .toList();
+        if (shown.isEmpty()) {
+            return;
         }
-        return total;
+        line.append("; ");
+        for (int index = 0; index < shown.size(); index++) {
+            if (index > 0) {
+                line.append(", ");
+            }
+            String tier = shown.get(index);
+            line.append(TIER_NAMES.getOrDefault(tier, tier)).append(' ').append(tiers.get(tier));
+        }
+    }
+
+    private static void axes(Map<String, Integer> contents, Map<String, Integer> tiers) {
+        contents.forEach((item, count) -> {
+            if (count > 0 && isAxe(item)) {
+                add(tiers, tier(item), count);
+            }
+        });
+    }
+
+    private static void add(Map<String, Integer> tiers, String item, int count) {
+        if (count > 0) {
+            tiers.merge(tier(item), count, Integer::sum);
+        }
+    }
+
+    private static int sum(Map<String, Integer> tiers) {
+        return tiers.values().stream().mapToInt(Integer::intValue).sum();
+    }
+
+    static String tier(String item) {
+        String id = item.startsWith(MINECRAFT) ? item.substring(MINECRAFT.length()) : item;
+        int split = id.lastIndexOf('_');
+        return split <= 0 ? id : id.substring(0, split);
     }
 
     private static boolean isAxe(ItemStack stack) {
