@@ -12,8 +12,8 @@ import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
 final class FillPickState {
-    private static final Logger LOGGER = LogUtils.getLogger();
     static final int NO_STAND_LOGGED = 4;
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private final FillSession host;
 

@@ -59,13 +59,14 @@ class GraphLifeCasesTests {
     }
 
     @Test
-    void tickets_Hungry_EatStaysWithinNeedBand() {
+    void tickets_Hungry_EatStaysWithinVitalBand() {
         GraphWorld world = busySettlement().event("hungry");
         GraphPlan plan = world.plan();
+        int need = GraphPriorities.need(GraphWorld.GRAPH);
 
         assertTrue(
-                plan.priority(EAT) > 0 && plan.priority(EAT) <= GraphPriorities.need(GraphWorld.GRAPH),
-                "Еда голодного духа идёт в полосе потребности, но не выше неё. Еда " + plan.priority(EAT) + ", задания "
+                plan.priority(EAT) > 0 && plan.priority(EAT) <= need && plan.priority(EAT) >= need - VitalNeeds.BAND,
+                "Голод — жизненная нужда в полосе потребности, но не выше неё. Еда " + plan.priority(EAT) + ", задания "
                         + ids(plan));
         assertTrue(
                 tickets(world.state()).post().stream()

@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
-public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> push, List<String> advice, boolean life) {
+public record GraphEvent(
+        String name, List<Task> tasks, Map<String, Integer> push, List<String> advice, boolean life, boolean vital) {
     public record Task(
             String id,
             BoardCase boardCase,
@@ -31,7 +32,11 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
     }
 
     public GraphEvent(String name, List<Task> tasks, Map<String, Integer> push, List<String> advice) {
-        this(name, tasks, push, advice, false);
+        this(name, tasks, push, advice, false, false);
+    }
+
+    public GraphEvent(String name, List<Task> tasks, Map<String, Integer> push, List<String> advice, boolean life) {
+        this(name, tasks, push, advice, life, false);
     }
 
     static Map<String, GraphEvent> withRepairs(
@@ -59,7 +64,9 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
                         task.owner(),
                         task.implemented()));
             }
-            repaired.put(name, new GraphEvent(name, tasks, template.push(), template.advice(), template.life()));
+            repaired.put(
+                    name,
+                    new GraphEvent(name, tasks, template.push(), template.advice(), template.life(), template.vital()));
         }
         return repaired;
     }
@@ -89,7 +96,8 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
                             tasks,
                             counts(entry.getValue().path("push")),
                             advice,
-                            entry.getValue().path("life").asBoolean(false)));
+                            entry.getValue().path("life").asBoolean(false),
+                            entry.getValue().path("vital").asBoolean(false)));
         });
         return events;
     }
@@ -114,6 +122,15 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
                                 task,
                                 graph.maxPriority(),
                                 graph.costs().life());
+                    }
+                    if (event.vital()) {
+                        int ceiling = GraphEventFacts.needEvent(event)
+                                ? GraphPriorities.need(graph)
+                                : GraphPriorities.work(graph);
+                        return VitalNeeds.priority(
+                                task.base(),
+                                event.tasks().stream().map(Task::base).toList(),
+                                ceiling);
                     }
                     if (GraphEventFacts.need(graph, state, event, task)) {
                         return GraphPriorities.need(graph);

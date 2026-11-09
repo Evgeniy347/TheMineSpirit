@@ -47,12 +47,8 @@
   Цена: засыпка вслепую может испортить участок. Предложение: `Terrain.unknown` запрещает засыпку, как посев.
 - **5-12 — закрыто третьей партией**: занятый стройкой дух бросает работу ради `retreat`
   (`CrossBattleWorkScenarioTests.combat_MobsAtBuilderAndChopper_RetreatPreemptsWork`).
-- **12-14** (`CrossBattleWorkScenarioTests.combat_HungryWoundedSpirit_FightsBeforeEating`): раненый голодный дух
-  сначала отбивается, но при острой нехватке угля (`mine_coal` 60) копает раньше обеда (55), хотя еда лежит в
-  сундуке. debtfood поднял событие `hungry` в полосу потребности, но это задание — `event:life_threat:eat`
-  (жизнь важнее), и оно всё ещё ниже шахты. Предложение: привязать еду жизни к той же полосе потребности, а не к
-  базовым весам шахты.
-- **14-22** (`CrossFarmSupplyScenarioTests.hunger_NoFoodButExpeditionReady_ExpeditionGoesWhileSpiritStarves`):
-  поход ставится выполнимым при нуле еды на складе, а голодный дух остаётся без обеда. Цена: поход без запаса.
-  Предложение: проверять запас еды похода по тому же складу, что и `eat`.
+- **12-14 — закрыто VitalGate**: раненый голодный дух сначала отбивается, а еда получила верхнюю полосу
+  приоритетов (`VitalNeeds`); `VitalGate` не отдаёт ему шахту, пока нужда жива.
+- **14-22 — закрыто VitalGate**: голодному духу поход не выдаётся, пока нужда жива; поход получает сытый дух
+  (`CrossFarmSupplyScenarioTests.hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave`).
 

@@ -6,6 +6,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.neoforge.GotoScript;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.HomePoint;
 import java.util.Map;
 
 public final class ReturnHomeScript implements ScriptInstance {
@@ -14,7 +15,7 @@ public final class ReturnHomeScript implements ScriptInstance {
     private final GotoScript walk;
 
     public ReturnHomeScript(SpiritEntity spirit) {
-        BlockCoord home = spirit.home().orElse(null);
+        BlockCoord home = HomePoint.of(spirit).orElse(null);
         this.walk = home == null ? null : new GotoScript(spirit, new GotoParams(home.x(), home.y(), home.z()));
     }
 
@@ -42,7 +43,9 @@ public final class ReturnHomeScript implements ScriptInstance {
 
     @Override
     public String failureReason() {
-        return walk == null ? "дом не задан: поставьте его командой /spirit home <дух> set" : walk.failureReason();
+        return walk == null
+                ? "дома нет ни у духа, ни у поселения: поставьте его командой /spirit home <дух> set"
+                : walk.failureReason();
     }
 
     @Override

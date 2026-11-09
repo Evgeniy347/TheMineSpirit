@@ -4,13 +4,11 @@ import com.theminespirit.core.engine.ScriptFactory;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.movement.DigOutObstacle;
-import com.theminespirit.core.movement.PitWalkOut;
 import com.theminespirit.core.movement.SealedSpace;
 import com.theminespirit.core.movement.WaterCrossingPlanner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.core.town.PlotProtection;
-import com.theminespirit.neoforge.board.PitWalkOutView;
 import com.theminespirit.neoforge.movement.CheapBlocks;
 import java.util.List;
 import java.util.Map;
@@ -48,10 +46,6 @@ public final class DigOutScript implements ScriptInstance {
     private boolean routeFallback;
     private final DigOutRestore restore;
 
-    static ScriptFactory factory(SpiritEntity spirit) {
-        return params -> new DigOutScript(spirit, GotoParams.from(params), GotoParams.rescue(params));
-    }
-
     public DigOutScript(SpiritEntity spirit, GotoParams target) {
         this(spirit, target, false);
     }
@@ -72,6 +66,10 @@ public final class DigOutScript implements ScriptInstance {
                 placer,
                 !descending && !sealedNow && target.y() > spirit.blockPosition().getY(),
                 restore);
+    }
+
+    static ScriptFactory factory(SpiritEntity spirit) {
+        return params -> new DigOutScript(spirit, GotoParams.from(params), GotoParams.rescue(params));
     }
 
     public static boolean sealed(Level level, BlockPos feet) {
@@ -121,7 +119,7 @@ public final class DigOutScript implements ScriptInstance {
         boolean goalReached = descending
                 ? feet.getY() <= target.y() && (open(level, feet) || feet.getY() == target.y())
                 : feet.getY() >= target.y();
-        if ((surfaced(feet) && !fromPit) || goalReached) {
+        if ((DigOutExit.surfaced(level, feet) && !fromPit && !restore.pendingOver(feet)) || goalReached) {
             backfill.report();
             restore.returnSpoil();
             PlanBreachRestore.restore(spirit, level, placer, feet);
@@ -138,26 +136,27 @@ public final class DigOutScript implements ScriptInstance {
             direction = towardTarget(feet);
         }
         BlockPos ahead = feet.relative(direction);
-        for (BlockPos cell : List.of(feet.above(2), ahead.above(), ahead.above(2))) {
+        boolean sideways = DigOutExit.fixedCeiling(level, feet);
+        List<BlockPos> clear =
+                sideways ? List.of(ahead.above(), ahead) : List.of(feet.above(2), ahead.above(), ahead.above(2));
+        for (BlockPos cell : clear) {
             if (DigOutObstacle.obstacle(DigOutBackfill.passable(level, cell), DigOutBackfill.water(level, cell))) {
                 return dig(cell);
             }
         }
-        if (DigOutBackfill.passable(level, ahead) || DigOutBackfill.water(level, ahead)) {
-            Optional<String> refusal = placeFloor(ahead);
+        BlockPos step = sideways ? ahead : ahead.above();
+        BlockPos floor = step.below();
+        if (DigOutBackfill.passable(level, floor) || DigOutBackfill.water(level, floor)) {
+            Optional<String> refusal = placeFloor(floor);
             if (refusal.isPresent()) {
-                return turnOrFail("пол ступени " + ahead.toShortString() + " не подложить: " + refusal.get());
+                return turnOrFail("пол ступени " + floor.toShortString() + " не подложить: " + refusal.get());
             }
         }
         backfill.remember(feet);
-        next = ahead.above();
+        next = step;
         stepTicks = 0;
         moveTo(next);
         return ScriptStatus.RUNNING;
-    }
-
-    private boolean surfaced(BlockPos feet) {
-        return open(level, feet) && PitWalkOut.exists(new PitWalkOutView(level), feet.getX(), feet.getZ(), feet.getY());
     }
 
     private boolean followRoute() {
@@ -203,9 +202,8 @@ public final class DigOutScript implements ScriptInstance {
             spirit.getJumpControl().jump();
             return;
         }
-        if (spirit.getNavigation().isDone()) {
-            spirit.getNavigation().moveTo(cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5, 1.0);
-        }
+        spirit.getNavigation().stop();
+        spirit.getMoveControl().setWantedPosition(cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5, 1.0);
     }
 
     private ScriptStatus dig(BlockPos cell) {

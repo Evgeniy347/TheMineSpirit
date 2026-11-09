@@ -46,8 +46,8 @@ final class BuildSchematicScript implements ScriptInstance {
     static final int MAX_CENTRING_TICKS = 20;
     static final int WALK_MARGIN = 6;
     static final int MAX_PLAN_TOP_UPS = 8;
-    private static final int SITE_NETWORK_RING = 6;
     static final int MAX_PLAN_TRIP_RETRIES = 2;
+    private static final int SITE_NETWORK_RING = 6;
 
     final SpiritEntity spirit;
     final Level level;

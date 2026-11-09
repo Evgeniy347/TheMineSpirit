@@ -153,13 +153,6 @@ public final class ProtectionGate {
                 .orElse(false);
     }
 
-    private static boolean onSettlementPlot(ServerLevel level, BlockCoord coord) {
-        return SettlementPlotStore.get(level)
-                .site()
-                .map(site -> site.inside(coord.x(), coord.z()))
-                .orElse(false);
-    }
-
     private static PlanBuilding planBuilding(ServerLevel level, BlockCoord coord) {
         return SettlementPlotStore.get(level)
                 .site()
@@ -197,7 +190,6 @@ public final class ProtectionGate {
         boolean inProtectedZone = PolicyConfig.zones().contains(dimension, coord);
         boolean unprotectArea = level instanceof ServerLevel server
                 && UnprotectService.of(server.getServer()).covers(dimension, coord, System.currentTimeMillis());
-        String id = blockId(state);
         StageSite site = site(level);
         PlotProtection.Ground effective = ground;
         if (site != null
@@ -218,7 +210,10 @@ public final class ProtectionGate {
         }
         boolean planCell = plot instanceof PlotProtection.Allowed allowed && allowed.building() != PlanBuilding.NONE;
         BlockProtection.Decision decision;
-        if (demolish && !inProtectedZone && level instanceof ServerLevel server && inFenceStrip(server, coord, id)) {
+        if (demolish
+                && !inProtectedZone
+                && level instanceof ServerLevel server
+                && inFenceStrip(server, coord, blockId(state))) {
             decision = new BlockProtection.Allowed();
         } else if (planCell) {
             decision = new BlockProtection.Allowed();
@@ -228,22 +223,15 @@ public final class ProtectionGate {
                     Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, AIR_ID),
                     new BlockProtection.Placement(false, inProtectedZone, unprotectArea));
         } else {
-            boolean spiritMarked = false;
-            boolean placedByPlayer = false;
-            boolean onPlot = false;
-            if (level instanceof ServerLevel server) {
-                spiritMarked = PlacedBlocksData.get(server).isSpiritMarked(pos);
-                placedByPlayer = !spiritMarked && PlacedBlocksData.get(server).isMarked(pos);
-                onPlot = onSettlementPlot(server, coord);
-            }
-            SettlementBreak.Origin origin = placedByPlayer
+            PlotMarks.Marks marks = PlotMarks.of(level, pos, coord);
+            SettlementBreak.Origin origin = marks.placedByPlayer()
                     ? SettlementBreak.Origin.PLAYER
-                    : spiritMarked ? SettlementBreak.Origin.SPIRIT : SettlementBreak.Origin.UNKNOWN;
+                    : marks.spiritMarked() ? SettlementBreak.Origin.SPIRIT : SettlementBreak.Origin.UNKNOWN;
             decision = SettlementBreak.decide(
                     PROTECTION,
                     new SettlementBreak.Facts(
                             origin,
-                            onPlot,
+                            marks.onPlot(),
                             false,
                             blockId(state),
                             inProtectedZone,

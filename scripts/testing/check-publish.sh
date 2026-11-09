@@ -5,7 +5,9 @@
 # Настоящие Gradle, tmux и сервер не нужны: gradlew, tmux и crontab — подделки, каталоги — временные.
 cd "$(dirname "$0")/../.." || exit 2
 root="$PWD"
-work="$root/TestResults/publish-check"
+. scripts/python-bin.sh
+work="$root/TestResults/publish-check.$$"
+trap 'rm -rf "$work"' EXIT
 rm -rf "$work"
 mkdir -p "$work/bin" "$work/jars"
 failed=0
@@ -21,18 +23,7 @@ export GIT_AUTHOR_EMAIL="publish-check@example.invalid"
 export GIT_COMMITTER_NAME="publish-check"
 export GIT_COMMITTER_EMAIL="publish-check@example.invalid"
 
-pick_python() {
-    local candidate
-    for candidate in "${THEMINESPIRIT_PYTHON:-}" "${PYTHON:-}" python3 python; do
-        [ -n "$candidate" ] || continue
-        candidate="$(command -v "$candidate" 2>/dev/null)" || continue
-        "$candidate" -c 'import sys, zipfile' >/dev/null 2>&1 || continue
-        printf '%s' "$candidate"
-        return 0
-    done
-    return 1
-}
-PYTHON="$(pick_python)" || {
+PYTHON="$(python_bin zipfile)" || {
     echo "FAIL нет рабочего python 3 для фикстур jar"
     exit 1
 }
@@ -129,7 +120,7 @@ chmod +x "$work/bin"/*
 make_repo() {
     local repo="$1"
     mkdir -p "$repo/scripts" "$repo/config" "$repo/build"
-    cp scripts/publish.sh scripts/module-paths.sh scripts/publish-status.sh "$repo/scripts/"
+    cp scripts/publish.sh scripts/module-paths.sh scripts/publish-status.sh scripts/python-bin.sh "$repo/scripts/"
     cp config/layout.properties "$repo/config/"
     printf 'mod_id=theminespirit\n' >"$repo/gradle.properties"
     printf "include ':mod'\n" >"$repo/settings.gradle"
@@ -179,6 +170,11 @@ code=$?
     && ok "годный jar: публикация дошла до установки, пака и страницы (код=0)" \
     || fail "годный jar: код=$code, вывод: $out"
 
+# lib: след сборки в выводе: по нему разбирают инцидент выкладки (какой коммит, какой файл, когда собран).
+echo "$out" | grep -q "Коммит: " && echo "$out" | grep -q "изменён " && echo "$out" | grep -q "sha256 " \
+    && ok "годный jar: вывод называет коммит, время сборки и sha256 выбранного jar" \
+    || fail "нет следа сборки (коммит/время/sha256) в выводе публикации: $out"
+
 repo="$work/repo-bad"
 make_repo "$repo"
 out=$(run_publish "$repo" "$work/bad/server" "$work/bad/client" "$work/bad/gateway" "$empty_jar")
@@ -201,5 +197,4 @@ code=$?
     && ok "--sync: битый jar на сервере не расходится по клиентам (код=1, пак не тронут)" \
     || fail "--sync: код=$code, вывод: $out"
 
-rm -rf "$work"
 exit $failed

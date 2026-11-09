@@ -1,7 +1,22 @@
 package com.theminespirit.core.board.graph;
 
-import static com.theminespirit.core.board.graph.CrossActions.*;
-import static com.theminespirit.core.board.graph.CrossScene.*;
+import static com.theminespirit.core.board.graph.CrossActions.board;
+import static com.theminespirit.core.board.graph.CrossActions.boardTicket;
+import static com.theminespirit.core.board.graph.CrossActions.id;
+import static com.theminespirit.core.board.graph.CrossActions.scripts;
+import static com.theminespirit.core.board.graph.CrossScene.FED;
+import static com.theminespirit.core.board.graph.CrossScene.chest;
+import static com.theminespirit.core.board.graph.CrossScene.damaged;
+import static com.theminespirit.core.board.graph.CrossScene.facts;
+import static com.theminespirit.core.board.graph.CrossScene.ids;
+import static com.theminespirit.core.board.graph.CrossScene.named;
+import static com.theminespirit.core.board.graph.CrossScene.plan;
+import static com.theminespirit.core.board.graph.CrossScene.spirit;
+import static com.theminespirit.core.board.graph.CrossScene.stageOne;
+import static com.theminespirit.core.board.graph.CrossScene.stageTwo;
+import static com.theminespirit.core.board.graph.CrossScene.task;
+import static com.theminespirit.core.board.graph.CrossScene.threat;
+import static com.theminespirit.core.board.graph.CrossScene.tickets;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -20,9 +35,18 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
 class CrossBattleWorkScenarioTests {
+    private static GraphTickets.Ticket ticket(
+            GraphTickets.Result result, Predicate<GraphTickets.Ticket> match, String absent) {
+        return result.post().stream()
+                .filter(match)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError(absent + ": " + result.post()));
+    }
+
     @Test
     void combat_MobsAtBuilderAndChopper_RetreatPreemptsWork() {
         GraphWorld world = stageTwo();
@@ -30,14 +54,10 @@ class CrossBattleWorkScenarioTests {
         world.with("oak_log", 0).with("oak_planks", 0).with("cobblestone", 64).with("dirt", 64);
         GraphFacts calm = facts(named(spirit("spirit-1"), spirit("spirit-2")));
         GraphTickets.Result calmTickets = tickets(world, calm);
-        GraphTickets.Ticket build = calmTickets.post().stream()
-                .filter(ticket -> ticket.id().startsWith("graph:building:hut"))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("В сцене нет стройки хижины: " + calmTickets.post()));
-        GraphTickets.Ticket chop = calmTickets.post().stream()
-                .filter(ticket -> ticket.node().startsWith("chop_"))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("В сцене нет рубки: " + calmTickets.post()));
+        GraphTickets.Ticket build = ticket(
+                calmTickets, ticket -> ticket.id().startsWith("graph:building:hut"), "В сцене нет стройки хижины");
+        GraphTickets.Ticket chop =
+                ticket(calmTickets, ticket -> ticket.node().startsWith("chop_"), "В сцене нет рубки");
 
         Board board = new Board(() -> 0);
         board.submit(boardTicket(build));

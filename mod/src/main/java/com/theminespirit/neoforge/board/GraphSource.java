@@ -3,8 +3,11 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.VitalGate;
 import com.theminespirit.core.board.graph.GraphCadence;
+import com.theminespirit.core.board.graph.GraphDecisions;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphPlanner;
 import com.theminespirit.core.board.graph.GraphState;
@@ -17,6 +20,7 @@ import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
@@ -148,7 +152,7 @@ public final class GraphSource {
             }
         }
         reporter.report(half.plan(), half.result(), unconnected, freeSpirit(half), half.now());
-        decisionLog.note(half.plan(), half.now());
+        decisionLog.note(half.plan(), half.now(), vitals(half));
         decisionLog.noteFailures(half.state(), half.now());
         reporter.world(half.level(), half.state(), half.now());
         reporter.builds(half.level(), half.service(), half.graph(), half.state(), half.scan(), half.now());
@@ -205,6 +209,33 @@ public final class GraphSource {
             }
             StageSettle.settle(level, service, stock, scan, building.boardCase(), level.getGameTime());
         }
+    }
+
+    private static List<GraphDecisions.Vital> vitals(Half half) {
+        List<GraphDecisions.Vital> rows = new ArrayList<>();
+        for (SpiritEntity spirit : half.spirits()) {
+            if (spirit.isRemoved()) {
+                continue;
+            }
+            Map<String, String> needs = SpiritVitals.needs(spirit);
+            if (needs.isEmpty()) {
+                continue;
+            }
+            String id = spirit.getUUID().toString();
+            String doing = half.service().board().assignedTo(spirit.getUUID()).stream()
+                    .filter(ticket -> VitalGate.blocksWork(ticket, needs))
+                    .map(BoardTicket::id)
+                    .findFirst()
+                    .orElse("");
+            String task = half.plan().tasks().stream()
+                    .filter(candidate -> candidate.spirit().filter(id::equals).isPresent())
+                    .map(candidate -> GraphTickets.PREFIX + candidate.id())
+                    .filter(ticket -> VitalGate.satisfies(ticket, needs))
+                    .findFirst()
+                    .orElse("");
+            needs.forEach((need, reason) -> rows.add(new GraphDecisions.Vital(id, need, reason, task, doing)));
+        }
+        return List.copyOf(rows);
     }
 
     private static boolean closed(BoardStatus status) {

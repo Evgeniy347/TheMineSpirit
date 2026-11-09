@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import org.slf4j.Logger;
 
 final class DigOutRestore {
@@ -33,6 +34,10 @@ final class DigOutRestore {
         }
     }
 
+    boolean pendingOver(BlockPos feet) {
+        return broken.keySet().stream().anyMatch(cell -> cell.getX() == feet.getX() && cell.getZ() == feet.getZ());
+    }
+
     boolean pending(BlockPos cell) {
         return broken.containsKey(cell);
     }
@@ -47,7 +52,8 @@ final class DigOutRestore {
         while (iterator.hasNext()) {
             Map.Entry<BlockPos, BlockState> entry = iterator.next();
             BlockPos cell = entry.getKey();
-            if (EscapeRestore.blockedByBody(new BlockCoord(cell.getX(), cell.getY(), cell.getZ()), body)) {
+            if (EscapeRestore.blockedByBody(new BlockCoord(cell.getX(), cell.getY(), cell.getZ()), body)
+                    || spirit.getBoundingBox().intersects(new AABB(cell))) {
                 continue;
             }
             if (level.getBlockState(cell).equals(entry.getValue())) {

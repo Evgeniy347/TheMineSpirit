@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.board.WalkableStand;
 import com.theminespirit.core.board.WorkStand;
 import com.theminespirit.core.building.RetreatPath;
 import com.theminespirit.core.engine.ScriptInstance;
@@ -88,7 +89,10 @@ public final class GotoScript implements ScriptInstance {
         if (walkable.isEmpty()) {
             return new Resolved(point, null);
         }
-        Optional<BlockCoord> stand = WorkStand.near(p, ground(level), walkable.orElseThrow()::contains);
+        Optional<BlockCoord> stand = WalkableStand.near(p, walkable.orElseThrow());
+        if (stand.isEmpty()) {
+            stand = WorkStand.near(p, ground(level), walkable.orElseThrow()::contains);
+        }
         if (stand.isEmpty()) {
             return new Resolved(
                     point,

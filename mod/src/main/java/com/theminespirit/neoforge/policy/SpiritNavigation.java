@@ -24,6 +24,11 @@ public final class SpiritNavigation extends GroundPathNavigation {
         return new PathFinder(this.nodeEvaluator, maxVisitedNodes);
     }
 
+    @Override
+    public boolean moveTo(double x, double y, double z, double speed) {
+        return moveTo(createPath(x, y, z, 0), speed);
+    }
+
     public PathType classify(PathfindingContext context, BlockPos pos) {
         return nodeEvaluator.getPathType(context, pos.getX(), pos.getY(), pos.getZ());
     }

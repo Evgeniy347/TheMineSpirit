@@ -80,6 +80,21 @@ final class BoardSettlementDesk {
                 incoming.boardCase());
     }
 
+    void withdraw(SpiritEntity spirit, BoardTicket ticket, String why) {
+        if (!board.release(ticket.id())) {
+            return;
+        }
+        issuedGenerations.remove(ticket.id());
+        stall.forget(spirit.getUUID());
+        spirit.cancelTask();
+        WorkReserveHub.releaseAll(spirit);
+        LOGGER.info(
+                "[board] дух {} бросает обычную работу {}: {} — задание возвращено на доску",
+                spirit.displayName(),
+                ticket.id(),
+                why);
+    }
+
     void release(SpiritEntity spirit) {
         for (BoardTicket ticket : board.assignedTo(spirit.getUUID())) {
             issuedGenerations.remove(ticket.id());

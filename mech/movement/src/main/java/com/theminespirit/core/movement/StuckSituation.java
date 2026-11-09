@@ -39,6 +39,14 @@ public final class StuckSituation {
             return false;
         }
 
+        default boolean breakable(BlockCoord cell) {
+            return true;
+        }
+
+        default boolean clearColumn(BlockCoord feet, int rise) {
+            return true;
+        }
+
         int floorY(int x, int z);
     }
 
