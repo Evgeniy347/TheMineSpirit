@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.theminespirit.core.board.GraphBlock;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,7 +61,8 @@ class GraphStateFactsTests {
         GraphFeedback feedback = new GraphFeedback(
                 GraphFeedback.Clock.unknown(),
                 GraphFeedback.Player.none(),
-                List.of(new GraphFeedback.Failure("mine_coal", "100,64,100", 2, GraphFeedback.Cause.NO_PATH, 100)));
+                List.of(new GraphFeedback.Failure(
+                        "mine_coal", "100,64,100", 2, new GraphBlock.Path("100,64,100"), 100)));
         GraphFacts facts = facts().withFeedback(feedback);
 
         assertEquals(

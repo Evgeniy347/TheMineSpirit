@@ -43,7 +43,26 @@ public record SettlementTree(
             int y,
             @Nullable Position at,
             Map<String, Integer> missing,
-            List<String> requirements) {
+            List<String> requirements,
+            String detail) {
+        public Node(
+                String id,
+                Kind kind,
+                State state,
+                String title,
+                String icon,
+                int level,
+                int percent,
+                boolean optional,
+                boolean blocking,
+                int x,
+                int y,
+                @Nullable Position at,
+                Map<String, Integer> missing,
+                List<String> requirements) {
+            this(id, kind, state, title, icon, level, percent, optional, blocking, x, y, at, missing, requirements, "");
+        }
+
         public Node {
             Objects.requireNonNull(id, "id узла древа не может быть null: по нему рисуют связи");
             Objects.requireNonNull(kind, "вид узла древа не может быть null: от него зависит цвет рамки");
@@ -70,6 +89,7 @@ public record SettlementTree(
                     Objects.requireNonNull(missing, "Недостача узла не может быть null: пустую задают пустой картой"));
             requirements = List.copyOf(Objects.requireNonNull(
                     requirements, "Требования узла не могут быть null: без них задают пустой список"));
+            Objects.requireNonNull(detail, "Пояснение узла не может быть null: пустое — пустой строкой");
         }
     }
 

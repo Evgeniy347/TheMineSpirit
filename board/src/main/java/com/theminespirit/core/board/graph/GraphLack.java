@@ -55,6 +55,11 @@ public final class GraphLack {
         return (double) have / total;
     }
 
+    static Map<String, Integer> materials(SupplyGraph graph, GraphState state, String building) {
+        SupplyGraph.Building known = graph.buildings().get(building);
+        return state.materials().getOrDefault(building, known == null ? Map.of() : known.materials());
+    }
+
     static boolean ready(SupplyGraph graph, GraphState state, String building) {
         SupplyGraph.Building known = graph.buildings().get(building);
         return known != null && share(graph, state, known.materials()) >= graph.buildStartShare();

@@ -69,6 +69,16 @@ class MethodShapeGuardTests {
     }
 
     @Test
+    void methodShapePattern_AbsoluteWindowsPath_IsReportedWithoutCrash() {
+        String sample = "class Sample { void flags(boolean a, boolean b, boolean c) { } }\n";
+
+        assertEquals(
+                List.of("1 Sample.flags"),
+                violationsOf(sample, URI.create("file:///F:/repo/mod/src/main/java/Sample.java")),
+                "Сторож обязан назвать нарушителя и на абсолютном пути Windows, а не падать на Path.of");
+    }
+
+    @Test
     void methodShapePattern_RecordCanonicalConstructor_IsClean() {
         String sample = "record Flags(boolean north, boolean south, boolean east) { }\n";
 
@@ -118,14 +128,17 @@ class MethodShapeGuardTests {
     }
 
     private static List<String> violationsOf(String source) {
+        return violationsOf(source, URI.create("string:///Sample.java"));
+    }
+
+    private static List<String> violationsOf(String source, URI uri) {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        JavaFileObject file =
-                new SimpleJavaFileObject(URI.create("string:///Sample.java"), JavaFileObject.Kind.SOURCE) {
-                    @Override
-                    public CharSequence getCharContent(boolean ignoreEncodingErrors) {
-                        return source;
-                    }
-                };
+        JavaFileObject file = new SimpleJavaFileObject(uri, JavaFileObject.Kind.SOURCE) {
+            @Override
+            public CharSequence getCharContent(boolean ignoreEncodingErrors) {
+                return source;
+            }
+        };
         JavacTask task = (JavacTask) compiler.getTask(null, null, null, List.of("-proc:none"), null, List.of(file));
         try {
             return inspect(task, Map.of()).stream()
@@ -141,7 +154,8 @@ class MethodShapeGuardTests {
         List<Violation> violations = new ArrayList<>();
         List<String> seen = new ArrayList<>();
         for (CompilationUnitTree unit : task.parse()) {
-            String file = unit.getSourceFile().toUri().getPath();
+            URI uri = unit.getSourceFile().toUri();
+            String file = "file".equals(uri.getScheme()) ? Path.of(uri).toString() : uri.getPath();
             new TreePathScanner<Void, Void>() {
                 private final Deque<ClassTree> owners = new ArrayDeque<>();
 

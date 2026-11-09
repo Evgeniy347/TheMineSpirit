@@ -2,6 +2,7 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.SupplyGraph;
@@ -42,6 +43,8 @@ final class CraftStationCheck {
                 new Placement("orchard", "orchard", 1, x + 14, z, 5, 5, Placement.Facing.SOUTH),
                 List.of(),
                 List.of(),
+                List.of(),
+                ColumnMask.rect(x, z, x + 20, z + 20),
                 ColumnMask.rect(x, z, x + 20, z + 20),
                 ColumnMask.rect(x, z, x, z),
                 ColumnMask.rect(x, z, x + 20, z + 20),
@@ -87,7 +90,7 @@ final class CraftStationCheck {
                             List.of(),
                             Map.of()),
                     TicketTarget.at(preferred),
-                    "маршрут не найден",
+                    new GraphBlock.Path(preferred.x() + "," + preferred.y() + "," + preferred.z()),
                     now);
 
             BlockCoord chosen = GraphTargets.craftPoint(helper.getLevel(), scan, service, graph, now);

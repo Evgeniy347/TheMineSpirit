@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.policy;
 
+import com.theminespirit.neoforge.SpiritBlocks;
 import com.theminespirit.neoforge.board.PlotBreakLog;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
@@ -21,6 +22,8 @@ public final class PolicyEvents {
     @SubscribeEvent
     public static void onBlockPlaced(BlockEvent.EntityPlaceEvent event) {
         if (event.getEntity() instanceof Player && event.getLevel() instanceof ServerLevel level) {
+            SpiritBlocks.playerPlace(
+                    level, event.getPos(), event.getPlacedBlock(), (Player) event.getEntity(), "команда игрока");
             PlacedBlocksData.get(level).mark(event.getPos());
         }
     }
@@ -29,6 +32,7 @@ public final class PolicyEvents {
     public static void onBlockBroken(BlockEvent.BreakEvent event) {
         if (event.getLevel() instanceof ServerLevel level) {
             PlacedBlocksData data = PlacedBlocksData.get(level);
+            SpiritBlocks.playerBreak(level, event.getPos(), event.getPlayer(), "команда игрока");
             PlotBreakLog.brokenBy(level, event.getPos(), event.getPlayer(), "BREAK", "команда игрока");
             data.unmark(event.getPos());
             data.unmarkSpirit(event.getPos());
@@ -41,6 +45,7 @@ public final class PolicyEvents {
         if (event.getLevel() instanceof ServerLevel level) {
             PlacedBlocksData data = PlacedBlocksData.get(level);
             event.getAffectedBlocks().forEach(pos -> {
+                SpiritBlocks.explosion(level, pos, level.getBlockState(pos));
                 PlotBreakLog.brokenBy(level, pos, null, "EXPLOSION", "взрыв");
                 data.unmark(pos);
                 data.unmarkSpirit(pos);

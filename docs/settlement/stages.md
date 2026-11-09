@@ -17,9 +17,13 @@
 | Этап | Держат (обязательно) | Желательно (не держат) |
 |---|---|---|
 | 1 | `CLEAR_GROUNDS`, `BUILD_MINE` 1, `BUILD_FENCE` 1, `BUILD_ORCHARD` 1, `BUILD_HOUSE` 1, `STOCK_CHESTS` 1, `LIGHTING` 1, `BUILD_STREETS` 1 | — |
-| 2 | `BUILD_MINE` 2, `BUILD_WAREHOUSE` 2, `BUILD_STREETS` 2; план: `plaza`, `family_house_a/b/c`, `storage`, `barn`, `field_a`, `field_b`, `pen`, `well`, `lumber_yard`, `workshop` | — |
-| 3 | `BUILD_MINE` 3, `BUILD_WAREHOUSE` 3, `BUILD_STREETS` 2; план: `player_house`, `forge`, `bakery`, `barracks` | `kennel`, `stable`, `weaver` |
-| 4 | `BUILD_MINE` 4, `BUILD_WAREHOUSE` 4; план: `town_hall`, `tavern`, `infirmary`, `training_yard` | `enchant_room`, `alchemy`, `library` |
+| 2 | `CLEAR_GROUNDS` 1, `BUILD_MINE` 2, `BUILD_WAREHOUSE` 2, `BUILD_STREETS` 2; план: `plaza`, `family_house_a/b/c`, `storage`, `barn`, `field_a`, `field_b`, `pen`, `well`, `lumber_yard`, `workshop` | — |
+| 3 | `CLEAR_GROUNDS` 1, `BUILD_MINE` 3, `BUILD_WAREHOUSE` 3, `BUILD_STREETS` 2; план: `player_house`, `forge`, `bakery`, `barracks` | `kennel`, `stable`, `weaver` |
+| 4 | `CLEAR_GROUNDS` 1, `BUILD_MINE` 4, `BUILD_WAREHOUSE` 4; план: `town_hall`, `tavern`, `infirmary`, `training_yard` | `enchant_room`, `alchemy`, `library` |
+
+Ровность держит каждый этап: зона — клетки внутри забора этапа плюс участки его и прошлых построек
+(`StageSite.zone()`). Яма, бугор, столб любой высоты и посторонний блок в зоне — дефект; постройки плана, схемы
+и деревья сада — нет. Дефект после закрытия снова открывает расчистку, граф поднимает `level_lot`/`backfill`.
 
 Все уровни требований — 1. Данные — `mod/src/main/resources/data/theminespirit/board/stages.json`
 (`buildings`, `requires`, `optional`, `plan`); планировщик читает `plan`, переход — `requires`/`buildings`,

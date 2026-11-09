@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DispatchBusy;
 import com.theminespirit.core.board.DispatchRound;
@@ -67,7 +66,7 @@ final class DispatchPick {
             }
             boolean stuck = own != null
                     && round.board().stuck().isStuck(own.id(), round.board().now());
-            if (ticket.boardCase() != BoardCase.TRANSFER_ITEM || !stuck) {
+            if (!stuck) {
                 return null;
             }
         }

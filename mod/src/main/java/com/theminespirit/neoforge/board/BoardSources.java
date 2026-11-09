@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.SourceFailureLog;
 import com.theminespirit.core.board.SourceGuard;
 import com.theminespirit.core.board.StockView;
@@ -64,12 +65,13 @@ public final class BoardSources {
         return target == null ? null : target.supplyItem();
     }
 
-    public void graphFailure(BoardTicket ticket, @Nullable TicketTarget target, @Nullable String reason, long now) {
+    public void graphFailure(
+            BoardTicket ticket, @Nullable TicketTarget target, GraphBlock.@Nullable Need need, long now) {
         String node = GraphFailureMemory.node(ticket.id(), ticket.cause());
         if (node == null) {
             return;
         }
-        graphFailures.note(node, graphTarget(target), reason, now);
+        graphFailures.note(node, graphTarget(target), need, now);
     }
 
     public void graphSuccess(BoardTicket ticket, @Nullable TicketTarget target, long now) {

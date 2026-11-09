@@ -145,7 +145,7 @@ final class Replanter {
             return;
         }
         Level level = spirit.level();
-        level.setBlock(cell, saplingState, Block.UPDATE_ALL);
+        SpiritBlocks.place((ServerLevel) spirit.level(), cell, saplingState, spirit, "REPLANT");
         SpiritGesture.workOn(spirit, cell);
         level.gameEvent(GameEvent.BLOCK_PLACE, cell, GameEvent.Context.of(spirit, saplingState));
         planted++;

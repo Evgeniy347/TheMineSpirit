@@ -7,6 +7,7 @@ import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.ProtectionConfig;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -34,7 +35,7 @@ class SettlementTemporaryTraceTests {
     }
 
     @Test
-    void scan_HighBridgeBlock_IsStray() {
+    void scan_HighBridgeBlock_IsPillarDefect() {
         Fake world = new Fake();
         world.put(2, LEVEL + 8, 2, "minecraft:cobblestone");
 
@@ -42,14 +43,10 @@ class SettlementTemporaryTraceTests {
                 SettlementScan.scan(ColumnMask.rect(0, 0, 5, 5).cells(), LEVEL, rules(), world);
 
         assertEquals(
-                1,
-                found.strays().size(),
-                "Мост или столб духа на высоте 8 над лотом — тоже лишнее: скан обязан видеть его, "
-                        + "а не обрываться на четырёх блоках над землёй");
-        assertEquals(
-                "minecraft:cobblestone",
-                found.strays().get(0).blockId(),
-                "Тип лишнего называет блок: по нему выбирают материал и снос");
+                List.of(new BlockCoord(2, LEVEL + 8, 2)),
+                found.pillars(),
+                "Мост или столб духа на высоте 8 над лотом — дефект зоны поселения, а не рядовое лишнее: "
+                        + "скан обязан видеть его, а не обрываться на четырёх блоках над землёй");
     }
 
     private static BlockProtection rules() {
@@ -81,6 +78,15 @@ class SettlementTemporaryTraceTests {
         @Override
         public String blockId(int x, int y, int z) {
             return blocks.getOrDefault(new BlockCoord(x, y, z), y < LEVEL ? "minecraft:stone" : "minecraft:air");
+        }
+
+        @Override
+        public int top(int x, int z) {
+            return blocks.keySet().stream()
+                    .filter(at -> at.x() == x && at.z() == z)
+                    .mapToInt(BlockCoord::y)
+                    .max()
+                    .orElse(LEVEL - 1);
         }
 
         @Override

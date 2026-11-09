@@ -59,6 +59,30 @@ class SettlementRoutesTests {
     }
 
     @Test
+    void get_Stage_ClearingCarriesDefectCounts() throws Exception {
+        gateway.with(new StageView(
+                1,
+                4,
+                Map.of("CLEAR_GROUNDS", 1),
+                List.of(new StageView.Requirement(
+                        1,
+                        "CLEAR_GROUNDS",
+                        1,
+                        true,
+                        StageRollback.Readiness.NOT_READY,
+                        false,
+                        Map.of("holes", 3, "mounds", 2, "pillars", 1)))));
+
+        RestResponse response = send("GET", "/v1/settlement/stage", "");
+
+        JsonNode defects =
+                MAPPER.readTree(response.body()).get("requirements").get(0).get("defects");
+        assertEquals(3, defects.get("holes").asInt(), "REST отдаёт число ям: " + response.body());
+        assertEquals(2, defects.get("mounds").asInt(), "REST отдаёт число бугров: " + response.body());
+        assertEquals(1, defects.get("pillars").asInt(), "REST отдаёт число столбов: " + response.body());
+    }
+
+    @Test
     void post_Rollback_ReturnsChangeAndDefaultsActor() throws Exception {
         String requestId = UUID.randomUUID().toString();
 

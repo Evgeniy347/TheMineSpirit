@@ -70,7 +70,8 @@ class PlotBreakLogGuardTests {
 
     private static Map<String, String> hooks() {
         Map<String, String> hooks = new LinkedHashMap<>();
-        hooks.put("neoforge/BlockBreaker.java", "BreakNotice.broken(");
+        hooks.put("neoforge/BlockBreaker.java", "BreakDestroy.after(");
+        hooks.put("neoforge/BreakDestroy.java", "BreakNotice.broken(");
         hooks.put("neoforge/policy/PolicyEvents.java", "PlotBreakLog.brokenBy(");
         return Map.copyOf(hooks);
     }

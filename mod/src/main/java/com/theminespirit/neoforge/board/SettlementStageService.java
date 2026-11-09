@@ -56,7 +56,9 @@ public final class SettlementStageService {
     public StageView view() {
         BoardService service = BoardRegistry.get(level);
         StageRules rules = rules();
-        return StageRollback.view(rules, buildingStages(), service.board().ledger(), this::readiness);
+        StageView base =
+                StageRollback.view(rules, buildingStages(), service.board().ledger(), this::readiness);
+        return StageDefects.withCounts(level, base);
     }
 
     public SettlementStageChange rollback(SettlementChange change) {
@@ -172,9 +174,20 @@ public final class SettlementStageService {
     }
 
     private StageRollback.Readiness stageOneReady(BoardCase boardCase, int levelOfBuilding) {
-        Optional<StageSite> site = SettlementPlotStore.get(level).site();
+        Optional<StageSite> site =
+                SettlementPlotStore.get(level).site(SettlementPlotStore.currentStage(BoardRegistry.get(level)));
         if (site.isEmpty()) {
             return StageRollback.Readiness.UNKNOWN;
+        }
+        if (levelOfBuilding == 1 && boardCase == BoardCase.CLEAR_GROUNDS) {
+            BuildingAuditInputs.Audit audit = BuildingAudit.clearing(
+                    level, site.orElseThrow(), BoardRegistry.get(level).board().now());
+            if (audit.unknown() > 0) {
+                return StageRollback.Readiness.UNKNOWN;
+            }
+            return audit.total() > 0 && audit.done() >= audit.total()
+                    ? StageRollback.Readiness.READY
+                    : StageRollback.Readiness.NOT_READY;
         }
         if (levelOfBuilding == 1 && boardCase == BoardCase.STOCK_CHESTS) {
             TownSnapshot.Progress yard = YardFloorWatch.progress(level, site.orElseThrow());
@@ -185,8 +198,11 @@ public final class SettlementStageService {
         String wood = wood();
         FirstStepsRunner.Placed placed =
                 FirstStepsRunner.audit(level, boardCase, levelOfBuilding, site.orElseThrow(), wood);
-        if (placed.total() == 0) {
+        if (placed.unknown() > 0) {
             return StageRollback.Readiness.UNKNOWN;
+        }
+        if (placed.total() == 0) {
+            return StageRollback.Readiness.NOT_READY;
         }
         return placed.done() >= placed.total() ? StageRollback.Readiness.READY : StageRollback.Readiness.NOT_READY;
     }

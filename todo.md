@@ -1,6 +1,6 @@
 # The Mine Spirit — план работ
 
-Прогресс: сделано 341 из 453 (75 %).
+Прогресс: сделано 341 из 457 (74 %).
 
 Открытые задачи плана, без деталей. Блок, который берут в работу, выносится в чеклист `tasks/<NN>-<имя>.md`,
 здесь остаётся ссылка; после ревью чеклист удаляется. Закрывать — только после тестов и ревью.
@@ -9,6 +9,17 @@
 
 Ревью кода от 2026-10-11: чеклисты 01–07 выполнены и приняты. Остались по порядку:
 
+- [ ] Техдолг testaudit: разнести `neoforge`-сессии длиннее 300 строк — `FarmSession`, `HarvestSession`,
+      `ClearAreaSession`, `SafeMineSession`, `DescentSession`, `HerdSession`, `HiveSession`, `DemoSession`:
+      общий каркас шага, отмены и подвешивания вместо копий; после — убрать записи из `config/filesize-baseline.txt`.
+- [ ] Техдолг testaudit: разнести `neoforge`-скрипты и блок-операции длиннее 300 строк — `MineBuildScript`,
+      `ChopTreeScript`, `CraftScript`, `SmeltScript`, `RepairScript`, `TreeChop`, `BlockBreaker`, `BlockPlacer`,
+      `DropCollector`, `WorldScanner`: блок-операции и скан — в отдельные helper-классы; убрать из baseline.
+- [ ] Техдолг testaudit: разнести `neoforge/board` и тактику длиннее 300 строк — `FirstStepsRunner`,
+      `TransferWatch`, `BoardService`, `TacticsService`, `ProtectionGate`, `SchematicSite`: сбор входов, решение
+      и запись состояния по зонам; убрать из baseline.
+- [ ] Техдолг testaudit: разнести `SpiritEntity` (749 строк) — инвентарь, ИИ-решения и сохранение по отдельным
+      классам; убрать из `config/filesize-baseline.txt`.
 - [ ] Невыполнимые задания (владелец 21.10): дух не должен получать задание, которое не может выполнить (нет
       инструмента/материала/пути, владелец задания исчез); если всё же получил — инцидент в журнал (для разбора:
       дух, задание, причина невыполнимости, состояние) и сразу новое задание, а не `wait`. Тест на доске (core) +

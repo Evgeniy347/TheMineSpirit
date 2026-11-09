@@ -215,6 +215,7 @@ def start_builders():
         ("late3-half", lambda graph: make_world(graph, 3, built_every_other=True)),
         ("stage2-full", java_second),
         ("stage2-all", lambda graph: make_world(graph, 2)),
+        ("block-no-torch", lambda graph: sim_gpu.failure_worlds(graph)[0]),
     ] + sim_gpu.input_builders()
 
 
@@ -232,12 +233,22 @@ def evaluate_population(base_graph, vectors, builders, params, limit=4000, devic
     detail = [[] for _ in vectors]
     for (index, name), outcome in zip(labels, outcomes):
         value = outcome["steps"] if outcome["finished"] else limit + PENALTY
+        if name.startswith("block"):
+            if outcome.get("repeat_blocked", 0) > 0:
+                value += PENALTY * outcome["repeat_blocked"]
+            if not outcome.get("key_raised", False):
+                value += PENALTY
+            if outcome.get("other_work", 0) == 0:
+                value += PENALTY
         scores[index] += value
         detail[index].append({
             "start": name,
             "steps": outcome["steps"],
             "finished": outcome["finished"],
             "stage": outcome["stage"],
+            "repeat_blocked": outcome.get("repeat_blocked", 0),
+            "key_raised": outcome.get("key_raised", False),
+            "other_work": outcome.get("other_work", 0),
         })
     return scores, detail
 

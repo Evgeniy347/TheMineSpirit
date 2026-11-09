@@ -193,7 +193,7 @@ public final class StripLogScript implements ScriptInstance {
         BlockEntity blockEntity = level.getBlockEntity(pos);
         ServerLevel server = (ServerLevel) level;
         BreakNotice.broken(server, pos, stripped, spirit, "STRIP", PlotProtection.Ground.NONE);
-        level.destroyBlock(pos, false, spirit);
+        SpiritBlocks.destroy(server, pos, false, spirit, "STRIP");
         stripped.getBlock().playerDestroy(server, presser(), pos, stripped, blockEntity, axe);
         if (axe.isDamageableItem()) {
             axe.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);

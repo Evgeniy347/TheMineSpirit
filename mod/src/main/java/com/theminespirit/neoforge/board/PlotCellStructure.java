@@ -33,7 +33,7 @@ public final class PlotCellStructure {
     }
 
     private static @Nullable StageSite site(ServerLevel level) {
-        return SettlementPlotStore.get(level).site().orElse(null);
+        return SettlementPlotStore.liveSite(level).orElse(null);
     }
 
     private static Plan plan(StageSite site) {

@@ -28,6 +28,7 @@ public final class GraphPlanner {
     private final GraphReach reach;
     private final GraphFlow flow = new GraphFlow();
     private final GraphChoiceRules choices;
+    private final GraphBlocks blockRules;
     private final Set<String> expanded = new HashSet<>();
     private final Set<String> chances = new HashSet<>();
     private final List<GraphPlan.Advice> advice = new ArrayList<>();
@@ -37,6 +38,7 @@ public final class GraphPlanner {
         this.state = Objects.requireNonNull(state, "Состояние не может быть null: задания выводятся из нехваток");
         this.reach = new GraphReach(graph, state);
         this.choices = new GraphChoiceRules(graph, state, reach);
+        this.blockRules = new GraphBlocks(graph, state, flow, this::push, notices);
     }
 
     public static GraphPlan plan(SupplyGraph graph, GraphState state) {
@@ -44,7 +46,8 @@ public final class GraphPlanner {
         planner.roots();
         planner.events();
         planner.orders();
-        planner.standing();
+        planner.blockRules.apply();
+        GraphStanding.collect(graph, state, planner.advice);
         return planner.result(planner.edges());
     }
 
@@ -53,6 +56,7 @@ public final class GraphPlanner {
         planner.roots();
         planner.events();
         planner.orders();
+        planner.blockRules.apply();
         planner.edges();
         return planner.flow;
     }
@@ -157,7 +161,7 @@ public final class GraphPlanner {
         } else if (node.startsWith(BUILDING)) {
             String id = node.substring(BUILDING.length());
             SupplyGraph.Building building = graph.buildings().get(id);
-            Map<String, Integer> needs = materials(id);
+            Map<String, Integer> needs = GraphLack.materials(graph, state, id);
             if (building != null
                     && GraphLack.stocked(graph, state, needs)
                     && (building.tool() == null || state.bestTier(building.tool()) >= 0)) {
@@ -295,10 +299,6 @@ public final class GraphPlanner {
         }
     }
 
-    private void standing() {
-        GraphStanding.collect(graph, state, advice);
-    }
-
     private void boost(String node, int weight, String event) {
         if (node.startsWith(TOOL)) {
             String kind = node.substring(TOOL.length());
@@ -365,9 +365,14 @@ public final class GraphPlanner {
             double value = score.getValue() * graph.costs().travelFactor(choices.travelTicks(score.getKey()));
             double adjusted = choices.value(score.getKey(), value, repeat);
             GraphPlan.Task task = task(score.getKey(), GraphEvent.priority(state, graph, score.getKey(), adjusted));
-            tasks.add(task);
+            String reason = blockRules.reason(score.getKey());
+            if (reason != null) {
+                task = GraphBlocks.blockedTask(task, reason);
+            }
+            GraphPlan.Task ready = task;
+            tasks.add(ready);
             station(score.getKey())
-                    .filter(ignored -> task.feasible())
+                    .filter(ignored -> ready.feasible())
                     .ifPresent(building -> load.merge(building, adjusted, Math::max));
         }
         load.forEach((building, value) -> stationTask(building, value, scores).ifPresent(tasks::add));
@@ -397,7 +402,7 @@ public final class GraphPlanner {
         }
         SupplyGraph.Building known = Objects.requireNonNull(
                 graph.buildings().get(building), "Станция " + building + " не описана среди построек графа");
-        Map<String, Integer> materials = materials(building);
+        Map<String, Integer> materials = GraphLack.materials(graph, state, building);
         return Optional.of(new GraphPlan.Task(
                 STATION + building,
                 known.boardCase(),
@@ -450,7 +455,7 @@ public final class GraphPlanner {
             String id = key.substring(BUILDING.length());
             SupplyGraph.Building building = Objects.requireNonNull(
                     graph.buildings().get(id), "Постройка " + id + " задания не описана в графе");
-            Map<String, Integer> materials = materials(id);
+            Map<String, Integer> materials = GraphLack.materials(graph, state, id);
             boolean tooled = (building.tool() == null || state.bestTier(building.tool()) >= 0)
                     && building.requires().stream().allMatch(required -> state.built(required) == Built.BUILT);
             return new GraphPlan.Task(
@@ -486,11 +491,6 @@ public final class GraphPlanner {
                 chances.contains(key),
                 graph.implemented(wayId),
                 choices.wayTicks(key, way));
-    }
-
-    private Map<String, Integer> materials(String building) {
-        SupplyGraph.Building known = graph.buildings().get(building);
-        return state.materials().getOrDefault(building, known == null ? Map.of() : known.materials());
     }
 
     private int count(String node) {

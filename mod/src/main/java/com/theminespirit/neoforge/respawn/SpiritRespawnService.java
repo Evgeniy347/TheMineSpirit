@@ -16,6 +16,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.inventory.SpiritInventory;
+import com.theminespirit.neoforge.log.SpiritWorldLog;
 import com.theminespirit.neoforge.movement.RouteHistory;
 import java.util.List;
 import java.util.Objects;
@@ -52,6 +53,10 @@ public final class SpiritRespawnService {
         }
         BlockPos death = spirit.blockPosition();
         String cause = event.getSource().getLocalizedDeathMessage(spirit).getString();
+        String killer = event.getSource().getEntity() == null
+                ? event.getSource().getMsgId()
+                : event.getSource().getEntity().getName().getString();
+        SpiritWorldLog.death(level, spirit, cause, killer);
         LOGGER.info(
                 "[death] дух {}: {}, место ({}, {}, {}), инвентарь {}, последние шаги маршрута {}",
                 spirit.displayName(),
@@ -121,6 +126,7 @@ public final class SpiritRespawnService {
             return;
         }
         SpiritRespawnStore.get(level).remove(entry.id());
+        SpiritWorldLog.deathRespawn(level, spirit, entry.death(), born);
         LOGGER.info(
                 "[respawn] дух {} погиб ({}, {}, {}, {}) → возрождён в ({}, {}, {})",
                 entry.name(),

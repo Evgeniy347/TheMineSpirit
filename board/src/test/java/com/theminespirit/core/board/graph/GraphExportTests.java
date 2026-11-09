@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.theminespirit.core.board.GraphBlock;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,7 +57,11 @@ class GraphExportTests {
         weak.facts = weak.facts.withPlayers(
                 List.of(new GraphFacts.Player("Steve", new GraphFacts.Position(0, 64, 0), 4.0F, 20.0F, 4)));
         cases.add(exportCase(weak, "weak_player_fact"));
+        for (Map<String, Object> playerCase : playerFactVector()) {
+            cases.add(playerCase);
+        }
         cases.add(exportCase(foodStageTwo(), "food_stage_two"));
+        cases.addAll(blockCases());
         Files.createDirectories(OUT.getParent());
         Files.copy(
                 Path.of("mod/src/main/resources/" + SupplyGraph.RESOURCE),
@@ -64,6 +69,52 @@ class GraphExportTests {
                 StandardCopyOption.REPLACE_EXISTING);
         new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValue(OUT.toFile(), cases);
         assertTrue(Files.size(OUT) > 0, "Контрольные случаи графа для Python-модели записаны в " + OUT);
+    }
+
+    private static List<Map<String, Object>> blockCases() {
+        List<Map<String, Object>> cases = new ArrayList<>();
+        List<GraphBlock> blocks = List.of(
+                new GraphBlock("mine_coal", "", new GraphBlock.Item("torch", 1)),
+                new GraphBlock("mine_coal", "", new GraphBlock.Tool("pickaxe", 0, "spirit-1")),
+                new GraphBlock("mine_coal", "", new GraphBlock.Building("clearing")),
+                new GraphBlock("mine_coal", "", new GraphBlock.Impossible("mine_coal")),
+                new GraphBlock("chop_oak_log", "1,64,0", new GraphBlock.Path("1,64,0")));
+        for (GraphBlock block : blocks) {
+            GraphWorld world = GraphWorld.empty().blocks(block);
+            GraphPlan plan = world.plan();
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("mutations", List.of("block " + block.need()));
+            entry.put("state", GraphStateJson.state(world.state()));
+            List<Map<String, Object>> tasks = new ArrayList<>();
+            for (GraphPlan.Task task : plan.tasks()) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("id", task.id());
+                row.put("priority", task.priority());
+                row.put("feasible", task.feasible());
+                row.put("chance", task.chance());
+                tasks.add(row);
+            }
+            entry.put("tasks", tasks);
+            entry.put(
+                    "notices",
+                    plan.notices().stream().map(GraphPlan.Notice::building).toList());
+            cases.add(entry);
+        }
+        return cases;
+    }
+
+    private static List<Map<String, Object>> playerFactVector() {
+        return List.of(
+                playerCase(4.0F, 20, "weak_player_health"),
+                playerCase(20.0F, 4, "weak_player_food"),
+                playerCase(20.0F, 20, "healthy_player_fact"));
+    }
+
+    private static Map<String, Object> playerCase(float health, int food, String mutation) {
+        GraphWorld world = GraphWorld.empty();
+        world.facts = world.facts.withPlayers(
+                List.of(new GraphFacts.Player("Steve", new GraphFacts.Position(0, 64, 0), health, 20.0F, food)));
+        return exportCase(world, mutation);
     }
 
     private static GraphWorld foodStageTwo() {

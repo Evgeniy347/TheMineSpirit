@@ -9,12 +9,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -118,7 +118,8 @@ final class CastObsidianScript implements ScriptInstance {
         if (!takeWaterBucket()) {
             return fail("нет ведра воды: лить на лаву нечем (осталось " + (params.count() - cast) + ")");
         }
-        level.setBlock(target, Blocks.OBSIDIAN.defaultBlockState(), Block.UPDATE_ALL);
+        SpiritBlocks.place(
+                (ServerLevel) spirit.level(), target, Blocks.OBSIDIAN.defaultBlockState(), spirit, "CAST_OBSIDIAN");
         phase = Phase.MINE;
         return ScriptStatus.RUNNING;
     }

@@ -1,50 +1,18 @@
 package com.theminespirit.neoforge;
 
-import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.coordinator.WorkKind;
-import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.ScriptInstance;
-import com.theminespirit.core.inventory.InventorySpace;
-import com.theminespirit.core.inventory.Stack;
-import com.theminespirit.core.mining.ApproachFailureTracker;
-import com.theminespirit.core.mining.BreakSafety;
-import com.theminespirit.core.mining.BreakSkipTally;
-import com.theminespirit.core.mining.DropRetries;
-import com.theminespirit.core.mining.MineTunnel;
-import com.theminespirit.core.mining.MineVeinStands;
-import com.theminespirit.core.mining.MiningPlanner;
-import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.OreKind;
-import com.theminespirit.core.mining.ProgressWatchdog;
 import com.theminespirit.core.mining.SoilLayer;
-import com.theminespirit.core.mining.TargetBuffer;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
-import com.theminespirit.core.pickup.OverflowMode;
-import com.theminespirit.core.pickup.PickupTuning;
-import com.theminespirit.core.script.CatalogLimits;
-import com.theminespirit.core.town.PlanBuilding;
-import com.theminespirit.core.town.PlotProtection;
-import com.theminespirit.neoforge.board.SettlementPlotStore;
-import com.theminespirit.neoforge.coordinator.WorkReserveHub;
-import com.theminespirit.neoforge.inventory.StackMapper;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
-import org.slf4j.Logger;
 
 public final class HarvestSession {
     public enum Outcome {
@@ -53,7 +21,7 @@ public final class HarvestSession {
         FAILED
     }
 
-    private enum State {
+    enum State {
         FIND,
         PICK,
         APPROACH,
@@ -64,72 +32,36 @@ public final class HarvestSession {
         REARM
     }
 
-    private static final double APPROACH_ARRIVAL = 0.6;
-    private static final double APPROACH_PROGRESS_STEP = 0.05;
-    private static final int COLLECT_RADIUS = 4;
-    private static final Logger LOGGER = LogUtils.getLogger();
-
     private final SpiritEntity spirit;
-    private final Level level;
-    private final HarvestTargets targets;
-    private final WorkKind kind;
-    private final String label;
-    private final int count;
-    private final int radius;
-    private final boolean skipWithoutTool;
-    private final boolean vein;
-    private final boolean allowTunnel;
-    private final LevelSafetyView safety;
+    private final HarvestRearm rearm;
     private final BlockBreaker breaker;
-    private final Approach approach;
-    private final TargetBuffer buffer = new TargetBuffer();
-    private final ProgressWatchdog watchdog = new ProgressWatchdog(CatalogLimits.HARVEST_NO_PROGRESS_TICKS);
-    private final ProgressWatchdog veinMining = new ProgressWatchdog(CatalogLimits.HARVEST_NO_PROGRESS_TICKS);
-    private final DropRetries dropRetries = new DropRetries(COLLECT_RADIUS);
+    private final int count;
+    private final boolean vein;
+    private final HarvestCounters counters;
+    private final HarvestTunnel tunnel;
+    private final HarvestSearch search;
+    private final HarvestLoot loot;
+    private final HarvestWork work;
 
     private State state = State.FIND;
     private Outcome outcome = Outcome.RUNNING;
     private String failureReason;
-    private BlockCoord currentTarget;
-    private BlockCoord currentStand;
-    private BlockCoord lastUnreachable;
-    private double closestApproach = Double.MAX_VALUE;
-    private final ApproachFailureTracker approachFailures = new ApproachFailureTracker();
-    private final Set<BlockCoord> reachStandsTried = new HashSet<>();
-    private VeinTunnelSession tunnel;
-    private final Set<BlockCoord> tunnelTried = new HashSet<>();
-    private String tunnelRefusal;
-    private DropCollector collector;
-    private final HarvestRearm rearm;
-    private HarvestDeposit deposit;
-    private boolean depositTried;
-    private boolean depositFreed;
-    private WorkTarget reserved;
-
-    private int mined;
-    private int unsafe;
-    private final BreakSkipTally breakSkips = new BreakSkipTally();
-    private int unreachable;
-    private int noTool;
-    private int protectedSkipped;
-    private final GatherCells terrain;
 
     private HarvestSession(SpiritEntity spirit, HarvestSpec spec) {
         this.spirit = spirit;
         this.rearm = new HarvestRearm(spirit);
-        this.level = spirit.level();
-        this.targets = spec.targets();
-        this.kind = spec.kind();
-        this.label = spec.label();
-        this.count = spec.count();
-        this.radius = spec.radius();
-        this.skipWithoutTool = spec.skipWithoutTool();
-        this.vein = spec.vein();
-        this.allowTunnel = spec.allowTunnel();
-        this.safety = new LevelSafetyView(level);
         this.breaker = new BlockBreaker(spirit);
-        this.approach = new Approach(spirit);
-        this.terrain = new GatherCells(level);
+        this.count = spec.count();
+        this.vein = spec.vein();
+        LevelSafetyView safety = new LevelSafetyView(spirit.level());
+        this.counters = new HarvestCounters(spec.count());
+        this.tunnel = new HarvestTunnel(spirit, spec, safety, counters);
+        this.search = new HarvestSearch(spirit, spec, safety, counters, tunnel, this::fail);
+        this.loot = new HarvestLoot(spirit, spec, search, breaker, rearm, counters);
+        this.work = new HarvestWork(
+                spirit, spec, safety, breaker, rearm, search, loot, counters, this::fail, this::beginBreak);
+        search.prepareWith(work::prepareBreak);
+        search.acceptWith(work::acceptTarget);
     }
 
     public static HarvestSession mineVein(
@@ -174,12 +106,13 @@ public final class HarvestSession {
         if (spirit.isRemoved()) {
             return fail("дух исчез во время добычи");
         }
-        if (mined >= count && collector == null) {
-            if (dropRetries.isEmpty()) {
+        if (counters.mined() >= count && !loot.active()) {
+            if (loot.retriesEmpty()) {
                 outcome = Outcome.SUCCEEDED;
                 return outcome;
             }
-            beginRetryCollect();
+            loot.beginRetry();
+            state = State.COLLECT;
         }
         if (state == State.REARM) {
             if (rearm.tick()) {
@@ -187,25 +120,20 @@ public final class HarvestSession {
             }
             return outcome;
         }
-
-        watchdog.tick();
-        if (vein && mined == 0) {
-            veinMining.tick();
-        }
-        ProgressWatchdog stalled =
-                watchdog.stalled() ? watchdog : vein && mined == 0 && veinMining.stalled() ? veinMining : null;
-        if (stalled != null) {
+        counters.tickWatchdogs(vein);
+        int limit = counters.stallLimit(vein);
+        if (limit >= 0) {
             return fail(HarvestReasonText.stallReason(
-                    reasonTally(), stalled.limitTicks(), searching(), state.name(), targetForReason()));
+                    counters.tally(), limit, searching(), state.name(), search.targetForReason()));
         }
         switch (state) {
-            case FIND -> find();
-            case PICK -> pick();
-            case APPROACH -> approachTick();
-            case BREAK -> breakTick();
+            case FIND -> state = search.find();
+            case PICK -> state = search.pick();
+            case APPROACH -> state = search.approachTick();
+            case BREAK -> state = work.breakTick();
             case COLLECT -> collectTick();
             case DEPOSIT -> depositTick();
-            case TUNNEL -> tunnelTick();
+            case TUNNEL -> state = tunnel.tick();
             case REARM -> {
                 if (rearm.tick()) {
                     state = State.PICK;
@@ -215,40 +143,42 @@ public final class HarvestSession {
         return outcome;
     }
 
+    private void collectTick() {
+        switch (loot.collectTick()) {
+            case RUNNING -> {}
+            case REARM -> state = State.REARM;
+            case PICK -> state = State.PICK;
+            case FAILED -> fail("не удалось подобрать дроп у " + search.target() + ": " + loot.failureReason());
+        }
+    }
+
+    private void depositTick() {
+        switch (loot.depositTick()) {
+            case RUNNING -> {}
+            case PICK -> state = State.PICK;
+            case FAILED -> fail(loot.depositFailureReason());
+        }
+    }
+
     public void cancel() {
-        releaseReserved();
-        breaker.cancel();
-        approach.cancel();
-        if (collector != null) {
-            collector.cancel();
-        }
-        if (deposit != null) {
-            deposit.cancel();
-        }
-        if (tunnel != null) {
-            tunnel.cancel();
-        }
+        work.releaseReserved();
+        work.cancelBreaker();
+        search.cancelApproach();
+        loot.cancelCollector();
+        loot.cancelDeposit();
+        tunnel.cancel();
         rearm.cancel();
     }
 
     public void suspend() {
-        approach.suspend();
+        search.suspendApproach();
         if (state == State.BREAK) {
-            breaker.cancel();
-            buffer.offer(List.of(currentTarget));
-            currentTarget = null;
-            currentStand = null;
+            work.suspendBreak();
             state = State.PICK;
         }
-        if (collector != null) {
-            collector.suspend();
-        }
-        if (deposit != null) {
-            deposit.suspend();
-        }
-        if (tunnel != null) {
-            tunnel.suspend();
-        }
+        loot.suspendCollector();
+        loot.suspendDeposit();
+        tunnel.suspend();
         rearm.suspend();
     }
 
@@ -257,453 +187,29 @@ public final class HarvestSession {
     }
 
     public ScriptInstance.Progress progress() {
-        return new ScriptInstance.Progress(Math.min(mined, count), count);
+        return new ScriptInstance.Progress(Math.min(counters.mined(), count), count);
     }
 
     public Map<String, Object> saveState() {
-        return Map.of("mined", mined);
+        return Map.of("mined", counters.mined());
     }
 
     public void restoreState(Map<String, Object> state) {
         Object value = state.get("mined");
         if (value instanceof Number number) {
-            mined = Math.max(mined, number.intValue());
+            counters.restoreMined(number.intValue());
         }
     }
 
-    private void find() {
-        if (targets.refusalReason() != null) {
-            fail(targets.refusalReason());
-            return;
-        }
-        if (!buffer.needsRefill()) {
-            state = State.PICK;
-            return;
-        }
-        buffer.offer(targets.advance());
-        if (!buffer.isEmpty()) {
-            state = State.PICK;
-            return;
-        }
-        if (targets.done()) {
-            fail(HarvestReasonText.stopReason(
-                    reasonTally(), radius, vein, kind == WorkKind.GATHER, lastUnreachable, tunnelRefusal));
-        }
-    }
-
-    private void pick() {
-        if (buffer.isEmpty()) {
-            state = State.FIND;
-            return;
-        }
-        if (buffer.needsRefill() && !targets.done()) {
-            buffer.offer(targets.advance());
-        }
-        BlockPos from = spirit.blockPosition();
-        BlockCoord origin = new BlockCoord(from.getX(), from.getY(), from.getZ());
-        List<BlockCoord> candidates = buffer.targets(origin);
-        if (kind == WorkKind.GATHER) {
-            candidates = terrain.shallow(candidates, buffer);
-            if (candidates.isEmpty()) {
-                state = State.FIND;
-                return;
-            }
-        }
-        for (BlockCoord candidate : candidates) {
-            boolean ownColumn = candidate.x() == origin.x() && candidate.z() == origin.z();
-            if (SpiritReach.reachable(origin, candidate)
-                    && !ownColumn
-                    && (vein || terrain.exposed(candidate))
-                    && !approachFailures.excludedStands().contains(origin)) {
-                if (acceptTarget(candidate)) {
-                    currentStand = origin;
-                    prepareBreak();
-                }
-                return;
-            }
-        }
-        MiningPlanner.Outcome result =
-                MiningPlanner.next(origin, candidates, safety, approachFailures.excludedStands(), this::standReachable);
-        if (result instanceof MiningPlanner.Exhausted exhausted) {
-            if (exhausted.noStand() > 0 || exhausted.unreachable() > 0) {
-                if (lastUnreachable == null && !candidates.isEmpty()) {
-                    lastUnreachable = candidates.get(0);
-                }
-                if (approachReachStand(origin, candidates)) {
-                    return;
-                }
-                if (vein && beginTunnel(origin, candidates)) {
-                    return;
-                }
-            }
-            unsafe += exhausted.unsafe();
-            breakSkips.record(BreakSkipTally.Reason.NO_STAND, exhausted.noStand());
-            unreachable += exhausted.unreachable();
-            buffer.clearActive();
-            state = State.FIND;
-            return;
-        }
-        MiningPlanner.Next next = (MiningPlanner.Next) result;
-        if (kind == WorkKind.GATHER && !standReachable(next.stand())) {
-            unreachable++;
-            lastUnreachable = next.target();
-            approachFailures.excludeStand(next.stand(), next.target());
-            state = State.PICK;
-            return;
-        }
-        if (!acceptTarget(next.target())) {
-            return;
-        }
-        currentStand = next.stand();
-        beginApproach(
-                new Vec3(next.stand().x() + 0.5, next.stand().y(), next.stand().z() + 0.5));
-        state = State.APPROACH;
-    }
-
-    private boolean standReachable(BlockCoord stand) {
-        return HarvestStands.reachable(spirit, stand);
-    }
-
-    private void beginApproach(Vec3 point) {
-        closestApproach = Double.MAX_VALUE;
-        approach.begin(point, APPROACH_ARRIVAL);
-    }
-
-    private void noteApproachProgress() {
-        if (currentStand == null) {
-            return;
-        }
-        double distance = spirit.position()
-                .distanceTo(new Vec3(currentStand.x() + 0.5, currentStand.y(), currentStand.z() + 0.5));
-        if (distance + APPROACH_PROGRESS_STEP < closestApproach) {
-            closestApproach = distance;
-            watchdog.progress();
-        }
-    }
-
-    private boolean acceptTarget(BlockCoord target) {
-        BlockState targetState = level.getBlockState(toPos(target));
-        buffer.remove(target);
-        if (!breaker.dropsAllowedFor(targetState)) {
-            String brokenTool = breaker.brokenToolSuffix();
-            if (!brokenTool.isEmpty()) {
-                if (!rearm.tried()) {
-                    buffer.offer(List.of(target));
-                    rearm.start(brokenTool);
-                    state = State.REARM;
-                    return false;
-                }
-                fail("инструмент сломался: добыто " + mined + " из " + count
-                        + (rearm.failure() == null ? "" : "; замена не добыта: " + rearm.failure()));
-                return false;
-            }
-            if (mined == 0 && !skipWithoutTool) {
-                fail(HarvestReasonText.tierReason(targetState, label));
-                return false;
-            }
-            noTool++;
-            return false;
-        }
-        currentTarget = target;
-        return true;
-    }
-
-    private boolean approachReachStand(BlockCoord origin, List<BlockCoord> candidates) {
-        List<BlockCoord> reachable =
-                vein ? candidates : candidates.stream().filter(terrain::exposed).toList();
-        Optional<BlockCoord> stand =
-                MineVeinStands.next(reachable, origin, safety, approachFailures.excludedStands(), reachStandsTried);
-        if (stand.isEmpty()) {
-            unreachable++;
-            if (!reachable.isEmpty()) {
-                lastUnreachable = reachable.get(0);
-            }
-            return false;
-        }
-        if (kind == WorkKind.GATHER && !standReachable(stand.get())) {
-            unreachable++;
-            lastUnreachable = reachable.isEmpty() ? null : reachable.get(0);
-            return false;
-        }
-        reachStandsTried.add(stand.get());
-        currentTarget = null;
-        currentStand = stand.get();
-        beginApproach(new Vec3(currentStand.x() + 0.5, currentStand.y(), currentStand.z() + 0.5));
-        state = State.APPROACH;
-        return true;
-    }
-
-    private boolean beginTunnel(BlockCoord origin, List<BlockCoord> candidates) {
-        if (tunnel != null) {
-            return true;
-        }
-        if (!allowTunnel) {
-            tunnelRefusal = "проход к руде запрещён: дух вне спуска и хода шахты";
-            return false;
-        }
-        String refusal = tunnelRefusal;
-        for (BlockCoord candidate : candidates) {
-            if (!tunnelTried.add(candidate)) {
-                continue;
-            }
-            MineTunnel.Plan plan = MineTunnel.plan(candidate, origin, safety, radius, this::protectedCell);
-            tunnel = VeinTunnelSession.start(spirit, candidate, plan, safety);
-            if (tunnel != null) {
-                state = State.TUNNEL;
-                return true;
-            }
-            refusal = plan.refusal();
-        }
-        tunnelRefusal = refusal;
-        return false;
-    }
-
-    private void tunnelTick() {
-        watchdog.progress();
-        veinMining.progress();
-        VeinTunnelSession.Outcome progress = tunnel.tick();
-        if (progress == VeinTunnelSession.Outcome.RUNNING) {
-            return;
-        }
-        if (progress == VeinTunnelSession.Outcome.FAILED) {
-            tunnelRefusal = tunnel.failureReason();
-        }
-        tunnel = null;
-        state = State.PICK;
-    }
-
-    private void approachTick() {
-        noteApproachProgress();
-        switch (approach.tick()) {
-            case MOVING -> {}
-            case ARRIVED -> {
-                if (currentTarget == null) {
-                    state = State.PICK;
-                } else {
-                    prepareBreak();
-                }
-            }
-            case STUCK, TIMEOUT -> {
-                if (currentTarget == null) {
-                    currentStand = null;
-                    state = State.PICK;
-                    return;
-                }
-                if (approachFailures.recordFailure(currentStand, currentTarget)) {
-                    unreachable++;
-                } else {
-                    buffer.offer(List.of(currentTarget));
-                }
-                currentTarget = null;
-                currentStand = null;
-                state = State.PICK;
-            }
-        }
-    }
-
-    private void prepareBreak() {
-        if (!(MiningSafety.canBreak(currentTarget, safety) instanceof BreakSafety.Safe)) {
-            unsafe++;
-            currentTarget = null;
-            currentStand = null;
-            state = State.PICK;
-            return;
-        }
+    BlockBreaker.Begin beginBreak(BlockCoord target) {
         BlockPos feet = spirit.blockPosition();
-        boolean inReach = SpiritReach.reachable(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), currentTarget);
-        BlockBreaker.Begin begin = inReach
-                ? breaker.beginAnyDistance(toPos(currentTarget), true)
-                : breaker.begin(toPos(currentTarget), true);
-        if (begin instanceof BlockBreaker.Protected) {
-            protectedSkipped++;
-            currentTarget = null;
-            currentStand = null;
-            state = State.PICK;
-            return;
-        }
-        if (begin instanceof BlockBreaker.Refused refused) {
-            if (refused.reason() == BlockBreaker.RefuseReason.NEED_TOOL) {
-                fail(refused.message());
-                return;
-            }
-            BreakSkipTally.Reason reason = BreakSkips.reason(refused.reason());
-            breakSkips
-                    .record(reason, currentTarget, currentStand)
-                    .ifPresent(sample -> SkipLog.skipped(LOGGER, spirit, "harvest", sample));
-            if (BreakSight.retryable(refused.reason()) && retryOtherStand()) {
-                return;
-            }
-            currentTarget = null;
-            currentStand = null;
-            state = State.PICK;
-            return;
-        }
-        if (breaker.dropsAllowed()) {
-            BlockPos pos = toPos(currentTarget);
-            BlockState stateToBreak = level.getBlockState(pos);
-            BlockEntity blockEntity = level.getBlockEntity(pos);
-            ItemStack tool = breaker.tool();
-            List<ItemStack> drops = Block.getDrops(stateToBreak, (ServerLevel) level, pos, blockEntity, spirit, tool);
-            StackMapper mapper = new StackMapper();
-            List<Stack> inventory = mapper.map(spirit.getInventory());
-            List<Stack> incoming = new ArrayList<>();
-            for (ItemStack drop : drops) {
-                if (!drop.isEmpty()) {
-                    incoming.add(mapper.of(drop));
-                }
-            }
-            boolean fits = incoming.isEmpty() || InventorySpace.holds(inventory, incoming);
-            boolean nearlyFull = HarvestDeposit.occupiedSlots(spirit) >= CatalogLimits.UNLOAD_TRIGGER_SLOTS;
-            if (!fits || (nearlyFull && !depositTried)) {
-                if (!depositTried) {
-                    startDeposit(incoming, !fits);
-                    return;
-                }
-                fail("инвентарь полон: не помещается добыча");
-                return;
-            }
-        }
-        WorkTarget target = new WorkTarget(kind, currentTarget);
-        if (!WorkReserveHub.reserve(spirit, target)) {
-            breaker.cancel();
-            currentTarget = null;
-            currentStand = null;
-            state = State.PICK;
-            return;
-        }
-        reserved = target;
-        state = State.BREAK;
+        boolean inReach = SpiritReach.reachable(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), target);
+        BlockPos pos = new BlockPos(target.x(), target.y(), target.z());
+        return inReach ? breaker.beginAnyDistance(pos, true) : breaker.begin(pos, true);
     }
 
-    private boolean retryOtherStand() {
-        if (currentTarget == null) {
-            return false;
-        }
-        BlockCoord target = currentTarget;
-        lastUnreachable = target;
-        if (currentStand != null) {
-            approachFailures.excludeStand(currentStand, target);
-        }
-        buffer.offer(List.of(target));
-        currentTarget = null;
-        currentStand = null;
-        state = State.PICK;
-        return true;
-    }
-
-    private void releaseReserved() {
-        if (reserved != null) {
-            WorkReserveHub.release(spirit, reserved);
-            reserved = null;
-        }
-    }
-
-    private void startDeposit(List<Stack> incoming, boolean mandatory) {
-        int toolSlot = breaker.toolSlot();
-        breaker.cancel();
-        approach.cancel();
-        depositTried = true;
-        depositFreed = false;
-        deposit = new HarvestDeposit(spirit, incoming, mandatory, toolSlot);
-        buffer.offer(List.of(currentTarget));
-        currentTarget = null;
-        currentStand = null;
-        state = State.DEPOSIT;
-    }
-
-    private void depositTick() {
-        HarvestDeposit.Step step = deposit.tick();
-        if (step == HarvestDeposit.Step.RUNNING) {
-            return;
-        }
-        String reason = deposit.failureReason();
-        depositFreed = deposit.freed();
-        deposit = null;
-        if (step == HarvestDeposit.Step.FAILED) {
-            fail(reason);
-            return;
-        }
-        state = State.PICK;
-    }
-
-    private void breakTick() {
-        switch (breaker.tick()) {
-            case BREAKING -> {}
-            case BROKEN -> {
-                releaseReserved();
-                mined++;
-                watchdog.progress();
-                veinMining.progress();
-                rearm.broken(breaker);
-                collector = newCollector(currentTarget);
-                state = State.COLLECT;
-            }
-            case GONE -> {
-                releaseReserved();
-                currentTarget = null;
-                currentStand = null;
-                state = State.PICK;
-            }
-        }
-    }
-
-    private void collectTick() {
-        DropCollector.State collected = collector.tick();
-        if (collected == DropCollector.State.RUNNING) {
-            return;
-        }
-        if (collected == DropCollector.State.FAILED) {
-            String reason = collector.failureReason();
-            if (mined >= count) {
-                fail("не удалось подобрать дроп у " + currentTarget + ": " + reason);
-                return;
-            }
-            dropRetries.failed(currentTarget);
-            collector = null;
-            currentTarget = null;
-            currentStand = null;
-            if (startPending()) {
-                return;
-            }
-            state = State.PICK;
-            return;
-        }
-        collector = null;
-        currentTarget = null;
-        currentStand = null;
-        if (depositFreed || HarvestDeposit.occupiedSlots(spirit) < CatalogLimits.UNLOAD_TRIGGER_SLOTS) {
-            depositTried = false;
-            depositFreed = false;
-        }
-        if (startPending()) {
-            return;
-        }
-        state = State.PICK;
-    }
-
-    private boolean startPending() {
-        if (!rearm.startPending(mined, count)) {
-            return false;
-        }
-        state = State.REARM;
-        return true;
-    }
-
-    private void beginRetryCollect() {
-        currentTarget = dropRetries.poll();
-        currentStand = null;
-        collector = newCollector(currentTarget);
-        state = State.COLLECT;
-    }
-
-    private DropCollector newCollector(BlockCoord center) {
-        return new DropCollector(
-                spirit,
-                IdFilter.matchAll(),
-                center,
-                COLLECT_RADIUS,
-                PickupTuning.DEFAULT,
-                OverflowMode.forSpirit(spirit.isFollowingPlayer()));
+    private boolean searching() {
+        return counters.mined() == 0 && (state == State.FIND || state == State.PICK || state == State.APPROACH);
     }
 
     private Outcome fail(String reason) {
@@ -711,38 +217,5 @@ public final class HarvestSession {
         failureReason = reason;
         cancel();
         return outcome;
-    }
-
-    private HarvestReasonText.Tally reasonTally() {
-        return new HarvestReasonText.Tally(mined, count, unsafe, noTool, protectedSkipped, unreachable, breakSkips);
-    }
-
-    private boolean searching() {
-        return mined == 0 && (state == State.FIND || state == State.PICK || state == State.APPROACH);
-    }
-
-    private BlockCoord targetForReason() {
-        if (currentTarget != null) {
-            return currentTarget;
-        }
-        return lastUnreachable;
-    }
-
-    private boolean protectedCell(BlockCoord cell) {
-        return level instanceof ServerLevel server
-                && SettlementPlotStore.get(server)
-                        .site()
-                        .map(site -> PlotProtection.check(
-                                        site,
-                                        cell,
-                                        PlotProtection.Action.DIG,
-                                        PlotProtection.Ground.NONE,
-                                        PlanBuilding.NONE)
-                                instanceof PlotProtection.Refused)
-                        .orElse(false);
-    }
-
-    private static BlockPos toPos(BlockCoord coord) {
-        return new BlockPos(coord.x(), coord.y(), coord.z());
     }
 }
