@@ -57,8 +57,8 @@ public final class PlotPlanBlocks {
             add(blocks, scheme(presets, build.scheme()), build.origin(), build.rotation(), build.only());
         }
         int fenceY = SiteLevels.fenceY(site);
-        for (WallPiece piece : WallLayout.of(presets, StageSchemes.fence(site.stage()))
-                .closedOrEmpty(site.ring().posts(), site.ring().gates())) {
+        for (WallPiece piece : WallLayout.of(presets, StageSchemes.fenceAtomic(site.stage()))
+                .closedOrAtomic(site.ring().posts(), site.ring().gates())) {
             add(
                     blocks,
                     scheme(presets, piece.scheme()),
