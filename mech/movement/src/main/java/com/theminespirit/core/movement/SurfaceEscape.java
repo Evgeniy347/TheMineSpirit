@@ -102,7 +102,7 @@ public final class SurfaceEscape {
                     addFall(moves, world, nx, y, nz);
                 }
             }
-            if ((wet || standing || climbable(world, from)) && passable(world, new BlockCoord(nx, y + 1, nz))) {
+            if ((wet || canRise(world, from, standing)) && passable(world, new BlockCoord(nx, y + 1, nz))) {
                 BlockCoord up = new BlockCoord(nx, y + 1, nz);
                 if (supported(world, up) || climbable(world, up)) {
                     moves.add(up);
@@ -132,6 +132,11 @@ public final class SurfaceEscape {
             }
         }
         return moves;
+    }
+
+    private static boolean canRise(RouteWorld world, BlockCoord from, boolean standing) {
+        return climbable(world, from)
+                || (standing && passable(kind(world, new BlockCoord(from.x(), from.y() + 2, from.z()))));
     }
 
     private static void addFall(List<BlockCoord> moves, RouteWorld world, int x, int y, int z) {
