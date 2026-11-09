@@ -32,6 +32,7 @@
 | [navigation-movement.md](navigation-movement.md) | Навигация, движение, добыча | baritone, altoclef |
 | [baritone-navigation.md](baritone-navigation.md) | Устройство навигации Baritone: A*, движения, кэш, сегменты, лицензия | baritone |
 | [colony-economy/README.md](colony-economy/README.md) | Работы, склад, снабжение, экономика | minecolonies |
+| [minecolonies/README.md](minecolonies/README.md) | Механики: стройка по схемам, шахта, карьер, лес, ферма, навигация, охрана, UI, лицензия, TOP-10 | minecolonies, structurize |
 | [npc-ai-commands.md](npc-ai-commands.md) | Цели NPC, черты, команды, патруль | citizens |
 | [llm-agents-skills/README.md](llm-agents-skills/README.md) | Наблюдение, промпты, память, навыки, куррикулум, верификация | mindcraft, mc_aiplayer, mc-ai-agent-mod, voyager |
 | [bot-api-bridge/README.md](bot-api-bridge/README.md) | REST/MCP-мосты и игровые примитивы | mineflayer, minecraft-mcp-server, minecraft-mcp |
@@ -65,6 +66,9 @@
 - Склад-агрегатор поверх всех контейнеров → функция над `WorldObservation`.
 - Стройка стадиями (`BuildingProgressStage`) + bucket ресурсов; курьер — отдельная профессия.
 - Анти-thrash: разнесённые периоды опроса нужд.
+- **Механика мира** (стройка по схемам, шахта, карьер, лес, ферма, навигация, охрана) — в
+  [minecolonies/README.md](minecolonies/README.md): что работник делает руками, как это описано данными,
+  чем отличается от нас, TOP-10 идей под наши боли (ямы, засыпка, шахта, защита, места, тропы).
 
 ### Цели NPC и команды (citizens)
 - Единый контракт Goal≈Behavior: `shouldExecute()` + `run()→RUNNING/SUCCESS/FAILURE` + `reset()`; приоритет — порядок/квоты.
