@@ -7,6 +7,11 @@ public final class PathGround {
 
     private PathGround() {}
 
+    public static boolean airCell(String cellId) {
+        Objects.requireNonNull(cellId, "Блок клетки не может быть null: по нему видно, свободна ли она");
+        return AIR.equals(cellId);
+    }
+
     public static boolean raisedPath(String cellId, String belowId) {
         Objects.requireNonNull(cellId, "Блок клетки не может быть null: по нему видно, свободна ли она");
         Objects.requireNonNull(belowId, "Блок под клеткой не может быть null: по нему видно, есть ли опора");

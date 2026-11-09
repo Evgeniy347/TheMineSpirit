@@ -14,9 +14,11 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ShovelItem;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -31,9 +33,10 @@ final class PathTrample {
         Level level = spirit.level();
         String current = BlockStates.idOf(level.getBlockState(target));
         boolean trample = SchematicActions.isTrampleGround(current);
+        boolean air = PathGround.airCell(current);
         boolean raised =
                 !trample && PathGround.raisedPath(current, BlockStates.idOf(level.getBlockState(target.below())));
-        if (!trample && !raised) {
+        if (!trample && !raised && !air) {
             return new BlockPlacer.Refused(
                     BlockPlacer.RefuseReason.NO_SUPPORT,
                     "тропинку топчут по земле или траве, а в " + target.toShortString() + " стоит " + current);
@@ -44,6 +47,28 @@ final class PathTrample {
                     BlockPlacer.RefuseReason.NO_MATERIAL, "нет лопаты для тропинки: сначала нужна лопата");
         }
         ItemStack shovel = spirit.getInventory().getItem(slot);
+        if (air) {
+            BlockPos below = target.below();
+            if (!level.getBlockState(below).canBeReplaced()) {
+                return new BlockPlacer.Refused(
+                        BlockPlacer.RefuseReason.NO_SUPPORT,
+                        "под пустой клеткой " + target.toShortString() + " нет опоры: дорожка повиснет в воздухе");
+            }
+            if (spirit.getInventory().countItem(Items.DIRT) < 1) {
+                return new BlockPlacer.Refused(
+                        BlockPlacer.RefuseReason.NO_MATERIAL,
+                        "нет земли под дорожку в " + target.toShortString() + ": снизу пусто");
+            }
+            spirit.getInventory().removeItemType(Items.DIRT, 1);
+            level.setBlock(below, Blocks.DIRT.defaultBlockState(), Block.UPDATE_ALL);
+            level.setBlock(target, Blocks.DIRT_PATH.defaultBlockState(), Block.UPDATE_ALL);
+            SpiritGesture.workOn(spirit, target);
+            shovel.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
+            if (level instanceof ServerLevel server) {
+                PlacedBlocksData.get(server).markSpirit(target);
+            }
+            return new BlockPlacer.Started(target.immutable());
+        }
         BlockPos ground = raised ? target.below() : target;
         UseOnContext context = new UseOnContext(level, null, InteractionHand.MAIN_HAND, shovel, topFace(ground));
         InteractionResult result = shovel.getItem().useOn(context);
