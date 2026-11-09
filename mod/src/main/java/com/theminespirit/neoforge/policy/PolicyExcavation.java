@@ -23,20 +23,18 @@ final class PolicyExcavation {
 
     static @Nullable StageSite site(Level level) {
         return level instanceof ServerLevel server
-                ? SettlementPlotStore.get(server).site().orElse(null)
+                ? SettlementPlotStore.liveSite(server).orElse(null)
                 : null;
     }
 
     static boolean inFenceStrip(ServerLevel level, BlockCoord coord, String blockId) {
-        return SettlementPlotStore.get(level)
-                .site()
+        return SettlementPlotStore.liveSite(level)
                 .map(site -> FenceDemolition.allowed(blockId, site.fenceStrip(), coord.x(), coord.z()))
                 .orElse(false);
     }
 
     static PlanBuilding planBuilding(ServerLevel level, BlockCoord coord) {
-        return SettlementPlotStore.get(level)
-                .site()
+        return SettlementPlotStore.liveSite(level)
                 .map(site -> site.protectionBuilding(coord.x(), coord.y(), coord.z()))
                 .orElse(PlanBuilding.NONE);
     }

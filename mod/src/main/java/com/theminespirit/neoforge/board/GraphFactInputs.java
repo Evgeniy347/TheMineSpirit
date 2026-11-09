@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.StageRules;
+import com.theminespirit.core.board.graph.ChestReach;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphFeedback;
 import com.theminespirit.core.board.graph.GraphKits;
@@ -12,15 +13,19 @@ import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.SettlementReach;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.SpiritDamageWatch;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.policy.PlanBreachData;
+import com.theminespirit.neoforge.terminal.CraftTerminalService;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -153,7 +158,8 @@ public final class GraphFactInputs {
         return BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
     }
 
-    static List<GraphFacts.Chest> chestFacts(List<ContainerSnapshot> snapshots) {
+    static List<GraphFacts.Chest> chestFacts(
+            List<ContainerSnapshot> snapshots, Function<BlockCoord, GraphFacts.Reach> reachAt) {
         List<GraphFacts.Chest> chests = new ArrayList<>();
         for (ContainerSnapshot snapshot : snapshots) {
             Map<String, Integer> contents = new LinkedHashMap<>();
@@ -167,9 +173,19 @@ public final class GraphFactInputs {
                     new GraphFacts.Position(pos.x(), pos.y(), pos.z()),
                     contents,
                     snapshot.freeSlots(),
-                    snapshot.slotCount()));
+                    snapshot.slotCount(),
+                    reachAt.apply(pos)));
         }
         return chests;
+    }
+
+    static Function<BlockCoord, GraphFacts.Reach> reachAt(ServerLevel level) {
+        Optional<SettlementReach> reach = CraftTerminalService.reach(level);
+        return pos -> {
+            boolean loaded = level.isLoaded(new BlockPos(pos.x(), pos.y(), pos.z()));
+            boolean covered = reach.map(found -> found.covers(pos.x(), pos.z())).orElse(true);
+            return ChestReach.verdict(loaded, covered);
+        };
     }
 
     static List<GraphFacts.Resource> resourceFacts(GraphSurroundings.Around around, SupplyGraph graph) {

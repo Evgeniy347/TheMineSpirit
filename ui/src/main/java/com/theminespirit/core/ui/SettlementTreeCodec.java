@@ -117,6 +117,7 @@ public final class SettlementTreeCodec {
         for (String requirement : node.requirements()) {
             out.writeUTF(requirement);
         }
+        out.writeUTF(node.detail());
     }
 
     private static SettlementTree.Node readNode(DataInputStream in) throws IOException {
@@ -144,7 +145,21 @@ public final class SettlementTreeCodec {
             requirements.add(in.readUTF());
         }
         return new SettlementTree.Node(
-                id, kind, state, title, icon, level, percent, optional, blocking, x, y, at, missing, requirements);
+                id,
+                kind,
+                state,
+                title,
+                icon,
+                level,
+                percent,
+                optional,
+                blocking,
+                x,
+                y,
+                at,
+                missing,
+                requirements,
+                in.readUTF());
     }
 
     private static SettlementTree.Edge readEdge(DataInputStream in) throws IOException {

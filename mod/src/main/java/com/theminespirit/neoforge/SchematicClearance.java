@@ -72,7 +72,7 @@ final class SchematicClearance {
         if (!(site.level instanceof ServerLevel server)) {
             return;
         }
-        StageSite stage = SettlementPlotStore.get(server).site().orElse(null);
+        StageSite stage = SettlementPlotStore.liveSite(server).orElse(null);
         if (stage == null) {
             return;
         }

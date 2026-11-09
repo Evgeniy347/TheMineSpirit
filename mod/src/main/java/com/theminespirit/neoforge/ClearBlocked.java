@@ -87,8 +87,7 @@ final class ClearBlocked {
 
     private boolean onFenceStrip(BlockPos pos) {
         return level instanceof ServerLevel server
-                && SettlementPlotStore.get(server)
-                        .site()
+                && SettlementPlotStore.liveSite(server)
                         .filter(site -> site.fenceStrip().contains(pos.getX(), pos.getZ()))
                         .isPresent();
     }

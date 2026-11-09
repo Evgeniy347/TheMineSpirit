@@ -23,7 +23,8 @@ public final class SettlementTrees {
             boolean blocking,
             SettlementTree.@Nullable Position at,
             Map<String, Integer> missing,
-            List<String> requirements) {
+            List<String> requirements,
+            String detail) {
         SettlementTree.Node node(SettlementTree.Point place) {
             return new SettlementTree.Node(
                     id,
@@ -39,7 +40,8 @@ public final class SettlementTrees {
                     place.y(),
                     at,
                     missing,
-                    requirements);
+                    requirements,
+                    detail);
         }
     }
 
@@ -70,7 +72,8 @@ public final class SettlementTrees {
                 false,
                 null,
                 Map.of(),
-                List.of()));
+                List.of(),
+                ""));
         List<SettlementTreeLayout.Branch> branches = new ArrayList<>();
         List<String> gateParents = new ArrayList<>();
         List<SettlementTreeObjects.Ref> refs = SettlementTreeObjects.of(rule, icons);
@@ -124,7 +127,8 @@ public final class SettlementTrees {
                 ref.blocking(),
                 fact == null ? null : fact.at(),
                 fact == null ? Map.of() : fact.missing(),
-                List.of());
+                List.of(),
+                fact == null ? "" : fact.detail());
     }
 
     private static Draft upgradeDraft(
@@ -151,7 +155,8 @@ public final class SettlementTrees {
                 false,
                 fact == null ? null : fact.at(),
                 fact == null ? Map.of() : fact.missing(),
-                requirements);
+                requirements,
+                fact == null ? "" : fact.detail());
     }
 
     private static Draft gateDraft(
@@ -168,7 +173,8 @@ public final class SettlementTrees {
                 false,
                 null,
                 Map.of(),
-                missing);
+                missing,
+                "");
     }
 
     static SettlementTree.State stateOf(SettlementTreeFacts.@Nullable Fact fact, boolean predecessorReady) {

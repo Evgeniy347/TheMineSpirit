@@ -28,7 +28,10 @@ final class DigOutPost {
         if (!dig && !bridge && !pillar) {
             return false;
         }
-        BlockCoord settlement = SettlementHome.of(post.spirits);
+        BlockCoord settlement = SettlementPlotStore.get(post.level)
+                .site()
+                .map(stage -> HomeStand.of(post.level, stage, post.spirits))
+                .orElseGet(() -> SettlementHome.of(post.spirits));
         boolean matched = false;
         for (SpiritEntity spirit : post.spirits) {
             if (spirit.isRemoved()) {

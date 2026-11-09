@@ -34,8 +34,9 @@ public final class SettlementWood {
         Objects.requireNonNull(home, "Порода без места не определяется: деревья ищутся вокруг дома");
         SettlementPlotStore store = SettlementPlotStore.get(level);
         Optional<SettlementPlot> plot = store.plot();
-        boolean settled =
-                store.site().map(site -> site.near(home.x(), home.z())).orElse(false);
+        boolean settled = SettlementPlotStore.liveSite(level)
+                .map(site -> site.near(home.x(), home.z()))
+                .orElse(false);
         if (plot.isPresent() && settled) {
             return plot.orElseThrow().wood();
         }

@@ -13,6 +13,7 @@ import com.theminespirit.core.board.ToolFate;
 import com.theminespirit.core.board.ToolsConfig;
 import com.theminespirit.core.board.WarehouseApproval;
 import com.theminespirit.core.board.WarehouseRules;
+import com.theminespirit.core.board.graph.ChestReach;
 import com.theminespirit.core.board.graph.GraphBuildingMaterials;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphKits;
@@ -70,7 +71,8 @@ final class GraphInputs {
                         .withThreats(life.threats())
                         .withPlayers(LifeInputs.players(level))
                         .withPlanBreaches(GraphFactInputs.planBreaches(level))
-                        .withChests(GraphFactInputs.chestFacts(StockReader.chests(level)))
+                        .withChests(
+                                GraphFactInputs.chestFacts(StockReader.chests(level), GraphFactInputs.reachAt(level)))
                         .withFeedback(GraphWorldFeedbackInputs.of(level, spirits, scan.home(), service))
                         .withWorld(WorldAreaInputs.of(
                                 level,
@@ -86,7 +88,7 @@ final class GraphInputs {
                         Math.ceil(graph.costs().choice().failureTargets())));
         GraphState state = new GraphState(
                         GraphNames.stock(
-                                stock.available(),
+                                ChestReach.reachableStock(stock.available(), facts.chests()),
                                 StockCatalog.defaultTable().nutrition().keySet()),
                         stage,
                         kits(spirits, graph),

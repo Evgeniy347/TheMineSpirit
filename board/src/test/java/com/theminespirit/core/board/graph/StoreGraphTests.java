@@ -106,7 +106,8 @@ class StoreGraphTests {
                         List.of(),
                         List.of(),
                         null))
-                .chest(new GraphFacts.Chest(new GraphFacts.Position(1, 64, 1), Map.of(), 5, 27))
+                .chest(new GraphFacts.Chest(
+                        new GraphFacts.Position(1, 64, 1), Map.of(), 5, 27, GraphFacts.Reach.UNKNOWN))
                 .build();
         GraphPlan plan = plan(GraphWorld.settled(), facts);
 
@@ -118,8 +119,14 @@ class StoreGraphTests {
     @Test
     void plan_FullChestAndFreeChest_PostsTransfer() {
         GraphFacts facts = new Facts()
-                .chest(new GraphFacts.Chest(new GraphFacts.Position(1, 64, 1), Map.of("minecraft:oak_log", 64), 0, 27))
-                .chest(new GraphFacts.Chest(new GraphFacts.Position(2, 64, 1), Map.of(), 27, 27))
+                .chest(new GraphFacts.Chest(
+                        new GraphFacts.Position(1, 64, 1),
+                        Map.of("minecraft:oak_log", 64),
+                        0,
+                        27,
+                        GraphFacts.Reach.UNKNOWN))
+                .chest(new GraphFacts.Chest(
+                        new GraphFacts.Position(2, 64, 1), Map.of(), 27, 27, GraphFacts.Reach.UNKNOWN))
                 .build();
         GraphPlan plan = plan(GraphWorld.settled(), facts);
 
@@ -179,7 +186,8 @@ class StoreGraphTests {
                         new GraphFacts.Position(1, 64, 1),
                         Map.of("minecraft:oak_log", 10, "minecraft:cobblestone", 10),
                         5,
-                        27))
+                        27,
+                        GraphFacts.Reach.UNKNOWN))
                 .build();
         GraphPlan plan = plan(GraphWorld.settled(), facts);
 

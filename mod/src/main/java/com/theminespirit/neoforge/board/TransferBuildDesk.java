@@ -54,8 +54,7 @@ final class TransferBuildDesk {
                 wood.put(item, count);
             }
         });
-        BlockCoord yard = SettlementPlotStore.get(level)
-                .site()
+        BlockCoord yard = SettlementPlotStore.liveSite(level)
                 .map(site -> site.workYard())
                 .orElseGet(() -> builder.home().orElseGet(() -> TransferStockDesk.at(builder)));
         Map<String, Integer> pooled = TransferStockDesk.hasSettlementChest(level, yard)

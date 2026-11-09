@@ -4,8 +4,6 @@ import com.theminespirit.core.board.graph.VitalNeeds;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -24,10 +22,11 @@ public final class DispatchRound {
             SpiritView view,
             boolean wet,
             List<String> stockTools,
-            Map<String, String> needs) {
+            Map<String, String> needs,
+            List<String> wornTools) {
         public Candidate(
                 UUID id, String name, @Nullable String busyWith, List<String> items, EatNeed eat, SpiritView view) {
-            this(id, name, busyWith, items, eat, view, false, List.of(), Map.of());
+            this(id, name, busyWith, items, eat, view, false, List.of(), Map.of(), List.of());
         }
 
         public Candidate(
@@ -38,7 +37,7 @@ public final class DispatchRound {
                 EatNeed eat,
                 SpiritView view,
                 boolean wet) {
-            this(id, name, busyWith, items, eat, view, wet, List.of(), Map.of());
+            this(id, name, busyWith, items, eat, view, wet, List.of(), Map.of(), List.of());
         }
 
         public Candidate(
@@ -50,7 +49,7 @@ public final class DispatchRound {
                 SpiritView view,
                 boolean wet,
                 List<String> stockTools) {
-            this(id, name, busyWith, items, eat, view, wet, stockTools, Map.of());
+            this(id, name, busyWith, items, eat, view, wet, stockTools, Map.of(), List.of());
         }
 
         public Candidate {
@@ -63,6 +62,8 @@ public final class DispatchRound {
                     stockTools, "Инструменты склада не могут быть null: пустой склад задают пустым списком"));
             needs = Map.copyOf(Objects.requireNonNull(
                     needs, "Живые нужды духа не могут быть null: у сытого и здорового — пустая карта"));
+            wornTools = List.copyOf(Objects.requireNonNull(
+                    wornTools, "Изношенные инструменты не могут быть null: целый инструмент — пустой список"));
         }
     }
 
@@ -159,6 +160,10 @@ public final class DispatchRound {
             return Optional.of("нет запаса " + ToolGate.carry(ticket).orElse("?")
                     + " в инвентаре: сначала взять со склада или скрафтить");
         }
+        if (ToolGate.worn(ticket, spirit.items(), spirit.wornTools())) {
+            return Optional.of("инструмент изношен: сначала починка или замена по графу, "
+                    + ToolGate.required(ticket).orElse("?"));
+        }
         if (!EvergreenRules.issuedTo(ticket, spirit.id(), spirit.eat(), spirit.view())) {
             return Optional.of("кейс " + ticket.boardCase() + " ему сейчас не к месту");
         }
@@ -221,7 +226,10 @@ public final class DispatchRound {
     }
 
     private static boolean tooled(BoardTicket ticket, Candidate spirit) {
-        return ToolGate.allows(ticket, spirit.items()) || ToolGate.allowsFromStock(ticket, spirit.stockTools());
+        if (ToolGate.allowsFromStock(ticket, spirit.stockTools())) {
+            return true;
+        }
+        return ToolGate.allows(ticket, spirit.items()) && !ToolGate.worn(ticket, spirit.items(), spirit.wornTools());
     }
 
     public void take(UUID spirit) {
@@ -245,49 +253,7 @@ public final class DispatchRound {
     }
 
     public String why(BoardTicket ticket, List<Candidate> spirits, @Nullable String supplyItem) {
-        List<String> free = new ArrayList<>();
-        Map<String, List<String>> groups = new LinkedHashMap<>();
-        List<String> busy = new ArrayList<>();
-        int eligible = 0;
-        for (Candidate spirit : spirits) {
-            if (ticket.assignee().filter(owner -> !owner.equals(spirit.id())).isPresent()) {
-                continue;
-            }
-            eligible++;
-            String reason = refusal(ticket, spirit, supplyItem).orElse(null);
-            if (reason == null) {
-                free.add(spirit.name());
-            } else if (reason.startsWith("занят: ")) {
-                busy.add(reason.substring("занят: ".length()));
-            } else {
-                groups.computeIfAbsent(reason, ignored -> new ArrayList<>()).add(spirit.name());
-            }
-        }
-        if (eligible == 0) {
-            return ticket.assignee().isPresent() ? "своего духа нет в мире" : "нет духов";
-        }
-        if (groups.isEmpty()) {
-            return "ждёт свободного духа: заняты " + eligible + " (" + distinct(busy, 4) + ")";
-        }
-        List<String> blockerLines = new ArrayList<>();
-        groups.forEach((reason, names) -> blockerLines.add(
-                names.size() == 1 ? names.get(0) + " — " + reason : reason + ": " + distinct(names, 4)));
-        for (String name : free) {
-            blockerLines.add("свободен, но выдача отложена: " + name);
-        }
-        String text = "ждёт духа: " + String.join("; ", blockerLines);
-        if (!busy.isEmpty()) {
-            text += "; ещё занято " + busy.size();
-        }
-        return text;
-    }
-
-    private static String distinct(List<String> values, int limit) {
-        List<String> unique = new ArrayList<>(new LinkedHashSet<>(values));
-        if (unique.size() <= limit) {
-            return String.join(", ", unique);
-        }
-        return String.join(", ", unique.subList(0, limit)) + ", …";
+        return DispatchWhy.text(this, ticket, spirits, supplyItem);
     }
 
     private String heldIds(UUID spirit) {

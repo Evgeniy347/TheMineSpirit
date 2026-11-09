@@ -43,7 +43,7 @@ final class MineLevels {
                 || status == BoardStatus.ASSIGNED) {
             return true;
         }
-        Optional<StageSite> stage = SettlementPlotStore.get(level).site();
+        Optional<StageSite> stage = SettlementPlotStore.liveSite(level);
         BlockCoord home = stage.map(StageSite::mineEntrance)
                 .orElseGet(() -> SettlementPlotStore.get(level)
                         .plot()

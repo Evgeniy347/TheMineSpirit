@@ -43,6 +43,8 @@ final class CraftStationCheck {
                 new Placement("orchard", "orchard", 1, x + 14, z, 5, 5, Placement.Facing.SOUTH),
                 List.of(),
                 List.of(),
+                List.of(),
+                ColumnMask.rect(x, z, x + 20, z + 20),
                 ColumnMask.rect(x, z, x + 20, z + 20),
                 ColumnMask.rect(x, z, x, z),
                 ColumnMask.rect(x, z, x + 20, z + 20),

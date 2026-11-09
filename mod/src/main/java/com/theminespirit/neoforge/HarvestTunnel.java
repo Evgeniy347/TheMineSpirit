@@ -82,8 +82,7 @@ final class HarvestTunnel {
 
     private boolean protectedCell(BlockCoord cell) {
         return spirit.level() instanceof ServerLevel server
-                && SettlementPlotStore.get(server)
-                        .site()
+                && SettlementPlotStore.liveSite(server)
                         .map(site -> PlotProtection.check(
                                         site,
                                         cell,

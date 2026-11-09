@@ -195,4 +195,29 @@ class ToolGateTests {
                     "Задание голыми руками не снимается за отсутствие кирки: " + boardCase);
         }
     }
+
+    @Test
+    void worn_OnlyWornTool_RefusesUntilRepair() {
+        BoardTicket mine = new BoardTicket(
+                "graph:building:mine",
+                BoardCase.BUILD_MINE,
+                Optional.empty(),
+                100,
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
+        List<String> worn = List.of("minecraft:wooden_pickaxe");
+
+        assertTrue(
+                ToolGate.worn(mine, worn, worn),
+                "Изношенная кирка не идёт в шахту: её сначала чинит или меняет граф, иначе она сломается в работе");
+        assertFalse(
+                ToolGate.worn(mine, List.of("minecraft:wooden_pickaxe", "minecraft:stone_pickaxe"), worn),
+                "Рядом целая кирка — износ одной не запрещает работу");
+        assertFalse(
+                ToolGate.worn(mine, List.of("minecraft:stone_sword"), List.of()),
+                "Отсутствие кирки — не износ: его закрывает allows, а не этот гейт");
+    }
 }

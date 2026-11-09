@@ -14,7 +14,7 @@ final class SelfCraftSteps {
     static List<ScriptCall> of(SpiritEntity spirit, String blockId, int count) {
         List<ScriptCall> steps = new ArrayList<>();
         if (spirit.level() instanceof ServerLevel server) {
-            SettlementPlotStore.get(server).site().ifPresent(site -> {
+            SettlementPlotStore.liveSite(server).ifPresent(site -> {
                 BlockCoord yard = site.workYard();
                 steps.add(new ScriptCall("goto", Map.of("x", yard.x(), "y", yard.y(), "z", yard.z())));
             });

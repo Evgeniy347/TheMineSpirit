@@ -52,8 +52,8 @@ public final class SiteLevels {
         Objects.requireNonNull(planned, "Признак плана не может быть null: постройки плана не срезают");
         int level = level(site);
         Map<Integer, Map<Integer, List<Integer>>> layers = new TreeMap<>();
-        for (ColumnMask.Cell column : site.level().cells()) {
-            if (skip.test(column)) {
+        for (ColumnMask.Cell column : site.zone().cells()) {
+            if (skip.test(column) || site.mineColumn(column.x(), column.z())) {
                 continue;
             }
             int top = tops.applyAsInt(column.x(), column.z());

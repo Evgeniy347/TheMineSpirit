@@ -70,7 +70,7 @@ final class StageWorldFacts {
                             continue;
                         }
                         var state = level.getBlockState(check);
-                        boolean onPad = stage.levelColumn(check.getX(), check.getZ());
+                        boolean onPad = stage.zone().contains(check.getX(), check.getZ());
                         if (!groundsDone && onPad && (state.is(BlockTags.LOGS) || state.is(BlockTags.LEAVES))) {
                             groundsCleared = false;
                         }
@@ -98,7 +98,7 @@ final class StageWorldFacts {
         Set<BoardCase> blocked = journalSteps(service, true, level, stage);
         boolean journal = world == FirstStepsRunner.PlanWorld.JOURNAL;
         boolean plotLevel =
-                journal || PlotLeveling.isLevel(stage.anchor(), stage.level(), SettlementGround.plotFeet(level, stage));
+                journal || PlotLeveling.isLevel(stage.anchor(), stage.zone(), SettlementGround.plotFeet(level, stage));
         boolean mineEntrance = built(level, done, BoardCase.BUILD_MINE, site, journal);
         boolean lighting = built(level, done, BoardCase.LIGHTING, site, journal);
         boolean fence = built(level, done, BoardCase.BUILD_FENCE, site, journal);

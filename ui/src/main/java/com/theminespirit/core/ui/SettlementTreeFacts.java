@@ -11,7 +11,17 @@ public record SettlementTreeFacts(Map<String, Fact> byKey) {
             boolean ready,
             boolean unknown,
             Map<String, Integer> missing,
-            SettlementTree.@Nullable Position at) {
+            SettlementTree.@Nullable Position at,
+            String detail) {
+        public Fact(
+                int percent,
+                boolean ready,
+                boolean unknown,
+                Map<String, Integer> missing,
+                SettlementTree.@Nullable Position at) {
+            this(percent, ready, unknown, missing, at, "");
+        }
+
         public Fact {
             if (percent < 0 || percent > 100) {
                 throw new IllegalArgumentException("Готовность постройки " + percent + "%: процент лежит от 0 до 100");
@@ -22,6 +32,7 @@ public record SettlementTreeFacts(Map<String, Fact> byKey) {
             }
             missing = Map.copyOf(Objects.requireNonNull(
                     missing, "Недостача постройки не может быть null: пустую задают пустой картой"));
+            Objects.requireNonNull(detail, "Пояснение факта не может быть null: пустое — пустой строкой");
         }
     }
 

@@ -57,6 +57,9 @@ final class SettlementTreeView {
             lines.add(Component.translatable(KEY + "level", node.level()));
         }
         lines.add(stateText(node));
+        if (!node.detail().isEmpty()) {
+            lines.add(Component.literal(node.detail()));
+        }
         if (!node.requirements().isEmpty()) {
             lines.add(Component.translatable(KEY + "requires", String.join(", ", node.requirements())));
         }

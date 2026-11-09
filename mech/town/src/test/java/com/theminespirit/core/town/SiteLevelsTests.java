@@ -206,7 +206,7 @@ class SiteLevelsTests {
 
     private static ColumnMask.Cell freeCell() {
         BlockCoord chest = SiteLevels.chestSpot(SITE);
-        return SITE.level().cells().stream()
+        return SITE.zone().cells().stream()
                 .filter(cell -> !SITE.planCell(cell.x(), LEVEL, cell.z()))
                 .filter(cell -> !SITE.ringPost(cell.x(), cell.z()))
                 .filter(cell -> cell.x() != chest.x() || cell.z() != chest.z())

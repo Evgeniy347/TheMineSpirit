@@ -28,7 +28,7 @@ public final class RescueBreach {
         if (!rescue || !(spirit.level() instanceof ServerLevel server)) {
             return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, "не спасение");
         }
-        StageSite site = SettlementPlotStore.get(server).site().orElse(null);
+        StageSite site = SettlementPlotStore.liveSite(server).orElse(null);
         if (site == null || !site.protectionCell(pos.getX(), pos.getY(), pos.getZ())) {
             return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, "не клетка плана");
         }

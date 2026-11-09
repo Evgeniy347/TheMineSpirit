@@ -241,6 +241,15 @@ class SettlementScanTests {
         }
 
         @Override
+        public int top(int x, int z) {
+            return blocks.keySet().stream()
+                    .filter(at -> at.x() == x && at.z() == z)
+                    .mapToInt(BlockCoord::y)
+                    .max()
+                    .orElse(LEVEL - 1);
+        }
+
+        @Override
         public boolean planned(int x, int y, int z) {
             return planned.contains(new BlockCoord(x, y, z));
         }
@@ -264,6 +273,11 @@ class SettlementScanTests {
         @Override
         public boolean spiritMarked(int x, int y, int z) {
             return spirit.contains(new BlockCoord(x, y, z));
+        }
+
+        @Override
+        public boolean temporary(int x, int y, int z) {
+            return false;
         }
 
         @Override

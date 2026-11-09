@@ -17,7 +17,18 @@ public record StageView(int stage, int stages, Map<String, Integer> missing, Lis
     }
 
     public record Requirement(
-            int stage, String id, int level, boolean closed, StageRollback.Readiness world, boolean optional) {
+            int stage,
+            String id,
+            int level,
+            boolean closed,
+            StageRollback.Readiness world,
+            boolean optional,
+            Map<String, Integer> defects) {
+        public Requirement(
+                int stage, String id, int level, boolean closed, StageRollback.Readiness world, boolean optional) {
+            this(stage, id, level, closed, world, optional, Map.of());
+        }
+
         public Requirement {
             if (stage < 1) {
                 throw new IllegalArgumentException(
@@ -32,6 +43,8 @@ public record StageView(int stage, int stages, Map<String, Integer> missing, Lis
             }
             Objects.requireNonNull(
                     world, "Состояние мира не может быть null: неизвестное — " + StageRollback.Readiness.UNKNOWN);
+            defects = Map.copyOf(Objects.requireNonNull(
+                    defects, "Дефекты требования не могут быть null: нет дефектов — пустая карта"));
         }
     }
 }

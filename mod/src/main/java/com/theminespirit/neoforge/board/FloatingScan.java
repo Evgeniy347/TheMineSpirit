@@ -114,6 +114,14 @@ public final class FloatingScan {
     }
 
     static List<BlockCoord> placed(ServerLevel level, ColumnMask area) {
+        return marked(level, area, true);
+    }
+
+    static List<BlockCoord> legacy(ServerLevel level, ColumnMask area) {
+        return marked(level, area, false);
+    }
+
+    private static List<BlockCoord> marked(ServerLevel level, ColumnMask area, boolean temporary) {
         PlacedBlocksData placed = PlacedBlocksData.get(level);
         List<BlockCoord> cells = new ArrayList<>();
         int x1 = area.minX() >> 4;
@@ -122,7 +130,11 @@ public final class FloatingScan {
         int z2 = (area.minZ() + area.depth() - 1) >> 4;
         for (int cx = x1; cx <= x2; cx++) {
             for (int cz = z1; cz <= z2; cz++) {
-                cells.addAll(placed.spiritMarkedIn(cx, cz));
+                if (temporary) {
+                    cells.addAll(placed.temporaryIn(cx, cz));
+                } else {
+                    cells.addAll(placed.spiritMarkedIn(cx, cz));
+                }
             }
         }
         return cells;
@@ -176,6 +188,15 @@ public final class FloatingScan {
         @Override
         public boolean planned(BlockCoord at) {
             return plan.planned(at);
+        }
+
+        @Override
+        public boolean temporary(BlockCoord at) {
+            BlockPos pos = pos(at);
+            PlacedBlocksData placed = PlacedBlocksData.get(level);
+            return placed.isTemporary(pos)
+                    || (placed.isSpiritMarked(pos)
+                            && TemporaryBlocks.legacyMovement(BlockStates.idOf(level.getBlockState(pos))));
         }
 
         @Override

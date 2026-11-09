@@ -50,7 +50,7 @@ public final class StorageFinder {
         if (!yardOnly) {
             return known;
         }
-        Optional<StageSite> site = SettlementPlotStore.get(level).site();
+        Optional<StageSite> site = SettlementPlotStore.liveSite(level);
         if (site.isEmpty()) {
             return List.of();
         }

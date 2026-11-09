@@ -93,6 +93,21 @@ class CleanupCasesTests {
     }
 
     @Test
+    void cleanup_NoDirtForMound_LevelLotWaitsForMaterial() {
+        GraphWorld world = GraphWorld.settled().with("dirt", 0);
+        GraphFacts facts = PlanCaseFacts.facts(
+                Map.of(),
+                List.of(),
+                new GraphSiteFacts.Terrain(0, 0, 2, 0, 0, Map.of("minecraft:dirt", 2), Map.of(), Map.of(), false));
+
+        GraphPlan plan = PlanCaseFacts.plan(world, facts);
+
+        assertFalse(
+                PlanCaseFacts.task(plan, "event:level_lot:level_lot").feasible(),
+                "Выравнивание без земли не крутится: узел ждёт материал, а не падает по кругу: " + plan.tasks());
+    }
+
+    @Test
     void cleanup_NaturalSlopeOnly_DoesNoLeveling() {
         GraphFacts facts = PlanCaseFacts.facts(
                 Map.of(),

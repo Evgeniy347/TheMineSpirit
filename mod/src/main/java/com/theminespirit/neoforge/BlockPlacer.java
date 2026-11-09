@@ -149,7 +149,7 @@ public final class BlockPlacer {
 
     private static @Nullable StageSite site(Level level) {
         return level instanceof ServerLevel server
-                ? SettlementPlotStore.get(server).site().orElse(null)
+                ? SettlementPlotStore.liveSite(server).orElse(null)
                 : null;
     }
 

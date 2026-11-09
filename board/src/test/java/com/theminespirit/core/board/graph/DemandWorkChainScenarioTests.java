@@ -151,6 +151,122 @@ class DemandWorkChainScenarioTests {
         assertTrue(stocked.task("dig_dirt").isEmpty(), "Земли хватает — добыча снята: " + ids(stocked));
     }
 
+    @Test
+    void case10_SandAndGlassForConstruction_RaisedThroughSandAndFurnace() {
+        GraphWorld world = pair(stageTwo());
+        world.stage = 4;
+        world.built("town_hall", Built.PLANNED);
+        world.with("sand", 0)
+                .with("glass", 0)
+                .with("glass_pane", 0)
+                .with("stone_bricks", 256)
+                .with("oak_planks", 160)
+                .with("bell", 4)
+                .with("lectern", 4)
+                .with("lantern", 16)
+                .with("coal", 64);
+        GraphPlan plan = plan(world, facts(TWO));
+
+        assertTrue(
+                task(plan, "craft_glass_pane").priority() > 0,
+                "Стекла нет — поднимается стеклянная панель: " + ids(plan));
+        assertTrue(
+                task(plan, "smelt_glass").priority() > 0, "Панель требует стекло — поднимается плавка: " + ids(plan));
+        assertTrue(task(plan, "dig_sand").feasible(), "Песок — источник стекла, его добыча доступна: " + ids(plan));
+
+        world.with("sand", 512).with("glass", 512).with("coal", 512);
+        GraphPlan stocked = plan(world, facts(TWO));
+        assertTrue(stocked.task("dig_sand").isEmpty(), "Песка хватает — добыча снята: " + ids(stocked));
+        assertTrue(
+                task(stocked, "craft_glass_pane").feasible(), "Песок и печь есть — панель крафтится: " + ids(stocked));
+    }
+
+    @Test
+    void case21_PlayerBeforeTrip_FoodAndToolSupplied() {
+        GraphWorld world = pair(stageTwo())
+                .event("more4_player_near")
+                .event("more4_player_hungry")
+                .event("more4_player_tool_broken")
+                .with("food", 32);
+        GraphPlan plan = plan(world, facts(TWO));
+
+        GraphPlan.Task food = task(plan, "event:more4_player_hungry:more4_bring_player_food");
+        GraphPlan.Task tool = task(plan, "event:more4_player_tool_broken:more4_lend_player_tool");
+        assertTrue(food.feasible(), "Еда на складе — голодному игроку перед походом её несут: " + ids(plan));
+        assertTrue(tool.feasible(), "Инструмент игрока сломан — дух даёт запасной: " + ids(plan));
+
+        world.with("food", 0);
+        GraphPlan bare = plan(world, facts(TWO));
+        assertFalse(
+                task(bare, "event:more4_player_hungry:more4_bring_player_food").feasible(),
+                "Еды нет — игроку нечего нести, пока граф не добудет еду: " + ids(bare));
+        assertTrue(
+                task(bare, "craft_food").priority() > 0,
+                "Еды нет — поднимается её производство, а не пустая доставка: " + ids(bare));
+    }
+
+    @Test
+    void case27_BooksAndShelvesForStageFour_RaisedThroughLeatherAndPaper() {
+        GraphWorld world = pair(stageTwo()).built("enchant_room", Built.PLANNED);
+        world.stage = 4;
+        world.built("pen_cow", Built.BUILT);
+        world.with("book", 0)
+                .with("bookshelf", 0)
+                .with("paper", 0)
+                .with("leather", 0)
+                .with("sugar_cane", 0)
+                .with("herd_cow", 3)
+                .with("oak_planks", 160)
+                .with("oak_log", 64)
+                .with("enchanting_table", 4)
+                .with("torch", 32);
+        GraphPlan plan = plan(world, facts(TWO));
+
+        GraphPlan.Task shelf = task(plan, "craft_bookshelf");
+        assertTrue(shelf.priority() > 0, "Полок нет — поднимается их крафт: " + ids(plan));
+        assertTrue(task(plan, "craft_book").priority() > 0, "Книг нет — поднимается крафт книги: " + ids(plan));
+        assertTrue(task(plan, "craft_paper").priority() > 0, "Бумаги нет — поднимается крафт бумаги: " + ids(plan));
+        assertTrue(task(plan, "skin_cow").feasible(), "Кожи нет — граф поднимает забой коровы: " + ids(plan));
+
+        world.with("book", 64).with("leather", 64).with("paper", 64).with("sugar_cane", 64);
+        GraphPlan stocked = plan(world, facts(TWO));
+        assertTrue(stocked.task("craft_book").isEmpty(), "Книг хватает — крафт снят: " + ids(stocked));
+        assertTrue(task(stocked, "craft_bookshelf").feasible(), "Книги и доски есть — полка ставится: " + ids(stocked));
+    }
+
+    @Test
+    void case29_NoWorkshopStation_PlacedThroughPlanks() {
+        GraphWorld world = pair(stageTwo()).event("more6_station_broken").with("oak_planks", 0);
+        GraphPlan plan = plan(world, facts(TWO));
+
+        GraphPlan.Task station = task(plan, "event:more6_station_broken:more6_place_station");
+        assertFalse(station.feasible(), "Досок нет — станок ждёт материал: " + ids(plan));
+        assertTrue(task(plan, "craft_oak_planks").priority() > 0, "Досок нет — поднимается крафт досок: " + ids(plan));
+
+        world.with("oak_planks", 64).with("oak_log", 64);
+        GraphPlan stocked = plan(world, facts(TWO));
+        assertTrue(
+                task(stocked, "event:more6_station_broken:more6_place_station").feasible(),
+                "Доски есть — станок ставится: " + ids(stocked));
+    }
+
+    @Test
+    void case33_NoStairsOutOfPit_PlanksAndStoneRaised() {
+        GraphWorld world = GraphWorld.settled().with("oak_planks", 0).with("cobblestone", 0);
+        GraphFacts facts = facts(named(spirit("spirit-1", 20, 20, true, false, "pit", List.of(), List.of())));
+        GraphPlan plan = plan(world, facts);
+
+        assertTrue(ids(plan).contains("pillar"), "Из ямы без ступеней поднимаются столбом: " + ids(plan));
+        assertFalse(task(plan, "pillar").feasible(), "Досок нет — столб ждёт материал: " + ids(plan));
+        assertTrue(task(plan, "craft_oak_planks").priority() > 0, "Досок нет — поднимается крафт досок: " + ids(plan));
+        assertTrue(task(plan, "mine_cobble").priority() > 0, "Камня нет — поднимается шахта: " + ids(plan));
+
+        world.with("oak_planks", 64).with("cobblestone", 64);
+        GraphPlan stocked = plan(world, facts);
+        assertTrue(task(stocked, "pillar").feasible(), "Доски есть — выход столбом выполним: " + ids(stocked));
+        assertTrue(task(stocked, "restore_trace").feasible(), "След возвращается камнем: " + ids(stocked));
+    }
+
     private static GraphPlan ordered(GraphWorld world, GraphFacts facts, Map<String, Integer> orders) {
         return GraphPlanner.plan(
                 world.graph,

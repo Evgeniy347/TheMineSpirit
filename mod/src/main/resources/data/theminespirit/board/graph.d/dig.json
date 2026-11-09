@@ -45,9 +45,6 @@
       "consumes": {
         "#planks": 8
       },
-      "needs": {
-        "trail_clean": 1
-      },
       "ticks": 600,
       "implemented": true
     },
@@ -59,9 +56,6 @@
       "weight": 1.0,
       "consumes": {
         "#planks": 4
-      },
-      "needs": {
-        "trail_clean": 1
       },
       "ticks": 400,
       "implemented": true

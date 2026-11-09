@@ -52,8 +52,7 @@ public final class NightLeashGate {
 
     private static boolean onPlan(Level level, BlockCoord target) {
         return level instanceof ServerLevel server
-                && SettlementPlotStore.get(server)
-                        .site()
+                && SettlementPlotStore.liveSite(server)
                         .map(site -> site.near(target.x(), target.z()))
                         .orElse(false);
     }

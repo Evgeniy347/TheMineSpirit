@@ -31,6 +31,7 @@ final class FloatingScanCycle {
     static final int SLICES_PER_STEP = FloatingSweep.SLICES_PER_STEP;
     static final int STEP_EVERY_TICKS = FloatingSweep.STEP_EVERY_TICKS;
     private static final int WHOLE_CYCLE = 1_000_000;
+    private static final int LEGACY_EVERY = 25;
     private static final Map<ResourceKey<Level>, FloatingScanCycle> CYCLES = new HashMap<>();
 
     private record Area(int minX, int minZ, int width, int depth, int bottom, int top) {}
@@ -40,6 +41,7 @@ final class FloatingScanCycle {
     private List<FloatingBlocks.Finding> pending = new ArrayList<>();
     private List<FloatingBlocks.Finding> published = List.of();
     private Set<BlockCoord> seen = new LinkedHashSet<>();
+    private int placedSteps;
 
     private FloatingScanCycle() {}
 
@@ -59,14 +61,14 @@ final class FloatingScanCycle {
             return List.of();
         }
         return CYCLES.computeIfAbsent(level.dimension(), key -> new FloatingScanCycle())
-                .step(level, site, area, bottom, top);
+                .step(level, site, area, region, bottom, top);
     }
 
     static void advance(ServerLevel level) {
         if (level.getGameTime() % STEP_EVERY_TICKS != 0) {
             return;
         }
-        Optional<StageSite> site = SettlementPlotStore.get(level).site();
+        Optional<StageSite> site = SettlementPlotStore.liveSite(level);
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
         if (site.isEmpty() || town.isEmpty()) {
             return;
@@ -92,11 +94,13 @@ final class FloatingScanCycle {
         for (SectionSlice slice : slices(area, bottom, top, WHOLE_CYCLE)) {
             scanSlice(level, area, slice, scan, candidates, seen, found);
         }
-        collectPlaced(level, area, bottom, top, scan, seen, found);
+        collectPlaced(level, region, bottom, top, scan, seen, found, true);
+        collectPlaced(level, region, bottom, top, scan, seen, found, false);
         return List.copyOf(found);
     }
 
-    private List<FloatingBlocks.Finding> step(ServerLevel level, StageSite site, ColumnMask area, int bottom, int top) {
+    private List<FloatingBlocks.Finding> step(
+            ServerLevel level, StageSite site, ColumnMask area, ColumnMask region, int bottom, int top) {
         Area next = new Area(area.minX(), area.minZ(), area.width(), area.depth(), bottom, top);
         if (!next.equals(this.area)) {
             reset(next, area, bottom, top);
@@ -107,11 +111,16 @@ final class FloatingScanCycle {
         for (SectionSlice slice : batch.slices()) {
             scanSlice(level, area, slice, scan, candidates, seen, pending);
         }
-        collectPlaced(level, area, bottom, top, scan, seen, pending);
+        collectPlaced(level, region, bottom, top, scan, seen, pending, true);
+        if (++placedSteps % LEGACY_EVERY == 0) {
+            collectPlaced(level, region, bottom, top, scan, seen, pending, false);
+        }
         if (batch.cycleDone()) {
             published = List.copyOf(pending);
             pending = new ArrayList<>();
             seen = new LinkedHashSet<>();
+        } else if (!pending.isEmpty()) {
+            published = List.copyOf(pending);
         }
         return published;
     }
@@ -122,6 +131,7 @@ final class FloatingScanCycle {
         pending = new ArrayList<>();
         published = List.of();
         seen = new LinkedHashSet<>();
+        placedSteps = 0;
     }
 
     private static List<SectionSlice> slices(ColumnMask area, int bottom, int top, int perStep) {
@@ -185,8 +195,9 @@ final class FloatingScanCycle {
             int top,
             FloatingScan.Scan scan,
             Set<BlockCoord> seen,
-            List<FloatingBlocks.Finding> found) {
-        for (BlockCoord cell : FloatingScan.placed(level, area)) {
+            List<FloatingBlocks.Finding> found,
+            boolean temporary) {
+        for (BlockCoord cell : temporary ? FloatingScan.placed(level, area) : FloatingScan.legacy(level, area)) {
             if (cell.y() >= bottom && cell.y() <= top && area.contains(cell.x(), cell.z()) && seen.add(cell)) {
                 FloatingBlocks.classify(cell, scan)
                         .ifPresent(finding -> FloatingScan.classifyTree(finding, scan, seen, found));

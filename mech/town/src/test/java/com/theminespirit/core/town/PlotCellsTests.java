@@ -50,6 +50,22 @@ class PlotCellsTests {
     }
 
     @Test
+    void defect_BlockAboveFreeHeight_IsPillar() {
+        assertEquals(
+                Optional.of(PlotCells.Defect.PILLAR),
+                PlotCells.defect(new PlotCells.Cell(PlotCells.FREE_HEIGHT, false, false), PlotCells.Found.NATURAL),
+                "Столб выше слоя свободной высоты — дефект любой высоты: аудит не ограничен тремя блоками");
+    }
+
+    @Test
+    void defect_PlannedBlockAboveFreeHeight_NotPillar() {
+        assertEquals(
+                Optional.empty(),
+                PlotCells.defect(new PlotCells.Cell(PlotCells.FREE_HEIGHT + 2, false, true), PlotCells.Found.OTHER),
+                "Блок постройки плана выше свободного слоя — не столб: схема дома не срезается");
+    }
+
+    @Test
     void expect_CellsByHeight_GroundFreeAny() {
         assertEquals(
                 List.of(

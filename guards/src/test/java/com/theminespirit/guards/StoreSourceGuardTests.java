@@ -57,17 +57,16 @@ class StoreSourceGuardTests {
     @Test
     void yardFloorWatch_OwnTick_IsRemoved() {
         String sources = SOURCES.get(BOARD.resolve("YardFloorWatch.java"));
-        String plot = SOURCES.get(BOARD.resolve("PlotAudit.java"));
 
         List<String> found = new ArrayList<>();
         found.addAll(found(sources, "static void tick("));
-        found.addAll(found(plot, "YardFloorWatch.tick("));
+        SOURCES.values().forEach(source -> found.addAll(found(source, "YardFloorWatch.tick(")));
         assertEquals(
                 List.of(),
                 found,
                 "Дыры под станками двора снова чинятся сторожами мимо графа: ремонт выбирает узел "
                         + "repair:stock_chests, сторож остаётся аудитом пола. "
-                        + "Нарушители: YardFloorWatch.tick, PlotAudit -> YardFloorWatch.tick");
+                        + "Нарушители: YardFloorWatch.tick, любой вызов YardFloorWatch.tick из аудита");
     }
 
     private static List<String> found(String source, String pattern) {

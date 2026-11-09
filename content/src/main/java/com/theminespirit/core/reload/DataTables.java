@@ -144,7 +144,7 @@ public final class DataTables {
                 ProtectionConfig::readClasspath);
         this.presets = registry.registerLazy(DataTableDefinitions.presets(), PresetLibrary::loadDefault);
         this.board = single("board", BoardConfig.RESOURCE, BoardConfig::fromJson, BoardConfig::readFromClasspath);
-        this.graph = DataTableDefinitions.graph(registry);
+        this.graph = DataTableDefinitions.supply(registry);
         this.building = single("building", BuildData.RESOURCE, BuildData::parse, BuildData::load);
         this.magnet = single("magnet", MagnetRules.RESOURCE, MagnetRules::parse, MagnetRules::load);
         this.fishingWait = single("fishing_wait", FishingWait.RESOURCE, FishingWait::parse, FishingWait::load);

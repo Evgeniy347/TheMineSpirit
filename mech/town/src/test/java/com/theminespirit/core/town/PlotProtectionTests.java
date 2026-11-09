@@ -188,6 +188,17 @@ class PlotProtectionTests {
     }
 
     @Test
+    void check_TemporaryMovement_AllowedOnPlanCell() {
+        BlockCoord cell = SITE.houseOrigin();
+
+        assertInstanceOf(
+                PlotProtection.Allowed.class,
+                decide(cell, PlotProtection.Action.PLACE, PlotProtection.Ground.TEMPORARY_MOVEMENT, PlanBuilding.NONE),
+                "Временный проход (столб, мост, пол ступени) обязан ставить опору и на клетке плана: "
+                        + "иначе дух не выберется с крыши и уборка застревает на улице");
+    }
+
+    @Test
     void basisText_EveryGround_IsNamed() {
         for (PlotProtection.Ground ground : PlotProtection.Ground.values()) {
             String text = PlotProtection.basisText(ground);

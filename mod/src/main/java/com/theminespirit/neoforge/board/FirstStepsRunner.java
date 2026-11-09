@@ -81,7 +81,7 @@ public final class FirstStepsRunner {
             return Optional.empty();
         }
         StageSite stage = SettlementPlotStore.get(level)
-                .site()
+                .site(SettlementPlotStore.currentStage(service))
                 .orElseThrow(() -> new IllegalStateException(
                         "Участок обмерен, а места этапа 1 нет: план поселения не сохранился в мире"));
         BlockCoord home = HomeStand.of(level, stage, spirits);

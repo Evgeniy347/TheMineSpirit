@@ -252,4 +252,38 @@ class DispatchRoundTests {
                 round.why(waiting, List.of()),
                 "Пустое поселение — честная причина «нет духов», а не пустая строка");
     }
+
+    @Test
+    void refusal_WornPickaxe_RefusedUntilGraphRepairsIt() {
+        BoardTicket mine = new BoardTicket(
+                "graph:building:mine",
+                BoardCase.BUILD_MINE,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.BUILD_MINE),
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
+        DispatchRound round = new DispatchRound(board(List.of(mine)), 0);
+        DispatchRound.Candidate worn = new DispatchRound.Candidate(
+                new UUID(0, 1),
+                "spirit-1",
+                null,
+                List.of("minecraft:wooden_pickaxe"),
+                FED,
+                SpiritView.free(),
+                false,
+                List.of(),
+                Map.of(),
+                List.of("minecraft:wooden_pickaxe"));
+
+        Optional<String> refusal = round.refusal(mine, worn);
+        assertTrue(
+                refusal.isPresent() && refusal.orElseThrow().contains("изношен"),
+                "Изношенная кирка не уходит в работу: граф сначала чинит или меняет её: " + refusal);
+        DispatchRound.Candidate fresh = new DispatchRound.Candidate(
+                new UUID(0, 2), "spirit-2", null, List.of("minecraft:stone_pickaxe"), FED, SpiritView.free());
+        assertTrue(round.refusal(mine, fresh).isEmpty(), "Целая кирка работу берёт: износ — не запрет инструмента");
+    }
 }

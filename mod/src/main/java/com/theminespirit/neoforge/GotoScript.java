@@ -136,7 +136,7 @@ public final class GotoScript implements ScriptInstance {
         if (!(level instanceof ServerLevel server)) {
             return goal;
         }
-        Optional<StageSite> site = SettlementPlotStore.get(server).site();
+        Optional<StageSite> site = SettlementPlotStore.liveSite(server);
         if (site.isEmpty()) {
             return goal;
         }
