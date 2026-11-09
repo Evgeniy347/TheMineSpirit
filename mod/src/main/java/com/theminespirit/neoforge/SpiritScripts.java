@@ -3,6 +3,8 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.engine.ConditionRegistry;
 import com.theminespirit.core.engine.ScriptFactory;
 import com.theminespirit.core.engine.ScriptInstance;
+import com.theminespirit.core.engine.ScriptPack;
+import com.theminespirit.core.engine.ScriptPacks;
 import com.theminespirit.core.engine.ScriptRegistry;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.planner.AcquireScript;
@@ -19,14 +21,15 @@ import com.theminespirit.neoforge.board.SettlementWood;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
 import com.theminespirit.neoforge.inventory.SpiritSupplies;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
 
 public final class SpiritScripts {
-    private static final Map<String, Function<SpiritEntity, ScriptFactory>> IMPLEMENTED =
-            SpiritScriptTable.implemented();
-    private static final ScriptCatalog CATALOG = CoreScripts.defaultCatalog().restrictedTo(IMPLEMENTED.keySet());
+    private static final List<ScriptPack<SpiritEntity>> PACKS = SpiritScriptPacks.all();
+    private static final Set<String> SCRIPT_IDS = ScriptPacks.ids(PACKS);
+    private static final ScriptCatalog CATALOG = CoreScripts.defaultCatalog().restrictedTo(SCRIPT_IDS);
 
     private SpiritScripts() {}
 
@@ -59,7 +62,7 @@ public final class SpiritScripts {
 
     public static ScriptRegistry registryFor(SpiritEntity spirit) {
         Map<String, ScriptFactory> factories = new LinkedHashMap<>();
-        IMPLEMENTED.forEach((id, builder) -> factories.put(id, withDefaults(id, builder.apply(spirit))));
+        ScriptPacks.factories(PACKS, spirit).forEach((id, builder) -> factories.put(id, withDefaults(id, builder)));
         return ScriptRegistry.of(factories);
     }
 
@@ -86,7 +89,7 @@ public final class SpiritScripts {
     }
 
     public static ScriptCatalog catalog() {
-        return CoreScripts.defaultCatalog().restrictedTo(IMPLEMENTED.keySet());
+        return CATALOG;
     }
 
     private static RecipeKnowledge acquireKnowledge(SpiritEntity spirit, Map<String, Integer> inventory) {
