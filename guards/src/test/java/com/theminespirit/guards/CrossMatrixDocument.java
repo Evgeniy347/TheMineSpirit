@@ -23,7 +23,7 @@ final class CrossMatrixDocument {
     private static final Pattern REGISTRY = Pattern.compile("^\\| (M\\d{2}) \\|");
     private static final Pattern MATRIX_HEADER = Pattern.compile("^\\| \\| (M\\d{2})");
     private static final Pattern MATRIX_ROW = Pattern.compile("^\\| (M\\d{2}) \\|");
-    private static final Pattern DETAIL = Pattern.compile("^\\| (\\d+)-(\\d+) \\| `([^`]+)` \\|");
+    private static final Pattern DETAIL = Pattern.compile("^\\| ((?:\\d+-\\d+)(?:, \\d+-\\d+)*) \\| `([^`]+)` \\|");
     private static final Pattern TEST_REF = Pattern.compile("`([A-Z][A-Za-z0-9]*Tests)\\.([A-Za-z0-9_]+)`");
     private static final Set<String> STATES = Set.of("Е", "Ч", "Н", "н/п", "—");
 
@@ -101,7 +101,7 @@ final class CrossMatrixDocument {
                 found.add("пара " + pair + " описана дважды");
             }
             String test = detail.get("test");
-            if (!refExists(test, sources)) {
+            if (!refProblem(test, sources).isEmpty()) {
                 found.add("ссылка `" + test + "` ведёт на несуществующий тест: " + refProblem(test, sources));
             }
             if (!"Е".equals(states(text).getOrDefault(pair, ""))) {
@@ -127,7 +127,7 @@ final class CrossMatrixDocument {
             }
         }
         for (String ref : references(text)) {
-            if (!refExists(ref, sources)) {
+            if (!refProblem(ref, sources).isEmpty()) {
                 found.add("ссылка `" + ref + "` ведёт на несуществующий тест: " + refProblem(ref, sources));
             }
         }
@@ -145,10 +145,6 @@ final class CrossMatrixDocument {
         }
         Pattern method = Pattern.compile("void\\s+" + Pattern.quote(parts[1]) + "\\s*\\(");
         return method.matcher(source).find() ? "" : "нет метода " + parts[1];
-    }
-
-    private static boolean refExists(String ref, Map<String, String> sources) {
-        return refProblem(ref, sources).isEmpty();
     }
 
     private static List<String> references(String text) {
@@ -237,14 +233,16 @@ final class CrossMatrixDocument {
                 continue;
             }
             String[] parts = line.split("\\|", -1);
-            Map<String, String> row = new TreeMap<>();
-            row.put("pair", matcher.group(1) + "-" + matcher.group(2));
-            row.put("test", matcher.group(3));
-            row.put("graph", parts.length > 3 ? parts[3].trim() : "");
-            row.put("mechanic", parts.length > 4 ? parts[4].trim() : "");
-            row.put("mark", parts.length > 5 ? parts[5].trim() : "");
-            row.put("strength", parts.length > 6 ? parts[6].trim() : "");
-            rows.add(row);
+            for (String pair : matcher.group(1).split(", ", -1)) {
+                Map<String, String> row = new TreeMap<>();
+                row.put("pair", pair);
+                row.put("test", matcher.group(2));
+                row.put("graph", parts.length > 3 ? parts[3].trim() : "");
+                row.put("mechanic", parts.length > 4 ? parts[4].trim() : "");
+                row.put("mark", parts.length > 5 ? parts[5].trim() : "");
+                row.put("strength", parts.length > 6 ? parts[6].trim() : "");
+                rows.add(row);
+            }
         }
         return rows;
     }

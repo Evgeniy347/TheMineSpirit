@@ -165,12 +165,12 @@ class DispatchRoundTests {
 
         assertEquals(
                 "goto",
-                DispatchRound.busyWith(null, plan, DispatchRound.BusyMode.WORK),
+                DispatchBusy.text(null, plan, DispatchBusy.Mode.WORK),
                 "Между шагами скрипт ещё не стартовал: причина ожидания обязана называть шаг плана (goto), "
                         + "а не обезличенное «задача» — иначе видно только «занят: задача»");
         assertEquals(
                 "тактика держит (goto)",
-                DispatchRound.busyWith(null, plan, DispatchRound.BusyMode.TACTICS),
+                DispatchBusy.text(null, plan, DispatchBusy.Mode.TACTICS),
                 "При управлении тактикой причина называет тот же шаг плана: «тактика держит (goto)»");
     }
 

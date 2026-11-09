@@ -28,6 +28,34 @@ class CrossMatrixGuardTests {
     }
 
     @Test
+    void matrix_MultiPairRow_CoversEveryPair() {
+        String text = String.join(
+                "\n",
+                List.of(
+                        "## Реестр механик",
+                        "| M01 | a |",
+                        "| M02 | b |",
+                        "| M03 | c |",
+                        "",
+                        "## Матрица пар",
+                        "| | M01 | M02 | M03 |",
+                        "|---|---|---|---|",
+                        "| M01 | — | Е | Е |",
+                        "| M02 | Е | — | Н |",
+                        "| M03 | Е | Н | — |",
+                        "",
+                        "| пара | тест | граф дал | механика сделала | отметка | сила |",
+                        "|---|---|---|---|---|---|",
+                        "| 1-2, 1-3 | `ATests.ok` | граф | механика | ОК | полный |"));
+
+        assertEquals(
+                List.of(),
+                CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }")),
+                "Строка с несколькими парами через запятую закрывает все перечисленные клетки: иначе матрица "
+                        + "требует дублировать один сценарий отдельной строкой на каждую пару");
+    }
+
+    @Test
     void matrix_AsymmetricCell_IsReported() {
         String text = CrossMatrixDocument.baseDocument().replace("| M01 | — | Н |", "| M01 | — | Е |");
 

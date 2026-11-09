@@ -1,6 +1,5 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.plan.TaskNode;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -55,6 +54,7 @@ public final class DispatchRound {
     private final long now;
     private final Map<UUID, Integer> held;
     private final Map<UUID, String> awaiting = new HashMap<>();
+    private final LifePreemption preemption = new LifePreemption();
 
     public DispatchRound(Board board, long now) {
         this.board = Objects.requireNonNull(board, "Доска раунда выдачи не может быть null: задания берутся с неё");
@@ -64,28 +64,6 @@ public final class DispatchRound {
 
     public static boolean tooLowForCleanup(BoardCase boardCase, int spiritY, int targetY) {
         return boardCase == BoardCase.DISMANTLE_SHELTER && spiritY < targetY - 4;
-    }
-
-    public enum BusyMode {
-        IDLE,
-        WORK,
-        TACTICS,
-        BACKGROUND
-    }
-
-    public static @Nullable String busyWith(@Nullable String script, @Nullable TaskNode plan, BusyMode mode) {
-        Objects.requireNonNull(mode, "Режим занятости не может быть null: по нему решают, что писать в причине");
-        if (mode == BusyMode.IDLE || mode == BusyMode.BACKGROUND) {
-            return null;
-        }
-        String shown = script;
-        if (shown == null && plan != null) {
-            shown = BoardActivities.firstScript(plan);
-        }
-        if (shown == null) {
-            shown = "задача";
-        }
-        return mode == BusyMode.TACTICS ? "тактика держит (" + shown + ")" : shown;
     }
 
     public static int stageCasesOpen(Board board) {
@@ -139,7 +117,7 @@ public final class DispatchRound {
                         + ": ждёт выход из ловушки (граф ставит rescue)");
             }
         }
-        if (spirit.busyWith() != null) {
+        if (spirit.busyWith() != null && !preemption.freed(spirit.id())) {
             return Optional.of("занят: " + spirit.busyWith());
         }
         String waits = awaiting.get(spirit.id());
@@ -187,16 +165,37 @@ public final class DispatchRound {
 
     public Optional<Candidate> choose(BoardTicket ticket, List<Candidate> preference, @Nullable String supplyItem) {
         for (Candidate spirit : preference) {
-            if (tooled(ticket, spirit) && fits(ticket, spirit, supplyItem)) {
+            if (tooled(ticket, spirit) && accepts(ticket, spirit, supplyItem)) {
                 return Optional.of(spirit);
             }
         }
         for (Candidate spirit : preference) {
-            if (!tooled(ticket, spirit) && fits(ticket, spirit, supplyItem)) {
+            if (!tooled(ticket, spirit) && accepts(ticket, spirit, supplyItem)) {
                 return Optional.of(spirit);
             }
         }
         return Optional.empty();
+    }
+
+    private boolean accepts(BoardTicket ticket, Candidate spirit, @Nullable String supplyItem) {
+        Optional<String> refusal = refusal(ticket, spirit, supplyItem);
+        if (refusal.isEmpty()) {
+            return true;
+        }
+        String reason = refusal.orElseThrow();
+        if (!reason.startsWith("занят: ") && !reason.startsWith("держит ")) {
+            return false;
+        }
+        Optional<BoardTicket> released = preemption.displace(ticket, spirit, board);
+        if (released.isEmpty()) {
+            return false;
+        }
+        held.computeIfPresent(spirit.id(), (ignored, count) -> Math.max(0, count - 1));
+        return refusal(ticket, spirit, supplyItem).isEmpty();
+    }
+
+    public List<BoardTicket> drainDisplaced(UUID spirit) {
+        return preemption.drain(spirit);
     }
 
     private static boolean tooled(BoardTicket ticket, Candidate spirit) {
