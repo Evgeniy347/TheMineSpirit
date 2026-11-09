@@ -4,6 +4,7 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphFailureMemory;
 import com.theminespirit.core.board.graph.GraphFeedback;
@@ -184,8 +185,8 @@ public final class BoardGameTests {
 
     private static void assertFailuresSurviveReload(GameTestHelper helper) {
         GraphFailureMemory memory = new GraphFailureMemory();
-        memory.note("chop_jungle_log", "10,64,20", "маршрут не найден", 100);
-        memory.note("chop_jungle_log", "10,64,20", "маршрут не найден", 120);
+        memory.note("chop_jungle_log", "10,64,20", new GraphBlock.Path("10,64,20"), 100);
+        memory.note("chop_jungle_log", "10,64,20", new GraphBlock.Path("10,64,20"), 120);
         BoardStateStore store = new BoardStateStore();
         store.updateFailures(memory.saved());
 
@@ -198,7 +199,7 @@ public final class BoardGameTests {
                         "chop_jungle_log", "10,64,20", 120, GraphFailureMemory.DEFAULT_HALF_LIFE_TICKS)
                 .orElseThrow();
         helper.assertTrue(
-                fact.count() == 2 && fact.cause() == GraphFeedback.Cause.NO_PATH,
+                fact.count() == 2 && fact.need() instanceof GraphBlock.Path,
                 "Память неудач обязана пережить перезапуск с числом и причиной: иначе недостижимая точка "
                         + "выбирается снова; в NBT " + fact);
     }

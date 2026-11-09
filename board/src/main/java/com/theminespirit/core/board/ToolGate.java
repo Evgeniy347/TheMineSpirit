@@ -118,6 +118,23 @@ public final class ToolGate {
                 && stock.stream().anyMatch(item -> item.endsWith(AXE));
     }
 
+    public static boolean worn(BoardTicket ticket, Collection<String> items, Collection<String> wornItems) {
+        Objects.requireNonNull(ticket, "Задание не может быть null: износ проверяют у его инструмента");
+        Objects.requireNonNull(items, "Инвентарь не может быть null: пустой — пустой набор");
+        Objects.requireNonNull(wornItems, "Изношенные предметы не могут быть null: целые — пустой набор");
+        Optional<String> required = required(ticket);
+        if (required.isEmpty()) {
+            return false;
+        }
+        String suffix = required.orElseThrow();
+        long matching = items.stream().filter(item -> item.endsWith(suffix)).count();
+        if (matching == 0) {
+            return false;
+        }
+        long worn = wornItems.stream().filter(item -> item.endsWith(suffix)).count();
+        return worn >= matching;
+    }
+
     public static boolean allows(BoardCase boardCase, Collection<String> items) {
         return allows(boardCase, items, null);
     }

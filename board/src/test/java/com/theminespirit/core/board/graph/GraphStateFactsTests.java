@@ -80,7 +80,7 @@ class GraphStateFactsTests {
     void chest_FreeSlotsAboveTotal_Rejected() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new GraphFacts.Chest(new GraphFacts.Position(0, 0, 0), Map.of(), 4, 2),
+                () -> new GraphFacts.Chest(new GraphFacts.Position(0, 0, 0), Map.of(), 4, 2, GraphFacts.Reach.UNKNOWN),
                 "Свободных слотов не может быть больше общего числа");
     }
 

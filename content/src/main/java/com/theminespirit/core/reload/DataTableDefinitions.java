@@ -2,6 +2,7 @@ package com.theminespirit.core.reload;
 
 import com.theminespirit.core.board.graph.GraphFragments;
 import com.theminespirit.core.board.graph.SupplyGraph;
+import com.theminespirit.core.board.graph.VitalNeeds;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicTextParser;
@@ -14,6 +15,11 @@ import java.util.Map;
 final class DataTableDefinitions {
     private DataTableDefinitions() {}
 
+    static TableHolder<SupplyGraph> supply(TableRegistry registry) {
+        vital(registry);
+        return graph(registry);
+    }
+
     static TableHolder<SupplyGraph> graph(TableRegistry registry) {
         return registry.registerLazy(
                 TableDefinition.composite(
@@ -25,6 +31,11 @@ final class DataTableDefinitions {
                                 contents.get(1).json(),
                                 contents.get(1).origin())),
                 SupplyGraph::loadDefault);
+    }
+
+    static void vital(TableRegistry registry) {
+        registry.registerLazy(
+                TableDefinition.single("vital", VitalNeeds.RESOURCE, VitalNeeds::parse), VitalNeeds::needs);
     }
 
     static TableDefinition<TacticsConfig> tactics() {

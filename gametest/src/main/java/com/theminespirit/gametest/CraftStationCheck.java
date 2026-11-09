@@ -2,6 +2,7 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.SupplyGraph;
@@ -87,7 +88,7 @@ final class CraftStationCheck {
                             List.of(),
                             Map.of()),
                     TicketTarget.at(preferred),
-                    "маршрут не найден",
+                    new GraphBlock.Path(String.valueOf(preferred)),
                     now);
 
             BlockCoord chosen = GraphTargets.craftPoint(helper.getLevel(), scan, service, graph, now);

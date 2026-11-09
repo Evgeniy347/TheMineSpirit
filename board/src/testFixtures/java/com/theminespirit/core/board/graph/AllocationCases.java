@@ -135,7 +135,8 @@ final class AllocationCases {
         return new GraphFacts(
                 spirits.stream().collect(Collectors.toMap(GraphFacts.Spirit::id, value -> value)),
                 List.of(),
-                List.of(new GraphFacts.Chest(new GraphFacts.Position(1, 64, 1), chest, 10, 27)),
+                List.of(new GraphFacts.Chest(
+                        new GraphFacts.Position(1, 64, 1), chest, 10, 27, GraphFacts.Reach.UNKNOWN)),
                 List.of(),
                 Map.of(),
                 Map.of(),
