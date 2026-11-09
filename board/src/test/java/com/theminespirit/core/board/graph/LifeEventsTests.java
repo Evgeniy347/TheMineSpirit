@@ -107,7 +107,7 @@ class LifeEventsTests {
     @Test
     void state_WeakPlayerThreshold_UsesGraphLifeNotJavaDefaults() {
         GraphWorld world = GraphWorld.empty();
-        world.graph = SupplyGraph.parse("{\"costs\": {}, \"life\": {\"weakHealth\": 0.5}}", "строгий порог жизни");
+        world.graph = SupplyGraph.parse("{\"life\": {\"weakHealth\": 0.5}}", "строгий порог жизни");
         world.facts = GraphFacts.empty().withPlayers(List.of(player(9.0F, 20)));
 
         assertTrue(

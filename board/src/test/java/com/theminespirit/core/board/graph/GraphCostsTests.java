@@ -52,6 +52,16 @@ class GraphCostsTests {
     }
 
     @Test
+    void life_NoCostsBlock_CoefficientsReadFromData() throws IOException {
+        GraphCosts costs = GraphCosts.parse(new ObjectMapper().readTree("{\"life\": {\"pressureBase\": 0.9}}"));
+
+        assertEquals(
+                0.9,
+                costs.life().pressureBase(),
+                "Формула жизни читается из данных графа и без блока costs: иначе коэффициенты молча берутся из Java");
+    }
+
+    @Test
     void life_DefaultGraph_ReadsCoefficientsFromData() {
         GraphLife life = GraphWorld.GRAPH.costs().life();
 
