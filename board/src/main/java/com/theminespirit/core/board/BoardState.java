@@ -29,7 +29,12 @@ public record BoardState(
         }
     }
 
-    public record Blocked(String ticketId, Map<String, Integer> missing, Map<String, Integer> available, long since) {
+    public record Blocked(
+            String ticketId,
+            Map<String, Integer> missing,
+            Map<String, Integer> available,
+            long since,
+            @Nullable GraphBlock block) {
         public Blocked {
             Objects.requireNonNull(ticketId, "id заблокированного задания не может быть null: пауза адресная");
             missing = Map.copyOf(Objects.requireNonNull(missing, "Нехватка блокировки не может быть null"));
@@ -37,6 +42,10 @@ public record BoardState(
             if (since < 0) {
                 throw new IllegalArgumentException("Тик блокировки " + since + " отрицателен: пауза идёт вперёд");
             }
+        }
+
+        public Blocked(String ticketId, Map<String, Integer> missing, Map<String, Integer> available, long since) {
+            this(ticketId, missing, available, since, null);
         }
     }
 

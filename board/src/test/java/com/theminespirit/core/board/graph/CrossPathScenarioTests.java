@@ -44,7 +44,7 @@ class CrossPathScenarioTests {
         GraphTickets.Result result = tickets(world, facts);
         Board board = board(world, result);
         board.stuck().see(id("spirit-2"), PIT, 0);
-        board.stuck().mark(id("spirit-2"), 0, "пути нет: маршрут не найден");
+        board.stuck().mark(id("spirit-2"), 0, "пути нет: маршрут не найден", true);
         DispatchRound round = new DispatchRound(board, 0);
         DispatchRound.Candidate stuck = new DispatchRound.Candidate(
                 id("spirit-2"), "spirit-2", null, List.of(), FED, SpiritView.free(), false, List.of());

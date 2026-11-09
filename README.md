@@ -195,7 +195,6 @@ test-fixtures/src/                     ← общие фикстуры и инс
 Каждый модуль — настоящий sourceSet (`<модуль>/src/{main,test}/java`), собирается сам, зависит от `:api` и явно
 объявленных модулей; тесты — в `src/test`; тиры `slowTest`/`mutationTest` — по модулям, корень собирает все.
 Версии Minecraft, NeoForge и зависимостей — в `gradle.properties`.
-
 ## Локальные рабочие каталоги
 
 `temp-scripts/` и `TestResults/` игнорируются Git; после клонирования их может не быть: `mkdir -p temp-scripts TestResults`.

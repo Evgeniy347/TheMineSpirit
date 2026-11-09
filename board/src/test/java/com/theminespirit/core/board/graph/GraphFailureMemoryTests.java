@@ -4,22 +4,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.GraphBlock;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class GraphFailureMemoryTests {
     @Test
-    void note_SameNodeAndTarget_CountsAndKeepsLastCause() {
+    void note_SameNodeAndTarget_CountsAndKeepsLastNeed() {
         GraphFailureMemory memory = new GraphFailureMemory();
 
-        memory.note("make:dirt", "10,64,20", "маршрут не найден", 100);
-        memory.note("make:dirt", "10,64,20", "не дошёл до цели", 120);
+        memory.note("make:dirt", "10,64,20", new GraphBlock.Path("10,64,20"), 100);
+        memory.note("make:dirt", "10,64,20", new GraphBlock.Path("10,64,20"), 120);
 
         List<GraphFeedback.Failure> facts = memory.facts(120);
         assertEquals(1, facts.size(), "Провалы одной цели складываются в одну запись: " + facts);
         assertEquals(2, facts.get(0).count(), "Счётчик провалов цели растёт");
-        assertEquals(GraphFeedback.Cause.NOT_REACHED, facts.get(0).cause(), "Последняя причина важнее первой");
+        assertEquals(new GraphBlock.Path("10,64,20"), facts.get(0).need(), "Последняя нужда важнее первой");
         assertEquals(120, facts.get(0).lastTick(), "В памяти остаётся время последнего провала");
     }
 
@@ -27,8 +28,8 @@ class GraphFailureMemoryTests {
     void note_DifferentTargets_KeepSeparateEntries() {
         GraphFailureMemory memory = new GraphFailureMemory();
 
-        memory.note("make:dirt", "10,64,20", "маршрут не найден", 100);
-        memory.note("make:dirt", "-82,67,-87", "маршрут не найден", 100);
+        memory.note("make:dirt", "10,64,20", new GraphBlock.Path("10,64,20"), 100);
+        memory.note("make:dirt", "-82,67,-87", new GraphBlock.Path("-82,67,-87"), 100);
 
         assertEquals(2, memory.facts(100).size(), "Цель — часть ключа памяти: разные цели не смешиваются");
         assertEquals(
@@ -46,7 +47,7 @@ class GraphFailureMemoryTests {
         GraphFailureMemory memory = new GraphFailureMemory();
         double halfLife = 1000.0;
 
-        memory.note("make:dirt", "10,64,20", "маршрут не найден", 100);
+        memory.note("make:dirt", "10,64,20", new GraphBlock.Path("10,64,20"), 100);
 
         GraphFeedback.Failure fresh =
                 memory.recent("make:dirt", "10,64,20", 100, halfLife).orElseThrow();
@@ -66,14 +67,14 @@ class GraphFailureMemoryTests {
     void succeed_SameTarget_ResetsItsCounter() {
         GraphFailureMemory memory = new GraphFailureMemory();
 
-        memory.note("chop_jungle_log", "10,64,20", "маршрут не найден", 100);
-        memory.note("chop_jungle_log", "10,64,20", "маршрут не найден", 120);
+        memory.note("chop_jungle_log", "10,64,20", new GraphBlock.Path("10,64,20"), 100);
+        memory.note("chop_jungle_log", "10,64,20", new GraphBlock.Path("10,64,20"), 120);
         memory.succeed("chop_jungle_log", "10,64,20", 130);
 
         assertTrue(
                 memory.recent("chop_jungle_log", "10,64,20", 130).isEmpty(),
                 "Успех по цели сбрасывает её счётчик: удачная рубка не тащит старый провал дальше");
-        memory.note("chop_jungle_log", "10,64,20", "маршрут не найден", 140);
+        memory.note("chop_jungle_log", "10,64,20", new GraphBlock.Path("10,64,20"), 140);
         assertEquals(
                 1,
                 memory.recent("chop_jungle_log", "10,64,20", 140).orElseThrow().count(),
@@ -81,19 +82,19 @@ class GraphFailureMemoryTests {
     }
 
     @Test
-    void unreachablePoints_NoPathAndNotReached_OnlyThoseAreCollected() {
+    void unreachablePoints_PathNeed_IsCollected() {
         GraphFailureMemory memory = new GraphFailureMemory();
 
-        memory.note("chop_jungle_log", "1,64,1", "маршрут не найден", 100);
-        memory.note("chop_jungle_log", "2,64,2", "застрял, не дошёл", 100);
-        memory.note("chop_jungle_log", "3,64,3", "чанк не загружен", 100);
-        memory.note("chop_jungle_log", "4,64,4", "не хватает dirt=12", 100);
-        memory.note("chop_jungle_log", "5,64,5", "причина не записана", 100);
+        memory.note("chop_jungle_log", "1,64,1", new GraphBlock.Path("1,64,1"), 100);
+        memory.note("chop_jungle_log", "2,64,2", new GraphBlock.Path("2,64,2"), 100);
+        memory.note("chop_jungle_log", "3,64,3", null, 100);
+        memory.note("chop_jungle_log", "4,64,4", new GraphBlock.Item("dirt", 12), 100);
+        memory.note("chop_jungle_log", "5,64,5", null, 100);
 
         assertEquals(
                 Set.of("1,64,1", "2,64,2"),
                 memory.unreachablePoints(100, 1000),
-                "Недостижимы только «нет пути» и «не дошёл»: чанк, материал и прочее не исключают цель");
+                "Недостижима только нужда пути: чанк, материал и прочее не исключают цель");
         memory.succeed("chop_jungle_log", "1,64,1", 110);
         assertEquals(Set.of("2,64,2"), memory.unreachablePoints(110, 1000), "Успех цели убирает её из недостижимых");
     }
@@ -102,10 +103,15 @@ class GraphFailureMemoryTests {
     void unreachablePoints_DifferentNodes_CollectPointsForAllTasks() {
         GraphFailureMemory memory = new GraphFailureMemory();
 
-        memory.note("event:more2_stage_prep:more2_prepare_stage", "-171,71,-489", "маршрут не найден", 100);
-        memory.note("event:more6_carry_materials:more6_deposit_materials", "-171,71,-489", "маршрут не найден", 110);
-        memory.note("chop_jungle_log", "1,64,1", "не хватило материала", 120);
-        memory.note("mine_coal", "", "маршрут не найден", 130);
+        memory.note(
+                "event:more2_stage_prep:more2_prepare_stage", "-171,71,-489", new GraphBlock.Path("-171,71,-489"), 100);
+        memory.note(
+                "event:more6_carry_materials:more6_deposit_materials",
+                "-171,71,-489",
+                new GraphBlock.Path("-171,71,-489"),
+                110);
+        memory.note("chop_jungle_log", "1,64,1", new GraphBlock.Item("dirt", 1), 120);
+        memory.note("mine_coal", "", new GraphBlock.Path(""), 130);
 
         assertEquals(
                 Set.of("-171,71,-489"),
@@ -115,38 +121,40 @@ class GraphFailureMemoryTests {
     }
 
     @Test
-    void recent_KnownFailure_ReturnsCountAndCause() {
+    void recent_KnownFailure_ReturnsCountAndNeed() {
         GraphFailureMemory memory = new GraphFailureMemory();
-        memory.note("building:streets", "-180,69,-520", "чанк не загружен", 500);
+        memory.note("building:streets", "-180,69,-520", null, 500);
 
         GraphFeedback.Failure failure =
                 memory.recent("building:streets", "-180,69,-520", 500).orElseThrow();
 
         assertEquals(1, failure.count(), "Недавний провал отдаётся с числом");
-        assertEquals(GraphFeedback.Cause.CHUNK, failure.cause(), "Причина «чанк» распознана");
+        assertNull(failure.need(), "Провал без нужды (чанк) не выдумывает причину");
     }
 
     @Test
-    void cause_KnownPhrases_AreClassified() {
-        assertEquals(
-                GraphFeedback.Cause.NO_PATH,
-                GraphFeedback.Cause.of("маршрут не найден: цель (-82,67,-87)"),
-                "Нет маршрута — NO_PATH");
-        assertEquals(
-                GraphFeedback.Cause.NO_PATH,
-                GraphFeedback.Cause.of("путь упёрся в тупик в пределах 4"),
-                "Тупик — NO_PATH");
-        assertEquals(
-                GraphFeedback.Cause.NOT_REACHED,
-                GraphFeedback.Cause.of("стоянка (-172,70,-491) за преградой"),
-                "Стоянка за преградой — NOT_REACHED");
-        assertEquals(
-                GraphFeedback.Cause.NO_MATERIAL,
-                GraphFeedback.Cause.of("не хватает dirt=12"),
-                "Нехватка — NO_MATERIAL");
-        assertEquals(GraphFeedback.Cause.CHUNK, GraphFeedback.Cause.of("чанк не загружен"), "Чанк — CHUNK");
-        assertEquals(GraphFeedback.Cause.OTHER, GraphFeedback.Cause.of("причина не записана"), "Неизвестная — OTHER");
-        assertEquals(GraphFeedback.Cause.OTHER, GraphFeedback.Cause.of(null), "Пустая причина — OTHER");
+    void note_TypedNeed_IsNotParsedFromText() {
+        GraphFailureMemory memory = new GraphFailureMemory();
+        GraphBlock.Need need = new GraphBlock.Tool("pickaxe", 1, "spirit-1");
+
+        memory.note("mine_coal", "", need, 10);
+
+        assertEquals(need, memory.recent("mine_coal", "", 10).orElseThrow().need(), "Нужда едет типом как есть");
+    }
+
+    @Test
+    void pathBlocks_FewTargets_NoBlockUntilDifferentTargets() {
+        GraphFailureMemory memory = new GraphFailureMemory();
+        memory.note("chop_oak_log", "1,64,0", new GraphBlock.Path("1,64,0"), 10);
+        memory.note("chop_oak_log", "1,64,0", new GraphBlock.Path("1,64,0"), 11);
+
+        assertTrue(memory.pathBlocks(11, 3000, 2).isEmpty(), "Одна цель не блокирует узел целиком");
+
+        memory.note("chop_oak_log", "9,64,0", new GraphBlock.Path("9,64,0"), 12);
+
+        List<GraphBlock> blocks = memory.pathBlocks(12, 3000, 2);
+        assertEquals(1, blocks.size(), "Две разные недостижимые цели блокируют узел: " + blocks);
+        assertEquals("chop_oak_log", blocks.get(0).node(), "Блокировка адресована узлу");
     }
 
     @Test
@@ -158,27 +166,8 @@ class GraphFailureMemoryTests {
                 GraphFailureMemory.node("graph:building:streets", "graph:building:streets"),
                 "Постройка остаётся собой");
         assertEquals(
-                "tool:pickaxe",
-                GraphFailureMemory.node("graph:tool:pickaxe@spirit-1", null),
-                "Личный путь на инструмент сводится к узлу");
-        assertEquals(
-                "event:more2_shortage:more2_gather",
-                GraphFailureMemory.node("first:build_streets", "graph:event:more2_shortage:more2_gather"),
-                "Причина билета мимо графа называет узел графа");
-        assertEquals(
-                "event:more2_shortage:more2_gather",
-                GraphFailureMemory.node("graph:make:dirt", "graph:event:more2_shortage:more2_gather"),
-                "Причина графа главнее id: память неудач адресуется узлом, который назвал провал");
-        assertEquals(
-                "make:dirt",
-                GraphFailureMemory.node("graph:make:dirt", "always"),
-                "Причина мимо графа не перекрывает id: без узла в причине память остаётся на билете");
-        assertEquals(
-                "rescue_spirit",
-                GraphFailureMemory.node("rescue:c48663b4-da59-43d9-9804-81a680580300", "graph:rescue_spirit@29454474"),
-                "Тик эпизода в причине спасения не дробит память неудач: узел остаётся rescue_spirit");
-        assertNull(
-                GraphFailureMemory.node("first:build_streets", "first:build_streets"),
-                "Провал мимо графа не попадает в память узлов");
+                "mine_coal",
+                GraphFailureMemory.node("graph:mine_coal@spirit-1", null),
+                "Дух-исполнитель не часть узла");
     }
 }

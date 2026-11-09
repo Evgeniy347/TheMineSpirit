@@ -35,7 +35,7 @@ final class BoardNotices {
             alive.add(ticket.id());
         }
         blockNotes.retain(alive);
-        for (BoardLogEntry entry : board.drainBlocks()) {
+        for (BoardLogEntry entry : board.failures().drainBlocks()) {
             journal.recordEntry(entry);
             blockNotes.observe(entry, now).ifPresent(summary -> {
                 if (summary.changed()) {

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Set;
@@ -69,7 +70,11 @@ class FailureTargetsTests {
                 GraphFeedback.Clock.unknown(),
                 GraphFeedback.Player.none(),
                 List.of(new GraphFeedback.Failure(
-                        "chop_jungle_log", FailureTargets.key(dead), 5, GraphFeedback.Cause.NO_PATH, 100)))));
+                        "chop_jungle_log",
+                        FailureTargets.key(dead),
+                        5,
+                        new GraphBlock.Path(FailureTargets.key(dead)),
+                        100)))));
         GraphTickets.Result failed = AllocationCases.tickets(world);
         int failedPriority = AllocationCases.only(failed, "chop_jungle_log").stream()
                 .findFirst()
@@ -92,11 +97,15 @@ class FailureTargetsTests {
         BlockCoord dead = new BlockCoord(-171, 71, -489);
         BlockCoord other = new BlockCoord(-150, 70, -480);
         GraphFailureMemory memory = new GraphFailureMemory();
-        memory.note("event:more2_stage_prep:more2_prepare_stage", FailureTargets.key(dead), "маршрут не найден", 100);
+        memory.note(
+                "event:more2_stage_prep:more2_prepare_stage",
+                FailureTargets.key(dead),
+                new GraphBlock.Path(FailureTargets.key(dead)),
+                100);
         memory.note(
                 "event:more6_carry_materials:more6_deposit_materials",
                 FailureTargets.key(dead),
-                "маршрут не найден",
+                new GraphBlock.Path(FailureTargets.key(dead)),
                 110);
 
         assertEquals(

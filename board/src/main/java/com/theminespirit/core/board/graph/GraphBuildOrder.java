@@ -85,7 +85,8 @@ final class GraphBuildOrder {
                             task.feasible(),
                             task.chance(),
                             task.implemented(),
-                            task.ticks());
+                            task.ticks(),
+                            task.blocked());
                 })
                 .toList();
     }

@@ -35,7 +35,7 @@ MAX_INT = 2 ** 31 - 1
 class World:
     def __init__(self, graph, stock=None, kits=None, buildings=None, stage=1,
                  storage_free=60, events=None, world=None, materials=None,
-                 stations=None, distances=None, facts=None):
+                 stations=None, distances=None, facts=None, failures=None):
         self.graph = graph
         self.stock = dict(stock or {})
         self.kits = {k: dict(v) for k, v in (kits or {}).items()}
@@ -48,6 +48,13 @@ class World:
         self.stations = dict(stations or {})
         self.distances = dict(distances or {})
         self.facts = copy.deepcopy(facts or {})
+        self.failures = dict(failures or {})
+        self.blocks = []
+        self.now = 0
+        self.block_priority = 0
+        self.key_raised = False
+        self.repeat_blocked = 0
+        self.other_work = 0
         self.stop_stage = LAST_STAGE + 1
 
     @classmethod
@@ -93,7 +100,7 @@ class World:
     def copy(self):
         copied = World(self.graph, self.stock, self.kits, self.buildings, self.stage,
                        self.storage_free, self.events, self.world, self.materials,
-                       self.stations, self.distances, self.facts)
+                       self.stations, self.distances, self.facts, self.failures)
         copied.stop_stage = self.stop_stage
         return copied
 
@@ -114,7 +121,31 @@ class World:
             "distances": self.distances,
             "stations": self.stations,
             "facts": self.facts,
+            "blocks": self.live_blocks(),
         })
+
+    def live_blocks(self):
+        return [block for block in self.blocks
+                if not self.need_satisfied(block.get("need") or {})]
+
+    def need_satisfied(self, need):
+        kind = need.get("kind")
+        if kind == "item":
+            return self.stock.get(need.get("item"), 0) >= int(need.get("count", 0))
+        if kind == "tool":
+            spirit = need.get("spirit") or ""
+            rank = int(need.get("rank", -1))
+            if spirit:
+                return int(self.kits.get(spirit, {}).get(need.get("tool"), -1)) >= rank
+            return max((int(kit.get(need.get("tool"), -1)) for kit in self.kits.values()),
+                       default=-1) >= rank
+        if kind == "building":
+            return self.buildings.get(need.get("building")) == BUILT
+        if kind == "holder":
+            return True
+        if kind == "path":
+            return self.now > int(need.get("until", MAX_INT))
+        return False
 
     def plan(self):
         return Planner(self.graph, self.state()).plan()
@@ -250,6 +281,16 @@ def baselines(graph):
     for index in range(2, 11):
         ten.tools("spirit-" + str(index), -1)
     return [empty, settled, crowded, second, ten]
+
+
+def failure_worlds(graph):
+    no_stick = World.settled(graph)
+    no_stick.failures["craft_torch"] = {"kind": "item", "item": "stick", "count": 1}
+    no_iron = World.settled(graph)
+    no_iron.failures["mine_iron"] = {"kind": "item", "item": "iron_ingot", "count": 1}
+    no_path = World.settled(graph)
+    no_path.failures["chop_oak_log"] = {"kind": "path", "point": "1,64,0"}
+    return [no_stick, no_iron, no_path]
 
 
 MORE_SIGNALS = (
@@ -488,9 +529,12 @@ def _blocked_world(graph):
             "clock": {"morning": True, "duskSoon": True, "night": False, "dayTime": 12000},
             "player": {"near": True, "holdingBlock": False, "usingItem": False, "digging": True},
             "failures": [
-                {"node": "mine_cobble", "target": "cobblestone", "count": 3, "cause": "NO_PATH", "lastTick": 10},
-                {"node": "chop_oak_log", "target": "oak_log", "count": 2, "cause": "NO_PATH", "lastTick": 20},
-                {"node": "mine_iron", "target": "iron_ingot", "count": 3, "cause": "NOT_REACHED", "lastTick": 30},
+                {"node": "mine_cobble", "target": "cobblestone", "count": 3,
+                 "need": {"point": "cobblestone"}, "lastTick": 10},
+                {"node": "chop_oak_log", "target": "oak_log", "count": 2,
+                 "need": {"point": "oak_log"}, "lastTick": 20},
+                {"node": "mine_iron", "target": "iron_ingot", "count": 3,
+                 "need": {"point": "iron_ingot"}, "lastTick": 30},
             ],
         },
     })
@@ -667,10 +711,20 @@ def answer(world, plan, strategist=None):
                 strategist.append(str(world.stage) + ":" + wanted.id)
 
 
-def finish(world, work, wear):
+def finish(world, work, wear, now):
     """GraphSimulation.finish: результат задания в момент его завершения."""
     task = work["task"]
     task_id = task["id"]
+    node = task_id.split("@", 1)[0]
+    need = world.failures.get(node)
+    if need is not None and not world.need_satisfied(need):
+        block = {"node": node, "target": "", "need": dict(need)}
+        if need.get("kind") == "path":
+            block["need"]["until"] = now + 3000
+        world.blocks.append(block)
+        world.failures.pop(node, None)
+        world.block_priority = max(world.block_priority, int(task.get("priority", 0)))
+        return
     world.after(task)
     if task_id.startswith("explore:"):
         world.world.add(task["makes"])
@@ -721,6 +775,7 @@ def assign(world, plan, now, free_at, running, seq, log):
     for spirit in list(world.kits):
         if free_at.get(spirit, now) > now:
             continue
+        blocked_now = {block.get("node") for block in world.live_blocks()}
         chosen = None
         for task in issue_order(plan):
             if task["id"] in taken:
@@ -734,6 +789,8 @@ def assign(world, plan, now, free_at, running, seq, log):
         if chosen is None:
             free_at[spirit] = now + IDLE_TICKS
             continue
+        if chosen["id"].split("@", 1)[0] in blocked_now:
+            world.repeat_blocked += 1
         taken.add(chosen["id"])
         for item, count in chosen["consumes"].items():
             consume(world, item, count)
@@ -872,11 +929,12 @@ def run_many(worlds, limit=4000, device="cuda", direct=True):
             state = states[index]
             world = state["world"]
             now = state["now"]
+            world.now = now
             for spirit in world.kits:
                 state["free_at"].setdefault(spirit, now)
             while state["running"] and state["running"][0][0] <= now:
                 _at, _seq, work = heapq.heappop(state["running"])
-                finish(world, work, state["wear"])
+                finish(world, work, state["wear"], state["now"])
             stage_before = world.stage
             promote(world)
             if world.stage != stage_before:
@@ -904,6 +962,14 @@ def run_many(worlds, limit=4000, device="cuda", direct=True):
             world = state["world"]
             now = state["now"]
             plan = planner.result(score)
+            blocked_now = {block.get("node") for block in world.live_blocks()}
+            if world.block_priority > 0:
+                if any(task["feasible"] and task["priority"] > world.block_priority
+                       for task in plan["tasks"]):
+                    world.key_raised = True
+                if any(task["feasible"] and task["id"].split("@", 1)[0] not in blocked_now
+                       for task in plan["tasks"]):
+                    world.other_work += 1
             answer(world, plan, state["strategist"])
             log = (state["trail"], state["stage_steps"], state["streak"])
             started = assign(world, plan, now, state["free_at"], state["running"],
@@ -933,6 +999,9 @@ def run_many(worlds, limit=4000, device="cuda", direct=True):
             "stage_ticks": state["stage_ticks"],
             "stage": state["stage"] if state["finished"] else world.stage,
             "strategist": state["strategist"],
+            "repeat_blocked": world.repeat_blocked,
+            "key_raised": world.key_raised,
+            "other_work": world.other_work,
         })
     return outcomes
 

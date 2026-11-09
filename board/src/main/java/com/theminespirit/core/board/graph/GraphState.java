@@ -1,6 +1,8 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.board.GraphBlock;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -17,7 +19,8 @@ public record GraphState(
         Map<String, Integer> distances,
         Map<String, Integer> stations,
         Map<String, Integer> orders,
-        GraphFacts facts) {
+        GraphFacts facts,
+        List<GraphBlock> blocks) {
     public enum Built {
         BUILT,
         PLANNED,
@@ -41,9 +44,40 @@ public record GraphState(
         orders = Map.copyOf(Objects.requireNonNull(
                 orders, "Недостача заказов игрока не может быть null: без заказов — пустая карта"));
         Objects.requireNonNull(facts, "Факты графа не могут быть null: пустые задают GraphFacts.empty()");
+        blocks = List.copyOf(
+                Objects.requireNonNull(blocks, "Блокировки не могут быть null: без них — пустой список, а не null"));
         if (stage < 1) {
             throw new IllegalArgumentException("Этап " + stage + " меньше 1: поселение начинается с этапа 1");
         }
+    }
+
+    public GraphState(
+            Map<String, Integer> stock,
+            int stage,
+            Map<String, Map<String, Integer>> kits,
+            Map<String, Built> buildings,
+            Map<String, Map<String, Integer>> materials,
+            int storageFreePercent,
+            Set<String> events,
+            Set<String> world,
+            Map<String, Integer> distances,
+            Map<String, Integer> stations,
+            Map<String, Integer> orders,
+            GraphFacts facts) {
+        this(
+                stock,
+                stage,
+                kits,
+                buildings,
+                materials,
+                storageFreePercent,
+                events,
+                world,
+                distances,
+                stations,
+                orders,
+                facts,
+                List.of());
     }
 
     public GraphState(
@@ -136,7 +170,26 @@ public record GraphState(
                 distances,
                 stations,
                 shortage,
-                facts);
+                facts,
+                blocks);
+    }
+
+    public GraphState withBlocks(List<GraphBlock> known) {
+        Objects.requireNonNull(known, "Блокировки не могут быть null: без них — пустой список");
+        return new GraphState(
+                stock,
+                stage,
+                kits,
+                buildings,
+                materials,
+                storageFreePercent,
+                events,
+                world,
+                distances,
+                stations,
+                orders,
+                facts,
+                known);
     }
 
     public GraphState withFacts(GraphFacts known) {
@@ -155,7 +208,8 @@ public record GraphState(
                 distances,
                 stations,
                 orders,
-                known);
+                known,
+                blocks);
     }
 
     public int stations(String building) {

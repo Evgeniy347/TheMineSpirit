@@ -13,6 +13,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.SupplyGraph;
+import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.script.CatalogLimits;
@@ -210,7 +211,9 @@ final class WorldPost {
                             .withPlan(new ScriptCall(
                                     "place_block",
                                     Map.of(
-                                            "block", entry.getValue().blockId(),
+                                            "block",
+                                                    EarthCover.restoreBlock(
+                                                            entry.getValue().blockId()),
                                             "x", pos.getX(),
                                             "y", pos.getY(),
                                             "z", pos.getZ()))));

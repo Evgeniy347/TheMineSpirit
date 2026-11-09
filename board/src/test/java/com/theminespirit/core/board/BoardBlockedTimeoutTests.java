@@ -1,7 +1,6 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -31,7 +30,7 @@ class BoardBlockedTimeoutTests {
                 1,
                 BoardTicket.ALWAYS_CAUSE,
                 List.of(),
-                Map.of());
+                Map.of("dirt", 9));
     }
 
     private static long blocked(Board board, long[] now) {
@@ -53,29 +52,28 @@ class BoardBlockedTimeoutTests {
     }
 
     @Test
-    void blocked_StockUnchanged_UnblocksByTimeout() {
+    void blocked_StockAppears_UnblocksByConditionNotByTime() {
         long[] now = {0};
         Board board = new Board(() -> now[0]);
         long blockedAt = blocked(board, now);
-        now[0] = blockedAt;
+
+        now[0] = blockedAt + BoardTuning.caseFailPauseCapTicks();
         board.claimable(new StockView(Map.of()), now[0]);
         assertEquals(
                 BoardStatus.BLOCKED,
                 board.statusOf(ID).orElse(null),
-                "Без смены запасов до таймаута задание остаётся BLOCKED: иначе оно крутит один и тот же провал");
+                "Таймер больше не снимает блокировку: без изменения условия задание остаётся BLOCKED");
 
-        now[0] = blockedAt + BoardTuning.caseFailPauseCapTicks();
-        board.claimable(new StockView(Map.of()), now[0]);
-        assertNotEquals(
-                BoardStatus.BLOCKED,
+        board.claimable(new StockView(Map.of("dirt", 9)), now[0]);
+        assertEquals(
+                BoardStatus.PENDING,
                 board.statusOf(ID).orElse(null),
-                "По таймауту BLOCKED снимается само: иначе заблокированная шахта стоит вечно, а город "
-                        + "не двигается (observe9: DONE 1243 не растёт, все духи idle)");
+                "Предмет появился — условие снято, задание снова доступно");
         assertTrue(
-                board.drainBlocks().stream()
+                board.failures().drainBlocks().stream()
                         .anyMatch(entry -> entry.event() == BoardLog.Event.UNBLOCKED
-                                && entry.modifiers().stream().anyMatch(text -> text.startsWith("timeout="))),
-                "Разблокировка по времени пишет в журнал причину timeout=: без неё не отличить таймаут "
-                        + "от пополнения запасов");
+                                && entry.modifiers().stream().anyMatch(text -> "changed=dirt:9->0".equals(text))),
+                "Разблокировка называет изменение запаса, а не таймаут");
+        assertTrue(board.failures().drainBlocks().isEmpty(), "Запись отдаётся один раз");
     }
 }

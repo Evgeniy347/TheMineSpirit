@@ -1,6 +1,8 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.graph.GraphState.Built;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,6 +28,7 @@ final class GraphWorld {
     final Set<String> world = new HashSet<>(Set.of(
             "tree:oak", "tree:jungle", "sand", "clay", "animals", "water", "flower:poppy", "flower:dandelion", "soil"));
     GraphFacts facts = GraphFacts.empty();
+    final List<GraphBlock> blocks = new ArrayList<>();
 
     static GraphWorld empty() {
         GraphWorld world = new GraphWorld();
@@ -57,6 +60,11 @@ final class GraphWorld {
             }
         }
         kits.put(spirit, kit);
+        return this;
+    }
+
+    GraphWorld blocks(GraphBlock... known) {
+        blocks.addAll(List.of(known));
         return this;
     }
 
@@ -228,6 +236,7 @@ final class GraphWorld {
         world.world.clear();
         world.world.addAll(this.world);
         world.facts = facts;
+        world.blocks.addAll(blocks);
         return world;
     }
 
@@ -244,7 +253,8 @@ final class GraphWorld {
                         distances,
                         stations,
                         Map.of())
-                .withFacts(facts);
+                .withFacts(facts)
+                .withBlocks(blocks);
     }
 
     static List<GraphPlan.Task> issueOrder(GraphPlan plan) {
