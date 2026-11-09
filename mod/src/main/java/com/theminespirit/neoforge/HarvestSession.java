@@ -730,8 +730,7 @@ public final class HarvestSession {
 
     private boolean protectedCell(BlockCoord cell) {
         return level instanceof ServerLevel server
-                && SettlementPlotStore.get(server)
-                        .site()
+                && SettlementPlotStore.liveSite(server)
                         .map(site -> PlotProtection.check(
                                         site,
                                         cell,

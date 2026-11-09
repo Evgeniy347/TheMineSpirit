@@ -66,7 +66,7 @@ final class FloatingScanCycle {
         if (level.getGameTime() % STEP_EVERY_TICKS != 0) {
             return;
         }
-        Optional<StageSite> site = SettlementPlotStore.get(level).site();
+        Optional<StageSite> site = SettlementPlotStore.liveSite(level);
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
         if (site.isEmpty() || town.isEmpty()) {
             return;

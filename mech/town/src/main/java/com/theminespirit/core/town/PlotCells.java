@@ -23,6 +23,7 @@ public final class PlotCells {
 
     public enum Defect {
         HOLE,
+        PILLAR,
         EXTRA
     }
 
@@ -58,6 +59,13 @@ public final class PlotCells {
         }
         if (expected == Expect.FREE && found == Found.NATURAL) {
             return Optional.of(Defect.EXTRA);
+        }
+        if (expected == Expect.ANY
+                && cell.dy() >= FREE_HEIGHT
+                && !cell.mine()
+                && !cell.planned()
+                && found != Found.OPEN) {
+            return Optional.of(Defect.PILLAR);
         }
         return Optional.empty();
     }

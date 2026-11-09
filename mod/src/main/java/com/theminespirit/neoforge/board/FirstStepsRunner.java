@@ -131,9 +131,9 @@ public final class FirstStepsRunner {
             return Optional.empty();
         }
         StageSite stage = SettlementPlotStore.get(level)
-                .site()
+                .site(SettlementPlotStore.currentStage(service))
                 .orElseThrow(() -> new IllegalStateException(
-                        "Участок обмерен, а места этапа 1 нет: план поселения не сохранился в мире"));
+                        "Участок обмерен, а места этапа нет: план поселения не сохранился в мире"));
         BlockCoord home = HomeStand.of(level, stage, spirits);
         String wood = woodOf(level, home, stock);
         StoneSite site = new StoneSite(home, wood, stage);
@@ -477,7 +477,7 @@ public final class FirstStepsRunner {
                             continue;
                         }
                         var state = level.getBlockState(check);
-                        boolean onPad = stage.levelColumn(check.getX(), check.getZ());
+                        boolean onPad = stage.zone().contains(check.getX(), check.getZ());
                         if (!groundsDone && onPad && (state.is(BlockTags.LOGS) || state.is(BlockTags.LEAVES))) {
                             groundsCleared = false;
                         }
@@ -505,7 +505,7 @@ public final class FirstStepsRunner {
         Set<BoardCase> blocked = journalSteps(service, true, level, stage);
         boolean journal = world == PlanWorld.JOURNAL;
         boolean plotLevel =
-                journal || PlotLeveling.isLevel(stage.anchor(), stage.level(), SettlementGround.plotFeet(level, stage));
+                journal || PlotLeveling.isLevel(stage.anchor(), stage.zone(), SettlementGround.plotFeet(level, stage));
         boolean mineEntrance = built(level, done, BoardCase.BUILD_MINE, site, journal);
         boolean lighting = built(level, done, BoardCase.LIGHTING, site, journal);
         boolean fence = built(level, done, BoardCase.BUILD_FENCE, site, journal);

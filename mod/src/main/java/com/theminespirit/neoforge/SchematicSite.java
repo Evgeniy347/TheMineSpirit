@@ -254,7 +254,7 @@ final class SchematicSite {
         if (!(level instanceof ServerLevel server)) {
             return;
         }
-        StageSite site = SettlementPlotStore.get(server).site().orElse(null);
+        StageSite site = SettlementPlotStore.liveSite(server).orElse(null);
         if (site == null) {
             return;
         }

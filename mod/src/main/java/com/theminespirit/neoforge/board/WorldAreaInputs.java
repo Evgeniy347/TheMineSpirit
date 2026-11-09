@@ -71,14 +71,16 @@ final class WorldAreaInputs {
                 .orElse(List.of());
         List<FloatingBlocks.Finding> counted = FloatingBlocks.countedInGraph(floating);
         Map<String, Boolean> lots = town.map(plan -> PlotLots.of(found, plan)).orElse(Map.of());
+        List<BlockCoord> raised = new ArrayList<>(found.mounds());
+        raised.addAll(found.pillars());
         GraphSiteFacts.Terrain terrain = terrain(
                 List.copyOf(found.pits().keySet()),
                 found.pits(),
-                found.mounds(),
+                raised,
                 FloatingBlocks.hangingCount(floating),
                 found.traces().size(),
                 new Marks(
-                        blockCounts(level, found.mounds()),
+                        blockCounts(level, raised),
                         found.pits().isEmpty()
                                 ? Map.of()
                                 : Map.of("minecraft:dirt", found.pits().size()),

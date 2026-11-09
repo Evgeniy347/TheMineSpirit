@@ -5,6 +5,7 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.BuildingWoods;
 import com.theminespirit.core.board.SettlementLevel;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageSites;
@@ -41,7 +42,7 @@ public final class SettlementPlotStore extends SavedData {
 
     private @Nullable SettlementPlot plot;
     private @Nullable TownPlan town;
-    private @Nullable StageSite site;
+    private final Map<Integer, StageSite> sites = new HashMap<>();
     private boolean leveled;
     private String levelRule = "";
     private BuildingWoods woods = BuildingWoods.NONE;
@@ -63,7 +64,7 @@ public final class SettlementPlotStore extends SavedData {
     public void fixTown(TownPlan next) {
         town = Objects.requireNonNull(next, "План поселения не может быть null: фиксируется размеченный план");
         plot = null;
-        site = null;
+        sites.clear();
         leveled = false;
         levelRule = "";
         woods = BuildingWoods.NONE;
@@ -72,12 +73,21 @@ public final class SettlementPlotStore extends SavedData {
 
     public void refitTown(TownPlan next) {
         town = Objects.requireNonNull(next, "План поселения не может быть null: фиксируется расширенный план");
-        site = null;
+        sites.clear();
         setDirty();
     }
 
     public Optional<StageSite> site() {
         return site(FIRST_STAGE);
+    }
+
+    static int currentStage(BoardService service) {
+        int stages = DataTables.INSTANCE.stages().current().stages().size();
+        return Math.max(FIRST_STAGE, Math.min(service.board().ledger().stage(), stages));
+    }
+
+    public static Optional<StageSite> liveSite(ServerLevel level) {
+        return get(level).site(currentStage(BoardRegistry.get(level)));
     }
 
     public Optional<StageSite> site(int stage) {
@@ -89,8 +99,8 @@ public final class SettlementPlotStore extends SavedData {
         if (current == null || plan == null) {
             return Optional.empty();
         }
-        StageSite cached = site;
-        if (cached == null || cached.anchor().y() != current.anchor().y() || cached.stage() != stage) {
+        StageSite cached = sites.get(stage);
+        if (cached == null || cached.anchor().y() != current.anchor().y()) {
             Optional<StageSite> found = SettlementLevel.site(plan, stage, current);
             if (found.isEmpty()) {
                 return Optional.empty();
@@ -100,7 +110,7 @@ public final class SettlementPlotStore extends SavedData {
                 LOGGER.warn("[plot] место этапа вышло за ограду: участок обрезан контуром поселения — "
                         + "проверьте план и ограду");
             }
-            site = cached;
+            sites.put(stage, cached);
         }
         return Optional.of(cached);
     }
@@ -116,7 +126,7 @@ public final class SettlementPlotStore extends SavedData {
             woods = BuildingWoods.NONE;
         }
         plot = next;
-        site = null;
+        sites.clear();
         setDirty();
     }
 
@@ -132,7 +142,7 @@ public final class SettlementPlotStore extends SavedData {
         }
         town = plan.atLevel(SettlementLevel.of(next));
         levelRule = SettlementLevel.RULE;
-        site = null;
+        sites.clear();
         setDirty();
     }
 
@@ -159,7 +169,7 @@ public final class SettlementPlotStore extends SavedData {
     public void clear() {
         plot = null;
         town = null;
-        site = null;
+        sites.clear();
         leveled = false;
         levelRule = "";
         woods = BuildingWoods.NONE;

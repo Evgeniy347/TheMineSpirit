@@ -4,6 +4,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.PitGroups;
 import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.PlotCells;
 import com.theminespirit.core.town.SettlementScan;
@@ -12,7 +13,9 @@ import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -25,17 +28,26 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 final class WorldAreaScan {
+    private static final long CACHE_TICKS = 600;
     private static final Map<String, Boolean> PLANTS = new HashMap<>();
-    private static final Map<String, SettlementScan.Strays> LAST = new HashMap<>();
+    private static final Map<String, Cached> LAST = new HashMap<>();
+
+    private record Cached(long bucket, StageSite site, SettlementScan.Strays found) {}
 
     private WorldAreaScan() {}
 
     static SettlementScan.Strays scan(ServerLevel level, StageSite site, Optional<TownPlan> town) {
+        long bucket = level.getGameTime() / CACHE_TICKS;
+        Cached before = LAST.get(key(level));
+        if (before != null && before.bucket() == bucket && before.site().equals(site)) {
+            return before.found();
+        }
         BlockProtection rules = DataTables.INSTANCE.protection().current();
         ColumnMask area = town.isEmpty() || rules.straysInsideFenceOnly()
-                ? site.enclosure()
+                ? site.zone()
                 : town.orElseThrow().region();
         int levelY = SettlementPlotStore.get(level)
                 .plot()
@@ -43,16 +55,29 @@ final class WorldAreaScan {
                 .orElse(site.anchor().y());
         SettlementScan.Strays found =
                 SettlementScan.scan(area.cells(), levelY, rules, new Live(level, site, town, levelY));
-        LAST.put(key(level), found);
+        LAST.put(key(level), new Cached(bucket, site, found));
         return found;
     }
 
     static Optional<SettlementScan.Strays> last(ServerLevel level) {
-        return Optional.ofNullable(LAST.get(key(level)));
+        return Optional.ofNullable(LAST.get(key(level))).map(Cached::found);
     }
 
     static boolean demolishStrays() {
         return DataTables.INSTANCE.protection().current().demolishStrays();
+    }
+
+    static List<BlockCoord> raised(SettlementScan.Strays found) {
+        List<BlockCoord> cells = new ArrayList<>(found.mounds());
+        cells.addAll(found.pillars());
+        found.strays().forEach(stray -> cells.add(stray.at()));
+        return cells;
+    }
+
+    static List<BlockCoord> holes(SettlementScan.Strays found) {
+        List<BlockCoord> cells = new ArrayList<>();
+        PitGroups.group(found.pits()).forEach(pit -> cells.addAll(pit.cells()));
+        return cells;
     }
 
     private static String key(ServerLevel level) {
@@ -92,13 +117,20 @@ final class WorldAreaScan {
         }
 
         @Override
+        public int top(int x, int z) {
+            return level.isLoaded(new BlockPos(x, levelY, z))
+                    ? level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z)
+                    : levelY;
+        }
+
+        @Override
         public boolean planned(int x, int y, int z) {
             return WorldAreaScan.planned(site, town, levelY, x, y, z);
         }
 
         @Override
         public OptionalInt lotLevel(int x, int z) {
-            return site.levelColumn(x, z) ? OptionalInt.of(levelY) : OptionalInt.empty();
+            return site.zone().contains(x, z) ? OptionalInt.of(levelY) : OptionalInt.empty();
         }
 
         @Override

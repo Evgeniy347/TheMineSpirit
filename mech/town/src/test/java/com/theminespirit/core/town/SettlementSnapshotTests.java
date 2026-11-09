@@ -99,10 +99,12 @@ class SettlementSnapshotTests {
 
     private static final class Fake implements SettlementScan.World {
         private final Map<String, String> blocks = new HashMap<>();
+        private final Map<String, Integer> tops = new HashMap<>();
         private final Set<ColumnMask.Cell> lots = new HashSet<>();
 
         void put(int x, int y, int z, String id) {
             blocks.put(x + "," + y + "," + z, id);
+            tops.merge(x + "," + z, y, Math::max);
         }
 
         @Override
@@ -119,6 +121,11 @@ class SettlementSnapshotTests {
         public String blockId(int x, int y, int z) {
             String known = blocks.get(x + "," + y + "," + z);
             return known != null ? known : y < LEVEL ? "minecraft:stone" : "minecraft:air";
+        }
+
+        @Override
+        public int top(int x, int z) {
+            return tops.getOrDefault(x + "," + z, LEVEL - 1);
         }
 
         @Override

@@ -15,7 +15,8 @@ final class PlotLots {
         plan.placements()
                 .forEach(place -> StageCatalog.graphId(place.id()).ifPresent(id -> {
                     boolean ready = found.pits().keySet().stream().noneMatch(at -> place.covers(at.x(), at.z()))
-                            && found.mounds().stream().noneMatch(at -> place.covers(at.x(), at.z()));
+                            && found.mounds().stream().noneMatch(at -> place.covers(at.x(), at.z()))
+                            && found.pillars().stream().noneMatch(at -> place.covers(at.x(), at.z()));
                     lots.merge(id, ready, (first, second) -> first && second);
                 }));
         return Map.copyOf(lots);
