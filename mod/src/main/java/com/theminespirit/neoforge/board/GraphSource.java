@@ -117,7 +117,7 @@ public final class GraphSource {
             } else if (activity && closed(status)) {
                 continue;
             }
-            if (!post.post(ticket)) {
+            if (!TicketIsolation.post(ticket.id(), () -> post.post(ticket))) {
                 if (!post.waiting().contains(ticket.id())) {
                     unconnected.add(ticket.id());
                 }

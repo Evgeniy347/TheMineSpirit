@@ -23,6 +23,18 @@ class PitExitPlannerTests {
     }
 
     @Test
+    void plan_ChestAboveHeadInTwoDeepPit_DoesNotChoosePillar() {
+        PitTestWorld world = PitTestWorld.pit(2, 0, PitExitPlanner.Kind.SOFT);
+        world.set(new BlockCoord(FEET.x(), FEET.y() + 2, FEET.z()), PitExitPlanner.Kind.HARD);
+
+        PitExitPlanner.Plan plan = PitExitPlanner.plan(FEET, world, new PitExitPlanner.Supplies(8, false));
+
+        assertTrue(
+                plan.method() != PitExitPlanner.Method.PILLAR,
+                "столб упирает голову в сундук над ямой, дух прыгает на месте вечно (spirit-5, -181,67,-518)");
+    }
+
+    @Test
     void plan_PitThreeWithBlocks_PlacesTwoSteps() {
         PitExitPlanner.Plan plan = PitExitPlanner.plan(
                 FEET, PitTestWorld.pit(3, 0, PitExitPlanner.Kind.HARD), new PitExitPlanner.Supplies(2, false));

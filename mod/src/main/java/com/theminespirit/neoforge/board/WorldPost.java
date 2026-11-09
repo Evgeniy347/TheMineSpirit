@@ -55,11 +55,20 @@ final class WorldPost {
         }
         BoardCase step = building.boardCase();
         String wood = BuildingWoodChoice.stored(post.level, step, post.scan.stage(), post.scan.wood());
-        BuildGap.Gap gap = FirstStepsRunner.gap(post.level, step, post.scan.stage(), wood);
+        TicketTarget target = FirstStepsRunner.targetFor(post.level, step, post.scan.stage(), wood);
+        if (step == BoardCase.BUILD_PLACED) {
+            Optional<TicketTarget> placed = PlacedRepair.target(post, id, target);
+            if (placed.isEmpty()) {
+                return false;
+            }
+            target = placed.orElseThrow();
+        }
+        BuildGap.Gap gap = step == BoardCase.BUILD_PLACED
+                ? PlacedRepair.gap(post, target, wood)
+                : FirstStepsRunner.gap(post.level, step, post.scan.stage(), wood);
         if (!gap.confident()) {
             return false;
         }
-        TicketTarget target = FirstStepsRunner.targetFor(post.level, step, post.scan.stage(), wood);
         if (step == BoardCase.CLEAR_GROUNDS) {
             PlotAudit.Audit audit = PlotAudit.audit(post.level, post.scan.stage(), post.now);
             if (audit.extras().isEmpty()) {

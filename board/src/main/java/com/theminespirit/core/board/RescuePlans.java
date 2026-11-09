@@ -243,7 +243,8 @@ public final class RescuePlans {
                     Map.of(
                             "x", rescue.target().x(),
                             "y", rescue.target().y(),
-                            "z", rescue.target().z()));
+                            "z", rescue.target().z(),
+                            "rescue", true));
         }
         List<TaskNode> steps = new ArrayList<>();
         for (BlockCoord block : rescue.blocks()) {

@@ -12,6 +12,15 @@ class PitWalkOutTests {
     private static final int ROOF = 64;
 
     @Test
+    void walkOut_WalledCellOpenToSky_IsNotAnExit() {
+        Grid cell = new Grid(Grid.NONE, ROOF).floorAt(0, 0, START).skyAt(0, 0, START);
+
+        assertFalse(
+                PitWalkOut.exists(cell, 0, 0, START),
+                "пробитая крыша клетки — не выход: иначе дух возвращает крышу и снова сидит замурованным");
+    }
+
+    @Test
     void walkOut_CaveWithNarrowCeilingHole_IsNotAnExit() {
         Grid cave = Grid.cave();
         cave.skyAt(6, 0, START).skyAt(6, 1, START);

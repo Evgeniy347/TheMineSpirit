@@ -109,7 +109,7 @@ public final class SurfaceEscape {
                 }
             }
             BlockCoord down = new BlockCoord(nx, y - 1, nz);
-            if (passable(world, down)) {
+            if (passable(world, level) && passable(world, down)) {
                 if (supported(world, down) || climbable(world, down)) {
                     moves.add(down);
                 } else {

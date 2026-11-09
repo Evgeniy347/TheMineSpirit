@@ -90,6 +90,30 @@ class TownPlanChangeGuardTests {
     }
 
     @Test
+    void readapt_PlacementsOutsideCatalog_DoNotBreakStreetOpening() {
+        TownPlan base = plan();
+        Placement any = base.placements().get(0);
+        List<Placement> placements = new ArrayList<>(base.placements());
+        for (String id : List.of("orchard_9", "retired_lot")) {
+            placements.add(new Placement(
+                    id, id, any.stage(), any.x() + 40, any.z() + 40, any.width(), any.depth(), any.facing()));
+        }
+        TownPlan stored =
+                new TownPlan(base.anchor(), base.region(), base.streets(), placements, base.fence(), base.unplaced());
+        TownRules changed = withSize(any.id(), 2, 2);
+        Set<String> built = new HashSet<>();
+        placements.stream()
+                .map(Placement::id)
+                .filter(id -> !id.equals(any.id()))
+                .forEach(built::add);
+
+        TownPlan next = TownPlanner.readapt(grid(), stored, changed, built);
+
+        assertTrue(next.placement("orchard_9").isPresent(), "сад по спросу не из каталога остаётся в плане");
+        assertTrue(next.placement("retired_lot").isPresent(), "бывший участок не роняет подгонку и весь граф");
+    }
+
+    @Test
     void change_AnyOneSize_KeepsOtherBuiltPlacementsAndStreets() {
         TownPlan base = plan();
         for (Placement target : base.placements()) {
