@@ -1042,7 +1042,8 @@ analyze_gametest() {
         return 1
     fi
 
-    echo "FAIL gametest: результат не распознан"
+    echo "FAIL gametest: сервер сцен не дошёл до результата, причина из лога:"
+    grep -E "не оставили ни одного теста|What went wrong|Exception caught|error:" "$log" | head -3 | cut -c1-240
     echo "полный лог: $log"
     return 1
 }
