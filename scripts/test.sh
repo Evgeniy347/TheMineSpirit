@@ -93,9 +93,9 @@ usage() {
   THEMINESPIRIT_GAMETEST_WARN_SECONDS предупреждение быстрого gametest (по умолчанию 120)
   THEMINESPIRIT_GAMETEST_STOP_SECONDS стоп быстрого gametest (по умолчанию 200)
   THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS  предупреждение --full (180)
-  THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS  стоп --full (300, от старта шардов)
-  THEMINESPIRIT_GAMETEST_PREPARE_WARN_SECONDS  предупреждение подготовки сборки (300)
-  THEMINESPIRIT_GAMETEST_PREPARE_STOP_SECONDS  стоп подготовки сборки (600, отдельный бюджет)
+  THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS  стоп --full (300, от старта сцен)
+  THEMINESPIRIT_GAMETEST_PREPARE_WARN_SECONDS  предупреждение подготовки сборки и загрузки мира (300)
+  THEMINESPIRIT_GAMETEST_PREPARE_STOP_SECONDS  стоп подготовки сборки и загрузки мира (600, отдельный бюджет)
   THEMINESPIRIT_GAMETEST_SHARDS      число параллельных серверов GameTest (ПК 3, Linux 1)
   THEMINESPIRIT_GAMETEST_LOCK        путь к замку (Windows: C:\ProgramData\theminespirit\theminespirit-gametest.lock, Linux: /tmp/theminespirit-gametest.lock)
   THEMINESPIRIT_GAMETEST_WAIT        ожидание замка, с (по умолчанию 1800)
@@ -651,7 +651,7 @@ start_heartbeat() {
     case "$HEARTBEAT_FILE" in */*) mkdir -p "${HEARTBEAT_FILE%/*}" ;; esac
     : >"$HEARTBEAT_FILE"
     now_s now
-    deadline=$(( now + GAMETEST_WAIT + GAMETEST_PREPARE_STOP + (UNIT_STOP > GAMETEST_FULL_STOP ? UNIT_STOP : GAMETEST_FULL_STOP) + 300 ))
+    deadline=$(( now + GAMETEST_WAIT + GAMETEST_PREPARE_STOP + GAMETEST_PREPARE_STOP + (UNIT_STOP > GAMETEST_FULL_STOP ? UNIT_STOP : GAMETEST_FULL_STOP) + 300 ))
     (
         beat=0
         while kill -0 "$$" 2>/dev/null; do
@@ -733,7 +733,7 @@ on_signal() {
     fi
     if [ -n "${LOG_FILE:-}" ] && [ -f "$LOG_FILE.stopped" ]; then
         if [ "$(cat "$LOG_FILE.stopped" 2>/dev/null)" = "prepare" ]; then
-            echo "стоп: подготовка сборки (предел ${GAMETEST_PREPARE_STOP} с)"
+            echo "стоп: подготовка сборки и загрузка мира (предел ${GAMETEST_PREPARE_STOP} с)"
         else
             echo "стоп по пределу ${STOP_SECONDS} с"
         fi
@@ -1048,6 +1048,29 @@ analyze_gametest() {
     return 1
 }
 
+gametest_scene_started() {
+    local log="$1" pid="$2"
+    grep -q "tests are now running" "$log" 2>/dev/null && return 0
+    kill -0 "$pid" 2>/dev/null || return 0
+    return 1
+}
+
+wait_gametest_scenes() {
+    local shard pid log waiting
+    while :; do
+        waiting=0
+        for ((shard = 0; shard < ${#GRADLE_PIDS[@]}; shard++)); do
+            pid="${GRADLE_PIDS[$shard]}"
+            log="$LOG_FILE"
+            [ "$GAMETEST_SHARDS" -gt 1 ] && log="$LOG_FILE.shard-$shard"
+            gametest_scene_started "$log" "$pid" || waiting=1
+        done
+        [ "$waiting" = 0 ] && return 0
+        [ -f "$LOG_FILE.stopped" ] && return 1
+        pause_tick 1
+    done
+}
+
 STAMP=$(date +%Y%m%d-%H%M%S-%N)
 LOG_FILE="$LOG_DIR/${STAMP}-${MODE}.log"
 rm -f "$LOG_FILE.stopped"
@@ -1203,7 +1226,7 @@ else
         if [ -f "$LOG_FILE.stopped" ]; then
             cat "$LOG_FILE.preflight" >"$LOG_FILE"
             rm -f "$LOG_FILE.preflight"
-            echo "стоп: подготовка сборки (предел ${GAMETEST_PREPARE_STOP} с)"
+            echo "стоп: подготовка сборки и загрузка мира (предел ${GAMETEST_PREPARE_STOP} с)"
             echo "полный лог: $LOG_FILE"
             exit 124
         fi
@@ -1221,8 +1244,8 @@ else
     fi
 
     now_s START_TIME
-    start_monitor "gametest" "$START_WARN" "$START_STOP"
-    echo "gametest: бюджет сценариев ${START_STOP} с — от старта шардов (подготовка сборки — ${GAMETEST_PREPARE_STOP} с отдельно)" >&2
+    start_monitor "prepare" "$GAMETEST_PREPARE_WARN" "$GAMETEST_PREPARE_STOP"
+    echo "gametest: подготовка сборки и загрузка мира — отдельный бюджет ${GAMETEST_PREPARE_STOP} с" >&2
 
     for ((shard = 0; shard < GAMETEST_SHARDS; shard++)); do
         shard_log="$LOG_FILE"
@@ -1261,6 +1284,18 @@ else
         GRADLE_PIDS+=("$!")
         echo "$!" >>"$LOG_FILE.gradlepids"
     done
+
+    if ! wait_gametest_scenes; then
+        stop_timer
+        [ "$GAMETEST_SHARDS" -gt 1 ] && cat "$LOG_FILE".shard-* >"$LOG_FILE" 2>/dev/null
+        echo "стоп: подготовка сборки и загрузка мира (предел ${GAMETEST_PREPARE_STOP} с)"
+        echo "полный лог: $LOG_FILE"
+        exit 124
+    fi
+    stop_timer
+    now_s START_TIME
+    start_monitor "gametest" "$START_WARN" "$START_STOP"
+    echo "gametest: бюджет сценариев ${START_STOP} с — от старта сцен (подготовка сборки и загрузка мира — ${GAMETEST_PREPARE_STOP} с отдельно)" >&2
 
     CODE=0
     SHARD_CODES=()
