@@ -1,5 +1,6 @@
 package com.theminespirit.core.movement;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
@@ -23,6 +24,27 @@ class SurfaceDescentTests {
         }
         return RouteCell.AIR;
     };
+
+    @Test
+    void path_StepDownUnderLowLintel_IsNotARoute() {
+        RouteWorld cell = (x, y, z) -> {
+            if (x == 1 && z == 0 && y <= 67 && y >= 65) {
+                return y == 65 || y == 66 || y == 67 ? RouteCell.AIR : RouteCell.solid(1);
+            }
+            if (x == 0 && z == 0 && (y == 67 || y == 68)) {
+                return RouteCell.AIR;
+            }
+            return RouteCell.solid(1);
+        };
+
+        Optional<List<BlockCoord>> found =
+                SurfaceEscape.path(new BlockCoord(0, 67, 0), cell, at -> at.x() == 1 && at.y() == 65);
+
+        assertFalse(
+                found.isPresent(),
+                "над соседней клеткой висит блок: тело в проём высотой 1 не пройдёт, "
+                        + "а дух стоял бы на месте с NO_PROGRESS (spirit-5, -181,67,-518)");
+    }
 
     @Test
     void path_FromRoofToWaterLanding_FindsSafeFall() {

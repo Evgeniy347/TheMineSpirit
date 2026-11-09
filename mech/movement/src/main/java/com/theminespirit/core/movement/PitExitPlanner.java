@@ -122,7 +122,7 @@ public final class PitExitPlanner {
     }
 
     private static boolean columnClear(BlockCoord feet, int rise, World world) {
-        for (int dy = 0; dy <= rise; dy++) {
+        for (int dy = 0; dy <= rise + 1; dy++) {
             if (!passable(world.at(new BlockCoord(feet.x(), feet.y() + dy, feet.z())))) {
                 return false;
             }

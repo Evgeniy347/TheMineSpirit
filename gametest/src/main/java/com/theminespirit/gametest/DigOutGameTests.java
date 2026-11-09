@@ -37,6 +37,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class DigOutGameTests {
     private static final int TOP = 12;
     private static final int POCKET = TOP - 7;
+    private static final BlockPos UNDER_CHEST = new BlockPos(2, TOP - 2, 2);
 
     private DigOutGameTests() {}
 
@@ -48,7 +49,8 @@ public final class DigOutGameTests {
                 List.of(
                         List.of(new BlockPos(2, POCKET, 5), new BlockPos(2, POCKET + 1, 5)),
                         List.of(new BlockPos(5, POCKET, 5), new BlockPos(5, POCKET + 1, 5)),
-                        List.of(new BlockPos(8, TOP - 2, 8), new BlockPos(8, TOP - 1, 8))));
+                        List.of(new BlockPos(8, TOP - 2, 8), new BlockPos(8, TOP - 1, 8)),
+                        List.of(UNDER_CHEST, UNDER_CHEST.above())));
     }
 
     private static void pocket(GameTestHelper helper, List<List<BlockPos>> pockets) {
@@ -66,7 +68,7 @@ public final class DigOutGameTests {
         List<BlockPos> planks = new ArrayList<>();
         for (List<BlockPos> cells : pockets) {
             BlockPos plank = cells.get(0).above(2);
-            helper.setBlock(plank, Blocks.JUNGLE_PLANKS);
+            helper.setBlock(plank, cells.get(0).equals(UNDER_CHEST) ? Blocks.CHEST : Blocks.JUNGLE_PLANKS);
             planks.add(plank);
         }
         List<SpiritEntity> spirits = new ArrayList<>();
@@ -157,7 +159,11 @@ public final class DigOutGameTests {
                                 .isStuck(spirit.getUUID(), board.board().now()),
                         "выполненный выход снимает метку «не двигается» по факту, а не по тайм-ауту");
                 helper.assertTrue(
-                        helper.getBlockState(planks.get(index)).is(Blocks.JUNGLE_PLANKS),
+                        helper.getBlockState(planks.get(index))
+                                .is(
+                                        planks.get(index).equals(UNDER_CHEST.above(2))
+                                                ? Blocks.CHEST
+                                                : Blocks.JUNGLE_PLANKS),
                         "Разбор при выходе временный: сломанная доска плана обязана вернуться на место после "
                                 + "спасения, иначе в постройке остаётся дыра (observe25 B2); в клетке "
                                 + planks.get(index) + " сейчас " + helper.getBlockState(planks.get(index)));
