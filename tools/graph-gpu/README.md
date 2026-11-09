@@ -20,8 +20,8 @@ Python нужен только для быстрой пакетной симул
 Пишет:
 
 - `TestResults/graph-export/graph.json` — копия ручного `board/graph.json`;
-- `TestResults/graph-export/conformance.json` — 200 состояний с заданиями Java (`id`, `priority`,
-  `feasible`, `chance`).
+- `TestResults/graph-export/conformance.json` — 200 случайных состояний с заданиями Java (`id`, `priority`,
+  `feasible`, `chance`) плюс именованные случаи (вектор фактов жизни, еда) — всего 205.
 
 Java грузит граф как слияние `board/graph.json` + `board/graph-recipes.json`
 (`SupplyGraph.loadDefault`/`merge`). Модель делает то же самое: `Graph.load_merged` читает
