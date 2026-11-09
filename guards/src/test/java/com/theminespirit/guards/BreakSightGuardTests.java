@@ -19,6 +19,8 @@ class BreakSightGuardTests {
     private static final List<String> UNLIMITED_ALLOWED =
             List.of("TreeChop.java", "HarvestSession.java", "FarmSession.java");
     private static final String BREAKER = "BlockBreaker.java";
+    private static final String CHECK = "BreakCheck.java";
+    private static final String DESTROY = "BreakDestroy.java";
     private static final String SPIRIT_POINT = "SpiritBlocks.java";
 
     @Test
@@ -36,8 +38,10 @@ class BreakSightGuardTests {
     void patternSource_DirectDestroyOutsideBreaker_IsReported() {
         Map<Path, String> sources = new LinkedHashMap<>();
         sources.put(Path.of("neoforge/Other.java"), "class Other { void f() { level.destroyBlock(pos, false); } }");
+        sources.put(Path.of("neoforge/" + BREAKER), breaker("BreakCheck.refusal(request);\nactive = true;"));
         sources.put(
-                Path.of("neoforge/" + BREAKER), breaker("BreakSight.visible(spirit, target, false);\nactive = true;"));
+                Path.of("neoforge/" + CHECK),
+                "class BreakCheck { void f() { BreakSight.visible(spirit, target, false); } }");
 
         assertEquals(
                 List.of("neoforge/Other.java:1 destroyBlock("),
@@ -49,8 +53,10 @@ class BreakSightGuardTests {
     void patternSource_UnlimitedBreakOutsideAllowedFiles_IsReported() {
         Map<Path, String> sources = new LinkedHashMap<>();
         sources.put(Path.of("neoforge/Other.java"), "class Other { void f() { breaker.beginAnyDistance(pos); } }");
+        sources.put(Path.of("neoforge/" + BREAKER), breaker("BreakCheck.refusal(request);\nactive = true;"));
         sources.put(
-                Path.of("neoforge/" + BREAKER), breaker("BreakSight.visible(spirit, target, false);\nactive = true;"));
+                Path.of("neoforge/" + CHECK),
+                "class BreakCheck { void f() { BreakSight.visible(spirit, target, false); } }");
 
         assertEquals(
                 List.of("neoforge/Other.java:1 beginAnyDistance("),
@@ -64,8 +70,10 @@ class BreakSightGuardTests {
         sources.put(
                 Path.of("neoforge/Other.java"),
                 "class Other { void f() { level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3); } }");
+        sources.put(Path.of("neoforge/" + BREAKER), breaker("BreakCheck.refusal(request);\nactive = true;"));
         sources.put(
-                Path.of("neoforge/" + BREAKER), breaker("BreakSight.visible(spirit, target, false);\nactive = true;"));
+                Path.of("neoforge/" + CHECK),
+                "class BreakCheck { void f() { BreakSight.visible(spirit, target, false); } }");
 
         assertEquals(
                 List.of("neoforge/Other.java:1 setBlock(AIR)"),
@@ -81,8 +89,10 @@ class BreakSightGuardTests {
         sources.put(
                 Path.of("neoforge/HarvestSession.java"),
                 "class HarvestSession { void f() { breaker.beginAnyDistance(pos); } }");
+        sources.put(Path.of("neoforge/" + BREAKER), breaker("BreakCheck.refusal(request);\nactive = true;"));
         sources.put(
-                Path.of("neoforge/" + BREAKER), breaker("BreakSight.visible(spirit, target, false);\nactive = true;"));
+                Path.of("neoforge/" + CHECK),
+                "class BreakCheck { void f() { BreakSight.visible(spirit, target, false); } }");
 
         assertEquals(
                 List.of(),
@@ -93,7 +103,8 @@ class BreakSightGuardTests {
     @Test
     void patternSource_BreakerWithoutSightCheck_IsReported() {
         Map<Path, String> sources = new LinkedHashMap<>();
-        sources.put(Path.of("neoforge/" + BREAKER), breaker("active = true;"));
+        sources.put(Path.of("neoforge/" + BREAKER), breaker("BreakCheck.refusal(request);\nactive = true;"));
+        sources.put(Path.of("neoforge/" + CHECK), "class BreakCheck { void f() { } }");
 
         assertEquals(
                 List.of("neoforge/BlockBreaker.java: ломка начинается без BreakSight.visible"),
@@ -109,7 +120,10 @@ class BreakSightGuardTests {
         List<String> found = new ArrayList<>();
         sources.forEach((path, text) -> {
             String name = path.getFileName().toString();
-            if (!BREAKER.equals(name) && !SPIRIT_POINT.equals(name) && !text.contains("BreakSight.visible(")) {
+            if (!BREAKER.equals(name)
+                    && !DESTROY.equals(name)
+                    && !SPIRIT_POINT.equals(name)
+                    && !text.contains("BreakSight.visible(")) {
                 collect(found, path, text, DIRECT_DESTROY, "destroyBlock(");
                 if (!path.toString().replace('\\', '/').contains("/demo/")) {
                     collect(found, path, text, CLEAR_AIR, "setBlock(AIR)");
@@ -125,9 +139,15 @@ class BreakSightGuardTests {
                 .orElse(null);
         if (breaker != null) {
             String text = sources.get(breaker);
-            int sight = text.indexOf("BreakSight.visible(");
+            Path check = sources.keySet().stream()
+                    .filter(path -> CHECK.equals(path.getFileName().toString()))
+                    .findFirst()
+                    .orElse(null);
+            String checkText = check == null ? "" : sources.get(check);
+            int refusal = text.indexOf("BreakCheck.refusal(");
+            int sight = checkText.indexOf("BreakSight.visible(");
             int active = text.indexOf("active = true;");
-            if (sight < 0 || active < 0 || sight > active) {
+            if (refusal < 0 || sight < 0 || active < 0 || refusal > active) {
                 found.add(breaker.toString().replace('\\', '/') + ": ломка начинается без BreakSight.visible");
             }
         }

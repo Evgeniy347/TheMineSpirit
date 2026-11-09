@@ -6,8 +6,6 @@ import com.theminespirit.core.observation.ContainerRef;
 import com.theminespirit.core.observation.EntityRef;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.observation.ItemCount;
-import com.theminespirit.core.observation.OpenBlock;
-import com.theminespirit.core.observation.OpenBlocks;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.observation.SectionCursor;
 import com.theminespirit.core.observation.SectionSlice;
@@ -63,8 +61,7 @@ public final class WorldScanner {
         private final Set<Block> filteredBlocks;
         private final IdentityHashMap<Block, int[]> blockCounts = new IdentityHashMap<>();
         private final List<ContainerRef> containers = new ArrayList<>();
-        private final List<OpenBlock> openBlocks = new ArrayList<>();
-        private final int openBlockLimit;
+        private final ScanOpenBlocks openBlocks;
         private final Set<Long> visitedChunks = new HashSet<>();
         private final Set<Long> skippedChunks = new HashSet<>();
         private int examinedPositions;
@@ -112,7 +109,7 @@ public final class WorldScanner {
             this.entityFilter = options.focus().filtersEntities() ? filter : IdFilter.matchAll();
             this.filteredBlocks =
                     options.focus().collectsBlocks() && !filter.matchesAll() ? BlockSets.resolve(filter) : null;
-            this.openBlockLimit = Math.max(0, options.openBlockLimit());
+            this.openBlocks = new ScanOpenBlocks(level, center, filteredBlocks, Math.max(0, options.openBlockLimit()));
         }
 
         public void step(int maxSlices) {
@@ -175,41 +172,10 @@ public final class WorldScanner {
                         if (counts(state)) {
                             blockCounts.computeIfAbsent(state.getBlock(), block -> new int[1])[0]++;
                         }
-                        collectOpenBlock(state, x, y, z);
+                        openBlocks.collect(state, x, y, z);
                     }
                 }
             }
-        }
-
-        private void collectOpenBlock(BlockState state, int x, int y, int z) {
-            if (openBlockLimit == 0 || state.isAir()) {
-                return;
-            }
-            String item = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
-            if (filteredBlocks != null && !filteredBlocks.contains(state.getBlock())) {
-                return;
-            }
-            if (!OpenBlocks.isImportant(item)) {
-                return;
-            }
-            BlockPos pos = new BlockPos(x, y, z);
-            if (!hasAirNeighbor(pos)) {
-                return;
-            }
-            double dx = x - center.x();
-            double dy = y - center.y();
-            double dz = z - center.z();
-            double distance = Math.round(Math.sqrt(dx * dx + dy * dy + dz * dz) * 10.0) / 10.0;
-            OpenBlocks.keepNearest(openBlocks, new OpenBlock(item, toCore(pos), distance), openBlockLimit);
-        }
-
-        private boolean hasAirNeighbor(BlockPos pos) {
-            return level.getBlockState(pos.offset(1, 0, 0)).isAir()
-                    || level.getBlockState(pos.offset(-1, 0, 0)).isAir()
-                    || level.getBlockState(pos.offset(0, 1, 0)).isAir()
-                    || level.getBlockState(pos.offset(0, -1, 0)).isAir()
-                    || level.getBlockState(pos.offset(0, 0, 1)).isAir()
-                    || level.getBlockState(pos.offset(0, 0, -1)).isAir();
         }
 
         private boolean counts(BlockState state) {
@@ -252,7 +218,7 @@ public final class WorldScanner {
                     List.of(),
                     List.of(),
                     null,
-                    openBlocks);
+                    openBlocks.result());
             return new Scan(observation, examinedPositions, skippedChunks.size());
         }
 

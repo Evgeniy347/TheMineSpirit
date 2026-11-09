@@ -13,9 +13,7 @@ import com.theminespirit.core.policy.SettlementBreak;
 import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.policy.ZonePolicy;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.town.FenceDemolition;
 import com.theminespirit.core.town.PlanBuilding;
-import com.theminespirit.core.town.PlanBuildings;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.BuildPlanOwner;
@@ -23,26 +21,21 @@ import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.PlotBreakLog;
 import com.theminespirit.neoforge.board.PlotCellStructure;
-import com.theminespirit.neoforge.board.SettlementPlotStore;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jspecify.annotations.Nullable;
 
 public final class ProtectionGate {
-    private static final String NATURAL_STAND_IN = "minecraft:stone";
     private static final BlockProtection PROTECTION =
             DataTables.INSTANCE.protection().current();
     private static final String AIR_ID = "minecraft:air";
 
     private final SpiritEntity spirit;
-    private int neighbourReads;
+    private final ProtectionNeighbours neighbours = new ProtectionNeighbours();
     private int checks;
 
     public ProtectionGate(SpiritEntity spirit) {
@@ -92,14 +85,7 @@ public final class ProtectionGate {
     }
 
     public BlockProtection.Decision checkDemolish(BlockPos pos, BlockState state) {
-        PlanBuilding ownBuilding = BuildPlanOwner.of(spirit);
-        if (spirit.level() instanceof ServerLevel server
-                && PlacedBlocksData.get(server).isSpiritMarked(pos)
-                && !foreignPlan(server, pos, ownBuilding)) {
-            return new BlockProtection.Allowed();
-        }
-        return decide(
-                pos, state, false, true, ownBuilding, PlotProtection.Action.BREAK, PlotProtection.Ground.PLAN_DEMOLISH);
+        return PolicyExcavation.demolish(this, spirit, pos, state);
     }
 
     public BlockProtection.Decision checkRepair(BlockPos pos, BlockState state) {
@@ -114,58 +100,10 @@ public final class ProtectionGate {
     }
 
     public BlockProtection.Decision checkExcavate(BlockPos pos, BlockState state) {
-        if (spirit.level() instanceof ServerLevel server) {
-            PlacedBlocksData placed = PlacedBlocksData.get(server);
-            if (placed.isSpiritMarked(pos) || placed.isMarked(pos)) {
-                PlotBreakLog.refused(
-                        server,
-                        pos,
-                        spirit,
-                        PlotProtection.Action.DIG.name(),
-                        PlotProtection.Ground.PLAN_EXCAVATE,
-                        "клетка " + pos.toShortString() + " уже облицована по плану: шахту копают до облицовки, "
-                                + "готовый блок не выламывают");
-                return new BlockProtection.Refused(
-                        PolicyId.PROTECTED_BLOCKS,
-                        "клетка " + pos.toShortString() + " уже облицована по плану: готовый блок шахты не выламывают");
-            }
-        }
-        return decide(
-                pos,
-                state,
-                false,
-                false,
-                PlanBuilding.MINE,
-                PlotProtection.Action.DIG,
-                PlotProtection.Ground.PLAN_EXCAVATE);
+        return PolicyExcavation.excavate(this, spirit, pos, state);
     }
 
-    private static @Nullable StageSite site(Level level) {
-        return level instanceof ServerLevel server
-                ? SettlementPlotStore.get(server).site().orElse(null)
-                : null;
-    }
-
-    private static boolean inFenceStrip(ServerLevel level, BlockCoord coord, String blockId) {
-        return SettlementPlotStore.get(level)
-                .site()
-                .map(site -> FenceDemolition.allowed(blockId, site.fenceStrip(), coord.x(), coord.z()))
-                .orElse(false);
-    }
-
-    private static PlanBuilding planBuilding(ServerLevel level, BlockCoord coord) {
-        return SettlementPlotStore.get(level)
-                .site()
-                .map(site -> site.protectionBuilding(coord.x(), coord.y(), coord.z()))
-                .orElse(PlanBuilding.NONE);
-    }
-
-    private static boolean foreignPlan(ServerLevel level, BlockPos pos, PlanBuilding ownBuilding) {
-        return PlanBuildings.foreign(
-                ownBuilding, planBuilding(level, new BlockCoord(pos.getX(), pos.getY(), pos.getZ())));
-    }
-
-    private BlockProtection.Decision decide(
+    BlockProtection.Decision decide(
             BlockPos pos,
             BlockState state,
             boolean tended,
@@ -190,7 +128,7 @@ public final class ProtectionGate {
         boolean inProtectedZone = PolicyConfig.zones().contains(dimension, coord);
         boolean unprotectArea = level instanceof ServerLevel server
                 && UnprotectService.of(server.getServer()).covers(dimension, coord, System.currentTimeMillis());
-        StageSite site = site(level);
+        StageSite site = PolicyExcavation.site(level);
         PlotProtection.Ground effective = ground;
         if (site != null
                 && tended
@@ -213,7 +151,7 @@ public final class ProtectionGate {
         if (demolish
                 && !inProtectedZone
                 && level instanceof ServerLevel server
-                && inFenceStrip(server, coord, blockId(state))) {
+                && PolicyExcavation.inFenceStrip(server, coord, blockId(state))) {
             decision = new BlockProtection.Allowed();
         } else if (planCell) {
             decision = new BlockProtection.Allowed();
@@ -239,7 +177,7 @@ public final class ProtectionGate {
                             PlanBuilding.NONE,
                             ownBuilding),
                     demolish ? SettlementBreak.Intent.DEMOLISH : SettlementBreak.Intent.BREAK,
-                    () -> neighbours(level, pos));
+                    () -> neighbours.ids(level, pos));
         }
         if (decision instanceof BlockProtection.Refused) {
             return decision;
@@ -292,7 +230,8 @@ public final class ProtectionGate {
         boolean placedByPlayer = level instanceof ServerLevel server
                 && PlacedBlocksData.get(server).isMarked(pos);
         return PROTECTION.checkUse(
-                neighbours(level, pos), new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
+                neighbours.ids(level, pos),
+                new BlockProtection.Placement(placedByPlayer, inProtectedZone, unprotectArea));
     }
 
     public BlockProtection.Decision checkPortalTarget(BlockCoord target) {
@@ -307,30 +246,8 @@ public final class ProtectionGate {
         return new BlockProtection.Allowed();
     }
 
-    public int neighbourReads() {
-        return neighbourReads;
-    }
-
     public int checks() {
         return checks;
-    }
-
-    private List<String> neighbours(Level level, BlockPos pos) {
-        List<String> ids = new ArrayList<>(BlockProtection.NEIGHBOUR_COUNT);
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                for (int dz = -1; dz <= 1; dz++) {
-                    if (dx != 0 || dy != 0 || dz != 0) {
-                        neighbourReads++;
-                        BlockPos near = pos.offset(dx, dy, dz);
-                        boolean spirits = level instanceof ServerLevel server
-                                && PlacedBlocksData.get(server).isSpiritMarked(near);
-                        ids.add(spirits ? NATURAL_STAND_IN : blockId(level.getBlockState(near)));
-                    }
-                }
-            }
-        }
-        return ids;
     }
 
     static String blockId(BlockState state) {

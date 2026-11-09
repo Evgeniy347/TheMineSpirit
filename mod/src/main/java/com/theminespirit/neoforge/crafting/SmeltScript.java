@@ -18,7 +18,6 @@ import net.minecraft.world.item.crafting.CampfireCookingRecipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.CampfireBlockEntity;
 
@@ -35,8 +34,6 @@ public final class SmeltScript implements ScriptInstance {
         CAMPFIRE
     }
 
-    private record Choice(String input, RecipeSpec recipe, int inputCount, int have) {}
-
     private final SpiritEntity spirit;
     private final SmeltParams params;
     private final List<StationType> candidateTypes;
@@ -46,7 +43,7 @@ public final class SmeltScript implements ScriptInstance {
     private int collected;
     private BlockPos resumeStation;
     private RecipeKnowledge knowledge;
-    private Choice choice;
+    private SmeltChoice.Choice choice;
     private Item inputItem;
     private FurnaceSession.Contents resident = new FurnaceSession.Contents(0, 0, 0);
     private int inPlay;
@@ -137,10 +134,11 @@ public final class SmeltScript implements ScriptInstance {
             return fail("нет рецепта плавки для '" + product + "'");
         }
         Map<String, Integer> available = CraftInventory.counts(spirit.getInventory());
-        Optional<FurnaceSession.Contents> inside =
-                resumeStation == null ? Optional.empty() : stationContentsAt(spirit.level(), resumeStation, product);
+        Optional<FurnaceSession.Contents> inside = resumeStation == null
+                ? Optional.empty()
+                : SmeltChoice.stationContentsAt(spirit.level(), resumeStation, product);
         resident = inside.orElse(new FurnaceSession.Contents(0, 0, 0));
-        choice = choose(recipes, remaining, resident, available);
+        choice = SmeltChoice.choose(recipes, remaining, resident, available);
         if (choice.have() < choice.inputCount()) {
             return fail("не хватает: " + choice.input() + " " + (choice.inputCount() - choice.have()) + " из "
                     + choice.inputCount());
@@ -162,41 +160,6 @@ public final class SmeltScript implements ScriptInstance {
         station = newStation(candidateTypes.get(stationIndex));
         phase = Phase.STATION;
         return ScriptStatus.RUNNING;
-    }
-
-    private static Optional<FurnaceSession.Contents> stationContentsAt(Level level, BlockPos pos, String product) {
-        BlockEntity entity = level.getBlockEntity(pos);
-        if (entity instanceof CampfireBlockEntity campfire) {
-            if (!Stations.isFoodProduct(product)) {
-                return Optional.empty();
-            }
-            int onFire = 0;
-            for (ItemStack stack : campfire.getItems()) {
-                onFire += stack.getCount();
-            }
-            return Optional.of(new FurnaceSession.Contents(onFire, 0, 0));
-        }
-        return FurnaceSession.contentsAt(level, pos);
-    }
-
-    private static Choice choose(
-            List<RecipeSpec> recipes, int remaining, FurnaceSession.Contents resident, Map<String, Integer> available) {
-        Choice best = null;
-        for (RecipeSpec recipe : recipes) {
-            int perInput = recipe.outputCount();
-            int stillToProduce = Math.max(0, remaining - resident.result() - resident.input() * perInput);
-            int needed = (stillToProduce + perInput - 1) / perInput;
-            for (String alternative : recipe.ingredients().get(0).alternatives()) {
-                int have = available.getOrDefault(alternative, 0);
-                if (have >= needed) {
-                    return new Choice(alternative, recipe, needed, have);
-                }
-                if (best == null || have > best.have()) {
-                    best = new Choice(alternative, recipe, needed, have);
-                }
-            }
-        }
-        return best;
     }
 
     private StationAccess newStation(StationType type) {
