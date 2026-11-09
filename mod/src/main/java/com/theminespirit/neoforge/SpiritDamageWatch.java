@@ -1,13 +1,10 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.board.graph.GraphFacts;
-import com.theminespirit.core.board.graph.LifeThreats;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
 import org.jspecify.annotations.Nullable;
 
 public final class SpiritDamageWatch {
@@ -17,27 +14,28 @@ public final class SpiritDamageWatch {
 
     private SpiritDamageWatch() {}
 
-    public static void note(UUID spirit, DamageSource source, float amount, long now) {
+    public static void note(UUID spirit, String source, float amount, long now, long windowTicks) {
+        Objects.requireNonNull(spirit, "id духа не может быть null: урон записывается конкретному духу");
+        Objects.requireNonNull(source, "источник урона не может быть null: без него свежий урон не назвать");
+        if (windowTicks <= 0) {
+            throw new IllegalArgumentException(
+                    "Окно урона " + windowTicks + " тиков: оно положительно и приходит из формулы жизни графа");
+        }
         if (amount <= 0) {
             return;
         }
         HITS.entrySet()
                 .removeIf(entry ->
-                        now < entry.getValue().at() || now - entry.getValue().at() > LifeThreats.DAMAGE_WINDOW_TICKS);
-        Entity attacker = source.getEntity();
-        String from = attacker == null
-                ? source.getMsgId()
-                : BuiltInRegistries.ENTITY_TYPE.getKey(attacker.getType()).toString();
+                        now < entry.getValue().at() || now - entry.getValue().at() > windowTicks);
         Hit before = HITS.get(spirit);
-        float total = before == null || now - before.at() > LifeThreats.DAMAGE_WINDOW_TICKS
-                ? amount
-                : before.amount() + amount;
-        HITS.put(spirit, new Hit(total, from, now));
+        float total = before == null || now - before.at() > windowTicks ? amount : before.amount() + amount;
+        HITS.put(spirit, new Hit(total, source, now));
     }
 
-    public static GraphFacts.@Nullable Hurt recent(UUID spirit, long now) {
+    public static GraphFacts.@Nullable Hurt recent(UUID spirit, long now, long windowTicks) {
+        Objects.requireNonNull(spirit, "id духа не может быть null: свежий урон ищется для конкретного духа");
         Hit hit = HITS.get(spirit);
-        if (hit == null || now < hit.at() || now - hit.at() > LifeThreats.DAMAGE_WINDOW_TICKS) {
+        if (hit == null || now < hit.at() || now - hit.at() > windowTicks) {
             return null;
         }
         return new GraphFacts.Hurt(hit.amount(), hit.source(), (int) (now - hit.at()));

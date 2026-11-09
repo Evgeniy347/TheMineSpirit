@@ -189,7 +189,8 @@ class StoreGraphTests {
     }
 
     private static GraphPlan plan(GraphWorld world, GraphFacts facts) {
-        return GraphPlanner.plan(world.graph, world.state().withFacts(facts));
+        return GraphPlanner.plan(
+                world.graph, world.state().withFacts(facts, world.graph.costs().life()));
     }
 
     private static GraphFacts facts(Map<String, Integer> minimum, Map<String, Integer> actual) {

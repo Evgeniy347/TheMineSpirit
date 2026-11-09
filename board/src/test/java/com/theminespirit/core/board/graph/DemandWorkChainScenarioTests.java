@@ -152,7 +152,9 @@ class DemandWorkChainScenarioTests {
     }
 
     private static GraphPlan ordered(GraphWorld world, GraphFacts facts, Map<String, Integer> orders) {
-        return GraphPlanner.plan(world.graph, world.state().withFacts(facts).withOrders(orders));
+        return GraphPlanner.plan(
+                world.graph,
+                world.state().withFacts(facts, world.graph.costs().life()).withOrders(orders));
     }
 
     private static List<String> ids(GraphPlan plan) {

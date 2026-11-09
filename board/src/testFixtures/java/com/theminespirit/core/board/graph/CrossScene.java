@@ -151,11 +151,13 @@ final class CrossScene {
     }
 
     static GraphPlan plan(GraphWorld world, GraphFacts facts) {
-        return GraphPlanner.plan(world.graph, world.state().withFacts(facts));
+        return GraphPlanner.plan(
+                world.graph, world.state().withFacts(facts, world.graph.costs().life()));
     }
 
     static GraphTickets.Result tickets(GraphWorld world, GraphFacts facts) {
-        return GraphTickets.of(world.graph, world.state().withFacts(facts), plan(world, facts));
+        return GraphTickets.of(
+                world.graph, world.state().withFacts(facts, world.graph.costs().life()), plan(world, facts));
     }
 
     static GraphTickets.Ticket ticketFor(GraphTickets.Result result, String id) {

@@ -167,7 +167,10 @@ class GraphTreeCasesTests {
     @Test
     void terrain_HangingAfterChop_ClearFloatingPosted() {
         GraphWorld world = GraphWorld.settled().with("oak_log", 64);
-        GraphState state = world.state().withFacts(facts(new GraphSiteFacts.Terrain(0, 3, 0, 0, 0)));
+        GraphState state = world.state()
+                .withFacts(
+                        facts(new GraphSiteFacts.Terrain(0, 3, 0, 0, 0)),
+                        world.graph.costs().life());
 
         GraphTickets.Ticket cleanup = tickets(state).post().stream()
                 .filter(ticket -> GraphWorldEvents.CLEAR_FLOATING.equals(ticket.node()))

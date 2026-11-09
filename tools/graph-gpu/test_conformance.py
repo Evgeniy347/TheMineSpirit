@@ -15,7 +15,7 @@ from collections import Counter
 
 import search
 import sim_gpu
-from graph_model import ABSENT, BUILT, PLANNED, Graph, Planner, State, plan
+from graph_model import ABSENT, BUILT, DEFAULT_LIFE, PLANNED, Graph, Planner, State, plan
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -217,6 +217,29 @@ def test_life_coefficient_vector():
         graph.costs.life.clear()
         graph.costs.life.update(saved)
     print("OK: коэффициенты и пороги жизни читаются из graph.json, а не из констант Python")
+
+
+def test_life_coefficients_from_file():
+    source = os.path.join(ROOT, "mod", "src", "main", "resources", "data", "theminespirit", "board",
+                          "graph.json")
+    with open(source, "r", encoding="utf-8") as handle:
+        data = json.load(handle)
+    declared = set(data.get("life") or {})
+    assert declared == set(DEFAULT_LIFE), \
+        "graph.json → life объявляет все коэффициенты формулы: нет " + str(sorted(set(DEFAULT_LIFE) - declared))
+    tuned = copy.deepcopy(data)
+    tuned["life"] = dict(tuned["life"], fullPressureMobs=2.75, pressureBase=0.93,
+                         injuryWound=0.67, weakHealth=0.55, weakFood=9)
+    with tempfile.TemporaryDirectory() as directory:
+        path = os.path.join(directory, "graph.json")
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump(tuned, handle)
+        graph = Graph.load_merged(path, RECIPES, FRAGMENTS)
+    for name, value in (("fullPressureMobs", 2.75), ("pressureBase", 0.93),
+                        ("injuryWound", 0.67), ("weakHealth", 0.55), ("weakFood", 9)):
+        assert graph.costs.life[name] == value, \
+            "Коэффициент " + name + " взят из файла graph.json, а не из DEFAULT_LIFE: " + str(graph.costs.life)
+    print("OK: формула жизни читает коэффициенты из файла, а не из констант Python")
 
 
 def test_food_need_band():
@@ -1347,6 +1370,7 @@ if __name__ == "__main__":
         test_life_priority()
         test_life_player_fact()
         test_life_coefficient_vector()
+        test_life_coefficients_from_file()
         test_food_need_band()
         test_dig_inputs()
         test_area_nodes()

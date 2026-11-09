@@ -72,7 +72,8 @@ public final class GraphFactInputs {
                             position(spirit),
                             spirit.getHealth(),
                             spirit.getMaxHealth(),
-                            SpiritDamageWatch.recent(spirit.getUUID(), now),
+                            SpiritDamageWatch.recent(
+                                    spirit.getUUID(), now, graph.costs().life().damageWindowTicks()),
                             spirit.hunger().foodLevel(),
                             spirit.getAirSupply(),
                             spirit.isInWater(),

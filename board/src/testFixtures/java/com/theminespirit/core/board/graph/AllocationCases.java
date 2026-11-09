@@ -35,13 +35,18 @@ final class AllocationCases {
     static GraphPlan plan(GraphWorld world) {
         return GraphFacts.empty().equals(world.facts)
                 ? world.plan()
-                : GraphPlanner.plan(world.graph, world.state().withFacts(world.facts));
+                : GraphPlanner.plan(
+                        world.graph,
+                        world.state().withFacts(world.facts, world.graph.costs().life()));
     }
 
     static GraphTickets.Result tickets(GraphWorld world) {
         return GraphFacts.empty().equals(world.facts)
                 ? GraphTickets.of(world.graph, world.state(), world.plan())
-                : GraphTickets.of(world.graph, world.state().withFacts(world.facts), plan(world));
+                : GraphTickets.of(
+                        world.graph,
+                        world.state().withFacts(world.facts, world.graph.costs().life()),
+                        plan(world));
     }
 
     static List<DispatchRound.Candidate> candidates(GraphWorld world) {

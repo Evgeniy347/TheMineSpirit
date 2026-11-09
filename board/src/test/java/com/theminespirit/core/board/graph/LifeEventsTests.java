@@ -63,7 +63,8 @@ class LifeEventsTests {
     void domainEvents_ThreatsInFacts_DeriveLifeBand() {
         GraphFacts facts = GraphFacts.empty().withThreats(List.of(threat(GraphFacts.TargetKind.SPIRIT, true)));
 
-        Set<String> events = GraphDomainEvents.of(facts, 1);
+        Set<String> events =
+                GraphDomainEvents.of(facts, 1, GraphWorld.GRAPH.costs().life());
 
         assertTrue(
                 events.contains("life_threat") && events.contains("life_threat_spirit"),
@@ -96,11 +97,23 @@ class LifeEventsTests {
         GraphLife strict = new GraphLife(1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 16.0, 200, 0.5, 6);
 
         assertFalse(
-                GraphDomainEvents.of(facts, 1).contains("life_threat_player"),
+                GraphDomainEvents.of(facts, 1, GraphWorld.GRAPH.costs().life()).contains("life_threat_player"),
                 "По умолчанию слабым считается игрок ниже 0.35 здоровья: 0.45 — ещё не жизнь");
         assertTrue(
                 GraphDomainEvents.of(facts, 1, strict).contains("life_threat_player"),
                 "Порог слабого игрока берётся из данных графа: 0.45 ниже 0.5 поднимает жизнь");
+    }
+
+    @Test
+    void state_WeakPlayerThreshold_UsesGraphLifeNotJavaDefaults() {
+        GraphWorld world = GraphWorld.empty();
+        world.graph = SupplyGraph.parse("{\"costs\": {}, \"life\": {\"weakHealth\": 0.5}}", "строгий порог жизни");
+        world.facts = GraphFacts.empty().withPlayers(List.of(player(9.0F, 20)));
+
+        assertTrue(
+                world.state().events().contains("life_threat_player"),
+                "Вход графа для духа берёт порог слабого игрока из его данных: 0.45 ниже 0.5 порога graph.json, "
+                        + "а не встроенной константы: " + world.state().events());
     }
 
     private static GraphFacts.Player player(float health, int food) {

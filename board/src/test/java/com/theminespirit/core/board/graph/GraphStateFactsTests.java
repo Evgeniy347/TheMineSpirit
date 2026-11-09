@@ -23,7 +23,10 @@ class GraphStateFactsTests {
     @Test
     void withOrders_AndWithFacts_KeepOtherData() {
         GraphFacts facts = facts();
-        GraphState state = GraphWorld.empty().state().withFacts(facts).withOrders(Map.of("coal", 4));
+        GraphState state = GraphWorld.empty()
+                .state()
+                .withFacts(facts, GraphWorld.GRAPH.costs().life())
+                .withOrders(Map.of("coal", 4));
 
         assertSame(facts, state.facts(), "Заказ не теряет факты графа");
         assertEquals(Map.of("coal", 4), state.orders(), "Факты не теряют заказ игрока");

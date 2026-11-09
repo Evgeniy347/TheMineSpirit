@@ -42,7 +42,10 @@ class GraphStateExportTests {
                 GraphFeedback.none(),
                 List.of(),
                 List.of());
-        GraphState state = GraphWorld.empty().state().withFacts(facts).withOrders(Map.of("coal", 3));
+        GraphState state = GraphWorld.empty()
+                .state()
+                .withFacts(facts, GraphWorld.GRAPH.costs().life())
+                .withOrders(Map.of("coal", 3));
 
         String json = new ObjectMapper().writeValueAsString(GraphStateJson.state(state));
 
