@@ -213,6 +213,10 @@
     {
       "have": "wheat_seeds",
       "build": "wheat_field"
+    },
+    {
+      "have": "dirt",
+      "build": "wheat_field"
     }
   ],
   "events": {

@@ -128,6 +128,31 @@ class FillScenarioTests {
     }
 
     @Test
+    void fill_ProtectedCell_IsNotFilledAndStaysBlocked() {
+        List<BlockCoord> cells = pit(0, 0, 2, 2, 64);
+        MemoryWorld world = new MemoryWorld();
+        for (int x = 0; x < 2; x++) {
+            for (int z = 0; z < 2; z++) {
+                world.withSolid(new BlockCoord(x, 63, z));
+            }
+        }
+        BlockCoord building = new BlockCoord(0, 64, 0);
+
+        FillOrder.Plan plan = FillOrder.fill(cells, Set.of(building), world, ANCHOR);
+
+        assertFalse(
+                plan.cells().contains(building),
+                "Засыпка не ставит блок в клетку постройки: иначе под домом вырастает столб из грунта");
+        assertTrue(
+                plan.blocked().contains(building),
+                "Засыпка обязана назвать защищённую клетку занятой, а не молча обойти её");
+        assertEquals(
+                3,
+                plan.cells().size(),
+                "Остальные клетки ямы засыпаются штатно: защита одной клетки не отменяет работу");
+    }
+
+    @Test
     void fill_PartialPit_ContinuesFromLowestEmptyLayerWithoutNewOrder() {
         List<BlockCoord> cells = pit(0, 0, 3, 3, 64);
         MemoryWorld world = new MemoryWorld();

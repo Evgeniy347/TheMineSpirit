@@ -10,10 +10,12 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
+import com.theminespirit.core.policy.BlockProtection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -49,7 +51,6 @@ final class TreeChop {
     private int skippedCells;
     private boolean lackedSaplings;
     private boolean breaking;
-    private boolean guarded;
     private final List<BlockPos> usedStands = new ArrayList<>();
     private @Nullable BlockPos stand;
     private @Nullable ChopOutcome refusal;
@@ -74,7 +75,6 @@ final class TreeChop {
         skippedCells = 0;
         lackedSaplings = false;
         breaking = false;
-        guarded = false;
         usedStands.clear();
         clearing.begin(target, new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ()));
         refusal = startApproach();
@@ -104,7 +104,7 @@ final class TreeChop {
             return ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
         }
         BlockCoord from = new BlockCoord(stand.getX(), stand.getY(), stand.getZ());
-        plan = ChopPlan.of(tree, from);
+        plan = ChopPlan.of(tree, from, this::protectedLog);
         planIndex = 0;
         usedStands.add(stand);
         approach.begin(Vec3.atBottomCenterOf(stand), ChopTuning.CHOP_ARRIVAL);
@@ -184,12 +184,6 @@ final class TreeChop {
             breaking = false;
             planIndex++;
         }
-        if (!guarded) {
-            guarded = true;
-            if (ChopGuard.protectedLog(spirit, tree, plan.order(), orchard)) {
-                return ChopOutcome.simple(ChopOutcome.State.PROTECTED);
-            }
-        }
         while (planIndex < plan.order().size()) {
             BlockCoord log = plan.order().get(planIndex);
             BlockBreaker.Begin begin = breaker.beginChop(toPos(log), orchard);
@@ -205,9 +199,18 @@ final class TreeChop {
         return afterPass();
     }
 
+    private boolean protectedLog(BlockCoord log) {
+        BlockPos pos = toPos(log);
+        BlockState state = spirit.level().getBlockState(pos);
+        BlockProtection.Decision decision = orchard
+                ? spirit.protectionGate().checkHarvest(pos, state)
+                : spirit.protectionGate().checkBreak(pos, state);
+        return decision instanceof BlockProtection.Refused;
+    }
+
     private ChopOutcome afterPass() {
         BlockCoord from = stand == null ? tree.base() : new BlockCoord(stand.getX(), stand.getY(), stand.getZ());
-        ChopPlan rest = plan.rest(view, from);
+        ChopPlan rest = plan.rest(view, from, this::protectedLog);
         plan = rest;
         if (rest.order().isEmpty()) {
             return startCollect();
@@ -231,7 +234,7 @@ final class TreeChop {
     }
 
     private ChopOutcome leftStanding() {
-        standingLogs = plan.rest(view, tree.base()).order().size();
+        standingLogs = plan.rest(view, tree.base(), this::protectedLog).order().size();
         LOGGER.warn(
                 "[chop] {} у дерева {}: и с последней стоянки не срублено {} брёвен: {}",
                 spirit.getName().getString(),

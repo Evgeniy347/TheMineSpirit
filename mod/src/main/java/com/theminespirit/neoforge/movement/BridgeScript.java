@@ -7,6 +7,7 @@ import com.theminespirit.core.movement.WaterCrossingPlanner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.BridgeParams;
 import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.BlockPlacer;
 import com.theminespirit.neoforge.BlockStates;
@@ -51,7 +52,7 @@ public final class BridgeScript implements ScriptInstance {
         this.length = params.length();
         this.requestedBlock = params.block();
         this.approach = new Approach(spirit);
-        this.placer = new BlockPlacer(spirit);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.NONE);
     }
 
     @Override

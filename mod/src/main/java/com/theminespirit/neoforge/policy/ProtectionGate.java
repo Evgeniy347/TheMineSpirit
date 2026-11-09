@@ -16,9 +16,13 @@ import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.FenceDemolition;
 import com.theminespirit.core.town.PlanBuilding;
 import com.theminespirit.core.town.PlanBuildings;
+import com.theminespirit.core.town.PlotProtection;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.BuildPlanOwner;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.PlotBreakLog;
+import com.theminespirit.neoforge.board.PlotCellStructure;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +33,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
 
 public final class ProtectionGate {
     private static final String NATURAL_STAND_IN = "minecraft:stone";
@@ -45,7 +50,8 @@ public final class ProtectionGate {
     }
 
     public BlockProtection.Decision checkBreak(BlockPos pos, BlockState state) {
-        return decideBreak(pos, state, false, false, PlanBuilding.NONE);
+        return decide(
+                pos, state, false, false, PlanBuilding.NONE, PlotProtection.Action.BREAK, PlotProtection.Ground.NONE);
     }
 
     public BlockProtection.Decision checkBreakOrEscape(BlockPos pos, BlockState state, boolean escaping) {
@@ -76,11 +82,13 @@ public final class ProtectionGate {
                 return new BlockProtection.Allowed();
             }
         }
-        return decideBreak(pos, state, false, false, PlanBuilding.NONE);
+        return decide(
+                pos, state, false, false, PlanBuilding.NONE, PlotProtection.Action.BREAK, PlotProtection.Ground.NONE);
     }
 
     public BlockProtection.Decision checkHarvest(BlockPos pos, BlockState state) {
-        return decideBreak(pos, state, true, false, PlanBuilding.NONE);
+        return decide(
+                pos, state, true, false, PlanBuilding.NONE, PlotProtection.Action.HARVEST, PlotProtection.Ground.NONE);
     }
 
     public BlockProtection.Decision checkDemolish(BlockPos pos, BlockState state) {
@@ -90,29 +98,52 @@ public final class ProtectionGate {
                 && !foreignPlan(server, pos, ownBuilding)) {
             return new BlockProtection.Allowed();
         }
-        return decideBreak(pos, state, false, true, ownBuilding);
+        return decide(
+                pos, state, false, true, ownBuilding, PlotProtection.Action.BREAK, PlotProtection.Ground.PLAN_DEMOLISH);
     }
 
-    static boolean harvestPlanCell(boolean spiritBuilt, boolean planCell) {
-        return spiritBuilt && planCell;
+    public BlockProtection.Decision checkRepair(BlockPos pos, BlockState state) {
+        return decide(
+                pos,
+                state,
+                false,
+                true,
+                BuildPlanOwner.of(spirit),
+                PlotProtection.Action.BREAK,
+                PlotProtection.Ground.REPAIR);
     }
 
-    private static boolean harvestProtectsPlan(ServerLevel level, BlockPos pos, BlockCoord coord) {
-        return harvestPlanCell(PlacedBlocksData.get(level).isSpiritMarked(pos), inPlan(level, coord));
+    public BlockProtection.Decision checkExcavate(BlockPos pos, BlockState state) {
+        if (spirit.level() instanceof ServerLevel server) {
+            PlacedBlocksData placed = PlacedBlocksData.get(server);
+            if (placed.isSpiritMarked(pos) || placed.isMarked(pos)) {
+                PlotBreakLog.refused(
+                        server,
+                        pos,
+                        spirit,
+                        PlotProtection.Action.DIG.name(),
+                        PlotProtection.Ground.PLAN_EXCAVATE,
+                        "клетка " + pos.toShortString() + " уже облицована по плану: шахту копают до облицовки, "
+                                + "готовый блок не выламывают");
+                return new BlockProtection.Refused(
+                        PolicyId.PROTECTED_BLOCKS,
+                        "клетка " + pos.toShortString() + " уже облицована по плану: готовый блок шахты не выламывают");
+            }
+        }
+        return decide(
+                pos,
+                state,
+                false,
+                false,
+                PlanBuilding.MINE,
+                PlotProtection.Action.DIG,
+                PlotProtection.Ground.PLAN_EXCAVATE);
     }
 
-    static boolean inPlan(ServerLevel level, BlockCoord coord) {
-        return SettlementPlotStore.get(level)
-                .site()
-                .map(site -> site.planCell(coord.x(), coord.y(), coord.z()))
-                .orElse(false);
-    }
-
-    private static boolean mineCell(ServerLevel level, BlockCoord coord) {
-        return SettlementPlotStore.get(level)
-                .site()
-                .map(site -> site.mineColumn(coord.x(), coord.z()) || site.minePassage(coord.x(), coord.z()))
-                .orElse(false);
+    private static @Nullable StageSite site(Level level) {
+        return level instanceof ServerLevel server
+                ? SettlementPlotStore.get(server).site().orElse(null)
+                : null;
     }
 
     private static boolean inFenceStrip(ServerLevel level, BlockCoord coord, String blockId) {
@@ -130,11 +161,10 @@ public final class ProtectionGate {
     }
 
     private static PlanBuilding planBuilding(ServerLevel level, BlockCoord coord) {
-        PlanBuilding owner = SettlementPlotStore.get(level)
+        return SettlementPlotStore.get(level)
                 .site()
-                .map(site -> site.planBuilding(coord.x(), coord.y(), coord.z()))
+                .map(site -> site.protectionBuilding(coord.x(), coord.y(), coord.z()))
                 .orElse(PlanBuilding.NONE);
-        return owner == PlanBuilding.MINE ? PlanBuilding.NONE : owner;
     }
 
     private static boolean foreignPlan(ServerLevel level, BlockPos pos, PlanBuilding ownBuilding) {
@@ -142,8 +172,14 @@ public final class ProtectionGate {
                 ownBuilding, planBuilding(level, new BlockCoord(pos.getX(), pos.getY(), pos.getZ())));
     }
 
-    private BlockProtection.Decision decideBreak(
-            BlockPos pos, BlockState state, boolean tended, boolean demolish, PlanBuilding ownBuilding) {
+    private BlockProtection.Decision decide(
+            BlockPos pos,
+            BlockState state,
+            boolean tended,
+            boolean demolish,
+            PlanBuilding ownBuilding,
+            PlotProtection.Action action,
+            PlotProtection.Ground ground) {
         checks++;
         BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
         BlockProtection.Decision outside = checkTravel(coord);
@@ -162,16 +198,31 @@ public final class ProtectionGate {
         boolean unprotectArea = level instanceof ServerLevel server
                 && UnprotectService.of(server.getServer()).covers(dimension, coord, System.currentTimeMillis());
         String id = blockId(state);
+        StageSite site = site(level);
+        PlotProtection.Ground effective = ground;
+        if (site != null
+                && tended
+                && site.protectionBuilding(coord.x(), coord.y(), coord.z()) == PlanBuilding.ORCHARD) {
+            effective = PlotProtection.Ground.ORCHARD_CARE;
+        }
+        if (unprotectArea) {
+            effective = PlotProtection.Ground.PLAYER_COMMAND;
+        }
+        boolean structure = level instanceof ServerLevel server && PlotCellStructure.isStructure(server, pos);
+        PlotProtection.Decision plot = PlotProtection.check(site, coord, action, effective, ownBuilding, structure);
+        if (plot instanceof PlotProtection.Refused refused) {
+            if (level instanceof ServerLevel server) {
+                PlotBreakLog.refused(server, pos, spirit, action.name(), effective, refused.reason());
+            }
+            return new BlockProtection.Refused(PolicyId.PROTECTED_BLOCKS, refused.reason());
+        }
+        boolean planCell = plot instanceof PlotProtection.Allowed allowed && allowed.building() != PlanBuilding.NONE;
         BlockProtection.Decision decision;
         if (demolish && !inProtectedZone && level instanceof ServerLevel server && inFenceStrip(server, coord, id)) {
             decision = new BlockProtection.Allowed();
+        } else if (planCell) {
+            decision = new BlockProtection.Allowed();
         } else if (tended) {
-            if (level instanceof ServerLevel server && harvestProtectsPlan(server, pos, coord)) {
-                return new BlockProtection.Refused(
-                        PolicyId.PROTECTED_ZONE,
-                        "клетка " + pos.toShortString() + " — блок плана поселения: добыча сняла бы стену "
-                                + "шахты или постройки, её возвращает ремонт по аудиту");
-            }
             decision = PROTECTION.check(
                     blockId(state),
                     Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, AIR_ID),
@@ -180,14 +231,10 @@ public final class ProtectionGate {
             boolean spiritMarked = false;
             boolean placedByPlayer = false;
             boolean onPlot = false;
-            boolean inPlan = false;
-            PlanBuilding owner = PlanBuilding.NONE;
             if (level instanceof ServerLevel server) {
                 spiritMarked = PlacedBlocksData.get(server).isSpiritMarked(pos);
                 placedByPlayer = !spiritMarked && PlacedBlocksData.get(server).isMarked(pos);
                 onPlot = onSettlementPlot(server, coord);
-                inPlan = inPlan(server, coord) && !mineCell(server, coord);
-                owner = planBuilding(server, coord);
             }
             SettlementBreak.Origin origin = placedByPlayer
                     ? SettlementBreak.Origin.PLAYER
@@ -195,7 +242,14 @@ public final class ProtectionGate {
             decision = SettlementBreak.decide(
                     PROTECTION,
                     new SettlementBreak.Facts(
-                            origin, onPlot, inPlan, blockId(state), inProtectedZone, unprotectArea, owner, ownBuilding),
+                            origin,
+                            onPlot,
+                            false,
+                            blockId(state),
+                            inProtectedZone,
+                            unprotectArea,
+                            PlanBuilding.NONE,
+                            ownBuilding),
                     demolish ? SettlementBreak.Intent.DEMOLISH : SettlementBreak.Intent.BREAK,
                     () -> neighbours(level, pos));
         }

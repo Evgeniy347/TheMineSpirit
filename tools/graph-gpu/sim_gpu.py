@@ -54,7 +54,7 @@ class World:
     def empty(cls, graph):
         world = cls(graph)
         world.kits["spirit-1"] = {}
-        world.world = {"tree:oak", "tree:jungle", "sand", "clay", "animals",
+        world.world = {"tree:oak", "tree:jungle", "sand", "clay", "animals", "water",
                        "flower:poppy", "flower:dandelion", "soil"}
         for building in graph.buildings.values():
             world.buildings[building.id] = PLANNED if building.stage == 1 and not building.optional else ABSENT

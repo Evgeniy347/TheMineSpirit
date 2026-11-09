@@ -213,8 +213,7 @@ final class SchematicWorkPhase {
         SpiritReach reach = SpiritReach.current();
         ReachPlanner.World world = host.placement.clearWorld();
         for (BlockCoord cell : ReachPlanner.workableNow(reach, host.feet(), clear, world)) {
-            BlockBreaker.Begin begin =
-                    host.breaker.begin(SchematicSite.toPos(cell), BlockBreaker.Intent.DEMOLISH, false);
+            BlockBreaker.Begin begin = host.breaker.beginRepair(SchematicSite.toPos(cell));
             switch (begin) {
                 case BlockBreaker.Started ignored -> {
                     host.breaking = cell;

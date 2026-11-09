@@ -91,6 +91,40 @@ final class GraphHarvestPost {
         return mature;
     }
 
+    boolean replantOrchard(GraphTickets.Ticket ticket, GraphPlan.Task task) {
+        String sapling = sapling(task);
+        for (BlockCoord spot : post.scan.stage().allOrchardSaplings()) {
+            BlockPos pos = new BlockPos(spot.x(), spot.y(), spot.z());
+            if (!post.level.isLoaded(pos) || !post.level.getBlockState(pos).isAir()) {
+                continue;
+            }
+            post.submit(
+                    post.ticket(
+                            ticket.id(),
+                            BoardCase.ACTIVITY_BUILD,
+                            Optional.empty(),
+                            task.priority(),
+                            ticket.id(),
+                            Map.of(sapling, 1)),
+                    TicketTarget.at(spot).withSupply(sapling, 1));
+            return true;
+        }
+        return false;
+    }
+
+    private String sapling(GraphPlan.Task task) {
+        String wood = post.scan.wood();
+        String preferred = wood + "_sapling";
+        if (post.graph.isGroup("#saplings") && post.graph.members("#saplings").contains(preferred)) {
+            return GraphNames.item(post.graph, preferred, wood);
+        }
+        return task.consumes().keySet().stream()
+                .sorted()
+                .findFirst()
+                .map(item -> GraphNames.item(post.graph, item, wood))
+                .orElse(GraphNames.item(post.graph, preferred, wood));
+    }
+
     boolean leftOre(GraphTickets.Ticket ticket, GraphPlan.Task task) {
         String item = GraphNames.item(post.graph, task.makes(), post.scan.wood());
         Map<BlockCoord, MineOreLedger.Left> ores = LeftOreWatch.find(post.level, item);

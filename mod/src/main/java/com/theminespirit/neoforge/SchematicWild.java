@@ -67,7 +67,7 @@ final class SchematicWild {
         if (!weed(level, pos)) {
             return null;
         }
-        return breaker.begin(pos, BlockBreaker.Intent.DEMOLISH, false) instanceof BlockBreaker.Started ? cell : null;
+        return breaker.beginRepair(pos) instanceof BlockBreaker.Started ? cell : null;
     }
 
     private static boolean weed(Level level, BlockPos pos) {

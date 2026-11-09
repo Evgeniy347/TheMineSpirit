@@ -203,7 +203,7 @@ class StageSiteTests {
     }
 
     @Test
-    void gatherProtected_StreetCell_True() {
+    void protectionCell_StreetCell_True() {
         StageSite site = TownFixtures.flatSite();
         TownPlan plan = TownFixtures.flatPlan();
         ColumnMask.Cell street =
@@ -227,17 +227,17 @@ class StageSiteTests {
                 "Любая клетка улицы плана (главной, боковой, кольца) обязана быть узнаваема: иначе дух снова "
                         + "выкопает покрытие улицы под материал");
         assertTrue(
-                site.gatherProtected(street.x(), y, street.z()),
+                site.protectionCell(street.x(), y, street.z()),
                 "observe22: сбор земли у поселения выкопал блоки улиц снаружи ограды (forbiddenBySettlement "
                         + "ловит только природные блоки внутри) — защита сбора обязана покрывать улицы");
     }
 
     @Test
-    void gatherProtected_FreeGroundOutsidePlan_False() {
+    void protectionCell_FreeGroundOutsidePlan_False() {
         StageSite site = TownFixtures.flatSite();
 
         assertFalse(
-                site.gatherProtected(
+                site.protectionCell(
                         site.anchor().x() + 1000,
                         site.anchor().y(),
                         site.anchor().z() + 1000),

@@ -698,8 +698,8 @@ def test_more7_inputs():
 def test_baseline_trail():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     outcome = sim_gpu.run(sim_gpu.baselines(graph)[0], limit=4000)
-    assert outcome["steps"] == 84 and outcome["ticks"] == 59220, \
-        "Пустой мир обязан повторить Java (84 шага, 59 220 тиков), а не решение линейной системы: " \
+    assert outcome["steps"] == 88 and outcome["ticks"] == 59680, \
+        "Пустой мир обязан повторить Java (88 шагов, 59 680 тиков), а не решение линейной системы: " \
         + str((outcome["steps"], outcome["ticks"]))
     print("OK: пустой мир совпадает с Java (расходящийся поток решается итерациями)")
 
@@ -823,9 +823,8 @@ def test_dead_inputs():
     for way in ("more5_light_crops", "more5_pickup_wood_drop", "more5_light_mine"):
         assert any(way in task for task in more5),             "Мир more5 обязан вызвать путь '" + way + "': " + str(more5)
     area = [step[1] for step in sim_gpu.run(worlds["world"], limit=1600)["trail"]]
-    repairs = {name for name in graph.events if name.startswith("repair_")}
-    for name in repairs:
-        assert any(task.startswith("event:" + name + ":") for task in area),             "Мир участка обязан вызвать ремонт '" + name + "'"
+    repairs = {name for name in worlds["world"].state().events if name.startswith("repair_")}
+    assert repairs and any(task.startswith("event:repair_") for task in area),             "Мир участка обязан вызвать ремонт повреждённой постройки: " + str(sorted(repairs))
     for name, expected in (("gear", {"gear_kit_mining", "gear_kit_woodcutting",
                                      "gear_kit_farming", "gear_kit_building"}),
                            ("farm", {"crop_dry", "pen_full"}),

@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.adapter.Visibility;
+import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
@@ -70,6 +71,9 @@ final class PillarDismantler {
                 return outcome;
             }
             Item item = state.getBlock().asItem();
+            if (level instanceof ServerLevel server) {
+                BreakNotice.broken(server, pos, state, spirit, "PILLAR_DOWN", PlotProtection.Ground.NONE);
+            }
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
             SpiritGesture.workOn(spirit, pos);
             unmark(pos);

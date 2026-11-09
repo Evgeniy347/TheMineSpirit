@@ -200,7 +200,7 @@ public record SupplyGraph(
                 ways,
                 edges,
                 unimplemented(root),
-                GraphEvent.parse(root),
+                GraphEvent.withRepairs(GraphEvent.parse(root), buildings),
                 groups(root),
                 triggers(root),
                 HerdCaps.parse(root, origin),

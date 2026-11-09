@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.OptionalInt;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class StageRepair {
@@ -31,6 +32,10 @@ final class StageRepair {
     record Gap(int missing, int total, Map<String, Integer> need) {}
 
     static BoardOutcome post(GraphPost post, BoardCase step, TicketTarget target, Gap gap) {
+        return post(post, step, target, gap, null);
+    }
+
+    static BoardOutcome post(GraphPost post, BoardCase step, TicketTarget target, Gap gap, @Nullable String planId) {
         BoardService service = post.service;
         long now = post.now;
         int missing = gap.missing();
@@ -42,7 +47,7 @@ final class StageRepair {
         if (StageAudit.repairBlockedByUpgrade(step, upgrading(service, step))) {
             return BoardOutcome.DUPLICATE;
         }
-        BoardTicket ticket = RepairPlan.ticket(step, gap.need(), now);
+        BoardTicket ticket = RepairPlan.ticket(step, gap.need(), now, planId);
         String id = ticket.id();
         int percent = total == 0 ? 0 : missing * PERCENT / total;
         BoardStatus current = service.board().statusOf(id).orElse(null);
