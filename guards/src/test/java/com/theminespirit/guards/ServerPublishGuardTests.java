@@ -19,6 +19,7 @@ class ServerPublishGuardTests {
     private static final Path PUBLISH = Path.of("scripts/publish.sh");
     private static final Path NIGHTLY = Path.of("scripts/nightly-analyzers.sh");
     private static final Path CHECK = Path.of("scripts/testing/check-publish.sh");
+    private static final Path PYTHON = Path.of("scripts/python-bin.sh");
     private static final Path LEAD = Path.of("docs/LEAD-AGENT.md");
     private static final Path SERVER = Path.of("server");
     private static final List<String> SERVER_SCRIPTS = List.of(
@@ -172,6 +173,35 @@ class ServerPublishGuardTests {
         assertFalse(
                 code.contains("publish.sh") || code.contains("world-snapshot.sh") || code.contains("stop.sh"),
                 "Ночной анализатор не публикует мод и не перезапускает сервер: только сборка и отчёт");
+    }
+
+    @Test
+    void publishScripts_PythonSelection_IsOneHelper() throws IOException {
+        assertTrue(
+                Files.isRegularFile(PYTHON),
+                "Нет scripts/python-bin.sh: выбор python (THEMINESPIRIT_PYTHON → PYTHON → python3 → python) "
+                        + "скопирован в publish.sh, nightly-analyzers.sh и check-publish.sh, и три копии расходятся: "
+                        + "на сервере один скрипт находит python, другой нет");
+        String helper = read(PYTHON);
+        assertTrue(
+                helper.contains("python_bin") && helper.contains("THEMINESPIRIT_PYTHON"),
+                "scripts/python-bin.sh обязан объявлять python_bin и порядок THEMINESPIRIT_PYTHON → PYTHON → "
+                        + "python3 → python: один выбор python на все скрипты");
+        for (Path script : List.of(PUBLISH, NIGHTLY, CHECK)) {
+            String text = read(script);
+            assertTrue(
+                    text.contains("python-bin.sh"),
+                    script + " не берёт общий выбор python из scripts/python-bin.sh: копия выбора снова "
+                            + "разойдётся с остальными, и на сервере скрипт молча не найдёт python");
+            assertFalse(
+                    text.contains("for candidate in") || text.contains("for path in \"${THEMINESPIRIT_PYTHON"),
+                    script + " всё ещё перебирает python сам, а не зовёт python_bin из scripts/python-bin.sh: "
+                            + "правка порядка поиска должна быть одна на все скрипты");
+        }
+        assertTrue(
+                read(PUBLISH).contains("$CLEANUP_SCRIPT_DIR/python-bin.sh"),
+                "publish.sh не раскладывает python-bin.sh рядом с nightly-analyzers.sh: на сервере ночной "
+                        + "прогон не найдёт helper и останется без сводки находок");
     }
 
     @Test
