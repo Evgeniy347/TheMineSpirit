@@ -47,7 +47,7 @@ final class PathTrample {
                     BlockPlacer.RefuseReason.NO_MATERIAL, "нет лопаты для тропинки: сначала нужна лопата");
         }
         ItemStack shovel = spirit.getInventory().getItem(slot);
-        if (air) {
+        if (air && !raised) {
             BlockPos below = target.below();
             if (!level.getBlockState(below).canBeReplaced()) {
                 return new BlockPlacer.Refused(

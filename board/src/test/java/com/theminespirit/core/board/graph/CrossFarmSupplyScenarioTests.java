@@ -1,7 +1,20 @@
 package com.theminespirit.core.board.graph;
 
-import static com.theminespirit.core.board.graph.CrossActions.*;
-import static com.theminespirit.core.board.graph.CrossScene.*;
+import static com.theminespirit.core.board.graph.CrossActions.scripts;
+import static com.theminespirit.core.board.graph.CrossActions.supplyTarget;
+import static com.theminespirit.core.board.graph.CrossScene.chest;
+import static com.theminespirit.core.board.graph.CrossScene.damaged;
+import static com.theminespirit.core.board.graph.CrossScene.facts;
+import static com.theminespirit.core.board.graph.CrossScene.ids;
+import static com.theminespirit.core.board.graph.CrossScene.named;
+import static com.theminespirit.core.board.graph.CrossScene.plan;
+import static com.theminespirit.core.board.graph.CrossScene.spirit;
+import static com.theminespirit.core.board.graph.CrossScene.stageOne;
+import static com.theminespirit.core.board.graph.CrossScene.stageTwo;
+import static com.theminespirit.core.board.graph.CrossScene.task;
+import static com.theminespirit.core.board.graph.CrossScene.threat;
+import static com.theminespirit.core.board.graph.CrossScene.ticketFor;
+import static com.theminespirit.core.board.graph.CrossScene.tickets;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
