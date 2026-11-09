@@ -3,8 +3,11 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.route.QuarryStatus;
 import com.theminespirit.core.board.route.RouteMarker;
+import com.theminespirit.core.board.route.RouteResource;
 import com.theminespirit.core.ui.MapMarker;
+import com.theminespirit.core.ui.MapQuarry;
 import com.theminespirit.core.ui.TownMapView;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
@@ -50,8 +53,8 @@ public final class TownMarkers {
             if (inside(area, route.point().x(), route.point().z())
                     && insideY(minY, maxY, route.point().y())) {
                 markers.add(new MapMarker(
-                        MapMarker.Kind.ROUTE,
-                        route.resource().family(),
+                        kind(route.resource()),
+                        name(route.resource()),
                         "",
                         route.point().x(),
                         route.point().z()));
@@ -68,6 +71,34 @@ public final class TownMarkers {
             }
         }
         return List.copyOf(markers);
+    }
+
+    private static MapMarker.Kind kind(RouteResource resource) {
+        return switch (resource) {
+            case DIRT -> MapMarker.Kind.DIRT;
+            case SAND -> MapMarker.Kind.SAND;
+            case SNOW -> MapMarker.Kind.ROUTE;
+        };
+    }
+
+    private static String name(RouteResource resource) {
+        return switch (resource) {
+            case DIRT -> "земля";
+            case SAND -> "песок";
+            case SNOW -> "снег";
+        };
+    }
+
+    public static List<MapQuarry> quarries(ServerLevel level) {
+        List<MapQuarry> out = new ArrayList<>();
+        for (QuarryStatus status : QuarryService.cachedStatuses(level)) {
+            String resource = status.resource().name().toLowerCase(Locale.ROOT);
+            out.add(
+                    status.state() == QuarryStatus.State.UNSET
+                            ? MapQuarry.unset(resource)
+                            : MapQuarry.of(resource, status.stateName(), status.remainingPercent()));
+        }
+        return List.copyOf(out);
     }
 
     private static String occupation(Optional<BoardService> service, UUID spirit) {

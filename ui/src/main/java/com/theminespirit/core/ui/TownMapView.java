@@ -75,6 +75,12 @@ public record TownMapView(List<MapRect> rects, List<MapLine> lines, List<MapMark
         return new TownMapView(rects, lines, next);
     }
 
+    public TownMapView withoutPaths() {
+        List<MapRect> kept =
+                rects.stream().filter(rect -> rect.kind() != Kind.PATH).toList();
+        return new TownMapView(kept, lines, markers);
+    }
+
     public static TownMapView of(TownSnapshot snapshot) {
         Objects.requireNonNull(snapshot, "Снимок плана не может быть null: карта строится по нему");
         List<MapRect> rects = new ArrayList<>();

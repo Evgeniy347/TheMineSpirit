@@ -3,10 +3,17 @@ package com.theminespirit.guards;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.route.QuarryCandidate;
+import com.theminespirit.core.board.route.QuarryStatus;
+import com.theminespirit.core.board.route.RouteResource;
 import com.theminespirit.core.policy.UnprotectArea;
 import com.theminespirit.core.rest.IdempotencyCache;
 import com.theminespirit.core.rest.PolicyGateway;
 import com.theminespirit.core.rest.PolicyRoutes;
+import com.theminespirit.core.rest.QuarryGateway;
+import com.theminespirit.core.rest.QuarryInstall;
+import com.theminespirit.core.rest.QuarryQuery;
+import com.theminespirit.core.rest.QuarryRoutes;
 import com.theminespirit.core.rest.Route;
 import com.theminespirit.core.rest.UnprotectRequest;
 import com.theminespirit.core.script.CoreScripts;
@@ -129,6 +136,18 @@ class ApiCatalogGuardTests {
     }
 
     @Test
+    void quarryRoutes_DeclaredInController_AreDocumentedInApiDoc() throws IOException {
+        List<String> missing = undocumentedRoutes(readApiDoc(), new QuarryRoutes(new NoQuarryGateway()).routes());
+
+        assertEquals(
+                List.of(),
+                missing,
+                "Маршрут /v1/quarry/* объявлен в QuarryRoutes, но не описан в docs/api/README.md: стратег по "
+                        + "документу не узнает, где искать и как ставить место добычи. Допишите строку таблицы "
+                        + "«Конечные точки» и раздел quarry.md. Не описаны");
+    }
+
+    @Test
     void undocumentedRoutes_MissingPath_IsReported() {
         List<Route> routes = List.of(new Route("GET", "/v1/policy/unprotect", (request, params) -> null));
 
@@ -156,6 +175,28 @@ class ApiCatalogGuardTests {
             }
         }
         return missing;
+    }
+
+    private static final class NoQuarryGateway implements QuarryGateway {
+        @Override
+        public List<QuarryStatus> statuses() {
+            return List.of();
+        }
+
+        @Override
+        public List<QuarryCandidate> search(QuarryQuery query) {
+            throw new UnsupportedOperationException("сторожу не нужен поиск");
+        }
+
+        @Override
+        public QuarryStatus install(QuarryInstall install) {
+            throw new UnsupportedOperationException("сторожу не нужна установка");
+        }
+
+        @Override
+        public QuarryStatus remove(RouteResource resource) {
+            throw new UnsupportedOperationException("сторожу не нужно снятие");
+        }
     }
 
     private static final class NoPolicyGateway implements PolicyGateway {

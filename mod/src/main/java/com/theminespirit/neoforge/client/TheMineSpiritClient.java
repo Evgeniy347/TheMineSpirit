@@ -56,7 +56,7 @@ public final class TheMineSpiritClient {
         });
         TownMapChannel.onClientMarkers(reply -> {
             if (Minecraft.getInstance().screen instanceof TownMapScreen screen) {
-                screen.showMarkers(reply.markers());
+                screen.showMarkers(reply.markers(), reply.quarries());
             }
         });
         MineMapChannel.onClientReply(reply -> {
