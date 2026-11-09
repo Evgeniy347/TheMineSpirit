@@ -65,23 +65,18 @@ public final class FarmSession {
         this.actions = new FarmActions(spirit);
         this.breaker = new BlockBreaker(spirit);
         this.counters = new FarmCounters(job, count, radius);
-        this.search = new FarmSearch(spirit, job, crop, targets, view, counters, this::fail, this::concludeExhausted);
-        this.loot = new FarmLoot(spirit, search, breaker, counters, replant);
-        this.work = new FarmWork(
+        this.search = new FarmSearch(
                 spirit,
                 job,
                 crop,
-                count,
-                replant,
-                view,
-                actions,
                 targets,
+                view,
                 counters,
-                search,
-                loot,
-                breaker,
-                this::fail,
-                this::beginUnlimited);
+                new FarmSearch.Callbacks(this::fail, this::concludeExhausted));
+        this.loot = new FarmLoot(spirit, search, breaker, counters, replant);
+        this.work = new FarmWork(
+                new FarmWork.Setup(spirit, job, crop, count, replant, view, actions, targets, counters),
+                new FarmWork.Helpers(search, loot, breaker, this::fail, this::beginUnlimited));
     }
 
     public static FarmSession till(SpiritEntity spirit, int radius, int count) {

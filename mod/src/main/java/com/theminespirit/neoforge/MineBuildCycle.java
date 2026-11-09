@@ -62,37 +62,34 @@ final class MineBuildCycle {
     private int settle;
     private int dug;
 
-    MineBuildCycle(
-            SpiritEntity spirit,
-            Level level,
-            LevelSafetyView safety,
-            BlockBreaker breaker,
-            MineFinish finish,
+    record Setup(SpiritEntity spirit, Level level, LevelSafetyView safety, BlockBreaker breaker, MineFinish finish) {}
+
+    record Grid(
             List<MineColumn> plan,
             Set<MineColumn> open,
             Set<MineColumn> closed,
             Set<BlockCoord> openCells,
-            Map<MineColumn, MineColumn> parents,
-            MineCells cells,
-            MineOpening entranceOpening,
-            MineStepWalker stepWalker,
-            MineBuildCells ore,
-            Host host) {
-        this.spirit = spirit;
-        this.level = level;
-        this.safety = safety;
-        this.breaker = breaker;
-        this.finish = finish;
-        this.plan = plan;
-        this.open = open;
-        this.closed = closed;
-        this.openCells = openCells;
-        this.parents = parents;
-        this.cells = cells;
-        this.entranceOpening = entranceOpening;
-        this.stepWalker = stepWalker;
-        this.ore = ore;
-        this.host = host;
+            Map<MineColumn, MineColumn> parents) {}
+
+    record Parts(
+            MineCells cells, MineOpening entranceOpening, MineStepWalker stepWalker, MineBuildCells ore, Host host) {}
+
+    MineBuildCycle(Setup setup, Grid grid, Parts parts) {
+        this.spirit = setup.spirit();
+        this.level = setup.level();
+        this.safety = setup.safety();
+        this.breaker = setup.breaker();
+        this.finish = setup.finish();
+        this.plan = grid.plan();
+        this.open = grid.open();
+        this.closed = grid.closed();
+        this.openCells = grid.openCells();
+        this.parents = grid.parents();
+        this.cells = parts.cells();
+        this.entranceOpening = parts.entranceOpening();
+        this.stepWalker = parts.stepWalker();
+        this.ore = parts.ore();
+        this.host = parts.host();
     }
 
     int dug() {

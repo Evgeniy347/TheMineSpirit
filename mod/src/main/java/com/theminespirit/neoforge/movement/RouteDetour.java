@@ -156,7 +156,7 @@ public final class RouteDetour {
                     route.end(),
                     segmented.millis());
             String refusal = refusal(spirit, pending, route);
-            SpiritWorldLog.route(
+            SpiritWorldLog.route(new SpiritWorldLog.Route(
                     spirit,
                     pending.plan.why(),
                     pending.plan.from(),
@@ -165,7 +165,7 @@ public final class RouteDetour {
                     route.nodes(),
                     segmented.millis(),
                     route.end(),
-                    refusal);
+                    refusal));
             if (refusal.isEmpty()) {
                 finish(pending, new RouteWalk(spirit, route, pending.plan.target()), "");
             } else {
