@@ -202,9 +202,8 @@ public final class DigOutScript implements ScriptInstance {
             spirit.getJumpControl().jump();
             return;
         }
-        if (spirit.getNavigation().isDone()) {
-            spirit.getNavigation().moveTo(cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5, 1.0);
-        }
+        spirit.getNavigation().stop();
+        spirit.getMoveControl().setWantedPosition(cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5, 1.0);
     }
 
     private ScriptStatus dig(BlockPos cell) {
