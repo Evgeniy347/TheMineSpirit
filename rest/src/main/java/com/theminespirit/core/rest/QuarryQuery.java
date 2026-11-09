@@ -55,6 +55,21 @@ public record QuarryQuery(RouteResource resource, Optional<BlockCoord> base, int
         }
     }
 
+    private static int requiredInteger(Map<String, String> query, String name) {
+        String raw = query.get(name);
+        if (raw == null || raw.isBlank()) {
+            throw invalid(
+                    "Координата '" + name + "' пуста: базовая точка задаётся числом в блоках", Map.of("field", name));
+        }
+        try {
+            return Integer.parseInt(raw.trim());
+        } catch (NumberFormatException broken) {
+            throw invalid(
+                    "Координата '" + name + "' = '" + raw + "' не целое число: точка задаётся в блоках",
+                    Map.of("field", name));
+        }
+    }
+
     private static Optional<BlockCoord> base(Map<String, String> query) {
         boolean any = query.containsKey("x") || query.containsKey("y") || query.containsKey("z");
         if (!any) {
@@ -65,7 +80,8 @@ public record QuarryQuery(RouteResource resource, Optional<BlockCoord> base, int
                     "Базовая точка задаётся всеми координатами x, y и z или не задаётся совсем",
                     Map.of("fields", "x,y,z"));
         }
-        return Optional.of(new BlockCoord(integer(query, "x", 0), integer(query, "y", 0), integer(query, "z", 0)));
+        return Optional.of(
+                new BlockCoord(requiredInteger(query, "x"), requiredInteger(query, "y"), requiredInteger(query, "z")));
     }
 
     private static ApiException invalid(String message) {
