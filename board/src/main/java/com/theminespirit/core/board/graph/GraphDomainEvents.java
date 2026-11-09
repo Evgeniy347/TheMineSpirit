@@ -7,10 +7,6 @@ import java.util.Set;
 public final class GraphDomainEvents {
     private GraphDomainEvents() {}
 
-    public static Set<String> of(GraphFacts facts, int stage) {
-        return of(facts, stage, GraphLife.DEFAULTS);
-    }
-
     public static Set<String> of(GraphFacts facts, int stage, GraphLife life) {
         Set<String> events = new LinkedHashSet<>(GraphWorldEvents.of(facts));
         events.addAll(GearInputs.events(facts, stage));

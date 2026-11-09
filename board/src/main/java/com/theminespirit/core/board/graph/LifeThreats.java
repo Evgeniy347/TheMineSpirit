@@ -7,8 +7,6 @@ import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 
 public final class LifeThreats {
-    public static final long DAMAGE_WINDOW_TICKS = GraphLife.DEFAULTS.damageWindowTicks();
-
     private LifeThreats() {}
 
     public static int priority(GraphFacts facts, GraphEvent event, GraphEvent.Task task, int max) {

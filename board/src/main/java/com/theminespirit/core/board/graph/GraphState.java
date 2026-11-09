@@ -192,10 +192,6 @@ public record GraphState(
                 known);
     }
 
-    public GraphState withFacts(GraphFacts known) {
-        return withFacts(known, GraphLife.DEFAULTS);
-    }
-
     public GraphState withFacts(GraphFacts known, GraphLife life) {
         Objects.requireNonNull(known, "Факты графа не могут быть null: пустые задают GraphFacts.empty()");
         Objects.requireNonNull(life, "Формула жизни не может быть null: без неё слабого игрока не распознать");

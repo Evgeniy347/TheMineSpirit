@@ -1,9 +1,10 @@
-package com.theminespirit.core.fishing;
+package com.theminespirit.core.intellect;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.fishing.FishingData;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 

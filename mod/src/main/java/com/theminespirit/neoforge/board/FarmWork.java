@@ -5,7 +5,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.WoolRules;
 import com.theminespirit.core.board.graph.FarmWays;
 import com.theminespirit.core.board.graph.GraphTickets;
-import com.theminespirit.core.fishing.FishingNeeds;
+import com.theminespirit.core.intellect.FishingNeeds;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Map;
 import java.util.Optional;

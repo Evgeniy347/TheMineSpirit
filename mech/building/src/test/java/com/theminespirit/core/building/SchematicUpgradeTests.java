@@ -37,6 +37,20 @@ class SchematicUpgradeTests {
                         + "а не снос");
     }
 
+    @Test
+    void extraPositions_PreviousScheme_CellsComparedExactly() {
+        Schematic previous = schematic(
+                new Schematic.Entry(0, 0, 0, "minecraft:oak_planks"),
+                new Schematic.Entry(1, 1, 0, "minecraft:oak_planks"));
+        Schematic next = schematic(new Schematic.Entry(0, 0, 0, "minecraft:stone_bricks"));
+
+        assertEquals(
+                List.of(new BlockCoord(11, 71, -5)),
+                SchematicUpgrade.extraPositions(previous, next, ORIGIN, BuildRotation.NONE),
+                "Старая схема из задания даёт точные клетки: лишний блок уровня снимается по позиции, "
+                        + "а не эвристикой по меткам духа");
+    }
+
     private static Schematic schematic(Schematic.Entry... entries) {
         return new Schematic(2, 2, 2, List.of(entries));
     }

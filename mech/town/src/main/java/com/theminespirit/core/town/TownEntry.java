@@ -3,7 +3,8 @@ package com.theminespirit.core.town;
 import java.util.Locale;
 import java.util.Objects;
 
-public record TownEntry(String id, String name, int width, int depth, Quarter quarter, boolean level, boolean rotate) {
+public record TownEntry(
+        String id, String name, int width, int depth, Quarter quarter, boolean level, boolean rotate, boolean field) {
     public static final int MAX_SIDE = 64;
 
     public TownEntry {

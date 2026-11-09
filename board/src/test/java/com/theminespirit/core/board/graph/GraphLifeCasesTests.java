@@ -13,6 +13,7 @@ import com.theminespirit.core.board.MoreActivityPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class GraphLifeCasesTests {
@@ -20,6 +21,22 @@ class GraphLifeCasesTests {
     private static final String DEFEND = "event:life_threat:defend";
     private static final String RETURN = "event:more7_evening_return:more7_return_home";
     private static final String IDLE = "event:more6_spirit_idle:more6_assign_idle";
+
+    @Test
+    void risk_HurtFreshnessWindow_ComesFromGraphData() {
+        GraphFacts facts = GraphFacts.empty()
+                .withSpirits(Map.of(
+                        "spirit-1",
+                        LifeGraphPlannerTests.spirit(
+                                "spirit-1", 10, 20, new GraphFacts.Hurt(8, "minecraft:zombie", 150))));
+        GraphLife wide = new GraphLife(1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 16.0, 200, 0.35, 6);
+        GraphLife narrow = new GraphLife(1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 16.0, 60, 0.35, 6);
+
+        assertTrue(
+                LifeThreats.severity(facts, "life_injury", wide) > LifeThreats.severity(facts, "life_injury", narrow),
+                "Окно свежего урона берётся из graph.json: в широком окне урон 150 тиков ещё весит, "
+                        + "в узком — уже нет");
+    }
 
     @Test
     void bands_PriorityOrder_WorkBelowNeedBelowLife() {

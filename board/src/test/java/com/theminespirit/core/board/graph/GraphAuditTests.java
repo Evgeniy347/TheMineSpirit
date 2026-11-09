@@ -48,6 +48,8 @@ class GraphAuditTests {
                         60,
                         Set.of(),
                         Set.of())
-                .withFacts(PlanCaseFacts.facts(Map.of("hut", hut), List.of(), GraphSiteFacts.Terrain.empty()));
+                .withFacts(
+                        PlanCaseFacts.facts(Map.of("hut", hut), List.of(), GraphSiteFacts.Terrain.empty()),
+                        GraphWorld.GRAPH.costs().life());
     }
 }

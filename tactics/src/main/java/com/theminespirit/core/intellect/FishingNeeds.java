@@ -1,10 +1,6 @@
-package com.theminespirit.core.fishing;
+package com.theminespirit.core.intellect;
 
-import com.theminespirit.core.intellect.FoodDeficit;
-import com.theminespirit.core.intellect.FoodNorm;
-import com.theminespirit.core.intellect.IntellectTuning;
-import com.theminespirit.core.intellect.NutritionTable;
-import com.theminespirit.core.intellect.StockCatalog;
+import com.theminespirit.core.fishing.FishingData;
 import com.theminespirit.core.processing.CookableFoods;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;

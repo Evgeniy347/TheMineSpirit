@@ -16,32 +16,6 @@ public record GraphCosts(
         Map<String, Integer> stationCapacity,
         GraphChoice choice,
         GraphLife life) {
-    public static final GraphCosts NONE = new GraphCosts(
-            1, Map.of(), Map.of(), Map.of(), 0, 1, Map.of(), Map.of(), GraphChoice.NEUTRAL, GraphLife.DEFAULTS);
-
-    public GraphCosts(
-            int defaultTicks,
-            Map<String, Integer> caseTicks,
-            Map<String, Integer> wayTicks,
-            Map<String, Integer> wayUses,
-            int ticksPerBlock,
-            int travelScaleTicks,
-            Map<String, Integer> toolDurability,
-            Map<String, Integer> stationCapacity,
-            GraphChoice choice) {
-        this(
-                defaultTicks,
-                caseTicks,
-                wayTicks,
-                wayUses,
-                ticksPerBlock,
-                travelScaleTicks,
-                toolDurability,
-                stationCapacity,
-                choice,
-                GraphLife.DEFAULTS);
-    }
-
     public GraphCosts {
         caseTicks = Map.copyOf(caseTicks);
         wayTicks = Map.copyOf(wayTicks);
@@ -84,8 +58,9 @@ public record GraphCosts(
 
     static GraphCosts parse(JsonNode root) {
         JsonNode costs = root.path("costs");
+        GraphLife life = GraphLife.parse(root.path("life"));
         if (costs.isMissingNode()) {
-            return NONE;
+            return new GraphCosts(1, Map.of(), Map.of(), Map.of(), 0, 1, Map.of(), Map.of(), GraphChoice.NEUTRAL, life);
         }
         Map<String, Integer> wayTicks = new LinkedHashMap<>();
         Map<String, Integer> wayUses = new LinkedHashMap<>();
@@ -107,6 +82,6 @@ public record GraphCosts(
                 GraphEvent.counts(costs.path("toolDurability")),
                 GraphEvent.counts(costs.path("stationCapacity")),
                 GraphChoice.parse(root.path("choice")),
-                GraphLife.parse(root.path("life")));
+                life);
     }
 }
