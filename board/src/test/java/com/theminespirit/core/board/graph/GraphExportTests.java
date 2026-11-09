@@ -56,6 +56,9 @@ class GraphExportTests {
         weak.facts = weak.facts.withPlayers(
                 List.of(new GraphFacts.Player("Steve", new GraphFacts.Position(0, 64, 0), 4.0F, 20.0F, 4)));
         cases.add(exportCase(weak, "weak_player_fact"));
+        for (Map<String, Object> playerCase : playerFactVector()) {
+            cases.add(playerCase);
+        }
         cases.add(exportCase(foodStageTwo(), "food_stage_two"));
         Files.createDirectories(OUT.getParent());
         Files.copy(
@@ -64,6 +67,20 @@ class GraphExportTests {
                 StandardCopyOption.REPLACE_EXISTING);
         new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValue(OUT.toFile(), cases);
         assertTrue(Files.size(OUT) > 0, "Контрольные случаи графа для Python-модели записаны в " + OUT);
+    }
+
+    private static List<Map<String, Object>> playerFactVector() {
+        return List.of(
+                playerCase(4.0F, 20, "weak_player_health"),
+                playerCase(20.0F, 4, "weak_player_food"),
+                playerCase(20.0F, 20, "healthy_player_fact"));
+    }
+
+    private static Map<String, Object> playerCase(float health, int food, String mutation) {
+        GraphWorld world = GraphWorld.empty();
+        world.facts = world.facts.withPlayers(
+                List.of(new GraphFacts.Player("Steve", new GraphFacts.Position(0, 64, 0), health, 20.0F, food)));
+        return exportCase(world, mutation);
     }
 
     private static GraphWorld foodStageTwo() {
