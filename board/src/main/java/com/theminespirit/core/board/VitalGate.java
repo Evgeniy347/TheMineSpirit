@@ -51,4 +51,8 @@ public final class VitalGate {
         Objects.requireNonNull(ticket, "Билет не может быть null: исключения проверяются по кейсу");
         return EXEMPT.contains(ticket.boardCase()) || ticket.id().startsWith("graph:event:life_");
     }
+
+    public static boolean blocksWork(BoardTicket ticket, Map<String, String> live) {
+        return !exempt(ticket) && !satisfies(ticket.id(), live);
+    }
 }

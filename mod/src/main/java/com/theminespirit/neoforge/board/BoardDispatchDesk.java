@@ -212,7 +212,7 @@ final class BoardDispatchDesk {
             }
             List<BoardTicket> held = List.copyOf(board.assignedTo(spirit.getUUID()));
             for (BoardTicket ticket : held) {
-                if (!VitalGate.satisfies(ticket.id(), needs)) {
+                if (VitalGate.blocksWork(ticket, needs)) {
                     settlement.withdraw(
                             spirit, ticket, needs.values().iterator().next());
                 }

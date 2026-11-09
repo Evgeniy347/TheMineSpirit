@@ -3,6 +3,7 @@ package com.theminespirit.core.board.graph;
 import static com.theminespirit.core.board.graph.CrossActions.*;
 import static com.theminespirit.core.board.graph.CrossScene.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.Board;
@@ -12,6 +13,7 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.EatNeed;
 import com.theminespirit.core.board.SpiritView;
+import com.theminespirit.core.board.VitalGate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -65,21 +67,25 @@ class CrossVitalScenarioTests {
                         .contains("голод"),
                 "Голодному духу не выдаётся шахта, пока нужда жива: "
                         + round.refusal(boardTicket(ticketFor(result, mineId)), hungry));
+        BoardTicket defend = new BoardTicket(
+                "graph:event:life_threat:defend",
+                BoardCase.ACTIVITY_DEFEND,
+                Optional.empty(),
+                100,
+                0,
+                1,
+                "graph:event:life_threat:defend",
+                List.of(),
+                Map.of());
         assertTrue(
-                round.refusal(
-                                new BoardTicket(
-                                        "graph:event:life_threat:defend",
-                                        BoardCase.ACTIVITY_DEFEND,
-                                        Optional.empty(),
-                                        100,
-                                        0,
-                                        1,
-                                        "graph:event:life_threat:defend",
-                                        List.of(),
-                                        Map.of()),
-                                hungry)
-                        .isEmpty(),
+                round.refusal(defend, hungry).isEmpty(),
                 "Защита жизни — исключение VitalGate: голодный дух всё равно защищается");
+        assertFalse(
+                VitalGate.blocksWork(defend, hungry.needs()),
+                "Живая нужда не отменяет защиту жизни и не снимает её с духа");
+        assertTrue(
+                VitalGate.blocksWork(boardTicket(ticketFor(result, mineId)), hungry.needs()),
+                "Обычная работа при живой нужде блокируется и снимается с духа");
         assertTrue(
                 round.refusal(boardTicket(ticketFor(result, mineId)), injured)
                         .orElse("")

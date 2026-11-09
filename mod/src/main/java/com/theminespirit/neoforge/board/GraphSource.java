@@ -223,8 +223,8 @@ public final class GraphSource {
             }
             String id = spirit.getUUID().toString();
             String doing = half.service().board().assignedTo(spirit.getUUID()).stream()
+                    .filter(ticket -> VitalGate.blocksWork(ticket, needs))
                     .map(BoardTicket::id)
-                    .filter(ticket -> !VitalGate.satisfies(ticket, needs))
                     .findFirst()
                     .orElse("");
             String task = half.plan().tasks().stream()
