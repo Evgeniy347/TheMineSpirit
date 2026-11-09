@@ -196,7 +196,6 @@ def test_life_coefficient_vector():
     print("OK: события жизни выводятся из порога graph.json, а не из константы Python")
 
 
-
 def test_food_need_band():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:

@@ -193,9 +193,14 @@ public record GraphState(
     }
 
     public GraphState withFacts(GraphFacts known) {
+        return withFacts(known, GraphLife.DEFAULTS);
+    }
+
+    public GraphState withFacts(GraphFacts known, GraphLife life) {
         Objects.requireNonNull(known, "Факты графа не могут быть null: пустые задают GraphFacts.empty()");
+        Objects.requireNonNull(life, "Формула жизни не может быть null: без неё слабого игрока не распознать");
         Set<String> derived = new LinkedHashSet<>(events);
-        derived.addAll(GraphDomainEvents.of(known, stage));
+        derived.addAll(GraphDomainEvents.of(known, stage, life));
         return new GraphState(
                 stock,
                 stage,

@@ -24,6 +24,35 @@ public final class GraphFailureMemory {
 
     private final Map<String, Entry> entries = new LinkedHashMap<>();
 
+    public record Saved(
+            String node, String target, @Nullable Need need, long lastTick, List<Long> ticks, int count) {
+        public Saved {
+            Objects.requireNonNull(node, "Узел сохранённого провала не может быть null: память адресная");
+            Objects.requireNonNull(
+                    target, "Цель сохранённого провала не может быть null: пустую задают пустой строкой");
+            if (count < 1 || count > MAX_COUNT) {
+                throw new IllegalArgumentException("Провалов " + count + " в сохранённой памяти: запись живёт "
+                        + "после хотя бы одного провала и не больше " + MAX_COUNT);
+            }
+            if (lastTick < 0) {
+                throw new IllegalArgumentException("Тик сохранённого провала " + lastTick
+                        + " отрицателен: время идёт вперёд, неизвестное не записывают");
+            }
+            ticks = List.copyOf(Objects.requireNonNull(
+                    ticks, "Тики сохранённых провалов не могут быть null: запись помнит хотя бы последний"));
+            if (ticks.isEmpty() || ticks.size() > MAX_TICKS) {
+                throw new IllegalArgumentException(
+                        "Тиков сохранённой памяти " + ticks.size() + ": от 1 до " + MAX_TICKS);
+            }
+            for (long tick : ticks) {
+                if (tick < 0) {
+                    throw new IllegalArgumentException(
+                            "Тик сохранённого провала " + tick + " отрицателен: время идёт вперёд");
+                }
+            }
+        }
+    }
+
     private record Entry(
             String node, String target, @Nullable Need need, long lastTick, List<Long> ticks, int count) {
         double weight(long now, double halfLife) {
@@ -116,6 +145,26 @@ public final class GraphFailureMemory {
         return unreachablePoints(now, DEFAULT_HALF_LIFE_TICKS);
     }
 
+    public List<Saved> saved() {
+        List<Saved> saved = new ArrayList<>(entries.size());
+        for (Entry entry : entries.values()) {
+            saved.add(new Saved(
+                    entry.node(), entry.target(), entry.need(), entry.lastTick(), entry.ticks(), entry.count()));
+        }
+        return List.copyOf(saved);
+    }
+
+    public void restore(List<Saved> saved) {
+        Objects.requireNonNull(saved, "Сохранённая память неудач не может быть null: пустую задают пустым списком");
+        entries.clear();
+        for (Saved fact : saved) {
+            entries.put(
+                    fact.node() + KEY_SEPARATOR + fact.target(),
+                    new Entry(fact.node(), fact.target(), fact.need(), fact.lastTick(), fact.ticks(), fact.count()));
+        }
+        trim();
+    }
+
     public boolean isEmpty() {
         return entries.isEmpty();
     }
@@ -138,8 +187,7 @@ public final class GraphFailureMemory {
         }
         List<GraphBlock> blocks = new ArrayList<>();
         targets.forEach((node, points) -> {
-            if (points.size() >= Math.max(1, minTargets)
-                    || repeated.getOrDefault(node, 0) >= Math.max(1, minTargets)) {
+            if (points.size() >= Math.max(1, minTargets) || repeated.getOrDefault(node, 0) >= Math.max(1, minTargets)) {
                 String point = points.iterator().next();
                 blocks.add(new GraphBlock(node, point, new GraphBlock.Path(point)));
             }

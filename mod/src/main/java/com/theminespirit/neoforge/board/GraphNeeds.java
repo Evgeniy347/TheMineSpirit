@@ -66,7 +66,9 @@ final class GraphNeeds {
     }
 
     private static @Nullable String madeItem(BoardTicket ticket) {
-        String prefix = ticket.id().startsWith("graph:make:") ? "graph:make:" : ticket.id().startsWith("supply_gather:") ? "supply_gather:" : null;
+        String prefix = ticket.id().startsWith("graph:make:")
+                ? "graph:make:"
+                : ticket.id().startsWith("supply_gather:") ? "supply_gather:" : null;
         if (prefix == null) {
             return null;
         }

@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardState;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.graph.GraphFailureMemory;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -27,7 +28,7 @@ public final class BoardStateStore extends SavedData {
     static final String TARGETS_KEY = "Targets";
 
     private static final String VERSION_KEY = "Version";
-    private static final int VERSION = 3;
+    private static final int VERSION = 4;
     private static final String ENTRIES_KEY = "Entries";
     private static final String LEDGER_KEY = "Ledger";
     private static final String BUILD_KEY = "Build";
@@ -49,6 +50,7 @@ public final class BoardStateStore extends SavedData {
 
     private BoardState state = BoardState.empty();
     private Map<String, TicketTarget> targets = Map.of();
+    private List<GraphFailureMemory.Saved> failures = List.of();
     private String build = "";
 
     public BoardStateStore() {}
@@ -82,6 +84,7 @@ public final class BoardStateStore extends SavedData {
                 version >= 2 ? BoardStateNbt.read(tag) : new BoardStateNbt.Parts(List.of(), List.of(), List.of());
         store.state = new BoardState(restored, ledger, parts.blocked(), parts.pauses(), parts.stuck());
         store.targets = version >= 3 ? BoardTargetsNbt.read(tag) : Map.of();
+        store.failures = version >= 4 ? BoardFailuresNbt.read(tag) : List.of();
         store.build = tag.getString(BUILD_KEY);
         return store;
     }
@@ -101,6 +104,7 @@ public final class BoardStateStore extends SavedData {
         tag.put(LEDGER_KEY, marks);
         BoardStateNbt.write(tag, state);
         tag.put(TARGETS_KEY, BoardTargetsNbt.write(targets));
+        tag.put(BoardFailuresNbt.KEY, BoardFailuresNbt.write(failures));
         tag.putString(BUILD_KEY, build);
         return tag;
     }
@@ -120,6 +124,18 @@ public final class BoardStateStore extends SavedData {
 
     public Map<String, TicketTarget> targets() {
         return targets;
+    }
+
+    public List<GraphFailureMemory.Saved> failures() {
+        return failures;
+    }
+
+    public void updateFailures(List<GraphFailureMemory.Saved> next) {
+        Objects.requireNonNull(next, "Память неудач не может быть null: пустую задают пустым списком");
+        if (!failures.equals(next)) {
+            failures = List.copyOf(next);
+            setDirty();
+        }
     }
 
     public void update(BoardState next) {
