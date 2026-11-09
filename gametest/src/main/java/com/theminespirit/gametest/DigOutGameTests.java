@@ -47,7 +47,8 @@ public final class DigOutGameTests {
                 helper,
                 List.of(
                         List.of(new BlockPos(2, POCKET, 5), new BlockPos(2, POCKET + 1, 5)),
-                        List.of(new BlockPos(5, POCKET, 5), new BlockPos(5, POCKET + 1, 5))));
+                        List.of(new BlockPos(5, POCKET, 5), new BlockPos(5, POCKET + 1, 5)),
+                        List.of(new BlockPos(8, TOP - 2, 8), new BlockPos(8, TOP - 1, 8))));
     }
 
     private static void pocket(GameTestHelper helper, List<List<BlockPos>> pockets) {

@@ -77,7 +77,7 @@ final class DigOutAction {
     private static void start(BoardService service, SpiritEntity spirit, BlockCoord goal) {
         service.detachForAction(spirit);
         TaskNode escape = new SequenceNode(List.of(
-                new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z())),
+                new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z(), "rescue", true)),
                 new ScriptCall("walk_careful", Map.of("x", goal.x(), "y", goal.y(), "z", goal.z()))));
         spirit.startTask(escape);
     }

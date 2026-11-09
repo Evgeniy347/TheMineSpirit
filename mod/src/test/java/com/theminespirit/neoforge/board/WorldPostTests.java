@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.observation.BlockCoord;
 import org.junit.jupiter.api.Test;
 
 class WorldPostTests {
@@ -33,5 +35,18 @@ class WorldPostTests {
                 WorldPost.room(9, 8),
                 "порция не растёт: иначе 95 world:backfill забивают доску, и вытеснение снимает "
                         + "repair:build_mine с причиной always");
+    }
+
+    @Test
+    void placedTarget_RepairOfPlacedBuilding_CarriesSchemeSlotAndWood() {
+        BlockCoord yard = new BlockCoord(0, 64, 0);
+        BlockCoord slot = new BlockCoord(10, 64, 20);
+        TicketTarget target = PlacedRepair.target(
+                slot, "schematics/well", "well", TicketTarget.at(yard).withWood("jungle"));
+
+        assertEquals("schematics/well", target.schemeFile(), "без схемы план BUILD_PLACED падает и останавливает граф");
+        assertEquals(slot, target.target(), "ремонт идёт в слот постройки, а не на рабочий двор");
+        assertEquals("well", target.building(), "задание помнит свою постройку плана");
+        assertEquals("jungle", target.wood(), "порода берётся из общей цели этапа");
     }
 }
