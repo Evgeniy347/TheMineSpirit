@@ -85,18 +85,10 @@ public final class BlockPlacer {
                     RefuseReason.CHUNK_NOT_LOADED,
                     "чанк с клеткой " + target.toShortString() + " не загружен: дух не грузит чанки ради стройки");
         }
-        BlockState current = level.getBlockState(target);
         boolean action = SchematicActions.isActionPlaced(blockId);
-        if (!action && !replaceable(current)) {
-            return new Refused(
-                    RefuseReason.OCCUPIED,
-                    "клетка " + target.toShortString() + " занята блоком " + BlockStates.idOf(current)
-                            + ": ставить некуда");
-        }
-        if (!livingEntities(level, target, spirit).isEmpty()) {
-            return new Refused(
-                    RefuseReason.OCCUPIED,
-                    "клетку " + target.toShortString() + " занимает живое существо: ставить в него нельзя");
+        Begin occupied = PlaceOccupancy.check(spirit, level, target, action);
+        if (occupied != null) {
+            return occupied;
         }
         BlockCoord feet = feet();
         BlockCoord cell = new BlockCoord(target.getX(), target.getY(), target.getZ());
@@ -163,10 +155,6 @@ public final class BlockPlacer {
         return level instanceof ServerLevel server
                 ? SettlementPlotStore.get(server).site().orElse(null)
                 : null;
-    }
-
-    private static boolean replaceable(BlockState state) {
-        return state.isAir() || state.canBeReplaced() || !state.getFluidState().isEmpty();
     }
 
     private static Begin farmland(SpiritEntity spirit, Level level, BlockPos target) {

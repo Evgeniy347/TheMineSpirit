@@ -912,6 +912,12 @@ class NavFuzzTests {
                 }
 
                 @Override
+                public boolean clear(int x, int y, int z) {
+                    Cell value = cellAt(x, y, z);
+                    return value == Cell.AIR || value == Cell.WATER;
+                }
+
+                @Override
                 public int surfaceY(int x, int z) {
                     if (x < 0 || x >= SIZE || z < 0 || z >= SIZE) {
                         return 1;

@@ -49,10 +49,14 @@ final class NavMoveCosts {
     }
 
     static void fall(NavContext context, int x, int y, int z, int dx, int dz, NavMoveResult out) {
-        fall(context, x, y, z, dx, dz, context.settings().maxFall(), out);
+        out.reset(x, y, z);
+        fall(context, dx, dz, context.settings().maxFall(), out);
     }
 
-    static void fall(NavContext context, int x, int y, int z, int dx, int dz, int groundMax, NavMoveResult out) {
+    static void fall(NavContext context, int dx, int dz, int groundMax, NavMoveResult out) {
+        int x = out.x;
+        int y = out.y;
+        int z = out.z;
         int nx = x + dx;
         int nz = z + dz;
         int max = groundMax;

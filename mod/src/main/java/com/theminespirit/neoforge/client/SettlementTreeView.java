@@ -19,6 +19,8 @@ final class SettlementTreeView {
     private static final String KEY = "theminespirit.tree.";
     private static final String CHECK = "\u2714";
 
+    record Viewpoint(int x, int y) {}
+
     private SettlementTreeView() {}
 
     static SettlementTree.@Nullable Node draw(
@@ -26,12 +28,12 @@ final class SettlementTreeView {
             Font font,
             SettlementTree model,
             BoardLayout.Rect inner,
-            double offsetX,
-            double offsetY,
-            int mouseX,
-            int mouseY) {
-        int left = inner.x() + SettlementTreeStyle.PAD + (int) Math.round(offsetX);
-        int top = inner.y() + SettlementTreeStyle.PAD + (int) Math.round(offsetY);
+            Viewpoint offset,
+            Viewpoint mouse) {
+        int mouseX = mouse.x();
+        int mouseY = mouse.y();
+        int left = inner.x() + SettlementTreeStyle.PAD + offset.x();
+        int top = inner.y() + SettlementTreeStyle.PAD + offset.y();
         drawLinks(graphics, model, left, top);
         SettlementTree.Node hovered = null;
         for (SettlementTree.Node node : model.nodes()) {

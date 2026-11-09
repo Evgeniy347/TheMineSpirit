@@ -26,6 +26,23 @@ class SurfaceDescentTests {
     };
 
     @Test
+    void path_StepUpUnderCeilingAboveHead_IsNotARoute() {
+        RouteWorld cell = (x, y, z) -> {
+            boolean pit = x == 0 && z == 0 && (y == 65 || y == 66);
+            boolean ledge = x == 1 && z == 0 && (y == 66 || y == 67);
+            return pit || ledge ? RouteCell.AIR : RouteCell.solid(1);
+        };
+
+        Optional<List<BlockCoord>> found =
+                SurfaceEscape.path(new BlockCoord(0, 65, 0), cell, at -> at.x() == 1 && at.y() == 66);
+
+        assertFalse(
+                found.isPresent(),
+                "потолок над головой не даёт подпрыгнуть на соседнюю ступень: дух считал себя вышедшим "
+                        + "и стоял на месте (spirit-1, -187,65,-514)");
+    }
+
+    @Test
     void path_StepDownUnderLowLintel_IsNotARoute() {
         RouteWorld cell = (x, y, z) -> {
             if (x == 1 && z == 0 && y <= 67 && y >= 65) {

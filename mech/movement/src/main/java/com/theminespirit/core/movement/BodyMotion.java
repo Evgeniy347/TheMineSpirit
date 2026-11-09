@@ -62,8 +62,7 @@ public final class BodyMotion {
             return fits(world, to) && supported(world, to);
         }
         if (dy == STEP_UP) {
-            return (standable(world, from) || water(world, from) || climbable(world, from))
-                    && headroom(world, from)
+            return (water(world, from) || climbable(world, from) || (standable(world, from) && headroom(world, from)))
                     && fits(world, to)
                     && supported(world, to);
         }

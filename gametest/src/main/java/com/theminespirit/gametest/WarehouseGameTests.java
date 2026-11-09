@@ -83,95 +83,110 @@ public final class WarehouseGameTests {
 
         helper.succeedWhen(() -> {
             run.assertStarted();
-            helper.assertTrue(
-                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "Склад уровня 1 обязан построиться целиком: статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет") + ", прогресс "
-                            + spirit.taskProgress().orElse(null));
-            int chests = 0;
-            int blocked = 0;
-            List<String> missing = new ArrayList<>();
-            for (Schematic.PlacedEntry entry : schematic.entries(absolute(helper, anchor))) {
-                if (!"minecraft:chest".equals(entry.block())) {
-                    continue;
-                }
-                chests++;
-                BlockPos pos = new BlockPos(
-                        entry.pos().x(), entry.pos().y(), entry.pos().z());
-                if (!helper.getLevel().getBlockState(pos).is(Blocks.CHEST)) {
-                    missing.add(pos.toShortString() + "="
-                            + helper.getLevel().getBlockState(pos).getBlock()
-                            + "@local("
-                            + (entry.pos().x() - helper.absolutePos(anchor).getX()) + ","
-                            + (entry.pos().y() - helper.absolutePos(anchor).getY()) + ","
-                            + (entry.pos().z() - helper.absolutePos(anchor).getZ()) + ")");
-                }
-                if (ChestBlock.isChestBlockedAt(helper.getLevel(), pos)) {
-                    blocked++;
-                }
-            }
-            helper.assertTrue(
-                    missing.isEmpty(),
-                    "Сундук схемы не поставлен: " + missing + "; статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", дух в "
-                            + spirit.blockPosition().toShortString() + ", сундуков в инвентаре "
-                            + BlockItems.countIn(spirit.getInventory(), "minecraft:chest"));
-            helper.assertTrue(
-                    chests == 18, "Склад уровня 1 обязан вмещать 18 блоков сундуков (9 двойных), фактически " + chests);
-            helper.assertTrue(
-                    blocked == 0,
-                    "Все сундуки склада, включая верхний, обязаны открываться: заблокировано " + blocked + " из "
-                            + chests);
+            assertWarehouseBuilt(helper, spirit, schematic, anchor);
             if (drain[0] == null) {
-                ServerLevel level = helper.getLevel();
-                BlockPos source = new BlockPos(10, 1, 4);
-                BlockPos warehouse = new BlockPos(13, 1, 4);
-                helper.setBlock(source, Blocks.CHEST);
-                helper.setBlock(warehouse, Blocks.CHEST);
-                PlacedBlocksData.get(level).markSpirit(helper.absolutePos(source));
-                ChestBlockEntity sourceChest = (ChestBlockEntity) level.getBlockEntity(helper.absolutePos(source));
-                sourceChest.setItem(0, new ItemStack(Items.DIRT, 5));
-                sourceChest.setItem(1, new ItemStack(Items.OAK_LOG, 3));
-                clearRegistry(level);
-                BlockPos absolute = helper.absolutePos(source);
-                BlockPos deposit = helper.absolutePos(warehouse);
-                ContainerSnapshot snapshot = new ContainerSnapshot(
-                        new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ()),
-                        List.of(new Stack("minecraft:dirt", 0, 5, 64), new Stack("minecraft:oak_log", 0, 3, 64)));
-                TaskNode plan = ChestPlans.demolish(
-                        snapshot,
-                        List.of(new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ())),
-                        new BlockCoord(deposit.getX(), deposit.getY(), deposit.getZ()));
-                drain[0] = SpiritRun.launch(helper, spirit, plan, SETTLE_TICKS);
-                sourcePos[0] = source;
-                warehousePos[0] = warehouse;
+                drainChest(helper, spirit, drain, sourcePos, warehousePos);
             }
-            helper.assertTrue(
-                    drain[0].started(),
-                    "снос сундука обязан начаться: дух в "
-                            + spirit.blockPosition().toShortString());
-            helper.assertTrue(
-                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "снос сундука обязан завершиться: статус "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
-                            + spirit.taskFailureReason().orElse("нет"));
-            ServerLevel level = helper.getLevel();
-            helper.assertTrue(
-                    level.getBlockState(helper.absolutePos(sourcePos[0])).isAir(),
-                    "сундук после выноса вещей обязан быть сломан, осталось "
-                            + level.getBlockState(helper.absolutePos(sourcePos[0])));
-            ChestBlockEntity warehouseChest =
-                    (ChestBlockEntity) level.getBlockEntity(helper.absolutePos(warehousePos[0]));
-            helper.assertTrue(
-                    count(warehouseChest, Items.DIRT) == 5,
-                    "вся грязь обязана оказаться в сундуке склада, фактически " + count(warehouseChest, Items.DIRT));
-            helper.assertTrue(
-                    count(warehouseChest, Items.OAK_LOG) == 3,
-                    "все брёвна обязаны оказаться в сундуке склада, фактически "
-                            + count(warehouseChest, Items.OAK_LOG));
+            assertDrainDone(helper, spirit, drain[0], sourcePos[0], warehousePos[0]);
             GameTestFixtures.finish(helper);
         });
+    }
+
+    private static void assertWarehouseBuilt(
+            GameTestHelper helper, SpiritEntity spirit, Schematic schematic, BlockPos anchor) {
+        helper.assertTrue(
+                spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                "Склад уровня 1 обязан построиться целиком: статус "
+                        + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                        + spirit.taskFailureReason().orElse("нет") + ", прогресс "
+                        + spirit.taskProgress().orElse(null));
+        int chests = 0;
+        int blocked = 0;
+        List<String> missing = new ArrayList<>();
+        for (Schematic.PlacedEntry entry : schematic.entries(absolute(helper, anchor))) {
+            if (!"minecraft:chest".equals(entry.block())) {
+                continue;
+            }
+            chests++;
+            BlockPos pos =
+                    new BlockPos(entry.pos().x(), entry.pos().y(), entry.pos().z());
+            if (!helper.getLevel().getBlockState(pos).is(Blocks.CHEST)) {
+                missing.add(pos.toShortString() + "="
+                        + helper.getLevel().getBlockState(pos).getBlock()
+                        + "@local("
+                        + (entry.pos().x() - helper.absolutePos(anchor).getX()) + ","
+                        + (entry.pos().y() - helper.absolutePos(anchor).getY()) + ","
+                        + (entry.pos().z() - helper.absolutePos(anchor).getZ()) + ")");
+            }
+            if (ChestBlock.isChestBlockedAt(helper.getLevel(), pos)) {
+                blocked++;
+            }
+        }
+        helper.assertTrue(
+                missing.isEmpty(),
+                "Сундук схемы не поставлен: " + missing + "; статус "
+                        + spirit.taskStatus().map(RunStatus::name).orElse("нет") + ", дух в "
+                        + spirit.blockPosition().toShortString() + ", сундуков в инвентаре "
+                        + BlockItems.countIn(spirit.getInventory(), "minecraft:chest"));
+        helper.assertTrue(
+                chests == 18, "Склад уровня 1 обязан вмещать 18 блоков сундуков (9 двойных), фактически " + chests);
+        helper.assertTrue(
+                blocked == 0,
+                "Все сундуки склада, включая верхний, обязаны открываться: заблокировано " + blocked + " из " + chests);
+    }
+
+    private static void drainChest(
+            GameTestHelper helper,
+            SpiritEntity spirit,
+            SpiritRun[] drain,
+            BlockPos[] sourcePos,
+            BlockPos[] warehousePos) {
+        ServerLevel level = helper.getLevel();
+        BlockPos source = new BlockPos(10, 1, 4);
+        BlockPos warehouse = new BlockPos(13, 1, 4);
+        helper.setBlock(source, Blocks.CHEST);
+        helper.setBlock(warehouse, Blocks.CHEST);
+        PlacedBlocksData.get(level).markSpirit(helper.absolutePos(source));
+        ChestBlockEntity sourceChest = (ChestBlockEntity) level.getBlockEntity(helper.absolutePos(source));
+        sourceChest.setItem(0, new ItemStack(Items.DIRT, 5));
+        sourceChest.setItem(1, new ItemStack(Items.OAK_LOG, 3));
+        clearRegistry(level);
+        BlockPos absolute = helper.absolutePos(source);
+        BlockPos deposit = helper.absolutePos(warehouse);
+        ContainerSnapshot snapshot = new ContainerSnapshot(
+                new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ()),
+                List.of(new Stack("minecraft:dirt", 0, 5, 64), new Stack("minecraft:oak_log", 0, 3, 64)));
+        TaskNode plan = ChestPlans.demolish(
+                snapshot,
+                List.of(new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ())),
+                new BlockCoord(deposit.getX(), deposit.getY(), deposit.getZ()));
+        drain[0] = SpiritRun.launch(helper, spirit, plan, SETTLE_TICKS);
+        sourcePos[0] = source;
+        warehousePos[0] = warehouse;
+    }
+
+    private static void assertDrainDone(
+            GameTestHelper helper, SpiritEntity spirit, SpiritRun drain, BlockPos source, BlockPos warehouse) {
+        helper.assertTrue(
+                drain.started(),
+                "снос сундука обязан начаться: дух в " + spirit.blockPosition().toShortString());
+        helper.assertTrue(
+                spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                "снос сундука обязан завершиться: статус "
+                        + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                        + spirit.taskFailureReason().orElse("нет"));
+        ServerLevel level = helper.getLevel();
+        helper.assertTrue(
+                level.getBlockState(helper.absolutePos(source)).isAir(),
+                "сундук после выноса вещей обязан быть сломан, осталось "
+                        + level.getBlockState(helper.absolutePos(source)));
+        ChestBlockEntity warehouseChest = (ChestBlockEntity) level.getBlockEntity(helper.absolutePos(warehouse));
+        helper.assertTrue(
+                count(warehouseChest, Items.DIRT) == 5,
+                "вся грязь обязана оказаться в сундуке склада, фактически " + count(warehouseChest, Items.DIRT));
+        helper.assertTrue(
+                count(warehouseChest, Items.OAK_LOG) == 3,
+                "все брёвна обязаны оказаться в сундуке склада, фактически " + count(warehouseChest, Items.OAK_LOG));
     }
 
     private static void clearRegistry(ServerLevel level) {

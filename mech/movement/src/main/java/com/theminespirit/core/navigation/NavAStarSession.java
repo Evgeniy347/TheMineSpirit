@@ -150,8 +150,7 @@ public final class NavAStarSession {
         }
         for (int[] direction : FALL_DIRECTIONS) {
             move.reset(current.x, current.y, current.z);
-            NavMoveCosts.fall(
-                    context, current.x, current.y, current.z, direction[0], direction[1], groundFall(current), move);
+            NavMoveCosts.fall(context, direction[0], direction[1], groundFall(current), move);
             relax(current, move);
             move.reset(current.x, current.y, current.z);
             NavMoveCosts.jump(context, current.x, current.y, current.z, direction[0], direction[1], move);

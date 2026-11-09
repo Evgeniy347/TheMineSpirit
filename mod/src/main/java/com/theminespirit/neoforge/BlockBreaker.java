@@ -192,14 +192,8 @@ public final class BlockBreaker {
                     RefuseReason.NO_SIGHT,
                     "блок " + target.toShortString() + " не виден из глаз: подойти или убрать мешающий блок");
         }
-        BlockProtection.Decision decision = switch (intent) {
-            case HARVEST, CHOP_HARVEST -> spirit.protectionGate().checkHarvest(target, targetState);
-            case DEMOLISH -> spirit.protectionGate().checkDemolish(target, targetState);
-            case REPAIR -> spirit.protectionGate().checkRepair(target, targetState);
-            case EXCAVATE -> spirit.protectionGate().checkExcavate(target, targetState);
-            case BREAK, CHOP -> spirit.protectionGate().checkBreakOrEscape(target, targetState, escaping, rescue);
-        };
-        if (decision instanceof BlockProtection.Refused refused) {
+        if (BreakProtection.check(spirit, intent, target, targetState, escaping, rescue)
+                instanceof BlockProtection.Refused refused) {
             return new Protected(refused.policy(), refused.reason());
         }
         pos = target.immutable();

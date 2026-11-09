@@ -9890,6 +9890,7 @@
       }
     },
     "hungry": {
+      "vital": true,
       "tasks": [
         {
           "id": "eat",
@@ -9969,6 +9970,7 @@
       ]
     },
     "tool_worn": {
+      "vital": true,
       "tasks": [
         {
           "id": "repair_tool",

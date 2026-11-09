@@ -23,6 +23,8 @@ import net.minecraft.world.level.block.state.BlockState;
 final class BuildPlanStart {
     record Prepared(BlockCoord supply, BuildPlanner.Start start, Map<String, Item> items) {}
 
+    record Supply(BlockCoord cell, Map<String, Integer> chest) {}
+
     private BuildPlanStart() {}
 
     static Prepared of(SpiritEntity spirit, SchematicSite site) {
@@ -68,6 +70,25 @@ final class BuildPlanStart {
             }
         });
         int materialSlots = materialSlots(spirit, materials);
+        Supply supply = supply(spirit, site, origin, items, inventory, required);
+        BuildPlanner.Start start = new BuildPlanner.Start(
+                done,
+                skip,
+                inventory,
+                supply.chest(),
+                BuildSupplyTrip.emptySlots(spirit) + materialSlots,
+                BuildSupplyTrip.junkSlots(spirit, site),
+                stacks(items));
+        return new Prepared(supply.cell(), start, Map.copyOf(items));
+    }
+
+    private static Supply supply(
+            SpiritEntity spirit,
+            SchematicSite site,
+            BlockCoord origin,
+            Map<String, Item> items,
+            Map<String, Integer> inventory,
+            Map<String, Integer> required) {
         BlockPos spiritPos = spirit.blockPosition();
         BlockCoord feet = new BlockCoord(spiritPos.getX(), spiritPos.getY(), spiritPos.getZ());
         Set<String> needed = needed(inventory, required);
@@ -112,17 +133,9 @@ final class BuildPlanStart {
         }
         boolean fetchNeeded = required.entrySet().stream()
                 .anyMatch(need -> inventory.getOrDefault(need.getKey(), 0) < need.getValue());
-        BlockCoord supply =
+        BlockCoord cell =
                 fetchNeeded ? relative(BuildSupplyPick.choose(feet, reachable), origin) : relative(feet, origin);
-        BuildPlanner.Start start = new BuildPlanner.Start(
-                done,
-                skip,
-                inventory,
-                chest,
-                BuildSupplyTrip.emptySlots(spirit) + materialSlots,
-                BuildSupplyTrip.junkSlots(spirit, site),
-                stacks(items));
-        return new Prepared(supply, start, Map.copyOf(items));
+        return new Supply(cell, chest);
     }
 
     private static int materialSlots(SpiritEntity spirit, Set<Item> materials) {
