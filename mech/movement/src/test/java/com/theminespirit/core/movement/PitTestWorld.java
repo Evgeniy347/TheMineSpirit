@@ -1,17 +1,11 @@
 package com.theminespirit.core.movement;
 
 import com.theminespirit.core.observation.BlockCoord;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 final class PitTestWorld implements PitExitPlanner.World {
     static final BlockCoord FEET = new BlockCoord(0, 64, 0);
@@ -45,31 +39,9 @@ final class PitTestWorld implements PitExitPlanner.World {
     }
 
     static PitTestWorld live() throws IOException {
-        List<String> lines;
-        try (InputStream stream = PitTestWorld.class.getResourceAsStream("/live/pit-warehouse-0611.live")) {
-            if (stream == null) {
-                throw new IllegalStateException("Нет живой фикстуры ямы: /live/pit-warehouse-0611.live");
-            }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-                lines = reader.lines().toList();
-            }
-        }
         PitTestWorld world = new PitTestWorld();
-        for (String line : lines) {
-            if (line.isBlank() || line.startsWith("#") || line.startsWith("feet")) {
-                continue;
-            }
-            StringTokenizer parts = new StringTokenizer(line);
-            if (parts.countTokens() != 4) {
-                throw new IllegalArgumentException("Строка живой фикстуры ямы не из четырёх полей: " + line);
-            }
-            world.set(
-                    new BlockCoord(
-                            Integer.parseInt(parts.nextToken()),
-                            Integer.parseInt(parts.nextToken()),
-                            Integer.parseInt(parts.nextToken())),
-                    PitExitPlanner.Kind.valueOf(parts.nextToken()));
-        }
+        LiveFixture.load(PitExitPlanner.Kind.class, "/live/pit-warehouse-0611.live")
+                .forEach(world::set);
         return world;
     }
 

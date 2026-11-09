@@ -11,7 +11,7 @@ public final class PitWalkOut {
     public static final int EXIT_RADIUS = 6;
     private static final int STEP_UP = 1;
     private static final int SAFE_DROP = 3;
-    private static final int SURFACE_CHECK_DISTANCE = 3;
+    private static final int SURFACE_REACH = EXIT_RADIUS;
     private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
     public interface World {
@@ -71,13 +71,21 @@ public final class PitWalkOut {
             return false;
         }
         for (int[] side : SIDES) {
-            int farX = x + SURFACE_CHECK_DISTANCE * side[0];
-            int farZ = z + SURFACE_CHECK_DISTANCE * side[1];
-            if (world.surfaceY(farX, farZ) <= y + SurfaceLevel.MARGIN) {
+            if (openSide(world, x, y, z, side)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static boolean openSide(World world, int x, int y, int z, int[] side) {
+        for (int step = 1; step <= SURFACE_REACH; step++) {
+            int surface = world.surfaceY(x + step * side[0], z + step * side[1]);
+            if (surface > y + SurfaceLevel.MARGIN) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static long key(int dx, int dz) {
