@@ -54,7 +54,7 @@ final class PitRescue {
     static Optional<PitExitPlanner.Plan> trapped(SpiritEntity spirit) {
         Level level = spirit.level();
         BlockPos feet = spirit.blockPosition();
-        if (top(level, feet.getX(), feet.getZ()) <= feet.getY()) {
+        if (top(level, feet.getX(), feet.getZ()) <= feet.getY() && walkOut(level, feet)) {
             return Optional.empty();
         }
         PitExitPlanner.Plan plan = PitExitPlanner.plan(

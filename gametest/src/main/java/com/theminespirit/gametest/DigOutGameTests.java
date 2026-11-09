@@ -168,6 +168,11 @@ public final class DigOutGameTests {
                                 + "спасения, иначе в постройке остаётся дыра (observe25 B2); в клетке "
                                 + planks.get(index) + " сейчас " + helper.getBlockState(planks.get(index)));
             }
+            SpiritEntity walker = spirits.get(0);
+            walker.getNavigation().moveTo(walker.getX() + 1, walker.getY(), walker.getZ(), 1.0);
+            helper.assertFalse(
+                    walker.getNavigation().isDone(),
+                    "соседняя клетка — настоящая цель шага: с точностью в блок дух считает её достигнутой и стоит");
             spirits.forEach(SpiritEntity::discard);
             GameTestFixtures.finish(helper, 16);
         });
