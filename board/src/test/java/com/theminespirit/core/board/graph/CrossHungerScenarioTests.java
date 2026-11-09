@@ -1,22 +1,21 @@
 package com.theminespirit.core.board.graph;
 
+import static com.theminespirit.core.board.graph.CrossActions.board;
 import static com.theminespirit.core.board.graph.CrossActions.boardTicket;
 import static com.theminespirit.core.board.graph.CrossActions.candidates;
 import static com.theminespirit.core.board.graph.CrossActions.id;
-import static com.theminespirit.core.board.graph.CrossActions.board;
-import static com.theminespirit.core.board.graph.CrossScene.stageOne;
-import static com.theminespirit.core.board.graph.CrossScene.facts;
-import static com.theminespirit.core.board.graph.CrossScene.spirit;
-import static com.theminespirit.core.board.graph.CrossScene.chest;
-import static com.theminespirit.core.board.graph.CrossScene.plan;
-import static com.theminespirit.core.board.graph.CrossScene.tickets;
-import static com.theminespirit.core.board.graph.CrossScene.ticketFor;
-import static com.theminespirit.core.board.graph.CrossScene.task;
-import static com.theminespirit.core.board.graph.CrossScene.ids;
-import static com.theminespirit.core.board.graph.CrossScene.named;
 import static com.theminespirit.core.board.graph.CrossScene.FED;
 import static com.theminespirit.core.board.graph.CrossScene.HUNGRY;
-
+import static com.theminespirit.core.board.graph.CrossScene.chest;
+import static com.theminespirit.core.board.graph.CrossScene.facts;
+import static com.theminespirit.core.board.graph.CrossScene.ids;
+import static com.theminespirit.core.board.graph.CrossScene.named;
+import static com.theminespirit.core.board.graph.CrossScene.plan;
+import static com.theminespirit.core.board.graph.CrossScene.spirit;
+import static com.theminespirit.core.board.graph.CrossScene.stageOne;
+import static com.theminespirit.core.board.graph.CrossScene.task;
+import static com.theminespirit.core.board.graph.CrossScene.ticketFor;
+import static com.theminespirit.core.board.graph.CrossScene.tickets;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
