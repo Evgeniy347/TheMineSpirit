@@ -31,7 +31,9 @@ final class BreakDestroy {
         if (level instanceof ServerLevel server) {
             BreakNotice.broken(server, brokenPos, broken, spirit, intent, ground);
         }
-        level.destroyBlock(brokenPos, false, spirit);
+        if (!SpiritBlocks.destroy((ServerLevel) spirit.level(), brokenPos, false, spirit, intent)) {
+            return new Result(false, "");
+        }
         spirit.hunger().onBlockBroken();
         if (dropsAllowed) {
             Block.dropResources(broken, level, brokenPos, blockEntity, spirit, usedTool);

@@ -16,7 +16,8 @@ final class BreakCheck {
             boolean reachLimited,
             boolean leavesPass,
             boolean escaping,
-            boolean rescue) {}
+            boolean rescue,
+            BreakRefusal refusals) {}
 
     private BreakCheck() {}
 
@@ -28,20 +29,23 @@ final class BreakCheck {
         boolean leavesPass = request.leavesPass();
         boolean escaping = request.escaping();
         boolean rescue = request.rescue();
+        BreakRefusal refusals = request.refusals();
         Level level = spirit.level();
         if (level.getChunkSource().getChunkNow(target.getX() >> 4, target.getZ() >> 4) == null) {
-            return new BlockBreaker.Refused(
+            return refusals.refused(
+                    target,
                     BlockBreaker.RefuseReason.CHUNK_NOT_LOADED,
                     "чанк с блоком " + target.toShortString() + " не загружен: дух не грузит чанки ради ломки");
         }
         BlockState targetState = level.getBlockState(target);
         if (targetState.isAir()) {
-            return new BlockBreaker.Refused(
-                    BlockBreaker.RefuseReason.AIR, "в " + target.toShortString() + " воздух: ломать нечего");
+            return refusals.refused(
+                    target, BlockBreaker.RefuseReason.AIR, "в " + target.toShortString() + " воздух: ломать нечего");
         }
         double hardness = targetState.getDestroySpeed(level, target);
         if (hardness < 0) {
-            return new BlockBreaker.Refused(
+            return refusals.refused(
+                    target,
                     BlockBreaker.RefuseReason.UNBREAKABLE,
                     "блок " + BreakNames.blockId(targetState) + " в " + target.toShortString() + " неразрушим: "
                             + hardness);
@@ -49,7 +53,8 @@ final class BreakCheck {
         if (reachLimited) {
             double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(target));
             if (distance > BlockBreaker.REACH) {
-                return new BlockBreaker.Refused(
+                return refusals.refused(
+                        target,
                         BlockBreaker.RefuseReason.OUT_OF_REACH,
                         "блок " + target.toShortString() + " дальше " + BlockBreaker.REACH + " от глаз (" + distance
                                 + "): подойти");
@@ -57,13 +62,14 @@ final class BreakCheck {
         }
         boolean chop = intent == BlockBreaker.Intent.CHOP || intent == BlockBreaker.Intent.CHOP_HARVEST;
         if (!chop && BreakSight.visible(spirit, target, leavesPass) != Visibility.CLEAR) {
-            return new BlockBreaker.Refused(
+            return refusals.refused(
+                    target,
                     BlockBreaker.RefuseReason.NO_SIGHT,
                     "блок " + target.toShortString() + " не виден из глаз: подойти или убрать мешающий блок");
         }
         if (BreakProtection.check(spirit, intent, target, targetState, escaping, rescue)
                 instanceof BlockProtection.Refused refused) {
-            return new BlockBreaker.Protected(refused.policy(), refused.reason());
+            return refusals.protectedBlock(target, refused.policy(), refused.reason());
         }
         return null;
     }

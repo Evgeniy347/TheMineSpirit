@@ -142,7 +142,7 @@ class BoardCaseFailureTests {
                 board.consecutiveFailures(SPIRIT_ONE, CASE),
                 "Счётчик провалов подряд доходит до предела: число в тесте — из production");
 
-        List<BoardLogEntry> journal = board.drainDetachments();
+        List<BoardLogEntry> journal = board.failures().drainDetachments();
         assertEquals(
                 1,
                 journal.size(),
@@ -155,7 +155,7 @@ class BoardCaseFailureTests {
                 SPIRIT_ONE.toString(),
                 journal.get(0).spirit(),
                 "Журнал называет духа, с которого снят кейс: без него разбор бесконечного цикла невозможен");
-        assertTrue(board.drainDetachments().isEmpty(), "Журнал отдаётся один раз: адаптер не пишет дубли");
+        assertTrue(board.failures().drainDetachments().isEmpty(), "Журнал отдаётся один раз: адаптер не пишет дубли");
 
         board.submit(ticket("first:after"));
         assertEquals(

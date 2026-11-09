@@ -61,7 +61,8 @@ final class FarmNetherWartScript implements ScriptInstance {
         }
         BlockPos crop = ground.above();
         if (!spirit.getInventory().removeItemType(Items.NETHER_WART, 1).isEmpty()) {
-            spirit.level().setBlockAndUpdate(crop, Blocks.NETHER_WART.defaultBlockState());
+            SpiritBlocks.place(
+                    (ServerLevel) spirit.level(), crop, Blocks.NETHER_WART.defaultBlockState(), spirit, "WART_PLANT");
             ticks = 0;
             phase = Phase.GROW;
             return ScriptStatus.RUNNING;
@@ -82,7 +83,8 @@ final class FarmNetherWartScript implements ScriptInstance {
             fail("в инвентаре нет песка душ для грядки");
             return false;
         }
-        spirit.level().setBlockAndUpdate(found, Blocks.SOUL_SAND.defaultBlockState());
+        SpiritBlocks.place(
+                (ServerLevel) spirit.level(), found, Blocks.SOUL_SAND.defaultBlockState(), spirit, "WART_GROUND");
         ground = found;
         return true;
     }
@@ -119,7 +121,7 @@ final class FarmNetherWartScript implements ScriptInstance {
         List<ItemStack> drops = Block.getDrops(spirit.level().getBlockState(crop), server, crop, null);
         BreakNotice.broken(
                 server, crop, spirit.level().getBlockState(crop), spirit, "FARM_HARVEST", PlotProtection.Ground.NONE);
-        spirit.level().removeBlock(crop, false);
+        SpiritBlocks.destroy((ServerLevel) spirit.level(), crop, false, spirit, "WART_HARVEST");
         for (ItemStack drop : drops) {
             ItemStack rest = spirit.getInventory().addItem(drop.copy());
             if (!rest.isEmpty()) {

@@ -54,7 +54,7 @@ class StuckDispatchLiveTests {
                 BoardOutcome.CLAIMED,
                 board.claim(fenceTicket.id(), stuck, clock[0]),
                 "Живой ticket " + fenceTicket.id() + " выдаётся застрявшему spirit-1, как в observe12");
-        board.fail(fenceTicket.id(), stock, stall);
+        board.fail(fenceTicket.id(), stock, stall, new GraphBlock.Path(""));
 
         List<DispatchRound.Candidate> candidates = new ArrayList<>();
         candidates.add(candidate(stuck, "spirit-1"));

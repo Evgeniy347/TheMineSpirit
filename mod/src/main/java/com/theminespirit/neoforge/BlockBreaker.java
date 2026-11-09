@@ -140,7 +140,8 @@ public final class BlockBreaker {
     Begin begin(BlockPos target, Intent intent, boolean reachLimited, boolean leavesPass) {
         cancel();
         this.intent = intent;
-        this.ground = groundFor(intent);
+        BreakRefusal refusals = new BreakRefusal(spirit, intent);
+        this.ground = BreakRefusal.groundFor(intent);
         if (escaping) {
             BlockPos feet = spirit.blockPosition();
             if (SelfRescue.mayBreakAtFeet(
@@ -150,7 +151,7 @@ public final class BlockBreaker {
             }
         }
         Begin refusal = BreakCheck.refusal(
-                new BreakCheck.Request(spirit, target, intent, reachLimited, leavesPass, escaping, rescue));
+                new BreakCheck.Request(spirit, target, intent, reachLimited, leavesPass, escaping, rescue, refusals));
         if (refusal != null) {
             return refusal;
         }
@@ -169,12 +170,13 @@ public final class BlockBreaker {
         forcedSlot = requestedSlot;
         choice = ToolChoice.best(options, reserve, MiningTables.repairTiers());
         if (ToolChoice.shouldRefuseForLackOfTool(choice, options)) {
-            return new Refused(RefuseReason.NEED_TOOL, BreakNames.needToolReason(targetState));
+            return refusals.refused(target, RefuseReason.NEED_TOOL, BreakNames.needToolReason(targetState));
         }
         boolean pickaxeBlock =
                 targetState.requiresCorrectToolForDrops() && targetState.is(BlockTags.MINEABLE_WITH_PICKAXE);
         if (ToolChoice.refusesHandDig(choice, options, pickaxeBlock, escaping)) {
-            return new Refused(
+            return refusals.refused(
+                    target,
                     RefuseReason.NEED_TOOL,
                     "нужна кирка для " + BreakNames.blockId(targetState)
                             + ": руками без дропа не копаем — кирки нет, дух не замурован");
@@ -282,14 +284,5 @@ public final class BlockBreaker {
             crackStage = NO_STAGE;
         }
         active = false;
-    }
-
-    private static PlotProtection.Ground groundFor(Intent intent) {
-        return switch (intent) {
-            case DEMOLISH -> PlotProtection.Ground.PLAN_DEMOLISH;
-            case REPAIR -> PlotProtection.Ground.REPAIR;
-            case EXCAVATE -> PlotProtection.Ground.PLAN_EXCAVATE;
-            case BREAK, HARVEST, CHOP, CHOP_HARVEST -> PlotProtection.Ground.NONE;
-        };
     }
 }

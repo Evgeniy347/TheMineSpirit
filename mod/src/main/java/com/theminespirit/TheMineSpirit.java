@@ -23,6 +23,7 @@ import com.theminespirit.neoforge.demo.DemoLifecycle;
 import com.theminespirit.neoforge.doors.DoorWatchService;
 import com.theminespirit.neoforge.experience.SpiritExperienceEvents;
 import com.theminespirit.neoforge.inventory.ContainerOpenService;
+import com.theminespirit.neoforge.log.LogLifecycle;
 import com.theminespirit.neoforge.movement.PathNetworkService;
 import com.theminespirit.neoforge.net.BoardViewChannel;
 import com.theminespirit.neoforge.net.BuildFingerprint;
@@ -66,6 +67,7 @@ public final class TheMineSpirit {
         ContainerOpenService.register();
         PolicyEvents.register(modContainer, modEventBus);
         RestLifecycle.register(NeoForge.EVENT_BUS);
+        LogLifecycle.register(NeoForge.EVENT_BUS);
         CoordinatorLifecycle.register(NeoForge.EVENT_BUS);
         BoardLifecycle.register(NeoForge.EVENT_BUS);
         DemoLifecycle.register(NeoForge.EVENT_BUS);

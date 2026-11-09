@@ -151,7 +151,7 @@ class BoardTests {
         String id = "first:clear_grounds";
         for (int attempt = 1; attempt <= BoardTuning.ticketFailLimit(); attempt++) {
             UUID holder = new UUID(0, attempt);
-            board.submit(ticket(id, BoardCase.CLEAR_GROUNDS, now[0], List.of()));
+            board.submit(ticketWithResources(id, BoardCase.CLEAR_GROUNDS, now[0], List.of(), Map.of("dirt", 9)));
             assertEquals(
                     BoardOutcome.CLAIMED,
                     board.claim(id, holder, now[0]),
@@ -168,7 +168,7 @@ class BoardTests {
                         + "не должен повторяться каждую пересборку");
         assertEquals(
                 BoardOutcome.DUPLICATE,
-                board.submit(ticket(id, BoardCase.CLEAR_GROUNDS, now[0], List.of())),
+                board.submit(ticketWithResources(id, BoardCase.CLEAR_GROUNDS, now[0], List.of(), Map.of("dirt", 9))),
                 "Заблокированное задание не переиздаётся с теми же условиями: иначе предел провалов "
                         + "ничего не ограничивает");
         assertEquals(
@@ -928,11 +928,11 @@ class BoardTests {
             UUID holder = new UUID(0, attempt);
             board.submit(blocked);
             board.claim(blocked.id(), holder, now[0]);
-            board.fail(blocked.id());
+            GraphBlock.Need need = attempt == BoardTuning.ticketFailLimit() ? new GraphBlock.Item("dirt", 1) : null;
+            board.fail(blocked.id(), new StockView(Map.of()), null, need);
             board.prune(now[0]);
             now[0] += Math.max(BoardTuning.failBackoffTicks(), board.casePauseTicks(holder, BoardCase.CRAFT_FURNACE));
         }
-
         assertTrue(board.blocked(blocked.id()), "Сцена: шаг первых шагов заблокирован провалами подряд");
         List<String> removed = board.resetForNewRules();
 

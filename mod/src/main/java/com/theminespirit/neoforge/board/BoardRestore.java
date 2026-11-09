@@ -23,7 +23,8 @@ final class BoardRestore {
             @Nullable BoardStateStore store,
             Map<String, TicketTarget> targets,
             BoardTicketDesk tickets,
-            JournalService journal) {
+            JournalService journal,
+            BoardSources sources) {
         if (store != null) {
             BoardState restored = store.state();
             BoardState byGraph = restored.withoutLegacy(Set.of(GraphTickets.PREFIX));
@@ -59,7 +60,7 @@ final class BoardRestore {
                 store.markBuild(build);
                 store.update(board.snapshot());
             }
-            BoardTargetsNbt.restore(store, board, targets);
+            BoardTargetsNbt.restore(store, board, targets, sources);
         }
         journal.restore(board.ledger());
     }

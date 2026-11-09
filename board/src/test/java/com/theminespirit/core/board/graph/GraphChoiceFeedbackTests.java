@@ -3,9 +3,12 @@ package com.theminespirit.core.board.graph;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.GraphBlock;
+import com.theminespirit.core.board.GraphBlock.Need;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 class GraphChoiceFeedbackTests {
@@ -50,22 +53,26 @@ class GraphChoiceFeedbackTests {
     }
 
     @Test
-    void failureBackoff_OtherCause_SoftPenalty() {
+    void failureBackoff_UnknownNeed_NoPenalty() {
         GraphWorld world = GraphWorld.settled();
         double calm = new GraphChoiceRules(GRAPH, world.state()).value("more_return_before_night", 1.0, false);
         double other = new GraphChoiceRules(
                         GRAPH,
-                        failedCause(world, "more_return_before_night", "0,64,0", 2, GraphFeedback.Cause.OTHER)
+                        failedCause(world, "more_return_before_night", "0,64,0", 2, null)
                                 .state())
                 .value("more_return_before_night", 1.0, false);
         double unreachable = new GraphChoiceRules(
                         GRAPH, failedMany(dusk(), 1, 2).state())
                 .value("more_return_before_night", 1.0, false);
 
-        assertTrue(other < calm, "Прочий провал даёт мягкий штраф, а не полное прощение: " + other + "/" + calm);
+        assertEquals(
+                calm,
+                other,
+                1e-9,
+                "Провал без типизированной нужды не штрафует узел: причина едет типом, а не догадкой");
         assertTrue(
                 other > unreachable,
-                "Прочий провал мягче доказанной недостижимости двух целей: " + other + " против " + unreachable);
+                "Провал без нужды мягче доказанной недостижимости двух целей: " + other + " против " + unreachable);
     }
 
     @Test
@@ -74,7 +81,7 @@ class GraphChoiceFeedbackTests {
         double calm = new GraphChoiceRules(GRAPH, world.state()).value("more_return_before_night", 1.0, false);
         double penalized = new GraphChoiceRules(
                         GRAPH,
-                        failedCause(world, "more_return_before_night", "0,64,0", 5, GraphFeedback.Cause.NO_PATH)
+                        failedCause(world, "more_return_before_night", "0,64,0", 5, new GraphBlock.Path("0,64,0"))
                                 .state())
                 .value("more_return_before_night", 1.0, false);
 
@@ -92,7 +99,7 @@ class GraphChoiceFeedbackTests {
         double calm = new GraphChoiceRules(GRAPH, world.state()).value("more_return_before_night", 1.0, false);
         double penalized = new GraphChoiceRules(
                         GRAPH,
-                        failedCause(world, "more_return_before_night", "0,64,0", 5, GraphFeedback.Cause.CHUNK)
+                        failedCause(world, "more_return_before_night", "0,64,0", 5, null)
                                 .state())
                 .value("more_return_before_night", 1.0, false);
 
@@ -110,7 +117,7 @@ class GraphChoiceFeedbackTests {
         double calm = new GraphChoiceRules(GRAPH, world.state()).value("more_return_before_night", 1.0, false);
         double penalized = new GraphChoiceRules(
                         GRAPH,
-                        failedCause(world, "more_return_before_night", "0,64,0", 5, GraphFeedback.Cause.NO_MATERIAL)
+                        failedCause(world, "more_return_before_night", "0,64,0", 5, new GraphBlock.Item("dirt", 1))
                                 .state())
                 .value("more_return_before_night", 1.0, false);
 
@@ -129,7 +136,7 @@ class GraphChoiceFeedbackTests {
         double calm = new GraphChoiceRules(GRAPH, world.state()).value("craft_jungle_planks", 1.0, false);
         double failed = new GraphChoiceRules(
                         GRAPH,
-                        failedCause(world, "craft_jungle_planks", "0,64,0", 5, GraphFeedback.Cause.NO_MATERIAL)
+                        failedCause(world, "craft_jungle_planks", "0,64,0", 5, new GraphBlock.Item("dirt", 1))
                                 .state())
                 .value("craft_jungle_planks", 1.0, false);
 
@@ -214,14 +221,14 @@ class GraphChoiceFeedbackTests {
         List<GraphFeedback.Failure> failures = new ArrayList<>();
         for (int index = 0; index < targets; index++) {
             failures.add(new GraphFeedback.Failure(
-                    "more_return_before_night", index + ",64,0", count, GraphFeedback.Cause.NO_PATH, 100));
+                    "more_return_before_night", index + ",64,0", count, new GraphBlock.Path(index + ",64,0"), 100));
         }
         return world.facts(world.facts.withFeedback(
                 new GraphFeedback(GraphFeedback.Clock.unknown(), GraphFeedback.Player.none(), failures)));
     }
 
     private static GraphWorld failedCause(
-            GraphWorld world, String node, String target, int count, GraphFeedback.Cause cause) {
+            GraphWorld world, String node, String target, int count, @Nullable Need cause) {
         GraphFeedback.Failure failure = new GraphFeedback.Failure(node, target, count, cause, 100);
         return world.facts(world.facts.withFeedback(
                 new GraphFeedback(GraphFeedback.Clock.unknown(), GraphFeedback.Player.none(), List.of(failure))));
@@ -229,7 +236,7 @@ class GraphChoiceFeedbackTests {
 
     private static GraphWorld failedNode(GraphWorld world, String node, int count) {
         GraphFeedback.Failure failure =
-                new GraphFeedback.Failure(node, "0,64,0", count, GraphFeedback.Cause.NO_PATH, 100);
+                new GraphFeedback.Failure(node, "0,64,0", count, new GraphBlock.Path("0,64,0"), 100);
         return world.facts(world.facts.withFeedback(
                 new GraphFeedback(GraphFeedback.Clock.unknown(), GraphFeedback.Player.none(), List.of(failure))));
     }

@@ -30,12 +30,14 @@ public final class BoardService {
     final BoardTicketDesk tickets;
     private final Board board;
     private final JournalService journal;
+    final @Nullable BoardStateStore store;
     private final CraterProfiles craters = new CraterProfiles(64);
-    private final Map<String, TicketTarget> targets = new HashMap<>();
+    final Map<String, TicketTarget> targets = new HashMap<>();
     private final BoardHerdDesk herd;
     private final BoardSupplyDesk supply;
     private final BoardDispatchDesk dispatch;
     private final BoardCycle cycle;
+    private final BoardBuildMeter meter = new BoardBuildMeter();
 
     public BoardService(
             Board board, HerdCycles animals, StockReader stockReader, BoardSources sources, JournalService journal) {
@@ -53,6 +55,7 @@ public final class BoardService {
         this.sources = Objects.requireNonNull(sources, "sources не может быть null: источники событий доски");
         this.journal =
                 Objects.requireNonNull(journal, "journal не может быть null: без него переходы не попадут в журнал");
+        this.store = store;
         this.herd = new BoardHerdDesk(
                 board, Objects.requireNonNull(animals, "animals не может быть null: циклы животных по видам"), targets);
         this.supply = new BoardSupplyDesk(
@@ -61,15 +64,14 @@ public final class BoardService {
                 targets);
         this.dispatch = new BoardDispatchDesk(this, board, targets);
         this.tickets = new BoardTicketDesk(this, board, targets);
-        this.cycle =
-                new BoardCycle(this, board, targets, dispatch, tickets, supply, sources, herd, notices, journal, store);
-        BoardRestore.restore(board, store, targets, tickets, journal);
+        this.cycle = new BoardCycle(this, board, targets, dispatch, tickets, supply, sources, herd, notices, journal);
+        BoardRestore.restore(board, store, targets, tickets, journal, sources);
     }
 
     public static BoardService create(ServerLevel level) {
         LongSupplier now = level::getGameTime;
         JournalService journal = JournalService.inWorld(level.getServer());
-        Board board = TransitionEvents.create(now, journal);
+        Board board = TransitionEvents.create(now, journal, level);
         return new BoardService(
                 board,
                 new HerdCycles(board),
@@ -99,17 +101,16 @@ public final class BoardService {
         cycle.rebuild(level, now);
     }
 
-    public void close() {
-        journal.flushAll();
-        persist();
+    public BoardBuildMeter meter() {
+        return meter;
     }
 
-    private void persist() {
-        cycle.persist();
+    public void close() {
+        BoardPersistence.close(this);
     }
 
     void persistBoard() {
-        persist();
+        BoardPersistence.persistBoard(this);
     }
 
     Map<String, Long> supplyClosed() {
@@ -146,7 +147,7 @@ public final class BoardService {
             dispatch.submitted();
             targets.put(ticket.id(), target);
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
-            persist();
+            BoardPersistence.persist(this);
         } else if (outcome == BoardOutcome.DUPLICATE) {
             targets.putIfAbsent(ticket.id(), target);
         }
@@ -157,7 +158,7 @@ public final class BoardService {
         BoardOutcome outcome = board.submit(ticket);
         if (outcome == BoardOutcome.ACCEPTED) {
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
-            persist();
+            BoardPersistence.persist(this);
         }
         return outcome;
     }
@@ -219,8 +220,8 @@ public final class BoardService {
         return tickets.resetForNewRules();
     }
 
-    void flushBlockNotes() {
-        notices.blocks(board, journal, stock(), board.now());
+    void flushBlockNotes(ServerLevel level) {
+        notices.blocks(level, board, journal, stock(), board.now());
     }
 
     public TicketTarget targetOf(String ticketId, List<SpiritEntity> spirits) {

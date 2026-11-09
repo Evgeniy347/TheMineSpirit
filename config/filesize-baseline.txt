@@ -1,5 +1,5 @@
 core/board/AnimalLifecycleTests.java	303
-core/board/Board.java	677
+core/board/Board.java	670
 core/board/BoardConfigTests.java	401
 core/board/BoardLogTests.java	422
 core/board/BoardTests.java	966

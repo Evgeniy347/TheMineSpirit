@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
-import org.jspecify.annotations.Nullable;
 
 final class BoardCycle {
     private final BoardService service;
@@ -27,7 +26,6 @@ final class BoardCycle {
     private final BoardHerdDesk herd;
     private final BoardNotices notices;
     private final JournalService journal;
-    private final @Nullable BoardStateStore store;
     private Set<String> liveCauses = Set.of();
     private long lastRebuild = -1;
     private long lastActivity;
@@ -42,8 +40,7 @@ final class BoardCycle {
             BoardSources sources,
             BoardHerdDesk herd,
             BoardNotices notices,
-            JournalService journal,
-            @Nullable BoardStateStore store) {
+            JournalService journal) {
         this.service = service;
         this.board = board;
         this.targets = targets;
@@ -54,7 +51,6 @@ final class BoardCycle {
         this.herd = herd;
         this.notices = notices;
         this.journal = journal;
-        this.store = store;
     }
 
     void tick(ServerLevel level, long now) {
@@ -72,7 +68,10 @@ final class BoardCycle {
     }
 
     void rebuild(ServerLevel level, long now) {
+        service.meter().rebuildStart();
+        service.meter().pruneStart();
         board.prune(now, liveCauses);
+        service.meter().pruneEnd();
         Set<String> alive = new HashSet<>();
         for (BoardTicket ticket : board.all()) {
             alive.add(ticket.id());
@@ -98,16 +97,11 @@ final class BoardCycle {
         dispatch.reconcile(spirits, true);
         dispatch.releaseDeadHolders(level, spirits, now);
         dispatch.dropAbsentOwners(spirits, now);
-        flushBlockNotes();
+        flushBlockNotes(level);
         lastRebuild = now;
         journal.flush(JournalService.FLUSH_BUDGET);
-        persist();
-    }
-
-    void persist() {
-        if (store != null) {
-            BoardTargetsNbt.persist(store, board.snapshot(), targets);
-        }
+        BoardPersistence.persist(service);
+        service.meter().rebuildEnd();
     }
 
     private Set<String> liveDropCauses(ServerLevel level) {
@@ -122,7 +116,7 @@ final class BoardCycle {
         return supply.stock();
     }
 
-    private void flushBlockNotes() {
-        notices.blocks(board, journal, stock(), board.now());
+    private void flushBlockNotes(ServerLevel level) {
+        notices.blocks(level, board, journal, stock(), board.now());
     }
 }

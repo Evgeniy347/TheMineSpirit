@@ -50,7 +50,8 @@ class StuckStageLiveTests {
         board.fail(
                 house.id(),
                 stock,
-                "застрял в (-177.5, 69.0, -517.5): петля переносов: цель -178,69,-518, клетки у неё уже пробовали (3)");
+                "застрял в (-177.5, 69.0, -517.5): петля переносов: цель -178,69,-518, клетки у неё уже пробовали (3)",
+                new GraphBlock.Path(""));
 
         List<DispatchRound.Candidate> candidates = List.of(candidate(spirit, "spirit-3"));
         Optional<DispatchRound.Candidate> immediate = new DispatchRound(board, clock[0]).choose(mine, candidates);
@@ -98,10 +99,13 @@ class StuckStageLiveTests {
                     BoardOutcome.CLAIMED,
                     board.claim(house.id(), UUID.randomUUID(), clock[0]),
                     "Попытка " + (attempt + 1) + " выдана духу");
-            assertTrue(board.fail(house.id(), stock, reasons.get(attempt)), "Попытка " + (attempt + 1) + " провалена");
+            GraphBlock.Need need =
+                    attempt + 1 == BoardTuning.ticketFailLimit() ? new GraphBlock.Item("netherite_ingot", 1) : null;
+            assertTrue(
+                    board.fail(house.id(), stock, reasons.get(attempt), need),
+                    "Попытка " + (attempt + 1) + " провалена");
             clock[0] += BoardTuning.caseFailPauseCapTicks();
         }
-        long blockedAt = clock[0];
         assertEquals(
                 BoardStatus.BLOCKED,
                 board.statusOf(house.id()).orElse(null),
@@ -135,17 +139,6 @@ class StuckStageLiveTests {
         assertTrue(
                 card != null && card.contains("заблокировано"),
                 "Карточка доски называет причину паузы после серии провалов: " + card);
-
-        clock[0] = blockedAt + BoardTuning.caseFailPauseCapTicks();
-        board.claimable(stock, clock[0]);
-        assertEquals(
-                BoardStatus.PENDING,
-                board.statusOf(house.id()).orElse(null),
-                "По окончании паузы блокировка снимается, и задание снова идёт в очередь");
-        assertEquals(
-                BoardOutcome.CLAIMED,
-                board.claim(house.id(), UUID.randomUUID(), clock[0]),
-                "После паузы задание снова выдаётся, а не висит вечно");
     }
 
     @Test

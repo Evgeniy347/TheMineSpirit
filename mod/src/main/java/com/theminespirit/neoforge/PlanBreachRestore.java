@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.neoforge.policy.PlanBreachData;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
@@ -50,7 +51,7 @@ public final class PlanBreachRestore {
                         distance);
                 continue;
             }
-            String id = breach.blockId();
+            String id = EarthCover.restoreBlock(breach.blockId());
             BlockPlacer.Begin begin = placer.begin(cell, BlockStates.stateFor(id), id);
             if (begin instanceof BlockPlacer.Started) {
                 data.clear(cell);

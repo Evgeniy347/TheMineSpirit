@@ -98,7 +98,12 @@ class GraphBaseWorldsTests {
         assertTrue(
                 firstAxe < 0 || firstWood < firstAxe,
                 "Топор не должен ждать себя: первая рубка " + firstWood + ", топор " + firstAxe);
-        assertTrue(steps.size() <= 120, "Пустой старт без топора зациклился: " + steps.size() + " заданий");
+        assertTrue(
+                outcome.finished(),
+                "Пустой старт без топора обязан дойти до последнего этапа, а не зациклиться: " + outcome.steps()
+                        + " заданий, " + outcome.stuck());
+        assertTrue(
+                outcome.steps() <= LIMIT, "Пустой старт без топора не уложился в предел решений: " + outcome.steps());
         assertTrue(
                 steps.stream().anyMatch(task -> task.contains("pickaxe")),
                 "Пустой старт всё равно доходит до инструмента: " + steps);

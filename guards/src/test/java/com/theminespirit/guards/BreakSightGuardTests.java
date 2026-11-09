@@ -21,6 +21,7 @@ class BreakSightGuardTests {
     private static final String BREAKER = "BlockBreaker.java";
     private static final String CHECK = "BreakCheck.java";
     private static final String DESTROY = "BreakDestroy.java";
+    private static final String SPIRIT_POINT = "SpiritBlocks.java";
 
     @Test
     void productionSources_BreakWithoutSight_AreReported() {
@@ -119,7 +120,10 @@ class BreakSightGuardTests {
         List<String> found = new ArrayList<>();
         sources.forEach((path, text) -> {
             String name = path.getFileName().toString();
-            if (!BREAKER.equals(name) && !DESTROY.equals(name) && !text.contains("BreakSight.visible(")) {
+            if (!BREAKER.equals(name)
+                    && !DESTROY.equals(name)
+                    && !SPIRIT_POINT.equals(name)
+                    && !text.contains("BreakSight.visible(")) {
                 collect(found, path, text, DIRECT_DESTROY, "destroyBlock(");
                 if (!path.toString().replace('\\', '/').contains("/demo/")) {
                     collect(found, path, text, CLEAR_AIR, "setBlock(AIR)");

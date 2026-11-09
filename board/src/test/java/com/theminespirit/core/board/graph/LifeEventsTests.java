@@ -90,6 +90,19 @@ class LifeEventsTests {
         assertFalse(events.contains("life_threat_player"), "Здоровый игрок без угроз не поднимает жизнь: " + events);
     }
 
+    @Test
+    void domainEvents_WeakThreshold_LifeComesFromGraphData() {
+        GraphFacts facts = GraphFacts.empty().withPlayers(List.of(player(9.0F, 20)));
+        GraphLife strict = new GraphLife(1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 16.0, 200, 0.5, 6);
+
+        assertFalse(
+                GraphDomainEvents.of(facts, 1).contains("life_threat_player"),
+                "По умолчанию слабым считается игрок ниже 0.35 здоровья: 0.45 — ещё не жизнь");
+        assertTrue(
+                GraphDomainEvents.of(facts, 1, strict).contains("life_threat_player"),
+                "Порог слабого игрока берётся из данных графа: 0.45 ниже 0.5 поднимает жизнь");
+    }
+
     private static GraphFacts.Player player(float health, int food) {
         return new GraphFacts.Player("Steve", AT, health, 20.0F, food);
     }

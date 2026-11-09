@@ -213,8 +213,9 @@ final class BoardSettlementDesk {
         stall.forget(spirit.getUUID());
         issuedGenerations.remove(ticket.id());
         spirit.cancelTask();
-        host.sources.graphFailure(ticket, targets.get(ticket.id()), reason, board.now());
-        board.fail(ticket.id(), host.stock(), reason);
+        var need = GraphNeeds.of(board, ticket, targets.get(ticket.id()), spirit, host.stock(), board.now());
+        host.sources.graphFailure(ticket, targets.get(ticket.id()), need, board.now());
+        board.fail(ticket.id(), host.stock(), reason, need);
     }
 
     private void resume(SpiritEntity spirit, BoardTicket ticket, List<SpiritEntity> spirits) {
@@ -270,11 +271,12 @@ final class BoardSettlementDesk {
         } else {
             String failure =
                     verdict != null ? verdict : spirit.taskFailureReason().orElse(null);
-            host.sources.graphFailure(ticket, targets.get(ticket.id()), failure, board.now());
-            board.fail(ticket.id(), host.stock(), failure);
+            var need = GraphNeeds.of(board, ticket, targets.get(ticket.id()), spirit, host.stock(), board.now());
+            host.sources.graphFailure(ticket, targets.get(ticket.id()), need, board.now());
+            board.fail(ticket.id(), host.stock(), failure, need);
             incidents.failed(spirit, ticket, targets.get(ticket.id()), why, board.now());
-            board.drainDetachments().forEach(host.journal()::recordEntry);
-            host.flushBlockNotes();
+            board.failures().drainDetachments().forEach(host.journal()::recordEntry);
+            host.flushBlockNotes((ServerLevel) spirit.level());
             if (ticket.boardCase() == BoardCase.CAPTURE_ANIMAL) {
                 host.captureFailed(ticket.id());
             }
