@@ -1,8 +1,7 @@
 package com.theminespirit.core.board.graph;
 
-import com.theminespirit.core.board.StuckCause;
+import com.theminespirit.core.board.GraphBlock.Need;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
@@ -51,47 +50,11 @@ public record GraphFeedback(Clock clock, Player player, List<Failure> failures) 
         }
     }
 
-    public enum Cause {
-        NO_PATH,
-        NOT_REACHED,
-        NO_MATERIAL,
-        CHUNK,
-        OTHER;
-
-        public static Cause of(@Nullable String reason) {
-            if (reason == null || reason.isBlank()) {
-                return OTHER;
-            }
-            String text = reason.toLowerCase(Locale.ROOT);
-            if (text.contains("чанк") || text.contains("chunk") || text.contains("не загружен")) {
-                return CHUNK;
-            }
-            if (StuckCause.noPath(reason)) {
-                return NO_PATH;
-            }
-            if (text.contains("не дошёл")
-                    || text.contains("не дошел")
-                    || text.contains("застрял")
-                    || text.contains("стоянк")
-                    || text.contains("преград")) {
-                return NOT_REACHED;
-            }
-            if (text.contains("нет материал")
-                    || text.contains("не хватает")
-                    || text.contains("нет предмет")
-                    || text.contains("материал")
-                    || text.contains("инструмент")) {
-                return NO_MATERIAL;
-            }
-            return OTHER;
-        }
-    }
-
-    public record Failure(String node, String target, int count, Cause cause, long lastTick, double weight) {
+    public record Failure(
+            String node, String target, int count, @Nullable Need need, long lastTick, double weight) {
         public Failure {
             Objects.requireNonNull(node, "Узел провала не может быть null: по нему граф помнит неудачу");
             Objects.requireNonNull(target, "Цель провала не может быть null: неизвестную задают пустой строкой");
-            Objects.requireNonNull(cause, "Причина провала не может быть null: неопознанную задают OTHER");
             if (count < 1) {
                 throw new IllegalArgumentException(
                         "Провалов " + count + ": запись памяти заводится только после хотя бы одного провала");
@@ -106,8 +69,8 @@ public record GraphFeedback(Clock clock, Player player, List<Failure> failures) 
             }
         }
 
-        public Failure(String node, String target, int count, Cause cause, long lastTick) {
-            this(node, target, count, cause, lastTick, count);
+        public Failure(String node, String target, int count, @Nullable Need need, long lastTick) {
+            this(node, target, count, need, lastTick, count);
         }
     }
 }

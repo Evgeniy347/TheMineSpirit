@@ -128,7 +128,6 @@ final class GraphChoiceRules {
         GraphChoice tuning = graph.costs().choice();
         boolean penalized = aggregate.targets().size() >= Math.ceil(tuning.failureTargets());
         double penalty = penalized ? Math.min(aggregate.unreachable(), FAILURE_CAP) : 0.0;
-        penalty += Math.min(aggregate.soft() * tuning.failureSoft(), FAILURE_CAP);
         return new FailureStats(penalty, penalized);
     }
 
@@ -141,10 +140,8 @@ final class GraphChoiceRules {
                     continue;
                 }
                 FailureAggregate aggregate = built.getOrDefault(failure.node(), FailureAggregate.EMPTY);
-                if (GraphFailureMemory.unreachable(failure.cause())) {
+                if (GraphFailureMemory.unreachable(failure.need())) {
                     built.put(failure.node(), aggregate.unreachable(failure.weight(), failure.target()));
-                } else if (failure.cause() == GraphFeedback.Cause.OTHER) {
-                    built.put(failure.node(), aggregate.soft(failure.weight()));
                 }
             }
             known = built;
@@ -153,23 +150,19 @@ final class GraphChoiceRules {
         return known;
     }
 
-    private record FailureAggregate(double unreachable, double soft, Set<String> targets) {
-        static final FailureAggregate EMPTY = new FailureAggregate(0.0, 0.0, Set.of());
+    private record FailureAggregate(double unreachable, Set<String> targets) {
+        static final FailureAggregate EMPTY = new FailureAggregate(0.0, Set.of());
 
         FailureAggregate unreachable(double weight, String target) {
             Set<String> next = new HashSet<>(targets);
             next.add(target);
-            return new FailureAggregate(unreachable + weight, soft, Set.copyOf(next));
-        }
-
-        FailureAggregate soft(double weight) {
-            return new FailureAggregate(unreachable, soft + weight, targets);
+            return new FailureAggregate(unreachable + weight, Set.copyOf(next));
         }
 
         FailureAggregate merge(FailureAggregate other) {
             Set<String> next = new HashSet<>(targets);
             next.addAll(other.targets);
-            return new FailureAggregate(unreachable + other.unreachable, soft + other.soft, Set.copyOf(next));
+            return new FailureAggregate(unreachable + other.unreachable, Set.copyOf(next));
         }
     }
 

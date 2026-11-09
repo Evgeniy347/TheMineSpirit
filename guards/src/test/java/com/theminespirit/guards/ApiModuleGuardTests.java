@@ -20,7 +20,6 @@ class ApiModuleGuardTests {
     private static final List<String> ALLOWED_PREFIXES = List.of("java.", "com.fasterxml.", "org.jspecify.");
     private static final List<String> CONTRACTS = List.of(
             "core/board/BoardCase.java",
-            "core/board/StuckCause.java",
             "core/board/ConfigStamp.java",
             "core/board/Point.java",
             "core/board/ToolsConfig.java",

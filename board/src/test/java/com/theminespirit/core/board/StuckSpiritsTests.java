@@ -130,7 +130,7 @@ class StuckSpiritsTests {
         StuckSpirits stuck = new StuckSpirits();
         stuck.see(SPIRIT, AT, 100);
         stuck.mark(SPIRIT, 140, "провал движения");
-        stuck.mark(SPIRIT, 160, "застрял: маршрут не найден");
+        stuck.mark(SPIRIT, 160, "застрял: маршрут не найден", true);
 
         assertTrue(
                 stuck.of(SPIRIT, 140 + BoardTuning.STUCK_TTL_TICKS - 1)

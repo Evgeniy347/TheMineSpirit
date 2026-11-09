@@ -68,7 +68,7 @@ class BoardBlockTests {
                 board.claim(ID, spirit(limit + 1), now[0]),
                 "Заблокированное задание не выдаётся даже другому духу: условие не изменилось");
 
-        List<BoardLogEntry> journal = board.drainBlocks();
+        List<BoardLogEntry> journal = board.failures().drainBlocks();
         assertEquals(1, journal.size(), "Блокировка пишется в журнал ровно один раз");
         assertEquals(BoardLog.Event.BLOCKED, journal.get(0).event(), "Событие журнала — BLOCKED");
         assertTrue(
@@ -77,28 +77,21 @@ class BoardBlockTests {
         assertTrue(
                 journal.get(0).modifiers().contains("missing=dirt:9"),
                 "Причина в журнале называет нехватку: " + journal.get(0).modifiers());
-        assertTrue(board.drainBlocks().isEmpty(), "Запись отдаётся один раз: адаптер не пишет дубли");
+        assertTrue(board.failures().drainBlocks().isEmpty(), "Запись отдаётся один раз: адаптер не пишет дубли");
     }
 
     @Test
-    void fail_SameStuckPointTwice_BlockedWithoutBurningLimit() {
+    void fail_TypedItemNeed_BlocksImmediately() {
         long[] now = {0};
         Board board = new Board(() -> now[0]);
-        String stuck = "застрял в (-175.3, 67.0, -487.5)";
-        for (int attempt = 1; attempt <= 2; attempt++) {
-            if (attempt > 1) {
-                board.prune(now[0]);
-                now[0] += BoardTuning.failBackoffTicks();
-            }
-            board.submit(ticket());
-            board.claim(ID, spirit(attempt), now[0]);
-            board.fail(ID, new StockView(Map.of()), stuck);
-        }
+        board.submit(ticket());
+        board.claim(ID, spirit(1), now[0]);
+        board.fail(ID, new StockView(Map.of()), "нет материала", new GraphBlock.Item("dirt", 9));
 
         assertTrue(
                 board.blocked(ID),
-                "Тот же «застрял» в той же точке у второго духа — дело места, а не духа: задание блокируется сразу, "
-                        + "а не сжигает " + BoardTuning.ticketFailLimit() + " попыток (INC-63)");
+                "Типизированная нужда блокирует задание сразу, а не сжигает " + BoardTuning.ticketFailLimit()
+                        + " попыток");
     }
 
     @Test
@@ -122,7 +115,7 @@ class BoardBlockTests {
         long[] now = {0};
         Board board = new Board(() -> now[0]);
         String stuck = "застрял в (-175.3, 67.0, -487.5)";
-        for (int attempt = 1; attempt <= 2; attempt++) {
+        for (int attempt = 1; attempt <= BoardTuning.ticketFailLimit(); attempt++) {
             if (attempt > 1) {
                 board.prune(now[0]);
                 now[0] += BoardTuning.failBackoffTicks();
@@ -132,7 +125,7 @@ class BoardBlockTests {
             board.fail(ID, new StockView(Map.of()), stuck);
         }
 
-        BoardLogEntry blocked = board.drainBlocks().get(0);
+        BoardLogEntry blocked = board.failures().drainBlocks().get(0);
 
         assertTrue(
                 blocked.modifiers().stream().anyMatch(modifier -> modifier.contains(stuck)),
@@ -215,7 +208,7 @@ class BoardBlockTests {
             board.fail(ID, new StockView(Map.of("dirt", 5)));
         }
         assertTrue(board.blocked(ID), "Подготовка: задание заблокировано пределом провалов");
-        board.drainBlocks();
+        board.failures().drainBlocks();
 
         board.claimable(new StockView(Map.of("dirt", 2)), now[0]);
 
@@ -225,7 +218,8 @@ class BoardBlockTests {
                 "Нехватка выросла (4 → 7), а условия задания не изменились: разблокировка гнала духа в тот же "
                         + "тупик, в отчёте это переиздание first:build_mine с новым createdAt и снова 5 провалов");
         assertTrue(
-                board.drainBlocks().isEmpty(), "Без улучшения запасов нет события UNBLOCKED: причина блокировки та же");
+                board.failures().drainBlocks().isEmpty(),
+                "Без улучшения запасов нет события UNBLOCKED: причина блокировки та же");
     }
 
     @Test
@@ -243,7 +237,7 @@ class BoardBlockTests {
             board.fail(ID);
         }
         assertTrue(board.blocked(ID), "Подготовка: задание заблокировано пределом провалов");
-        board.drainBlocks();
+        board.failures().drainBlocks();
 
         List<BoardTicket> ready = board.claimable(new StockView(Map.of("dirt", 9)), now[0]);
         assertTrue(
@@ -255,7 +249,7 @@ class BoardBlockTests {
                 "Разблокированное задание ждёт исполнителя, а не остаётся BLOCKED");
         assertEquals(0, board.ticketFailures(ID), "Разблокировка начинает серию провалов заново");
 
-        List<BoardLogEntry> journal = board.drainBlocks();
+        List<BoardLogEntry> journal = board.failures().drainBlocks();
         assertEquals(1, journal.size(), "Снятие блокировки пишется в журнал ровно один раз");
         assertEquals(BoardLog.Event.UNBLOCKED, journal.get(0).event(), "Событие журнала — UNBLOCKED");
         assertTrue(

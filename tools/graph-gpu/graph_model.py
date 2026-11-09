@@ -772,6 +772,7 @@ class Graph:
                 "push": dict(template["push"]),
                 "advice": list(template["advice"]),
                 "life": bool(template["life"]),
+                "vital": bool(template.get("vital", False)),
             }
 
     @classmethod
@@ -884,6 +885,7 @@ class State:
         self.distances = dict(data.get("distances") or {})
         self.stations = dict(data.get("stations") or {})
         self.orders = dict(data.get("orders") or {})
+        self.blocks = list(data.get("blocks") or [])
         self.facts = dict(data.get("facts") or {})
         self.spirit_facts = {k: dict(v) for k, v in (self.facts.get("spirits") or {}).items()}
         self.threats = list(self.facts.get("threats") or [])
@@ -964,6 +966,7 @@ class State:
             "stations": self.stations,
             "orders": self.orders,
             "facts": self.facts,
+            "blocks": self.blocks,
         })
 
     def spirits(self):
@@ -1050,6 +1053,7 @@ class Planner:
         self.advice = []
         self._sourced = {}
         self._failure_index = None
+        self.blocked = {}
 
     @staticmethod
     def threshold(item, state):
@@ -1530,7 +1534,99 @@ class Planner:
         self.roots()
         self.events()
         self.orders()
+        self.apply_blocks()
         self.standing()
+
+    def apply_blocks(self):
+        if not self.state.blocks:
+            return
+        scores = self.flow.solve()
+        for block in self.state.blocks:
+            need = block.get("need") or {}
+            if self.satisfied(need):
+                continue
+            reason = self.block_text(need)
+            self.blocked[block.get("node")] = reason
+            kind = need.get("kind")
+            if kind == "impossible":
+                self.notices.setdefault(block.get("node"), {
+                    "building": block.get("node"), "reason": "невозможно: " + reason})
+                continue
+            if kind == "item" and not self.graph.is_group(need.get("item"))                     and not self.graph.producers(need.get("item")):
+                missing = "нет источника " + str(need.get("item")) + " в данных графа: нужда "                           + str(need.get("count")) + " не снимется ни добычей, ни крафтом"
+                self.blocked[block.get("node")] = missing
+                self.notices.setdefault(block.get("node"), {
+                    "building": block.get("node"), "reason": "невозможно: " + missing})
+                continue
+            node = block.get("node")
+            self.push_need(node, need, max(1.0, scores.get(node, self.declared(node))))
+
+    def satisfied(self, need):
+        kind = need.get("kind")
+        if kind == "item":
+            return self.count(need.get("item")) >= int(need.get("count", 0))
+        if kind == "tool":
+            spirit = need.get("spirit") or ""
+            rank = int(need.get("rank", -1))
+            return (self.state.best_tier(need.get("tool")) if not spirit
+                    else self.state.tier(spirit, need.get("tool"))) >= rank
+        if kind == "building":
+            return self.state.built(need.get("building")) == BUILT
+        if kind == "holder":
+            known = self.state.spirit_facts.get(need.get("spirit"))
+            if known is None:
+                return True
+            return (not known.get("stuck", False)) if need.get("stuck", False) else known.get("activity") is None
+        return False
+
+    def push_need(self, source, need, amount):
+        kind = need.get("kind")
+        if kind == "item":
+            if need.get("item") != source:
+                self.push(source, need.get("item"), amount)
+        elif kind == "tool":
+            spirit = need.get("spirit") or ""
+            if not spirit:
+                self.push_tool(source, need.get("tool"), amount)
+            else:
+                self.push(source, TOOL + need.get("tool") + AT + spirit, amount)
+        elif kind == "building":
+            node = BUILDING + need.get("building")
+            if node != source:
+                self.push(source, node, amount)
+        elif kind == "holder" and need.get("stuck", False):
+            self.push(source, "rescue", amount)
+
+    def declared(self, node):
+        if node.startswith(BUILDING):
+            building = self.graph.buildings.get(node[len(BUILDING):])
+            return 1 if building is None else max(1, building.base)
+        item = self.graph.items.get(node)
+        if item is not None:
+            return max(1, item.base)
+        return max(1, self.graph.max_priority // 2)
+
+    @staticmethod
+    def block_text(need):
+        kind = need.get("kind")
+        if kind == "item":
+            return "нужно " + str(need.get("item")) + " ×" + str(need.get("count"))
+        if kind == "tool":
+            return "нужен инструмент " + str(need.get("tool")) + " тира " + str(need.get("rank"))                    + ("" if not need.get("spirit") else " у " + str(need.get("spirit")))
+        if kind == "building":
+            return "нужна постройка " + str(need.get("building"))
+        if kind == "path":
+            return "нужен путь к " + str(need.get("point"))
+        if kind == "holder":
+            return ("застрял держатель " if need.get("stuck") else "занят держатель ") + str(need.get("spirit"))
+        if kind == "impossible":
+            return "нет источника " + str(need.get("node"))
+        return "блокировка без причины"
+
+    def blocked_reason(self, key):
+        at = key.find(AT)
+        base = key if at < 0 else key[:at]
+        return self.blocked.get(key, self.blocked.get(base))
 
     def apply_edges(self, scores):
         changed = False
@@ -1565,6 +1661,9 @@ class Planner:
             value = raw * self.graph.costs.travel_factor(self.travel_ticks(key))
             value = self.choice(key, value, repeat)
             task = self.task(key, value)
+            reason = self.blocked_reason(key)
+            if reason is not None:
+                task = dict(task, feasible=False, blocked=reason)
             tasks.append(task)
             building = self.station(key)
             if building is not None and task["feasible"]:
@@ -1638,12 +1737,10 @@ class Planner:
             if entry is None:
                 entry = [0.0, 0.0, set()]
                 index[node] = entry
-            cause = failure.get("cause", "OTHER")
-            if cause in ("NO_PATH", "NOT_REACHED"):
+            need = failure.get("need")
+            if need is not None and "point" in need:
                 entry[0] += weight
                 entry[2].add(failure.get("target", ""))
-            elif cause == "OTHER":
-                entry[1] += weight
         self._failure_index = index
         return index
 
@@ -1663,7 +1760,6 @@ class Planner:
         tuning = self.graph.costs.choice
         penalized = len(targets) >= math.ceil(tuning.failureTargets)
         penalty = min(unreachable, 3.0) if penalized else 0.0
-        penalty += min(soft * tuning.failureSoft, 3.0)
         return penalized, penalty
 
     def way_of(self, key):

@@ -784,11 +784,24 @@ def test_more7_inputs():
     print("OK: входы области graphmore7 учитываются в выборе")
 
 
+def test_block_feedback():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    for index, world in enumerate(sim_gpu.failure_worlds(graph)):
+        outcome = sim_gpu.run(world, limit=4000)
+        assert outcome["repeat_blocked"] == 0, \
+            "Заблокированная задача поставлена повторно в мире " + str(index) + ": " + str(outcome)
+        assert outcome["key_raised"], \
+            "Ключевая задача не поднята выше прежнего приоритета в мире " + str(index) + ": " + str(outcome)
+        assert outcome["other_work"] > 0, \
+            "Прочая работа простаивает при блокировке в мире " + str(index) + ": " + str(outcome)
+    print("OK: блокировка не повторяется, ключ поднят, прочая работа идёт")
+
+
 def test_baseline_trail():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     outcome = sim_gpu.run(sim_gpu.baselines(graph)[0], limit=4000)
-    assert outcome["steps"] == 88 and outcome["ticks"] == 59680, \
-        "Пустой мир обязан повторить Java (88 шагов, 59 680 тиков), а не решение линейной системы: " \
+    assert outcome["steps"] == 1043 and outcome["ticks"] == 197660, \
+        "Пустой мир обязан повторить Java (1043 шага, 197 660 тиков), а не решение линейной системы: " \
         + str((outcome["steps"], outcome["ticks"]))
     print("OK: пустой мир совпадает с Java (расходящийся поток решается итерациями)")
 
@@ -1119,8 +1132,8 @@ def test_failure_memory():
     def failures(world, entries):
         world.with_facts({"feedback": {"failures": [
             {"node": "more_return_before_night", "target": target, "count": count,
-             "cause": cause, "lastTick": 100}
-            for target, count, cause in entries]}})
+             "need": need, "lastTick": 100}
+            for target, count, need in entries]}})
         return world
 
     def priority_of(world):
@@ -1129,45 +1142,45 @@ def test_failure_memory():
 
     calm = dusk()
     calm_priority = priority_of(calm)
-    one = failures(dusk(), [("0,64,0", 5, "NO_PATH")])
+    one = failures(dusk(), [("0,64,0", 5, {"point": "0,64,0"})])
     assert priority_of(one) == calm_priority, \
         "Python: один недоступный ствол не штрафует рубку везде: %s/%s" % (
             priority_of(one), calm_priority)
 
-    many = failures(dusk(), [("0,64,0", 3, "NO_PATH"), ("8,64,8", 3, "NOT_REACHED")])
+    many = failures(dusk(), [("0,64,0", 3, {"point": "0,64,0"}), ("8,64,8", 3, {"point": "8,64,8"})])
     assert priority_of(many) < calm_priority, \
         "Python: провал разных целей снижает вес узла: %s/%s" % (priority_of(many), calm_priority)
 
     faded = dusk()
     faded.with_facts({"feedback": {"failures": [
         {"node": "more_return_before_night", "target": target, "count": 1, "weight": 0.1,
-         "cause": "NO_PATH", "lastTick": 100}
+         "need": {"point": target}, "lastTick": 100}
         for target in ("0,64,0", "8,64,8")]}})
     assert priority_of(many) < priority_of(faded) <= calm_priority, \
         "Python: затухший штраф слабее свежего и не превышает спокойный вес: %s/%s/%s" % (
             priority_of(many), priority_of(faded), calm_priority)
 
-    chunk = failures(dusk(), [("0,64,0", 5, "CHUNK")])
+    chunk = failures(dusk(), [("0,64,0", 5, None)])
     assert priority_of(chunk) == calm_priority, \
         "Python: незагруженный чанк не штрафует узел: %s/%s" % (priority_of(chunk), calm_priority)
-    material = failures(dusk(), [("0,64,0", 5, "NO_MATERIAL")])
+    material = failures(dusk(), [("0,64,0", 5, {"item": "dirt", "count": 1})])
     assert priority_of(material) == calm_priority, \
         "Python: нет материала — нехватка снабжения, а не штраф узла: %s/%s" % (
             priority_of(material), calm_priority)
-    other = failures(dusk(), [("0,64,0", 2, "OTHER")])
-    assert calm_priority > priority_of(other) > priority_of(many), \
-        "Python: прочий провал штрафует мягче доказанной недостижимости: %s/%s/%s" % (
-            priority_of(other), priority_of(many), calm_priority)
+    other = failures(dusk(), [("0,64,0", 2, None)])
+    assert priority_of(other) == calm_priority, \
+        "Python: провал без нужды не штрафует узел: %s/%s" % (
+            priority_of(other), calm_priority)
 
     calm_ticks = next(t["ticks"] for t in calm.plan()["tasks"]
                       if t["id"] == "more_return_before_night")
-    far_one = failures(dusk(farTrip=5.0), [("0,64,0", 1, "NO_PATH")])
+    far_one = failures(dusk(farTrip=5.0), [("0,64,0", 1, {"point": "0,64,0"})])
     far_one_ticks = next(t["ticks"] for t in far_one.plan()["tasks"]
                          if t["id"] == "more_return_before_night")
     assert far_one_ticks == calm_ticks, \
         "Python: одна недоступная цель не удлиняет дорогу всему узлу: %s/%s" % (
             far_one_ticks, calm_ticks)
-    far_many = failures(dusk(farTrip=5.0), [("0,64,0", 1, "NO_PATH"), ("8,64,8", 1, "NO_PATH")])
+    far_many = failures(dusk(farTrip=5.0), [("0,64,0", 1, {"point": "0,64,0"}), ("8,64,8", 1, {"point": "8,64,8"})])
     far_many_ticks = next(t["ticks"] for t in far_many.plan()["tasks"]
                           if t["id"] == "more_return_before_night")
     assert far_many_ticks == 2200, \
@@ -1355,6 +1368,7 @@ if __name__ == "__main__":
         test_more4_inputs()
         test_more7_nodes()
         test_more7_inputs()
+        test_block_feedback()
         test_baseline_trail()
         test_audit_inputs()
         test_event_scaling()

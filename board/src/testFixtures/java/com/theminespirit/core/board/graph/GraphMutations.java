@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.graph.GraphFacts.Position;
 import com.theminespirit.core.board.graph.GraphFacts.Spirit;
 import com.theminespirit.core.board.graph.GraphSiteFacts.StageReqs;
@@ -27,7 +28,7 @@ final class GraphMutations {
     }
 
     static List<GraphWorld> simulationBases() {
-        return baselines().subList(1, 5);
+        return baselines();
     }
 
     static List<Mutation> curated() {
@@ -242,21 +243,16 @@ final class GraphMutations {
             if (GraphWorld.GRAPH.way(node).isEmpty()) {
                 continue;
             }
-            all.add(new Mutation(
-                    "неудача " + node + " NO_PATH x2",
-                    world -> failure(world, node, GraphFeedback.Cause.NO_PATH, 2, 2)));
-            all.add(new Mutation(
-                    "неудача " + node + " CHUNK", world -> failure(world, node, GraphFeedback.Cause.CHUNK, 4, 2)));
+            all.add(new Mutation("неудача " + node + " NO_PATH x2", world -> failure(world, node, null, 2, 2)));
+            all.add(new Mutation("неудача " + node + " CHUNK", world -> failure(world, node, null, 4, 2)));
             all.add(new Mutation(
                     "неудача " + node + " NO_MATERIAL",
-                    world -> failure(world, node, GraphFeedback.Cause.NO_MATERIAL, 4, 2)));
-            all.add(new Mutation(
-                    "неудача " + node + " OTHER", world -> failure(world, node, GraphFeedback.Cause.OTHER, 3, 2)));
+                    world -> failure(world, node, new GraphBlock.Item("dirt", 1), 4, 2)));
+            all.add(new Mutation("неудача " + node + " OTHER", world -> failure(world, node, null, 3, 2)));
         }
     }
 
-    private static GraphWorld failure(
-            GraphWorld world, String node, GraphFeedback.Cause cause, int count, int targets) {
+    private static GraphWorld failure(GraphWorld world, String node, GraphBlock.Need cause, int count, int targets) {
         GraphWorld copy = world.copy();
         List<GraphFeedback.Failure> failures =
                 new ArrayList<>(copy.facts.feedback().failures());
