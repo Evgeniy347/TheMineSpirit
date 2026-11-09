@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -68,6 +69,33 @@ class BoardEventsJournalTests {
                 "FAILED в board-log обязан назвать причину провала: сейчас modifiers="
                         + failed.get(0).modifiers()
                         + ", и причину приходится искать в latest.log (наблюдение 6, лог 4)");
+    }
+
+    @Test
+    void prune_CompletedActivity_DropsTicketButKeepsDoneEvent() {
+        List<BoardLog.Event> events = new ArrayList<>();
+        Board board = new Board(() -> 1000, (event, ticket, holder, tick) -> events.add(event));
+        BoardTicket ticket = new BoardTicket(
+                "activity_unload_test",
+                BoardCase.ACTIVITY_UNLOAD,
+                Optional.empty(),
+                50,
+                0,
+                1,
+                "activity:test",
+                List.of(),
+                Map.of());
+
+        board.submit(ticket);
+        board.claim("activity_unload_test", SPIRIT, 1000);
+        board.complete("activity_unload_test");
+        int removed = board.prune(2000, Set.of());
+
+        assertEquals(1, removed, "Завершённая работа-занятие обязана уходить с доски, иначе она растёт за сутки");
+        assertEquals(0, board.all().size(), "После prune завершённых занятий на доске не остаётся");
+        assertTrue(
+                events.contains(BoardLog.Event.DONE),
+                "История завершённого задания обязана уйти в журнал и task_events до prune: сама доска её уже не хранит");
     }
 
     @Test

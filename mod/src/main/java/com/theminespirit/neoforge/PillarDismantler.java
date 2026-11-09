@@ -14,7 +14,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 final class PillarDismantler {
@@ -74,7 +73,7 @@ final class PillarDismantler {
             if (level instanceof ServerLevel server) {
                 BreakNotice.broken(server, pos, state, spirit, "PILLAR_DOWN", PlotProtection.Ground.NONE);
             }
-            level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+            SpiritBlocks.destroy((ServerLevel) spirit.level(), pos, false, spirit, "PILLAR_DOWN");
             SpiritGesture.workOn(spirit, pos);
             unmark(pos);
             if (!Items.AIR.equals(item)) {

@@ -9,6 +9,7 @@ import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.script.ContainerTarget;
 import com.theminespirit.core.script.TransferParams;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.log.SpiritWorldLog;
 import java.util.List;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -71,6 +72,7 @@ public final class WithdrawScript extends ContainerTask {
     @Override
     protected ScriptStatus finish(int moved, TransferRunner.Shortage shortage) {
         Container current = container;
+        SpiritWorldLog.itemMove(spirit, "take", params.item(), moved, containerPos);
         LOGGER.info(
                 "[withdraw] {}: контейнер{} — свободно {} из {} слотов, перенесено {}, решение: {}",
                 spirit.displayName(),

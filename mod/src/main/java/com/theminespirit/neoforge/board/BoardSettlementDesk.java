@@ -213,8 +213,9 @@ final class BoardSettlementDesk {
         stall.forget(spirit.getUUID());
         issuedGenerations.remove(ticket.id());
         spirit.cancelTask();
-        host.sources.graphFailure(ticket, targets.get(ticket.id()), reason, board.now());
-        board.fail(ticket.id(), host.stock(), reason);
+        var need = GraphNeeds.of(board, ticket, targets.get(ticket.id()), spirit, host.stock(), board.now());
+        host.sources.graphFailure(ticket, targets.get(ticket.id()), need, board.now());
+        board.fail(ticket.id(), host.stock(), reason, need);
     }
 
     private void resume(SpiritEntity spirit, BoardTicket ticket, List<SpiritEntity> spirits) {
@@ -261,17 +262,21 @@ final class BoardSettlementDesk {
                 case CAPTURE_ANIMAL -> host.completeCapture(ticket.id());
                 case BUILD_PEN -> host.completePen(ticket.id());
                 case LURE_ANIMAL -> host.completeLure(host.speciesFor(ticket));
-                case RESCUE_SPIRIT -> incidents.rescued(spirit, ticket);
+                case RESCUE_SPIRIT -> {
+                    board.stuck().release(spirit.getUUID(), board.now(), "спасение " + ticket.id() + " выполнено");
+                    incidents.rescued(spirit, ticket);
+                }
                 default -> {}
             }
         } else {
             String failure =
                     verdict != null ? verdict : spirit.taskFailureReason().orElse(null);
-            host.sources.graphFailure(ticket, targets.get(ticket.id()), failure, board.now());
-            board.fail(ticket.id(), host.stock(), failure);
+            var need = GraphNeeds.of(board, ticket, targets.get(ticket.id()), spirit, host.stock(), board.now());
+            host.sources.graphFailure(ticket, targets.get(ticket.id()), need, board.now());
+            board.fail(ticket.id(), host.stock(), failure, need);
             incidents.failed(spirit, ticket, targets.get(ticket.id()), why, board.now());
-            board.drainDetachments().forEach(host.journal()::recordEntry);
-            host.flushBlockNotes();
+            board.failures().drainDetachments().forEach(host.journal()::recordEntry);
+            host.flushBlockNotes((ServerLevel) spirit.level());
             if (ticket.boardCase() == BoardCase.CAPTURE_ANIMAL) {
                 host.captureFailed(ticket.id());
             }

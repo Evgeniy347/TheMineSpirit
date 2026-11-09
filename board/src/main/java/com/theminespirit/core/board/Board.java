@@ -35,6 +35,7 @@ public final class Board {
     private final WaitNotes waitNotes = new WaitNotes();
     private final HoldBook holds = new HoldBook();
     private final BlockedBook blocked;
+    private final BoardFailureDesk failures;
     private final BoardAssignments assignments;
     private final CasePauseBook casePauses = new CasePauseBook();
     private final StuckSpirits stuckSpirits = new StuckSpirits();
@@ -56,6 +57,8 @@ public final class Board {
         this.assignments = new BoardAssignments(tickets, statuses, claimAssignees, nowTicks);
         this.blocked = new BlockedBook(
                 statuses, tickets, claimAssignees, ticketFailures, lastFailReasons, failHistory, blockNotes);
+        this.failures =
+                new BoardFailureDesk(blocked, tickets, statuses, claimAssignees, stuckSpirits, blockNotes, detachments);
     }
 
     public long now() {
@@ -164,6 +167,7 @@ public final class Board {
     public List<BoardTicket> claimable(StockView stock, long now) {
         Objects.requireNonNull(stock, "stock не может быть null: гейт без снимка запасов не проверить");
         BoardTiming.require(now);
+        releaseStuckHolders(now);
         unblockChanged(stock, now);
         refreshGateStatuses(stock);
         List<BoardTicket> ready = new ArrayList<>();
@@ -267,6 +271,10 @@ public final class Board {
     }
 
     public boolean fail(String ticketId, StockView stock, @Nullable String reason) {
+        return fail(ticketId, stock, reason, null);
+    }
+
+    public boolean fail(String ticketId, StockView stock, @Nullable String reason, GraphBlock.@Nullable Need need) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: провал идёт по id задания");
         Objects.requireNonNull(stock, "stock не может быть null: по нему фиксируются условия блокировки");
         BoardTicket ticket = tickets.get(ticketId);
@@ -279,8 +287,8 @@ public final class Board {
         UUID holder = holder(ticket);
         if (holder != null) {
             noteCaseFailure(holder, ticket, now);
-            if (StuckCause.movement(reason)) {
-                stuckSpirits.mark(holder, now, reason == null ? "провал движения" : reason);
+            if (need instanceof GraphBlock.Path) {
+                stuckSpirits.mark(holder, now, reason == null ? "провал движения" : reason, true);
             }
         }
         String previous = reason == null ? null : lastFailReasons.put(ticketId, reason);
@@ -288,7 +296,7 @@ public final class Board {
         if (reason != null && reason.equals(previous)) {
             ticketFailures.put(ticketId, BoardTuning.ticketFailLimit() - 1);
         }
-        noteTicketFailure(ticket, now, stock);
+        noteTicketFailure(ticket, now, stock, need);
         holds.release(ticketId);
         events.transition(BoardLog.Event.FAILED, ticket.withFailure(reason), claimAssignees.get(ticketId), now);
         return true;
@@ -335,24 +343,8 @@ public final class Board {
         return statuses.get(ticketId) == BoardStatus.BLOCKED;
     }
 
-    public List<BoardLogEntry> blocks() {
-        return List.copyOf(blockNotes);
-    }
-
-    public List<BoardLogEntry> drainBlocks() {
-        List<BoardLogEntry> drained = List.copyOf(blockNotes);
-        blockNotes.clear();
-        return drained;
-    }
-
-    public List<BoardLogEntry> detachments() {
-        return List.copyOf(detachments);
-    }
-
-    public List<BoardLogEntry> drainDetachments() {
-        List<BoardLogEntry> drained = List.copyOf(detachments);
-        detachments.clear();
-        return drained;
+    public BoardFailureDesk failures() {
+        return failures;
     }
 
     public boolean cancel(String ticketId) {
@@ -658,16 +650,17 @@ public final class Board {
                 now));
     }
 
-    private void noteTicketFailure(BoardTicket ticket, long now, StockView stock) {
-        int failures = ticketFailures.merge(ticket.id(), 1, Integer::sum);
-        if (failures < BoardTuning.ticketFailLimit()) {
-            return;
-        }
-        blocked.note(ticket, failures, ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock), stock, now);
+    private void noteTicketFailure(BoardTicket ticket, long now, StockView stock, GraphBlock.@Nullable Need need) {
+        int failuresSoFar = ticketFailures.merge(ticket.id(), 1, Integer::sum);
+        failures.noteFailure(ticket, failuresSoFar, now, stock, need);
     }
 
     private void unblockChanged(StockView stock, long now) {
         blocked.unblock(stock, now);
+    }
+
+    private void releaseStuckHolders(long now) {
+        failures.releaseStuckHolders(now);
     }
 
     public List<String> failureHistory(String ticketId) {

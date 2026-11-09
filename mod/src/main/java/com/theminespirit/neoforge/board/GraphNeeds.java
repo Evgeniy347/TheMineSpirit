@@ -1,0 +1,105 @@
+package com.theminespirit.neoforge.board;
+
+import com.theminespirit.core.board.Board;
+import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.GraphBlock;
+import com.theminespirit.core.board.ResourceGate;
+import com.theminespirit.core.board.StockNeed;
+import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.ToolGate;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.neoforge.SpiritEntity;
+import java.util.Collection;
+import java.util.Map;
+import java.util.UUID;
+import org.jspecify.annotations.Nullable;
+
+final class GraphNeeds {
+    private GraphNeeds() {}
+
+    static GraphBlock.@Nullable Need of(
+            Board board,
+            BoardTicket ticket,
+            @Nullable TicketTarget target,
+            SpiritEntity spirit,
+            StockView stock,
+            long now) {
+        return of(board, ticket, target, spirit.getUUID().toString(), SpiritItems.ids(spirit), stock, now);
+    }
+
+    static GraphBlock.@Nullable Need of(
+            Board board,
+            BoardTicket ticket,
+            @Nullable TicketTarget target,
+            @Nullable String holder,
+            Collection<String> items,
+            StockView stock,
+            long now) {
+        if (holder != null && board.stuck().isStuck(UUID.fromString(holder), now)) {
+            return new GraphBlock.Path(point(target));
+        }
+        String made = madeItem(ticket);
+        if (made != null) {
+            int count = target == null ? 1 : Math.max(1, target.supplyCount());
+            return new GraphBlock.Item(made, count);
+        }
+        Map<String, Integer> missing = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
+        if (!missing.isEmpty()) {
+            Map.Entry<String, Integer> first = missing.entrySet().iterator().next();
+            return new GraphBlock.Item(first.getKey(), first.getValue());
+        }
+        String placed = placedBlock(ticket, target);
+        if (placed != null && stock.available().getOrDefault(placed, 0) < 1) {
+            return new GraphBlock.Item(placed, 1);
+        }
+        String tool = ToolGate.required(ticket).orElse(null);
+        if (tool != null && holder != null && !ToolGate.allows(ticket, items)) {
+            return new GraphBlock.Tool(tool, 0, holder);
+        }
+        if (target != null) {
+            return new GraphBlock.Path(point(target));
+        }
+        return null;
+    }
+
+    private static @Nullable String madeItem(BoardTicket ticket) {
+        String prefix = ticket.id().startsWith("graph:make:")
+                ? "graph:make:"
+                : ticket.id().startsWith("supply_gather:") ? "supply_gather:" : null;
+        if (prefix == null) {
+            return null;
+        }
+        String item = ticket.id().substring(prefix.length());
+        int at = item.indexOf('@');
+        if (at >= 0) {
+            item = item.substring(0, at);
+        }
+        int part = item.indexOf(':');
+        return part < 0 ? item : item.substring(0, part);
+    }
+
+    static String point(@Nullable TicketTarget target) {
+        if (target == null) {
+            return "";
+        }
+        return target.target().x() + "," + target.target().y() + ","
+                + target.target().z();
+    }
+
+    private static @Nullable String placedBlock(BoardTicket ticket, @Nullable TicketTarget target) {
+        if (ticket.boardCase() != BoardCase.REPAIR_BUILDING || target == null) {
+            return null;
+        }
+        TaskNode plan = target.plan();
+        if (plan instanceof ScriptCall call
+                && "place_block".equals(call.script())
+                && call.params().get("block") instanceof String block) {
+            int state = block.indexOf('[');
+            return state < 0 ? block : block.substring(0, state);
+        }
+        return null;
+    }
+}

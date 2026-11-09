@@ -27,7 +27,8 @@ public final class GraphFailureText {
         for (int index = 0; index < shown; index++) {
             GraphFeedback.Failure failure = sorted.get(index);
             text.add(failure.node() + " → " + (failure.target().isBlank() ? "-" : failure.target()) + ": "
-                    + failure.cause() + ", штраф " + weight(failure.weight()) + ", провалов "
+                    + (failure.need() == null ? "причина неизвестна" : failure.need()) + ", штраф "
+                    + weight(failure.weight()) + ", провалов "
                     + failure.count());
         }
         if (sorted.size() > shown) {

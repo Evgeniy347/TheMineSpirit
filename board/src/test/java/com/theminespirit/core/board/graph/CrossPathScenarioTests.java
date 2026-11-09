@@ -44,7 +44,7 @@ class CrossPathScenarioTests {
         GraphTickets.Result result = tickets(world, facts);
         Board board = board(world, result);
         board.stuck().see(id("spirit-2"), PIT, 0);
-        board.stuck().mark(id("spirit-2"), 0, "пути нет: маршрут не найден");
+        board.stuck().mark(id("spirit-2"), 0, "пути нет: маршрут не найден", true);
         DispatchRound round = new DispatchRound(board, 0);
         DispatchRound.Candidate stuck = new DispatchRound.Candidate(
                 id("spirit-2"), "spirit-2", null, List.of(), FED, SpiritView.free(), false, List.of());
@@ -56,7 +56,7 @@ class CrossPathScenarioTests {
         work.put("event:gear_craft_pickaxe:craft_tool:pickaxe", "1-9 крафт");
         work.put("gather_seeds", "1-10 ферма");
         work.put("event:life_threat:retreat", "1-13 бегство");
-        work.put("event:life_threat:eat", "1-14 еда");
+        work.put("event:hungry:eat", "1-14 еда");
         work.put("event:life_threat:sleep", "1-15 сон");
         work.put("event:tool_worn:repair_tool", "1-16 ремонт инструмента");
         work.put("event:more5_mine_dark:more5_light_mine", "1-18 свет");

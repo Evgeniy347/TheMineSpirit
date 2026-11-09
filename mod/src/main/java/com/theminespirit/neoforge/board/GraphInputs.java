@@ -4,6 +4,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.ExpeditionRule;
+import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.StageRules;
@@ -78,6 +79,11 @@ final class GraphInputs {
                                 town,
                                 BuildingAuditInputs.buildings(level, service, scan, buildings, town))));
         GraphStockNote.log(facts, spirits);
+        List<GraphBlock> blocks = new ArrayList<>(service.board().failures().graphBlocks());
+        blocks.addAll(service.sources
+                .graphFailures()
+                .pathBlocks(service.board().now(), graph.costs().choice().failureHalfLife(), (int)
+                        Math.ceil(graph.costs().choice().failureTargets())));
         GraphState state = new GraphState(
                         GraphNames.stock(
                                 stock.available(),
@@ -92,7 +98,8 @@ final class GraphInputs {
                         around.distances(),
                         GraphFactInputs.stationCounts(graph, buildings))
                 .withOrders(GraphNames.need(CraftOrders.shortage(level)))
-                .withFacts(GraphStoreInputs.of(facts, level, graph));
+                .withFacts(
+                        GraphStoreInputs.of(facts, level, graph), graph.costs().life());
         GraphState more3 = More3Inputs.apply(
                 More2Inputs.apply(
                         MoreInputs.apply(
@@ -112,7 +119,7 @@ final class GraphInputs {
         GraphState more4 = More4Inputs.apply(more3, level, spirits, scan, graph);
         GraphState more5 = More5World.apply(more4, level, graph, scan, around);
         GraphState more7 = More7Inputs.apply(more5, level, graph, scan);
-        return More6Inputs.apply(more7, level, around, scan);
+        return More6Inputs.apply(more7, level, around, scan).withBlocks(blocks);
     }
 
     static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {

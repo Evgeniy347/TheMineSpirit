@@ -7,6 +7,7 @@ import com.theminespirit.core.board.graph.FailureTargets;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.pickup.LeafDropStand;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -16,7 +17,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.CraftingTableBlock;
 
-final class GraphTargets {
+public final class GraphTargets {
     private static final int STATION_RADIUS = 12;
     private static final int STATION_HEIGHT = 4;
     private static final int NO_GROUND = Integer.MIN_VALUE;
@@ -56,20 +57,38 @@ final class GraphTargets {
         }
         String building = way.map(SupplyGraph.Way::building).orElse(null);
         if (building == null) {
-            return craftPoint(level, scan);
+            return craftPoint(level, scan, service, graph, now);
         }
         if ("mine".equals(building)) {
             return stand(level, scan.stage().mineEntrance());
         }
         if (building.startsWith("mine_level_")) {
-            return mineBottom(level, scan).orElseGet(() -> craftPoint(level, scan));
+            return mineBottom(level, scan).orElseGet(() -> craftPoint(level, scan, service, graph, now));
         }
-        return craftPoint(level, scan);
+        return craftPoint(level, scan, service, graph, now);
     }
 
-    private static BlockCoord craftPoint(ServerLevel level, FirstStepsRunner.StageScan scan) {
-        boolean yard = scan.facts().done().contains(BoardCase.STOCK_CHESTS);
-        return craft(level, yard ? scan.stage().workYard() : scan.stage().anchor());
+    public static BlockCoord craftPoint(
+            ServerLevel level, FirstStepsRunner.StageScan scan, BoardService service, SupplyGraph graph, long now) {
+        double halfLife = graph.costs().choice().failureHalfLife();
+        Set<String> unreachable = service.sources.graphUnreachablePoints(now, halfLife);
+        double radius = graph.costs().choice().failureTargetRadius();
+        List<BlockCoord> centers = new ArrayList<>();
+        if (scan.facts().done().contains(BoardCase.STOCK_CHESTS)) {
+            centers.add(scan.stage().workYard());
+            centers.add(scan.stage().anchor());
+        } else {
+            centers.add(scan.stage().anchor());
+            centers.add(scan.stage().workYard());
+        }
+        List<BlockCoord> stands = new ArrayList<>();
+        for (BlockCoord center : centers) {
+            BlockCoord stand = craft(level, center);
+            if (!stands.contains(stand)) {
+                stands.add(stand);
+            }
+        }
+        return FailureTargets.choose(stands, unreachable, radius);
     }
 
     private static Optional<BlockCoord> mineBottom(ServerLevel level, FirstStepsRunner.StageScan scan) {

@@ -1,8 +1,11 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.board.GraphBlock;
+import com.theminespirit.core.board.GraphBlock.Need;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -21,8 +24,37 @@ public final class GraphFailureMemory {
 
     private final Map<String, Entry> entries = new LinkedHashMap<>();
 
+    public record Saved(
+            String node, String target, @Nullable Need need, long lastTick, List<Long> ticks, int count) {
+        public Saved {
+            Objects.requireNonNull(node, "Узел сохранённого провала не может быть null: память адресная");
+            Objects.requireNonNull(
+                    target, "Цель сохранённого провала не может быть null: пустую задают пустой строкой");
+            if (count < 1 || count > MAX_COUNT) {
+                throw new IllegalArgumentException("Провалов " + count + " в сохранённой памяти: запись живёт "
+                        + "после хотя бы одного провала и не больше " + MAX_COUNT);
+            }
+            if (lastTick < 0) {
+                throw new IllegalArgumentException("Тик сохранённого провала " + lastTick
+                        + " отрицателен: время идёт вперёд, неизвестное не записывают");
+            }
+            ticks = List.copyOf(Objects.requireNonNull(
+                    ticks, "Тики сохранённых провалов не могут быть null: запись помнит хотя бы последний"));
+            if (ticks.isEmpty() || ticks.size() > MAX_TICKS) {
+                throw new IllegalArgumentException(
+                        "Тиков сохранённой памяти " + ticks.size() + ": от 1 до " + MAX_TICKS);
+            }
+            for (long tick : ticks) {
+                if (tick < 0) {
+                    throw new IllegalArgumentException(
+                            "Тик сохранённого провала " + tick + " отрицателен: время идёт вперёд");
+                }
+            }
+        }
+    }
+
     private record Entry(
-            String node, String target, GraphFeedback.Cause cause, long lastTick, List<Long> ticks, int count) {
+            String node, String target, @Nullable Need need, long lastTick, List<Long> ticks, int count) {
         double weight(long now, double halfLife) {
             double total = 0.0;
             for (long tick : ticks) {
@@ -37,18 +69,17 @@ public final class GraphFailureMemory {
         }
     }
 
-    public void note(String node, String target, @Nullable String reason, long now) {
+    public void note(String node, String target, @Nullable Need need, long now) {
         Objects.requireNonNull(node, "Узел провала не может быть null: память адресная");
         Objects.requireNonNull(target, "Цель провала не может быть null: неизвестную задают пустой строкой");
         requireTick(now, "провала");
         Entry previous = entries.get(node + KEY_SEPARATOR + target);
-        GraphFeedback.Cause cause = GraphFeedback.Cause.of(reason);
         Entry next = previous == null
-                ? new Entry(node, target, cause, now, List.of(now), 1)
+                ? new Entry(node, target, need, now, List.of(now), 1)
                 : new Entry(
                         previous.node(),
                         previous.target(),
-                        cause,
+                        need,
                         now,
                         withTick(previous.ticks(), now),
                         Math.min(MAX_COUNT, previous.count() + 1));
@@ -76,7 +107,7 @@ public final class GraphFailureMemory {
                 continue;
             }
             facts.add(new GraphFeedback.Failure(
-                    entry.node(), entry.target(), entry.count(), entry.cause(), entry.lastTick(), weight));
+                    entry.node(), entry.target(), entry.count(), entry.need(), entry.lastTick(), weight));
         }
         facts.sort((one, two) -> {
             int byTime = Long.compare(two.lastTick(), one.lastTick());
@@ -103,7 +134,7 @@ public final class GraphFailureMemory {
     public Set<String> unreachablePoints(long now, double halfLifeTicks) {
         Set<String> points = new TreeSet<>();
         for (GraphFeedback.Failure failure : facts(now, halfLifeTicks)) {
-            if (unreachable(failure.cause()) && !failure.target().isEmpty()) {
+            if (unreachable(failure.need()) && !failure.target().isEmpty()) {
                 points.add(failure.target());
             }
         }
@@ -114,12 +145,54 @@ public final class GraphFailureMemory {
         return unreachablePoints(now, DEFAULT_HALF_LIFE_TICKS);
     }
 
+    public List<Saved> saved() {
+        List<Saved> saved = new ArrayList<>(entries.size());
+        for (Entry entry : entries.values()) {
+            saved.add(new Saved(
+                    entry.node(), entry.target(), entry.need(), entry.lastTick(), entry.ticks(), entry.count()));
+        }
+        return List.copyOf(saved);
+    }
+
+    public void restore(List<Saved> saved) {
+        Objects.requireNonNull(saved, "Сохранённая память неудач не может быть null: пустую задают пустым списком");
+        entries.clear();
+        for (Saved fact : saved) {
+            entries.put(
+                    fact.node() + KEY_SEPARATOR + fact.target(),
+                    new Entry(fact.node(), fact.target(), fact.need(), fact.lastTick(), fact.ticks(), fact.count()));
+        }
+        trim();
+    }
+
     public boolean isEmpty() {
         return entries.isEmpty();
     }
 
-    public static boolean unreachable(GraphFeedback.Cause cause) {
-        return cause == GraphFeedback.Cause.NO_PATH || cause == GraphFeedback.Cause.NOT_REACHED;
+    public static boolean unreachable(@Nullable Need need) {
+        return need instanceof GraphBlock.Path;
+    }
+
+    public List<GraphBlock> pathBlocks(long now, double halfLifeTicks, int minTargets) {
+        requireTick(now, "чтения блокировок");
+        requireHalfLife(halfLifeTicks);
+        Map<String, Set<String>> targets = new LinkedHashMap<>();
+        Map<String, Integer> repeated = new LinkedHashMap<>();
+        for (GraphFeedback.Failure failure : facts(now, halfLifeTicks)) {
+            if (unreachable(failure.need()) && !failure.target().isEmpty()) {
+                targets.computeIfAbsent(failure.node(), ignored -> new LinkedHashSet<>())
+                        .add(failure.target());
+                repeated.merge(failure.node(), failure.count(), Math::max);
+            }
+        }
+        List<GraphBlock> blocks = new ArrayList<>();
+        targets.forEach((node, points) -> {
+            if (points.size() >= Math.max(1, minTargets) || repeated.getOrDefault(node, 0) >= Math.max(1, minTargets)) {
+                String point = points.iterator().next();
+                blocks.add(new GraphBlock(node, point, new GraphBlock.Path(point)));
+            }
+        });
+        return List.copyOf(blocks);
     }
 
     private static List<Long> withTick(List<Long> ticks, long now) {

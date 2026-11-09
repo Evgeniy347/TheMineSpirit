@@ -18,8 +18,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ShovelItem;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -60,8 +60,10 @@ final class PathTrample {
                         "нет земли под дорожку в " + target.toShortString() + ": снизу пусто");
             }
             spirit.getInventory().removeItemType(Items.DIRT, 1);
-            level.setBlock(below, Blocks.DIRT.defaultBlockState(), Block.UPDATE_ALL);
-            level.setBlock(target, Blocks.DIRT_PATH.defaultBlockState(), Block.UPDATE_ALL);
+            SpiritBlocks.place(
+                    (ServerLevel) spirit.level(), below, Blocks.DIRT.defaultBlockState(), spirit, "PATH_TRAMPLE");
+            SpiritBlocks.place(
+                    (ServerLevel) spirit.level(), target, Blocks.DIRT_PATH.defaultBlockState(), spirit, "PATH_TRAMPLE");
             SpiritGesture.workOn(spirit, target);
             shovel.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
             if (level instanceof ServerLevel server) {
@@ -70,6 +72,7 @@ final class PathTrample {
             return new BlockPlacer.Started(target.immutable());
         }
         BlockPos ground = raised ? target.below() : target;
+        BlockState before = level.getBlockState(ground);
         UseOnContext context = new UseOnContext(level, null, InteractionHand.MAIN_HAND, shovel, topFace(ground));
         InteractionResult result = shovel.getItem().useOn(context);
         if (!result.consumesAction() || !level.getBlockState(ground).is(Blocks.DIRT_PATH)) {
@@ -79,6 +82,7 @@ final class PathTrample {
                             + " тропинка не вышла: нужна земля или трава под открытым небом");
         }
         SpiritGesture.workOn(spirit, ground);
+        SpiritBlocks.record((ServerLevel) spirit.level(), ground, before, spirit, "PATH_TRAMPLE");
         shovel.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
         if (level instanceof ServerLevel server) {
             PlacedBlocksData.get(server).markSpirit(ground);

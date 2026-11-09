@@ -4,7 +4,10 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.graph.GraphFailureMemory;
+import com.theminespirit.core.board.graph.GraphFeedback;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.PlotLeveling;
@@ -42,6 +45,7 @@ public final class BoardGameTests {
     public static void craftStonePickaxe_BoardTicket_GivesSpiritTool(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        CraftStationCheck.unreachableStationSkipsToAnother(helper);
         BoardService board = BoardRegistry.get(helper.getLevel());
         for (BoardTicket ticket : board.board().all()) {
             board.board().cancel(ticket.id());
@@ -75,6 +79,7 @@ public final class BoardGameTests {
                                 List.of(new PlotLeveling.Box(
                                         home.x(), home.y(), home.z(), home.x(), home.y(), home.z())),
                                 PlotLeveling.DEFAULT_BLOCK)));
+        assertFailuresSurviveReload(helper);
 
         helper.succeedWhen(() -> {
             helper.assertTrue(
@@ -176,6 +181,27 @@ public final class BoardGameTests {
                 "Цель задания " + id + " обязана пережить сохранение доски: иначе после перезапуска яма "
                         + "ставится второй раз или продолжение теряет клетки; в NBT "
                         + loaded.targets().get(id));
+    }
+
+    private static void assertFailuresSurviveReload(GameTestHelper helper) {
+        GraphFailureMemory memory = new GraphFailureMemory();
+        memory.note("chop_jungle_log", "10,64,20", new GraphBlock.Path("10,64,20"), 100);
+        memory.note("chop_jungle_log", "10,64,20", new GraphBlock.Path("10,64,20"), 120);
+        BoardStateStore store = new BoardStateStore();
+        store.updateFailures(memory.saved());
+
+        CompoundTag saved = store.save(new CompoundTag(), helper.getLevel().registryAccess());
+        BoardStateStore loaded = BoardStateStore.load(saved, helper.getLevel().registryAccess());
+        GraphFailureMemory restored = new GraphFailureMemory();
+        restored.restore(loaded.failures());
+
+        GraphFeedback.Failure fact = restored.recent(
+                        "chop_jungle_log", "10,64,20", 120, GraphFailureMemory.DEFAULT_HALF_LIFE_TICKS)
+                .orElseThrow();
+        helper.assertTrue(
+                fact.count() == 2 && fact.need() instanceof GraphBlock.Path,
+                "Память неудач обязана пережить перезапуск с числом и причиной: иначе недостижимая точка "
+                        + "выбирается снова; в NBT " + fact);
     }
 
     private static void drainForeignTickets(BoardService board) {

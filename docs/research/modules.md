@@ -116,7 +116,7 @@
 Факты мира: `BlockCoord`, `IdFilter`, `ScanRadius`, `ObservationLimits`, `CellReport`, `HazardFacts`, `Memory*`
 (`core.observation`, `core.perception`). Работа: `ScriptSpec`, `ParamSpec`, `ParamType`, `ConditionSpec`,
 `CatalogLimits`, `ScriptCatalog`/`ConditionCatalog` (сейчас final-классы, станут контрактами), `Plan*`, `TaskRecord`, `TaskState`,
-`PolicyExemptions`. Состояния/словари: `BoardCase`, `StuckCause`, `ConfigStamp`, `SafetyView`, `Cell`, `Species`,
+`PolicyExemptions`. Состояния/словари: `BoardCase`, `GraphBlock`, `ConfigStamp`, `SafetyView`, `Cell`, `Species`,
 `FeedTable`, `OreKind`, `WoodSpecies`, `CropKind`, `TreeSpecies`,
 `JsonResource`, `DataTables` (тоже final-класс → контракт), `Point`.
 
@@ -126,7 +126,7 @@
 
 | Цикл | Классы | Способ |
 |---|---|---|
-| `board` ↔ `board.graph` | `GraphChoiceRules`, `GraphCosts`, `GraphPlan`, `GraphPlanner`, `StageBuilt` → `BoardCase`, `StuckCause`, `SettlementFacts`; `StageCatalog`, `ToolCraftPlan` → `SupplyGraph` | `BoardCase`/`StuckCause` в API; `StageCatalog` получает `SupplyGraph` параметром |
+| `board` ↔ `board.graph` | `GraphChoiceRules`, `GraphCosts`, `GraphPlan`, `GraphPlanner`, `StageBuilt` → `BoardCase`, `GraphBlock`, `SettlementFacts`; `StageCatalog`, `ToolCraftPlan` → `SupplyGraph` | `BoardCase`/`GraphBlock` в API; `StageCatalog` получает `SupplyGraph` параметром |
 | `board` ↔ `reload` | 21 файл `board` → `reload.DataTables`; `reload` → `BoardConfig`, `StageRules`, `SupplyGraph` | интерфейс `DataTables` в API; схемы таблиц — у владельцев, сборка — в `:content` |
 | `board` ↔ `script` | 20 файлов `board` → `script.CatalogLimits`; `CoreScripts` и `*Params` → словари механик | контракты каталога в API, параметры — в модули механик |
 | `board` ↔ `town` | `town` → `SettlementPlot`, `PlotCells`, `PlotLeveling`, `TicketPlans`, `StageRules`; `board` → `ColumnMask`, `StageWork`, `TownPlan` | геометрия участков в `:mech:town`, доска спрашивает `SettlementFacts` |

@@ -15,9 +15,12 @@ class PlotBreakPathGuardTests {
     private static final Set<String> REMOVALS =
             Set.of("destroyBlock(", "removeBlock(", "Blocks.AIR.defaultBlockState()");
     private static final String SINGLE_POINT = "neoforge/BlockBreaker.java";
+    private static final String SPIRIT_POINT = "neoforge/SpiritBlocks.java";
     private static final String DEMO = "neoforge/demo/DemoSession.java";
     private static final Set<String> ALLOWED = Set.of(
             SINGLE_POINT,
+            "neoforge/BreakDestroy.java",
+            SPIRIT_POINT,
             DEMO,
             "neoforge/PillarDismantler.java",
             "neoforge/FarmNetherWartScript.java",
@@ -42,6 +45,7 @@ class PlotBreakPathGuardTests {
                     continue;
                 }
                 if (!SINGLE_POINT.equals(file)
+                        && !SPIRIT_POINT.equals(file)
                         && !DEMO.equals(file)
                         && !source.getValue().contains("BreakNotice.broken(")) {
                     offenders.add(file + ": " + found + " без BreakNotice.broken — поломка мимо журнала");
@@ -54,7 +58,8 @@ class PlotBreakPathGuardTests {
                 offenders,
                 "Дух меняет мир только через BlockBreaker: иначе защита плана и журнал [plot-break] видят не все "
                         + "поломки, и постройка тихо теряет блоки (observe23: дом 100→94). Прямые destroyBlock/"
-                        + "removeBlock/воздух разрешены только демо-сцене и известным временным путям, и каждый "
+                        + "removeBlock/воздух разрешены только BlockBreaker (его BreakDestroy), демо-сцене и известным "
+                        + "временным путям, и каждый "
                         + "такой путь обязан писать в BreakNotice. Нарушители");
     }
 
@@ -95,7 +100,10 @@ class PlotBreakPathGuardTests {
         if (found.isEmpty() || !ALLOWED.contains(file)) {
             return List.of();
         }
-        if (SINGLE_POINT.equals(file) || DEMO.equals(file) || text.contains("BreakNotice.broken(")) {
+        if (SINGLE_POINT.equals(file)
+                || SPIRIT_POINT.equals(file)
+                || DEMO.equals(file)
+                || text.contains("BreakNotice.broken(")) {
             return List.of();
         }
         return List.of(file + ": " + found + " без BreakNotice.broken — поломка мимо журнала");

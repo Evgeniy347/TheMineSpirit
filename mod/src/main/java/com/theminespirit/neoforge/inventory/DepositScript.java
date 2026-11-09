@@ -16,6 +16,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.script.TransferParams;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.log.SpiritWorldLog;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.world.Container;
@@ -65,6 +66,7 @@ public final class DepositScript extends ContainerTask {
     @Override
     protected ScriptStatus finish(int moved, TransferRunner.Shortage shortage) {
         Container current = container;
+        SpiritWorldLog.itemMove(spirit, "deposit", params.item(), moved, containerPos);
         String verdict = switch (shortage) {
             case NONE -> "предметы приняты";
             case SOURCE_LACK ->

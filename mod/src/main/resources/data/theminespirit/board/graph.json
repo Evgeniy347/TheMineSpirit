@@ -2634,9 +2634,7 @@
       "case": "BUILD_MINE",
       "stage": 1,
       "base": 78,
-      "materials": {
-        "torch": 6
-      },
+      "materials": {},
       "tool": "pickaxe",
       "requires": [
         "clearing"
@@ -9915,6 +9913,15 @@
           "base": 90,
           "consumes": {},
           "world": "water",
+          "onlyWhenEmpty": "food",
+          "owner": "hungriest"
+        },
+        {
+          "id": "harvest_crop",
+          "case": "GATHER_MATERIALS",
+          "base": 88,
+          "consumes": {},
+          "building": "wheat_field",
           "onlyWhenEmpty": "food",
           "owner": "hungriest"
         },

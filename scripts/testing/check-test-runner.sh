@@ -79,6 +79,7 @@ FAKE
 
 cat >"$work/bin/slow" <<'FAKE'
 #!/usr/bin/env bash
+echo "1 tests are now running at position 0, 0, 0!"
 sleep 30
 exit 0
 FAKE
@@ -929,6 +930,8 @@ cat >"$work/bin/slow-prepare" <<'FAKE'
 for a in "$@"; do
     case "$a" in
         :gametest:runGameTestServer|runGameTestServer)
+            sleep "${LOAD_SLEEP:-0}"
+            echo "1 tests are now running at position 0, 0, 0!"
             : >"${SHARD_MARK:?}"
             sleep "${SHARD_SLEEP:-30}"
             echo "All 1 required tests passed"
@@ -963,8 +966,21 @@ out=$(PREP_SLEEP=3 SHARD_SLEEP=30 SHARD_MARK="$mark" THEMINESPIRIT_GRADLEW="$wor
     bash scripts/test.sh gametest --full 2>&1)
 code=$?
 [ "$code" = 124 ] && [ -f "$mark" ] && echo "$out" | grep -q "стоп по пределу 2 с" \
-    && ok "gametest-shard-budget: предел сценариев считается от старта шардов, а не от сборки" \
+    && ok "gametest-shard-budget: предел сценариев считается от старта сцен, а не от сборки" \
     || fail "gametest-shard-budget: код=$code, шард стартовал=$( [ -f "$mark" ] && echo да || echo нет), вывод: $out"
+rm -rf "$work/tmp/lock.d"
+
+rm -f "$mark"
+out=$(LOAD_SLEEP=4 SHARD_SLEEP=1 SHARD_MARK="$mark" THEMINESPIRIT_GRADLEW="$work/bin/slow-prepare" \
+    THEMINESPIRIT_GAMETEST_SHARDS=1 THEMINESPIRIT_GAMETEST_NOFLOCK=1 \
+    THEMINESPIRIT_GAMETEST_LOCK="$work/tmp/lock" \
+    THEMINESPIRIT_GAMETEST_PREPARE_WARN_SECONDS=600 THEMINESPIRIT_GAMETEST_PREPARE_STOP_SECONDS=600 \
+    THEMINESPIRIT_GAMETEST_FULL_WARN_SECONDS=600 THEMINESPIRIT_GAMETEST_FULL_STOP_SECONDS=2 \
+    bash scripts/test.sh gametest --full 2>&1)
+code=$?
+[ "$code" = 0 ] && echo "$out" | grep -q "OK gametest: 1 тест" \
+    && ok "gametest-load-budget: загрузка мира вне бюджета сцен" \
+    || fail "gametest-load-budget: код=$code, вывод: $out"
 rm -rf "$work/tmp/lock.d"
 
 rm -rf "$work/tmp/lock.d" "$argsdir"

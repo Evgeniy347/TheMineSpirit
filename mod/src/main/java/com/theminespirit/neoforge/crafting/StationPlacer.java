@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.crafting;
 
 import com.theminespirit.core.crafting.CraftTuning;
+import com.theminespirit.neoforge.SpiritBlocks;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.SpiritGesture;
 import com.theminespirit.neoforge.board.PlacementJournal;
@@ -10,8 +11,8 @@ import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 
@@ -33,7 +34,7 @@ public final class StationPlacer {
             BlockState state = type.placedState(toward);
             if (isFree(level, cell, state)) {
                 spirit.getInventory().removeItemType(type.item(), 1);
-                level.setBlock(cell, state, Block.UPDATE_ALL);
+                SpiritBlocks.place((ServerLevel) spirit.level(), cell, state, spirit, "STATION");
                 SpiritGesture.workOn(spirit, cell);
                 PlacementJournal.placed(spirit, type.noun(), cell, "своей станции рядом не найдено");
                 return Optional.of(cell);

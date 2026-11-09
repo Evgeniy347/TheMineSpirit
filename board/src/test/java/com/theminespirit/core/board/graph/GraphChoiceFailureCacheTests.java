@@ -3,8 +3,11 @@ package com.theminespirit.core.board.graph;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.GraphBlock;
+import com.theminespirit.core.board.GraphBlock.Need;
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 class GraphChoiceFailureCacheTests {
@@ -36,24 +39,23 @@ class GraphChoiceFailureCacheTests {
     }
 
     @Test
-    void failureBackoff_SoftFailuresOnNodeAndSuffix_AreSummedInOneRun() {
+    void failureBackoff_UnknownNeed_DoesNotChangeWeight() {
         GraphWorld world = GraphWorld.settled();
         String key = "craft_jungle_planks@spirit-1";
-        GraphWorld nodeSoft = failed(world, "craft_jungle_planks", "1,64,0", GraphFeedback.Cause.OTHER);
-        double one = new GraphChoiceRules(GRAPH, nodeSoft.state()).value(key, 1.0, false);
-        GraphWorld bothSoft = failed(nodeSoft, key, "2,64,0", GraphFeedback.Cause.OTHER);
-        double two = new GraphChoiceRules(GRAPH, bothSoft.state()).value(key, 1.0, false);
-        assertTrue(
-                two < one,
-                "Мягкий штраф узла и личного ключа складывается в агрегате прогона: прочие провалы всех целей "
-                        + "узла дают один суммарный вес, а не последний найденный: " + two + " против " + one);
+        double calm = new GraphChoiceRules(GRAPH, world.state()).value(key, 1.0, false);
+        GraphWorld nodeUnknown = failed(world, "craft_jungle_planks", "1,64,0", null);
+        double one = new GraphChoiceRules(GRAPH, nodeUnknown.state()).value(key, 1.0, false);
+        GraphWorld bothUnknown = failed(nodeUnknown, key, "2,64,0", null);
+        double two = new GraphChoiceRules(GRAPH, bothUnknown.state()).value(key, 1.0, false);
+        assertEquals(calm, one, 1e-9, "Провал без нужды не штрафует узел");
+        assertEquals(calm, two, 1e-9, "Провал без нужды не штрафует и личный ключ");
     }
 
     private static GraphWorld failed(GraphWorld world, String node, String target) {
-        return failed(world, node, target, GraphFeedback.Cause.NO_PATH);
+        return failed(world, node, target, new GraphBlock.Path(target));
     }
 
-    private static GraphWorld failed(GraphWorld world, String node, String target, GraphFeedback.Cause cause) {
+    private static GraphWorld failed(GraphWorld world, String node, String target, @Nullable Need cause) {
         GraphFeedback known = world.facts.feedback();
         List<GraphFeedback.Failure> failures = new ArrayList<>(known.failures());
         failures.add(new GraphFeedback.Failure(node, target, 1, cause, 100));

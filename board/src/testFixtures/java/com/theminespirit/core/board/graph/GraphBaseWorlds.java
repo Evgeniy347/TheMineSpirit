@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.graph.GraphFacts.Position;
 import com.theminespirit.core.board.graph.GraphSiteFacts.StageReqs;
 import com.theminespirit.core.board.graph.GraphSiteFacts.Stray;
@@ -113,13 +114,16 @@ final class GraphBaseWorlds {
                         GraphFeedback.Clock.unknown(),
                         GraphFeedback.Player.none(),
                         List.of(
-                                new GraphFeedback.Failure("mine_cobble", "1,64,0", 2, GraphFeedback.Cause.NO_PATH, 10),
-                                new GraphFeedback.Failure("mine_cobble", "9,64,0", 3, GraphFeedback.Cause.NO_PATH, 11),
-                                new GraphFeedback.Failure("chop_oak_log", "1,64,0", 2, GraphFeedback.Cause.NO_PATH, 20),
-                                new GraphFeedback.Failure("chop_oak_log", "9,64,0", 2, GraphFeedback.Cause.NO_PATH, 21),
                                 new GraphFeedback.Failure(
-                                        "mine_iron", "1,64,0", 3, GraphFeedback.Cause.NOT_REACHED, 30),
-                                new GraphFeedback.Failure("mine_iron", "1,64,0", 1, GraphFeedback.Cause.OTHER, 31))));
+                                        "mine_cobble", "1,64,0", 2, new GraphBlock.Path("1,64,0"), 10),
+                                new GraphFeedback.Failure(
+                                        "mine_cobble", "9,64,0", 3, new GraphBlock.Path("9,64,0"), 11),
+                                new GraphFeedback.Failure(
+                                        "chop_oak_log", "1,64,0", 2, new GraphBlock.Path("1,64,0"), 20),
+                                new GraphFeedback.Failure(
+                                        "chop_oak_log", "9,64,0", 2, new GraphBlock.Path("9,64,0"), 21),
+                                new GraphFeedback.Failure("mine_iron", "1,64,0", 3, new GraphBlock.Path("1,64,0"), 30),
+                                new GraphFeedback.Failure("mine_iron", "1,64,0", 1, null, 31))));
         return world;
     }
 

@@ -18,6 +18,7 @@ import com.theminespirit.core.route.RouteFailures;
 import com.theminespirit.core.route.RouteThrottle;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.TickWatch;
+import com.theminespirit.neoforge.log.SpiritWorldLog;
 import net.minecraft.core.BlockPos;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -155,6 +156,16 @@ public final class RouteDetour {
                     route.end(),
                     segmented.millis());
             String refusal = refusal(spirit, pending, route);
+            SpiritWorldLog.route(
+                    spirit,
+                    pending.plan.why(),
+                    pending.plan.from(),
+                    pending.plan.target(),
+                    route.status().name(),
+                    route.nodes(),
+                    segmented.millis(),
+                    route.end(),
+                    refusal);
             if (refusal.isEmpty()) {
                 finish(pending, new RouteWalk(spirit, route, pending.plan.target()), "");
             } else {
