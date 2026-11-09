@@ -26,6 +26,7 @@ HELP = """scripts/live.sh <команда>  (цель: своя копия де�
   status                 духи, доска, падения источников, свежие сбои; с этого начинать
   spirit <имя> [строк]   один дух: состояние, его задания, журнал, срез мира вокруг
   slice <x> <y> <z> [радиус] [вверх] [вниз]   карта блоков слоями
+  loops [строк]          задания, которые падают снова и снова: что и почему, за весь журнал
   log <шаблон> [строк]   строки журнала мода по регулярному выражению
   fixture <имя духа> <файл> [радиус]   мир вокруг духа в mech/movement/src/test/resources/live/<файл>.live
   check [--wait секунд]  граф жив и работа есть: код 0 — да, 1 — нет (после каждой выкладки)
@@ -165,6 +166,22 @@ def slice_cmd(target, args):
     print(target.slice_args([args.x, args.y, args.z, args.radius, args.up, args.down]))
 
 
+def loops(target, args):
+    lines = target.log(40000)
+    counts = collections.Counter()
+    reasons = {}
+    for line in lines:
+        found = re.search(r"провалил задание доски (\S+) \(кейс (\w+)\): (.{0,90})", line)
+        if found:
+            key = re.sub(r"[0-9a-f]{8}-[0-9a-f-]{27}|-?\d+,-?\d+(,-?\d+)?|3w5\w+", "*", found.group(1))
+            counts[key] += 1
+            reasons[key] = found.group(3)
+    span = "%s..%s" % (lines[0][:8], lines[-1][:8]) if lines else "-"
+    print("провалов %d за %s" % (sum(counts.values()), span))
+    for key, count in counts.most_common(args.lines):
+        print("%4d %-44s %s" % (count, key[:44], reasons[key][:90]))
+
+
 def log_cmd(target, args):
     pattern = re.compile(args.pattern)
     shown = [line for line in target.log(20000) if pattern.search(line)]
@@ -256,6 +273,9 @@ def main():
     cut.add_argument("up", type=int, nargs="?", default=3)
     cut.add_argument("down", type=int, nargs="?", default=2)
     cut.set_defaults(run=slice_cmd)
+    loop = sub.add_parser("loops")
+    loop.add_argument("lines", type=int, nargs="?", default=15)
+    loop.set_defaults(run=loops)
     grep = sub.add_parser("log")
     grep.add_argument("pattern")
     grep.add_argument("lines", type=int, nargs="?", default=30)
