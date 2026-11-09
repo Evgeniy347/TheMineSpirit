@@ -5,6 +5,7 @@ import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BuildProgressSnapshots;
+import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
@@ -71,6 +72,14 @@ final class BoardTicketDesk {
             String ticket = orphans.remove(spirit.getUUID());
             boolean holdsTicket = !board.assignedTo(spirit.getUUID()).isEmpty();
             if (ticket == null || spirit.isRemoved() || holdsTicket) {
+                continue;
+            }
+            if (!TicketRun.restoredTask(spirit.taskGeneration())) {
+                LOGGER.info(
+                        "[board] сброс сборки не трогает духа {}: он уже выполняет другую задачу, а старое "
+                                + "задание {} остаётся снятым с доски",
+                        spirit.displayName(),
+                        ticket);
                 continue;
             }
             if (spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {

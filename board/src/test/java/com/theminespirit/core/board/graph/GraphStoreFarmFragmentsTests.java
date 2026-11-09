@@ -94,6 +94,22 @@ class GraphStoreFarmFragmentsTests {
     }
 
     @Test
+    void farmFragment_DirtWithoutSeeds_PostsWheatFieldTicket() {
+        GraphWorld world = GraphWorld.settled()
+                .built("wheat_field", GraphState.Built.PLANNED)
+                .with("dirt", 8)
+                .with("wheat_seeds", 0);
+        GraphState state = world.state();
+        GraphTickets.Result result = GraphTickets.of(GRAPH, state, GraphPlanner.plan(GRAPH, state));
+
+        assertTrue(
+                result.post().stream().anyMatch(ticket -> "graph:building:wheat_field".equals(ticket.id())),
+                "Грядка этапа 1 с землёй в запасе обязана стать билетом доски: PLANNED без задания — "
+                        + "сад не строится (observe25 B11): "
+                        + result.post().stream().map(GraphTickets.Ticket::id).toList());
+    }
+
+    @Test
     void farmFragment_FarmEvents_AreDeclared() {
         for (String event :
                 List.of("crop_ready", "crop_dry", "field_empty", "animal_starving", "pen_full", "orchard_empty")) {

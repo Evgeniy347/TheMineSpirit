@@ -14,8 +14,8 @@ public final class TaskReconciler {
     public static final int ABSENT_GRACE_TICKS = 100;
     static final String SPIRIT_GONE = "дух исчез: сущность не вернулась в мир за %d тиков, задача потеряна";
     static final String SPIRIT_DEAD = "дух исчез: он погиб, задача прервана";
-    static final String DISPLACED = "задача вытеснена вне REST: дух получил другую задачу командой /spirit или "
-            + "планировщиком ИИ, эта задача остановлена";
+    static final String DISPLACED = "задача вытеснена вне REST: дух получил другую задачу от доски (граф), командой "
+            + "/spirit или планировщиком ИИ, эта задача остановлена";
     static final String NO_REASON = "скрипт провалился без указания причины";
 
     private final TaskRegistry registry;

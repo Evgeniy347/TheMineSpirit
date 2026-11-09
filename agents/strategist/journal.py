@@ -10,7 +10,8 @@ from pathlib import Path
 
 SCHEMA = 1
 EVENTS = ("cycle_start", "bot_skipped", "observed", "decision", "rejected", "posted", "task_state", "task_done",
-          "brain_failure", "alert", "warehouse_decision", "warehouse_skipped")
+          "brain_failure", "alert", "warehouse_decision", "warehouse_skipped",
+          "quarry_decision", "quarry_skipped", "quarry_none")
 MAX_REPLY_BYTES = 4096
 TRUNCATION_MARK = "…[усечено]"
 RECENT_EVENTS = ("task_done", "rejected")

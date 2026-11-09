@@ -130,9 +130,6 @@ final class DeadCodeExemptions {
                     "core/navigation/NavPathSplicer.java|class|<top>#NavPathSplicer",
                     "Склейка сегментов Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
             new Exemption(
-                    "core/navigation/NavSegmentedPlanner.java|class|<top>#NavSegmentedPlanner",
-                    "Сегментированный дальний путь Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
-            new Exemption(
                     "core/movement/ApproachRoute.java|class|<top>#ApproachRoute",
                     "Прототип маршрута подхода: docs/research/pathfinding-range.md"),
             new Exemption(

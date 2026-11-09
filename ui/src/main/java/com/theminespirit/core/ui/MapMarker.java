@@ -6,7 +6,9 @@ public record MapMarker(Kind kind, String name, String occupation, int x, int z)
     public enum Kind {
         SPIRIT,
         PLAYER,
-        ROUTE
+        ROUTE,
+        DIRT,
+        SAND
     }
 
     public MapMarker {
