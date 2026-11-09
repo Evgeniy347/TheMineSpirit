@@ -4,12 +4,26 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.OptionalInt;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class PitWalkOutTests {
     private static final int START = 20;
     private static final int ROOF = 64;
+
+    @Test
+    void walkOut_StepUpUnderCeilingAboveHead_IsNotAnExit() {
+        Grid ramp = Grid.enclosedPit();
+        ramp.ceilingAt(0, -1, START + 2).ceilingAt(0, 0, START + 2).ceilingAt(0, 1, START + 2);
+
+        assertFalse(
+                PitWalkOut.exists(ramp, 0, 0, START),
+                "из-под низкого потолка на ступень не подпрыгнуть: иначе метка «не двигается» снимается "
+                        + "как выход, а дух стоит на месте (spirit-1, -187,65,-514)");
+    }
 
     @Test
     void walkOut_WalledCellOpenToSky_IsNotAnExit() {
@@ -71,6 +85,7 @@ class PitWalkOutTests {
         private static final int NONE = Integer.MIN_VALUE;
         private final int[][] floor = new int[SIZE][SIZE];
         private final int[][] sky = new int[SIZE][SIZE];
+        private final Set<List<Integer>> ceiling = new HashSet<>();
 
         private Grid(int floorY, int skyY) {
             for (int[] row : floor) {
@@ -101,6 +116,11 @@ class PitWalkOutTests {
             return this;
         }
 
+        Grid ceilingAt(int x, int z, int y) {
+            ceiling.add(List.of(x, y, z));
+            return this;
+        }
+
         Grid skyAt(int x, int z, int y) {
             sky[x - MIN][z - MIN] = y;
             return this;
@@ -113,6 +133,11 @@ class PitWalkOutTests {
             }
             int ground = floor[x - MIN][z - MIN];
             return ground == NONE || ground < from ? OptionalInt.empty() : OptionalInt.of(ground);
+        }
+
+        @Override
+        public boolean clear(int x, int y, int z) {
+            return !ceiling.contains(List.of(x, y, z));
         }
 
         @Override

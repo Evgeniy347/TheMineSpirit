@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.movement.PitExitPlanner;
 import com.theminespirit.core.movement.PitWalkOut;
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.Objects;
 import java.util.OptionalInt;
 import net.minecraft.core.BlockPos;
@@ -20,6 +21,11 @@ public final class PitWalkOutView implements PitWalkOut.World {
     @Override
     public OptionalInt groundY(int x, int z, int from) {
         return PitExitPlanner.groundY(x, z, from, cells);
+    }
+
+    @Override
+    public boolean clear(int x, int y, int z) {
+        return cells.at(new BlockCoord(x, y, z)) == PitExitPlanner.Kind.AIR;
     }
 
     @Override

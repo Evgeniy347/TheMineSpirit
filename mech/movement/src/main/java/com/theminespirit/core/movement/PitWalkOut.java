@@ -18,6 +18,8 @@ public final class PitWalkOut {
         OptionalInt groundY(int x, int z, int from);
 
         int surfaceY(int x, int z);
+
+        boolean clear(int x, int y, int z);
     }
 
     private PitWalkOut() {}
@@ -43,7 +45,8 @@ public final class PitWalkOut {
                     continue;
                 }
                 int climb = ground.getAsInt() - cell[2];
-                boolean walkable = climb <= STEP_UP && climb >= -SAFE_DROP;
+                boolean headroom = climb <= 0 || world.clear(cell[0], cell[2] + 2, cell[1]);
+                boolean walkable = climb <= STEP_UP && climb >= -SAFE_DROP && headroom;
                 if (!walkable) {
                     continue;
                 }
