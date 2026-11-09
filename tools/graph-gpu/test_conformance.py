@@ -196,6 +196,45 @@ def test_life_coefficient_vector():
     print("OK: события жизни выводятся из порога graph.json, а не из константы Python")
 
 
+def test_food_need_band():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
+        cases = json.load(handle)
+    case = next((item for item in cases if "food_stage_two" in item.get("mutations", ())), None)
+    assert case is not None, "В conformance есть случай stage 2 с пустой едой и углём"
+    tasks = {task["id"]: task for task in plan(graph, State(case["state"]))["tasks"]}
+    mine = tasks["mine_coal"]
+    harvest = tasks.get("event:hungry:harvest_crop")
+    assert harvest is not None and harvest["feasible"], \
+        "Поле построено — сбор урожая подключён к голоду: " + str(harvest)
+    food = ("event:hungry:hunt", "event:hungry:fish", "event:hungry:harvest_crop",
+            "event:hungry:wait_food")
+    food_priorities = [tasks[task]["priority"] for task in food]
+    assert food_priorities == sorted(food_priorities, reverse=True), \
+        "Пути еды стоят по силе в полосе потребности: " + str(food_priorities)
+    assert min(food_priorities) >= graph.work_priority - 9, \
+        "Вся еда не ниже полосы потребности: " + str(food_priorities)
+    assert tasks["event:hungry:hunt"]["priority"] == graph.need_priority, \
+        "Голод с пустой едой идёт в полосе потребности: " + str(tasks["event:hungry:hunt"])
+    assert mine["priority"] <= graph.work_priority, \
+        "Шахта остаётся обычной работой под полосой потребности: " + str(mine["priority"])
+    fed = State({
+        "stage": 2,
+        "stock": {"food": 8, "coal": 0},
+        "kits": {"spirit-1": {}},
+        "buildings": {"wheat_field": "BUILT", "mine": "BUILT"},
+        "events": ["hungry"],
+        "world": [],
+    })
+    fed_tasks = {task["id"]: task for task in plan(graph, fed)["tasks"]}
+    eat = fed_tasks["event:hungry:eat"]["priority"]
+    assert eat >= graph.work_priority - 9, \
+        "Обед голодного духа с едой в запасе — тоже потребность: " + str(fed_tasks.get("event:hungry:eat"))
+    assert eat <= graph.need_priority, \
+        "Обед не выходит за верх полосы потребности: " + str(eat)
+    print("OK: голод на этапе 2 выше шахты, сбор урожая подключён")
+
+
 def dig_inputs(graph, facts):
     state = State({
         "stock": {},
@@ -1271,6 +1310,7 @@ if __name__ == "__main__":
         test_fragments()
         test_life_priority()
         test_life_player_fact()
+        test_food_need_band()
         test_dig_inputs()
         test_area_nodes()
         test_store_nodes()
