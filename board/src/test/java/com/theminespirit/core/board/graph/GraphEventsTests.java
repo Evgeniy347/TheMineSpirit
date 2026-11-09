@@ -41,6 +41,10 @@ class GraphEventsTests {
 
         assertTrue(
                 repaired != null && !repaired.tasks().isEmpty(), "повреждённая постройка обязана дать событие ремонта");
+        assertEquals(
+                List.of("repair:hut"),
+                repaired.tasks().stream().map(GraphEvent.Task::id).toList(),
+                "повреждённая постройка обязана дать событие ремонта");
         GraphEvent.Task created = repaired.tasks().get(0);
         assertEquals("repair:hut", created.id(), "ремонт адресуется конкретной постройке");
         assertEquals("hut", created.building(), "клетка ремонта — сама повреждённая постройка");
