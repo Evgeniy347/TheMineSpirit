@@ -9888,6 +9888,7 @@
       }
     },
     "hungry": {
+      "vital": true,
       "tasks": [
         {
           "id": "eat",
@@ -9912,6 +9913,15 @@
           "base": 90,
           "consumes": {},
           "world": "water",
+          "onlyWhenEmpty": "food",
+          "owner": "hungriest"
+        },
+        {
+          "id": "harvest_crop",
+          "case": "GATHER_MATERIALS",
+          "base": 88,
+          "consumes": {},
+          "building": "wheat_field",
           "onlyWhenEmpty": "food",
           "owner": "hungriest"
         },
@@ -9967,6 +9977,7 @@
       ]
     },
     "tool_worn": {
+      "vital": true,
       "tasks": [
         {
           "id": "repair_tool",

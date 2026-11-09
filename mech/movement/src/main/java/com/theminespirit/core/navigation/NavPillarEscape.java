@@ -56,7 +56,7 @@ public final class NavPillarEscape {
                 int nz = cell.z() + side[1];
                 for (int depth = 2; depth <= maxDepth; depth++) {
                     int feet = cell.y() - depth;
-                    if (!passableColumn(world, nx, cell.y() - 1, feet, nz)) {
+                    if (!passableColumn(world, nx, cell.y(), feet, nz)) {
                         break;
                     }
                     boolean landing = world.walkable(nx, feet - 1, nz);

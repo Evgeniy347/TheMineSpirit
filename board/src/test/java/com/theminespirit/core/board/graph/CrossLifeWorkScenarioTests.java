@@ -1,6 +1,5 @@
 package com.theminespirit.core.board.graph;
 
-import static com.theminespirit.core.board.graph.CrossActions.board;
 import static com.theminespirit.core.board.graph.CrossActions.boardTicket;
 import static com.theminespirit.core.board.graph.CrossActions.chopTarget;
 import static com.theminespirit.core.board.graph.CrossActions.id;

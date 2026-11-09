@@ -1,0 +1,68 @@
+{
+  "needs": [
+    {
+      "id": "hunger",
+      "event": "hungry",
+      "gate": true,
+      "reason": "голод",
+      "blocked": "голод: еды нет и источника нет",
+      "allow": ["graph:event:hungry:", "graph:restock_food@"]
+    },
+    {
+      "id": "injury",
+      "event": "life_injury",
+      "gate": true,
+      "reason": "ранение",
+      "blocked": "ранение: нет пути к отдыху",
+      "healthShare": 0.35,
+      "allow": [
+        "graph:event:life_injury:",
+        "graph:event:more4_caution:more4_rest_injured"
+      ]
+    },
+    {
+      "id": "stuck",
+      "event": "rescue_spirit",
+      "gate": false,
+      "reason": "застревание",
+      "blocked": "застревание: выхода нет, ждёт rescue",
+      "allow": ["graph:rescue_spirit", "graph:event:life_threat:retreat"]
+    },
+    {
+      "id": "threat",
+      "event": "life_threat",
+      "gate": false,
+      "reason": "угроза",
+      "blocked": "угроза жизни",
+      "allow": [
+        "graph:event:life_threat:",
+        "graph:event:life_threat_spirit:",
+        "graph:event:life_threat_player:"
+      ]
+    },
+    {
+      "id": "threat_spirit",
+      "event": "life_threat_spirit",
+      "gate": false,
+      "reason": "угроза духу",
+      "blocked": "угроза духу",
+      "allow": ["graph:event:life_threat_spirit:", "graph:event:life_threat:"]
+    },
+    {
+      "id": "threat_player",
+      "event": "life_threat_player",
+      "gate": false,
+      "reason": "угроза игроку",
+      "blocked": "угроза игроку",
+      "allow": ["graph:event:life_threat_player:", "graph:event:life_threat:"]
+    },
+    {
+      "id": "tool",
+      "event": "tool_worn",
+      "gate": false,
+      "reason": "инструмент",
+      "blocked": "сломанный инструмент: нет пути починки",
+      "allow": ["graph:event:tool_worn:", "graph:event:gear_", "graph:tool:"]
+    }
+  ]
+}

@@ -29,6 +29,12 @@ class PathGroundTests {
     }
 
     @Test
+    void airCell_EmptyOrFilled_IsDetected() {
+        assertTrue(PathGround.airCell("minecraft:air"), "пустая клетка пути — воздух");
+        assertFalse(PathGround.airCell("minecraft:grass_block"), "трава — не пустая клетка");
+    }
+
+    @Test
     void openAbove_Stone_IsNotOpenForPath() {
         assertFalse(
                 PathGround.openAbove("minecraft:stone"),

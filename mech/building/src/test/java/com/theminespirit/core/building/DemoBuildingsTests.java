@@ -47,6 +47,7 @@ class DemoBuildingsTests {
                         "fence_corner45_left",
                         "fence_corner45_right",
                         "fence_wicket",
+                        "fence_gate",
                         "wall_3",
                         "wall_3_straight",
                         "wall_3_post",

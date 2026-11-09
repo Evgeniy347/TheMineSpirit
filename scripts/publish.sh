@@ -8,6 +8,7 @@ GATEWAY_DIR="${GATEWAY_DIR:-/opt/gateway}"
 STATUS_REL="users/admin/sites/the-mine-spirit/server/mod.json"
 SERVER_FILES="$MOD_DIR/server"
 . "$MOD_DIR/scripts/module-paths.sh"
+. "$MOD_DIR/scripts/python-bin.sh"
 JAR_DIR="$MOD_DIR/$MOD_JAR_DIR"
 WORLD_BACKUPS="${WORLD_BACKUPS:-/opt/minecraft/backups/world}"
 CLEANUP_SCRIPT_DIR="${CLEANUP_SCRIPT_DIR:-/opt/minecraft/scripts}"
@@ -96,22 +97,25 @@ sha256_of() {
     sha256sum "$1" 2>/dev/null | cut -d' ' -f1
 }
 
+# lib: след выбранной сборки в выводе — по нему разбирают инцидент выкладки: какой коммит, какой файл,
+# когда он собран. Без следа причина (гонка/кэш/старый jar) видна только по косвенным признакам.
+trace_jar() {
+    local jar="$1" size mtime sha
+    size="$(stat -c %s "$jar" 2>/dev/null || echo '?')"
+    mtime="$(date -r "$jar" '+%F %T' 2>/dev/null || echo '?')"
+    sha="$(sha256_of "$jar")"
+    echo "Коммит: $(git -C "$MOD_DIR" rev-parse HEAD 2>/dev/null || echo '?')"
+    echo "jar: $jar ($size байт, изменён $mtime, sha256 ${sha:-?})"
+}
+
 # lib: jar читается по содержимому: 08.11 в 0.1.3253 уехал jar с пустым META-INF/neoforge.mods.toml,
 # сервер не стартовал («Missing ModLoader»), простой ~20 минут. Проверка — до остановки сервера.
 jar_reader() {
-    local candidate path
     if command -v unzip >/dev/null 2>&1; then
         printf '%s' unzip
         return 0
     fi
-    for candidate in "${THEMINESPIRIT_PYTHON:-}" "${PYTHON:-}" python3 python; do
-        [ -n "$candidate" ] || continue
-        path="$(command -v "$candidate" 2>/dev/null)" || continue
-        "$path" -c 'import zipfile' >/dev/null 2>&1 || continue
-        printf '%s' "$path"
-        return 0
-    done
-    return 1
+    python_bin zipfile
 }
 
 jar_entry_text() {
@@ -210,8 +214,7 @@ if $check_build; then
         echo "Сборка не дала theminespirit-*.jar в $MOD_JAR_DIR/" >&2
         exit 1
     fi
-    echo "jar: ${jars[0]}"
-    echo "sha256: $(sha256_of "${jars[0]}")"
+    trace_jar "${jars[0]}"
     if ! verify_mod_jar "${jars[0]}"; then
         echo "ОШИБКА: собранный jar негоден для сервера" >&2
         exit 1
@@ -275,6 +278,14 @@ deploy_server_files() {
             return 1
         fi
         chmod 755 "$CLEANUP_SCRIPT_DIR/nightly-analyzers.sh"
+    fi
+    # lib: nightly-analyzers.sh зовёт python_bin из общего helper — без него на сервере нет сводки находок.
+    if [ -f "$MOD_DIR/scripts/python-bin.sh" ]; then
+        if ! cp -f "$MOD_DIR/scripts/python-bin.sh" "$CLEANUP_SCRIPT_DIR/python-bin.sh"; then
+            echo "ОШИБКА: не скопировать python-bin.sh в $CLEANUP_SCRIPT_DIR" >&2
+            return 1
+        fi
+        chmod 755 "$CLEANUP_SCRIPT_DIR/python-bin.sh"
     fi
     if ! install_hang_watch_cron; then
         return 1
@@ -586,7 +597,7 @@ if [ "$size" -lt 4096 ]; then
     echo "jar подозрительно мал ($size байт): $jar" >&2
     exit 1
 fi
-echo "Найден $(basename "$jar") ($size байт)"
+trace_jar "$jar"
 version="$(version_of "$jar")"
 
 if ! verify_mod_jar "$jar"; then

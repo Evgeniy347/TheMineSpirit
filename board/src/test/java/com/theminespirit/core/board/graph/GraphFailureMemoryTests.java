@@ -143,17 +143,16 @@ class GraphFailureMemoryTests {
     }
 
     @Test
-    void pathBlocks_FewTargets_NoBlockUntilDifferentTargets() {
+    void pathBlocks_RepeatedTarget_BlocksAfterThreshold() {
         GraphFailureMemory memory = new GraphFailureMemory();
         memory.note("chop_oak_log", "1,64,0", new GraphBlock.Path("1,64,0"), 10);
+
+        assertTrue(memory.pathBlocks(10, 3000, 2).isEmpty(), "Один провал ещё не блокирует узел");
+
         memory.note("chop_oak_log", "1,64,0", new GraphBlock.Path("1,64,0"), 11);
 
-        assertTrue(memory.pathBlocks(11, 3000, 2).isEmpty(), "Одна цель не блокирует узел целиком");
-
-        memory.note("chop_oak_log", "9,64,0", new GraphBlock.Path("9,64,0"), 12);
-
-        List<GraphBlock> blocks = memory.pathBlocks(12, 3000, 2);
-        assertEquals(1, blocks.size(), "Две разные недостижимые цели блокируют узел: " + blocks);
+        List<GraphBlock> blocks = memory.pathBlocks(11, 3000, 2);
+        assertEquals(1, blocks.size(), "Повтор той же недостижимой цели блокирует узел: " + blocks);
         assertEquals("chop_oak_log", blocks.get(0).node(), "Блокировка адресована узлу");
     }
 

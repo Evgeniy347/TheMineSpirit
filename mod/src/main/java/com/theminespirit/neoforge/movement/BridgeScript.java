@@ -33,8 +33,6 @@ public final class BridgeScript implements ScriptInstance {
     private final Approach approach;
     private final BlockPlacer placer;
 
-    private String blockId;
-    private BlockState wanted;
     private BlockCoord step;
     private List<BlockCoord> cells;
     private int placed;
@@ -133,22 +131,28 @@ public final class BridgeScript implements ScriptInstance {
             cells.add(cell);
             cell = new BlockCoord(cell.x() + step.x(), cell.y(), cell.z() + step.z());
         }
-        String resolved = requestedBlock != null
-                ? requestedBlock
-                : WaterCrossingPlanner.cheapestAvailable(CheapBlocks.counts(spirit))
-                        .orElse(null);
-        if (resolved == null) {
-            fail("нет материала для моста: нужны земля, булыжник или доски, есть 0");
-            return false;
-        }
-        blockId = resolved;
-        wanted = BlockStates.stateFor(blockId);
-        if (CheapBlocks.count(spirit, blockId) < length) {
-            fail("нет материала '" + blockId + "': нужно " + length + ", есть " + CheapBlocks.count(spirit, blockId));
-            return false;
+        if (requestedBlock != null) {
+            int stock = CheapBlocks.count(spirit, requestedBlock);
+            if (stock < length) {
+                fail("нет материала '" + requestedBlock + "': нужно " + length + ", есть " + stock);
+                return false;
+            }
+        } else {
+            int stock = WaterCrossingPlanner.total(CheapBlocks.counts(spirit));
+            if (stock < length) {
+                fail("нет материала для моста: нужно " + length + ", есть " + stock);
+                return false;
+            }
         }
         initialized = true;
         return true;
+    }
+
+    private Optional<String> nextBlock() {
+        if (requestedBlock != null) {
+            return Optional.of(requestedBlock);
+        }
+        return WaterCrossingPlanner.cheapestAvailable(CheapBlocks.counts(spirit));
     }
 
     private void beginFinalWalk() {
@@ -187,7 +191,13 @@ public final class BridgeScript implements ScriptInstance {
         if (stand != null) {
             return stand;
         }
-        BlockPlacer.Begin begin = placer.begin(new BlockPos(cell.x(), cell.y(), cell.z()), wanted, blockId);
+        Optional<String> blockId = nextBlock();
+        if (blockId.isEmpty()) {
+            return fail("нет материала для моста: осталось " + (cells.size() - placed) + " клеток, блоков 0");
+        }
+        String id = blockId.orElseThrow();
+        BlockPlacer.Begin begin =
+                placer.begin(new BlockPos(cell.x(), cell.y(), cell.z()), BlockStates.stateFor(id), id);
         if (begin instanceof BlockPlacer.Started) {
             placed++;
             used++;
@@ -198,7 +208,7 @@ public final class BridgeScript implements ScriptInstance {
         }
         BlockPlacer.Refused refused = (BlockPlacer.Refused) begin;
         return switch (refused.reason()) {
-            case NO_MATERIAL -> fail("нет материала '" + blockId + "': нужно " + length + ", есть " + used);
+            case NO_MATERIAL -> fail("нет материала '" + id + "': нужно 1, есть " + CheapBlocks.count(spirit, id));
             case OCCUPIED -> fail("клетка " + toShort(cell) + " занята: мост некуда ставить");
             case NO_SUPPORT -> fail("под клеткой " + toShort(cell) + " нет опоры: блок повиснет");
             case OUT_OF_REACH -> fail("клетка " + toShort(cell) + " вне досягаемости");

@@ -29,6 +29,27 @@ class GraphRoutesTests {
     }
 
     @Test
+    void decisions_VitalNeed_ReportsNeedAndOrdinaryWork() {
+        GraphGateway gateway = () -> new GraphDecisions(
+                9,
+                List.of(),
+                List.of(new GraphDecisions.Vital(
+                        "spirit-1",
+                        "hunger",
+                        "голод: еды нет и источника нет",
+                        "graph:event:hungry:hunt",
+                        "graph:mine_coal")));
+
+        RestResponse response = Router.of(GraphRoutes.of(gateway))
+                .handle(new RestRequest("GET", GraphRoutes.DECISIONS, Map.of(), Map.of(), new byte[0]));
+
+        assertTrue(response.body().contains("\"need\":\"hunger\""), "Метрика нужды называет нужду: " + response.body());
+        assertTrue(
+                response.body().contains("\"doing\":\"graph:mine_coal\""),
+                "Метрика видит обычную работу при живой нужде: " + response.body());
+    }
+
+    @Test
     void decisions_EmptySnapshot_StillValidJson() {
         GraphGateway gateway = GraphDecisions::empty;
 

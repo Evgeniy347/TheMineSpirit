@@ -47,7 +47,7 @@ public final class GraphPlanner {
         planner.events();
         planner.orders();
         planner.blockRules.apply();
-        GraphAdvice.standing(graph, state, planner.advice);
+        GraphStanding.collect(graph, state, planner.advice);
         return planner.result(planner.edges());
     }
 
@@ -279,6 +279,7 @@ public final class GraphPlanner {
             }
             event.push().forEach((node, weight) -> boost(node, weight, name));
             event.advice().forEach(rule -> advice.add(new GraphPlan.Advice(name, rule)));
+            VitalPaths.note(graph, state, name, event, notices);
         }
     }
 

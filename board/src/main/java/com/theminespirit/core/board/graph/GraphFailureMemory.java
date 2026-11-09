@@ -128,15 +128,18 @@ public final class GraphFailureMemory {
         requireTick(now, "чтения блокировок");
         requireHalfLife(halfLifeTicks);
         Map<String, Set<String>> targets = new LinkedHashMap<>();
+        Map<String, Integer> repeated = new LinkedHashMap<>();
         for (GraphFeedback.Failure failure : facts(now, halfLifeTicks)) {
             if (unreachable(failure.need()) && !failure.target().isEmpty()) {
                 targets.computeIfAbsent(failure.node(), ignored -> new LinkedHashSet<>())
                         .add(failure.target());
+                repeated.merge(failure.node(), failure.count(), Math::max);
             }
         }
         List<GraphBlock> blocks = new ArrayList<>();
         targets.forEach((node, points) -> {
-            if (points.size() >= Math.max(1, minTargets)) {
+            if (points.size() >= Math.max(1, minTargets)
+                    || repeated.getOrDefault(node, 0) >= Math.max(1, minTargets)) {
                 String point = points.iterator().next();
                 blocks.add(new GraphBlock(node, point, new GraphBlock.Path(point)));
             }

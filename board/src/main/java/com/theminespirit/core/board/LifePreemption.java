@@ -18,12 +18,19 @@ final class LifePreemption {
     }
 
     Optional<BoardTicket> displace(BoardTicket incoming, DispatchRound.Candidate spirit, Board board) {
-        if (incoming.boardCase() != BoardCase.ACTIVITY_RETREAT) {
+        return displace(incoming, spirit, board, false);
+    }
+
+    Optional<BoardTicket> displace(
+            BoardTicket incoming, DispatchRound.Candidate spirit, Board board, boolean vitalIncoming) {
+        if (incoming.boardCase() != BoardCase.ACTIVITY_RETREAT && !vitalIncoming) {
             return Optional.empty();
         }
         BoardTicket work = null;
         for (BoardTicket held : board.assignedTo(spirit.id())) {
-            if (held.priority() >= incoming.priority() || !preemptable(held)) {
+            if ((!vitalIncoming && held.priority() >= incoming.priority())
+                    || !preemptable(held)
+                    || VitalGate.satisfies(held.id(), spirit.needs())) {
                 continue;
             }
             if (work == null || held.priority() < work.priority()) {

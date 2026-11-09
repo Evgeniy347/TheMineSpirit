@@ -34,6 +34,10 @@ final class DigOutRestore {
         }
     }
 
+    boolean pendingOver(BlockPos feet) {
+        return broken.keySet().stream().anyMatch(cell -> cell.getX() == feet.getX() && cell.getZ() == feet.getZ());
+    }
+
     boolean pending(BlockPos cell) {
         return broken.containsKey(cell);
     }

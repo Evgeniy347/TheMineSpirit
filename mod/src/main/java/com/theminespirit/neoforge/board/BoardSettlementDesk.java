@@ -80,6 +80,21 @@ final class BoardSettlementDesk {
                 incoming.boardCase());
     }
 
+    void withdraw(SpiritEntity spirit, BoardTicket ticket, String why) {
+        if (!board.release(ticket.id())) {
+            return;
+        }
+        issuedGenerations.remove(ticket.id());
+        stall.forget(spirit.getUUID());
+        spirit.cancelTask();
+        WorkReserveHub.releaseAll(spirit);
+        LOGGER.info(
+                "[board] дух {} бросает обычную работу {}: {} — задание возвращено на доску",
+                spirit.displayName(),
+                ticket.id(),
+                why);
+    }
+
     void release(SpiritEntity spirit) {
         for (BoardTicket ticket : board.assignedTo(spirit.getUUID())) {
             issuedGenerations.remove(ticket.id());
@@ -198,14 +213,7 @@ final class BoardSettlementDesk {
         stall.forget(spirit.getUUID());
         issuedGenerations.remove(ticket.id());
         spirit.cancelTask();
-        var need = GraphNeeds.of(
-                board,
-                ticket,
-                targets.get(ticket.id()),
-                spirit.getUUID().toString(),
-                SpiritItems.ids(spirit),
-                host.stock(),
-                board.now());
+        var need = GraphNeeds.of(board, ticket, targets.get(ticket.id()), spirit, host.stock(), board.now());
         host.sources.graphFailure(ticket, targets.get(ticket.id()), need, board.now());
         board.fail(ticket.id(), host.stock(), reason, need);
     }
@@ -254,20 +262,16 @@ final class BoardSettlementDesk {
                 case CAPTURE_ANIMAL -> host.completeCapture(ticket.id());
                 case BUILD_PEN -> host.completePen(ticket.id());
                 case LURE_ANIMAL -> host.completeLure(host.speciesFor(ticket));
-                case RESCUE_SPIRIT -> incidents.rescued(spirit, ticket);
+                case RESCUE_SPIRIT -> {
+                    board.stuck().release(spirit.getUUID(), board.now(), "спасение " + ticket.id() + " выполнено");
+                    incidents.rescued(spirit, ticket);
+                }
                 default -> {}
             }
         } else {
             String failure =
                     verdict != null ? verdict : spirit.taskFailureReason().orElse(null);
-            var need = GraphNeeds.of(
-                    board,
-                    ticket,
-                    targets.get(ticket.id()),
-                    spirit.getUUID().toString(),
-                    SpiritItems.ids(spirit),
-                    host.stock(),
-                    board.now());
+            var need = GraphNeeds.of(board, ticket, targets.get(ticket.id()), spirit, host.stock(), board.now());
             host.sources.graphFailure(ticket, targets.get(ticket.id()), need, board.now());
             board.fail(ticket.id(), host.stock(), failure, need);
             incidents.failed(spirit, ticket, targets.get(ticket.id()), why, board.now());

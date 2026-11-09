@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.building.BuildStandLevel;
 import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.building.CellPartition;
 import com.theminespirit.core.building.ReachPlanner;
@@ -179,11 +180,17 @@ final class SchematicPlacement {
     }
 
     ScriptStatus moveTowards(List<BlockCoord> cells, ReachPlanner.World base, boolean outsideOnly) {
+        if (host.feet().y() < host.site.origin().y() - 1) {
+            host.pit.escape(host.feet());
+            return ScriptStatus.RUNNING;
+        }
+        ReachPlanner.World stands =
+                BuildStandLevel.atOrAbove(base, host.site.origin().y() - 1);
         Set<BlockCoord> occupied = SchematicWalkways.free(host.site.primaries(), host.site.schemeCells());
         Optional<Set<BlockCoord>> reachable = host.site.walkable(host.feet(), BuildSchematicScript.WALK_MARGIN);
         boolean walkKnown =
                 host.site.networkBox(BuildSchematicScript.WALK_MARGIN).contains(host.feet()) && reachable.isPresent();
-        ReachPlanner.World world = walkKnown ? BuildStandPath.walkableOnly(base, reachable.orElseThrow()) : base;
+        ReachPlanner.World world = walkKnown ? BuildStandPath.walkableOnly(stands, reachable.orElseThrow()) : stands;
         Optional<BlockCoord> stand =
                 BuildStandPath.choose(cells, world, host.excludedStands, occupied, outsideOnly, host.feet());
         if (stand.isEmpty()) {

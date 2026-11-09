@@ -83,9 +83,9 @@ public final class GraphTickets {
     private static List<Ticket> consolidate(List<Ticket> tickets) {
         Map<String, Ticket> best = new LinkedHashMap<>();
         for (Ticket ticket : tickets) {
-            String key = ticket.task().spirit().isEmpty()
-                    ? ticket.kind() + ":" + ticket.task().makes()
-                    : "id:" + ticket.id();
+            String key = ticket.kind() == Kind.EVENT || ticket.task().spirit().isPresent()
+                    ? "id:" + ticket.id()
+                    : ticket.kind() + ":" + ticket.task().makes();
             Ticket before = best.get(key);
             if (before == null || stronger(ticket, before)) {
                 best.put(key, ticket);

@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
-public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> push, List<String> advice, boolean life) {
+public record GraphEvent(
+        String name, List<Task> tasks, Map<String, Integer> push, List<String> advice, boolean life, boolean vital) {
     public record Task(
             String id,
             BoardCase boardCase,
@@ -31,7 +32,11 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
     }
 
     public GraphEvent(String name, List<Task> tasks, Map<String, Integer> push, List<String> advice) {
-        this(name, tasks, push, advice, false);
+        this(name, tasks, push, advice, false, false);
+    }
+
+    public GraphEvent(String name, List<Task> tasks, Map<String, Integer> push, List<String> advice, boolean life) {
+        this(name, tasks, push, advice, life, false);
     }
 
     static Map<String, GraphEvent> withRepairs(
@@ -59,7 +64,9 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
                         task.owner(),
                         task.implemented()));
             }
-            repaired.put(name, new GraphEvent(name, tasks, template.push(), template.advice(), template.life()));
+            repaired.put(
+                    name,
+                    new GraphEvent(name, tasks, template.push(), template.advice(), template.life(), template.vital()));
         }
         return repaired;
     }
@@ -89,47 +96,49 @@ public record GraphEvent(String name, List<Task> tasks, Map<String, Integer> pus
                             tasks,
                             counts(entry.getValue().path("push")),
                             advice,
-                            entry.getValue().path("life").asBoolean(false)));
+                            entry.getValue().path("life").asBoolean(false),
+                            entry.getValue().path("vital").asBoolean(false)));
         });
         return events;
     }
 
     static int priority(GraphState state, SupplyGraph graph, String key, double value) {
-        return priority(
-                state.facts(),
-                graph.events(),
-                key,
-                value,
-                GraphPriorities.work(graph),
-                graph.maxPriority(),
-                graph.costs().life());
-    }
-
-    static int priority(
-            GraphFacts facts,
-            Map<String, GraphEvent> events,
-            String key,
-            double value,
-            int workMax,
-            int lifeMax,
-            GraphLife life) {
         if (key.startsWith("event:")) {
             int start = "event:".length();
             int end = key.indexOf(':', start);
             String name = end < 0 ? key.substring(start) : key.substring(start, end);
-            GraphEvent event = events.get(name);
-            if (event != null && event.life()) {
+            GraphEvent event = graph.events().get(name);
+            if (event != null) {
                 String taskId = end < 0 ? "" : key.substring(end + 1);
                 GraphEvent.Task task = event.tasks().stream()
                         .filter(candidate -> candidate.id().equals(taskId))
                         .findFirst()
                         .orElse(null);
                 if (task != null) {
-                    return LifeThreats.priority(facts, event, task, lifeMax, life);
+                    if (event.life()) {
+                        return LifeThreats.priority(
+                                state.facts(),
+                                event,
+                                task,
+                                graph.maxPriority(),
+                                graph.costs().life());
+                    }
+                    if (event.vital()) {
+                        int ceiling = GraphEventFacts.needEvent(event)
+                                ? GraphPriorities.need(graph)
+                                : GraphPriorities.work(graph);
+                        return VitalNeeds.priority(
+                                task.base(),
+                                event.tasks().stream().map(Task::base).toList(),
+                                ceiling);
+                    }
+                    if (GraphEventFacts.need(graph, state, event, task)) {
+                        return GraphPriorities.need(graph);
+                    }
                 }
             }
         }
-        return GraphFlow.priority(value, workMax);
+        return GraphFlow.priority(value, GraphPriorities.work(graph));
     }
 
     static Map<String, Integer> counts(JsonNode node) {

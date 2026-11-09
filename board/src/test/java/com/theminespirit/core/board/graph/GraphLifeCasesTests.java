@@ -22,6 +22,18 @@ class GraphLifeCasesTests {
     private static final String IDLE = "event:more6_spirit_idle:more6_assign_idle";
 
     @Test
+    void bands_PriorityOrder_WorkBelowNeedBelowLife() {
+        int life = GraphWorld.GRAPH.maxPriority();
+        assertEquals(life - 2, GraphPriorities.work(GraphWorld.GRAPH), "Обычная работа — нижняя полоса");
+        assertEquals(life - 1, GraphPriorities.need(GraphWorld.GRAPH), "Потребность — средняя полоса");
+        assertTrue(
+                GraphPriorities.work(GraphWorld.GRAPH) < GraphPriorities.need(GraphWorld.GRAPH)
+                        && GraphPriorities.need(GraphWorld.GRAPH) < life,
+                "Полосы не слипаются: работа " + GraphPriorities.work(GraphWorld.GRAPH) + ", потребность "
+                        + GraphPriorities.need(GraphWorld.GRAPH) + ", жизнь " + life);
+    }
+
+    @Test
     void tickets_Threat_DefendFirstAtGraphCeiling() {
         GraphWorld world = busySettlement()
                 .event("life_threat")
@@ -47,13 +59,14 @@ class GraphLifeCasesTests {
     }
 
     @Test
-    void tickets_Hungry_EatStaysWithinOrdinaryCeiling() {
+    void tickets_Hungry_EatStaysWithinVitalBand() {
         GraphWorld world = busySettlement().event("hungry");
         GraphPlan plan = world.plan();
+        int need = GraphPriorities.need(GraphWorld.GRAPH);
 
         assertTrue(
-                plan.priority(EAT) > 0 && plan.priority(EAT) <= GraphPriorities.work(GraphWorld.GRAPH),
-                "Еда — обычное событие: она важна, но не выше потолка 99. Еда " + plan.priority(EAT) + ", задания "
+                plan.priority(EAT) > 0 && plan.priority(EAT) <= need && plan.priority(EAT) >= need - VitalNeeds.BAND,
+                "Голод — жизненная нужда в полосе потребности, но не выше неё. Еда " + plan.priority(EAT) + ", задания "
                         + ids(plan));
         assertTrue(
                 tickets(world.state()).post().stream()
@@ -95,6 +108,10 @@ class GraphLifeCasesTests {
                 .filter(task -> "wait_food".equals(task.id()))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Нет ожидания еды в голоде: " + hungry.tasks()));
+        GraphEvent.Task harvest = hungry.tasks().stream()
+                .filter(task -> "harvest_crop".equals(task.id()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Нет сбора урожая в голоде: " + hungry.tasks()));
 
         assertEquals(BoardCase.HUNT_WILD_SHEEP, hunt.boardCase(), "Охота — существующая механика добычи мяса");
         assertEquals("animals", hunt.world(), "Охота требует животных в округе: без них источник не выдумывается");
@@ -105,6 +122,10 @@ class GraphLifeCasesTests {
         assertEquals(BoardCase.ACTIVITY_SENSE, wait.boardCase(), "Без источника дух ждёт на месте, а не копает");
         assertEquals("food", wait.onlyWhenEmpty(), "Ждать еду есть смысл только пока еды нет");
         assertEquals("hungriest", wait.owner(), "Ожидание адресовано голодному духу, а не сытому");
+        assertEquals(BoardCase.GATHER_MATERIALS, harvest.boardCase(), "Сбор урожая — работа фермы");
+        assertEquals("wheat_field", harvest.building(), "Урожай собирают только с построенного поля");
+        assertEquals("food", harvest.onlyWhenEmpty(), "Урожай подключается к голоду, пока еды нет");
+        assertEquals("hungriest", harvest.owner(), "Урожай собирает самый голодный дух");
     }
 
     @Test
