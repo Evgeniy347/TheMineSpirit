@@ -84,7 +84,8 @@ public final class BoardFailureDesk {
         }
         Map.Entry<String, Integer> first = missing.entrySet().iterator().next();
         int count = ticket.requiredItems().getOrDefault(first.getKey(), first.getValue());
-        blocked.note(ticket, failures, missing, stock, now, address, "", new GraphBlock.Item(first.getKey(), count));
+        blocked.note(new BlockedBook.BlockedNote(
+                ticket, failures, missing, stock, now, address, "", new GraphBlock.Item(first.getKey(), count)));
     }
 
     void releaseStuckHolders(long now) {
