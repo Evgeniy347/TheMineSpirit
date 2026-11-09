@@ -58,7 +58,7 @@ guards/GameTestIsolationGuardTests.java	352
 guards/GameTestTimeoutGuardTests.java	484
 guards/ProductionCommentGuardTests.java	575
 guards/SucceedWhenReturnGuardTests.java	343
-neoforge/BlockBreaker.java	416
+neoforge/BlockBreaker.java	413
 neoforge/BlockPlacer.java	309
 neoforge/ChopTreeScript.java	343
 neoforge/ClearAreaSession.java	541
@@ -73,7 +73,7 @@ neoforge/SpiritEntity.java	749
 neoforge/SpiritScripts.java	384
 neoforge/TreeChop.java	302
 neoforge/WorldScanner.java	306
-neoforge/board/BoardService.java	342
+neoforge/board/BoardService.java	336
 neoforge/board/FirstStepsRunner.java	681
 neoforge/board/TransferWatch.java	569
 neoforge/crafting/CraftScript.java	384

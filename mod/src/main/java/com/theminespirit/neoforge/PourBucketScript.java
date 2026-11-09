@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -102,7 +103,7 @@ final class PourBucketScript implements ScriptInstance {
         if (!takeFilledBucket()) {
             return fail("ведра " + fluid.bucketItem() + " в инвентаре нет: лить нечего");
         }
-        level.setBlock(target, block().defaultBlockState(), Block.UPDATE_ALL);
+        SpiritBlocks.place((ServerLevel) spirit.level(), target, block().defaultBlockState(), spirit, "POUR_BUCKET");
         giveEmptyBucket();
         outcome = ScriptStatus.SUCCEEDED;
         return outcome;

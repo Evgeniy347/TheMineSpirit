@@ -10,7 +10,6 @@ import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import org.slf4j.Logger;
@@ -60,7 +59,7 @@ final class DigOutRestore {
                 iterator.remove();
                 continue;
             }
-            level.setBlock(cell, entry.getValue(), Block.UPDATE_ALL);
+            SpiritBlocks.restore((ServerLevel) spirit.level(), cell, entry.getValue(), spirit, "DIG_OUT_BACKFILL");
             if (level instanceof ServerLevel server) {
                 PlacedBlocksData.get(server).markSpirit(cell);
             }

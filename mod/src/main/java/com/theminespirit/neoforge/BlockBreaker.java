@@ -152,7 +152,8 @@ public final class BlockBreaker {
     Begin begin(BlockPos target, Intent intent, boolean reachLimited, boolean leavesPass) {
         cancel();
         this.intent = intent;
-        this.ground = groundFor(intent);
+        BreakRefusal refusals = new BreakRefusal(spirit, intent);
+        this.ground = BreakRefusal.groundFor(intent);
         if (escaping) {
             BlockPos feet = spirit.blockPosition();
             if (SelfRescue.mayBreakAtFeet(
@@ -163,17 +164,19 @@ public final class BlockBreaker {
         }
         Level level = spirit.level();
         if (level.getChunkSource().getChunkNow(target.getX() >> 4, target.getZ() >> 4) == null) {
-            return new Refused(
+            return refusals.refused(
+                    target,
                     RefuseReason.CHUNK_NOT_LOADED,
                     "чанк с блоком " + target.toShortString() + " не загружен: дух не грузит чанки ради ломки");
         }
         BlockState targetState = level.getBlockState(target);
         if (targetState.isAir()) {
-            return new Refused(RefuseReason.AIR, "в " + target.toShortString() + " воздух: ломать нечего");
+            return refusals.refused(target, RefuseReason.AIR, "в " + target.toShortString() + " воздух: ломать нечего");
         }
         double hardness = targetState.getDestroySpeed(level, target);
         if (hardness < 0) {
-            return new Refused(
+            return refusals.refused(
+                    target,
                     RefuseReason.UNBREAKABLE,
                     "блок " + BreakNames.blockId(targetState) + " в " + target.toShortString() + " неразрушим: "
                             + hardness);
@@ -181,20 +184,22 @@ public final class BlockBreaker {
         if (reachLimited) {
             double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(target));
             if (distance > REACH) {
-                return new Refused(
+                return refusals.refused(
+                        target,
                         RefuseReason.OUT_OF_REACH,
                         "блок " + target.toShortString() + " дальше " + REACH + " от глаз (" + distance + "): подойти");
             }
         }
         boolean chop = intent == Intent.CHOP || intent == Intent.CHOP_HARVEST;
         if (!chop && BreakSight.visible(spirit, target, leavesPass) != Visibility.CLEAR) {
-            return new Refused(
+            return refusals.refused(
+                    target,
                     RefuseReason.NO_SIGHT,
                     "блок " + target.toShortString() + " не виден из глаз: подойти или убрать мешающий блок");
         }
         if (BreakProtection.check(spirit, intent, target, targetState, escaping, rescue)
                 instanceof BlockProtection.Refused refused) {
-            return new Protected(refused.policy(), refused.reason());
+            return refusals.protectedBlock(target, refused.policy(), refused.reason());
         }
         pos = target.immutable();
         state = targetState;
@@ -208,12 +213,13 @@ public final class BlockBreaker {
         forcedSlot = requestedSlot;
         choice = ToolChoice.best(options, reserve, MiningTables.repairTiers());
         if (ToolChoice.shouldRefuseForLackOfTool(choice, options)) {
-            return new Refused(RefuseReason.NEED_TOOL, BreakNames.needToolReason(targetState));
+            return refusals.refused(target, RefuseReason.NEED_TOOL, BreakNames.needToolReason(targetState));
         }
         boolean pickaxeBlock =
                 targetState.requiresCorrectToolForDrops() && targetState.is(BlockTags.MINEABLE_WITH_PICKAXE);
         if (ToolChoice.refusesHandDig(choice, options, pickaxeBlock, escaping)) {
-            return new Refused(
+            return refusals.refused(
+                    target,
                     RefuseReason.NEED_TOOL,
                     "нужна кирка для " + BreakNames.blockId(targetState)
                             + ": руками без дропа не копаем — кирки нет, дух не замурован");
@@ -379,7 +385,7 @@ public final class BlockBreaker {
         if (level instanceof ServerLevel server) {
             BreakNotice.broken(server, brokenPos, broken, spirit, intent.name(), ground);
         }
-        level.destroyBlock(brokenPos, false, spirit);
+        if (!SpiritBlocks.destroy((ServerLevel) spirit.level(), brokenPos, false, spirit, intent.name())) return;
         spirit.hunger().onBlockBroken();
         if (dropsAllowed) {
             Block.dropResources(broken, level, brokenPos, blockEntity, spirit, usedTool);
@@ -403,14 +409,5 @@ public final class BlockBreaker {
             crackStage = NO_STAGE;
         }
         active = false;
-    }
-
-    private static PlotProtection.Ground groundFor(Intent intent) {
-        return switch (intent) {
-            case DEMOLISH -> PlotProtection.Ground.PLAN_DEMOLISH;
-            case REPAIR -> PlotProtection.Ground.REPAIR;
-            case EXCAVATE -> PlotProtection.Ground.PLAN_EXCAVATE;
-            case BREAK, HARVEST, CHOP, CHOP_HARVEST -> PlotProtection.Ground.NONE;
-        };
     }
 }

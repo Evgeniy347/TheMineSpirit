@@ -171,9 +171,31 @@ def test_life_player_fact():
 
 def test_life_coefficient_vector():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
-    saved = graph.costs.life["weakHealth"]
-    graph.costs.life["weakHealth"] = 0.5
+    saved = dict(graph.costs.life)
+
+    def defend_priority():
+        hurt = {"amount": 8, "source": "minecraft:zombie", "ticksAgo": 0}
+        state = State({
+            "stage": 1,
+            "kits": {"spirit-1": {}},
+            "events": [],
+            "facts": life_facts(health=10, hurt=hurt, targets=[("spirit-1", 8)]),
+        })
+        return next((task["priority"] for task in plan(graph, state)["tasks"]
+                     if task["id"] == "event:life_threat_spirit:protect_spirit"), 0)
+
     try:
+        base = defend_priority()
+        assert base > 0, "Раненый дух и моб поднимают защиту: вектор коэффициентов жизни пуст"
+        for name, value in (("fullPressureMobs", 0.25), ("pressureBase", 0.9),
+                            ("pressureWound", 0.95), ("hurtShare", 0.9)):
+            graph.costs.life[name] = value
+            boosted = defend_priority()
+            assert boosted > base, \
+                "Коэффициент " + name + " из graph.json меняет жизнь: " + str(boosted) + " не выше " + str(base)
+            graph.costs.life[name] = saved[name]
+
+        graph.costs.life["weakHealth"] = 0.5
         vector = (("раненый 0.45", 9, True), ("целый 0.55", 11, False))
         for label, health, expected in vector:
             state = State({
@@ -192,8 +214,9 @@ def test_life_coefficient_vector():
             assert raised == expected, \
                 "Вектор фактов жизни " + label + ": порог из graph.json даёт " + str(expected) + ", а не " + str(raised)
     finally:
-        graph.costs.life["weakHealth"] = saved
-    print("OK: события жизни выводятся из порога graph.json, а не из константы Python")
+        graph.costs.life.clear()
+        graph.costs.life.update(saved)
+    print("OK: коэффициенты и пороги жизни читаются из graph.json, а не из констант Python")
 
 
 def test_food_need_band():
@@ -1323,6 +1346,7 @@ if __name__ == "__main__":
         test_fragments()
         test_life_priority()
         test_life_player_fact()
+        test_life_coefficient_vector()
         test_food_need_band()
         test_dig_inputs()
         test_area_nodes()
