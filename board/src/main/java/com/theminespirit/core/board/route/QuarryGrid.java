@@ -8,8 +8,8 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class QuarryGrid {
-    public static final int STEP = 96;
-    public static final int ANGLES = 16;
+    public static final int STEP = 128;
+    public static final int ANGLES = 8;
     private static final double FULL_TURN = Math.PI * 2;
 
     private QuarryGrid() {}

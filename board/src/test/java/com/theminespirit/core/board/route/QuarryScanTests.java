@@ -89,6 +89,17 @@ class QuarryScanTests {
     }
 
     @Test
+    void grid_Sampling_IsSmallEnoughForRestTimeout() {
+        List<BlockCoord> points = QuarryGrid.points(HOME, 128, 512);
+
+        assertEquals(
+                24,
+                points.size(),
+                "Кольца 128..512 шагом 128 и 8 направлений дают 24 области: поиск обязан укладываться в тайм-аут "
+                        + "REST (10 с), иначе стратег не получит место добычи");
+    }
+
+    @Test
     void sites_NoMarker_NoEventAndNoWorldTag() {
         QuarrySites.Feed feed = QuarrySites.feed(List.of(), HOME);
 

@@ -41,7 +41,9 @@ final class QuarryWorld implements QuarryProbe {
         int maxChunkZ = (area.point().z() + radius) >> 4;
         for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
             for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
-                level.getChunk(chunkX, chunkZ);
+                if (level.getChunkSource().getChunkNow(chunkX, chunkZ) == null) {
+                    level.getChunk(chunkX, chunkZ);
+                }
             }
         }
     }
