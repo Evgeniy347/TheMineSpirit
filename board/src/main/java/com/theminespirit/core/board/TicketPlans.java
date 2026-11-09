@@ -81,9 +81,6 @@ public final class TicketPlans {
     private static final int MINE_STEPS_SIZE = 3;
     private static final int RELOCATE_CLEAR_RADIUS = 4;
 
-    private static final List<BlockCoord> LIGHT_OFFSETS = List.of(
-            new BlockCoord(-3, 0, -3), new BlockCoord(3, 0, -3), new BlockCoord(-3, 0, 3), new BlockCoord(3, 0, 3));
-
     private TicketPlans() {}
 
     public static Optional<String> craftItem(BoardCase boardCase) {
@@ -187,7 +184,7 @@ public final class TicketPlans {
             case HARVEST_ORCHARD -> OrchardPlans.harvest(target);
             case PLACE_BEEHIVE -> placeBeehive(target);
             case BUILD_FENCE -> buildFence(target, level);
-            case LIGHTING -> lighting(target);
+            case LIGHTING -> TorchPlans.lighting(target);
             case BUILD_STREETS -> RoutePlans.path(target);
             case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
             case DISMANTLE_SHELTER -> dismantleShelter(target);
@@ -330,37 +327,36 @@ public final class TicketPlans {
     }
 
     private static TaskNode buildPenLevel(int level, TicketTarget target) {
-        String scheme = switch (level) {
+        return sequence(
+                gotoTarget(target), schematic(penScheme(level), target, level > 1 ? penScheme(level - 1) : null));
+    }
+
+    private static String penScheme(int level) {
+        return switch (level) {
             case 1 -> "pen_4x5";
             case 2 -> "pen_7x7";
             default -> "pen_9x9";
         };
-        return sequence(
-                gotoTarget(target),
-                new ScriptCall(
-                        BUILD_SCHEMATIC,
-                        Map.of(
-                                FILE,
-                                scheme,
-                                "x",
-                                target.target().x(),
-                                "y",
-                                target.target().y(),
-                                "z",
-                                target.target().z())));
     }
 
     private static TaskNode buildWarehouseLevel(int level, TicketTarget target) {
-        return sequence(gotoTarget(target), schematic(WarehouseRules.scheme(level), target));
+        return sequence(
+                gotoTarget(target),
+                schematic(WarehouseRules.scheme(level), target, level > 1 ? WarehouseRules.scheme(level - 1) : null));
     }
 
     private static TaskNode enchantRoomLevel(int level, TicketTarget target) {
-        String scheme = switch (level) {
+        return sequence(
+                gotoTarget(target),
+                schematic(enchantScheme(level), target, level > 1 ? enchantScheme(level - 1) : null));
+    }
+
+    private static String enchantScheme(int level) {
+        return switch (level) {
             case 1 -> ENCHANT_ROOM_SCHEME;
             case 2 -> ENCHANT_ROOM_SHELVES_SCHEME;
             default -> ENCHANT_ROOM_HALL_SCHEME;
         };
-        return sequence(gotoTarget(target), schematic(scheme, target));
     }
 
     private static TaskNode repairFence(TicketTarget target) {
@@ -527,23 +523,6 @@ public final class TicketPlans {
         return sequence(step, store(target, LEFTOVERS.toArray(String[]::new)));
     }
 
-    private static TaskNode lighting(TicketTarget target) {
-        List<BlockCoord> torches = LIGHT_OFFSETS.stream()
-                .map(offset -> new BlockCoord(
-                        target.target().x() + offset.x(),
-                        target.target().y(),
-                        target.target().z() + offset.z()))
-                .toList();
-        List<TaskNode> steps = new ArrayList<>(torches.size() + 4);
-        steps.add(gotoTarget(target));
-        steps.addAll(TorchPlans.supply(torches.size()));
-        for (BlockCoord torch : torches) {
-            steps.add(new ScriptCall(
-                    "place_block", Map.of(BLOCK, TORCH, "x", torch.x(), "y", torch.y(), "z", torch.z())));
-        }
-        return new SequenceNode(steps);
-    }
-
     private static TaskNode dismantleShelter(TicketTarget target) {
         return new ScriptCall(
                 CLEAR_AREA,
@@ -603,11 +582,13 @@ public final class TicketPlans {
     }
 
     private static TaskNode buildHouse(int level, TicketTarget target) {
-        if (target.schemeFile() != null) {
-            return sequence(gotoTarget(target), schematic(target.schemeFile(), target));
-        }
-        String scheme = BuildingLevels.scheme(BoardCase.BUILD_HOUSE, level).orElse(DEFAULT_SCHEME);
-        return sequence(gotoTarget(target), schematic(scheme, target));
+        String scheme = target.schemeFile() == null
+                ? BuildingLevels.scheme(BoardCase.BUILD_HOUSE, level).orElse(DEFAULT_SCHEME)
+                : target.schemeFile();
+        String previous = level > 1
+                ? BuildingLevels.scheme(BoardCase.BUILD_HOUSE, level - 1).orElse(null)
+                : null;
+        return sequence(gotoTarget(target), schematic(scheme, target, previous));
     }
 
     private static TaskNode repairBuilding(TicketTarget target) {
@@ -807,10 +788,19 @@ public final class TicketPlans {
     }
 
     private static ScriptCall schematic(String scheme, TicketTarget target) {
-        return schematic(scheme, target.target(), target);
+        return schematic(scheme, target.target(), target, null);
+    }
+
+    private static ScriptCall schematic(String scheme, TicketTarget target, @Nullable String previous) {
+        return schematic(scheme, target.target(), target, previous);
     }
 
     private static ScriptCall schematic(String scheme, BlockCoord origin, TicketTarget target) {
+        return schematic(scheme, origin, target, null);
+    }
+
+    private static ScriptCall schematic(
+            String scheme, BlockCoord origin, TicketTarget target, @Nullable String previous) {
         Map<String, Object> params = new LinkedHashMap<>();
         params.put(FILE, scheme);
         params.put("x", origin.x());
@@ -818,6 +808,9 @@ public final class TicketPlans {
         params.put("z", origin.z());
         if (target.wood() != null) {
             params.put(BuildSchematicParams.WOOD, target.wood());
+        }
+        if (previous != null) {
+            params.put(BuildSchematicParams.PREVIOUS, previous);
         }
         return new ScriptCall(BUILD_SCHEMATIC, Map.copyOf(params));
     }

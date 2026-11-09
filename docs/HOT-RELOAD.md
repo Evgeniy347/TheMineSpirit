@@ -46,6 +46,7 @@
 | `presets` | `schematics/presets.json` + тела схем | библиотека построек (индекс и тела схем — одна таблица) |
 | `board` | `board/board.json` | расписание доски задач |
 | `graph` | `board/graph.json` | граф потребностей доски: пороги запасов, пути добычи, постройки, события |
+| `vital` | `board/vital.json` | жизненные нужды духа: события, гейт, пути удовлетворения |
 | `doors` | `doors/doors.json` | вечерний порог и параметры дверей |
 | `tactics` | `tactics/{enemies,weights,rules,modes}.json` | ядро тактики (четыре файла — одна таблица) |
 | `adapter` | `tactics/adapter.json` | интервал оценки тактики, радиус фактов и т. п. |

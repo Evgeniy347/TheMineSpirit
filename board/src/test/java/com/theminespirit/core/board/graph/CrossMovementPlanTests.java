@@ -11,7 +11,6 @@ import static com.theminespirit.core.board.graph.CrossScene.spirit;
 import static com.theminespirit.core.board.graph.CrossScene.stageOne;
 import static com.theminespirit.core.board.graph.CrossScene.task;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.BoardActivities;
@@ -92,7 +91,7 @@ class CrossMovementPlanTests {
     }
 
     @Test
-    void pit_PillarNeedsTrailClean_SecondRunOpensExit() {
+    void pit_PillarOpensFromPlanks_AndRestoreTraceStaysPlanned() {
         GraphWorld world = stageOne();
         world.with("oak_planks", 64).with("cobblestone", 64).with("oak_log", 64);
         GraphFacts facts = facts(
@@ -103,16 +102,10 @@ class CrossMovementPlanTests {
                 Map.of());
         GraphPlan first = plan(world, facts);
 
-        assertFalse(
-                task(first, "pillar").feasible(), "Столб из ямы не ставится, пока не возвращён след: " + ids(first));
-        assertTrue(task(first, "restore_trace").feasible(), "Первый прогон даёт возврат следа: " + ids(first));
-
-        world.with("trail_clean", 1);
-        GraphPlan second = plan(world, facts);
-
         assertTrue(
-                task(second, "pillar").feasible(),
-                "След возвращён — выход столбом появляется со следующего прогона: " + ids(second));
+                task(first, "pillar").feasible(),
+                "Доски есть — выход столбом выполним сразу, без ожидания возврата следа: " + ids(first));
+        assertTrue(task(first, "restore_trace").feasible(), "Возврат следа остаётся в плане: " + ids(first));
         List<String> pillar = new ArrayList<>();
         collect(ActivityPlans.pillar(3, "oak_planks").task(), pillar);
         assertEquals("pillar_up", pillar.get(0), "Столб строится действием pillar_up, а не телепортом: " + pillar);

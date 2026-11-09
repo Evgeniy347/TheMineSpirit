@@ -4,7 +4,7 @@ core/board/BoardConfigTests.java	401
 core/board/BoardLogTests.java	422
 core/board/BoardTests.java	966
 core/board/BoardTicketTests.java	401
-core/board/TicketPlans.java	884
+core/board/TicketPlans.java	877
 core/board/TicketPlansTests.java	1231
 core/board/graph/GraphPlanner.java	499
 core/board/graph/GraphPlannerTests.java	933
@@ -49,7 +49,7 @@ core/tactics/TacticsConfigTests.java	370
 core/task/TaskReconcilerTests.java	368
 core/task/TaskRegistryTests.java	312
 gametest/DemoAuditGameTests.java	1101
-gametest/GameTestFilter.java	327
+gametest/GameTestFilter.java	305
 gametest/GameTestFixtures.java	354
 gametest/HouseMovementGameTests.java	365
 gametest/RestFixture.java	310

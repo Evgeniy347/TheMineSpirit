@@ -25,12 +25,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.AABB;
+import org.jspecify.annotations.Nullable;
 
 final class SchematicSite {
     private static final Set<String> DERIVED = Set.of("shape");
     final Level level;
     final BuildRotation rotation;
     final Schematic schematic;
+    final @Nullable Schematic previous;
     final BlockCoord origin;
     final List<Schematic.PlacedEntry> entries;
     final List<Schematic.PlacedEntry> primaries;
@@ -49,9 +51,15 @@ final class SchematicSite {
     final int maxY;
 
     SchematicSite(Level level, Schematic schematic, BlockCoord origin, BuildRotation rotation) {
+        this(level, schematic, null, origin, rotation);
+    }
+
+    SchematicSite(
+            Level level, Schematic schematic, @Nullable Schematic previous, BlockCoord origin, BuildRotation rotation) {
         this.level = level;
         this.rotation = rotation;
         this.schematic = schematic;
+        this.previous = previous;
         this.origin = origin;
         this.entries = schematic.entries(origin, rotation).stream()
                 .filter(entry -> SchematicActions.buildEntry(entry.block(), BlockItems.hasBlockItem(entry.block())))
@@ -179,7 +187,7 @@ final class SchematicSite {
 
     boolean supported(Schematic.PlacedEntry entry) {
         return SchematicActions.isFluidPlaced(entry.block())
-                || BlockPlacer.hasSupport(level, toPos(entry.pos()), wanted(entry));
+                || PlaceSupport.hasSupport(level, toPos(entry.pos()), wanted(entry));
     }
 
     boolean standable(BlockCoord feet) {

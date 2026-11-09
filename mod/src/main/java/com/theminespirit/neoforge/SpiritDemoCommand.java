@@ -46,7 +46,11 @@ final class SpiritDemoCommand {
                                         .executes(context -> city(
                                                 context,
                                                 integer(context, "stage"),
-                                                BlockPosArgument.getBlockPos(context, POS)))))));
+                                                BlockPosArgument.getBlockPos(context, POS))))))
+                .then(literal("wall")
+                        .executes(context -> wall(context, null))
+                        .then(argument(POS, BlockPosArgument.blockPos())
+                                .executes(context -> wall(context, BlockPosArgument.getBlockPos(context, POS))))));
         for (CommandNode<CommandSourceStack> demo : spirit.getArguments()) {
             if ("demo".equals(demo.getName())) {
                 for (DemoBuildings.Building building : DemoBuildings.all()) {
@@ -127,6 +131,11 @@ final class SpiritDemoCommand {
         return DemoRegistry.get(source.getLevel()).startCity(source, stage, pos);
     }
 
+    private static int wall(CommandContext<CommandSourceStack> context, BlockPos pos) {
+        CommandSourceStack source = context.getSource();
+        return DemoRegistry.get(source.getLevel()).startWall(source, pos);
+    }
+
     private static int level(CommandContext<CommandSourceStack> context) {
         return IntegerArgumentType.getInteger(context, "level");
     }
@@ -138,6 +147,8 @@ final class SpiritDemoCommand {
     private static int list(CommandContext<CommandSourceStack> context) {
         CommandSourceStack source = context.getSource();
         source.sendSuccess(() -> Component.literal("Демо-стройки (только оператор):"), false);
+        source.sendSuccess(
+                () -> Component.literal("  wall — стена-витрина: углы 90° и 45°, диагональ и калитка"), false);
         for (DemoBuildings.Building building : DemoBuildings.all()) {
             String levels = building.leveled()
                     ? "уровни "

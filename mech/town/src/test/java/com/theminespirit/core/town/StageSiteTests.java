@@ -166,7 +166,7 @@ class StageSiteTests {
                 SITE.gatherForbidden(far, 9),
                 "Пещера далеко за оградой не под поселением: запрет там оставил бы духов без камня");
         assertFalse(
-                SITE.fillStandAllowed(SITE.workYard(), false),
+                StageStands.fillStandAllowed(SITE, SITE.workYard(), false),
                 "Подсыпка со стоянки на площадке под крышей недопустима: дух замуруется в площадке");
     }
 

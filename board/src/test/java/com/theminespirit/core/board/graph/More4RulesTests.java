@@ -270,6 +270,6 @@ class More4RulesTests {
     }
 
     private static GraphFacts.Chest chest(Map<String, Integer> contents) {
-        return new GraphFacts.Chest(new GraphFacts.Position(0, 64, 0), contents, 0, 27);
+        return new GraphFacts.Chest(new GraphFacts.Position(0, 64, 0), contents, 0, 27, GraphFacts.Reach.UNKNOWN);
     }
 }

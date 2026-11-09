@@ -15,18 +15,20 @@ public record BuildSchematicParams(
         @Nullable BuildRotation rotation,
         int segments,
         @Nullable String wood,
-        List<String> only) {
+        List<String> only,
+        @Nullable String previous) {
     public static final int SEGMENTS_FROM_FILE = 0;
     public static final int SEGMENTS_MAX = 64;
     public static final String WOOD = "wood";
     public static final String ONLY = "only";
+    public static final String PREVIOUS = "previous";
 
     public BuildSchematicParams(String file, int x, int y, int z, @Nullable BuildRotation rotation) {
-        this(file, x, y, z, rotation, SEGMENTS_FROM_FILE, null, List.of());
+        this(file, x, y, z, rotation, SEGMENTS_FROM_FILE, null, List.of(), null);
     }
 
     public BuildSchematicParams(String file, int x, int y, int z, @Nullable BuildRotation rotation, int segments) {
-        this(file, x, y, z, rotation, segments, null, List.of());
+        this(file, x, y, z, rotation, segments, null, List.of(), null);
     }
 
     public BuildSchematicParams {
@@ -39,6 +41,7 @@ public record BuildSchematicParams(
         BuildingCoords.checkZ(z);
         rotation = rotation == null ? BuildRotation.NONE : rotation;
         only = List.copyOf(Objects.requireNonNull(only, "Отбор блоков build_schematic не может быть null"));
+        previous = previous == null || previous.isBlank() ? null : previous;
         if (wood != null) {
             WoodSpecies.check(wood);
         }
@@ -60,7 +63,8 @@ public record BuildSchematicParams(
                 params.get(WOOD) instanceof String wood ? wood : null,
                 params.get(ONLY) instanceof String only && !only.isBlank()
                         ? List.of(only.split(","))
-                        : List.<String>of());
+                        : List.<String>of(),
+                params.get(PREVIOUS) instanceof String previous ? previous : null);
     }
 
     private static BuildRotation rotation(Map<String, Object> params) {

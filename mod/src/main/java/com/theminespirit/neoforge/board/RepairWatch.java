@@ -5,13 +5,9 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.board.ToolFate;
-import com.theminespirit.core.board.ToolsConfig;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairCalculator;
 import com.theminespirit.core.repair.RepairCosts;
-import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.core.repair.RepairMaterials;
 import com.theminespirit.core.repair.RepairMethod;
 import com.theminespirit.core.script.CatalogLimits;
@@ -74,23 +70,13 @@ final class RepairWatch {
 
     private static Optional<String> repairableTool(SpiritEntity spirit, BooleanSupplier anvilNear) {
         SpiritInventory inventory = spirit.getInventory();
-        int percent = RepairData.loadDefault().maxDurabilityPercent();
-        ToolsConfig tools = DataTables.INSTANCE.board().current().tools();
         RepairCosts costs = RepairCosts.defaults();
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);
-            if (stack.isEmpty() || stack.getDamageValue() <= 0 || stack.getMaxDamage() <= 0) {
-                continue;
-            }
-            int maxDurability = stack.getMaxDamage();
-            int durability = maxDurability - stack.getDamageValue();
-            if (!RepairCalculator.damagedEnoughToRepair(durability, maxDurability, percent)) {
+            if (!ToolWear.repairable(stack)) {
                 continue;
             }
             String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
-            if (tools.fate(itemId, true) != ToolFate.REPAIR) {
-                continue;
-            }
             Optional<String> material = RepairMaterials.materialFor(itemId);
             boolean secondAvailable = hasSecondDamaged(inventory, itemId, slot);
             boolean materialAvailable = material.isPresent()

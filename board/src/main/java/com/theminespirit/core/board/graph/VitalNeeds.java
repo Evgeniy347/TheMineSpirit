@@ -2,18 +2,21 @@ package com.theminespirit.core.board.graph;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.reload.TableSlot;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import org.jspecify.annotations.Nullable;
+import java.util.function.Supplier;
 
 public final class VitalNeeds {
     public static final String RESOURCE = "data/theminespirit/board/vital.json";
 
     public static final int BAND = 9;
+
+    private static final TableSlot<List<Need>> SOURCE = new TableSlot<>(VitalNeeds::load);
 
     public record Need(
             String id,
@@ -55,22 +58,18 @@ public final class VitalNeeds {
         }
     }
 
-    private static volatile @Nullable List<Need> cached;
-
     private VitalNeeds() {}
 
     public static List<Need> needs() {
-        List<Need> known = cached;
-        if (known == null) {
-            synchronized (VitalNeeds.class) {
-                known = cached;
-                if (known == null) {
-                    known = parse(JsonResource.parse(JsonResource.readClasspath(RESOURCE), RESOURCE), RESOURCE);
-                    cached = known;
-                }
-            }
-        }
-        return known;
+        return SOURCE.current();
+    }
+
+    public static void useSource(Supplier<List<Need>> supplier) {
+        SOURCE.use(supplier);
+    }
+
+    private static List<Need> load() {
+        return parse(JsonResource.parse(JsonResource.readClasspath(RESOURCE), RESOURCE), RESOURCE);
     }
 
     public static Optional<Need> byId(String id) {
@@ -89,7 +88,11 @@ public final class VitalNeeds {
         return Math.max(0, workMax - (int) Math.min(BAND, above));
     }
 
-    static List<Need> parse(JsonNode root, String origin) {
+    public static List<Need> parse(String json, String origin) {
+        return parse(JsonResource.parse(json, origin), origin);
+    }
+
+    public static List<Need> parse(JsonNode root, String origin) {
         Objects.requireNonNull(root, "Таблица нужд не может быть null: без неё жизненный гейт не построить");
         List<Need> needs = new ArrayList<>();
         Map<String, String> seen = new LinkedHashMap<>();

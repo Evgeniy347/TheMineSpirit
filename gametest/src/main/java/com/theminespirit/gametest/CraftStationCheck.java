@@ -44,6 +44,7 @@ final class CraftStationCheck {
                 List.of(),
                 List.of(),
                 List.of(),
+                List.of(),
                 ColumnMask.rect(x, z, x + 20, z + 20),
                 ColumnMask.rect(x, z, x + 20, z + 20),
                 ColumnMask.rect(x, z, x, z),

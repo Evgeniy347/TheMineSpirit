@@ -223,7 +223,8 @@ class TownPlanChangeGuardTests {
                         entry.depth() + addDepth,
                         entry.quarter(),
                         entry.level(),
-                        entry.rotate()));
+                        entry.rotate(),
+                        entry.field()));
             } else {
                 entries.add(entry);
             }

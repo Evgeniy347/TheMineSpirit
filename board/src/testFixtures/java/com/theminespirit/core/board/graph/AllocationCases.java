@@ -35,13 +35,18 @@ final class AllocationCases {
     static GraphPlan plan(GraphWorld world) {
         return GraphFacts.empty().equals(world.facts)
                 ? world.plan()
-                : GraphPlanner.plan(world.graph, world.state().withFacts(world.facts));
+                : GraphPlanner.plan(
+                        world.graph,
+                        world.state().withFacts(world.facts, world.graph.costs().life()));
     }
 
     static GraphTickets.Result tickets(GraphWorld world) {
         return GraphFacts.empty().equals(world.facts)
                 ? GraphTickets.of(world.graph, world.state(), world.plan())
-                : GraphTickets.of(world.graph, world.state().withFacts(world.facts), plan(world));
+                : GraphTickets.of(
+                        world.graph,
+                        world.state().withFacts(world.facts, world.graph.costs().life()),
+                        plan(world));
     }
 
     static List<DispatchRound.Candidate> candidates(GraphWorld world) {
@@ -135,7 +140,8 @@ final class AllocationCases {
         return new GraphFacts(
                 spirits.stream().collect(Collectors.toMap(GraphFacts.Spirit::id, value -> value)),
                 List.of(),
-                List.of(new GraphFacts.Chest(new GraphFacts.Position(1, 64, 1), chest, 10, 27)),
+                List.of(new GraphFacts.Chest(
+                        new GraphFacts.Position(1, 64, 1), chest, 10, 27, GraphFacts.Reach.UNKNOWN)),
                 List.of(),
                 Map.of(),
                 Map.of(),

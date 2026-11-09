@@ -57,6 +57,32 @@ class DemandFoodChainScenarioTests {
     }
 
     @Test
+    void case04_FoodInFarChest_DeliveryRaisedInsteadOfHunting() {
+        GraphWorld world = pair(stageTwo()).event("hungry").with("food", 32);
+        GraphFacts facts = facts(
+                named(spirit("spirit-1"), spirit("spirit-2")),
+                List.of(),
+                List.of(new GraphFacts.Chest(
+                        new GraphFacts.Position(96, 64, 96),
+                        Map.of("minecraft:bread", 32),
+                        8,
+                        27,
+                        GraphFacts.Reach.PATH)),
+                GraphSiteFacts.Terrain.empty(),
+                Map.of());
+        GraphPlan plan = plan(world, facts);
+
+        GraphPlan.Task eat = task(plan, "event:hungry:eat");
+        assertTrue(eat.feasible(), "Еда в дальнем достижимом сундуке — дух идёт за ней: " + ids(plan));
+        assertTrue(
+                plan.task("event:hungry:hunt").map(task -> !task.feasible()).orElse(true),
+                "Еда есть — охота не поднимается: доставка со склада дешевле добычи: " + ids(plan));
+        assertTrue(
+                plan.task("craft_food").isEmpty(),
+                "Запас еды покрывает цель — крафт еды не заказывается: " + ids(plan));
+    }
+
+    @Test
     void case05_FurnaceMissing_CobblestoneRaisedUntilFurnaceCanBeBuilt() {
         GraphWorld world = pair(stageOne()).built("furnace", Built.PLANNED);
         world.with("cobblestone", 0).with("stone", 0);
@@ -217,7 +243,9 @@ class DemandFoodChainScenarioTests {
     }
 
     private static GraphPlan planWithOrders(GraphWorld world, GraphFacts facts, Map<String, Integer> orders) {
-        return GraphPlanner.plan(world.graph, world.state().withFacts(facts).withOrders(orders));
+        return GraphPlanner.plan(
+                world.graph,
+                world.state().withFacts(facts, world.graph.costs().life()).withOrders(orders));
     }
 
     private static List<String> ids(GraphPlan plan) {

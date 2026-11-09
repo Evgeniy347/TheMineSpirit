@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,6 +54,42 @@ class GearStockTests {
     }
 
     @Test
+    void plan_WoodenAxeHeldAndChestFull_NoHigherAxeCraft() {
+        GraphFacts facts = facts(
+                Map.of("spirit-1", spirit(null, List.of(tool("axe", 0, 131, 131)), List.of())),
+                List.of(chest(Map.of("minecraft:wooden_axe", 57))));
+        GraphWorld world = GraphWorld.settled().tools("spirit-1", 0).facts(facts);
+
+        GraphPlan plan = world.plan();
+
+        assertFalse(
+                plan.tasks().stream().anyMatch(task -> isAxeCraft(task.id())),
+                "Топор уже есть, в сундуках ещё 57 — граф не крафтит ни деревянный, ни следующий: " + plan.tasks());
+    }
+
+    @Test
+    void plan_FewerAxesThanSpirits_CraftsOnlyForUncovered() {
+        GraphFacts facts = facts(
+                Map.of(
+                        "spirit-1", spirit(null, List.of(), List.of()),
+                        "spirit-2", spirit(null, List.of(), List.of())),
+                List.of(chest(Map.of("minecraft:wooden_axe", 1))));
+        GraphWorld world =
+                GraphWorld.settled().tools("spirit-1", -1).tools("spirit-2", -1).facts(facts);
+
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.tasks().stream().anyMatch(task -> isAxeCraft(task.id())),
+                "Один топор на двух духов — крафт для того, кому не хватило: иначе «запас есть» скрывает "
+                        + "нехватку: " + plan.tasks());
+    }
+
+    private static boolean isAxeCraft(String taskId) {
+        return taskId.contains("_axe") && taskId.contains("craft") && !taskId.contains("pickaxe");
+    }
+
+    @Test
     void events_AxeMovedFromChestToSpirit_NoCraftBeforeOrAfter() {
         List<GraphFacts.Chest> chestWithAxe = List.of(chest(Map.of("minecraft:stone_axe", 1)));
         GraphFacts.Spirit empty = spirit(null, List.of(), List.of());
@@ -91,7 +128,7 @@ class GearStockTests {
     }
 
     private static GraphFacts.Chest chest(Map<String, Integer> contents) {
-        return new GraphFacts.Chest(new GraphFacts.Position(0, 64, 0), contents, 10, 27);
+        return new GraphFacts.Chest(new GraphFacts.Position(0, 64, 0), contents, 10, 27, GraphFacts.Reach.UNKNOWN);
     }
 
     private static GraphFacts facts(Map<String, GraphFacts.Spirit> spirits, List<GraphFacts.Chest> chests) {

@@ -13,12 +13,16 @@ final class ChestTools {
     static Set<String> covered(SupplyGraph graph, GraphState state) {
         Set<String> covered = new HashSet<>();
         for (String kind : graph.kit().kinds()) {
+            int target = graph.rank(graph.kit().tier(kind, state.stage()));
+            if (target < 0) {
+                continue;
+            }
             int have = count(graph, state, kind);
             if (have <= 0) {
                 continue;
             }
             List<String> lacking = state.kits().keySet().stream()
-                    .filter(spirit -> state.tier(spirit, kind) < 0)
+                    .filter(spirit -> state.tier(spirit, kind) < target)
                     .sorted()
                     .toList();
             for (int index = 0; index < Math.min(have, lacking.size()); index++) {

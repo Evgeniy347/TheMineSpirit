@@ -3,6 +3,7 @@ package com.theminespirit.core.board;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 import com.theminespirit.core.board.graph.SupplyGraph;
+import com.theminespirit.core.board.graph.VitalNeeds;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.InventoryNormTable;
@@ -10,10 +11,12 @@ import com.theminespirit.core.intellect.OutsideRules;
 import com.theminespirit.core.intellect.defense.DefenseProfile;
 import com.theminespirit.core.processing.ProcessingRules;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.reload.TableHolder;
 import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;
 import com.theminespirit.core.town.TownRules;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class TableBindingsTests {
@@ -26,6 +29,10 @@ class TableBindingsTests {
         assertSame(tables.demand().current(), DemandRules.current(), "settlement_demand.json читается у владельца");
         assertSame(tables.leveling().current(), LevelingRules.current(), "leveling.json читается у владельца");
         assertSame(tables.graph().current(), SupplyGraph.current(), "graph.json читается у владельца");
+        @SuppressWarnings("unchecked")
+        TableHolder<List<VitalNeeds.Need>> vital = (TableHolder<List<VitalNeeds.Need>>)
+                tables.registry().holder("vital").orElseThrow();
+        assertSame(vital.current(), VitalNeeds.needs(), "vital.json читается у владельца");
         assertSame(tables.presets().current(), PresetLibrary.current(), "presets.json читается у владельца");
         assertSame(tables.town().current(), TownRules.current(), "town.json читается у владельца");
         assertSame(tables.repair().current(), RepairData.current(), "repair.json читается у владельца");

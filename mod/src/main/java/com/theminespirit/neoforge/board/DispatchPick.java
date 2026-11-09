@@ -146,6 +146,7 @@ final class DispatchPick {
                 new SpiritView(control, false, status == RunStatus.RUNNING),
                 spirit.isInWater(),
                 stockTools,
-                SpiritVitals.needs(spirit));
+                SpiritVitals.needs(spirit),
+                List.copyOf(ToolWear.worn(spirit)));
     }
 }

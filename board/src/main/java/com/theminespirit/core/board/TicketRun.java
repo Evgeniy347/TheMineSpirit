@@ -11,6 +11,10 @@ public enum TicketRun {
     DISPLACED,
     RESUME;
 
+    public static boolean restoredTask(long currentGeneration) {
+        return currentGeneration == SpiritReading.UNKNOWN_GENERATION;
+    }
+
     public static TicketRun decide(
             long issuedGeneration, long currentGeneration, @Nullable RunStatus status, boolean externalControl) {
         return decide(issuedGeneration, currentGeneration, status, externalControl, true);

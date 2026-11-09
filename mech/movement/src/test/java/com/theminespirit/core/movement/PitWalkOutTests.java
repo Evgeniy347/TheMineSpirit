@@ -76,6 +76,32 @@ class PitWalkOutTests {
     }
 
     @Test
+    void walkOut_CaveHoleWiderThanThree_IsNotAnExit() {
+        Grid cave = Grid.cave();
+        for (int z = 0; z <= 3; z++) {
+            cave.skyAt(6, z, START);
+        }
+
+        assertFalse(
+                PitWalkOut.exists(cave, 0, 0, START),
+                "проём в потолке шире трёх клеток не выход: проверка поверхности на одной точке в трёх шагах "
+                        + "попадала внутрь проёма и объявляла выход там, где кругом потолок пещеры (debtnav3, п.3)");
+    }
+
+    @Test
+    void walkOut_CaveHoleSixWide_IsNotAnExit() {
+        Grid cave = Grid.cave();
+        for (int z = 0; z <= 5; z++) {
+            cave.skyAt(6, z, START);
+        }
+
+        assertFalse(
+                PitWalkOut.exists(cave, 0, 0, START),
+                "проём в потолке в шесть клеток не выход: поверхность вокруг клетки выхода обязана быть местностью, "
+                        + "а не дном той же дыры (debtnav3, п.3)");
+    }
+
+    @Test
     void walkOut_CaveMouthToOpenSlope_IsAnExit() {
         Grid cave = Grid.cave();
         for (int z = -12; z <= 12; z++) {

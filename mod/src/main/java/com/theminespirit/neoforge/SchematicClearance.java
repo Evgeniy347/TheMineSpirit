@@ -69,6 +69,10 @@ final class SchematicClearance {
     }
 
     private void addOldSchemeExtras(List<BlockCoord> cells) {
+        if (site.previous != null) {
+            cells.addAll(SchematicUpgrade.extraPositions(site.previous, site.schematic, site.origin, site.rotation));
+            return;
+        }
         if (!(site.level instanceof ServerLevel server)) {
             return;
         }

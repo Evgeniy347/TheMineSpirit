@@ -37,7 +37,7 @@ class CrossRouteStageScenarioTests {
     private static final BlockCoord PIT = new BlockCoord(2, 60, 2);
 
     @Test
-    void pit_WaterAtBottom_BridgeWaitsForTraceAndThenUsesPlanks() {
+    void pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned() {
         GraphWorld world = stageOne();
         world.built("hut", Built.PLANNED);
         world.with("oak_planks", 64).with("oak_log", 64).with("cobblestone", 64);
@@ -51,16 +51,13 @@ class CrossRouteStageScenarioTests {
 
         GraphPlan.Task bridge = task(first, "bridge");
         GraphPlan.Task trace = task(first, "restore_trace");
-        assertFalse(bridge.feasible(), "Мост из ямы с водой не ставится, пока не возвращён след: " + ids(first));
-        assertTrue(trace.feasible(), "Граф сначала возвращает след restore_trace: " + ids(first));
+        assertTrue(bridge.feasible(), "Доски есть — мост из воды выполним сразу: " + ids(first));
+        assertTrue(trace.feasible(), "Возврат следа остаётся в плане: " + ids(first));
         assertTrue(
                 first.task("building:hut").filter(GraphPlan.Task::feasible).isPresent(),
                 "Стройка дома ждёт, но не отменяется: " + ids(first));
 
-        world.with("trail_clean", 1);
-        GraphPlan second = plan(world, facts);
-        GraphPlan.Task ready = task(second, "bridge");
-        assertTrue(ready.feasible(), "След возвращён — мост из ямы становится выполним: " + ids(second));
+        GraphPlan.Task ready = task(first, "bridge");
         assertEquals(
                 Map.of("#planks", 8),
                 ready.consumes(),

@@ -139,7 +139,7 @@ final class CrossScene {
     }
 
     static GraphFacts.Chest chest(Map<String, Integer> contents) {
-        return new GraphFacts.Chest(new GraphFacts.Position(1, 64, 1), contents, 10, 27);
+        return new GraphFacts.Chest(new GraphFacts.Position(1, 64, 1), contents, 10, 27, GraphFacts.Reach.UNKNOWN);
     }
 
     static GraphFacts.Building damaged(String id, int audit, int damage, Map<String, Integer> missing) {
@@ -151,11 +151,13 @@ final class CrossScene {
     }
 
     static GraphPlan plan(GraphWorld world, GraphFacts facts) {
-        return GraphPlanner.plan(world.graph, world.state().withFacts(facts));
+        return GraphPlanner.plan(
+                world.graph, world.state().withFacts(facts, world.graph.costs().life()));
     }
 
     static GraphTickets.Result tickets(GraphWorld world, GraphFacts facts) {
-        return GraphTickets.of(world.graph, world.state().withFacts(facts), plan(world, facts));
+        return GraphTickets.of(
+                world.graph, world.state().withFacts(facts, world.graph.costs().life()), plan(world, facts));
     }
 
     static GraphTickets.Ticket ticketFor(GraphTickets.Result result, String id) {

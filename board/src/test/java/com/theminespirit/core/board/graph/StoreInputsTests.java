@@ -35,7 +35,8 @@ class StoreInputsTests {
                 new GraphFacts.Position(1, 64, 1),
                 Map.of("minecraft:oak_log", 10, "minecraft:birch_log", 5, "minecraft:cobblestone", 40),
                 2,
-                27));
+                27,
+                GraphFacts.Reach.UNKNOWN));
 
         GraphSiteFacts.StageReqs reqs = StoreInputs.stageReqs(EMPTY, settings, SupplyGraph.loadDefault(), chests);
 

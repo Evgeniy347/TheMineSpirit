@@ -16,8 +16,8 @@
 задача возвращается на доску (`CrossFleeScenarioTests.flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard`,
 `CrossLifeWorkScenarioTests.flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard`); **5-12** — тот же
 механизм для строителя под мобами (`CrossBattleWorkScenarioTests.combat_MobsAtBuilderAndChopper_RetreatPreemptsWork`).
-**2-5** закреплено `CrossRouteStageScenarioTests.pit_PillarNeedsTrailClean_SecondRunOpensExit` (первый прогон —
-`restore_trace`, второй — `pillar`).
+**2-5** закреплено `CrossRouteStageScenarioTests.pit_PillarOpensFromPlanks_AndRestoreTraceStaysPlanned` (мост/столб
+выполнимы сразу по доскам, `restore_trace` остаётся в плане).
 Закрыто ранее: **14-4, 14-20** — crossfood поднял узел «добыть еду» выше шахты (охота/рыбалка, без источника —
 ожидание); пары `ОК`, сценарий переписан в `CrossHungerScenarioTests`.
 Дополнено debtfood: голод идёт отдельной **полосой потребности** (99) над обычной работой (98) и ниже жизни (100);
