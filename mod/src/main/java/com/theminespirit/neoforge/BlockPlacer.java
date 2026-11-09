@@ -68,11 +68,11 @@ public final class BlockPlacer {
     }
 
     public Begin begin(BlockPos target, BlockState state, String blockId) {
-        return begin(target, state, blockId, true);
+        return PlaceRefusal.checked(spirit, target, blockId, begin(target, state, blockId, true));
     }
 
     public Begin beginWithoutSupport(BlockPos target, BlockState state, String blockId) {
-        return begin(target, state, blockId, false);
+        return PlaceRefusal.checked(spirit, target, blockId, begin(target, state, blockId, false));
     }
 
     private Begin begin(BlockPos target, BlockState state, String blockId, boolean supportRequired) {
@@ -128,13 +128,13 @@ public final class BlockPlacer {
         }
         ItemStack used = new ItemStack(wanted);
         spirit.getInventory().removeItemType(wanted, 1);
-        level.setBlock(target, state, Block.UPDATE_ALL);
+        SpiritBlocks.place((ServerLevel) spirit.level(), target, state, spirit, blockId);
         if (firstOfTwoParts(state)) {
             state.getBlock().setPlacedBy(level, target, state, spirit, used);
         } else if (!pairedChestHalf(state)) {
             BlockState updated = Block.updateFromNeighbourShapes(state, level, target);
             if (!updated.equals(state)) {
-                level.setBlock(target, updated, Block.UPDATE_ALL);
+                SpiritBlocks.place((ServerLevel) spirit.level(), target, updated, spirit, blockId);
             }
         }
         if (!level.getBlockState(target).is(state.getBlock())) {

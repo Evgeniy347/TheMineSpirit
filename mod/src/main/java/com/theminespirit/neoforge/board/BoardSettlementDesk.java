@@ -271,7 +271,7 @@ final class BoardSettlementDesk {
             board.fail(ticket.id(), host.stock(), failure);
             incidents.failed(spirit, ticket, targets.get(ticket.id()), why, board.now());
             board.drainDetachments().forEach(host.journal()::recordEntry);
-            host.flushBlockNotes();
+            host.flushBlockNotes((ServerLevel) spirit.level());
             if (ticket.boardCase() == BoardCase.CAPTURE_ANIMAL) {
                 host.captureFailed(ticket.id());
             }

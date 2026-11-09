@@ -115,7 +115,7 @@ final class SchematicPlanStand {
                 continue;
             }
             if (host.site.rightBlockWrongState(entry)) {
-                host.site.repairState(entry);
+                host.site.repairState(entry, host.spirit);
                 return true;
             }
             byCell.put(cell, entry);

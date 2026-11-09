@@ -285,16 +285,16 @@ final class SchematicSite {
         return SchematicActions.isActionPlaced(entry.block()) || current.isAir() || current.canBeReplaced();
     }
 
-    void repairState(Schematic.PlacedEntry entry) {
+    void repairState(Schematic.PlacedEntry entry, SpiritEntity spirit) {
         BlockPos target = toPos(entry.pos());
         BlockState wanted = wanted(entry);
-        level.setBlock(target, wanted, Block.UPDATE_ALL);
+        SpiritBlocks.place((ServerLevel) spirit.level(), target, wanted, spirit, "REPAIR_SCHEMA");
         if (!wanted.hasProperty(BlockStateProperties.BED_PART)
                 && !wanted.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)
                 && !BlockPlacer.pairedChestHalf(wanted)) {
             BlockState updated = Block.updateFromNeighbourShapes(wanted, level, target);
             if (!updated.equals(wanted)) {
-                level.setBlock(target, updated, Block.UPDATE_ALL);
+                SpiritBlocks.place((ServerLevel) spirit.level(), target, updated, spirit, "REPAIR_SCHEMA");
             }
         }
     }

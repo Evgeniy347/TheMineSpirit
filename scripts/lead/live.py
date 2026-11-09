@@ -6,6 +6,7 @@
 """
 import argparse
 import collections
+import datetime as dt
 import json
 import os
 import re
@@ -20,7 +21,6 @@ SSH = os.environ.get("LIVE_SSH", "domovoy@192.168.0.147")
 MAIN_REST = os.environ.get("LIVE_REST", "http://192.168.0.147:8765")
 MAIN_SERVER = "/opt/minecraft/server"
 SLICE = os.path.join(HERE, "world-slice.py")
-NOISE = ("отказ ломать", "[pos]", "[tick]")
 HELP = """scripts/live.sh <команда>  (цель: своя копия дерева, иначе основной сервер только на чтение; --main — основной)
 
   status                 духи, доска, падения источников, свежие сбои; с этого начинать
@@ -76,6 +76,19 @@ class Target:
             ).stdout
             text = out.decode("utf-8", "replace").splitlines()
         return [mod_line(line) for line in text if "theminespirit" in line and "\tat " not in line]
+
+    def logq(self, args):
+        command = [sys.executable, os.path.join(REPO, "scripts", "logdb", "logq.py")]
+        if self.copy:
+            command.extend(["--logs", os.path.join(self.copy, "logs")])
+        else:
+            command.append("--main")
+        command.extend(["--json", *args])
+        try:
+            output = subprocess.run(command, capture_output=True, check=True).stdout
+            return json.loads(output.decode("utf-8", "replace"))
+        except (OSError, subprocess.CalledProcessError, json.JSONDecodeError):
+            return []
 
     def slice_args(self, args):
         if self.copy:
@@ -154,10 +167,16 @@ def spirit(target, args):
         if task.get("assignee") == bot["id"] and task["status"] != "DONE":
             print("  задание %s %s %s: %s" % (task["id"][:50], task["status"], task.get("effectivePriority"), str(task.get("waitReason"))[:110]))
     print("журнал:")
-    keys = (bot["name"] + " ", bot["name"] + ":", bot["id"])
-    shown = [line for line in target.log(6000) if any(k in line for k in keys) and not any(n in line for n in NOISE)]
-    for line in shown[-args.lines:]:
-        print("  " + line[:420])
+    rows = target.logq(["spirit", bot["name"], "--since", "1h", "--limit", str(args.lines)])
+    if rows:
+        for row in rows:
+            print("  %s %-14s %s" % (
+                stamp(row.get("ts")),
+                row.get("type") or "-",
+                (row.get("summary") or "")[:380],
+            ))
+    else:
+        print("  в базе логов событий нет: загрузчик дочитает JSONL после следующего поиска")
     x, y, z = bot["position"]
     print(target.slice_args([x, y, z, 3, 3, 2]))
 
@@ -167,6 +186,18 @@ def slice_cmd(target, args):
 
 
 def loops(target, args):
+    rows = target.logq(["failures", "--since", "30d", "--limit", str(args.lines)])
+    if rows:
+        total = sum(int(row.get("n") or 0) for row in rows)
+        print("провалов %d за 30 дней" % total)
+        for row in rows:
+            print("%4s %-20s %-12s %s" % (
+                row.get("n"),
+                (row.get("board_case") or "-")[:20],
+                (row.get("cause") or "-")[:12],
+                (row.get("reason") or "")[:100],
+            ))
+        return
     lines = target.log(40000)
     counts = collections.Counter()
     reasons = {}
@@ -183,10 +214,15 @@ def loops(target, args):
 
 
 def log_cmd(target, args):
-    pattern = re.compile(args.pattern)
-    shown = [line for line in target.log(20000) if pattern.search(line)]
-    for line in shown[-args.lines:]:
-        print(line[:500])
+    rows = target.logq(["grep", args.pattern, "--limit", str(args.lines), "--since", "24h"])
+    for row in rows:
+        print("%s %-12s %s" % (stamp(row.get("ts")), row.get("type") or "-", (row.get("summary") or "")[:460]))
+
+
+def stamp(millis):
+    if not millis:
+        return "-"
+    return dt.datetime.fromtimestamp(int(millis) / 1000, dt.timezone.utc).strftime("%d.%m %H:%M:%S")
 
 
 def kind_of(name):

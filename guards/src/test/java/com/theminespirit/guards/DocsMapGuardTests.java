@@ -125,7 +125,9 @@ class DocsMapGuardTests {
             throw new UncheckedIOException("Сторож не смог собрать документы", e);
         }
         try (Stream<Path> files = Files.walk(SCRIPTS)) {
-            for (Path file : files.filter(Files::isRegularFile).toList()) {
+            for (Path file : files.filter(Files::isRegularFile)
+                    .filter(path -> !path.toString().contains("__pycache__"))
+                    .toList()) {
                 paths.add(file.toString().replace('\\', '/'));
             }
         } catch (IOException e) {

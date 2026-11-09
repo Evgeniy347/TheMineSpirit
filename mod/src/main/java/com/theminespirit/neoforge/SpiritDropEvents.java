@@ -1,6 +1,8 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.neoforge.log.SpiritWorldLog;
 import java.util.Iterator;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
@@ -18,7 +20,18 @@ public final class SpiritDropEvents {
         Iterator<ItemEntity> drops = event.getDrops().iterator();
         while (drops.hasNext()) {
             ItemEntity drop = drops.next();
-            ItemStack rest = spirit.getInventory().addItem(drop.getItem().copy());
+            ItemStack stack = drop.getItem();
+            int before = stack.getCount();
+            ItemStack rest = spirit.getInventory().addItem(stack.copy());
+            int taken = before - rest.getCount();
+            if (taken > 0) {
+                SpiritWorldLog.itemMove(
+                        spirit,
+                        "pickup",
+                        BuiltInRegistries.ITEM.getKey(stack.getItem()).toString(),
+                        taken,
+                        null);
+            }
             if (rest.isEmpty()) {
                 drops.remove();
             } else {
