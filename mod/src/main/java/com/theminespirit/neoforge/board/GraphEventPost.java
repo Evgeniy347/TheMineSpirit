@@ -19,6 +19,7 @@ final class GraphEventPost {
     private static final String EAT = "eat";
     private static final String WAIT_FOOD = "wait_food";
     private static final String ORDER = "craft_player_order";
+    private static final int HEAL_TICKS = 100;
     private static final Set<String> DEMOLITION = Set.of("demolish_stray", "clear_floating");
     private static final Set<String> COLLECT = Set.of("collect_drops", "collect_saplings");
 
@@ -94,10 +95,48 @@ final class GraphEventPost {
         if (!ticket.id().startsWith(GraphTickets.PREFIX + "event:life_")) {
             return false;
         }
-        if (ticket.task().boardCase() == BoardCase.ACTIVITY_DEFEND) {
-            return GraphDefensePost.post(post, ticket);
+        Optional<String> action = lifeAction(ticket.node(), ticket.task().boardCase());
+        if (action.isEmpty()) {
+            return false;
         }
-        return ticket.node().contains("retreat") && retreat(post, ticket);
+        return switch (action.orElseThrow()) {
+            case "defend" -> GraphDefensePost.post(post, ticket);
+            case "retreat" -> retreat(post, ticket);
+            case "heal" -> heal(post);
+            default -> false;
+        };
+    }
+
+    static Optional<String> lifeAction(String node, BoardCase boardCase) {
+        if (boardCase == BoardCase.ACTIVITY_DEFEND) {
+            return Optional.of("defend");
+        }
+        if (node.contains("retreat")) {
+            return Optional.of("retreat");
+        }
+        if (boardCase == BoardCase.ACTIVITY_REST && "heal".equals(node)) {
+            return Optional.of("heal");
+        }
+        return Optional.empty();
+    }
+
+    private static boolean heal(GraphPost post) {
+        GraphFacts.Spirit injured = post.facts.spirits().values().stream()
+                .filter(spirit -> spirit.health() < spirit.maxHealth())
+                .min(Comparator.comparingDouble((GraphFacts.Spirit spirit) -> spirit.health() / spirit.maxHealth())
+                        .thenComparing(GraphFacts.Spirit::id))
+                .orElse(null);
+        if (injured == null) {
+            return false;
+        }
+        for (var spirit : post.spirits) {
+            if (spirit.isRemoved() || !spirit.getUUID().toString().equals(injured.id())) {
+                continue;
+            }
+            return ActivityLaunch.launchOn(
+                    post, spirit, BoardCase.ACTIVITY_REST, "wait", new ScriptCall("wait", Map.of("ticks", HEAL_TICKS)));
+        }
+        return false;
     }
 
     private static boolean retreat(GraphPost post, GraphTickets.Ticket ticket) {

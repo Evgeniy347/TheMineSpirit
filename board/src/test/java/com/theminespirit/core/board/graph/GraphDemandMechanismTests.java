@@ -20,8 +20,10 @@ class GraphDemandMechanismTests {
         GraphWorld world = stageTwo().with("cobblestone", 0);
         int previous = -1;
         for (int run = 1; run <= 10; run++) {
-            GraphTickets.Result result =
-                    GraphTickets.of(world.graph, world.state().withFacts(facts(TWO)), plan(world, facts(TWO)));
+            GraphTickets.Result result = GraphTickets.of(
+                    world.graph,
+                    world.state().withFacts(facts(TWO), world.graph.costs().life()),
+                    plan(world, facts(TWO)));
             List<GraphTickets.Ticket> stone = result.post().stream()
                     .filter(ticket -> "cobblestone".equals(ticket.task().makes()))
                     .toList();
@@ -42,7 +44,10 @@ class GraphDemandMechanismTests {
         GraphPlan full = plan(world, facts(TWO));
         assertTrue(
                 full.task("mine_cobble").isEmpty(), "Цель достигнута — добыча камня не заказывается: " + full.tasks());
-        GraphTickets.Result closed = GraphTickets.of(world.graph, world.state().withFacts(facts(TWO)), full);
+        GraphTickets.Result closed = GraphTickets.of(
+                world.graph,
+                world.state().withFacts(facts(TWO), world.graph.costs().life()),
+                full);
         assertTrue(
                 closed.post().stream()
                         .noneMatch(ticket -> "cobblestone".equals(ticket.task().makes())),
@@ -75,7 +80,8 @@ class GraphDemandMechanismTests {
     void demand_TargetGrowsWithSpirits_RequestCoversWholeShortage() {
         GraphFacts oneFacts = facts(named(spirit("spirit-1")));
         GraphWorld one = stageTwo().with("food", 0);
-        GraphTickets.Result single = GraphTickets.of(one.graph, one.state().withFacts(oneFacts), plan(one, oneFacts));
+        GraphTickets.Result single = GraphTickets.of(
+                one.graph, one.state().withFacts(oneFacts, one.graph.costs().life()), plan(one, oneFacts));
         int oneCount = single.post().stream()
                 .filter(ticket -> "food".equals(ticket.task().makes()))
                 .mapToInt(GraphTickets.Ticket::count)
@@ -84,7 +90,8 @@ class GraphDemandMechanismTests {
 
         GraphWorld two = stageTwo().with("food", 0);
         two.tools("spirit-2", 1);
-        GraphTickets.Result pair = GraphTickets.of(two.graph, two.state().withFacts(facts(TWO)), plan(two, facts(TWO)));
+        GraphTickets.Result pair = GraphTickets.of(
+                two.graph, two.state().withFacts(facts(TWO), two.graph.costs().life()), plan(two, facts(TWO)));
         int twoCount = pair.post().stream()
                 .filter(ticket -> "food".equals(ticket.task().makes()))
                 .mapToInt(GraphTickets.Ticket::count)

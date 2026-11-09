@@ -253,7 +253,7 @@ final class GraphWorld {
                         distances,
                         stations,
                         Map.of())
-                .withFacts(facts)
+                .withFacts(facts, graph.costs().life())
                 .withBlocks(blocks);
     }
 

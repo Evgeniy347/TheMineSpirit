@@ -11,13 +11,13 @@
 | 1 | еда: урожай → охота → дойка/яйца | `DemandFoodChainScenarioTests.case01_FoodLacking_CropAndHuntRaisedAboveDairyAndEggs` | покрыто |
 | 2 | мотыга одна на ферму | `GraphAllocationGroupBTests.case14_NoHoe_HoeCraftBeforeField`, `GearFragmentTests.plan_SpiritWithoutHoe_GetsHoeCraft` | есть |
 | 3 | голодное стадо ↔ посев корма | `CrossSettlementScenarioTests.husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing` | есть |
-| 4 | еда в дальнем сундуке → доставка вместо добычи | — | очередь |
+| 4 | еда в дальнем сундуке → доставка вместо добычи | `DemandFoodChainScenarioTests.case04_FoodInFarChest_DeliveryRaisedInsteadOfHunting` | покрыто |
 | 5 | нет печи → булыжник → печь | `DemandFoodChainScenarioTests.case05_FurnaceMissing_CobblestoneRaisedUntilFurnaceCanBeBuilt` | покрыто |
 | 6 | потолок топоров, улучшение и ремонт | `GraphPlannerTests.plan_WoodenHoeAndSword_OnlySwordUpgraded`, `GraphAllocationGroupBTests.case26_WornTool_RepairRaised` | есть |
 | 7 | железо → плавка → железный инструмент | `CrossSettlementScenarioTests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool`, `GraphPlannerTests.plan_StageTwo_IronPickaxeIsKitNotChance` | есть |
 | 8 | палки малым запасом | `GraphPlannerTests.plan_NoStonePickaxe_RaisesCobbleAndSticks` | есть |
 | 9 | лес рядом кончился → посадка и дальняя рубка | `GraphTreeCasesTests.plan_ForestDepleted_ReplantsOnlyInOrchard`, `GraphTreeCasesTests.plan_NoOakInWorld_NoChopTask` | есть |
-| 10 | песок/стекло для стройки | — | очередь |
+| 10 | песок/стекло для стройки | `DemandWorkChainScenarioTests.case10_SandAndGlassForConstruction_RaisedThroughSandAndFurnace` | покрыто |
 | 11 | овец нет → разведение → стрижка | `DemandFoodChainScenarioTests.case11_NoSheep_BreedingRaisedThenShearing` | покрыто |
 | 12 | низкое здоровье без еды | `DemandFoodChainScenarioTests.case12_LowHealthWithoutFood_FoodAndHealingRaisedAboveMine` | покрыто |
 | 13 | оружие и стрелы | `GraphPlannerTests.plan_HostileNearby_RaisesSword` | есть |
@@ -28,19 +28,19 @@
 | 18 | буфер у стройки/шахты | `DemandFoodChainScenarioTests.case18_SiteNeedsBuffer_PlanksAndSiteChestRaised` | покрыто |
 | 19 | вода/канал/ведро для грядки | `DemandFoodChainScenarioTests.case19_FieldDry_WaterBucketRaisedThroughBucketAndIron` | покрыто |
 | 20 | набор выхода для шахты (еда, факелы, кирка) | `DemandFoodChainScenarioTests.case20_MiningKit_FoodTorchesPickaxeRaised` | покрыто |
-| 21 | снабжение игрока перед походом | — | очередь |
+| 21 | снабжение игрока перед походом | `DemandWorkChainScenarioTests.case21_PlayerBeforeTrip_FoodAndToolSupplied` | покрыто |
 | 22 | общий механизм спроса и подъёма приоритета | `GraphDemandMechanismTests.demand_RepeatedTenTimes_OneRequestNoMoreThanTarget`, `GraphDemandMechanismTests.demand_Disappeared_PriorityReturnsAndComesBack`, `GraphDemandMechanismTests.demand_TargetGrowsWithSpirits_RequestCoversWholeShortage` | покрыто |
 | 23 | износ брони перед боем → ремонт/замена | `GearInputsTests.events_WornHelmet_AddsArmorWorn`, `CrossSupplyScenarioTests.combat_WoundedWithoutArmor_FightsBeforeCraftingArmor` | есть |
 | 24 | нет лука/стрел у стража → крафт | `DemandFoodChainScenarioTests.case24_NoBowOrArrows_GuardCraftsBowAndArrows` | покрыто |
 | 25 | нет наковальни → железо → наковальня | `CrossSettlementScenarioTests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool` | есть |
 | 26 | мало зелий лечения при частых ранах → алхимия | `BrewGraphPlannerTests.plan_StageThreePotionFullLine_Feasible` | есть |
-| 27 | нет книг/полок этапа 4 → кожа, бумага | — | очередь |
+| 27 | нет книг/полок этапа 4 → кожа, бумага | `DemandWorkChainScenarioTests.case27_BooksAndShelvesForStageFour_RaisedThroughLeatherAndPaper` | покрыто |
 | 28 | нет тростника → посадка у воды | `DemandFoodChainScenarioTests.case28_SugarCaneMissing_PlantingRaisedUntilStocked` | покрыто |
-| 29 | нет станка мастерской → крафт станций | — | очередь |
+| 29 | нет станка мастерской → крафт станций | `DemandWorkChainScenarioTests.case29_NoWorkshopStation_PlacedThroughPlanks` | покрыто |
 | 30 | лава у шахты → вода/булыжник до работы | `DemandSafetyChainScenarioTests.case30_LavaNearMine_BlockingAndStoneRaisedBeforeWork` | покрыто |
 | 31 | шахту затопило → блоки, факелы, обход | `DemandSafetyChainScenarioTests.case31_FloodedMine_BlocksTorchesAndBypassRaised` | покрыто |
 | 32 | обвал/гравий → поддержки, не копать под песком | `DemandSafetyChainScenarioTests.case32_Collapse_SandAndGravelSupportRaised` | покрыто |
-| 33 | нет ступеней вниз → доски/булыжник | — | очередь |
+| 33 | нет ступеней вниз → доски/булыжник | `DemandWorkChainScenarioTests.case33_NoStairsOutOfPit_PlanksAndStoneRaised` | покрыто |
 | 34 | жила кончилась → новая жила/смена шахты | `DemandWorkChainScenarioTests.case34_OreVeinEnded_SustainMineRaised` | покрыто |
 | 35 | нет глины/кирпича для плана → глина, печь | `DemandWorkChainScenarioTests.case35_BricksMissingForForge_ClayAndFurnaceRaised` | покрыто |
 | 36 | нет камня для стен → шахта камня до плана | `GraphRequiresTests.plan_MineNotBuiltNoCobble_CobbleWaitsMineRaised` | есть |

@@ -88,7 +88,7 @@
 | 1-22 | `CrossPathScenarioTests.path_NoPathMark_RefusesEveryGraphTaskButRescue` | граф ставит поход | поход не берёт духа без пути | ОК | полный |
 | 2-5 | `CrossLifeWorkScenarioTests.pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill` | rescue 98, repair hut 78, backfill выполним | спасатель `clear_area`, ремонт `build_schematic` | ОК | полный |
 | 2-6 | `CrossLifeWorkScenarioTests.pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill` | backfill выполним при застрявшем духе | засыпка `fill` не ждёт спасения | ОК | полный |
-| 2-8 | `CrossRouteStageScenarioTests.pit_WaterAtBottom_BridgeWaitsForTraceAndThenUsesPlanks` | bridge требует trail_clean, затем 8 досок | мост тратит доски, дом ждёт | ОК | полный |
+| 2-8 | `CrossRouteStageScenarioTests.pit_WaterAtBottom_BridgeUsesPlanksAndTraceStaysPlanned` | мост тратит 8 досок сразу, restore_trace в плане | мост тратит доски, дом ждёт | ОК | полный |
 | 2-12 | `CrossBattleWorkScenarioTests.combat_PitTrappedSpiritUnderMobs_RescueWaitsForDefend` | defend 100 выше `rescue_spirit` | сначала бой, спасение из ямы ждёт | ОК | полный |
 | 2-13 | `CrossBattleWorkScenarioTests.combat_PitTrappedSpiritUnderMobs_RescueWaitsForDefend` | `retreat` и `rescue_spirit` рядом | механика ямы выбирает PIT, без ступеней NONE | ОК | полный |
 | 2-20 | `CrossLifeWorkScenarioTests.pit_InPlanCell_EscapeAndRescuePostedBesideRepairAndBackfill` | спасение выше ремонта хижины | граф ставит rescue первым | ОК | полный |

@@ -124,7 +124,8 @@ final class CrossActions {
                     views.getOrDefault(spirit, SpiritView.free()),
                     false,
                     List.of(),
-                    needs(eat.getOrDefault(spirit, CrossScene.FED))));
+                    needs(eat.getOrDefault(spirit, CrossScene.FED)),
+                    List.of()));
         });
         return spirits;
     }
@@ -139,7 +140,8 @@ final class CrossActions {
                 candidate.view(),
                 candidate.wet(),
                 candidate.stockTools(),
-                candidate.needs());
+                candidate.needs(),
+                candidate.wornTools());
     }
 
     static Map<String, String> needs(EatNeed eat) {

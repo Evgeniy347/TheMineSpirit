@@ -139,7 +139,12 @@ class GraphFactsCopyGuardTests {
                                 List.of(new GraphFacts.Tool("minecraft:iron_pickaxe", "pickaxe", 2, 200, 250)),
                                 null)),
                 List.of(threat()),
-                List.of(new GraphFacts.Chest(new GraphFacts.Position(5, 64, 6), Map.of("minecraft:coal", 8), 5, 27)),
+                List.of(new GraphFacts.Chest(
+                        new GraphFacts.Position(5, 64, 6),
+                        Map.of("minecraft:coal", 8),
+                        5,
+                        27,
+                        GraphFacts.Reach.UNKNOWN)),
                 List.of(new GraphFacts.Resource(
                         "tree:oak", new GraphFacts.Position(7, 64, 8), 9, GraphFacts.Reach.PATH, 18)),
                 Map.of(

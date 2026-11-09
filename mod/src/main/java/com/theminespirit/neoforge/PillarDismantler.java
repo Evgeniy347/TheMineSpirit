@@ -117,6 +117,7 @@ final class PillarDismantler {
     private void unmark(BlockPos pos) {
         if (level instanceof ServerLevel server) {
             PlacedBlocksData.get(server).unmarkSpirit(pos);
+            PlacedBlocksData.get(server).unmarkTemporary(pos);
         }
     }
 }

@@ -170,7 +170,9 @@ class LifeGraphPlannerTests {
             @ForAll @IntRange(min = 0, max = 30) int distance,
             @ForAll @IntRange(min = 0, max = 240) int hurtAge) {
         GraphFacts.Hurt hurt =
-                health < 20 && hurtAge <= 200 ? new GraphFacts.Hurt(6, "minecraft:zombie", hurtAge) : null;
+                health < 20 && hurtAge <= GraphWorld.GRAPH.costs().life().damageWindowTicks()
+                        ? new GraphFacts.Hurt(6, "minecraft:zombie", hurtAge)
+                        : null;
         List<GraphFacts.Threat> threats = new ArrayList<>();
         for (int index = 0; index < mobs; index++) {
             threats.add(threat("threat-" + index, "spirit-1", GraphFacts.TargetKind.SPIRIT, distance + index));

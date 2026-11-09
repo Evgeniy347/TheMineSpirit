@@ -107,7 +107,9 @@ class GraphWorldEventsTests {
     void state_WithWorldFacts_MergesDerivedEvents() {
         GraphState state = new GraphState(
                         Map.of(), 1, Map.of("spirit-1", Map.of()), Map.of(), Map.of(), 60, Set.of("night"), Set.of())
-                .withFacts(facts(List.of(), new GraphSiteFacts.Terrain(1, 0, 0, 2, 0), Map.of()));
+                .withFacts(
+                        facts(List.of(), new GraphSiteFacts.Terrain(1, 0, 0, 2, 0), Map.of()),
+                        GraphWorld.GRAPH.costs().life());
 
         assertTrue(state.events().contains("night"), "Старое событие не теряется");
         assertTrue(state.events().contains(GraphWorldEvents.BACKFILL), "Вход графа добавляет узел засыпки");

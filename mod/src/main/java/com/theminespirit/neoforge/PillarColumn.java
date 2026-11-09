@@ -4,10 +4,12 @@ import com.theminespirit.core.movement.CellCentering;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.town.PlotProtection;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -59,7 +61,7 @@ final class PillarColumn {
         this.baseX = feet.getX();
         this.baseY = feet.getY();
         this.baseZ = feet.getZ();
-        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.NONE);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.TEMPORARY_MOVEMENT);
     }
 
     static PillarColumn throughWater(SpiritEntity spirit, String blockId) {
@@ -188,6 +190,9 @@ final class PillarColumn {
         BlockPlacer.Begin begin = placer.begin(target, state, blockId);
         if (begin instanceof BlockPlacer.Started) {
             cells.add(new BlockCoord(target.getX(), target.getY(), target.getZ()));
+            if (level instanceof ServerLevel server) {
+                PlacedBlocksData.get(server).markTemporary(target);
+            }
             built++;
             stallTicks = 0;
             return Outcome.RUNNING;

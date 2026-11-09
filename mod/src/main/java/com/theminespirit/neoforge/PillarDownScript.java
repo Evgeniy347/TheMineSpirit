@@ -66,6 +66,15 @@ public final class PillarDownScript implements ScriptInstance {
         }
     }
 
+    public static boolean ownBelow(SpiritEntity spirit) {
+        if (!(spirit.level() instanceof ServerLevel server)) {
+            return false;
+        }
+        BlockPos below = spirit.blockPosition().below();
+        return PlacedBlocksData.get(server).isSpiritMarked(below)
+                && !spirit.level().getBlockState(below).isAir();
+    }
+
     private ScriptStatus fail(String reason) {
         failureReason = reason;
         outcome = ScriptStatus.FAILED;

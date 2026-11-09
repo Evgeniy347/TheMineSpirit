@@ -16,8 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class CoreScripts {
-    private static final String RADIUS = "radius";
-    private static final String FILTER = "filter";
+    private static final String RADIUS = "radius", FILTER = "filter";
     private static final String SPECIES = "species";
     private static final String TARGET = "target";
     private static final String BLOCK = "block";
@@ -1087,7 +1086,8 @@ public final class CoreScripts {
                                         BuildSchematicParams.SEGMENTS_MAX,
                                         BuildSchematicParams.SEGMENTS_FROM_FILE),
                                 ParamSpec.enumeration(
-                                        BuildSchematicParams.WOOD, false, WoodSpecies.ALL, WoodSpecies.OAK)),
+                                        BuildSchematicParams.WOOD, false, WoodSpecies.ALL, WoodSpecies.OAK),
+                                ParamSpec.text(BuildSchematicParams.PREVIOUS, false, "")),
                         List.of("файл схемы существует"),
                         List.of("схема построена")),
                 spec(

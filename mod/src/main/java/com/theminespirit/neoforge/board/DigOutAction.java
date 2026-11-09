@@ -28,7 +28,10 @@ final class DigOutAction {
     private final Map<UUID, Long> pausedUntil = new HashMap<>();
 
     void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
-        BlockCoord settlement = SettlementHome.of(spirits);
+        BlockCoord settlement = SettlementPlotStore.get(level)
+                .site()
+                .map(stage -> HomeStand.of(level, stage, spirits))
+                .orElseGet(() -> SettlementHome.of(spirits));
         for (SpiritEntity spirit : spirits) {
             if (spirit.isRemoved()) {
                 continue;

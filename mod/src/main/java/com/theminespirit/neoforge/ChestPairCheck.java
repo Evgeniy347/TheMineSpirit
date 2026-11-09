@@ -38,7 +38,7 @@ final class ChestPairCheck {
         boolean free = other.isAir() || other.canBeReplaced();
         boolean clear =
                 free && BlockPlacer.livingEntities(level, partner, spirit).isEmpty();
-        boolean supported = paired || BlockPlacer.hasSupport(level, partner, state);
+        boolean supported = paired || PlaceSupport.hasSupport(level, partner, state);
         BlockPos feetPos = spirit.blockPosition();
         boolean reachable = paired
                 || SpiritReach.current()

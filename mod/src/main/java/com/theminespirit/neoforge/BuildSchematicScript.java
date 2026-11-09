@@ -123,6 +123,11 @@ final class BuildSchematicScript implements ScriptInstance {
     final SchematicPlacement placement;
     private final SchematicWorkPhase workPhase;
 
+    private static Schematic previous(BuildSchematicParams params) {
+        Schematic schematic = SchematicResources.load(params.previous());
+        return params.wood() == null ? schematic : SchematicWood.swap(schematic, params.wood());
+    }
+
     BuildSchematicScript(SpiritEntity spirit, BuildSchematicParams params) {
         this(
                 spirit,
@@ -131,6 +136,7 @@ final class BuildSchematicScript implements ScriptInstance {
                                 ? SchematicResources.load(params.file())
                                 : SchematicWood.swap(SchematicResources.load(params.file()), params.wood()),
                         params.only()),
+                params.previous() == null ? null : previous(params),
                 params.file(),
                 new BlockCoord(params.x(), params.y(), params.z()),
                 params.rotation());
@@ -138,9 +144,19 @@ final class BuildSchematicScript implements ScriptInstance {
 
     BuildSchematicScript(
             SpiritEntity spirit, Schematic schematic, String file, BlockCoord origin, BuildRotation rotation) {
+        this(spirit, schematic, null, file, origin, rotation);
+    }
+
+    BuildSchematicScript(
+            SpiritEntity spirit,
+            Schematic schematic,
+            @Nullable Schematic previous,
+            String file,
+            BlockCoord origin,
+            BuildRotation rotation) {
         this.spirit = spirit;
         this.level = spirit.level();
-        this.site = new SchematicSite(level, schematic, origin, rotation);
+        this.site = new SchematicSite(level, schematic, previous, origin, rotation);
         this.placer = new BlockPlacer(spirit, PlotProtection.Ground.PLAN_BUILD);
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);

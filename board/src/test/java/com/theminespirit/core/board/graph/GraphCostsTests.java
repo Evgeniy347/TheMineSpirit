@@ -4,8 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.inventory.JsonResource;
 import java.io.IOException;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class GraphCostsTests {
@@ -23,6 +26,39 @@ class GraphCostsTests {
                 GraphLife.DEFAULTS.pressureWound(),
                 tuned.pressureWound(),
                 "Недостающее поле формулы жизни остаётся значением по умолчанию");
+    }
+
+    @Test
+    void life_ShippedGraph_DeclaresEveryCoefficient() {
+        JsonNode life = JsonResource.parse(JsonResource.readClasspath(SupplyGraph.RESOURCE), SupplyGraph.RESOURCE)
+                .path("life");
+
+        for (String name : List.of(
+                "fullPressureMobs",
+                "pressureBase",
+                "pressureWound",
+                "hurtShare",
+                "injuryWound",
+                "injuryHurt",
+                "threatRadius",
+                "damageWindowTicks",
+                "weakHealth",
+                "weakFood")) {
+            assertTrue(
+                    life.path(name).isNumber(),
+                    "graph.json → life объявляет коэффициент " + name
+                            + ": без него значение молча берётся из Java, а не из данных графа");
+        }
+    }
+
+    @Test
+    void life_NoCostsBlock_CoefficientsReadFromData() throws IOException {
+        GraphCosts costs = GraphCosts.parse(new ObjectMapper().readTree("{\"life\": {\"pressureBase\": 0.9}}"));
+
+        assertEquals(
+                0.9,
+                costs.life().pressureBase(),
+                "Формула жизни читается из данных графа и без блока costs: иначе коэффициенты молча берутся из Java");
     }
 
     @Test

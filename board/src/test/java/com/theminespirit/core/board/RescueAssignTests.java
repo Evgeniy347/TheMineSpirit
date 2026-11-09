@@ -10,8 +10,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.PlanValidator;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.ConditionCatalog;
@@ -20,12 +22,15 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class RescueAssignTests {
     private static final UUID HELPER = UUID.fromString("f58b83b6-c9a0-406d-967a-822843debf54");
+    private static final BlockCoord TRAPPED = new BlockCoord(10, 40, -5);
 
     @Test
     void assign_SelfPlanExists_SelfAssignee() {
@@ -140,6 +145,35 @@ class RescueAssignTests {
     }
 
     @Test
+    void self_SurfaceNoPathOnOwnPillar_DescendsBeforeBridge() {
+        assertEquals(
+                RescuePlans.Self.DESCEND,
+                RescuePlans.self(new RescuePlans.Situation(false, false, true, true, true, 10, true)),
+                "Дух на своём столбе без пути домой обязан разобрать столб и спуститься: мост по воздуху "
+                        + "дороже и опаснее, даже когда блоки есть");
+    }
+
+    @Test
+    void self_SurfaceNoPathOnOwnPillarWithoutBlocks_Descends() {
+        assertEquals(
+                RescuePlans.Self.DESCEND,
+                RescuePlans.self(new RescuePlans.Situation(false, false, true, true, true, 0, true)),
+                "Без блоков моста не построить: собственный столб — единственный честный спуск");
+    }
+
+    @Test
+    void descent_Plan_RunsPillarDownThenReturnsHome() {
+        TaskNode plan = RescuePlans.descent(TRAPPED);
+
+        PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
+        assertEquals(
+                List.of("pillar_down", "dig_out", "goto"),
+                scripts(plan),
+                "Спуск со своего столба: сначала пошаговый разбор под собой, затем дорога к дому; "
+                        + "мост не строится");
+    }
+
+    @Test
     void self_LiveObserve25LostSpiritWithBlocks_BridgesHome() throws IOException {
         JsonNode live = new ObjectMapper()
                 .readTree(Files.readString(
@@ -234,6 +268,22 @@ class RescueAssignTests {
                 CatalogLimits.BRIDGE_LENGTH_MAX,
                 call.params().get("length"),
                 "длина моста не выходит за предел каталога: PlanValidator отверг бы такой план");
+    }
+
+    private static List<String> scripts(TaskNode plan) {
+        List<String> names = new ArrayList<>();
+        collect(plan, names);
+        return names;
+    }
+
+    private static void collect(TaskNode plan, List<String> names) {
+        if (plan instanceof ScriptCall call) {
+            names.add(call.script());
+        } else if (plan instanceof SequenceNode sequence) {
+            sequence.steps().forEach(step -> collect(step, names));
+        } else if (plan instanceof FallbackNode fallback) {
+            fallback.steps().forEach(step -> collect(step, names));
+        }
     }
 
     private static BlockCoord coord(JsonNode node) {

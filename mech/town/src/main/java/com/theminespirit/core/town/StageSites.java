@@ -71,6 +71,7 @@ public final class StageSites {
                 orchard,
                 orchardSaplings(orchard, levelY, orchardScheme),
                 extraOrchards(own, levelY, orchardScheme),
+                fields(plan, stage, rules),
                 plan.upToStage(stage),
                 layout.level(),
                 layout.zone(),
@@ -130,6 +131,12 @@ public final class StageSites {
             }
         }
         return List.copyOf(plots);
+    }
+
+    private static List<Placement> fields(TownPlan plan, int stage, TownRules rules) {
+        return plan.upToStage(stage).stream()
+                .filter(place -> rules.entry(place.id()).map(TownEntry::field).orElse(false))
+                .toList();
     }
 
     private static List<BlockCoord> orchardSaplings(Placement orchard, int levelY, String scheme) {

@@ -2,6 +2,7 @@ package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
@@ -9,6 +10,32 @@ import org.junit.jupiter.api.Test;
 
 class PlotProtectionTests {
     private static final StageSite SITE = TownFixtures.flatSite();
+
+    @Test
+    void protectionCell_FieldCell_True() {
+        Placement field = TownFixtures.flatPlan()
+                .placement("wheat_field")
+                .orElseThrow(() -> new IllegalStateException("В плане этапа 1 нет домашней грядки"));
+        int y = SITE.anchor().y();
+        int x = field.centerX();
+        int z = field.centerZ();
+
+        assertTrue(
+                SITE.protectionCell(x, y, z),
+                "Клетка поля — постройка плана: без этого пахота и сбор урожая выкапывают грядку, "
+                        + "а защита видит поле только там, где случайно попала улица или площадка");
+        assertEquals(PlanBuilding.FIELD, SITE.protectionBuilding(x, y, z), "Защита обязана называть поле полем");
+        assertEquals("поле", SITE.protectionArea(x, y, z), "Журнал отказа называет участок «поле»");
+    }
+
+    @Test
+    void fields_LaterStage_KeepEarlierFieldsAndAddOwn() {
+        StageSite second = StageSites.of(TownFixtures.flatPlan(), 2, TownFixtures.LEVEL, TownRules.load());
+        List<String> ids = second.fields().stream().map(Placement::id).toList();
+
+        assertTrue(ids.contains("wheat_field"), "Грядка этапа 1 остаётся постоянной площадкой на этапе 2: " + ids);
+        assertTrue(ids.contains("field_a") && ids.contains("field_b"), "Пашни этапа 2 входят в поля: " + ids);
+    }
 
     @Test
     void check_DeepMineCell_OrdinaryBreakRefused() {
@@ -185,6 +212,17 @@ class PlotProtectionTests {
                 PlotProtection.Refused.class,
                 decide(house, PlotProtection.Action.DIG, PlotProtection.Ground.PLAN_EXCAVATE, PlanBuilding.MINE),
                 "Прокоп не имеет права лезть в дом под видом шахты");
+    }
+
+    @Test
+    void check_TemporaryMovement_AllowedOnPlanCell() {
+        BlockCoord cell = SITE.houseOrigin();
+
+        assertInstanceOf(
+                PlotProtection.Allowed.class,
+                decide(cell, PlotProtection.Action.PLACE, PlotProtection.Ground.TEMPORARY_MOVEMENT, PlanBuilding.NONE),
+                "Временный проход (столб, мост, пол ступени) обязан ставить опору и на клетке плана: "
+                        + "иначе дух не выберется с крыши и уборка застревает на улице");
     }
 
     @Test
