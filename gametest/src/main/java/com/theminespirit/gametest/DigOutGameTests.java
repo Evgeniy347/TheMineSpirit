@@ -155,7 +155,8 @@ public final class DigOutGameTests {
                         board.board()
                                 .stuck()
                                 .isStuck(spirit.getUUID(), board.board().now()),
-                        "выполненный выход снимает метку «не двигается» по факту, а не по тайм-ауту");
+                        "выполненный выход снимает метку «не двигается» по факту, а не по тайм-ауту: дух "
+                                + spirit.displayName() + " стоит в " + current + ", старт " + startY);
                 helper.assertTrue(
                         helper.getBlockState(planks.get(index)).is(Blocks.JUNGLE_PLANKS),
                         "Разбор при выходе временный: сломанная доска плана обязана вернуться на место после "

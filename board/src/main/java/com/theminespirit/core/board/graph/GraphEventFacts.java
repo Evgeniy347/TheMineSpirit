@@ -46,6 +46,11 @@ public final class GraphEventFacts {
         return task.onlyWhenEmpty() == null || GraphLack.count(graph, state, task.onlyWhenEmpty()) == 0;
     }
 
+    public static boolean need(SupplyGraph graph, GraphState state, GraphEvent event, GraphEvent.Task task) {
+        boolean needEvent = event.tasks().stream().anyMatch(candidate -> candidate.onlyWhenEmpty() != null);
+        return needEvent && feasible(graph, state, task);
+    }
+
     public static Optional<String> owner(GraphState state, GraphEvent.Task task) {
         if (!"hungriest".equals(task.owner())) {
             return Optional.empty();

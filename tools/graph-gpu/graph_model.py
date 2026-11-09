@@ -701,7 +701,8 @@ class Graph:
         self.build_ready_boost = int(data.get("buildReadyBoost", 0))
         self.build_start_share = float(data.get("buildStartShare", 1.0))
         self.max_priority = int(data.get("maxPriority", 100))
-        self.work_priority = self.max_priority - 1 if self.max_priority > 0 else self.max_priority
+        self.work_priority = self.max_priority - 2 if self.max_priority > 1 else self.max_priority
+        self.need_priority = self.max_priority - 1 if self.max_priority > 0 else self.max_priority
         self.tiers = list(data.get("tiers") or [])
         kit = data.get("kit") or {}
         self.kit_tiers = dict(kit.get("tiers") or {})
@@ -1427,7 +1428,30 @@ class Planner:
                 return dict(material)
         return dict(task.get("consumes") or {})
 
+    def event_applies(self, task):
+        world = task.get("world")
+        if world is not None and world not in self.state.world:
+            return False
+        empty = task.get("onlyWhenEmpty")
+        return empty is None or self.count(empty) == 0
+
+    def event_feasible(self, task):
+        if not self.event_applies(task):
+            return False
+        building = task.get("building")
+        fact = None if building is None else self.state.building_facts.get(building)
+        target = building is None or self.state.built(building) == BUILT or (
+            fact is not None and not fact.get("unknown", False)
+            and int(fact.get("auditPercent", 0)) > 0)
+        return self.stocked(self.event_consumes(task)) and target
+
+    def event_need(self, event, task):
+        need_event = any(candidate.get("onlyWhenEmpty") is not None for candidate in event["tasks"])
+        return need_event and self.event_feasible(task)
+
     def event_weight(self, task):
+        if not self.event_applies(task):
+            return 0
         base = int(task.get("base", 0))
         building = task.get("building")
         if building is None or building not in self.state.building_facts:
@@ -1722,15 +1746,11 @@ class Planner:
                 raise KeyError("Событие " + parts[1] + " задания не описано в графе")
             if event.get("life", False):
                 prio = life_priority(state, parts[1], event["tasks"], task, graph.max_priority)
+            elif self.event_need(event, task):
+                prio = graph.need_priority
             consumes = self.event_consumes(task)
-            building = task.get("building")
-            fact = None if building is None else state.building_facts.get(building)
-            target = building is None or state.built(building) == BUILT or (
-                fact is not None and not fact.get("unknown", False)
-                and int(fact.get("auditPercent", 0)) > 0)
-            feasible = self.stocked(consumes) and target
             return {"id": key, "makes": task.get("id"), "spirit": None, "priority": prio,
-                    "consumes": consumes, "feasible": feasible, "chance": False,
+                    "consumes": consumes, "feasible": self.event_feasible(task), "chance": False,
                     "implemented": bool(task.get("implemented", True)),
                     "ticks": graph.costs.ticks(key, task.get("case"))}
         if key.startswith(BUILDING):

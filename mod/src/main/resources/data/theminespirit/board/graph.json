@@ -9918,6 +9918,15 @@
           "owner": "hungriest"
         },
         {
+          "id": "harvest_crop",
+          "case": "GATHER_MATERIALS",
+          "base": 88,
+          "consumes": {},
+          "building": "wheat_field",
+          "onlyWhenEmpty": "food",
+          "owner": "hungriest"
+        },
+        {
           "id": "wait_food",
           "case": "ACTIVITY_SENSE",
           "base": 82,

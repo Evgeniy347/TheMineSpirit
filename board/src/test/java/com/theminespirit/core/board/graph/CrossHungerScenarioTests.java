@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.SpiritView;
+import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,12 +41,13 @@ class CrossHungerScenarioTests {
                 "Добычу еды граф адресует голодному духу, а не сытому: " + hunt);
         assertEquals(Optional.of("spirit-1"), wait.spirit(), "Ожидание еды тоже адресовано голодному духу: " + wait);
         assertTrue(
-                wait.priority() > mine.priority() && wait.priority() < hunt.priority(),
-                "Ожидание — запасной путь: ниже добычи, но выше шахты. Ожидание " + wait.priority() + ", охота "
-                        + hunt.priority() + ", шахта " + mine.priority());
-        assertEquals(
-                hunt.id(),
-                tickets(world, facts).post().get(0).task().id(),
+                wait.priority() > mine.priority(),
+                "Ожидание еды выше шахты, пока еды нет: ожидание " + wait.priority() + ", шахта " + mine.priority());
+        assertTrue(
+                order(plan, hunt.id()) < order(plan, wait.id()),
+                "Ожидание — запасной путь после добычи: охота " + hunt.priority() + ", ожидание " + wait.priority());
+        assertTrue(
+                tickets(world, facts).post().get(0).task().id().startsWith("event:hungry:"),
                 "Первым на доске добыть еду, а не копать: "
                         + tickets(world, facts).post().stream()
                                 .map(GraphTickets.Ticket::id)
@@ -184,6 +186,10 @@ class CrossHungerScenarioTests {
         GraphPlan.Task mine = task(plan, "mine_coal");
 
         assertTrue(eat.feasible(), "Еда в сундуке делает поесть выполнимым: " + ids(plan));
+        assertEquals(
+                GraphWorld.GRAPH.maxPriority() - 1,
+                eat.priority(),
+                "Обед голодного духа идёт в полосе потребности: " + eat.priority());
         assertTrue(eat.priority() > mine.priority(), "Поесть важнее шахты: " + ids(plan));
         assertTrue(
                 plan.task("event:hungry:hunt").isEmpty(),
@@ -208,5 +214,47 @@ class CrossHungerScenarioTests {
                         .map(DispatchRound.Candidate::name)
                         .orElse(""),
                 "Поесть достаётся голодному духу, а не сытому");
+    }
+
+    @Test
+    void hunger_StageTwoCoalEmpty_HarvestAndHuntOutrankSaturatedMine() {
+        GraphWorld world = stageTwo();
+        world.built("wheat_field", Built.BUILT);
+        world.tools("spirit-2", 1);
+        world.with("coal", 0).with("food", 0).event("hungry");
+        GraphFacts facts = facts(named(spirit("spirit-1", 20, 2), spirit("spirit-2")));
+        GraphPlan plan = plan(world, facts);
+
+        GraphPlan.Task hunt = task(plan, "event:hungry:hunt");
+        GraphPlan.Task fish = task(plan, "event:hungry:fish");
+        GraphPlan.Task harvest = task(plan, "event:hungry:harvest_crop");
+        GraphPlan.Task wait = task(plan, "event:hungry:wait_food");
+        GraphPlan.Task mine = task(plan, "mine_coal");
+
+        assertTrue(harvest.feasible(), "Поле построено — урожай можно собрать: " + ids(plan));
+        assertEquals(BoardCase.GATHER_MATERIALS, harvest.boardCase(), "Сбор урожая — работа фермы, а не охота");
+        for (GraphPlan.Task food : List.of(hunt, fish, harvest, wait)) {
+            assertTrue(
+                    food.priority() > mine.priority(),
+                    "Еда выше насыщенной шахты на этапе 2: " + food.id() + " " + food.priority() + ", шахта "
+                            + mine.priority());
+        }
+        assertEquals(
+                GraphWorld.GRAPH.maxPriority() - 1,
+                hunt.priority(),
+                "Голод с пустой едой идёт в полосе потребности, а не в обычной работе: " + hunt.priority());
+        assertTrue(
+                mine.priority() <= GraphPriorities.work(GraphWorld.GRAPH),
+                "Шахта остаётся обычной работой под полосой потребности: шахта " + mine.priority());
+        assertTrue(
+                tickets(world, facts).post().get(0).task().id().startsWith("event:hungry:"),
+                "Первым на доске добыть еду, а не копать: "
+                        + tickets(world, facts).post().stream()
+                                .map(GraphTickets.Ticket::id)
+                                .toList());
+    }
+
+    private static int order(GraphPlan plan, String id) {
+        return plan.tasks().stream().map(GraphPlan.Task::id).toList().indexOf(id);
     }
 }

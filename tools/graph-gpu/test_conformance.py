@@ -169,6 +169,43 @@ def test_life_player_fact():
     print("OK: факт здоровья игрока и коэффициенты жизни читаются из данных графа")
 
 
+def test_food_need_band():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
+        cases = json.load(handle)
+    case = next((item for item in cases if "food_stage_two" in item.get("mutations", ())), None)
+    assert case is not None, "В conformance есть случай stage 2 с пустой едой и углём"
+    tasks = {task["id"]: task for task in plan(graph, State(case["state"]))["tasks"]}
+    mine = tasks["mine_coal"]
+    harvest = tasks.get("event:hungry:harvest_crop")
+    assert harvest is not None and harvest["feasible"], \
+        "Поле построено — сбор урожая подключён к голоду: " + str(harvest)
+    for food in ("event:hungry:hunt", "event:hungry:fish", "event:hungry:harvest_crop",
+                 "event:hungry:wait_food"):
+        assert tasks[food]["priority"] > mine["priority"], \
+            "Еда выше насыщенной шахты на этапе 2: %s %s, шахта %s" % (
+                food, tasks[food]["priority"], mine["priority"])
+    assert tasks["event:hungry:hunt"]["priority"] == graph.need_priority, \
+        "Голод с пустой едой идёт в полосе потребности: " + str(tasks["event:hungry:hunt"])
+    assert mine["priority"] <= graph.work_priority, \
+        "Шахта остаётся обычной работой под полосой потребности: " + str(mine["priority"])
+    fed = State({
+        "stage": 2,
+        "stock": {"food": 8, "coal": 0},
+        "kits": {"spirit-1": {}},
+        "buildings": {"wheat_field": "BUILT", "mine": "BUILT"},
+        "events": ["hungry"],
+        "world": [],
+    })
+    fed_tasks = {task["id"]: task for task in plan(graph, fed)["tasks"]}
+    assert fed_tasks["event:hungry:eat"]["priority"] == graph.need_priority, \
+        "Обед голодного духа с едой в запасе — тоже потребность: " + str(fed_tasks.get("event:hungry:eat"))
+    assert fed_tasks["event:hungry:eat"]["priority"] > fed_tasks["mine_coal"]["priority"], \
+        "Обед выше шахты и при еде в запасе: " + str(fed_tasks["event:hungry:eat"]) + " / " \
+        + str(fed_tasks["mine_coal"])
+    print("OK: голод на этапе 2 выше шахты, сбор урожая подключён")
+
+
 def dig_inputs(graph, facts):
     state = State({
         "stock": {},
@@ -1207,6 +1244,7 @@ if __name__ == "__main__":
         test_fragments()
         test_life_priority()
         test_life_player_fact()
+        test_food_need_band()
         test_dig_inputs()
         test_area_nodes()
         test_store_nodes()

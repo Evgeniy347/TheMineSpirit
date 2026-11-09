@@ -246,7 +246,10 @@ final class BoardSettlementDesk {
                 case CAPTURE_ANIMAL -> host.completeCapture(ticket.id());
                 case BUILD_PEN -> host.completePen(ticket.id());
                 case LURE_ANIMAL -> host.completeLure(host.speciesFor(ticket));
-                case RESCUE_SPIRIT -> incidents.rescued(spirit, ticket);
+                case RESCUE_SPIRIT -> {
+                    board.stuck().release(spirit.getUUID(), board.now(), "спасение " + ticket.id() + " выполнено");
+                    incidents.rescued(spirit, ticket);
+                }
                 default -> {}
             }
         } else {

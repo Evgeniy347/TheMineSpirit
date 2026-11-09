@@ -55,24 +55,8 @@ class GraphExportTests {
         GraphWorld weak = GraphWorld.empty().event("life_threat_player");
         weak.facts = weak.facts.withPlayers(
                 List.of(new GraphFacts.Player("Steve", new GraphFacts.Position(0, 64, 0), 4.0F, 20.0F, 4)));
-        GraphPlan weakPlan = weak.plan();
-        Map<String, Object> weakEntry = new LinkedHashMap<>();
-        weakEntry.put("mutations", List.of("weak_player_fact"));
-        weakEntry.put("state", GraphStateJson.state(weak.state()));
-        List<Map<String, Object>> weakTasks = new ArrayList<>();
-        for (GraphPlan.Task task : weakPlan.tasks()) {
-            Map<String, Object> row = new LinkedHashMap<>();
-            row.put("id", task.id());
-            row.put("priority", task.priority());
-            row.put("feasible", task.feasible());
-            row.put("chance", task.chance());
-            weakTasks.add(row);
-        }
-        weakEntry.put("tasks", weakTasks);
-        weakEntry.put(
-                "notices",
-                weakPlan.notices().stream().map(GraphPlan.Notice::building).toList());
-        cases.add(weakEntry);
+        cases.add(exportCase(weak, "weak_player_fact"));
+        cases.add(exportCase(foodStageTwo(), "food_stage_two"));
         Files.createDirectories(OUT.getParent());
         Files.copy(
                 Path.of("mod/src/main/resources/" + SupplyGraph.RESOURCE),
@@ -80,6 +64,39 @@ class GraphExportTests {
                 StandardCopyOption.REPLACE_EXISTING);
         new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValue(OUT.toFile(), cases);
         assertTrue(Files.size(OUT) > 0, "Контрольные случаи графа для Python-модели записаны в " + OUT);
+    }
+
+    private static GraphWorld foodStageTwo() {
+        GraphWorld world = GraphWorld.settled();
+        world.stage = 2;
+        for (String building : List.of("warehouse", "smithing_table", "anvil", "plaza", "family_house_a", "field")) {
+            world.built(building, GraphState.Built.PLANNED);
+        }
+        world.built("wheat_field", GraphState.Built.BUILT);
+        world.tools("spirit-2", 1);
+        world.with("coal", 0).with("food", 0).event("hungry");
+        return world;
+    }
+
+    private static Map<String, Object> exportCase(GraphWorld world, String mutation) {
+        GraphPlan plan = world.plan();
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("mutations", List.of(mutation));
+        entry.put("state", GraphStateJson.state(world.state()));
+        List<Map<String, Object>> tasks = new ArrayList<>();
+        for (GraphPlan.Task task : plan.tasks()) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", task.id());
+            row.put("priority", task.priority());
+            row.put("feasible", task.feasible());
+            row.put("chance", task.chance());
+            tasks.add(row);
+        }
+        entry.put("tasks", tasks);
+        entry.put(
+                "notices",
+                plan.notices().stream().map(GraphPlan.Notice::building).toList());
+        return entry;
     }
 
     @Test
