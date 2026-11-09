@@ -587,7 +587,28 @@ def _text_messages(logger, level, message, ts, tick, build, source):
     )
 
 
-def ingest_text(conn, path, default_source="import", build="unknown"):
+def _skip_line(counters, logger, line):
+    counters["skipped"] += 1
+    name = logger or "—"
+    by_logger = counters["skipped_by_logger"]
+    by_logger[name] = by_logger.get(name, 0) + 1
+    if len(counters["skipped_samples"]) < 5:
+        counters["skipped_samples"].append(line[:300])
+
+
+def _store_message(conn, key, counters, logger, level, message, ts, build, source):
+    table_name, row_id = _insert(
+        conn, _text_messages(logger, level, message, ts, 0, build, source), source, build
+    )
+    if row_id is None:
+        return False
+    _note_range(conn, key, table_name, row_id)
+    counters["stored"] += 1
+    return True
+
+
+def ingest_text(conn, path, default_source="import", build="unknown", levels=None):
+    """Загрузить текстовый лог. levels — оставить только эти уровни (для debug-логов)."""
     path = Path(path)
     key = str(path.resolve())
     stat = path.stat()
@@ -607,17 +628,12 @@ def ingest_text(conn, path, default_source="import", build="unknown"):
         data = path.read_bytes()[offset:]
         file_size = stat.st_size
     counters = _empty_counters()
-    position = 0
     current_build = build
-    typed = set()
     conn.commit()
     conn.execute("BEGIN")
-    while True:
-        newline = data.find(b"\n", position)
-        if newline < 0:
-            break
-        raw = data[position:newline]
-        position = newline + 1
+
+    def read_line(raw):
+        nonlocal current_build
         try:
             line = raw.decode("utf-8")
         except UnicodeDecodeError:
@@ -628,35 +644,72 @@ def ingest_text(conn, path, default_source="import", build="unknown"):
         counters["lines"] += 1
         header = HEADER.match(line)
         if not header:
-            counters["skipped"] += 1
-            continue
-        ts = _ms(*header.group(1, 2, 3, 4, 5, 6, 7))
+            _skip_line(counters, "", line)
+            return
+        try:
+            ts = _ms(*header.group(1, 2, 3, 4, 5, 6, 7))
+        except (ValueError, KeyError):
+            _skip_line(counters, "", line)
+            return
         level = header.group(9)
         logger = header.group(10)
         message = repair_text(header.group(11))
+        if levels and level not in levels:
+            _skip_line(counters, logger, line)
+            return
         build_match = re.search(r"The Mine Spirit ([\w.+-]+) загружен", message)
         if build_match:
             current_build = build_match.group(1)
         record, parsed = parse_text(logger, level, message, ts, 0, current_build, default_source)
-        is_mod = "theminespirit" in logger
         if parsed:
-            table_name, row_id = _insert(conn, record, default_source, current_build)
-            typed.add(table_name)
-            _note_range(conn, key, table_name, row_id)
+            try:
+                table_name, row_id = _insert(conn, record, default_source, current_build)
+            except (ValueError, KeyError, TypeError) as error:
+                counters["errors"] += 1
+                if len(counters["error_samples"]) < 5:
+                    counters["error_samples"].append("%s: %s" % (error, line[:300]))
+                try:
+                    _store_message(
+                        conn, key, counters, logger, level, message, ts, current_build, default_source
+                    )
+                except (ValueError, KeyError, TypeError):
+                    counters["errors"] += 1
+                return
             counters["typed"][table_name] = counters["typed"].get(table_name, 0) + 1
-        elif is_mod or level in ("WARN", "ERROR"):
-            _insert(conn, _text_messages(logger, level, message, ts, 0, current_build, default_source),
-                    default_source, current_build)
-            counters["messages"] += 1
+            if row_id is None:
+                counters["merged"] += 1
+            else:
+                _note_range(conn, key, table_name, row_id)
+                counters["stored"] += 1
+            return
+        if "theminespirit" in logger or level in ("WARN", "ERROR"):
+            if _store_message(
+                conn, key, counters, logger, level, message, ts, current_build, default_source
+            ):
+                counters["messages"] += 1
         else:
-            counters["skipped"] += 1
-    _save_state(conn, key, file_size, file_size if gz else offset + position, stat.st_mtime, gz)
+            _skip_line(counters, logger, line)
+
+    segments = data.split(b"\n")
+    trailing = segments.pop()
+    for raw in segments:
+        read_line(raw)
+    if gz and trailing:
+        read_line(trailing)
+    elif trailing:
+        counters["tail"] = 1
+    consumed = len(data) - len(trailing)
+    _save_state(conn, key, file_size, file_size if gz else offset + consumed, stat.st_mtime, gz)
     conn.commit()
     return counters
 
 
 def _empty_counters():
-    return {"lines": 0, "typed": {}, "messages": 0, "skipped": 0}
+    return {
+        "lines": 0, "typed": {}, "messages": 0, "skipped": 0,
+        "errors": 0, "merged": 0, "stored": 0, "tail": 0,
+        "skipped_by_logger": {}, "skipped_samples": [], "error_samples": [],
+    }
 
 
 def main(argv=None):
