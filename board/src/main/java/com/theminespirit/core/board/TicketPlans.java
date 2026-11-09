@@ -327,37 +327,36 @@ public final class TicketPlans {
     }
 
     private static TaskNode buildPenLevel(int level, TicketTarget target) {
-        String scheme = switch (level) {
+        return sequence(
+                gotoTarget(target), schematic(penScheme(level), target, level > 1 ? penScheme(level - 1) : null));
+    }
+
+    private static String penScheme(int level) {
+        return switch (level) {
             case 1 -> "pen_4x5";
             case 2 -> "pen_7x7";
             default -> "pen_9x9";
         };
-        return sequence(
-                gotoTarget(target),
-                new ScriptCall(
-                        BUILD_SCHEMATIC,
-                        Map.of(
-                                FILE,
-                                scheme,
-                                "x",
-                                target.target().x(),
-                                "y",
-                                target.target().y(),
-                                "z",
-                                target.target().z())));
     }
 
     private static TaskNode buildWarehouseLevel(int level, TicketTarget target) {
-        return sequence(gotoTarget(target), schematic(WarehouseRules.scheme(level), target));
+        return sequence(
+                gotoTarget(target),
+                schematic(WarehouseRules.scheme(level), target, level > 1 ? WarehouseRules.scheme(level - 1) : null));
     }
 
     private static TaskNode enchantRoomLevel(int level, TicketTarget target) {
-        String scheme = switch (level) {
+        return sequence(
+                gotoTarget(target),
+                schematic(enchantScheme(level), target, level > 1 ? enchantScheme(level - 1) : null));
+    }
+
+    private static String enchantScheme(int level) {
+        return switch (level) {
             case 1 -> ENCHANT_ROOM_SCHEME;
             case 2 -> ENCHANT_ROOM_SHELVES_SCHEME;
             default -> ENCHANT_ROOM_HALL_SCHEME;
         };
-        return sequence(gotoTarget(target), schematic(scheme, target));
     }
 
     private static TaskNode repairFence(TicketTarget target) {
