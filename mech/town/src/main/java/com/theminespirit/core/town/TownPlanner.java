@@ -12,6 +12,8 @@ public final class TownPlanner {
     public static final String FENCE = "fence";
     public static final String TORCHES = "torches";
     public static final Set<String> LINE_ELEMENTS = Set.of(FENCE, TORCHES);
+    // lib: центр и дом с шахтой — первыми (их места привязаны к якорю), затем крупные постройки этапов 2–4.
+    private static final Set<String> EARLY = Set.of("hut", "yard", "mine");
 
     private TownPlanner() {}
 
@@ -24,32 +26,42 @@ public final class TownPlanner {
         TownStreets streets = TownStreets.lay(grid, region, anchor.x(), anchor.z(), rules.streets());
         BuildingPlacer placer = new BuildingPlacer(grid, region, streets, anchor.x(), anchor.z(), rules);
         List<String> unplaced = new ArrayList<>();
-        for (boolean center : new boolean[] {true, false}) {
-            for (int stage = 1; stage <= stages.size(); stage++) {
-                for (String id : stages.get(stage - 1)) {
-                    if (LINE_ELEMENTS.contains(id)) {
-                        continue;
-                    }
-                    TownEntry entry = rules.entry(id)
-                            .orElseThrow(() -> new IllegalArgumentException("Этап ссылается на постройку '" + id
-                                    + "', которой нет в каталоге town.json: этап не возьмёт её место из плана"));
-                    if ((entry.quarter() == TownEntry.Quarter.CENTER) == center
-                            && placer.place(entry, stage).isEmpty()) {
-                        unplaced.add(id);
-                    }
+        // lib: крупные постройки получают места первыми: иначе мелкие этапа 1–2 занимают лучшие куски,
+        // и дома этапов 3–4 не влезают в оставшиеся полосы.
+        List<Planned> planned = new ArrayList<>();
+        for (int stage = 1; stage <= stages.size(); stage++) {
+            for (String id : stages.get(stage - 1)) {
+                if (LINE_ELEMENTS.contains(id)) {
+                    continue;
                 }
+                TownEntry entry = rules.entry(id)
+                        .orElseThrow(() -> new IllegalArgumentException("Этап ссылается на постройку '" + id
+                                + "', которой нет в каталоге town.json: этап не возьмёт её место из плана"));
+                planned.add(new Planned(stage, entry));
+            }
+        }
+        planned.sort((first, second) -> {
+            int group = Integer.compare(order(first), order(second));
+            if (group != 0) {
+                return group;
+            }
+            if (order(first) == 1) {
+                return 0;
+            }
+            int area = Integer.compare(
+                    second.entry().width() * second.entry().depth(),
+                    first.entry().width() * first.entry().depth());
+            return area != 0
+                    ? area
+                    : first.entry().id().compareTo(second.entry().id());
+        });
+        for (Planned place : planned) {
+            if (placer.place(place.entry(), place.stage()).isEmpty()) {
+                unplaced.add(place.entry().id());
             }
         }
         List<Placement> placed = placer.placed();
-        ColumnMask reserved = placed.stream()
-                .filter(place -> rules.entry(place.id()).orElseThrow().quarter() == TownEntry.Quarter.CENTER)
-                .map(Placement::mask)
-                .reduce(ColumnMask::union)
-                .orElse(ColumnMask.rect(anchor.x(), anchor.z(), anchor.x(), anchor.z()));
-        TownStreets open = new TownStreets(
-                streets.main().minus(reserved),
-                streets.side().minus(reserved),
-                streets.ring().minus(reserved));
+        TownStreets open = openStreets(streets, placed, rules, anchor);
         FenceLine fence = FenceGates.around(region, open);
         return new TownPlan(anchor, region, open, placed, fence, unplaced);
     }
@@ -178,7 +190,30 @@ public final class TownPlanner {
         }
         List<Placement> placements = new ArrayList<>(placer.placed());
         placements.addAll(failed);
-        return new TownPlan(plan.anchor(), plan.region(), plan.streets(), placements, plan.fence(), unplaced);
+        TownStreets open = openStreets(plan.streets(), placements, rules, plan.anchor());
+        return new TownPlan(plan.anchor(), plan.region(), open, placements, plan.fence(), unplaced);
+    }
+
+    private static TownStreets openStreets(
+            TownStreets streets, List<Placement> placements, TownRules rules, BlockCoord anchor) {
+        ColumnMask reserved = placements.stream()
+                .filter(place -> rules.entry(place.id()).orElseThrow().quarter() == TownEntry.Quarter.CENTER)
+                .map(Placement::mask)
+                .reduce(ColumnMask::union)
+                .orElse(ColumnMask.rect(anchor.x(), anchor.z(), anchor.x(), anchor.z()));
+        return new TownStreets(
+                streets.main().minus(reserved),
+                streets.side().minus(reserved),
+                streets.ring().minus(reserved));
+    }
+
+    private record Planned(int stage, TownEntry entry) {}
+
+    private static int order(Planned place) {
+        if (place.entry().quarter() == TownEntry.Quarter.CENTER) {
+            return 0;
+        }
+        return EARLY.contains(place.entry().id()) ? 1 : 2;
     }
 
     private static List<String> stageEntries(List<List<String>> stages, int stage) {

@@ -17,7 +17,7 @@ public final class FenceGates {
         Objects.requireNonNull(streets, "Улицы не могут быть null: где улица пересекает ограду — ворота");
         List<ColumnMask.Cell> loop = FenceLine.loop(area);
         FenceLine bare = new FenceLine(loop, List.of());
-        List<Integer> required = crossings(loop, streets);
+        List<Integer> required = straighten(bare, crossings(loop, streets));
         List<Integer> splits = required.isEmpty() ? corners(loop) : required;
         SortedSet<Integer> gates = new TreeSet<>(required);
         int size = loop.size();
@@ -72,6 +72,18 @@ public final class FenceGates {
         return gates.stream().sorted().toList();
     }
 
+    private static List<Integer> straighten(FenceLine line, List<Integer> crossings) {
+        int size = line.posts().size();
+        List<Integer> out = new ArrayList<>(crossings.size());
+        for (int index = 0; index < crossings.size(); index++) {
+            int target = crossings.get(index);
+            int previous = index > 0 ? crossings.get(index - 1) : crossings.get(crossings.size() - 1) - size;
+            int next = index + 1 < crossings.size() ? crossings.get(index + 1) : crossings.get(0) + size;
+            out.add(Math.floorMod(straightNear(line, target, previous, next), size));
+        }
+        return out;
+    }
+
     private static boolean onStreet(ColumnMask.Cell cell, TownStreets streets) {
         return streets.contains(cell.x(), cell.z());
     }
@@ -81,7 +93,10 @@ public final class FenceGates {
         for (int shift = 0; shift <= SHIFT; shift++) {
             for (int sign : new int[] {-1, 1}) {
                 int at = target + sign * shift;
-                if (at > previous
+                if (at >= 0
+                        && at < size
+                        && at > previous
+                        && at < next
                         && at - previous <= FenceGateRule.MAX_SPAN
                         && next - at <= FenceGateRule.MAX_SPAN
                         && line.straight(Math.floorMod(at, size))) {

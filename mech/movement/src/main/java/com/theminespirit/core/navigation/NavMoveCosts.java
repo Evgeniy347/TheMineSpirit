@@ -21,11 +21,12 @@ final class NavMoveCosts {
     }
 
     private static final double SQRT_2 = Math.sqrt(2);
+    private static final int MAX_JUMP_DISTANCE = 2;
 
     private NavMoveCosts() {}
 
     static void jump(NavContext context, int x, int y, int z, int dx, int dz, NavMoveResult out) {
-        for (int distance = 2; distance <= 4; distance++) {
+        for (int distance = 2; distance <= MAX_JUMP_DISTANCE; distance++) {
             for (int step = 1; step < distance; step++) {
                 int gapX = x + dx * step;
                 int gapZ = z + dz * step;
@@ -61,7 +62,7 @@ final class NavMoveCosts {
         int max = groundMax;
         for (int depth = 2; depth <= context.settings().maxWaterFall(); depth++) {
             int feet = y - depth;
-            if (!passableColumn(context, nx, y - 1, feet + 1, nz)) {
+            if (!passableColumn(context, nx, y - 1, feet, nz)) {
                 return;
             }
             boolean landing = context.world().walkable(nx, feet - 1, nz);

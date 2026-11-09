@@ -25,6 +25,7 @@ import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.RescuePlans;
 import com.theminespirit.core.board.SpiritView;
@@ -34,24 +35,29 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
 class CrossBattleWorkScenarioTests {
+    private static GraphTickets.Ticket ticket(
+            GraphTickets.Result result, Predicate<GraphTickets.Ticket> match, String absent) {
+        return result.post().stream()
+                .filter(match)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError(absent + ": " + result.post()));
+    }
+
     @Test
-    void combat_MobsAtBuilderAndChopper_DefendCeilingButWorkStays() {
+    void combat_MobsAtBuilderAndChopper_RetreatPreemptsWork() {
         GraphWorld world = stageTwo();
         world.built("hut", Built.PLANNED);
         world.with("oak_log", 0).with("oak_planks", 0).with("cobblestone", 64).with("dirt", 64);
         GraphFacts calm = facts(named(spirit("spirit-1"), spirit("spirit-2")));
         GraphTickets.Result calmTickets = tickets(world, calm);
-        GraphTickets.Ticket build = calmTickets.post().stream()
-                .filter(ticket -> ticket.id().startsWith("graph:building:hut"))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("В сцене нет стройки хижины: " + calmTickets.post()));
-        GraphTickets.Ticket chop = calmTickets.post().stream()
-                .filter(ticket -> ticket.node().startsWith("chop_"))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("В сцене нет рубки: " + calmTickets.post()));
+        GraphTickets.Ticket build = ticket(
+                calmTickets, ticket -> ticket.id().startsWith("graph:building:hut"), "В сцене нет стройки хижины");
+        GraphTickets.Ticket chop =
+                ticket(calmTickets, ticket -> ticket.node().startsWith("chop_"), "В сцене нет рубки");
 
         Board board = new Board(() -> 0);
         board.submit(boardTicket(build));
@@ -84,26 +90,34 @@ class CrossBattleWorkScenarioTests {
         assertTrue(
                 plan.task(chop.node()).filter(GraphPlan.Task::feasible).isPresent(),
                 "Рубка не исчезает из графа при угрозе: " + ids(plan));
-        assertEquals(
-                BoardStatus.ASSIGNED,
-                board.statusOf(build.id()).orElseThrow(),
-                "Доска не снимает стройку с духа при появлении мобов");
-        assertEquals(
-                BoardStatus.ASSIGNED,
-                board.statusOf(chop.id()).orElseThrow(),
-                "Доска не снимает рубку с духа при появлении мобов");
         DispatchRound round = new DispatchRound(board, 0);
         DispatchRound.Candidate builder = new DispatchRound.Candidate(
                 id("spirit-1"), "spirit-1", "build_schematic", List.of(), FED, SpiritView.free(), false, List.of());
         DispatchRound.Candidate chopper = new DispatchRound.Candidate(
                 id("spirit-2"), "spirit-2", "chop_tree", List.of(), FED, SpiritView.free(), false, List.of());
-        Optional<String> builderRefusal = round.refusal(boardTicket(retreat), builder);
-        Optional<String> chopperRefusal = round.refusal(boardTicket(retreat), chopper);
-        assertTrue(builderRefusal.isPresent(), "Строитель не берёт бегство вторым заданием: " + builderRefusal);
-        assertTrue(chopperRefusal.isPresent(), "Рубящий не берёт бегство вторым заданием: " + chopperRefusal);
+
         assertTrue(
-                builderRefusal.orElseThrow().contains("занят"),
-                "Отказ строителю называет занятость стройкой: " + builderRefusal);
+                round.choose(boardTicket(retreat), List.of(builder)).isPresent(),
+                "Раненый строитель бросает хижину и уходит от мобов");
+        assertEquals(
+                BoardStatus.PENDING,
+                board.statusOf(build.id()).orElseThrow(),
+                "Вытесненная стройка возвращается на доску, а не держится за бегущим духом");
+        assertEquals(
+                List.of(build.id()),
+                round.drainDisplaced(id("spirit-1")).stream()
+                        .map(BoardTicket::id)
+                        .toList(),
+                "Мод получает снятую стройку, чтобы остановить действие духа");
+        assertTrue(
+                round.refusal(boardTicket(retreat), builder).isEmpty(),
+                "После вытеснения строитель свободен для бегства: " + round.refusal(boardTicket(retreat), builder));
+        assertEquals(
+                BoardStatus.ASSIGNED,
+                board.statusOf(chop.id()).orElseThrow(),
+                "Рубка второго духа не снята: он не цель бегства");
+        Optional<String> chopperRefusal = round.refusal(boardTicket(retreat), chopper);
+        assertTrue(chopperRefusal.isPresent(), "Рубящий без выбора бегства остаётся занят: " + chopperRefusal);
         assertTrue(
                 chopperRefusal.orElseThrow().contains("занят"),
                 "Отказ рубящему называет занятость рубкой: " + chopperRefusal);

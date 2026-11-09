@@ -8,7 +8,9 @@ import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.TownPlan;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -92,7 +94,7 @@ public final class BuildingAuditInputs {
         Map<String, GraphFacts.Building> facts = new LinkedHashMap<>(GraphFactInputs.buildingFacts(states, town, scan));
         house(level, service, scan, facts, now);
         stage(level, scan, states, facts, now);
-        town.ifPresent(plan -> plan.placements().forEach(place -> placement(level, place, scan, states, facts, now)));
+        town.ifPresent(plan -> placements(level, plan, scan, states, facts, now));
         return facts;
     }
 
@@ -142,29 +144,64 @@ public final class BuildingAuditInputs {
                 BuildingAudit.first(level, scan, BoardCase.BUILD_ORCHARD));
     }
 
-    private static void placement(
+    static Map<String, List<Placement>> grouped(TownPlan plan) {
+        Map<String, List<Placement>> groups = new LinkedHashMap<>();
+        for (Placement place : plan.placements()) {
+            if (!auditable(place.id())) {
+                continue;
+            }
+            String key = key(place.id());
+            if (STAGE_KEYS.contains(key)) {
+                continue;
+            }
+            groups.computeIfAbsent(key, ignored -> new ArrayList<>()).add(place);
+        }
+        return groups;
+    }
+
+    private static void placements(
             ServerLevel level,
-            Placement place,
+            TownPlan plan,
             FirstStepsRunner.StageScan scan,
             Map<String, Built> states,
             Map<String, GraphFacts.Building> facts,
             long now) {
-        if (!auditable(place.id())) {
-            return;
+        grouped(plan).forEach((key, places) -> {
+            boolean built = false;
+            List<Audit> audits = new ArrayList<>(places.size());
+            List<GraphFacts.Position> spots = new ArrayList<>(places.size());
+            for (Placement place : places) {
+                built |= built(states, key, place.id());
+                GraphFacts.Position spot =
+                        new GraphFacts.Position(place.x(), scan.stage().anchor().y(), place.z());
+                spots.add(spot);
+                Optional<StageCatalog.Entry> entry = StageCatalog.entry(place.id());
+                audits.add(entry.map(value -> BuildingAudit.scheme(level, value.scheme(), spot, scan.wood(), now))
+                        .orElseGet(() -> BuildingAudit.stageOrchard(level, spot, scan.wood(), now)));
+            }
+            GraphFacts.Position at = spots.get(incomplete(audits));
+            GraphFacts.Building base = facts.get(key);
+            int currentLevel = built || (base != null && base.level() > 0) ? 1 : 0;
+            facts.put(key, fact(key, currentLevel, at, sum(audits), built));
+        });
+    }
+
+    static int incomplete(List<Audit> audits) {
+        for (int index = 0; index < audits.size(); index++) {
+            Audit audit = audits.get(index);
+            if (audit.unknown() > 0 || audit.done() < audit.total()) {
+                return index;
+            }
         }
-        String key = key(place.id());
-        if (STAGE_KEYS.contains(key)) {
-            return;
+        return 0;
+    }
+
+    static Audit sum(List<Audit> audits) {
+        Audit out = new Audit(0, 0, Map.of(), Map.of(), 0, 0);
+        for (Audit audit : audits) {
+            out = out.plus(audit);
         }
-        boolean built = built(states, key, place.id());
-        GraphFacts.Building base = facts.get(key);
-        int currentLevel = built || (base != null && base.level() > 0) ? 1 : 0;
-        GraphFacts.Position at =
-                new GraphFacts.Position(place.x(), scan.stage().anchor().y(), place.z());
-        Optional<StageCatalog.Entry> entry = StageCatalog.entry(place.id());
-        Audit audit = entry.map(value -> BuildingAudit.scheme(level, value.scheme(), at, scan.wood(), now))
-                .orElseGet(() -> BuildingAudit.stageOrchard(level, at, scan.wood(), now));
-        facts.put(key, fact(key, currentLevel, at, audit, built));
+        return out;
     }
 
     private static boolean built(Map<String, Built> states, String key, String planId) {

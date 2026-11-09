@@ -1,5 +1,6 @@
 package com.theminespirit.core.town;
 
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Objects;
 import java.util.PriorityQueue;
@@ -41,10 +42,33 @@ public final class PlotContour {
         return new ColumnMask(grid.minX(), grid.minZ(), grid.width(), grid.depth(), bits.fillHoles(kept));
     }
 
+    // lib: высота якоря — медиана суши вокруг него: одиночный блок над землёй (столб, пол постройки)
+    // иначе отрезает весь участок от соседей и план не растёт.
+    private static int anchorLevel(TerrainGrid grid, GridBits bits, BitSet land, int ax, int az) {
+        int radius = 2;
+        int[] values = new int[(2 * radius + 1) * (2 * radius + 1)];
+        int count = 0;
+        for (int dz = -radius; dz <= radius; dz++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                int x = ax + dx;
+                int z = az + dz;
+                if (!bits.inside(x, z) || !land.get(bits.at(x, z))) {
+                    continue;
+                }
+                values[count++] = grid.feet(grid.minX() + x, grid.minZ() + z);
+            }
+        }
+        if (count == 0) {
+            return grid.feet(grid.minX() + ax, grid.minZ() + az);
+        }
+        Arrays.sort(values, 0, count);
+        return values[count / 2];
+    }
+
     private static BitSet flood(TerrainGrid grid, GridBits bits, BitSet land, int start, TownRules.Ground rules) {
         int ax = start % grid.width();
         int az = start / grid.width();
-        int anchorFeet = grid.feet(grid.minX() + ax, grid.minZ() + az);
+        int anchorFeet = anchorLevel(grid, bits, land, ax, az);
         BitSet region = new BitSet(bits.size());
         BitSet seen = new BitSet(bits.size());
         Queue<long[]> queue =
@@ -56,7 +80,7 @@ public final class PlotContour {
             region.set(index);
             int x = index % grid.width();
             int z = index / grid.width();
-            int here = grid.feet(grid.minX() + x, grid.minZ() + z);
+            int here = index == start ? anchorFeet : grid.feet(grid.minX() + x, grid.minZ() + z);
             for (int side = 0; side < DX.length; side++) {
                 int nx = x + DX[side];
                 int nz = z + DZ[side];

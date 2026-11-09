@@ -125,11 +125,18 @@ class NavMoveCostsTests {
     }
 
     @Test
+    void jump_ThreeCellGap_IsImpossible() {
+        NavTestWorld world = NavTestWorld.flat(0).air(1, 0, 0).air(2, 0, 0);
+        assertTrue(
+                jump(world, 0, 1, 0, 1, 0).cost >= NavActionCosts.COST_INF,
+                "прыжок на три клетки walker не выполнит: маршрут не имеет права его планировать");
+    }
+
+    @Test
     void jump_FiveBlockGap_IsImpossible() {
         NavTestWorld world =
                 NavTestWorld.flat(0).air(1, 0, 0).air(2, 0, 0).air(3, 0, 0).air(4, 0, 0);
-        assertTrue(
-                jump(world, 0, 1, 0, 1, 0).cost >= NavActionCosts.COST_INF, "щель шире четырёх блоков не перепрыгнуть");
+        assertTrue(jump(world, 0, 1, 0, 1, 0).cost >= NavActionCosts.COST_INF, "щель шире прыжка не перепрыгнуть");
     }
 
     @Test
