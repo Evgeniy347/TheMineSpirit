@@ -119,7 +119,7 @@ public final class DigOutScript implements ScriptInstance {
         boolean goalReached = descending
                 ? feet.getY() <= target.y() && (open(level, feet) || feet.getY() == target.y())
                 : feet.getY() >= target.y();
-        if ((DigOutExit.surfaced(level, feet) && !fromPit) || goalReached) {
+        if ((DigOutExit.surfaced(level, feet) && !fromPit && !restore.pendingOver(feet)) || goalReached) {
             backfill.report();
             restore.returnSpoil();
             PlanBreachRestore.restore(spirit, level, placer, feet);
