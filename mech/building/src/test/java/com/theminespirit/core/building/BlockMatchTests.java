@@ -28,5 +28,21 @@ class BlockMatchTests {
         assertTrue(
                 BlockMatch.matches("minecraft:wall_torch", "minecraft:torch"),
                 "настенный факел — тот же факел: владелец разрешил не различать способ крепления");
+        assertTrue(
+                BlockMatch.matches("minecraft:torch[facing=east]", "minecraft:wall_torch"),
+                "стоящий факел закрывает клетку настенного: способ крепления не входит в готовность");
+    }
+
+    @Test
+    void matches_DoorGateAndChest_IgnoreState() {
+        assertTrue(
+                BlockMatch.matches("minecraft:oak_door[half=lower,open=true]", "minecraft:oak_door"),
+                "открытая дверь не повреждает постройку: состояние open не входит в готовность");
+        assertTrue(
+                BlockMatch.matches("minecraft:oak_fence_gate[open=false]", "minecraft:oak_fence_gate"),
+                "закрытая калитка не повреждает постройку: состояние open не входит в готовность");
+        assertTrue(
+                BlockMatch.matches("minecraft:chest[facing=east,type=right]", "minecraft:chest"),
+                "направление и двойная половина сундука не влияют на готовность склада");
     }
 }
