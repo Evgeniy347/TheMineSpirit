@@ -71,11 +71,7 @@ final class WorldPost {
             return false;
         }
         if (step == BoardCase.CLEAR_GROUNDS) {
-            SettlementScan.Strays found = WorldAreaScan.last(post.level)
-                    .orElseGet(() -> WorldAreaScan.scan(
-                            post.level,
-                            post.scan.stage(),
-                            SettlementPlotStore.get(post.level).town()));
+            SettlementScan.Strays found = WorldAreaScan.cachedOrScan(post.level, post.scan.stage());
             List<BlockCoord> extras = WorldAreaScan.raised(found);
             List<BlockCoord> holes = WorldAreaScan.holes(found);
             if (extras.isEmpty() && holes.isEmpty()) {

@@ -63,6 +63,12 @@ final class WorldAreaScan {
         return Optional.ofNullable(LAST.get(key(level))).map(Cached::found);
     }
 
+    static SettlementScan.Strays cachedOrScan(ServerLevel level, StageSite site) {
+        return last(level)
+                .orElseGet(
+                        () -> scan(level, site, SettlementPlotStore.get(level).town()));
+    }
+
     static boolean demolishStrays() {
         return DataTables.INSTANCE.protection().current().demolishStrays();
     }
