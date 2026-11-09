@@ -24,6 +24,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 public final class DemoService {
@@ -70,7 +71,7 @@ public final class DemoService {
             source.sendFailure(Component.literal("Демо-стройка не начата: " + refused.getMessage()));
             return 0;
         }
-        String refused = launch(plans, player == null ? null : player.getUUID());
+        String refused = launch(plans, null, player == null ? null : player.getUUID());
         if (refused != null) {
             source.sendFailure(Component.literal(refused));
             return 0;
@@ -129,7 +130,7 @@ public final class DemoService {
         }
         int started = 0;
         for (DemoPlan plan : plans) {
-            String refused = launch(List.of(plan), player == null ? null : player.getUUID());
+            String refused = launch(List.of(plan), null, player == null ? null : player.getUUID());
             if (refused != null) {
                 source.sendFailure(Component.literal(plan.name() + ": " + refused));
             } else {
@@ -151,6 +152,10 @@ public final class DemoService {
         return total;
     }
 
+    public int startWall(CommandSourceStack source, BlockPos explicit) {
+        return DemoWall.start(this, level, source, explicit);
+    }
+
     private static int stageOf(String scheme) {
         return DataTables.INSTANCE
                 .presets()
@@ -160,15 +165,17 @@ public final class DemoService {
                 .orElse(Integer.MAX_VALUE);
     }
 
-    private String launch(List<DemoPlan> plans, UUID owner) {
+    String launch(List<DemoPlan> plans, @Nullable DemoPlan site, UUID owner) {
         SpiritEntity spirit = ModEntities.SPIRIT.get().create(level);
         if (spirit == null) {
             return "Дух не создан: тип сущности " + ModEntities.SPIRIT.getId() + " не зарегистрирован";
         }
-        DemoSession session = new DemoSession(level, spirit, plans, owner);
+        DemoSession session = site == null
+                ? new DemoSession(level, spirit, plans, owner)
+                : new DemoSession(level, spirit, plans, owner, site);
         spirit.setDemo(true);
         spirit.setInvulnerable(true);
-        BlockCoord spawn = plans.get(0).placement().spawn();
+        BlockCoord spawn = (site == null ? plans.get(0) : site).placement().spawn();
         spirit.moveTo(spawn.x() + 0.5, spawn.y(), spawn.z() + 0.5);
         level.addFreshEntity(spirit);
         try {
@@ -199,7 +206,7 @@ public final class DemoService {
         return removed;
     }
 
-    private void stopOwnedBy(UUID owner) {
+    void stopOwnedBy(UUID owner) {
         for (DemoSession session : new ArrayList<>(sessions)) {
             if (owner.equals(session.owner())) {
                 session.abort();
@@ -239,7 +246,7 @@ public final class DemoService {
         return List.of(DemoPlanner.plan(building, levelRequested, anchor, lookDx, lookDz, rotation));
     }
 
-    private Optional<BlockPos> anchor(CommandSourceStack source, BlockPos explicit) {
+    Optional<BlockPos> anchor(CommandSourceStack source, BlockPos explicit) {
         if (explicit != null) {
             return Optional.of(explicit);
         }
