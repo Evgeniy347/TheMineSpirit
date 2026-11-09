@@ -116,6 +116,10 @@ public final class GraphSource {
                     continue;
                 }
                 half.service().board().reopen(ticket.id());
+            } else if (status == BoardStatus.BLOCKED) {
+                if (!half.service().board().failures().unblock(ticket.id(), half.now())) {
+                    continue;
+                }
             } else if (status != null && !activity) {
                 continue;
             } else if (activity && closed(status)) {

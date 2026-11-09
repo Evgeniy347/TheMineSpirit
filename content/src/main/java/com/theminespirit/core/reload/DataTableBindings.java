@@ -7,6 +7,7 @@ import com.theminespirit.core.board.DemandRules;
 import com.theminespirit.core.board.LevelingRules;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.graph.SupplyGraph;
+import com.theminespirit.core.board.graph.VitalNeeds;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.hunger.HungerRules;
@@ -26,6 +27,7 @@ import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;
 import com.theminespirit.core.town.TownRules;
+import java.util.List;
 
 final class DataTableBindings {
     private DataTableBindings() {}
@@ -40,6 +42,12 @@ final class DataTableBindings {
         DemandRules.useSource(() -> tables.demand().current());
         LevelingRules.useSource(() -> tables.leveling().current());
         SupplyGraph.useSource(() -> tables.graph().current());
+        @SuppressWarnings("unchecked")
+        TableHolder<List<VitalNeeds.Need>> vital = (TableHolder<List<VitalNeeds.Need>>) tables.registry()
+                .holder("vital")
+                .orElseThrow(() ->
+                        new IllegalStateException("Таблица vital не зарегистрирована: гейт нужд читал бы старый файл"));
+        VitalNeeds.useSource(vital::current);
         PresetLibrary.useSource(() -> tables.presets().current());
         SpiritReach.useSource(() -> tables.building().current().reach());
         TownRules.useSource(() -> tables.town().current());

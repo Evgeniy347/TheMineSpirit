@@ -51,7 +51,11 @@ class StoreRulesTests {
     @Test
     void actual_ChestsAndSpirits_UseShortIds() {
         List<GraphFacts.Chest> chests = List.of(new GraphFacts.Chest(
-                new GraphFacts.Position(1, 64, 2), Map.of("minecraft:oak_log", 5, "minecraft:coal", 2), 3, 27));
+                new GraphFacts.Position(1, 64, 2),
+                Map.of("minecraft:oak_log", 5, "minecraft:coal", 2),
+                3,
+                27,
+                GraphFacts.Reach.UNKNOWN));
         GraphFacts.Spirit spirit = new GraphFacts.Spirit(
                 "spirit-1",
                 new GraphFacts.Position(0, 64, 0),
@@ -82,8 +86,14 @@ class StoreRulesTests {
                         new GraphFacts.Position(0, 64, 0),
                         Map.of("oak_log", 1, "coal", 1, "bread", 1, "wheat", 1),
                         20,
-                        27),
-                new GraphFacts.Chest(new GraphFacts.Position(1, 64, 0), Map.of("oak_log", 1, "coal", 1), 25, 27));
+                        27,
+                        GraphFacts.Reach.UNKNOWN),
+                new GraphFacts.Chest(
+                        new GraphFacts.Position(1, 64, 0),
+                        Map.of("oak_log", 1, "coal", 1),
+                        25,
+                        27,
+                        GraphFacts.Reach.UNKNOWN));
 
         assertEquals(1, StoreRules.mixedChests(chests, 4), "Смешанным считается сундук, где типов не меньше порога");
     }

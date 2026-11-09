@@ -3,11 +3,13 @@ package com.theminespirit.core.board;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 final class BlockedBook {
     private final Map<String, BoardStatus> statuses;
@@ -20,6 +22,7 @@ final class BlockedBook {
     private final Map<String, Map<String, Integer>> missing = new LinkedHashMap<>();
     private final Map<String, Map<String, Integer>> available = new LinkedHashMap<>();
     private final Map<String, Long> since = new LinkedHashMap<>();
+    private final Map<String, GraphBlock> blocks = new LinkedHashMap<>();
 
     BlockedBook(
             Map<String, BoardStatus> statuses,
@@ -38,8 +41,19 @@ final class BlockedBook {
         this.notes = Objects.requireNonNull(notes, "Журнал блокировок не может быть null: переходы пишутся в него");
     }
 
-    void note(BoardTicket ticket, int failuresSoFar, Map<String, Integer> missingNow, StockView stock, long now) {
+    void note(
+            BoardTicket ticket,
+            int failuresSoFar,
+            Map<String, Integer> missingNow,
+            StockView stock,
+            long now,
+            String node,
+            String target,
+            GraphBlock.@Nullable Need need) {
         statuses.put(ticket.id(), BoardStatus.BLOCKED);
+        if (need != null) {
+            blocks.put(ticket.id(), new GraphBlock(node, target, need));
+        }
         missing.put(ticket.id(), missingNow);
         Map<String, Integer> have = new LinkedHashMap<>();
         ticket.requiredItems()
@@ -60,6 +74,38 @@ final class BlockedBook {
                 null,
                 ConfigStamp.current(),
                 now));
+    }
+
+    void block(BoardTicket ticket, GraphBlock block, long now) {
+        statuses.put(ticket.id(), BoardStatus.BLOCKED);
+        blocks.put(ticket.id(), block);
+        since.putIfAbsent(ticket.id(), now);
+        notes.add(new BoardLogEntry(
+                BoardLog.Event.BLOCKED,
+                now,
+                ticket.id(),
+                ticket.boardCase(),
+                ticket.level(),
+                ticket.cause(),
+                BoardRules.priorityOf(ticket.boardCase()),
+                ticket.priority(),
+                List.of("need=" + block.need()),
+                null,
+                ConfigStamp.current(),
+                now));
+    }
+
+    List<GraphBlock> blocks() {
+        return List.copyOf(blocks.values());
+    }
+
+    boolean unblock(String ticketId, long now) {
+        BoardTicket ticket = tickets.get(ticketId);
+        if (ticket == null || statuses.get(ticketId) != BoardStatus.BLOCKED) {
+            return false;
+        }
+        release(ticket, now, List.of("need=" + blocks.getOrDefault(ticketId, null)));
+        return true;
     }
 
     boolean reprioritize(String ticketId, int priority) {
@@ -128,13 +174,13 @@ final class BlockedBook {
             if (statuses.get(ticket.id()) != BoardStatus.BLOCKED) {
                 continue;
             }
-            Map<String, Integer> missingNow = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
+            GraphBlock block = blocks.get(ticket.id());
             Map<String, Integer> before = missing.getOrDefault(ticket.id(), Map.of());
-            boolean improved = improved(ticket.id(), stock);
-            if (!improved && !expired(ticket.id(), now)) {
+            if (!satisfied(block, ticket, stock)) {
                 continue;
             }
-            release(ticket, now, changed(improved, before, missingNow));
+            Map<String, Integer> missingNow = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
+            release(ticket, now, changed(before, missingNow));
         }
     }
 
@@ -146,6 +192,7 @@ final class BlockedBook {
         missing.remove(ticket.id());
         available.remove(ticket.id());
         since.remove(ticket.id());
+        blocks.remove(ticket.id());
         notes.add(new BoardLogEntry(
                 BoardLog.Event.UNBLOCKED,
                 now,
@@ -165,20 +212,27 @@ final class BlockedBook {
         missing.remove(ticketId);
         available.remove(ticketId);
         since.remove(ticketId);
+        blocks.remove(ticketId);
     }
 
     void clear() {
         missing.clear();
         available.clear();
         since.clear();
+        blocks.clear();
     }
 
     List<BoardState.Blocked> snapshot() {
         List<BoardState.Blocked> states = new ArrayList<>();
-        for (Map.Entry<String, Map<String, Integer>> entry : missing.entrySet()) {
-            String id = entry.getKey();
+        Set<String> ids = new LinkedHashSet<>(missing.keySet());
+        ids.addAll(blocks.keySet());
+        for (String id : ids) {
             states.add(new BoardState.Blocked(
-                    id, entry.getValue(), available.getOrDefault(id, Map.of()), since.getOrDefault(id, 0L)));
+                    id,
+                    missing.getOrDefault(id, Map.of()),
+                    available.getOrDefault(id, Map.of()),
+                    since.getOrDefault(id, 0L),
+                    blocks.get(id)));
         }
         return List.copyOf(states);
     }
@@ -187,26 +241,26 @@ final class BlockedBook {
         missing.clear();
         available.clear();
         since.clear();
+        blocks.clear();
         for (BoardState.Blocked state : states) {
             missing.put(state.ticketId(), state.missing());
             available.put(state.ticketId(), state.available());
             since.put(state.ticketId(), state.since());
-        }
-    }
-
-    private boolean improved(String ticketId, StockView stock) {
-        Map<String, Integer> before = available.getOrDefault(ticketId, Map.of());
-        for (Map.Entry<String, Integer> entry : before.entrySet()) {
-            if (stock.available().getOrDefault(entry.getKey(), 0) > entry.getValue()) {
-                return true;
+            if (state.block() != null) {
+                blocks.put(state.ticketId(), state.block());
             }
         }
-        return false;
     }
 
-    private boolean expired(String ticketId, long now) {
-        Long blockedAt = since.get(ticketId);
-        return blockedAt != null && now - blockedAt >= BoardTuning.caseFailPauseCapTicks();
+    private static boolean satisfied(@Nullable GraphBlock block, BoardTicket ticket, StockView stock) {
+        if (block == null) {
+            return ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock)
+                    .isEmpty();
+        }
+        if (block.need() instanceof GraphBlock.Item item) {
+            return stock.available().getOrDefault(item.item(), 0) >= item.count();
+        }
+        return false;
     }
 
     private List<String> reason(int failuresSoFar, Map<String, Integer> missingNow, String ticketId) {
@@ -221,12 +275,8 @@ final class BlockedBook {
         return List.copyOf(reason);
     }
 
-    private static List<String> changed(boolean improved, Map<String, Integer> before, Map<String, Integer> after) {
+    private static List<String> changed(Map<String, Integer> before, Map<String, Integer> after) {
         List<String> changed = new ArrayList<>(List.of("failures=0"));
-        if (!improved) {
-            changed.add("timeout=" + BoardTuning.caseFailPauseCapTicks());
-            return List.copyOf(changed);
-        }
         Set<String> items = new HashSet<>(before.keySet());
         items.addAll(after.keySet());
         for (String item : items) {

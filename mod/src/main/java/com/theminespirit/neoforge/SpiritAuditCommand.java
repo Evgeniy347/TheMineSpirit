@@ -29,7 +29,7 @@ final class SpiritAuditCommand {
 
     private static int floating(CommandSourceStack source) {
         ServerLevel level = source.getLevel();
-        Optional<StageSite> site = SettlementPlotStore.get(level).site();
+        Optional<StageSite> site = SettlementPlotStore.liveSite(level);
         if (site.isEmpty()) {
             source.sendFailure(Component.literal("Участок поселения ещё не размечен: аудит висящих объектов пуст"));
             return 0;

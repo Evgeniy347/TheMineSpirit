@@ -4,6 +4,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.ExpeditionRule;
+import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.StageRules;
@@ -12,6 +13,7 @@ import com.theminespirit.core.board.ToolFate;
 import com.theminespirit.core.board.ToolsConfig;
 import com.theminespirit.core.board.WarehouseApproval;
 import com.theminespirit.core.board.WarehouseRules;
+import com.theminespirit.core.board.graph.ChestReach;
 import com.theminespirit.core.board.graph.GraphBuildingMaterials;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphKits;
@@ -69,7 +71,8 @@ final class GraphInputs {
                         .withThreats(life.threats())
                         .withPlayers(LifeInputs.players(level))
                         .withPlanBreaches(GraphFactInputs.planBreaches(level))
-                        .withChests(GraphFactInputs.chestFacts(StockReader.chests(level)))
+                        .withChests(
+                                GraphFactInputs.chestFacts(StockReader.chests(level), GraphFactInputs.reachAt(level)))
                         .withFeedback(GraphWorldFeedbackInputs.of(level, spirits, scan.home(), service))
                         .withWorld(WorldAreaInputs.of(
                                 level,
@@ -78,9 +81,14 @@ final class GraphInputs {
                                 town,
                                 BuildingAuditInputs.buildings(level, service, scan, buildings, town))));
         GraphStockNote.log(facts, spirits);
+        List<GraphBlock> blocks = new ArrayList<>(service.board().failures().graphBlocks());
+        blocks.addAll(service.sources
+                .graphFailures()
+                .pathBlocks(service.board().now(), graph.costs().choice().failureHalfLife(), (int)
+                        Math.ceil(graph.costs().choice().failureTargets())));
         GraphState state = new GraphState(
                         GraphNames.stock(
-                                stock.available(),
+                                ChestReach.reachableStock(stock.available(), facts.chests()),
                                 StockCatalog.defaultTable().nutrition().keySet()),
                         stage,
                         kits(spirits, graph),
@@ -113,7 +121,7 @@ final class GraphInputs {
         GraphState more4 = More4Inputs.apply(more3, level, spirits, scan, graph);
         GraphState more5 = More5World.apply(more4, level, graph, scan, around);
         GraphState more7 = More7Inputs.apply(more5, level, graph, scan);
-        return More6Inputs.apply(more7, level, around, scan);
+        return More6Inputs.apply(more7, level, around, scan).withBlocks(blocks);
     }
 
     static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {

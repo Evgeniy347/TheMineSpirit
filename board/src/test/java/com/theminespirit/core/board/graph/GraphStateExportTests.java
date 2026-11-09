@@ -31,7 +31,12 @@ class GraphStateExportTests {
                                 List.of(new GraphFacts.Tool("minecraft:iron_pickaxe", "pickaxe", 2, 200, 250)),
                                 null)),
                 List.of(),
-                List.of(new GraphFacts.Chest(new GraphFacts.Position(3, 64, 4), Map.of("minecraft:coal", 8), 5, 27)),
+                List.of(new GraphFacts.Chest(
+                        new GraphFacts.Position(3, 64, 4),
+                        Map.of("minecraft:coal", 8),
+                        5,
+                        27,
+                        GraphFacts.Reach.UNKNOWN)),
                 List.of(new GraphFacts.Resource(
                         "tree:oak", new GraphFacts.Position(5, 64, 6), 7, GraphFacts.Reach.UNKNOWN, 14)),
                 Map.of("furnace", new GraphFacts.Station("furnace", "furnace", null, false, null, null, null)),

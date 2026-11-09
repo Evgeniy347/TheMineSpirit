@@ -84,17 +84,21 @@ public final class StuckSpirits {
     }
 
     public void mark(UUID spirit, long now, String reason) {
+        mark(spirit, now, reason, false);
+    }
+
+    public void mark(UUID spirit, long now, String reason, boolean noPath) {
         Objects.requireNonNull(spirit, "Дух не может быть null: застревает конкретный дух");
         Objects.requireNonNull(reason, "Причина метки не может быть null: без неё метку не объяснить");
         if (now < 0) {
             throw new IllegalArgumentException("Тик " + now + " отрицателен: застревание не ставится в прошлое");
         }
-        if (stuck.putIfAbsent(spirit, new Stuck(seen.get(spirit), now, StuckCause.noPath(reason))) == null) {
+        if (stuck.putIfAbsent(spirit, new Stuck(seen.get(spirit), now, noPath)) == null) {
             note(spirit, seen.get(spirit), now, true, reason);
             return;
         }
         Stuck known = stuck.get(spirit);
-        if (StuckCause.noPath(reason) && !known.noPath()) {
+        if (noPath && !known.noPath()) {
             stuck.put(spirit, new Stuck(known.at(), known.since(), true));
         }
     }

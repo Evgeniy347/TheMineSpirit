@@ -8,8 +8,10 @@ import com.theminespirit.neoforge.BlockBreaker;
 import com.theminespirit.neoforge.BlockPlacer;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 
 final class RouteMutations {
@@ -26,7 +28,7 @@ final class RouteMutations {
         this.spirit = spirit;
         this.walk = walk;
         this.breaker = new BlockBreaker(spirit);
-        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.NONE);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.TEMPORARY_MOVEMENT);
     }
 
     boolean busy() {
@@ -115,7 +117,12 @@ final class RouteMutations {
         }
         String id = blockId.get();
         return switch (placer.beginWithoutSupport(cell, BlockStates.stateFor(id), id)) {
-            case BlockPlacer.Started ignored -> Optional.empty();
+            case BlockPlacer.Started ignored -> {
+                if (spirit.level() instanceof ServerLevel server) {
+                    PlacedBlocksData.get(server).markTemporary(cell);
+                }
+                yield Optional.empty();
+            }
             case BlockPlacer.Refused refused -> Optional.of(refused.message());
             case BlockPlacer.Protected refused -> Optional.of(refused.reason());
         };

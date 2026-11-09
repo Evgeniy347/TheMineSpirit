@@ -17,7 +17,7 @@ public final class PlanDetour {
         if (!(spirit.level() instanceof ServerLevel server)) {
             return false;
         }
-        Optional<StageSite> found = SettlementPlotStore.get(server).site();
+        Optional<StageSite> found = SettlementPlotStore.liveSite(server);
         if (found.isEmpty()) {
             return false;
         }

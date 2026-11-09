@@ -14,19 +14,22 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.core.town.ColumnMask;
+import com.theminespirit.core.town.SettlementScan;
 import com.theminespirit.core.town.StageSite;
+import com.theminespirit.core.town.StrayGroups;
 import com.theminespirit.core.town.TownSnapshot;
 import com.theminespirit.neoforge.SchematicResources;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 final class BuildingAudit {
@@ -75,25 +78,53 @@ final class BuildingAudit {
     }
 
     static BuildingAuditInputs.Audit clearing(ServerLevel level, StageSite site, long now) {
-        for (ColumnMask.Cell column : site.level().cells()) {
-            if (!level.isLoaded(new BlockPos(column.x(), site.anchor().y(), column.z()))) {
-                return new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 1);
-            }
+        SettlementScan.Strays found =
+                WorldAreaScan.scan(level, site, SettlementPlotStore.get(level).town());
+        if (found.unknown() > 0) {
+            return new BuildingAuditInputs.Audit(0, 0, Map.of(), Map.of(), 0, 1);
         }
-        PlotAudit.Audit found = PlotAudit.audit(level, site, now);
+        Set<ColumnMask.Cell> defective = new LinkedHashSet<>();
+        found.pits().keySet().forEach(at -> defective.add(new ColumnMask.Cell(at.x(), at.z())));
+        Set<ColumnMask.Cell> mounds = columns(found.mounds());
+        Set<ColumnMask.Cell> pillars = columns(found.pillars());
+        defective.addAll(mounds);
+        defective.addAll(pillars);
+        for (StrayGroups.Cell stray : found.strays()) {
+            defective.add(new ColumnMask.Cell(stray.at().x(), stray.at().z()));
+        }
         Map<String, Integer> extra = new LinkedHashMap<>();
-        for (BlockCoord at : found.extras()) {
-            BlockState state = level.getBlockState(new BlockPos(at.x(), at.y(), at.z()));
-            if (!vegetation(state)) {
-                extra.merge(id(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString()), 1, Integer::sum);
-            }
+        countBlocks(level, found.mounds(), extra);
+        countBlocks(level, found.pillars(), extra);
+        for (StrayGroups.Cell stray : found.strays()) {
+            extra.merge(stray.blockId(), 1, Integer::sum);
         }
-        int total = site.level().count();
-        Map<String, Integer> missing = found.holes().isEmpty()
+        int total = site.zone().count();
+        Map<String, Integer> missing = found.pits().isEmpty()
                 ? Map.of()
-                : Map.of("minecraft:dirt", found.holes().size());
+                : Map.of("minecraft:dirt", found.pits().size());
         return new BuildingAuditInputs.Audit(
-                total, Math.max(0, total - found.holes().size()), missing, extra, 0, 0);
+                total,
+                Math.max(0, total - defective.size()),
+                missing,
+                extra,
+                0,
+                0,
+                new BuildingAuditInputs.Defects(found.pits().size(), mounds.size(), pillars.size()));
+    }
+
+    private static Set<ColumnMask.Cell> columns(List<BlockCoord> cells) {
+        Set<ColumnMask.Cell> columns = new LinkedHashSet<>();
+        for (BlockCoord at : cells) {
+            columns.add(new ColumnMask.Cell(at.x(), at.z()));
+        }
+        return columns;
+    }
+
+    private static void countBlocks(ServerLevel level, List<BlockCoord> cells, Map<String, Integer> counts) {
+        for (BlockCoord at : cells) {
+            BlockState state = level.getBlockState(new BlockPos(at.x(), at.y(), at.z()));
+            counts.merge(id(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString()), 1, Integer::sum);
+        }
     }
 
     static BuildingAuditInputs.Audit stageOrchard(ServerLevel level, GraphFacts.Position at, String wood, long now) {
@@ -169,14 +200,6 @@ final class BuildingAudit {
             SCHEMES.clear();
             GAPS.clear();
         }
-    }
-
-    private static boolean vegetation(BlockState state) {
-        return state.is(BlockTags.FLOWERS)
-                || state.is(Blocks.SHORT_GRASS)
-                || state.is(Blocks.TALL_GRASS)
-                || state.is(Blocks.FERN)
-                || state.is(Blocks.LARGE_FERN);
     }
 
     private static BuildGap.Probe streetProbe(ServerLevel level) {

@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardState;
+import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -31,6 +32,18 @@ final class BoardStateNbt {
     private static final String X_KEY = "X";
     private static final String Y_KEY = "Y";
     private static final String Z_KEY = "Z";
+    private static final String BLOCK_KEY = "Block";
+    private static final String BLOCK_KIND_KEY = "Kind";
+    private static final String BLOCK_NODE_KEY = "Node";
+    private static final String BLOCK_TARGET_KEY = "Target";
+    private static final String BLOCK_ITEM_KEY = "Item";
+    private static final String BLOCK_COUNT_KEY = "Count";
+    private static final String BLOCK_TOOL_KEY = "Tool";
+    private static final String BLOCK_RANK_KEY = "Rank";
+    private static final String BLOCK_SPIRIT_KEY = "Spirit";
+    private static final String BLOCK_BUILDING_KEY = "Building";
+    private static final String BLOCK_POINT_KEY = "Point";
+    private static final String BLOCK_STUCK_KEY = "Stuck";
 
     record Parts(List<BoardState.Blocked> blocked, List<BoardState.Pause> pauses, List<BoardState.Stuck> stuck) {
         Parts {
@@ -50,6 +63,9 @@ final class BoardStateNbt {
             item.put(MISSING_KEY, items(entry.missing()));
             item.put(AVAILABLE_KEY, items(entry.available()));
             item.putLong(SINCE_KEY, entry.since());
+            if (entry.block() != null) {
+                item.put(BLOCK_KEY, blockTag(entry.block()));
+            }
             blocked.add(item);
         }
         tag.put(BLOCKED_KEY, blocked);
@@ -94,7 +110,8 @@ final class BoardStateNbt {
                     item.getString(ID_KEY),
                     items(item.getCompound(MISSING_KEY)),
                     items(item.getCompound(AVAILABLE_KEY)),
-                    item.getLong(SINCE_KEY)));
+                    item.getLong(SINCE_KEY),
+                    item.contains(BLOCK_KEY) ? blockOf(item.getCompound(BLOCK_KEY)) : null));
         }
         List<BoardState.Pause> pauses = new ArrayList<>();
         ListTag pausesTag = tag.getList(PAUSES_KEY, Tag.TAG_COMPOUND);
@@ -137,5 +154,55 @@ final class BoardStateNbt {
             values.put(key, tag.getInt(key));
         }
         return Map.copyOf(values);
+    }
+
+    private static CompoundTag blockTag(GraphBlock block) {
+        CompoundTag tag = new CompoundTag();
+        tag.putString(BLOCK_NODE_KEY, block.node());
+        tag.putString(BLOCK_TARGET_KEY, block.target());
+        GraphBlock.Need need = block.need();
+        if (need instanceof GraphBlock.Item item) {
+            tag.putString(BLOCK_KIND_KEY, "item");
+            tag.putString(BLOCK_ITEM_KEY, item.item());
+            tag.putInt(BLOCK_COUNT_KEY, item.count());
+        } else if (need instanceof GraphBlock.Tool tool) {
+            tag.putString(BLOCK_KIND_KEY, "tool");
+            tag.putString(BLOCK_TOOL_KEY, tool.kind());
+            tag.putInt(BLOCK_RANK_KEY, tool.rank());
+            tag.putString(BLOCK_SPIRIT_KEY, tool.spirit());
+        } else if (need instanceof GraphBlock.Building building) {
+            tag.putString(BLOCK_KIND_KEY, "building");
+            tag.putString(BLOCK_BUILDING_KEY, building.id());
+        } else if (need instanceof GraphBlock.Path path) {
+            tag.putString(BLOCK_KIND_KEY, "path");
+            tag.putString(BLOCK_POINT_KEY, path.point());
+        } else if (need instanceof GraphBlock.Holder holder) {
+            tag.putString(BLOCK_KIND_KEY, "holder");
+            tag.putString(BLOCK_SPIRIT_KEY, holder.spirit());
+            tag.putBoolean(BLOCK_STUCK_KEY, holder.stuck());
+        } else if (need instanceof GraphBlock.Impossible impossible) {
+            tag.putString(BLOCK_KIND_KEY, "impossible");
+            tag.putString(BLOCK_NODE_KEY, impossible.node());
+        } else {
+            throw new IllegalStateException("Неизвестная нужда блокировки: " + need);
+        }
+        return tag;
+    }
+
+    private static GraphBlock blockOf(CompoundTag tag) {
+        String node = tag.getString(BLOCK_NODE_KEY);
+        String target = tag.getString(BLOCK_TARGET_KEY);
+        GraphBlock.Need need = switch (tag.getString(BLOCK_KIND_KEY)) {
+            case "item" -> new GraphBlock.Item(tag.getString(BLOCK_ITEM_KEY), tag.getInt(BLOCK_COUNT_KEY));
+            case "tool" ->
+                new GraphBlock.Tool(
+                        tag.getString(BLOCK_TOOL_KEY), tag.getInt(BLOCK_RANK_KEY), tag.getString(BLOCK_SPIRIT_KEY));
+            case "building" -> new GraphBlock.Building(tag.getString(BLOCK_BUILDING_KEY));
+            case "path" -> new GraphBlock.Path(tag.getString(BLOCK_POINT_KEY));
+            case "holder" -> new GraphBlock.Holder(tag.getString(BLOCK_SPIRIT_KEY), tag.getBoolean(BLOCK_STUCK_KEY));
+            case "impossible" -> new GraphBlock.Impossible(tag.getString(BLOCK_NODE_KEY));
+            default -> throw new IllegalStateException("Неизвестный вид блокировки: " + tag.getString(BLOCK_KIND_KEY));
+        };
+        return new GraphBlock(node, target, need);
     }
 }

@@ -105,10 +105,13 @@ class WorldMutationGuardTests {
                 "neoforge/inventory/ContainerLid.java",
                 "крышка сундука/бочки: визуальное состояние, не добыча и не стройка");
         map.put("neoforge/husbandry/HiveSession.java", "улей и костёр: сбор мёда и поджиг, блок остаётся на месте");
+        map.put("neoforge/husbandry/HiveHarvest.java", "сбор мёда: меняется только состояние улья");
+        map.put("neoforge/husbandry/HiveSmoke.java", "поджиг костра: меняется только состояние костра");
         map.put("neoforge/FarmActions.java", "возраст куста ягод после сбора: состояние растения, а не новый блок");
         map.put(
                 "neoforge/demo/DemoSession.java",
                 "демо-сцена: строит и убирает декорации, к работе поселения не относится");
+        map.put("neoforge/demo/DemoStock.java", "демо-сцена: сундуки материалов и табличка, к поселению не относятся");
         return Map.copyOf(map);
     }
 }

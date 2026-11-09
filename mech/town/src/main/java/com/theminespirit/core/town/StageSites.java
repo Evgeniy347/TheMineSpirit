@@ -72,7 +72,9 @@ public final class StageSites {
                 orchardSaplings(orchard, levelY, orchardScheme),
                 extraOrchards(own, levelY, orchardScheme),
                 fields(plan, stage, rules),
+                plan.upToStage(stage),
                 layout.level(),
+                layout.zone(),
                 layout.streets(),
                 layout.enclosure(),
                 layout.fenceStrip(),
@@ -82,6 +84,7 @@ public final class StageSites {
     private record Layout(
             BlockCoord anchor,
             ColumnMask level,
+            ColumnMask zone,
             ColumnMask streets,
             ColumnMask enclosure,
             ColumnMask fenceStrip,
@@ -115,7 +118,8 @@ public final class StageSites {
                 FenceStrip.of(ring, rules.spacing().fenceStrip()).intersect(plan.region());
         ColumnMask between = streets.intersect(box(pad, 0));
         ColumnMask level = pad.union(between).union(fenceStrip).intersect(plan.region());
-        return Optional.of(new Layout(anchor, level, streets, enclosure, fenceStrip, ring));
+        ColumnMask zone = enclosure.union(built).intersect(plan.region());
+        return Optional.of(new Layout(anchor, level, zone, streets, enclosure, fenceStrip, ring));
     }
 
     private static List<OrchardPlot> extraOrchards(List<Placement> own, int levelY, String orchardScheme) {
@@ -187,19 +191,19 @@ public final class StageSites {
     public static boolean insideEnclosure(StageSite site) {
         for (Placement place : List.of(site.hut(), site.yard(), site.mine(), site.orchard())) {
             for (ColumnMask.Cell cell : place.mask().cells()) {
-                if (!site.inside(cell.x(), cell.z())) {
+                if (!site.enclosure().contains(cell.x(), cell.z())) {
                     return false;
                 }
             }
         }
         for (OrchardPlot plot : site.extraOrchards()) {
             for (ColumnMask.Cell cell : plot.place().mask().cells()) {
-                if (!site.inside(cell.x(), cell.z())) {
+                if (!site.enclosure().contains(cell.x(), cell.z())) {
                     return false;
                 }
             }
         }
-        return site.inside(site.anchor().x(), site.anchor().z());
+        return site.enclosure().contains(site.anchor().x(), site.anchor().z());
     }
 
     private static ColumnMask connected(ColumnMask mask, BlockCoord anchor) {

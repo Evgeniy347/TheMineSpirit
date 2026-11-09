@@ -26,15 +26,47 @@ public final class BuildingAuditInputs {
 
     private BuildingAuditInputs() {}
 
+    record Defects(int holes, int mounds, int pillars) {
+        Defects {
+            if (holes < 0 || mounds < 0 || pillars < 0) {
+                throw new IllegalArgumentException("Дефекты участка " + holes + ", " + mounds + ", " + pillars
+                        + ": чисел меньше нуля не бывает, отсутствие — ноль");
+            }
+        }
+
+        static Defects empty() {
+            return new Defects(0, 0, 0);
+        }
+
+        Defects plus(Defects other) {
+            return new Defects(holes + other.holes, mounds + other.mounds, pillars + other.pillars);
+        }
+
+        boolean clean() {
+            return holes == 0 && mounds == 0 && pillars == 0;
+        }
+    }
+
     record Audit(
-            int total, int done, Map<String, Integer> missing, Map<String, Integer> extra, int wrong, int unknown) {
+            int total,
+            int done,
+            Map<String, Integer> missing,
+            Map<String, Integer> extra,
+            int wrong,
+            int unknown,
+            Defects defects) {
         Audit {
             missing = Map.copyOf(Objects.requireNonNull(missing, "Недостача аудита не может быть null"));
             extra = Map.copyOf(Objects.requireNonNull(extra, "Лишнее аудита не может быть null"));
+            Objects.requireNonNull(defects, "Дефекты аудита не могут быть null: нет дефектов — нули");
             if (total < 0 || done < 0 || done > total || wrong < 0 || unknown < 0) {
                 throw new IllegalArgumentException("Аудит " + done + " из " + total + ", чужих " + wrong
                         + ", неизвестных " + unknown + ": числа не отрицательны, сделанное не больше плана");
             }
+        }
+
+        Audit(int total, int done, Map<String, Integer> missing, Map<String, Integer> extra, int wrong, int unknown) {
+            this(total, done, missing, extra, wrong, unknown, Defects.empty());
         }
 
         Audit plus(Audit other) {
@@ -44,7 +76,8 @@ public final class BuildingAuditInputs {
                     merge(missing, other.missing),
                     merge(extra, other.extra),
                     wrong + other.wrong,
-                    unknown + other.unknown);
+                    unknown + other.unknown,
+                    defects.plus(other.defects));
         }
 
         int missingCount() {

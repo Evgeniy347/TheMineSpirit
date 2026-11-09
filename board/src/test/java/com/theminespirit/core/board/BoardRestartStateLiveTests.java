@@ -36,7 +36,11 @@ class BoardRestartStateLiveTests {
                 BoardOutcome.CLAIMED,
                 board.claim(ticket.id(), spirit, clock[0]),
                 "Живой ticket выдаётся своему духу spirit-2");
-        board.fail(ticket.id(), new StockView(Map.of()), "застрял в (-169, 70, -505): петля переносов");
+        board.fail(
+                ticket.id(),
+                new StockView(Map.of()),
+                "застрял в (-169, 70, -505): петля переносов",
+                new GraphBlock.Path(""));
 
         Board restored = new Board(() -> clock[0]);
         restored.restore(board.snapshot());
@@ -74,7 +78,15 @@ class BoardRestartStateLiveTests {
                     BoardOutcome.CLAIMED,
                     board.claim(ticket.id(), UUID.randomUUID(), clock[0]),
                     "Попытка " + (attempt + 1) + " выдана духу");
-            assertTrue(board.fail(ticket.id(), stock, reasons.get(attempt)), "Попытка " + (attempt + 1) + " провалена");
+            assertTrue(
+                    board.fail(
+                            ticket.id(),
+                            stock,
+                            reasons.get(attempt),
+                            attempt + 1 == BoardTuning.ticketFailLimit()
+                                    ? new GraphBlock.Item("cobblestone", 1)
+                                    : null),
+                    "Попытка " + (attempt + 1) + " провалена");
             clock[0] += BoardTuning.caseFailPauseCapTicks();
             board.prune(clock[0]);
         }
@@ -102,9 +114,15 @@ class BoardRestartStateLiveTests {
         clock[0] = blockedAt + BoardTuning.caseFailPauseCapTicks();
         restored.claimable(stock, clock[0]);
         assertEquals(
+                BoardStatus.BLOCKED,
+                restored.statusOf(ticket.id()).orElse(null),
+                "Таймер не снимает блокировку после перезапуска: снимает только выполненное условие");
+
+        restored.claimable(new StockView(Map.of("cobblestone", 1)), clock[0]);
+        assertEquals(
                 BoardStatus.PENDING,
                 restored.statusOf(ticket.id()).orElse(null),
-                "Пауза блокировки продолжает считаться от тика блокировки после перезапуска, а не вечно");
+                "Предмет появился — блокировка снята проверкой условия, а не временем");
     }
 
     @Test
@@ -151,7 +169,15 @@ class BoardRestartStateLiveTests {
                     BoardOutcome.CLAIMED,
                     board.claim(ticket.id(), UUID.randomUUID(), clock[0]),
                     "Попытка " + (attempt + 1) + " выдана духу");
-            assertTrue(board.fail(ticket.id(), stock, reasons.get(attempt)), "Попытка " + (attempt + 1) + " провалена");
+            assertTrue(
+                    board.fail(
+                            ticket.id(),
+                            stock,
+                            reasons.get(attempt),
+                            attempt + 1 == BoardTuning.ticketFailLimit()
+                                    ? new GraphBlock.Item("cobblestone", 1)
+                                    : null),
+                    "Попытка " + (attempt + 1) + " провалена");
             if (attempt + 1 < BoardTuning.ticketFailLimit()) {
                 clock[0] += BoardTuning.caseFailPauseCapTicks();
                 assertEquals(

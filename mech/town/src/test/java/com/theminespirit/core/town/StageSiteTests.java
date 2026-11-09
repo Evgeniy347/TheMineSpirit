@@ -123,10 +123,9 @@ class StageSiteTests {
                             + "тропинки и саженцы повиснут или утонут");
         }
         assertTrue(
-                SITE.level().count() < SITE.enclosure().count() / 2,
-                "Выравнивается " + SITE.level().count() + " колонок из "
-                        + SITE.enclosure().count()
-                        + " огороженных: выравнивать весь участок запрещено (решение владельца 25.10)");
+                SITE.level().count() < SITE.zone().count(),
+                "Площадки этапа — часть зоны, а не вся зона: ровность считается по ограде и участкам "
+                        + "(решение владельца 09.11), а не только по площадкам");
     }
 
     @Test
@@ -167,7 +166,7 @@ class StageSiteTests {
                 SITE.gatherForbidden(far, 9),
                 "Пещера далеко за оградой не под поселением: запрет там оставил бы духов без камня");
         assertFalse(
-                SITE.fillStandAllowed(SITE.workYard(), false),
+                StageStands.fillStandAllowed(SITE, SITE.workYard(), false),
                 "Подсыпка со стоянки на площадке под крышей недопустима: дух замуруется в площадке");
     }
 

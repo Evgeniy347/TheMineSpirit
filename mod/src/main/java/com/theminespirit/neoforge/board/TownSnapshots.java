@@ -26,7 +26,7 @@ public final class TownSnapshots {
         Optional<TownPlan> town = store.town();
         BoardService service = BoardRegistry.get(level);
         int stageValue = service.board().ledger().stage();
-        Optional<StageSite> site = store.site();
+        Optional<StageSite> site = SettlementPlotStore.liveSite(level);
         Optional<SettlementPlot> plot = store.plot();
         if (town.isEmpty() || site.isEmpty() || plot.isEmpty()) {
             return Optional.empty();
@@ -47,7 +47,7 @@ public final class TownSnapshots {
     public static Optional<TownMapView.Bounds> markerBounds(ServerLevel level) {
         SettlementPlotStore store = SettlementPlotStore.get(level);
         Optional<TownPlan> town = store.town();
-        Optional<StageSite> site = store.site();
+        Optional<StageSite> site = SettlementPlotStore.liveSite(level);
         if (town.isEmpty() || site.isEmpty() || store.plot().isEmpty()) {
             return Optional.empty();
         }

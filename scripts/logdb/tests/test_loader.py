@@ -1,14 +1,17 @@
+import gzip
 import json
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 LOGDB = HERE.parent
 sys.path.insert(0, str(LOGDB))
 import loader
+import logq
 
 FIXTURE = LOGDB / "fixtures" / "legacy.log"
 
@@ -162,6 +165,118 @@ class LoaderTests(unittest.TestCase):
         )
         self.assertNotEqual(0, result.returncode)
         self.assertIn("только чтение", result.stderr + result.stdout)
+
+    def write_log(self, name, lines):
+        path = self.dir / name
+        path.write_text("".join(line + "\n" for line in lines), encoding="utf-8")
+        return path
+
+    def test_remoteCommand_ReadsOnlyWithoutJsonlIngest(self):
+        args = logq.build_parser().parse_args(["--main", "cell", "--", "-177", "68", "-517"])
+        command = logq.remote_command(args, "/db/events.db")
+        self.assertNotIn("--logs", command, "основная база пишется только cron, logq --main не дочитывает JSONL")
+        self.assertEqual(["cell", "-177", "68", "-517"], command[-4:])
+        failures = logq.build_parser().parse_args(["--main", "failures", "--since", "1h"])
+        command = logq.remote_command(failures, "/db/events.db")
+        self.assertEqual(["--since", "1h"], command[-2:])
+
+    def test_text_SkippedAndStored_AddUp(self):
+        path = self.write_log(
+            "plain.log",
+            [
+                "[09Nov2026 11:00:00.000] [Server thread/INFO] [net.minecraft.Foo/]: обычная строка",
+                "[09Nov2026 11:00:01.000] [Server thread/WARN] [net.minecraft.Foo/]: предупреждение",
+            ],
+        )
+        counters = loader.ingest_text(self.conn, path)
+        self.conn.commit()
+        self.assertEqual(2, counters["lines"])
+        self.assertEqual(1, counters["skipped"])
+        self.assertEqual(1, counters["messages"])
+        self.assertEqual(1, counters["stored"])
+        self.assertEqual(counters["lines"], counters["stored"] + counters["merged"] + counters["skipped"])
+        self.assertEqual({"net.minecraft.Foo/": 1}, counters["skipped_by_logger"])
+        self.assertTrue(counters["skipped_samples"])
+
+    def test_text_LevelFilter_LeavesOnlyRequestedLevel(self):
+        path = self.write_log(
+            "mixed.log",
+            [
+                "[09Nov2026 11:00:00.000] [Server thread/INFO] [com.theminespirit.Board/]: [board] "
+                "ASSIGNED задание=t-1 кейс=GATHER_MATERIALS попыток=1 выбор=spirit-1",
+                "[09Nov2026 11:00:01.000] [Server thread/DEBUG] [com.theminespirit.Move/]: подробности шага",
+            ],
+        )
+        counters = loader.ingest_text(self.conn, path, levels={"DEBUG"})
+        self.conn.commit()
+        self.assertEqual(2, counters["lines"])
+        self.assertEqual(1, counters["skipped"])
+        self.assertEqual(1, counters["messages"])
+        self.assertEqual({}, counters["typed"])
+
+    def test_text_BrokenRecord_IsStoredAsErrorAndDoesNotAbort(self):
+        path = self.write_log(
+            "broken.log",
+            ["[09Nov2026 11:00:00.000] [Server thread/INFO] [com.theminespirit.Board/]: [board] сломано"],
+        )
+        bad = {"type": "block_change", "ts": 1_700_000_000_000, "tick": 0, "build": "x", "source": "import"}
+        with mock.patch.object(loader, "parse_text", return_value=(bad, True)):
+            counters = loader.ingest_text(self.conn, path)
+        self.conn.commit()
+        self.assertEqual(1, counters["lines"])
+        self.assertEqual(1, counters["errors"])
+        self.assertEqual(1, counters["stored"])
+        self.assertEqual(0, counters["messages"])
+        self.assertEqual(counters["lines"], counters["stored"] + counters["merged"] + counters["skipped"])
+        self.assertEqual(1, self.count("messages"))
+        self.assertIn("нет обязательного поля", counters["error_samples"][0])
+
+    def test_text_GzipWithoutFinalNewline_IsImported(self):
+        path = self.dir / "tail.log.gz"
+        with gzip.open(path, "wb") as stream:
+            stream.write(
+                b"[09Nov2026 11:00:00.000] [Server thread/WARN] [net.minecraft.Foo/]: \xd1\x85\xd0\xb2\xd0\xbe\xd1\x81\xd1\x82"
+            )
+        counters = loader.ingest_text(self.conn, path)
+        self.conn.commit()
+        self.assertEqual(1, counters["lines"])
+        self.assertEqual(0, counters["tail"])
+        self.assertEqual(1, counters["stored"])
+        self.assertEqual(1, counters["messages"])
+
+    def test_import_DeleteVerified_RemovesGzAndKeepsLatest(self):
+        logs = self.dir / "logs"
+        logs.mkdir()
+        old = logs / "old.log.gz"
+        with gzip.open(old, "wb") as stream:
+            stream.write(
+                b"[09Nov2026 11:00:00.000] [Server thread/WARN] [net.minecraft.Foo/]: warning\n"
+            )
+        latest = logs / "latest.log"
+        latest.write_text(
+            "[09Nov2026 11:00:01.000] [Server thread/WARN] [net.minecraft.Foo/]: warning\n",
+            encoding="utf-8",
+        )
+        report = self.dir / "report.json"
+        result = subprocess.run(
+            [
+                sys.executable, str(LOGDB / "import_legacy.py"),
+                "--db", str(self.db), "--logs", str(logs),
+                "--exclude", "latest.log", "--report", str(report),
+                "--delete-verified",
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertFalse(old.exists(), "сверенный архив должен удаляться")
+        self.assertTrue(latest.exists(), "latest.log не трогаем")
+        data = json.loads(report.read_text(encoding="utf-8"))
+        self.assertEqual(1, len(data["files"]))
+        self.assertTrue(data["files"][0]["verified"])
+        self.assertTrue(data["files"][0]["deleted"])
+        self.assertEqual(1, data["files"][0]["db_rows"])
 
 
 if __name__ == "__main__":

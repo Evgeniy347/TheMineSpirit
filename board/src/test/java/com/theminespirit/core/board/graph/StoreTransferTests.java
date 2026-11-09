@@ -65,6 +65,6 @@ class StoreTransferTests {
     }
 
     private static GraphFacts.Chest chest(GraphFacts.Position position, Map<String, Integer> contents, int free) {
-        return new GraphFacts.Chest(position, contents, free, free + contents.size());
+        return new GraphFacts.Chest(position, contents, free, free + contents.size(), GraphFacts.Reach.UNKNOWN);
     }
 }

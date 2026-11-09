@@ -31,7 +31,7 @@ final class SoilQuarry {
     }
 
     static Result find(ServerLevel level, BlockCoord home) {
-        StageSite site = SettlementPlotStore.get(level).site().orElse(null);
+        StageSite site = SettlementPlotStore.liveSite(level).orElse(null);
         BlockCoord best = null;
         int bestDistance = Integer.MAX_VALUE;
         int inside = 0;

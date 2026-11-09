@@ -2,6 +2,7 @@ package com.theminespirit.guards;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphFactsUpdates;
 import com.theminespirit.core.board.graph.GraphFeedback;
@@ -138,7 +139,12 @@ class GraphFactsCopyGuardTests {
                                 List.of(new GraphFacts.Tool("minecraft:iron_pickaxe", "pickaxe", 2, 200, 250)),
                                 null)),
                 List.of(threat()),
-                List.of(new GraphFacts.Chest(new GraphFacts.Position(5, 64, 6), Map.of("minecraft:coal", 8), 5, 27)),
+                List.of(new GraphFacts.Chest(
+                        new GraphFacts.Position(5, 64, 6),
+                        Map.of("minecraft:coal", 8),
+                        5,
+                        27,
+                        GraphFacts.Reach.UNKNOWN)),
                 List.of(new GraphFacts.Resource(
                         "tree:oak", new GraphFacts.Position(7, 64, 8), 9, GraphFacts.Reach.PATH, 18)),
                 Map.of(
@@ -186,7 +192,7 @@ class GraphFactsCopyGuardTests {
                         new GraphFeedback.Clock(true, true, false, 13000),
                         new GraphFeedback.Player(new GraphFacts.Position(1, 64, 1), true, true, true, false),
                         List.of(new GraphFeedback.Failure(
-                                "make:dirt", "0,64,0", 2, GraphFeedback.Cause.NO_PATH, 100, 1.5))),
+                                "make:dirt", "0,64,0", 2, new GraphBlock.Path("0,64,0"), 100, 1.5))),
                 List.of(new GraphFacts.Player("Steve", new GraphFacts.Position(1, 64, 1), 20, 20, 20)),
                 List.of(new GraphFacts.Position(2, 64, 2)));
     }

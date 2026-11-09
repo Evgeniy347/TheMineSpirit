@@ -49,7 +49,7 @@ class BoardNoticeTextTests {
     void blockedLine_BlockedEntry_WaitReasonSameTextAsRest() {
         long[] now = {0};
         Board board = blockedBoard(now);
-        BoardLogEntry entry = board.drainBlocks().get(0);
+        BoardLogEntry entry = board.failures().drainBlocks().get(0);
 
         String line = BoardNoticeText.line(board, entry, new StockView(Map.of()), now[0]);
 
@@ -64,7 +64,7 @@ class BoardNoticeTextTests {
     void blockedLine_HistoryInReason_IsNotRepeatedAsSecondField() {
         long[] now = {0};
         Board board = blockedBoard(now);
-        BoardLogEntry entry = board.drainBlocks().get(0);
+        BoardLogEntry entry = board.failures().drainBlocks().get(0);
 
         String line = BoardNoticeText.line(board, entry, new StockView(Map.of()), now[0]);
 
@@ -82,10 +82,10 @@ class BoardNoticeTextTests {
     void unblockedLine_UnblockedEntry_NamesOldReason() {
         long[] now = {0};
         Board board = blockedBoard(now);
-        board.drainBlocks();
+        board.failures().drainBlocks();
 
         board.claimable(new StockView(Map.of("dirt", 9)), now[0]);
-        BoardLogEntry entry = board.drainBlocks().get(0);
+        BoardLogEntry entry = board.failures().drainBlocks().get(0);
 
         String line = BoardNoticeText.line(board, entry, new StockView(Map.of("dirt", 9)), now[0]);
 

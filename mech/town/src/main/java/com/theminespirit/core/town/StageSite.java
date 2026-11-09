@@ -18,7 +18,9 @@ public record StageSite(
         List<BlockCoord> orchardSaplings,
         List<OrchardPlot> extraOrchards,
         List<Placement> fields,
+        List<Placement> placements,
         ColumnMask level,
+        ColumnMask zone,
         ColumnMask streets,
         ColumnMask enclosure,
         ColumnMask fenceStrip,
@@ -50,9 +52,11 @@ public record StageSite(
                 orchardSaplings, "Места деревьев сада не могут быть null: пусто — пустой список"));
         extraOrchards = List.copyOf(
                 Objects.requireNonNull(extraOrchards, "Дополнительные сады не могут быть null: пусто — пустой список"));
-        fields =
-                List.copyOf(Objects.requireNonNull(fields, "Площадки полей не могут быть null: пусто — пустой список"));
+        fields = List.copyOf(Objects.requireNonNull(fields, "Поля этапа не могут быть null"));
+        placements = List.copyOf(
+                Objects.requireNonNull(placements, "Постройки этапа не могут быть null: пусто — пустой список"));
         Objects.requireNonNull(level, "Площадки выравнивания не могут быть null");
+        Objects.requireNonNull(zone, "Зона поселения не может быть null: по ней идут аудит, выравнивание и защита");
         Objects.requireNonNull(streets, "Улицы плана не могут быть null: по ним дух не берёт материалы плана");
         Objects.requireNonNull(enclosure, "Огороженная область не может быть null");
         Objects.requireNonNull(fenceStrip, "Полоса ограды не может быть null: по ней сносится старая ограда");
@@ -143,7 +147,11 @@ public record StageSite(
     }
 
     public boolean inside(int x, int z) {
-        return enclosure.contains(x, z);
+        return zone.contains(x, z);
+    }
+
+    public boolean placementColumn(int x, int z) {
+        return placements.stream().anyMatch(place -> place.covers(x, z));
     }
 
     public boolean streetColumn(int x, int z) {
@@ -172,7 +180,8 @@ public record StageSite(
                 || orchard.covers(x, z)
                 || extraOrchardCell(x, z)
                 || fieldColumn(x, z)
-                || mine.covers(x, z);
+                || mine.covers(x, z)
+                || placementColumn(x, z);
     }
 
     public PlanBuilding planBuilding(int x, int y, int z) {
@@ -231,10 +240,7 @@ public record StageSite(
         if (planCell(x, y, z) || orchardTree(x, y, z)) {
             return true;
         }
-        if (y < anchor.y() - 1 || y > anchor.y() + BUILDING_HEIGHT) {
-            return false;
-        }
-        return streetColumn(x, z) || fenceStrip.contains(x, z);
+        return zone.contains(x, z) || streetColumn(x, z) || fenceStrip.contains(x, z);
     }
 
     public PlanBuilding protectionBuilding(int x, int y, int z) {
@@ -289,10 +295,5 @@ public record StageSite(
                 && x < enclosure.minX() + enclosure.width() + CAVE_MARGIN
                 && z >= enclosure.minZ() - CAVE_MARGIN
                 && z < enclosure.minZ() + enclosure.depth() + CAVE_MARGIN;
-    }
-
-    public boolean fillStandAllowed(BlockCoord stand, boolean sky) {
-        Objects.requireNonNull(stand, "Стоянка не может быть null: проверяется её клетка");
-        return sky || !levelColumn(stand.x(), stand.z());
     }
 }

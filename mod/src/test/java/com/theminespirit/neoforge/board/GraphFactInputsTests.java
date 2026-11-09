@@ -21,7 +21,8 @@ class GraphFactInputsTests {
                 new BlockCoord(1, 64, 2),
                 Arrays.asList(new Stack("minecraft:oak_log", 0, 5, 64), null, new Stack("minecraft:coal", 0, 2, 64)));
 
-        List<GraphFacts.Chest> chests = GraphFactInputs.chestFacts(List.of(snapshot));
+        List<GraphFacts.Chest> chests =
+                GraphFactInputs.chestFacts(List.of(snapshot), ignored -> GraphFacts.Reach.UNKNOWN);
 
         assertEquals(1, chests.size(), "Один открытый сундук даёт один факт");
         GraphFacts.Chest chest = chests.get(0);
@@ -32,6 +33,23 @@ class GraphFactInputsTests {
                 "Содержимое сундука складывается по предметам");
         assertEquals(1, chest.freeSlots(), "Свободный слот считается по null-слотам");
         assertEquals(3, chest.totalSlots(), "Общее число слотов считается по размеру контейнера");
+        assertEquals(
+                GraphFacts.Reach.UNKNOWN, chest.reach(), "Неизвестная достижимость сундука переносится как UNKNOWN");
+    }
+
+    @Test
+    void chestFacts_ReachFromWorld_MarksUnreachableChest() {
+        ContainerSnapshot snapshot =
+                new ContainerSnapshot(new BlockCoord(1, 64, 2), List.of(new Stack("minecraft:bread", 0, 5, 64)));
+
+        GraphFacts.Chest chest = GraphFactInputs.chestFacts(List.of(snapshot), ignored -> GraphFacts.Reach.NO_PATH)
+                .get(0);
+
+        assertEquals(
+                GraphFacts.Reach.NO_PATH,
+                chest.reach(),
+                "Факт достижимости сундука обязан попадать во вход графа: иначе еда в недостижимом сундуке "
+                        + "считается выполнимой задачей");
     }
 
     @Test

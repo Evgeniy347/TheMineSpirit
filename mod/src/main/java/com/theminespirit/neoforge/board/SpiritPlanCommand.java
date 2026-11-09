@@ -72,7 +72,7 @@ public final class SpiritPlanCommand {
     private static void streets(CommandSourceStack source) {
         SettlementPlotStore store = SettlementPlotStore.get(source.getLevel());
         Optional<TownPlan> town = store.town();
-        Optional<StageSite> site = store.site();
+        Optional<StageSite> site = SettlementPlotStore.liveSite(source.getLevel());
         if (town.isEmpty() || site.isEmpty()) {
             return;
         }

@@ -28,7 +28,7 @@ final class MineVeinScript implements ScriptInstance {
         if (!(spirit.level() instanceof ServerLevel level)) {
             return true;
         }
-        Optional<StageSite> site = SettlementPlotStore.get(level).site();
+        Optional<StageSite> site = SettlementPlotStore.liveSite(level);
         if (site.isEmpty()) {
             return true;
         }

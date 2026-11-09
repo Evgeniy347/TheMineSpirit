@@ -160,6 +160,40 @@ class SettlementTreeScenarioTests {
     }
 
     @Test
+    void stageOne_ClearingIsSeparateItem_WithDefectCounts() {
+        SettlementTree tree = stageOne(facts().board(BoardCase.CLEAR_GROUNDS, 70, false, "ям 3, бугров 2, столбов 1")
+                .board(BoardCase.BUILD_STREETS, PERCENT)
+                .build());
+
+        SettlementTree.Node clearing = tree.node("s1:case:CLEAR_GROUNDS:1").orElseThrow();
+        SettlementTree.Node streets = tree.node("s1:case:BUILD_STREETS:1").orElseThrow();
+
+        assertEquals(
+                SettlementTree.State.IN_PROGRESS,
+                clearing.state(),
+                "Неровная зона — работа в процессе, а не готово: этап не закрывается при дефектах");
+        assertEquals(
+                "ям 3, бугров 2, столбов 1",
+                clearing.detail(),
+                "Вкладка J называет числа дефектов ровности: игрок видит, что именно чинят");
+        assertTrue(
+                !clearing.id().equals(streets.id()),
+                "Расчистка и улицы — отдельные пункты древа: улицы не прячут дефекты зоны");
+        assertEquals(SettlementTree.State.READY, streets.state(), "Улицы готовы независимо от дефектов ровности");
+    }
+
+    @Test
+    void stageOne_CleanClearing_ShowsZeroDefects() {
+        SettlementTree tree =
+                stageOne(facts().board(BoardCase.CLEAR_GROUNDS, PERCENT, true, "ям 0, бугров 0, столбов 0")
+                        .build());
+
+        SettlementTree.Node clearing = tree.node("s1:case:CLEAR_GROUNDS:1").orElseThrow();
+        assertEquals(SettlementTree.State.READY, clearing.state(), "Ровная зона закрывает расчистку");
+        assertEquals("ям 0, бугров 0, столбов 0", clearing.detail(), "Ноль дефектов показывается числом, а не пусто");
+    }
+
+    @Test
     void percentFromWorld_PartialProgress_BeatsJournalReadyFlag() {
         SettlementTreeFacts facts = facts().board(BoardCase.BUILD_MINE, 40).build();
         SettlementTree tree = stageOne(facts);
@@ -191,9 +225,13 @@ class SettlementTreeScenarioTests {
         }
 
         FactsBuilder board(BoardCase boardCase, int percent, boolean ready) {
+            return board(boardCase, percent, ready, "");
+        }
+
+        FactsBuilder board(BoardCase boardCase, int percent, boolean ready, String detail) {
             facts.put(
                     SettlementTreeFacts.boardKey(boardCase, 1),
-                    new SettlementTreeFacts.Fact(percent, ready, false, Map.of(), null));
+                    new SettlementTreeFacts.Fact(percent, ready, false, Map.of(), null, detail));
             return this;
         }
 

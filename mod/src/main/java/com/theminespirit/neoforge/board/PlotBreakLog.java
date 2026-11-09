@@ -42,7 +42,7 @@ public final class PlotBreakLog {
 
     private static void record(
             ServerLevel level, BlockPos pos, @Nullable Entity breaker, String action, String basis, String reason) {
-        StageSite site = SettlementPlotStore.get(level).site().orElse(null);
+        StageSite site = SettlementPlotStore.liveSite(level).orElse(null);
         if (site == null || !site.protectionCell(pos.getX(), pos.getY(), pos.getZ())) {
             return;
         }

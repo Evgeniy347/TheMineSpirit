@@ -4,6 +4,7 @@ import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.StageStands;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.List;
@@ -86,9 +87,8 @@ final class FillStands {
             return true;
         }
         boolean sky = openAbove(stand);
-        return SettlementPlotStore.get(server)
-                .site()
-                .map(site -> site.fillStandAllowed(stand, sky))
+        return SettlementPlotStore.liveSite(server)
+                .map(site -> StageStands.fillStandAllowed(site, stand, sky))
                 .orElse(true);
     }
 

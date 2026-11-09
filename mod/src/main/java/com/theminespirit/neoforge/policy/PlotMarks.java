@@ -17,8 +17,7 @@ final class PlotMarks {
         }
         boolean spiritMarked = PlacedBlocksData.get(server).isSpiritMarked(pos);
         boolean placedByPlayer = !spiritMarked && PlacedBlocksData.get(server).isMarked(pos);
-        boolean onPlot = SettlementPlotStore.get(server)
-                .site()
+        boolean onPlot = SettlementPlotStore.liveSite(server)
                 .map(site -> site.inside(coord.x(), coord.z()))
                 .orElse(false);
         return new Marks(spiritMarked, placedByPlayer, onPlot);

@@ -23,8 +23,7 @@ public final class OrchardTrees {
         if (!(level instanceof ServerLevel server)) {
             return false;
         }
-        return SettlementPlotStore.get(server)
-                .site()
+        return SettlementPlotStore.liveSite(server)
                 .filter(site -> site.orchardTree(cell.x(), cell.y(), cell.z()))
                 .filter(site -> planted(server, site, cell))
                 .isPresent();

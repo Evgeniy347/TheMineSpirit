@@ -13,6 +13,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.SupplyGraph;
+import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.script.CatalogLimits;
@@ -70,11 +71,13 @@ final class WorldPost {
             return false;
         }
         if (step == BoardCase.CLEAR_GROUNDS) {
-            PlotAudit.Audit audit = PlotAudit.audit(post.level, post.scan.stage(), post.now);
-            if (audit.extras().isEmpty()) {
+            SettlementScan.Strays found = WorldAreaScan.cachedOrScan(post.level, post.scan.stage());
+            List<BlockCoord> extras = WorldAreaScan.raised(found);
+            List<BlockCoord> holes = WorldAreaScan.holes(found);
+            if (extras.isEmpty() && holes.isEmpty()) {
                 return false;
             }
-            target = target.withLeveling(LevelRepair.leveling(List.of(), audit.extras()));
+            target = target.withLeveling(LevelRepair.leveling(holes, extras));
         }
         target = StageSettle.repairTarget(step, target, gap);
         BoardOutcome outcome = StageRepair.post(
@@ -178,7 +181,13 @@ final class WorldPost {
             return true;
         }
         post.submit(
-                post.ticket(id, BoardCase.REPAIR_BUILDING, Optional.empty(), priority, ticket.id(), Map.of()),
+                post.ticket(
+                        id,
+                        BoardCase.REPAIR_BUILDING,
+                        Optional.empty(),
+                        priority,
+                        ticket.id(),
+                        post.items(ticket.task())),
                 TicketTarget.at(first).withLeveling(LevelRepair.leveling(List.of(), extras)));
         return true;
     }
@@ -210,7 +219,9 @@ final class WorldPost {
                             .withPlan(new ScriptCall(
                                     "place_block",
                                     Map.of(
-                                            "block", entry.getValue().blockId(),
+                                            "block",
+                                                    EarthCover.restoreBlock(
+                                                            entry.getValue().blockId()),
                                             "x", pos.getX(),
                                             "y", pos.getY(),
                                             "z", pos.getZ()))));

@@ -20,7 +20,7 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
 SSH = os.environ.get("LIVE_SSH", "domovoy@192.168.0.147")
 MAIN_SERVER = "/opt/minecraft/server"
-MAIN_SCRIPTS = "/opt/minecraft/tmp/logdb"
+MAIN_SCRIPTS = "/opt/minecraft/scripts/logdb"
 FTS = "messages_fts"
 
 
@@ -274,27 +274,11 @@ def dispatch(args, conn):
     raise SystemExit("неизвестная команда: %s" % command)
 
 
-def remote(args):
-    ssh = ["ssh", "-o", "ConnectTimeout=10", SSH]
-    db = MAIN_SERVER + "/logs/events.db"
-    probe = subprocess.run(ssh + ["test -f " + db], capture_output=True)
-    if probe.returncode != 0:
-        raise SystemExit(
-            "на основном сервере ещё нет базы логов (%s): этап 2 выполнит импорт; "
-            "пока ищите в своей копии (scripts/dev-server.sh up)" % db
-        )
-    subprocess.run(ssh + ["mkdir -p " + MAIN_SCRIPTS], check=True)
-    for name in ("schema.json", "loader.py", "logq.py"):
-        path = HERE / name
-        subprocess.run(
-            ssh + ["cat > %s/%s" % (MAIN_SCRIPTS, name)],
-            input=path.read_bytes(),
-            check=True,
-        )
+def remote_command(args, db):
+    """Команда для основного сервера: только чтение базы, JSONL грузит cron."""
     command = [
         "python3", MAIN_SCRIPTS + "/logq.py",
         "--db", db,
-        "--logs", MAIN_SERVER + "/logs",
         "--json",
         "--limit", str(args.limit),
         args.command,
@@ -324,6 +308,30 @@ def remote(args):
         command.extend(args.words)
     elif args.command == "sql":
         command.extend([args.query])
+    return command
+
+
+def remote(args):
+    ssh = ["ssh", "-o", "ConnectTimeout=10", SSH]
+    db = MAIN_SERVER + "/logs/events.db"
+    probe = subprocess.run(ssh + ["test -f " + db], capture_output=True)
+    if probe.returncode != 0:
+        raise SystemExit(
+            "на основном сервере ещё нет базы логов (%s): этап 2 выполнит импорт; "
+            "пока ищите в своей копии (scripts/dev-server.sh up)" % db
+        )
+    subprocess.run(ssh + ["mkdir -p " + MAIN_SCRIPTS], check=True)
+    for name in ("schema.json", "loader.py", "logq.py"):
+        destination = "%s/%s" % (MAIN_SCRIPTS, name)
+        present = subprocess.run(ssh + ["test -f " + destination], capture_output=True)
+        if present.returncode == 0:
+            continue
+        subprocess.run(
+            ssh + ["cat > " + destination],
+            input=(HERE / name).read_bytes(),
+            check=True,
+        )
+    command = remote_command(args, db)
     output = subprocess.run(ssh + [" ".join(_quote(part) for part in command)], capture_output=True, check=True)
     return output.stdout.decode("utf-8", "replace")
 

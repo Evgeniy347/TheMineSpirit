@@ -95,7 +95,9 @@ final class CasePauseBook {
         known.token = token;
         known.consecutive++;
         known.pausedUntil = now + BoardBackoff.pauseTicks(known.consecutive);
-        if (!known.detached && known.consecutive >= BoardTuning.caseFailLimit()) {
+        if (!known.detached
+                && known.consecutive >= BoardTuning.caseFailLimit()
+                && ticket.boardCase() != BoardCase.RESCUE_SPIRIT) {
             known.detached = true;
             known.pausedUntil = now + BoardTuning.caseFailPauseCapTicks();
             return true;

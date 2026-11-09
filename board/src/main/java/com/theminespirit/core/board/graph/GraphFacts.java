@@ -158,11 +158,12 @@ public record GraphFacts(
         }
     }
 
-    public record Chest(Position position, Map<String, Integer> contents, int freeSlots, int totalSlots) {
+    public record Chest(Position position, Map<String, Integer> contents, int freeSlots, int totalSlots, Reach reach) {
         public Chest {
             Objects.requireNonNull(position, "позиция сундука не может быть null: без неё не дойти до склада");
             contents = Map.copyOf(
                     Objects.requireNonNull(contents, "содержимое сундука не может быть null: пустой — пустая карта"));
+            Objects.requireNonNull(reach, "достижимость сундука не может быть null: неизвестное — UNKNOWN");
             if (freeSlots < 0 || totalSlots < 0 || freeSlots > totalSlots) {
                 throw new IllegalArgumentException("Свободных слотов " + freeSlots + " из " + totalSlots
                         + ": число слотов не отрицательно и не больше общего");

@@ -24,7 +24,7 @@ public final class MineSnapshots {
     }
 
     public static Optional<MineGeometry> geometry(ServerLevel level) {
-        return SettlementPlotStore.get(level).site().flatMap(MineSnapshots::geometry);
+        return SettlementPlotStore.liveSite(level).flatMap(MineSnapshots::geometry);
     }
 
     public static Optional<MineGeometry> geometry(StageSite stage) {
