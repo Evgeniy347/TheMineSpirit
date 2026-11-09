@@ -190,6 +190,47 @@ class NavAStarTests {
     }
 
     @Test
+    void pillars_TwoHeightsOverFlatGround_BothDescend() {
+        NavTestWorld world = NavTestWorld.flat(0);
+        for (int y = 1; y <= 4; y++) {
+            world.solid(0, y, 0);
+        }
+        for (int y = 1; y <= 5; y++) {
+            world.solid(20, y, 20);
+        }
+        NavResult low = planAt(world, new BlockCoord(0, 5, 0), walkOnly(), new NavGoalBlock(8, 1, 0));
+        NavResult high = planAt(world, new BlockCoord(20, 6, 20), walkOnly(), new NavGoalBlock(28, 1, 20));
+
+        assertEquals(
+                NavSearchStatus.FOUND,
+                low.status(),
+                "дух на одиночном столбе высотой 4 обязан спуститься на землю и дойти до цели: в observe25 "
+                        + "spirit-1 стоял на блоке (-155,72,-490), а поиск отдавал NONE после 1–3 узлов, "
+                        + "потому что падение глубже 3 запрещено, а обойти столб нечем");
+        assertTrue(low.end().y() <= 1, "путь обязан спустить духа с опоры, а кончается в " + low.end());
+        assertEquals(
+                NavSearchStatus.FOUND,
+                high.status(),
+                "столб высотой 5 (spirit-2 observe25) — тот же спуск: одиночную опору нельзя запирать "
+                        + "пределом падения 3");
+        assertTrue(high.end().y() <= 1, "путь со второго столба обязан выйти на землю, а кончается в " + high.end());
+    }
+
+    @Test
+    void pillar_TooDeepForEscape_StillNoPath() {
+        NavTestWorld world = NavTestWorld.flat(0);
+        for (int y = 1; y <= 16; y++) {
+            world.solid(0, y, 0);
+        }
+        NavResult result = planAt(world, new BlockCoord(0, 17, 0), walkOnly(), new NavGoalBlock(8, 1, 0));
+
+        assertFalse(
+                result.found(),
+                "со столба выше безопасного спуска путь не выдумывается: падение с 16 блоков убило бы духа, "
+                        + "а не спасло");
+    }
+
+    @Test
     void cave_UnderSettlementWithWater_PathStaysAboveGround() {
         NavTestWorld world = underWallCorridor(true);
         NavResult result = plan(world, 0, walkOnly(), new NavGoalBlock(10, 1, 0));

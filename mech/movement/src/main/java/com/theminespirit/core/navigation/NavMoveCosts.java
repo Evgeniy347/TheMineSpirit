@@ -48,9 +48,13 @@ final class NavMoveCosts {
     }
 
     static void fall(NavContext context, int x, int y, int z, int dx, int dz, NavMoveResult out) {
+        fall(context, x, y, z, dx, dz, context.settings().maxFall(), out);
+    }
+
+    static void fall(NavContext context, int x, int y, int z, int dx, int dz, int groundMax, NavMoveResult out) {
         int nx = x + dx;
         int nz = z + dz;
-        int max = context.settings().maxFall();
+        int max = groundMax;
         for (int depth = 2; depth <= context.settings().maxWaterFall(); depth++) {
             int feet = y - depth;
             if (!passableColumn(context, nx, y - 1, feet + 1, nz)) {

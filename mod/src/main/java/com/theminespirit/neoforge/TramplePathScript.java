@@ -8,6 +8,7 @@ import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ScanTuning;
+import com.theminespirit.core.town.PlotProtection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -44,7 +45,7 @@ final class TramplePathScript implements ScriptInstance {
                         Blocks.COARSE_DIRT,
                         Blocks.ROOTED_DIRT,
                         Blocks.MYCELIUM));
-        this.placer = new BlockPlacer(spirit);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.PLAN_BUILD);
         this.approach = new Approach(spirit);
     }
 

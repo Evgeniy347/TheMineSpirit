@@ -61,7 +61,7 @@ final class SoilQuarry {
                     continue;
                 }
                 if (site != null
-                        && (site.gatherProtected(x, y, z) || site.gatherForbidden(new BlockCoord(x, y, z), 0))) {
+                        && (site.protectionCell(x, y, z) || site.gatherForbidden(new BlockCoord(x, y, z), 0))) {
                     inside++;
                     continue;
                 }

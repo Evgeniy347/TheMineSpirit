@@ -28,6 +28,34 @@ class CrossMatrixGuardTests {
     }
 
     @Test
+    void matrix_MultiPairRow_CoversEveryPair() {
+        String text = String.join(
+                "\n",
+                List.of(
+                        "## Реестр механик",
+                        "| M01 | a |",
+                        "| M02 | b |",
+                        "| M03 | c |",
+                        "",
+                        "## Матрица пар",
+                        "| | M01 | M02 | M03 |",
+                        "|---|---|---|---|",
+                        "| M01 | — | Е | Е |",
+                        "| M02 | Е | — | Н |",
+                        "| M03 | Е | Н | — |",
+                        "",
+                        "| пара | тест | граф дал | механика сделала | отметка | сила |",
+                        "|---|---|---|---|---|---|",
+                        "| 1-2, 1-3 | `ATests.ok` | граф | механика | ОК | полный |"));
+
+        assertEquals(
+                List.of(),
+                CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }")),
+                "Строка с несколькими парами через запятую закрывает все перечисленные клетки: иначе матрица "
+                        + "требует дублировать один сценарий отдельной строкой на каждую пару");
+    }
+
+    @Test
     void matrix_AsymmetricCell_IsReported() {
         String text = CrossMatrixDocument.baseDocument().replace("| M01 | — | Н |", "| M01 | — | Е |");
 
@@ -58,6 +86,48 @@ class CrossMatrixGuardTests {
                         .anyMatch(issue -> issue.contains("клетка Е пары 1-2 без строки")),
                 "Сторож ослеп: клетка Е без строки «граф/механика» обязана попасть в нарушения: "
                         + CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }")));
+    }
+
+    @Test
+    void matrix_NoPairWithoutReason_IsReported() {
+        String text = CrossMatrixDocument.baseDocument()
+                .replace("| M01 | — | Н |", "| M01 | — | н/п |")
+                .replace("| M02 | Н | — |", "| M02 | н/п | — |");
+
+        assertTrue(
+                CrossMatrixNoPair.issues(text, "").stream()
+                        .anyMatch(issue -> issue.contains("клетка н/п") && issue.contains("без обоснования")),
+                "Сторож ослеп: клетка н/п без строки обоснования обязана попасть в нарушения");
+    }
+
+    @Test
+    void matrix_NoPairReasonForTestedPair_IsReported() {
+        String text = CrossMatrixDocument.baseDocument();
+
+        assertTrue(
+                CrossMatrixNoPair.issues(text, "| 1-2 | причина достаточной длины |\n").stream()
+                        .anyMatch(issue -> issue.contains("обоснование относится к другой паре")),
+                "Сторож ослеп: обоснование н/п для пары с общим тестом обязано попасть в нарушения");
+    }
+
+    @Test
+    void detail_MissingStrength_IsReported() {
+        String text = CrossMatrixDocument.baseDocument().replace("| ОК | полный |", "| ОК |  |");
+
+        assertTrue(
+                CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
+                        .anyMatch(issue -> issue.contains("не размечена силой")),
+                "Сторож ослеп: строка пары без силы полный/слабо обязана попасть в нарушения");
+    }
+
+    @Test
+    void detail_WeakStrength_IsAccepted() {
+        String text = CrossMatrixDocument.baseDocument().replace("| ОК | полный |", "| ОК | слабо |");
+
+        assertTrue(
+                CrossMatrixDocument.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
+                        .noneMatch(issue -> issue.contains("силой")),
+                "Сторож ложно срабатывает: отметка «слабо» — законная сила пары");
     }
 
     @Test

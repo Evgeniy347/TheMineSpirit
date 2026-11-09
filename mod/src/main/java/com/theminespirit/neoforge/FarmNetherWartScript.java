@@ -2,7 +2,9 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.script.WartFarmParams;
+import com.theminespirit.core.town.PlotProtection;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
@@ -110,7 +112,13 @@ final class FarmNetherWartScript implements ScriptInstance {
             return fail("грядка адского нароста вне серверного мира");
         }
         Block block = spirit.level().getBlockState(crop).getBlock();
+        if (spirit.protectionGate().checkHarvest(crop, spirit.level().getBlockState(crop))
+                instanceof BlockProtection.Refused refused) {
+            return fail("урожай нароста в " + crop.toShortString() + " не снят: " + refused.reason());
+        }
         List<ItemStack> drops = Block.getDrops(spirit.level().getBlockState(crop), server, crop, null);
+        BreakNotice.broken(
+                server, crop, spirit.level().getBlockState(crop), spirit, "FARM_HARVEST", PlotProtection.Ground.NONE);
         spirit.level().removeBlock(crop, false);
         for (ItemStack drop : drops) {
             ItemStack rest = spirit.getInventory().addItem(drop.copy());

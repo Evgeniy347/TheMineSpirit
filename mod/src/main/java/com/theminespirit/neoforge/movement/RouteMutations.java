@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.movement;
 import com.theminespirit.core.movement.WaterCrossingPlanner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.RemovalLog;
+import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.BlockBreaker;
 import com.theminespirit.neoforge.BlockPlacer;
 import com.theminespirit.neoforge.BlockStates;
@@ -25,7 +26,7 @@ final class RouteMutations {
         this.spirit = spirit;
         this.walk = walk;
         this.breaker = new BlockBreaker(spirit);
-        this.placer = new BlockPlacer(spirit);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.NONE);
     }
 
     boolean busy() {
