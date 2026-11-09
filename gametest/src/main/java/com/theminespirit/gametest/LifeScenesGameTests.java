@@ -2,6 +2,7 @@ package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.SpiritDamageWatch;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.LifeInputs;
@@ -64,8 +65,10 @@ public final class LifeScenesGameTests {
             helper.assertTrue(
                     spirit.getHealth() < healthBefore,
                     "Урон в мире уменьшает здоровье духа: " + spirit.getHealth() + "/" + healthBefore);
-            GraphFacts.Hurt hurt =
-                    SpiritDamageWatch.recent(spirit.getUUID(), helper.getLevel().getGameTime());
+            GraphFacts.Hurt hurt = SpiritDamageWatch.recent(
+                    spirit.getUUID(),
+                    helper.getLevel().getGameTime(),
+                    DataTables.INSTANCE.graph().current().costs().life().damageWindowTicks());
             helper.assertTrue(
                     hurt != null && hurt.amount() > 0 && "minecraft:zombie".equals(hurt.source()),
                     "Свежий урон духу известен графу: " + hurt);

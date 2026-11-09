@@ -39,7 +39,8 @@ final class PlanCaseFacts {
     }
 
     static GraphPlan plan(GraphWorld world, GraphFacts facts) {
-        return GraphPlanner.plan(world.graph, world.state().withFacts(facts));
+        return GraphPlanner.plan(
+                world.graph, world.state().withFacts(facts, world.graph.costs().life()));
     }
 
     static boolean posted(GraphPlan plan, String id) {

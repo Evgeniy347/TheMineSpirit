@@ -103,7 +103,9 @@ class GearFragmentTests {
                                 List.of(),
                                 List.of(),
                                 null)));
-        GraphState state = GraphWorld.empty().state().withFacts(facts);
+        GraphState state = GraphWorld.empty()
+                .state()
+                .withFacts(facts, GraphWorld.GRAPH.costs().life());
 
         GraphPlan plan = GraphPlanner.plan(GraphWorld.GRAPH, state);
 

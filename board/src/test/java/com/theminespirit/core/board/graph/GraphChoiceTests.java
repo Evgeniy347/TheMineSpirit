@@ -213,7 +213,8 @@ class GraphChoiceTests {
                 costs.travelScaleTicks(),
                 costs.toolDurability(),
                 costs.stationCapacity(),
-                choice);
+                choice,
+                costs.life());
         return new SupplyGraph(
                 GRAPH.decay(),
                 GRAPH.urgentBoost(),
