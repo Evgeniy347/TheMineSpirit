@@ -106,7 +106,8 @@ public final class SettlementScan {
                 unknown++;
                 continue;
             }
-            int surface = surface(world, x, z, level);
+            int top = world.top(x, z);
+            int surface = surface(world, x, z, level, top);
             OptionalInt lot = world.lotLevel(x, z);
             OptionalInt dug = world.dugTop(x, z);
             if (lot.isPresent()) {
@@ -131,7 +132,7 @@ public final class SettlementScan {
             }
             boolean deep = surface < level - 1 || dug.isPresent();
             int from = deep ? level - TRACE_DEPTH : Math.min(level - TRACE_SHALLOW, surface);
-            int above = Math.max(level + STRAY_ABOVE, surface);
+            int above = top < level ? level - 1 : Math.max(level + STRAY_ABOVE, surface);
             for (int y = from; y <= above; y++) {
                 BlockCoord at = new BlockCoord(x, y, z);
                 boolean open = world.open(x, y, z);
@@ -212,8 +213,8 @@ public final class SettlementScan {
         return false;
     }
 
-    private static int surface(World world, int x, int z, int level) {
-        int top = Math.max(world.top(x, z), level + PlotCells.FREE_HEIGHT - 1);
+    private static int surface(World world, int x, int z, int level, int knownTop) {
+        int top = knownTop < level ? knownTop : Math.max(knownTop, level + PlotCells.FREE_HEIGHT - 1);
         for (int y = top; y > level - PIT_DEPTH_MAX; y--) {
             if (world.open(x, y, z)) {
                 continue;
