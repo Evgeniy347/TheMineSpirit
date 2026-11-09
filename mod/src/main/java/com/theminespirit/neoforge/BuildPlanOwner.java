@@ -30,8 +30,7 @@ public final class BuildPlanOwner {
         ScriptCall call = buildCall(plan.get());
         if (call != null) {
             BlockCoord origin = origin(call);
-            return SettlementPlotStore.get(server)
-                    .site()
+            return SettlementPlotStore.liveSite(server)
                     .map(stage -> PlanBuildings.ofBuild(stage, file(call), origin))
                     .orElseGet(() -> PlanBuildings.ofScheme(file(call)));
         }
@@ -39,8 +38,7 @@ public final class BuildPlanOwner {
         if (clearing == null) {
             return PlanBuilding.NONE;
         }
-        return SettlementPlotStore.get(server)
-                .site()
+        return SettlementPlotStore.liveSite(server)
                 .map(stage -> demolished(stage, clearing))
                 .orElse(PlanBuilding.NONE);
     }

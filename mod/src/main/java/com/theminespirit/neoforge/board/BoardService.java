@@ -1,28 +1,19 @@
 package com.theminespirit.neoforge.board;
 
-import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.ActivityCadence;
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardOutcome;
-import com.theminespirit.core.board.BoardReserve;
-import com.theminespirit.core.board.BoardState;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.CraterProfiles;
 import com.theminespirit.core.board.HerdCycles;
-import com.theminespirit.core.board.StockParts;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
-import com.theminespirit.neoforge.net.BuildFingerprint;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -32,10 +23,8 @@ import java.util.UUID;
 import java.util.function.LongSupplier;
 import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 
 public final class BoardService {
-    private static final Logger LOGGER = LogUtils.getLogger();
     public final BoardSources sources;
     final BoardNotices notices = new BoardNotices();
     final BoardTicketDesk tickets;
@@ -44,12 +33,10 @@ public final class BoardService {
     final @Nullable BoardStateStore store;
     private final CraterProfiles craters = new CraterProfiles(64);
     final Map<String, TicketTarget> targets = new HashMap<>();
-    private long lastActivity;
     private final BoardHerdDesk herd;
     private final BoardSupplyDesk supply;
     private final BoardDispatchDesk dispatch;
-    private Set<String> liveCauses = Set.of();
-    private long lastRebuild = -1;
+    private final BoardCycle cycle;
     private final BoardBuildMeter meter = new BoardBuildMeter();
 
     public BoardService(
@@ -77,50 +64,8 @@ public final class BoardService {
                 targets);
         this.dispatch = new BoardDispatchDesk(this, board, targets);
         this.tickets = new BoardTicketDesk(this, board, targets);
-        if (store != null) {
-            BoardState restored = store.state();
-            BoardState byGraph = restored.withoutLegacy(Set.of(GraphTickets.PREFIX));
-            int dropped = restored.entries().size() - byGraph.entries().size();
-            if (dropped > 0) {
-                LOGGER.warn(
-                        "[board] при загрузке снято {} заданий мимо графа: их ставят заново источники графа", dropped);
-            }
-            BoardState owned = byGraph.withoutActivities();
-            int activities = byGraph.entries().size() - owned.entries().size();
-            if (activities > 0) {
-                LOGGER.info(
-                        "[board] при загрузке снято {} занятий: духи потеряли задачи перезапуска, "
-                                + "источники графа поставят их заново",
-                        activities);
-            }
-            if (!owned.isEmpty()) {
-                board.restore(owned);
-            }
-            cancelRestoredRescues(board);
-            String build = BuildFingerprint.current();
-            if (!build.equals(store.build())) {
-                List<String> reset = resetForNewRules();
-                if (!reset.isEmpty()) {
-                    LOGGER.warn(
-                            "[incident] сборка мода сменилась ({} → {}): сброшено {} заданий старых правил {}, источники "
-                                    + "поставят их заново",
-                            store.build().isEmpty() ? "?" : store.build(),
-                            build,
-                            reset.size(),
-                            reset);
-                }
-                store.markBuild(build);
-                store.update(board.snapshot());
-            }
-            BoardTargetsNbt.restore(store, board, targets, sources);
-        }
-        journal.restore(board.ledger());
-    }
-
-    private static void cancelRestoredRescues(Board board) {
-        board.all().stream()
-                .filter(ticket -> ticket.boardCase() == BoardCase.RESCUE_SPIRIT)
-                .forEach(ticket -> board.cancel(ticket.id()));
+        this.cycle = new BoardCycle(this, board, targets, dispatch, tickets, supply, sources, herd, notices, journal);
+        BoardRestore.restore(board, store, targets, tickets, journal, sources);
     }
 
     public static BoardService create(ServerLevel level) {
@@ -149,54 +94,11 @@ public final class BoardService {
     }
 
     public void tick(ServerLevel level, long now) {
-        journal.flush(JournalService.FLUSH_BUDGET);
-        long since = now - lastRebuild;
-        if (since >= BoardTuning.boardIntervalTicks()) {
-            rebuild(level, now);
-            return;
-        }
-        if (ActivityCadence.due(lastActivity, now)) {
-            lastActivity = now;
-            dispatch.reconcile(SpiritCensus.all(level), false);
-        }
-        dispatch.tick(level, now);
+        cycle.tick(level, now);
     }
 
     public void rebuild(ServerLevel level, long now) {
-        meter.rebuildStart();
-        meter.pruneStart();
-        board.prune(now, liveCauses);
-        meter.pruneEnd();
-        Set<String> alive = new HashSet<>();
-        for (BoardTicket ticket : board.all()) {
-            alive.add(ticket.id());
-        }
-        targets.keySet().retainAll(alive);
-        dispatch.retainTickets(alive);
-        List<SpiritEntity> spirits = SpiritCensus.all(level);
-        tickets.cancelOrphans(level, spirits);
-        StockParts parts = supply.refresh(level, spirits);
-        dispatch.settleOwners(spirits);
-        supply.ensure(level, this, spirits, now);
-        StockView unreserved = parts.free(BoardReserve.items(board));
-        Set<String> live = sources.tick(level, this, spirits, unreserved, now);
-        live.addAll(herd.liveCauses(level));
-        live.addAll(herd.liveDropCauses(level));
-        liveCauses = live;
-        if (!sources.failedRound()) {
-            board.retain(live, now);
-        }
-        ForceloadGuard.tick(level, spirits, board, targets);
-        dispatch.issue(level, spirits, now);
-        notices.watchPending(board, stock(), now);
-        dispatch.reconcile(spirits, true);
-        dispatch.releaseDeadHolders(level, spirits, now);
-        dispatch.dropAbsentOwners(spirits, now);
-        flushBlockNotes(level);
-        lastRebuild = now;
-        journal.flush(JournalService.FLUSH_BUDGET);
-        BoardPersistence.persist(this);
-        meter.rebuildEnd();
+        cycle.rebuild(level, now);
     }
 
     public BoardBuildMeter meter() {

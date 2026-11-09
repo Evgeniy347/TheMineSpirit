@@ -15,13 +15,10 @@ import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.core.town.PlotProtection;
-import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
 public final class DescentSession {
@@ -42,13 +39,12 @@ public final class DescentSession {
 
     private static final double APPROACH_ARRIVAL = 0.6;
     private static final int COLLECT_RADIUS = 4;
-    private static final String TORCH_BLOCK_ID = "minecraft:torch";
 
     private final SpiritEntity spirit;
     private final Level level;
     private final LevelSafetyView safety;
     private final BlockBreaker breaker;
-    private final BlockPlacer placer;
+    private final DescentTorch torch;
     private final Approach approach;
     private final BuildReservations reservations;
 
@@ -72,7 +68,7 @@ public final class DescentSession {
         this.level = spirit.level();
         this.safety = new LevelSafetyView(level);
         this.breaker = new BlockBreaker(spirit);
-        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.PLAN_BUILD);
+        this.torch = new DescentTorch(level, new BlockPlacer(spirit, PlotProtection.Ground.PLAN_BUILD));
         this.approach = new Approach(spirit);
         this.reservations = BuildReservationHub.forLevel(level);
         BlockPos feet = spirit.blockPosition();
@@ -127,44 +123,27 @@ public final class DescentSession {
     }
 
     public ScriptInstance.Progress progress() {
-        return new ScriptInstance.Progress(stepIndex, Math.max(plan.steps().size(), 1));
+        return DescentState.progress(stepIndex, plan);
     }
 
     public Map<String, Object> resultData() {
-        int floorUnderFeet = entry.y() - 1;
-        int y = stepIndex == 0
-                ? floorUnderFeet
-                : plan.steps().get(stepIndex - 1).floor();
-        int depth = floorUnderFeet - y;
-        return Map.of(
-                "reached", stopReason == null,
-                "y", y,
-                "depth", depth,
-                "blocks_dug", blocksDug,
-                "reason", stopReason == null ? "" : stopReason);
+        return DescentState.result(entry, plan, stepIndex, blocksDug, stopReason);
     }
 
     public Map<String, Object> saveState() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("entry_x", entry.x());
-        map.put("entry_y", entry.y());
-        map.put("entry_z", entry.z());
-        map.put("direction", plan.direction().name().toLowerCase(Locale.ROOT));
-        map.put("target_y", plan.targetY());
-        map.put("step", stepIndex);
-        map.put("blocks_dug", blocksDug);
-        return Map.copyOf(map);
+        return DescentState.save(entry, plan, stepIndex, blocksDug);
     }
 
     public void restoreState(Map<String, Object> saved) {
         Objects.requireNonNull(saved, "Снимок состояния не может быть null: пустое состояние задают пустой картой");
-        entry = new BlockCoord(number(saved, "entry_x"), number(saved, "entry_y"), number(saved, "entry_z"));
-        direction = DescentDirection.parse(text(saved, "direction"));
-        targetY = number(saved, "target_y");
-        blocksDug = number(saved, "blocks_dug");
+        DescentState.Snapshot snapshot = DescentState.read(saved);
+        entry = snapshot.entry();
+        direction = snapshot.direction();
+        targetY = snapshot.targetY();
+        blocksDug = snapshot.blocksDug();
         torchInterval = DescentData.loadDefault().torchInterval();
         plan = DescentPlan.from(safety, entry, direction, targetY, torchInterval);
-        stepIndex = Math.min(number(saved, "step"), plan.steps().size());
+        stepIndex = Math.min(snapshot.stepIndex(), plan.steps().size());
         approachBegun = false;
         state = State.PLAN_CHECK;
     }
@@ -175,21 +154,11 @@ public final class DescentSession {
             return;
         }
         DescentStep step = plan.steps().get(stepIndex);
-        String danger = DescentPlan.dangerAt(safety, step, plan.direction());
-        if (danger != null) {
-            stopReason = danger;
+        String stop = DescentPlanner.check(step, plan, safety, reservations, spirit.getUUID());
+        if (stop != null) {
+            stopReason = stop;
             complete();
             return;
-        }
-        for (BlockCoord cell : step.passage()) {
-            if (reservations.foreign(cell, spirit.getUUID())) {
-                stopReason = "клетка " + cell + " занята другим духом: спуск остановлен";
-                complete();
-                return;
-            }
-        }
-        for (BlockCoord cell : step.passage()) {
-            reservations.reserve(cell, spirit.getUUID());
         }
         state = State.DIG_BEGIN;
     }
@@ -280,28 +249,12 @@ public final class DescentSession {
     }
 
     private void torchTick() {
-        BlockCoord stand = currentStep().stand();
-        BlockPos standPos = toPos(stand);
-        if (level.getBlockState(standPos).is(Blocks.TORCH)) {
+        String refusal = torch.place(currentStep().stand());
+        if (refusal == null) {
             stepFinished();
             return;
         }
-        BlockPlacer.Begin begin = placer.begin(standPos, Blocks.TORCH.defaultBlockState(), TORCH_BLOCK_ID);
-        if (begin instanceof BlockPlacer.Started) {
-            stepFinished();
-            return;
-        }
-        if (begin instanceof BlockPlacer.Protected protectedPlace) {
-            stopReason = "ставить факел запрещено: " + protectedPlace.reason();
-            complete();
-            return;
-        }
-        BlockPlacer.Refused refused = (BlockPlacer.Refused) begin;
-        stopReason = switch (refused.reason()) {
-            case NO_MATERIAL -> "нет факелов в инвентаре: ступень " + stand + " осталась без света";
-            case OCCUPIED -> "клетка ступени " + stand + " занята другим блоком: факел не поставлен";
-            default -> refused.message();
-        };
+        stopReason = refusal;
         complete();
     }
 
@@ -335,26 +288,5 @@ public final class DescentSession {
 
     private static BlockPos toPos(BlockCoord coord) {
         return new BlockPos(coord.x(), coord.y(), coord.z());
-    }
-
-    private static int number(Map<String, Object> map, String key) {
-        Object value = map.get(key);
-        if (value == null) {
-            throw new IllegalArgumentException("Поле снимка '" + key + "' отсутствует: без него спуск не восстановить");
-        }
-        if (!(value instanceof Number number)) {
-            throw new IllegalArgumentException(
-                    "Поле снимка '" + key + "' обязано быть числом: иначе спуск не восстановить");
-        }
-        return number.intValue();
-    }
-
-    private static String text(Map<String, Object> map, String key) {
-        Object value = map.get(key);
-        if (!(value instanceof String text)) {
-            throw new IllegalArgumentException(
-                    "Поле снимка '" + key + "' обязано быть строкой: иначе спуск не восстановить");
-        }
-        return text;
     }
 }

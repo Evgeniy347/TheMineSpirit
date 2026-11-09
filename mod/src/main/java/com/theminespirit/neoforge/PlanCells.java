@@ -19,8 +19,7 @@ final class PlanCells {
         if (!(level instanceof ServerLevel server)) {
             return false;
         }
-        return SettlementPlotStore.get(server)
-                        .site()
+        return SettlementPlotStore.liveSite(server)
                         .filter(site -> site.planCell(pos.getX(), pos.getY(), pos.getZ())
                                 && !oldFill(level, site, pos)
                                 && (site.ringPost(pos.getX(), pos.getZ()) || !debris(level, pos)))

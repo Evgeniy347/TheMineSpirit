@@ -32,7 +32,7 @@ final class ChestSnapshots {
         if (town.isPresent()) {
             return town;
         }
-        return SettlementPlotStore.get(level).site().map(StageSite::enclosure);
+        return SettlementPlotStore.liveSite(level).map(StageSite::enclosure);
     }
 
     static List<BlockCoord> positions(ServerLevel level) {

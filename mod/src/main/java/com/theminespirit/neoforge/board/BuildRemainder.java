@@ -18,7 +18,7 @@ final class BuildRemainder {
     static Map<String, Integer> left(ServerLevel level, BoardCase build, TaskNode plan, Map<String, Integer> need) {
         SettlementPlotStore store = SettlementPlotStore.get(level);
         Optional<String> wood = store.plot()
-                .map(plot -> store.site()
+                .map(plot -> SettlementPlotStore.liveSite(level)
                         .map(site -> BuildingWoodChoice.stored(level, build, site, plot.wood()))
                         .orElse(plot.wood()));
         if (!WOODEN.contains(build) || wood.isEmpty()) {

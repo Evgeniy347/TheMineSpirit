@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.RescuePlans;
 import com.theminespirit.core.movement.PitExitPlanner;
+import com.theminespirit.core.navigation.PillarDescent;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
@@ -9,6 +10,8 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.PickaxeCheck;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.movement.RouteLevelView;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -48,7 +51,12 @@ final class RescueTicket {
         boolean tool = PickaxeCheck.has(spirit);
         boolean open = DigOutScript.open(level, feet);
         int blocks = PitRescue.supplies(spirit).blocks();
-        RescuePlans.Self method = RescuePlans.self(new RescuePlans.Situation(false, false, tool, open, noPath, blocks));
+        BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
+        PillarDescent.@Nullable Plan descent = ownPillar(level, spirit, at);
+        boolean descend =
+                descent != null && open && noPath && (blocks < 1 || descent.depth() <= Math.max(1, span(at, home)));
+        RescuePlans.Self method =
+                RescuePlans.self(new RescuePlans.Situation(false, false, tool, open, noPath, blocks, descend));
         return switch (method) {
             case PIT ->
                 throw new IllegalStateException("Яма без плана выхода: PitRescue обязан назвать способ подъёма");
@@ -63,8 +71,31 @@ final class RescueTicket {
                                 RescuePlans.bridge(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), home, blocks),
                                 digOut(home))),
                         "пути домой нет, кирки нет: мостит к поселению своими блоками (" + blocks + ")");
+            case DESCEND -> {
+                PillarDescent.Plan plan = Objects.requireNonNull(descent, "Спуск без плана: духу нечего разбирать");
+                yield new Escape(
+                        true,
+                        RescuePlans.descent(home),
+                        "пути домой нет, но стоит на своём столбе: разбирает " + plan.depth()
+                                + " блоков под собой и спускается на " + plan.landing() + " (мост "
+                                + Math.max(1, span(at, home)) + " блоков дороже и висит над землёй)");
+            }
             case NONE -> new Escape(false, null, refusal(open, noPath, blocks));
         };
+    }
+
+    private static PillarDescent.@Nullable Plan ownPillar(ServerLevel level, SpiritEntity spirit, BlockCoord at) {
+        PlacedBlocksData placed = PlacedBlocksData.get(level);
+        return PillarDescent.plan(
+                        new RouteLevelView(spirit),
+                        at,
+                        cell -> placed.isSpiritMarked(new BlockPos(cell.x(), cell.y(), cell.z())),
+                        64)
+                .orElse(null);
+    }
+
+    private static int span(BlockCoord from, BlockCoord home) {
+        return Math.max(Math.abs(home.x() - from.x()), Math.abs(home.z() - from.z()));
     }
 
     private static Escape dig(ServerLevel level, BlockPos feet, BlockCoord home, boolean open) {

@@ -10,11 +10,13 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.movement.CheapBlocks;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -57,7 +59,7 @@ public final class DigOutScript implements ScriptInstance {
         this.fromPit = open(level, spirit.blockPosition());
         this.descending = target.y() < spirit.blockPosition().getY();
         this.breaker = BlockBreaker.escaping(spirit, rescue);
-        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.NONE);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.TEMPORARY_MOVEMENT);
         this.restore = new DigOutRestore(spirit, level);
         boolean sealedNow = sealed(level, spirit.blockPosition());
         this.backfill = new DigOutBackfill(
@@ -231,7 +233,12 @@ public final class DigOutScript implements ScriptInstance {
         }
         String id = blockId.get();
         return switch (placer.begin(cell, BlockStates.stateFor(id), id)) {
-            case BlockPlacer.Started ignored -> Optional.empty();
+            case BlockPlacer.Started ignored -> {
+                if (level instanceof ServerLevel server) {
+                    PlacedBlocksData.get(server).markTemporary(cell);
+                }
+                yield Optional.empty();
+            }
             case BlockPlacer.Refused refused -> Optional.of(refused.message());
             case BlockPlacer.Protected refused -> Optional.of(refused.reason());
         };

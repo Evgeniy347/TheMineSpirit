@@ -28,7 +28,7 @@ public final class MineSnapshots {
     }
 
     private static Optional<MineLayout> layout(ServerLevel level) {
-        Optional<StageSite> site = SettlementPlotStore.get(level).site();
+        Optional<StageSite> site = SettlementPlotStore.liveSite(level);
         Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(TicketPlans.MINE_DESCENT_SCHEME);
         if (site.isEmpty() || preset.isEmpty()) {
             return Optional.empty();

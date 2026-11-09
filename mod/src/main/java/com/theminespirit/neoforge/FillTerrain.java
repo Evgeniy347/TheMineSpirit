@@ -57,7 +57,7 @@ final class FillTerrain implements FillOrder.World {
 
     private Set<BlockCoord> activeRegion() {
         StageSite site = level instanceof ServerLevel server
-                ? SettlementPlotStore.get(server).site().orElse(null)
+                ? SettlementPlotStore.liveSite(server).orElse(null)
                 : null;
         if (site == null) {
             return region;

@@ -19,6 +19,7 @@ class PlotBreakPathGuardTests {
     private static final String DEMO = "neoforge/demo/DemoSession.java";
     private static final Set<String> ALLOWED = Set.of(
             SINGLE_POINT,
+            "neoforge/BreakDestroy.java",
             SPIRIT_POINT,
             DEMO,
             "neoforge/PillarDismantler.java",
@@ -57,7 +58,8 @@ class PlotBreakPathGuardTests {
                 offenders,
                 "Дух меняет мир только через BlockBreaker: иначе защита плана и журнал [plot-break] видят не все "
                         + "поломки, и постройка тихо теряет блоки (observe23: дом 100→94). Прямые destroyBlock/"
-                        + "removeBlock/воздух разрешены только демо-сцене и известным временным путям, и каждый "
+                        + "removeBlock/воздух разрешены только BlockBreaker (его BreakDestroy), демо-сцене и известным "
+                        + "временным путям, и каждый "
                         + "такой путь обязан писать в BreakNotice. Нарушители");
     }
 

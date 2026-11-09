@@ -17,7 +17,7 @@ final class StageBootstrap {
             return;
         }
         SettlementPlotStore store = SettlementPlotStore.get(level);
-        Optional<StageSite> site = store.site(1);
+        Optional<StageSite> site = store.site(SettlementPlotStore.currentStage(service));
         Optional<SettlementPlot> plot = store.plot();
         if (site.isEmpty() || plot.isEmpty()) {
             return;

@@ -15,7 +15,7 @@ public final class HomePoint {
         if (own.isPresent() || !(spirit.level() instanceof ServerLevel level)) {
             return own;
         }
-        Optional<StageSite> site = SettlementPlotStore.get(level).site();
+        Optional<StageSite> site = SettlementPlotStore.liveSite(level);
         return site.map(stage -> HomeStand.of(level, stage, List.of(spirit)));
     }
 }

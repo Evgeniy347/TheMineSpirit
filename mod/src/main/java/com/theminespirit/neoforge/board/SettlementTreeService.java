@@ -52,7 +52,7 @@ public final class SettlementTreeService {
 
     private static SettlementTreeFacts facts(ServerLevel level, StageRules rules, int stage, BoardService service) {
         SettlementPlotStore store = SettlementPlotStore.get(level);
-        Optional<StageSite> site = store.site();
+        Optional<StageSite> site = store.site(stage);
         Optional<TownPlan> town = store.town();
         Optional<SettlementPlot> plot = store.plot();
         if (site.isEmpty() || town.isEmpty() || plot.isEmpty()) {
@@ -119,16 +119,25 @@ public final class SettlementTreeService {
                         placed.total(), placed.done(), Map.of(), Map.of(), 0, placed.unknown());
             }
         };
-        return fact(audit, casePosition(place, boardCase));
+        String detail = boardCase == BoardCase.CLEAR_GROUNDS ? defectsText(audit.defects()) : "";
+        return fact(audit, casePosition(place, boardCase), detail);
+    }
+
+    private static String defectsText(BuildingAuditInputs.Defects defects) {
+        return "ям " + defects.holes() + ", бугров " + defects.mounds() + ", столбов " + defects.pillars();
     }
 
     private static SettlementTreeFacts.Fact fact(BuildingAuditInputs.Audit audit, BlockCoord at) {
+        return fact(audit, at, "");
+    }
+
+    private static SettlementTreeFacts.Fact fact(BuildingAuditInputs.Audit audit, BlockCoord at, String detail) {
         if (audit.unknown() > 0) {
-            return new SettlementTreeFacts.Fact(0, false, true, Map.of(), position(at));
+            return new SettlementTreeFacts.Fact(0, false, true, Map.of(), position(at), detail);
         }
         int percent = audit.total() == 0 ? 0 : Math.min(100, audit.done() * 100 / audit.total());
         boolean ready = audit.total() > 0 && audit.done() >= audit.total();
-        return new SettlementTreeFacts.Fact(percent, ready, false, audit.missing(), position(at));
+        return new SettlementTreeFacts.Fact(percent, ready, false, audit.missing(), position(at), detail);
     }
 
     private static SettlementTree.Position position(BlockCoord at) {

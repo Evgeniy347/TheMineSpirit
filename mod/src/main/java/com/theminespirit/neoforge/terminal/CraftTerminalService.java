@@ -57,7 +57,10 @@ public final class CraftTerminalService {
         SettlementPlotStore store = SettlementPlotStore.get(overworld);
         return store.town()
                 .map(plan -> SettlementReach.of(
-                        plan, store.site().map(site -> site.ring().posts()).orElse(List.of())));
+                        plan,
+                        SettlementPlotStore.liveSite(overworld)
+                                .map(site -> site.ring().posts())
+                                .orElse(List.of())));
     }
 
     public static SettlementReach.Access access(ServerPlayer player) {

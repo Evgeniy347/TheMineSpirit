@@ -141,6 +141,37 @@ class FloatingBlocksTests {
     }
 
     @Test
+    void classify_SpiritPlacedDirtPillar_IsTemporaryAndRemoved() {
+        Fake world = new Fake();
+        world.put(6, 72, 6, "minecraft:dirt");
+        world.temporary.add(new BlockCoord(6, 72, 6));
+
+        FloatingBlocks.Finding finding = world.only(6, 72, 6);
+
+        assertEquals(
+                FloatingBlocks.Kind.OTHER,
+                finding.kind(),
+                "Земля, поставленная духом вне плана, — временный блок перемещения: аудит обязан её видеть, "
+                        + "хотя обычная земля природная и в уборку не идёт");
+        assertTrue(
+                finding.reason().contains("временный блок духа"),
+                "Причина называет владельца и обязанность убрать: иначе след духа неотличим от рельефа");
+    }
+
+    @Test
+    void classify_SpiritPlacedDirtInsidePlan_IsNotReported() {
+        Fake world = new Fake();
+        world.put(6, 72, 6, "minecraft:dirt");
+        world.temporary.add(new BlockCoord(6, 72, 6));
+        world.planned.add(new BlockCoord(6, 72, 6));
+
+        assertEquals(
+                Optional.empty(),
+                FloatingBlocks.classify(new BlockCoord(6, 72, 6), world),
+                "Блок духа на клетке плана — часть постройки: аудит его не снимает");
+    }
+
+    @Test
     void classify_OtherArtificialBlock_IsOther() {
         Fake world = new Fake();
         world.put(7, 70, 7, "minecraft:oak_planks");
@@ -200,6 +231,7 @@ class FloatingBlocksTests {
     private static final class Fake implements FloatingBlocks.World {
         private final Map<BlockCoord, String> blocks = new HashMap<>();
         private final Set<BlockCoord> planned = new HashSet<>();
+        private final Set<BlockCoord> temporary = new HashSet<>();
         private final Set<BlockCoord> trees = new HashSet<>();
         private final Set<BlockCoord> registered = new HashSet<>();
 
@@ -224,6 +256,11 @@ class FloatingBlocksTests {
         @Override
         public boolean planned(BlockCoord at) {
             return planned.contains(at);
+        }
+
+        @Override
+        public boolean temporary(BlockCoord at) {
+            return temporary.contains(at);
         }
 
         @Override

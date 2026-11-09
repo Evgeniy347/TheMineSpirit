@@ -47,6 +47,8 @@ public final class FloatingBlocks {
 
         boolean planned(BlockCoord at);
 
+        boolean temporary(BlockCoord at);
+
         boolean log(BlockCoord at);
 
         boolean treeLog(BlockCoord at);
@@ -100,6 +102,10 @@ public final class FloatingBlocks {
         String id = world.blockId(at);
         if (id == null || AIR.equals(id) || world.planned(at)) {
             return Optional.empty();
+        }
+        if (world.temporary(at)) {
+            int height = Math.max(0, at.y() - world.groundY(at.x(), at.z()) - 1);
+            return Optional.of(new Finding(at, Kind.OTHER, id, height, temporary(height)));
         }
         boolean log = world.log(at);
         boolean leaf = pathOf(id).endsWith("_leaves");
@@ -220,6 +226,10 @@ public final class FloatingBlocks {
     private static boolean isLeaves(BlockCoord at, World world) {
         String id = world.blockId(at);
         return id != null && pathOf(id).endsWith("_leaves");
+    }
+
+    private static String temporary(int height) {
+        return "временный блок духа вне плана, высота " + height + ": поставлен для перемещения и обязан быть убран";
     }
 
     private static String reason(Kind kind, int height) {

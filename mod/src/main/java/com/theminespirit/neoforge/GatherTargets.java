@@ -42,7 +42,7 @@ final class GatherTargets implements HarvestTargets {
     GatherTargets(Level level, BlockPos center, int radius, IdFilter filter, boolean settled) {
         this.level = level;
         this.settlement = level instanceof ServerLevel server && settled
-                ? SettlementPlotStore.get(server).site().orElse(null)
+                ? SettlementPlotStore.liveSite(server).orElse(null)
                 : null;
         this.settled = settled;
         this.center = center;

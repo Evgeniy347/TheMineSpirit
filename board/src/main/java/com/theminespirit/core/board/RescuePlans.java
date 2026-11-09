@@ -28,14 +28,20 @@ public final class RescuePlans {
         PIT,
         WALK,
         DIG,
-        BRIDGE
+        BRIDGE,
+        DESCEND
     }
 
-    public record Situation(boolean pit, boolean steps, boolean tool, boolean open, boolean noPath, int blocks) {
+    public record Situation(
+            boolean pit, boolean steps, boolean tool, boolean open, boolean noPath, int blocks, boolean descent) {
         public Situation {
             if (blocks < 0) {
                 throw new IllegalArgumentException("Блоков для моста " + blocks + ": отрицательный запас не бывает");
             }
+        }
+
+        public Situation(boolean pit, boolean steps, boolean tool, boolean open, boolean noPath, int blocks) {
+            this(pit, steps, tool, open, noPath, blocks, false);
         }
 
         public Situation(boolean pit, boolean steps, boolean tool, boolean open, boolean noPath) {
@@ -129,6 +135,9 @@ public final class RescuePlans {
         if (situation.pit()) {
             return situation.steps() || situation.tool() ? Self.PIT : Self.NONE;
         }
+        if (situation.open() && situation.descent()) {
+            return Self.DESCEND;
+        }
         if (situation.open() && situation.noPath() && situation.blocks() > 0) {
             return Self.BRIDGE;
         }
@@ -136,6 +145,11 @@ public final class RescuePlans {
             return Self.WALK;
         }
         return situation.tool() ? Self.DIG : Self.NONE;
+    }
+
+    public static TaskNode descent(BlockCoord home) {
+        Objects.requireNonNull(home, "Дом не может быть null: после разбора столба духу надо куда-то идти");
+        return new SequenceNode(List.of(new ScriptCall("pillar_down", Map.of()), digOut(home), gotoPoint(home)));
     }
 
     public static TaskNode bridge(BlockCoord from, BlockCoord home, int blocks) {

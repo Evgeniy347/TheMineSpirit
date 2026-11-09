@@ -12,10 +12,12 @@ import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.BlockPlacer;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -50,7 +52,7 @@ public final class BridgeScript implements ScriptInstance {
         this.length = params.length();
         this.requestedBlock = params.block();
         this.approach = new Approach(spirit);
-        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.NONE);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.TEMPORARY_MOVEMENT);
     }
 
     @Override
@@ -201,6 +203,9 @@ public final class BridgeScript implements ScriptInstance {
         if (begin instanceof BlockPlacer.Started) {
             placed++;
             used++;
+            if (level instanceof ServerLevel server) {
+                PlacedBlocksData.get(server).markTemporary(new BlockPos(cell.x(), cell.y(), cell.z()));
+            }
             return ScriptStatus.RUNNING;
         }
         if (begin instanceof BlockPlacer.Protected protectedBlock) {

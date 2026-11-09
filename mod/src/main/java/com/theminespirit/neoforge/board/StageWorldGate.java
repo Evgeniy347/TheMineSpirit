@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 final class StageWorldGate {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Set<BoardCase> WORLD_STEPS = Set.of(
+            BoardCase.CLEAR_GROUNDS,
             BoardCase.BUILD_MINE,
             BoardCase.STOCK_CHESTS,
             BoardCase.BUILD_HOUSE,

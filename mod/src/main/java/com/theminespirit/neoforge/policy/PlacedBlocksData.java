@@ -18,6 +18,7 @@ public final class PlacedBlocksData extends SavedData {
 
     private static final String CHUNKS = "Chunks";
     private static final String SPIRIT_CHUNKS = "SpiritChunks";
+    private static final String TEMPORARY_CHUNKS = "TemporaryChunks";
     private static final String CHUNK_X = "X";
     private static final String CHUNK_Z = "Z";
     private static final String OVERFLOWED = "Overflowed";
@@ -25,14 +26,16 @@ public final class PlacedBlocksData extends SavedData {
 
     private final PlacedBlockSet set;
     private final PlacedBlockSet spiritSet;
+    private final PlacedBlockSet temporarySet;
 
     public PlacedBlocksData() {
-        this(new PlacedBlockSet(), new PlacedBlockSet());
+        this(new PlacedBlockSet(), new PlacedBlockSet(), new PlacedBlockSet());
     }
 
-    private PlacedBlocksData(PlacedBlockSet set, PlacedBlockSet spiritSet) {
+    private PlacedBlocksData(PlacedBlockSet set, PlacedBlockSet spiritSet, PlacedBlockSet temporarySet) {
         this.set = set;
         this.spiritSet = spiritSet;
+        this.temporarySet = temporarySet;
     }
 
     public static SavedData.Factory<PlacedBlocksData> factory() {
@@ -46,13 +49,15 @@ public final class PlacedBlocksData extends SavedData {
     public static PlacedBlocksData load(CompoundTag tag, HolderLookup.Provider registries) {
         return new PlacedBlocksData(
                 PlacedBlockCodec.decode(readEntries(tag, CHUNKS)),
-                PlacedBlockCodec.decode(readEntries(tag, SPIRIT_CHUNKS)));
+                PlacedBlockCodec.decode(readEntries(tag, SPIRIT_CHUNKS)),
+                PlacedBlockCodec.decode(readEntries(tag, TEMPORARY_CHUNKS)));
     }
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         tag.put(CHUNKS, writeEntries(PlacedBlockCodec.encode(set)));
         tag.put(SPIRIT_CHUNKS, writeEntries(PlacedBlockCodec.encode(spiritSet)));
+        tag.put(TEMPORARY_CHUNKS, writeEntries(PlacedBlockCodec.encode(temporarySet)));
         return tag;
     }
 
@@ -117,6 +122,26 @@ public final class PlacedBlocksData extends SavedData {
 
     public List<BlockCoord> spiritMarkedIn(int chunkX, int chunkZ) {
         return spiritSet.inChunk(chunkX, chunkZ);
+    }
+
+    public void markTemporary(BlockPos pos) {
+        if (temporarySet.add(toCoord(pos))) {
+            setDirty();
+        }
+    }
+
+    public void unmarkTemporary(BlockPos pos) {
+        if (temporarySet.remove(toCoord(pos))) {
+            setDirty();
+        }
+    }
+
+    public boolean isTemporary(BlockPos pos) {
+        return temporarySet.contains(toCoord(pos));
+    }
+
+    public List<BlockCoord> temporaryIn(int chunkX, int chunkZ) {
+        return temporarySet.inChunk(chunkX, chunkZ);
     }
 
     public int size() {

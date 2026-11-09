@@ -2,8 +2,6 @@ package com.theminespirit.neoforge.husbandry;
 
 import com.theminespirit.core.husbandry.AnimalRef;
 import com.theminespirit.core.husbandry.HerdJob;
-import com.theminespirit.core.husbandry.HerdSafety;
-import com.theminespirit.core.husbandry.HerdTally;
 import com.theminespirit.core.husbandry.PenBounds;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.husbandry.SwordTier;
@@ -20,7 +18,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.animal.Animal;
@@ -54,11 +51,6 @@ public final class HerdSession {
     static final double APPROACH_ARRIVAL = 2.0;
     static final double REACH = 3.0;
     static final int COLLECT_RADIUS = 3;
-    private static final String VERSION_KEY = "v";
-    private static final int VERSION = 1;
-    private static final String DONE_KEY = "done";
-    private static final String TARGET_KEY = "target";
-
     final SpiritEntity spirit;
     final HerdJob job;
     final List<Species> wanted;
@@ -112,12 +104,13 @@ public final class HerdSession {
     int actionsThisTick;
     int maxActionsPerTick;
 
-    private final HerdFlock flock;
-    private final HerdBreedFeed breedFeed;
-    private final HerdProduce produce;
-    private final HerdCullHunt cullHunt;
-    private final HerdLure lure;
-    private final HerdPickup pickup;
+    final HerdFlock flock;
+    final HerdBreedFeed breedFeed;
+    final HerdProduce produce;
+    final HerdCullHunt cullHunt;
+    final HerdLure lure;
+    final HerdPickup pickup;
+    private final HerdFlow flow;
 
     private HerdSession(
             SpiritEntity spirit, HerdJob job, List<Species> wanted, int searchRadius, int goal, boolean babiesFirst) {
@@ -140,6 +133,7 @@ public final class HerdSession {
         this.cullHunt = new HerdCullHunt(this, flock);
         this.lure = new HerdLure(this, flock);
         this.pickup = new HerdPickup(this);
+        this.flow = new HerdFlow(this);
     }
 
     public static HerdSession breed(SpiritEntity spirit, Species species, int radius, int pairs) {
@@ -183,10 +177,10 @@ public final class HerdSession {
         }
         ticks++;
         switch (state) {
-            case FIND -> find();
-            case PICK -> pick();
-            case APPROACH -> approachTick();
-            case ACT -> act();
+            case FIND -> flow.find();
+            case PICK -> flow.pick();
+            case APPROACH -> flow.approachTick();
+            case ACT -> flow.act();
             case COLLECT -> pickup.collectTick();
             case LURE -> lure.lureTick();
         }
@@ -227,53 +221,11 @@ public final class HerdSession {
     }
 
     public Map<String, Object> saveState() {
-        Map<String, Object> saved = new HashMap<>();
-        saved.put(VERSION_KEY, VERSION);
-        saved.put(DONE_KEY, done);
-        saved.put("fed", fed);
-        saved.put("babiesFed", babiesFed);
-        saved.put("born", born);
-        saved.put("sheared", sheared);
-        saved.put("milked", milked);
-        saved.put("eggsPicked", eggsPicked);
-        saved.put("culled", culled);
-        saved.put("escapedReturned", escapedReturned);
-        saved.put("skipped", skipped);
-        if (currentId != null && (state == State.APPROACH || state == State.ACT || state == State.COLLECT)) {
-            saved.put(TARGET_KEY, currentId);
-        }
-        if (!handledIds.isEmpty()) {
-            saved.put("handled", List.copyOf(handledIds));
-        }
-        return Map.copyOf(saved);
+        return HerdSave.save(this);
     }
 
     public void restoreState(Map<String, Object> saved) {
-        Objects.requireNonNull(saved, "Состояние не может быть null: пустое задают пустой картой");
-        if (saved.get(VERSION_KEY) instanceof Number version && version.intValue() != VERSION) {
-            throw new IllegalArgumentException("Версия состояния " + version + " не поддерживается: сессия стада "
-                    + "читает только версию " + VERSION);
-        }
-        done = Math.max(done, number(saved, DONE_KEY));
-        fed = Math.max(fed, number(saved, "fed"));
-        babiesFed = Math.max(babiesFed, number(saved, "babiesFed"));
-        born = Math.max(born, number(saved, "born"));
-        sheared = Math.max(sheared, number(saved, "sheared"));
-        milked = Math.max(milked, number(saved, "milked"));
-        eggsPicked = Math.max(eggsPicked, number(saved, "eggsPicked"));
-        culled = Math.max(culled, number(saved, "culled"));
-        escapedReturned = Math.max(escapedReturned, number(saved, "escapedReturned"));
-        skipped = Math.max(skipped, number(saved, "skipped"));
-        if (saved.get(TARGET_KEY) instanceof String target && !target.isBlank()) {
-            preferredTarget = target;
-        }
-        if (saved.get("handled") instanceof List<?> handled) {
-            for (Object id : handled) {
-                if (id instanceof String text && !text.isBlank()) {
-                    handledIds.add(text);
-                }
-            }
-        }
+        HerdSave.restore(this, saved);
     }
 
     public int planCalls() {
@@ -296,112 +248,13 @@ public final class HerdSession {
         return maxActionsPerTick;
     }
 
-    void find() {
-        flock.refreshSnapshot(false);
-        if (job == HerdJob.HERD_CHECK) {
-            finishCheck();
-            return;
-        }
-        if (job == HerdJob.COLLECT_EGGS) {
-            pickup.findEggs();
-            return;
-        }
-        state = State.PICK;
-    }
-
-    void pick() {
-        flock.refreshSnapshot(false);
-        switch (job) {
-            case BREED -> breedFeed.pickBreed();
-            case FEED -> breedFeed.pickFeed();
-            case SHEAR -> produce.pickShear();
-            case MILK -> produce.pickMilk();
-            case CULL -> cullHunt.pickCull();
-            case HUNT -> cullHunt.pickHunt();
-            default -> fail("работа " + job + " не выбирает цели: снимок уже собран, а дальше идти некуда");
-        }
-    }
-
-    void approachTick() {
-        switch (approach.tick()) {
-            case MOVING -> {}
-            case ARRIVED -> state = State.ACT;
-            case STUCK, TIMEOUT -> {
-                if (current != null && !current.isRemoved() && inReach(current)) {
-                    state = State.ACT;
-                } else {
-                    skipped++;
-                    handledIds.add(currentId);
-                    current = null;
-                    currentId = null;
-                    state = State.PICK;
-                }
-            }
-        }
-    }
-
-    void act() {
-        if (current == null || current.isRemoved() || !current.isAlive()) {
-            current = null;
-            currentId = null;
-            state = State.PICK;
-            return;
-        }
-        Optional<String> danger = HerdSafety.dangerReason(
-                new HerdSafety.Hazards(current.isInLava(), current.isOnFire(), current.isInWater()));
-        if (danger.isPresent()) {
-            skipped++;
-            handledIds.add(currentId);
-            current = null;
-            currentId = null;
-            firstParent = null;
-            pendingSecondId = null;
-            state = State.PICK;
-            return;
-        }
-        if (!inReach(current)) {
-            beginApproach(current);
-            return;
-        }
-        switch (act) {
-            case BREED_FIRST -> breedFeed.breedFirst();
-            case BREED_SECOND -> breedFeed.breedSecond();
-            case FEED_ONE -> breedFeed.feedOne();
-            case SHEAR_ONE -> produce.shearOne();
-            case MILK_ONE -> produce.milkOne();
-            case CULL_ONE, HUNT_ONE -> cullHunt.strikeOne();
-        }
-    }
-
-    void finishWithTally() {
-        int kept = 0;
-        if (job == HerdJob.CULL && adultsAtStart >= 0) {
-            kept = Math.max(0, adultsAtStart - culled);
-        }
-        if (job == HerdJob.HERD_CHECK) {
-            kept = flock.censusTotal();
-        }
-        HerdTally tally = new HerdTally(
-                fed, babiesFed, born, sheared, milked, eggsPicked, culled, kept, escapedReturned, skipped, goal);
-        if (tally.outcome(job) instanceof HerdTally.Failed failed) {
-            fail(failed.text());
-        } else {
-            outcome = Outcome.SUCCEEDED;
-            cancel();
-        }
-    }
-
-    void finishCheck() {
-        finishWithTally();
-    }
-
     void beginApproach(Animal animal) {
         approach.begin(animal, APPROACH_ARRIVAL);
         state = State.APPROACH;
     }
 
-    boolean inReach(Animal animal) {
-        return spirit.getEyePosition().distanceTo(animal.position()) <= REACH;
+    void finishWithTally() {
+        flow.finishWithTally();
     }
 
     void startCollect(IdFilter filter, BlockPos at, int radius) {
@@ -428,9 +281,5 @@ public final class HerdSession {
         failureReason = reason;
         cancel();
         return outcome;
-    }
-
-    private static int number(Map<String, Object> saved, String key) {
-        return saved.get(key) instanceof Number value ? Math.max(0, value.intValue()) : 0;
     }
 }
