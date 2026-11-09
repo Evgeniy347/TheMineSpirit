@@ -15,6 +15,25 @@ class PitWalkOutTests {
     private static final int ROOF = 64;
 
     @Test
+    void walkOut_StepDownOnOpenHill_IsAnExit() {
+        Grid hill = new Grid(START - 1, START - 1);
+        hill.floorAt(0, 0, START).skyAt(0, 0, START);
+
+        assertTrue(
+                PitWalkOut.exists(hill, 0, 0, START),
+                "спуск на блок с открытого холма — выход: иначе дух на ровной земле считается запертым и "
+                        + "простаивает с меткой «не двигается» (spirit-3, spirit-4, -173,71,-489)");
+    }
+
+    @Test
+    void walkOut_DropThroughSolidGround_IsNotAStep() {
+        Grid buried = new Grid(Grid.NONE, ROOF).floorAt(0, 0, START);
+        buried.floorAt(1, 0, START - 2).ceilingAt(1, 0, START - 1);
+
+        assertFalse(PitWalkOut.exists(buried, 0, 0, START), "сквозь сплошной блок на нижнюю клетку не спуститься");
+    }
+
+    @Test
     void walkOut_StepUpUnderCeilingAboveHead_IsNotAnExit() {
         Grid ramp = Grid.enclosedPit();
         ramp.ceilingAt(0, -1, START + 2).ceilingAt(0, 0, START + 2).ceilingAt(0, 1, START + 2);

@@ -137,19 +137,14 @@ listed_paths() {
 
 classes_arg() {
     if [ -n "${LIVE_DEBUG_CLASSES:-}" ]; then
-        listed_paths "$LIVE_DEBUG_CLASSES"
-    else
-        local dirs module_root first=1
-        for module_root in "$MOD_MAIN_DIR" ${MOD_MODULE_MAIN_ROOTS//,/ }; do
-            dirs="$(win_path "$REPO/$module_root")"
-            if [ "$first" = 1 ]; then
-                first=0
-                printf '%s' "$dirs"
-            else
-                printf ';%s' "$dirs"
-            fi
-        done
+        printf '%s' "$LIVE_DEBUG_CLASSES"
+        return
     fi
+    local out="" dir
+    for dir in "$REPO"/*/build/classes/java/main "$REPO"/mech/*/build/classes/java/main; do
+        [ -d "$dir" ] && out="$out${out:+;}$(win_path "$dir")"
+    done
+    printf '%s' "$out"
 }
 
 run_client() {

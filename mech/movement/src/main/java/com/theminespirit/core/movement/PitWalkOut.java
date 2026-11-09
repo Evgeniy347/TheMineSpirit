@@ -40,7 +40,7 @@ public final class PitWalkOut {
             for (int[] side : SIDES) {
                 int nx = cell[0] + side[0];
                 int nz = cell[1] + side[1];
-                OptionalInt ground = world.groundY(nx, nz, cell[2]);
+                OptionalInt ground = PitWalkStep.next(world, nx, nz, cell[2], SAFE_DROP);
                 if (ground.isEmpty()) {
                     continue;
                 }

@@ -134,8 +134,7 @@ public final class FirstStepsRunner {
                 .site()
                 .orElseThrow(() -> new IllegalStateException(
                         "Участок обмерен, а места этапа 1 нет: план поселения не сохранился в мире"));
-        BlockCoord home = new BlockCoord(
-                stage.anchor().x(), SettlementHome.y(spirits), stage.anchor().z());
+        BlockCoord home = HomeStand.of(level, stage, spirits);
         String wood = woodOf(level, home, stock);
         StoneSite site = new StoneSite(home, wood, stage);
         Scan scan = buildFacts(level, site, stock, service, world);
