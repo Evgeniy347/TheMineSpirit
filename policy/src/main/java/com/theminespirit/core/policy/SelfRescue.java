@@ -22,7 +22,7 @@ public final class SelfRescue {
         }
         int dy = target.y() - feet.y();
         return dy >= 0
-                && dy <= ESCAPE_HEIGHT + 1
+                && dy <= ESCAPE_HEIGHT
                 && Math.abs(target.x() - feet.x()) <= 1
                 && Math.abs(target.z() - feet.z()) <= 1;
     }

@@ -41,8 +41,12 @@ public final class SchemeAudit {
                         .entries(new BlockCoord(x, y, z), rotation)
                         .stream()
                         .filter(entry ->
-                                !entry.optional() && !SchematicBlocks.isSecondaryPart(entry.block(), entry.state()))
+                                required(entry) && !SchematicBlocks.isSecondaryPart(entry.block(), entry.state()))
                         .toList());
+    }
+
+    private static boolean required(Schematic.PlacedEntry entry) {
+        return !entry.optional() || SchematicBlocks.path(entry.block()).endsWith("_sapling");
     }
 
     public static Optional<MineLayout> mine(ScriptCall call) {

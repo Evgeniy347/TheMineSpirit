@@ -1,8 +1,10 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -11,6 +13,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.PlanValidator;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
 import java.io.IOException;
@@ -145,7 +148,13 @@ class RescueAssignTests {
         BlockCoord feet = coord(lost.get("feet"));
         BlockCoord home = coord(lost.get("home"));
         int blocks = lost.get("cheap_blocks").asInt();
+        int span = Math.max(Math.abs(home.x() - feet.x()), Math.abs(home.z() - feet.z()));
 
+        assertTrue(
+                lost.get("inventory").get("minecraft:dirt").asInt() < span,
+                "живая фикстура: у spirit-4 "
+                        + lost.get("inventory").get("minecraft:dirt").asInt() + " земли при разрыве " + span
+                        + " — одного вида не хватает, мост обязан смешивать блоки");
         assertEquals(
                 RescuePlans.Self.BRIDGE,
                 RescuePlans.self(new RescuePlans.Situation(false, false, false, true, true, blocks)),
@@ -165,10 +174,66 @@ class RescueAssignTests {
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
         ScriptCall call = assertInstanceOf(ScriptCall.class, plan, "Переправа к дому — один скрипт bridge");
         assertEquals("bridge", call.script(), "Мост ставит скрипт bridge, а не повторный dig_out");
+        assertFalse(
+                call.params().containsKey("block"),
+                "мост не привязан к одному виду блока: у spirit-4 26 земли и 8 досок, мост обязан смешивать запас");
         int length = (Integer) call.params().get("length");
-        int span = Math.max(Math.abs(home.x() - feet.x()), Math.abs(home.z() - feet.z()));
         assertTrue(length >= span, "Мост обязан покрыть разрыв " + span + " клеток, а не " + length);
         assertTrue(length <= blocks, "Мост не длиннее запаса: на " + length + " клеток у духа " + blocks + " блоков");
+    }
+
+    @Test
+    void self_UndergroundWithBlocks_None() {
+        assertEquals(
+                RescuePlans.Self.NONE,
+                RescuePlans.self(new RescuePlans.Situation(false, false, false, false, true, 38)),
+                "под землёй блоки не заменяют кирку: мост строят на поверхности, в толще нужен проход");
+    }
+
+    @Test
+    void situation_NegativeBlocks_Rejected() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new RescuePlans.Situation(false, false, false, true, true, -1),
+                "отрицательный запас блоков — ошибка входа: молча превращать его в ноль значит врать о мосте");
+    }
+
+    @Test
+    void bridge_NoBlocks_Rejected() {
+        BlockCoord feet = new BlockCoord(0, 64, 0);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> RescuePlans.bridge(feet, new BlockCoord(10, 64, 0), 0),
+                "мост без материала не начинают: пустой bridge-вызов только сожжёт попытку спасения");
+    }
+
+    @Test
+    void bridge_StockShorterThanSpan_CappedByStock() {
+        BlockCoord feet = new BlockCoord(0, 64, 0);
+        ScriptCall call = assertInstanceOf(
+                ScriptCall.class,
+                RescuePlans.bridge(feet, new BlockCoord(30, 64, 0), 5),
+                "мост к дому остаётся одним скриптом bridge");
+
+        assertEquals(
+                5,
+                call.params().get("length"),
+                "мост не длиннее запаса: на 30 клеток разрыва у духа 5 блоков — ставит 5, дальше решает следующий прогон");
+    }
+
+    @Test
+    void bridge_SpanBeyondCatalogLimit_CappedByLimit() {
+        BlockCoord feet = new BlockCoord(0, 64, 0);
+        ScriptCall call = assertInstanceOf(
+                ScriptCall.class,
+                RescuePlans.bridge(feet, new BlockCoord(200, 64, 0), 500),
+                "дальний дом тоже получает bridge-план, а не отказ");
+
+        assertEquals(
+                CatalogLimits.BRIDGE_LENGTH_MAX,
+                call.params().get("length"),
+                "длина моста не выходит за предел каталога: PlanValidator отверг бы такой план");
     }
 
     private static BlockCoord coord(JsonNode node) {

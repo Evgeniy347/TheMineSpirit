@@ -1,7 +1,6 @@
 package com.theminespirit.core.board.graph;
 
 import static com.theminespirit.core.board.graph.CrossActions.scripts;
-import static com.theminespirit.core.board.graph.CrossScene.armor;
 import static com.theminespirit.core.board.graph.CrossScene.facts;
 import static com.theminespirit.core.board.graph.CrossScene.ids;
 import static com.theminespirit.core.board.graph.CrossScene.named;

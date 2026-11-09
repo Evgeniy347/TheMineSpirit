@@ -197,6 +197,51 @@ class ReachPlannerTests {
         return cells;
     }
 
+    @Test
+    void atOrAbove_BelowBuildBase_IsNotStandable() {
+        ReachPlanner.World world = BuildStandLevel.atOrAbove(
+                new SetWorld(
+                        Set.of(cell(0, 66, 0), cell(0, 69, 0), cell(0, 70, 0)),
+                        Set.of(cell(0, 66, 0), cell(0, 69, 0), cell(0, 70, 0))),
+                69);
+
+        assertFalse(
+                world.standable(cell(0, 66, 0)), "стоянка ниже низа постройки — это яма: дух спустится и не выйдет");
+        assertTrue(world.standable(cell(0, 69, 0)), "стоянка на низу постройки допустима");
+        assertTrue(world.standable(cell(0, 70, 0)), "стоянка выше низа постройки допустима");
+        assertTrue(world.ready(cell(0, 69, 0)), "ready делегируется исходному миру");
+    }
+
+    @Test
+    void atOrAbove_SchemeCells_UsesLowestSchemeLayerAsBase() {
+        ReachPlanner.World world = BuildStandLevel.atOrAbove(
+                new SetWorld(Set.of(cell(0, 68, 0), cell(0, 70, 0)), Set.of(cell(0, 68, 0), cell(0, 70, 0))),
+                List.of(cell(0, 70, 0), cell(0, 71, 0)));
+
+        assertFalse(world.standable(cell(0, 68, 0)), "низ схемы — её нижний слой: стоянка ниже него не годится");
+        assertTrue(world.standable(cell(0, 70, 0)), "стоянка на уровне нижнего слоя проходит");
+    }
+
+    @Test
+    void allowed_StandBelowBase_IsRejectedAboveIsAccepted() {
+        assertFalse(
+                BuildStandLevel.allowed(cell(0, 66, 0), 69),
+                "стоянка ниже низа постройки — это яма: дух спустится и не выйдет");
+        assertTrue(BuildStandLevel.allowed(cell(0, 69, 0), 69), "стоянка на уровне низа допустима");
+        assertTrue(BuildStandLevel.allowed(cell(0, 71, 0), 69), "стоянка выше низа допустима");
+    }
+
+    @Test
+    void isAction_ActionPlacedCell_IsDetected() {
+        assertTrue(
+                BuildStandLevel.isAction(new Schematic.PlacedEntry(cell(0, 0, 0), "minecraft:dirt_path")),
+                "дорожка ставится действием лопаты: схема обязана видеть её без предмета");
+        assertFalse(
+                BuildStandLevel.isAction(new Schematic.PlacedEntry(cell(0, 0, 0), "minecraft:stone")),
+                "обычный блок ставится предметом, а не действием");
+        assertFalse(BuildStandLevel.isAction(null), "пустая клетка схемы не является действием");
+    }
+
     record SetWorld(Set<BlockCoord> ready, Set<BlockCoord> standable) implements ReachPlanner.World {
         @Override
         public boolean ready(BlockCoord cell) {
