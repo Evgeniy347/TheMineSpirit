@@ -11,6 +11,7 @@
 | `gametest.sh` | обёртка над `test.sh gametest` |
 | `module-paths.sh` | общие переменные путей для остальных скриптов (`MOD_MAIN_DIR`, ресурсы, jar, GameTest) |
 | `publish.sh` | публикация мода целиком (только по согласованию), `--temp`/`--sync` |
+| `live.sh status`, `spirit`, `slice`, `log`, `fixture`, `check` | **с него начинать**: что с духами и миром, одной командой; копия дерева или основной сервер на чтение, `docs/LIVE-DEBUG.md` |
 | `dev-server.sh`, `live-debug.sh` | своя копия сервера и живая отладка, `docs/LIVE-DEBUG.md` |
 | `schematic.sh` | постройки текстом: `show`, `check` |
 | `prove-red.sh` | тест `fix:`-коммита краснеет на родителе и зеленеет на коммите |

@@ -100,8 +100,18 @@ def main():
     parser.add_argument("up", type=int, nargs="?", default=3)
     parser.add_argument("down", type=int, nargs="?", default=2)
     parser.add_argument("--world", default="/opt/minecraft/server/world")
+    parser.add_argument("--cells", action="store_true", help="построчно: x y z блок")
     args = parser.parse_args()
     chunks = {}
+    if args.cells:
+        for y in range(args.y - args.down, args.y + args.up + 1):
+            for z in range(args.z - args.radius, args.z + args.radius + 1):
+                for x in range(args.x - args.radius, args.x + args.radius + 1):
+                    key = (x >> 4, z >> 4)
+                    if key not in chunks:
+                        chunks[key] = read_chunk(args.world, *key)
+                    print(x, y, z, block_at(chunks[key], x, y, z))
+        return
     names = {"minecraft:air": ".", "minecraft:cave_air": "."}
     symbols = iter("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#$%&*+=~")
     for y in range(args.y + args.up, args.y - args.down - 1, -1):
