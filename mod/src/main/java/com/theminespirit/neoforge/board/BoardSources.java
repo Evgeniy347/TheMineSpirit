@@ -84,6 +84,14 @@ public final class BoardSources {
         return graphFailures.unreachablePoints(now, halfLifeTicks);
     }
 
+    public List<GraphFailureMemory.Saved> graphFailureSnapshots() {
+        return graphFailures.saved();
+    }
+
+    public void restoreGraphFailures(List<GraphFailureMemory.Saved> saved) {
+        graphFailures.restore(saved);
+    }
+
     private static String graphTarget(@Nullable TicketTarget target) {
         return target == null
                 ? ""

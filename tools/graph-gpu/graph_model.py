@@ -885,6 +885,7 @@ class State:
         self.player = dict(feedback.get("player") or {})
         self.players = list(self.facts.get("players") or [])
         self.failures = list(feedback.get("failures") or [])
+        self._base_events = list(self.events)
         self._derive_world_events()
 
     def _derive_world_events(self):
@@ -912,6 +913,7 @@ class State:
                 derived.append("repair_" + building_id)
         derived.extend(_life_events(self))
         derived.extend(_gear_events(self))
+        self.events = list(self._base_events)
         for name in derived:
             if name not in self.events:
                 self.events.append(name)
@@ -942,7 +944,7 @@ class State:
             "buildings": self.buildings,
             "materials": self.materials,
             "storageFreePercent": self.storage_free_percent,
-            "events": self.events,
+            "events": self._base_events,
             "world": self.world,
             "distances": self.distances,
             "stations": self.stations,
@@ -1026,7 +1028,7 @@ class Planner:
         self.graph = graph
         self.state = state
         state.life = graph.costs.life
-        state.events = list(state.events)
+        state._derive_world_events()
         self.flow = Flow()
         self.expanded = set()
         self.notices = {}

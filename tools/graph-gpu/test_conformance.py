@@ -169,6 +169,33 @@ def test_life_player_fact():
     print("OK: факт здоровья игрока и коэффициенты жизни читаются из данных графа")
 
 
+def test_life_coefficient_vector():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    saved = graph.costs.life["weakHealth"]
+    graph.costs.life["weakHealth"] = 0.5
+    try:
+        vector = (("раненый 0.45", 9, True), ("целый 0.55", 11, False))
+        for label, health, expected in vector:
+            state = State({
+                "stage": 1,
+                "kits": {"spirit-1": {}},
+                "events": [],
+                "facts": {
+                    "spirits": {},
+                    "threats": [],
+                    "players": [{"name": "Steve", "position": {"x": 0, "y": 64, "z": 0},
+                                 "health": health, "maxHealth": 20, "food": 20}],
+                },
+            })
+            raised = any(task["id"].startswith("event:life_threat_player:")
+                         for task in plan(graph, state)["tasks"])
+            assert raised == expected, \
+                "Вектор фактов жизни " + label + ": порог из graph.json даёт " + str(expected) + ", а не " + str(raised)
+    finally:
+        graph.costs.life["weakHealth"] = saved
+    print("OK: события жизни выводятся из порога graph.json, а не из константы Python")
+
+
 def dig_inputs(graph, facts):
     state = State({
         "stock": {},
