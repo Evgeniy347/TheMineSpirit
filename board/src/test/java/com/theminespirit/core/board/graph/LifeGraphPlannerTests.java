@@ -134,8 +134,8 @@ class LifeGraphPlannerTests {
         assertTrue(
                 plan.tasks().stream()
                         .filter(task -> !task.id().startsWith("event:life_"))
-                        .allMatch(task -> task.priority() <= GraphPriorities.work(GraphWorld.GRAPH)),
-                "Обычные задания не выше 99: " + plan.tasks());
+                        .allMatch(task -> task.priority() <= GraphPriorities.need(GraphWorld.GRAPH)),
+                "Обычные задания и потребности не выше полосы потребности: " + plan.tasks());
         assertTrue(
                 LifeThreats.risk(facts, "spirit-a") > LifeThreats.risk(facts, "spirit-c"),
                 "Два моба у духа опаснее одного дальнего");
@@ -155,12 +155,12 @@ class LifeGraphPlannerTests {
         GraphPlan plan = world.plan();
 
         assertTrue(
-                plan.tasks().stream().allMatch(task -> task.priority() <= GraphPriorities.work(GraphWorld.GRAPH)),
-                "Цепочка бревно → доски → палки не выходит за 99: " + plan.tasks());
+                plan.tasks().stream().allMatch(task -> task.priority() <= GraphPriorities.need(GraphWorld.GRAPH)),
+                "Цепочка бревно → доски → палки не выходит за полосу потребности: " + plan.tasks());
         assertEquals(
                 GraphPriorities.work(GraphWorld.GRAPH),
                 GraphFlow.priority(1_000_000, GraphPriorities.work(GraphWorld.GRAPH)),
-                "Даже бесконечный поток обычной работы упирается в 99, а не в 100");
+                "Даже бесконечный поток обычной работы упирается в полосу работы, а не в жизнь");
     }
 
     @Property(tries = 200)
@@ -197,8 +197,9 @@ class LifeGraphPlannerTests {
         assertTrue(
                 plan.tasks().stream()
                         .filter(task -> !task.id().startsWith("event:life_"))
-                        .allMatch(task -> task.priority() <= GraphPriorities.work(GraphWorld.GRAPH)),
-                "Свойство: обычные задания не выше 99: " + plan.tasks());
+                        .allMatch(task -> task.priority() <= GraphPriorities.need(GraphWorld.GRAPH)),
+                "Свойство: обычные задания и потребности не выше полосы потребности, факты " + health + "/" + mobs + "/"
+                        + distance + "/" + hurtAge + ": " + plan.tasks());
     }
 
     static GraphFacts danger(

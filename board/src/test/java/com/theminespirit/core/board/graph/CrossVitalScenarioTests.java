@@ -171,6 +171,55 @@ class CrossVitalScenarioTests {
     }
 
     @Test
+    void vital_StageTwoCoalEmpty_GateKeepsFoodOverSaturatedMine() {
+        GraphWorld world = stageTwo();
+        world.built("wheat_field", GraphState.Built.BUILT);
+        world.tools("spirit-2", 1);
+        world.with("coal", 0).with("food", 0).event("hungry");
+        GraphFacts facts = facts(named(spirit("spirit-1", 20, 2), spirit("spirit-2")));
+        GraphPlan plan = plan(world, facts);
+
+        GraphPlan.Task hunt = task(plan, "event:hungry:hunt");
+        GraphPlan.Task fish = task(plan, "event:hungry:fish");
+        GraphPlan.Task harvest = task(plan, "event:hungry:harvest_crop");
+        GraphPlan.Task wait = task(plan, "event:hungry:wait_food");
+        GraphPlan.Task mine = task(plan, "mine_coal");
+        int need = GraphPriorities.need(GraphWorld.GRAPH);
+
+        assertTrue(harvest.feasible(), "Поле построено — урожай можно собрать: " + ids(plan));
+        assertEquals(BoardCase.GATHER_MATERIALS, harvest.boardCase(), "Сбор урожая — работа фермы, а не охота");
+        assertEquals(need, hunt.priority(), "Охота — верх полосы потребности: " + hunt.priority());
+        assertTrue(
+                hunt.priority() > mine.priority(),
+                "Охота выше насыщенной шахты на этапе 2: охота " + hunt.priority() + ", шахта " + mine.priority());
+        for (GraphPlan.Task food : List.of(hunt, fish, harvest, wait)) {
+            assertTrue(
+                    food.priority() >= need - VitalNeeds.BAND,
+                    "Еда держится в полосе потребности: " + food.id() + " " + food.priority());
+        }
+        assertTrue(
+                mine.priority() <= GraphPriorities.work(GraphWorld.GRAPH),
+                "Шахта остаётся обычной работой под полосой потребности: шахта " + mine.priority());
+        GraphTickets.Result result = tickets(world, facts);
+        List<DispatchRound.Candidate> candidates = candidates(
+                world,
+                Map.of("spirit-1", HUNGRY, "spirit-2", FED),
+                Map.of("spirit-1", SpiritView.free(), "spirit-2", SpiritView.free()));
+        DispatchRound round = new DispatchRound(board(world, result), 0);
+        assertTrue(
+                round.refusal(boardTicket(ticketFor(result, GraphTickets.id(mine))), candidates.get(0))
+                        .orElse("")
+                        .contains("голод"),
+                "VitalGate не отдаёт шахту голодному, пока есть путь к еде: "
+                        + round.refusal(boardTicket(ticketFor(result, GraphTickets.id(mine))), candidates.get(0)));
+        assertEquals(
+                hunt.id(),
+                result.post().get(0).task().id(),
+                "Первым на доске добыть еду, а не копать: "
+                        + result.post().stream().map(GraphTickets.Ticket::id).toList());
+    }
+
+    @Test
     void vital_HungryWithoutPathOnBoard_KeepsWorkingAndWorkIsNotBlocked() {
         GraphWorld world = GraphMutations.liveStageOne().with("food", 0).tools("spirit-2", 1);
         GraphPlan plan = plan(world, world.facts);
