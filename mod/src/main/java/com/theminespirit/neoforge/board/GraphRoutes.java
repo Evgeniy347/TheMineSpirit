@@ -47,7 +47,7 @@ final class GraphRoutes {
             return false;
         }
         BlockCoord dig = point.orElseThrow();
-        PlotLeveling plan = RouteWorks.dig(level, dig);
+        PlotLeveling plan = RouteWorks.dig(level, dig, resource);
         if (plan.cut().isEmpty()) {
             return false;
         }

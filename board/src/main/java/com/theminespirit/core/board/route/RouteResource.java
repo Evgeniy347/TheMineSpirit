@@ -1,6 +1,5 @@
 package com.theminespirit.core.board.route;
 
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -69,10 +68,6 @@ public enum RouteResource {
         return "source_depleted:" + event;
     }
 
-    public String retargetEvent() {
-        return "route_retarget_" + event;
-    }
-
     public Set<String> blocks() {
         return blocks;
     }
@@ -81,28 +76,6 @@ public enum RouteResource {
         Objects.requireNonNull(block, "Блок не может быть null: по нему ищут место добычи");
         String name = block.startsWith("minecraft:") ? block.substring("minecraft:".length()) : block;
         return blocks.contains(name);
-    }
-
-    public static Optional<RouteResource> ofBiome(String biome) {
-        Objects.requireNonNull(biome, "Биом не может быть null: без него не выбрать ресурс маршрута");
-        String path = biome.substring(biome.indexOf(':') + 1).toLowerCase(Locale.ROOT);
-        if (path.contains("desert") || path.contains("badlands") || path.contains("beach")) {
-            return Optional.of(SAND);
-        }
-        if (path.contains("snowy")
-                || path.contains("frozen")
-                || path.contains("ice_spikes")
-                || path.contains("grove")) {
-            return Optional.of(SNOW);
-        }
-        if (path.contains("plains")
-                || path.contains("meadow")
-                || path.contains("forest")
-                || path.contains("taiga")
-                || path.contains("savanna")) {
-            return Optional.of(DIRT);
-        }
-        return Optional.empty();
     }
 
     public static Optional<RouteResource> ofBlock(String block) {

@@ -80,6 +80,26 @@ class WorldFragmentTests {
     }
 
     @Test
+    void planBuilding_Damaged_PostsRepairTicketToBoard() {
+        GraphWorld world = GraphWorld.settled();
+        world.built("weaver", GraphState.Built.BUILT);
+        GraphFacts facts = PlanCaseFacts.facts(
+                Map.of("weaver", PlanCaseFacts.building("weaver", 60, 40, Map.of("oak_planks", 40), false)),
+                List.of(),
+                GraphSiteFacts.Terrain.empty());
+        GraphState state = world.state().withFacts(facts, world.graph.costs().life());
+
+        GraphTickets.Result result = GraphTickets.of(world.graph, state, GraphPlanner.plan(world.graph, state));
+
+        assertTrue(
+                result.post().stream()
+                        .anyMatch(ticket -> "graph:event:repair_weaver:repair:weaver".equals(ticket.id())),
+                "Повреждённая постройка плана (weaver) стоит в журнале BUILT, но аудит мира видит изъян — "
+                        + "она обязана получить билет ремонта на доске, иначе два аудита расходятся (observe25 B9): "
+                        + result.post().stream().map(GraphTickets.Ticket::id).toList());
+    }
+
+    @Test
     void clearFloating_HangingWorld_PostsTicketToCleanupAction() {
         SupplyGraph graph = SupplyGraph.loadDefault();
         GraphState state = new GraphState(

@@ -147,6 +147,8 @@ class ScenarioRun:
                 self.fake.busy_after_observe = set(value)
             elif key == "warehouse":
                 self.fake.set_warehouse(**value)
+            elif key == "quarry":
+                self.fake.set_quarry(**value)
             elif key in ("tasks_route", "plan_route", "plan_error", "task_post_lose_response", "drop_connection_next",
                          "bots_as_list", "warehouse_route"):
                 setattr(self.fake, key, value)
@@ -180,6 +182,20 @@ class ScenarioRun:
         if actual != expected:
             self.fail(when, f"POST /v1/settlement/warehouse получено {actual}, ожидалось {expected}; запросы: "
                       f"{[(r['path'], r['status'], r['body']) for r in self.fake.requests_to('POST', '/v1/settlement/warehouse')]}")
+
+    def check_quarry_posts(self, expected, when):
+        actual = len(self.fake.requests_to("POST", "/v1/quarry/site"))
+        if actual != expected:
+            self.fail(when, f"POST /v1/quarry/site получено {actual}, ожидалось {expected}; запросы: "
+                      f"{[(r['path'], r['status'], r['body']) for r in self.fake.requests_to('POST', '/v1/quarry/site')]}")
+
+    def check_quarry_body(self, expected, when):
+        posts = self.fake.requests_to("POST", "/v1/quarry/site")
+        if not posts:
+            self.fail(when, "для проверки тела нужно решение о месте добычи, а POST /v1/quarry/site нет")
+        for field, value in expected.items():
+            if posts[0]["body"].get(field) != value:
+                self.fail(when, f"поле {field} места добычи {posts[0]['body'].get(field)!r}, ожидалось {value!r}")
 
     def check_warehouse_body(self, expected, when):
         posts = self.fake.requests_to("POST", "/v1/settlement/warehouse")

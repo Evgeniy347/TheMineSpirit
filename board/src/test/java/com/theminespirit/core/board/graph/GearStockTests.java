@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,6 +51,42 @@ class GearStockTests {
                         .anyMatch(
                                 task -> task.id().contains("_axe") && task.id().contains("craft")),
                 "В сундуках 57 топоров — граф обязан вести духа за запасом, а не крафтить ещё: " + plan.tasks());
+    }
+
+    @Test
+    void plan_WoodenAxeHeldAndChestFull_NoHigherAxeCraft() {
+        GraphFacts facts = facts(
+                Map.of("spirit-1", spirit(null, List.of(tool("axe", 0, 131, 131)), List.of())),
+                List.of(chest(Map.of("minecraft:wooden_axe", 57))));
+        GraphWorld world = GraphWorld.settled().tools("spirit-1", 0).facts(facts);
+
+        GraphPlan plan = world.plan();
+
+        assertFalse(
+                plan.tasks().stream().anyMatch(task -> isAxeCraft(task.id())),
+                "Топор уже есть, в сундуках ещё 57 — граф не крафтит ни деревянный, ни следующий: " + plan.tasks());
+    }
+
+    @Test
+    void plan_FewerAxesThanSpirits_CraftsOnlyForUncovered() {
+        GraphFacts facts = facts(
+                Map.of(
+                        "spirit-1", spirit(null, List.of(), List.of()),
+                        "spirit-2", spirit(null, List.of(), List.of())),
+                List.of(chest(Map.of("minecraft:wooden_axe", 1))));
+        GraphWorld world =
+                GraphWorld.settled().tools("spirit-1", -1).tools("spirit-2", -1).facts(facts);
+
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                plan.tasks().stream().anyMatch(task -> isAxeCraft(task.id())),
+                "Один топор на двух духов — крафт для того, кому не хватило: иначе «запас есть» скрывает "
+                        + "нехватку: " + plan.tasks());
+    }
+
+    private static boolean isAxeCraft(String taskId) {
+        return taskId.contains("_axe") && taskId.contains("craft") && !taskId.contains("pickaxe");
     }
 
     @Test

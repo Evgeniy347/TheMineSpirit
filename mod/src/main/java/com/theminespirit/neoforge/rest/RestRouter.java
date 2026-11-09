@@ -7,6 +7,7 @@ import com.theminespirit.core.rest.HealthRoutes;
 import com.theminespirit.core.rest.IdempotencyCache;
 import com.theminespirit.core.rest.PlanningService;
 import com.theminespirit.core.rest.PolicyRoutes;
+import com.theminespirit.core.rest.QuarryRoutes;
 import com.theminespirit.core.rest.Route;
 import com.theminespirit.core.rest.Router;
 import com.theminespirit.core.rest.SettlementRoutes;
@@ -46,6 +47,7 @@ public final class RestRouter {
         BoardRoutes boardRoutes = new BoardRoutes(boardGateway, new IdempotencyCache());
         routes.addAll(boardRoutes.routes());
         routes.addAll(GraphRoutes.of(new SpiritGraphGateway(gateway.server())));
+        routes.addAll(new QuarryRoutes(new SpiritQuarryGateway(gateway.server(), gateway.serverCall())).routes());
         PolicyRoutes policyRoutes = new PolicyRoutes(new SpiritPolicyGateway(gateway.server()), new IdempotencyCache());
         routes.addAll(policyRoutes.routes());
         SettlementRoutes settlementRoutes = new SettlementRoutes(
