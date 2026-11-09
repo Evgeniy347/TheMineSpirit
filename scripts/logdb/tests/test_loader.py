@@ -11,6 +11,7 @@ HERE = Path(__file__).resolve().parent
 LOGDB = HERE.parent
 sys.path.insert(0, str(LOGDB))
 import loader
+import logq
 
 FIXTURE = LOGDB / "fixtures" / "legacy.log"
 
@@ -169,6 +170,15 @@ class LoaderTests(unittest.TestCase):
         path = self.dir / name
         path.write_text("".join(line + "\n" for line in lines), encoding="utf-8")
         return path
+
+    def test_remoteCommand_ReadsOnlyWithoutJsonlIngest(self):
+        args = logq.build_parser().parse_args(["--main", "cell", "--", "-177", "68", "-517"])
+        command = logq.remote_command(args, "/db/events.db")
+        self.assertNotIn("--logs", command, "основная база пишется только cron, logq --main не дочитывает JSONL")
+        self.assertEqual(["cell", "-177", "68", "-517"], command[-4:])
+        failures = logq.build_parser().parse_args(["--main", "failures", "--since", "1h"])
+        command = logq.remote_command(failures, "/db/events.db")
+        self.assertEqual(["--since", "1h"], command[-2:])
 
     def test_text_SkippedAndStored_AddUp(self):
         path = self.write_log(
