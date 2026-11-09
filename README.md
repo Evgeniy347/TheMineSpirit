@@ -144,9 +144,8 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [todo.md](todo.md) | открытые задачи плана и прогресс |
 | [tasks/](tasks/) | чеклисты блоков в работе; удаляются после приёмки |
 | [CLAUDE.md](CLAUDE.md) | вход для Claude Code, отсылает к AGENTS.md |
-| [docs/CONVENTIONS.md](docs/CONVENTIONS.md), [docs/TESTING.md](docs/TESTING.md), [docs/testing/CROSS-MATRIX.md](docs/testing/CROSS-MATRIX.md), [docs/testing/CROSS-MATRIX-NO-PAIR.md](docs/testing/CROSS-MATRIX-NO-PAIR.md), [docs/testing/CROSS-MATRIX-NOTES.md](docs/testing/CROSS-MATRIX-NOTES.md), [docs/testing/GRAPH-DEMAND.md](docs/testing/GRAPH-DEMAND.md), [docs/GIT.md](docs/GIT.md) | код, тесты, git; матрица пересечений механик, непересекающиеся пары, техдолг; реестр цепочек спроса графа |
+| [docs/FIXING.md](docs/FIXING.md), [docs/CONVENTIONS.md](docs/CONVENTIONS.md), [docs/TESTING.md](docs/TESTING.md), [docs/testing/CROSS-MATRIX.md](docs/testing/CROSS-MATRIX.md), [docs/testing/CROSS-MATRIX-NO-PAIR.md](docs/testing/CROSS-MATRIX-NO-PAIR.md), [docs/testing/CROSS-MATRIX-NOTES.md](docs/testing/CROSS-MATRIX-NOTES.md), [docs/testing/GRAPH-DEMAND.md](docs/testing/GRAPH-DEMAND.md), [docs/GIT.md](docs/GIT.md) | код, тесты, git; матрица пересечений механик, непересекающиеся пары, техдолг; реестр цепочек спроса графа |
 | [docs/PUBLISH.md](docs/PUBLISH.md) | публикация мода (только по согласованию) |
-| [docs/FIXING.md](docs/FIXING.md) | как чинить: причина, а не следствие; признаки костыля |
 | [docs/LEAD-AGENT.md](docs/LEAD-AGENT.md), [docs/EXECUTOR-MODELS.md](docs/EXECUTOR-MODELS.md) | главный агент, приёмка, модели-исполнители |
 | [docs/api/README.md](docs/api/README.md) | контракт REST-сервиса духов, формат плана и построек |
 | [docs/tactics/README.md](docs/tactics/README.md), [docs/STRATEGIST.md](docs/STRATEGIST.md), [docs/HOT-RELOAD.md](docs/HOT-RELOAD.md) | тактика, стратег, горячая перезагрузка таблиц |
