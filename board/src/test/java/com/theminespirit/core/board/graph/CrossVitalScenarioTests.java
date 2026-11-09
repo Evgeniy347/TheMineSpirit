@@ -123,5 +123,30 @@ class CrossVitalScenarioTests {
         assertTrue(
                 barePlan.task("event:hungry:wait_food").stream().anyMatch(GraphPlan.Task::feasible),
                 "Ждать еду — выполнимый запасной путь нужды: " + ids(barePlan));
+
+        GraphWorld live =
+                GraphMutations.liveStageOne().event("hungry").with("food", 0).tools("spirit-2", 1);
+        GraphPlan livePlan = plan(live, live.facts);
+        GraphTickets.Result liveResult = tickets(live, live.facts);
+        DispatchRound liveRound = new DispatchRound(board(live, liveResult), 0);
+        List<DispatchRound.Candidate> liveCandidates = candidates(
+                live,
+                Map.of("spirit-1", HUNGRY, "spirit-2", FED),
+                Map.of("spirit-1", SpiritView.free(), "spirit-2", SpiritView.free()));
+        GraphPlan.Task liveWork = task(livePlan, "dig_dirt");
+
+        assertTrue(
+                liveRound
+                        .refusal(boardTicket(ticketFor(liveResult, GraphTickets.id(liveWork))), liveCandidates.get(0))
+                        .orElse("")
+                        .contains("голод"),
+                "На живом снимке этапа 1 голодному духу тоже не достаётся обычная работа");
+        assertEquals(
+                "spirit-2",
+                liveRound
+                        .choose(boardTicket(ticketFor(liveResult, GraphTickets.id(liveWork))), liveCandidates)
+                        .map(DispatchRound.Candidate::name)
+                        .orElse(""),
+                "На живом снимке обычную работу получает сытый дух: " + liveCandidates);
     }
 }
