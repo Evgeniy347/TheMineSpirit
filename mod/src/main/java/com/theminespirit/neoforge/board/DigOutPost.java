@@ -50,7 +50,7 @@ final class DigOutPost {
             BlockCoord goal = SurfacePoint.of(post.level, settlement);
             service.detachForAction(spirit);
             spirit.startTask(new SequenceNode(List.of(
-                    new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z())),
+                    new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z(), "rescue", true)),
                     new ScriptCall(WALK_CAREFUL, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z())))));
             return true;
         }

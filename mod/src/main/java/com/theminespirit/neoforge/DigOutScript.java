@@ -4,11 +4,13 @@ import com.theminespirit.core.engine.ScriptFactory;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.movement.DigOutObstacle;
+import com.theminespirit.core.movement.PitWalkOut;
 import com.theminespirit.core.movement.SealedSpace;
 import com.theminespirit.core.movement.WaterCrossingPlanner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.core.town.PlotProtection;
+import com.theminespirit.neoforge.board.PitWalkOutView;
 import com.theminespirit.neoforge.movement.CheapBlocks;
 import java.util.List;
 import java.util.Map;
@@ -119,7 +121,7 @@ public final class DigOutScript implements ScriptInstance {
         boolean goalReached = descending
                 ? feet.getY() <= target.y() && (open(level, feet) || feet.getY() == target.y())
                 : feet.getY() >= target.y();
-        if ((open(level, feet) && !fromPit) || goalReached) {
+        if ((surfaced(feet) && !fromPit) || goalReached) {
             backfill.report();
             restore.returnSpoil();
             PlanBreachRestore.restore(spirit, level, placer, feet);
@@ -152,6 +154,10 @@ public final class DigOutScript implements ScriptInstance {
         stepTicks = 0;
         moveTo(next);
         return ScriptStatus.RUNNING;
+    }
+
+    private boolean surfaced(BlockPos feet) {
+        return open(level, feet) && PitWalkOut.exists(new PitWalkOutView(level), feet.getX(), feet.getZ(), feet.getY());
     }
 
     private boolean followRoute() {
