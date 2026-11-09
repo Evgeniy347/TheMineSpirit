@@ -18,7 +18,7 @@ cd "$top" || exit 1
 # Тесты читают рабочее дерево, а не индекс: незастейдженные правки в наблюдаемых путях попадают в прогон.
 unstaged="$( { git diff --name-only; git ls-files --others --exclude-standard; } | grep -E "$WATCHED")"
 
-echo "pre-commit: в коммите есть изменения в src/ или сборке — прогоняю scripts/test.sh unit --changed (зелёный нужен до коммита)…" >&2
+echo "pre-commit: в коммите есть проверяемые изменения — прогоняю scripts/test.sh unit --changed (зелёный нужен до коммита)…" >&2
 
 # GIT_* из окружения хука не нужны сборке и могут увести её git-команды в чужой индекс.
 mkdir -p TestResults/logs
