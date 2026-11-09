@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.io.IOException;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongSupplier;
 import org.junit.jupiter.api.Test;
@@ -82,12 +83,11 @@ class NavSegmentedSessionTests {
     @Test
     void livePillar_SpiritOnSingleBlock_LeavesTowardsGround() throws IOException {
         LiveNavWorld world = LiveNavWorld.live("/live/observe25-pillar-1108.live");
-        assertTrue(
-                NavPillarEscape.isolated(world, -155, 72, -490),
-                "живая клетка spirit-1 (-155,72,-490) обязана считаться одиночной опорой");
+        Set<BlockCoord> pillar = NavPillarEscape.plateau(world, -155, 72, -490);
+        assertEquals(1, pillar.size(), "живая клетка spirit-1 (-155,72,-490) обязана считаться одиночной опорой");
         assertEquals(
                 68,
-                NavPillarEscape.landingBelow(world, -155, 72, -490, 12).orElse(-1),
+                NavPillarEscape.landingFrom(world, pillar, 12).orElse(-1),
                 "под одиночной опорой spirit-1 обязана быть площадка y=68");
         NavSegmentedSession session = new NavSegmentedSession(
                 new NavContext(world, routeSettings(), 0),
@@ -114,6 +114,48 @@ class NavSegmentedSessionTests {
         assertTrue(
                 result.positions().stream().anyMatch(cell -> cell.y() <= 68),
                 "путь обязан спустить духа с одиночной опоры на землю, а позиции: " + result.positions());
+    }
+
+    @Test
+    void liveTower_TwoWidePillar_DescendsWithoutSolidCells() throws IOException {
+        LiveNavWorld world = LiveNavWorld.live("/live/observe26-tower-1108.live");
+        Set<BlockCoord> plateau = NavPillarEscape.plateau(world, -142, 79, -504);
+
+        assertEquals(
+                2, plateau.size(), "опора spirit-4 шириной в две клетки: это всё ещё узкая опора, а не ровный пол");
+        assertEquals(
+                72,
+                NavPillarEscape.landingFrom(world, plateau, 12).orElse(-1),
+                "предел спуска — земля y=72: ближний уступ y=76 ведёт в тупик, и предел обязан покрыть землю");
+
+        NavSegmentedSession session = new NavSegmentedSession(
+                new NavContext(world, routeSettings(), 0),
+                new BlockCoord(-142, 79, -504),
+                new NavGoalNear(-138, 72, -504, 1),
+                32,
+                6,
+                0.5);
+        NavSegmentedRoute result = null;
+        int steps = 0;
+        while (result == null && steps < 50) {
+            result = session.step(Long.MAX_VALUE);
+            steps++;
+        }
+
+        assertTrue(result != null, "сессия обязана завершиться");
+        assertEquals(
+                NavSearchStatus.FOUND,
+                result.status(),
+                "spirit-4 стоял на столбе 2×2 высотой 9 и получал NONE: спуск на землю y=72 есть, "
+                        + "опору нельзя считать ровным полом");
+        for (BlockCoord cell : result.positions()) {
+            assertTrue(
+                    world.passable(cell.x(), cell.y(), cell.z()),
+                    "маршрут не идёт сквозь блок (" + cell + "): иначе проверка шагов объявит NONE");
+        }
+        assertTrue(
+                result.positions().stream().anyMatch(cell -> cell.y() <= 72),
+                "путь обязан спустить духа с опоры на землю, а позиции: " + result.positions());
     }
 
     private static NavSettings routeSettings() {

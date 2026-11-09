@@ -1,7 +1,6 @@
 package com.theminespirit.core.board.graph;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.theminespirit.core.board.BoardCase;
 import java.util.List;
@@ -39,7 +38,10 @@ class GraphEventsTests {
         GraphEvent repaired = GraphEvent.withRepairs(Map.of("building_damaged", template), Map.of("hut", building))
                 .get(GraphWorldEvents.REPAIR + "hut");
 
-        assertNotNull(repaired, "повреждённая постройка обязана дать событие ремонта");
+        assertEquals(
+                List.of("repair:hut"),
+                repaired.tasks().stream().map(GraphEvent.Task::id).toList(),
+                "повреждённая постройка обязана дать событие ремонта");
         GraphEvent.Task created = repaired.tasks().get(0);
         assertEquals("repair:hut", created.id(), "ремонт адресуется конкретной постройке");
         assertEquals("hut", created.building(), "клетка ремонта — сама повреждённая постройка");

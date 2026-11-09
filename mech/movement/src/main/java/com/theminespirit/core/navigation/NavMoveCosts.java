@@ -57,7 +57,7 @@ final class NavMoveCosts {
         int max = groundMax;
         for (int depth = 2; depth <= context.settings().maxWaterFall(); depth++) {
             int feet = y - depth;
-            if (!passableColumn(context, nx, y - 1, feet + 1, nz)) {
+            if (!passableColumn(context, nx, y - 1, feet, nz)) {
                 return;
             }
             boolean landing = context.world().walkable(nx, feet - 1, nz);
