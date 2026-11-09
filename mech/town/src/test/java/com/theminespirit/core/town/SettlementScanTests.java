@@ -267,6 +267,11 @@ class SettlementScanTests {
         }
 
         @Override
+        public boolean temporary(int x, int y, int z) {
+            return false;
+        }
+
+        @Override
         public boolean registered(int x, int y, int z) {
             return false;
         }

@@ -12,7 +12,7 @@ import org.jspecify.annotations.Nullable;
 
 public final class SettlementScan {
     public static final int PIT_DEPTH_MAX = 64;
-    private static final int STRAY_ABOVE = 4;
+    private static final int STRAY_ABOVE = 32;
     private static final int TRACE_DEPTH = 16;
 
     public interface World {
@@ -31,6 +31,8 @@ public final class SettlementScan {
         boolean playerPlaced(int x, int y, int z);
 
         boolean spiritMarked(int x, int y, int z);
+
+        boolean temporary(int x, int y, int z);
 
         boolean registered(int x, int y, int z);
 
@@ -121,10 +123,10 @@ public final class SettlementScan {
                 if (y < level - 1) {
                     continue;
                 }
-                if (world.planned(x, y, z)
-                        || world.playerPlaced(x, y, z)
-                        || world.registered(x, y, z)
-                        || !rules.stray(world.blockId(x, y, z))) {
+                if (world.planned(x, y, z) || world.playerPlaced(x, y, z) || world.registered(x, y, z)) {
+                    continue;
+                }
+                if (!world.temporary(x, y, z) && !rules.stray(world.blockId(x, y, z))) {
                     continue;
                 }
                 strays.add(new StrayGroups.Cell(at, world.blockId(x, y, z)));

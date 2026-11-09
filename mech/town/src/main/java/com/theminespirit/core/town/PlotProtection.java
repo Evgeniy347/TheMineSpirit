@@ -21,7 +21,8 @@ public final class PlotProtection {
         PLAN_BUILD,
         ORCHARD_CARE,
         SELF_RESCUE,
-        PLAYER_COMMAND
+        PLAYER_COMMAND,
+        TEMPORARY_MOVEMENT
     }
 
     public sealed interface Decision permits Allowed, Refused {}
@@ -65,7 +66,7 @@ public final class PlotProtection {
         }
         PlanBuilding building = site.protectionBuilding(cell.x(), cell.y(), cell.z());
         String area = site.protectionArea(cell.x(), cell.y(), cell.z());
-        if (ground == Ground.SELF_RESCUE || ground == Ground.PLAYER_COMMAND) {
+        if (ground == Ground.SELF_RESCUE || ground == Ground.PLAYER_COMMAND || ground == Ground.TEMPORARY_MOVEMENT) {
             return new Allowed(ground, building, area);
         }
         if (ground == Ground.ORCHARD_CARE) {
@@ -145,6 +146,7 @@ public final class PlotProtection {
             case ORCHARD_CARE -> "уход за садом по плану";
             case SELF_RESCUE -> "самоспасение замурованного";
             case PLAYER_COMMAND -> "команда игрока";
+            case TEMPORARY_MOVEMENT -> "временный проход с возвратом";
         };
     }
 }

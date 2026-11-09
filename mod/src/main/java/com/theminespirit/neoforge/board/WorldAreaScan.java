@@ -117,6 +117,14 @@ final class WorldAreaScan {
         }
 
         @Override
+        public boolean temporary(int x, int y, int z) {
+            PlacedBlocksData placed = PlacedBlocksData.get(level);
+            return placed.isTemporary(new BlockPos(x, y, z))
+                    || (placed.isSpiritMarked(new BlockPos(x, y, z))
+                            && TemporaryBlocks.legacyMovement(blockId(x, y, z)));
+        }
+
+        @Override
         public boolean registered(int x, int y, int z) {
             return registered.contains(new BlockCoord(x, y, z));
         }

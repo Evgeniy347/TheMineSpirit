@@ -77,6 +77,11 @@ public final class LiveFloatingWorld implements TreeView, FloatingBlocks.World {
     }
 
     @Override
+    public boolean temporary(BlockCoord at) {
+        return false;
+    }
+
+    @Override
     public boolean log(BlockCoord at) {
         return isLog(at);
     }

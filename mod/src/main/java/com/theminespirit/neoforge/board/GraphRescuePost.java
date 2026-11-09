@@ -31,7 +31,10 @@ final class GraphRescuePost {
     private GraphRescuePost() {}
 
     static boolean rescue(GraphPost post, GraphTickets.Ticket ticket, GraphPlan.Task task) {
-        BlockCoord home = SettlementHome.of(post.spirits);
+        BlockCoord home = SettlementPlotStore.get(post.level)
+                .site()
+                .map(stage -> HomeStand.of(post.level, stage, post.spirits))
+                .orElseGet(() -> SettlementHome.of(post.spirits));
         boolean posted = false;
         for (GraphFacts.Spirit fact : post.facts.spirits().values()) {
             if (!fact.stuck()) {

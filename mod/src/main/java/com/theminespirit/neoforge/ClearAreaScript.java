@@ -31,6 +31,9 @@ final class ClearAreaScript implements ScriptInstance {
     private int restockAttempts;
     private @Nullable TaskRunner climb;
     private boolean climbChecked;
+    private @Nullable TaskRunner descend;
+    private boolean climbed;
+    private boolean descendTried;
 
     ClearAreaScript(SpiritEntity spirit, ClearAreaParams params) {
         this.spirit = spirit;
@@ -86,13 +89,49 @@ final class ClearAreaScript implements ScriptInstance {
                         + climb.failureReason().orElse("причина неизвестна"));
                 return ScriptStatus.FAILED;
             }
+            climbed = true;
             climb = null;
+        }
+        if (descend != null) {
+            return tickDescend();
         }
         return switch (session.tick()) {
             case RUNNING -> ScriptStatus.RUNNING;
-            case SUCCEEDED -> ScriptStatus.SUCCEEDED;
             case FAILED -> ScriptStatus.FAILED;
+            case SUCCEEDED -> {
+                if (!climbed || descendTried) {
+                    yield ScriptStatus.SUCCEEDED;
+                }
+                descendTried = true;
+                descend = descendRunner();
+                yield descend == null ? ScriptStatus.SUCCEEDED : tickDescend();
+            }
         };
+    }
+
+    private ScriptStatus tickDescend() {
+        TaskRunner runner = descend;
+        if (runner == null) {
+            return ScriptStatus.SUCCEEDED;
+        }
+        if (runner.isSuspended()) {
+            runner.resume();
+        }
+        if (runner.tick() == RunStatus.RUNNING) {
+            return ScriptStatus.RUNNING;
+        }
+        descend = null;
+        return ScriptStatus.SUCCEEDED;
+    }
+
+    private @Nullable TaskRunner descendRunner() {
+        if (spirit == null || !PillarDownScript.ownBelow(spirit)) {
+            return null;
+        }
+        return TaskRunner.start(
+                new ScriptCall("pillar_down", Map.of()),
+                SpiritScripts.registryFor(spirit),
+                ConditionRegistry.of(Map.of()));
     }
 
     @Override
@@ -157,6 +196,14 @@ final class ClearAreaScript implements ScriptInstance {
         if (restock != null) {
             restock.cancel();
             restock = null;
+        }
+        if (climb != null) {
+            climb.cancel();
+            climb = null;
+        }
+        if (descend != null) {
+            descend.cancel();
+            descend = null;
         }
         session.cancel();
     }
