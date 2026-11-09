@@ -86,8 +86,7 @@ final class FillStands {
             return true;
         }
         boolean sky = openAbove(stand);
-        return SettlementPlotStore.get(server)
-                .site()
+        return SettlementPlotStore.liveSite(server)
                 .map(site -> site.fillStandAllowed(stand, sky))
                 .orElse(true);
     }

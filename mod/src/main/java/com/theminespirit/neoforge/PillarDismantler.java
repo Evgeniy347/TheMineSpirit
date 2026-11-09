@@ -105,8 +105,7 @@ final class PillarDismantler {
 
     private boolean planned(BlockPos pos) {
         return level instanceof ServerLevel server
-                && SettlementPlotStore.get(server)
-                        .site()
+                && SettlementPlotStore.liveSite(server)
                         .map(site -> site.planCell(pos.getX(), pos.getY(), pos.getZ()))
                         .orElse(false);
     }

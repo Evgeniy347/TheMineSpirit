@@ -128,8 +128,7 @@ final class StationAccess {
 
     private Optional<BlockPos> settlementCenter() {
         if (spirit.level() instanceof ServerLevel level) {
-            Optional<BlockCoord> center = SettlementPlotStore.get(level)
-                    .site()
+            Optional<BlockCoord> center = SettlementPlotStore.liveSite(level)
                     .map(StageSite::workYard)
                     .or(() -> SettlementPlotStore.get(level).plot().map(plot -> plot.anchor()));
             if (center.isPresent()) {

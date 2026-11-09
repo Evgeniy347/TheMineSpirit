@@ -184,8 +184,7 @@ final class MineCellAim {
 
     static String context(Level level, SpiritEntity spirit, List<MineColumn> plan, BlockCoord cell) {
         boolean planCell = level instanceof ServerLevel server
-                && SettlementPlotStore.get(server)
-                        .site()
+                && SettlementPlotStore.liveSite(server)
                         .map(site -> site.planCell(cell.x(), cell.y(), cell.z()))
                         .orElse(false);
         boolean inPlan = plan.stream()
