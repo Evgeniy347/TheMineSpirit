@@ -126,6 +126,9 @@ final class BoardDispatchDesk {
                 LOGGER.debug("Задание {} ждёт свободного духа: {}", ticket.id(), why);
                 continue;
             }
+            for (BoardTicket displaced : round.drainDisplaced(spirit.getUUID())) {
+                settlement.displace(spirit, displaced, ticket);
+            }
             board.noteWait(ticket.id(), null);
             TicketTarget target = gatherOnTop(
                     ticket,
