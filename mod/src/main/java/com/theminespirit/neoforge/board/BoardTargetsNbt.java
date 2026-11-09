@@ -1,10 +1,13 @@
 package com.theminespirit.neoforge.board;
 
+import com.mojang.logging.LogUtils;
+import com.theminespirit.core.ErrorText;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardState;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TicketTargetCodec;
+import com.theminespirit.core.board.TicketTargets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -17,8 +20,11 @@ import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
+import org.slf4j.Logger;
 
 final class BoardTargetsNbt {
+    private static final Logger LOGGER = LogUtils.getLogger();
+    static final String KEY = "Targets";
     private static final String TARGET_ID_KEY = "Id";
     private static final String TARGET_DATA_KEY = "Data";
 
@@ -32,6 +38,14 @@ final class BoardTargetsNbt {
             alive.add(ticket.id());
         }
         targets.keySet().retainAll(alive);
+        List<String> cancelled = TicketTargets.dropBroken(board, store.brokenTargets());
+        if (!cancelled.isEmpty()) {
+            LOGGER.warn(
+                    "[board] при загрузке снято {} заданий с нечитаемой целью {}: без цели задание исполнялось бы "
+                            + "у дома; источники графа поставят его заново",
+                    cancelled.size(),
+                    cancelled);
+        }
     }
 
     static void persist(
@@ -56,22 +70,32 @@ final class BoardTargetsNbt {
         return list;
     }
 
-    static Map<String, TicketTarget> read(CompoundTag tag) {
-        Map<String, TicketTarget> targets = new LinkedHashMap<>();
-        ListTag list = tag.getList(BoardStateStore.TARGETS_KEY, Tag.TAG_COMPOUND);
+    static Read read(CompoundTag tag) {
+        Map<String, Map<String, Object>> raw = new LinkedHashMap<>();
+        List<TicketTargets.Broken> broken = new ArrayList<>();
+        ListTag list = tag.getList(KEY, Tag.TAG_COMPOUND);
         for (int index = 0; index < list.size(); index++) {
             CompoundTag item = list.getCompound(index);
             String id = item.getString(TARGET_ID_KEY);
             try {
-                targets.put(id, TicketTargetCodec.decode(map(item.getCompound(TARGET_DATA_KEY))));
-            } catch (IllegalArgumentException broken) {
-                throw new IllegalStateException(
-                        "Цель задания " + id + " не читается: " + broken.getMessage() + "; проверьте NBT доски",
-                        broken);
+                raw.put(id, map(item.getCompound(TARGET_DATA_KEY)));
+            } catch (RuntimeException unreadable) {
+                broken.add(new TicketTargets.Broken(id, ErrorText.of(unreadable)));
             }
         }
-        return Map.copyOf(targets);
+        TicketTargets decoded = TicketTargets.decode(raw);
+        broken.addAll(decoded.broken());
+        for (TicketTargets.Broken target : broken) {
+            LOGGER.warn(
+                    "[board] цель задания {} не читается: {}; задание будет снято, а не исполнено у дома",
+                    target.id(),
+                    target.message());
+        }
+        return new Read(
+                decoded.targets(), broken.stream().map(TicketTargets.Broken::id).toList());
     }
+
+    record Read(Map<String, TicketTarget> targets, List<String> broken) {}
 
     private static CompoundTag mapTag(Map<String, Object> values) {
         CompoundTag tag = new CompoundTag();

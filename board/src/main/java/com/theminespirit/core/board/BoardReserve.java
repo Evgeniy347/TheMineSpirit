@@ -1,22 +1,17 @@
 package com.theminespirit.core.board;
 
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public final class BoardReserve {
-    private static final Set<BoardStatus> OPEN =
-            EnumSet.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED);
-
     private BoardReserve() {}
 
     public static Map<String, Integer> items(Board board) {
         Objects.requireNonNull(board, "Бронь без доски не считается: материалы держат её задания");
         Map<String, Integer> reserved = new HashMap<>();
         for (BoardTicket ticket : board.all()) {
-            if (!OPEN.contains(board.statusOf(ticket.id()).orElse(BoardStatus.DONE))) {
+            if (!board.statusOf(ticket.id()).orElse(BoardStatus.DONE).open()) {
                 continue;
             }
             ticket.requiredItems().forEach((item, count) -> reserved.merge(shortId(item), count, Integer::sum));

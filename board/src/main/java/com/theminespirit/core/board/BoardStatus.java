@@ -7,5 +7,9 @@ public enum BoardStatus {
     BLOCKED,
     DONE,
     FAILED,
-    CANCELLED
+    CANCELLED;
+
+    public boolean open() {
+        return this == PENDING || this == WAITING_RESOURCES || this == ASSIGNED;
+    }
 }

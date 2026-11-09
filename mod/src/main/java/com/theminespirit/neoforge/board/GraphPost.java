@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.MaterialSource;
+import com.theminespirit.core.board.OpenPrefixes;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
@@ -32,8 +33,6 @@ final class GraphPost {
     static final String MAKE = GraphTickets.PREFIX + "make:";
     static final String PART = ":2";
     static final Set<String> MINED = Set.of("cobblestone", "coal");
-    private static final Set<BoardStatus> OPEN_STATUSES =
-            Set.of(BoardStatus.PENDING, BoardStatus.WAITING_RESOURCES, BoardStatus.ASSIGNED);
 
     final ServerLevel level;
     final FirstStepsRunner.StageScan scan;
@@ -51,6 +50,7 @@ final class GraphPost {
     GraphTickets.@Nullable Ticket current;
     private final Set<String> waiting = new HashSet<>();
     private @Nullable BlockCoord craft;
+    private @Nullable OpenPrefixes openPrefixes;
 
     GraphPost(
             ServerLevel level,
@@ -260,7 +260,15 @@ final class GraphPost {
     BoardOutcome submit(BoardTicket ticket, TicketTarget target) {
         BoardOutcome outcome = service.submit(ticket, target);
         if (outcome == BoardOutcome.DUPLICATE) service.board().reprioritize(ticket.id(), ticket.priority());
+        if (outcome == BoardOutcome.ACCEPTED && openPrefixes != null) openPrefixes.posted(ticket.id());
         return outcome;
+    }
+
+    int openCount(String prefix) {
+        if (openPrefixes == null) {
+            openPrefixes = OpenPrefixes.of(service.board(), WorldPost.OPEN_PREFIXES);
+        }
+        return openPrefixes.open(prefix);
     }
 
     boolean done(String id) {
@@ -268,7 +276,7 @@ final class GraphPost {
     }
 
     boolean open(String id) {
-        return service.board().statusOf(id).filter(OPEN_STATUSES::contains).isPresent();
+        return service.board().statusOf(id).filter(BoardStatus::open).isPresent();
     }
 
     Set<String> waiting() {
