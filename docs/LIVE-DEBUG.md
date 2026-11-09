@@ -5,6 +5,7 @@
 ```
 scripts/live.sh status                  # кто что делает, падает ли граф, частые сбои
 scripts/live.sh spirit spirit-5         # журнал духа и карта блоков вокруг него
+scripts/live.sh loops                   # какие задания падают снова и снова
 scripts/dev-server.sh up                # своя копия живого мира; live.sh теперь смотрит в неё
 scripts/live-debug.sh --run run-live/<имя> hotswap <класс>   # правка сразу в копии, без перезапуска
 scripts/live.sh fixture spirit-5 <файл> # этот мир становится фикстурой теста
