@@ -2,16 +2,17 @@ package com.theminespirit.core.board.graph;
 
 import static com.theminespirit.core.board.graph.CrossActions.boardTicket;
 import static com.theminespirit.core.board.graph.CrossActions.id;
-import static com.theminespirit.core.board.graph.CrossScene.FED;
+import static com.theminespirit.core.board.graph.CrossScene.stageOne;
 import static com.theminespirit.core.board.graph.CrossScene.facts;
+import static com.theminespirit.core.board.graph.CrossScene.spirit;
+import static com.theminespirit.core.board.graph.CrossScene.threat;
+import static com.theminespirit.core.board.graph.CrossScene.plan;
+import static com.theminespirit.core.board.graph.CrossScene.tickets;
+import static com.theminespirit.core.board.graph.CrossScene.task;
 import static com.theminespirit.core.board.graph.CrossScene.ids;
 import static com.theminespirit.core.board.graph.CrossScene.named;
-import static com.theminespirit.core.board.graph.CrossScene.plan;
-import static com.theminespirit.core.board.graph.CrossScene.spirit;
-import static com.theminespirit.core.board.graph.CrossScene.stageOne;
-import static com.theminespirit.core.board.graph.CrossScene.task;
-import static com.theminespirit.core.board.graph.CrossScene.threat;
-import static com.theminespirit.core.board.graph.CrossScene.tickets;
+import static com.theminespirit.core.board.graph.CrossScene.FED;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -20,6 +21,7 @@ import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.movement.DisengageRoute;
@@ -33,7 +35,7 @@ import org.junit.jupiter.api.Test;
 
 class CrossFleeScenarioTests {
     @Test
-    void flee_WhileChopping_GraphKeepsChopAndRetreatWaits() {
+    void flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard() {
         GraphWorld world = stageOne();
         world.with("oak_log", 0).with("oak_planks", 0);
         GraphFacts calm = facts(named(spirit("spirit-1"), spirit("spirit-2")));
@@ -60,12 +62,11 @@ class CrossFleeScenarioTests {
                 .filter(ticket -> ticket.id().endsWith(":retreat"))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Нет бегства в графе: " + dangerTickets.post()));
-        board.submit(boardTicket(retreat));
+        board.submit(boardTicket(retreat, Optional.of(id("spirit-1"))));
 
         DispatchRound.Candidate chopper = new DispatchRound.Candidate(
                 id("spirit-1"), "spirit-1", "chop_tree", List.of(), FED, SpiritView.free(), false, List.of());
         DispatchRound round = new DispatchRound(board, 0);
-        Optional<String> refusal = round.refusal(boardTicket(retreat), chopper);
 
         assertTrue(
                 dangerTickets.post().stream().anyMatch(ticket -> ticket.id().endsWith(":retreat")),
@@ -76,17 +77,25 @@ class CrossFleeScenarioTests {
         assertTrue(
                 dangerTickets.post().stream().anyMatch(ticket -> ticket.node().startsWith("chop_")),
                 "Рубка не исчезает из графа при угрозе: " + dangerTickets.post());
+        assertTrue(
+                round.choose(boardTicket(retreat, Optional.of(id("spirit-1"))), List.of(chopper))
+                        .isPresent(),
+                "Бегство выше работы: рубящий дух бросает дерево и уходит от мобов");
         assertEquals(
-                BoardStatus.ASSIGNED,
+                List.of(chop.id()),
+                round.drainDisplaced(id("spirit-1")).stream()
+                        .map(BoardTicket::id)
+                        .toList(),
+                "Вытесненная рубка возвращается на доску, а не пропадает");
+        assertEquals(
+                BoardStatus.PENDING,
                 board.statusOf(chop.id()).orElseThrow(),
-                "Доска оставляет рубку за духом, метка работы не снимается");
-        assertTrue(refusal.isPresent(), "Рубящий дух не берёт бегство вторым заданием: " + refusal);
+                "Рубка больше не держится за убегающим духом: её возьмёт другой или он сам после бегства");
         assertTrue(
-                refusal.orElseThrow().contains("занят"),
-                "Причина отказа называет занятость рубкой, а не молчит: " + refusal);
-        assertTrue(
-                round.choose(boardTicket(retreat), List.of(chopper)).isEmpty(),
-                "Бегство ждёт, пока рубка не закончится: граф и доска не умеют её вытеснить");
+                round.refusal(boardTicket(retreat, Optional.of(id("spirit-1"))), chopper)
+                        .isEmpty(),
+                "После вытеснения дух свободен для бегства: "
+                        + round.refusal(boardTicket(retreat, Optional.of(id("spirit-1"))), chopper));
     }
 
     @Test

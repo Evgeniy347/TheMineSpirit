@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.DispatchBusy;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.EatNeed;
 import com.theminespirit.core.board.SpiritView;
@@ -58,8 +59,11 @@ final class DispatchPick {
         String supply = target == null ? null : target.supplyItem();
         if (ticket.assignee().isPresent()) {
             DispatchRound.Candidate own = candidates.get(ticket.assignee().orElseThrow());
-            if (own != null && round.fits(ticket, own, supply)) {
-                return entities.get(own.id());
+            if (own != null) {
+                Optional<DispatchRound.Candidate> chosen = round.choose(ticket, List.of(own), supply);
+                if (chosen.isPresent()) {
+                    return entities.get(chosen.orElseThrow().id());
+                }
             }
             boolean stuck = own != null
                     && round.board().stuck().isStuck(own.id(), round.board().now());
@@ -125,12 +129,12 @@ final class DispatchPick {
         boolean running =
                 status == RunStatus.RUNNING || spirit.currentTaskScript().isPresent();
         boolean control = spirit.tactics().wantsControl();
-        DispatchRound.BusyMode mode = !running
-                ? DispatchRound.BusyMode.IDLE
+        DispatchBusy.Mode mode = !running
+                ? DispatchBusy.Mode.IDLE
                 : control
-                        ? DispatchRound.BusyMode.TACTICS
-                        : spirit.runsBackgroundTask() ? DispatchRound.BusyMode.BACKGROUND : DispatchRound.BusyMode.WORK;
-        String busyWith = DispatchRound.busyWith(
+                        ? DispatchBusy.Mode.TACTICS
+                        : spirit.runsBackgroundTask() ? DispatchBusy.Mode.BACKGROUND : DispatchBusy.Mode.WORK;
+        String busyWith = DispatchBusy.text(
                 spirit.currentTaskScript().orElse(null), spirit.currentPlan().orElse(null), mode);
         return new DispatchRound.Candidate(
                 spirit.getUUID(),
@@ -142,6 +146,7 @@ final class DispatchPick {
                                 Math.ceil(spirit.getMaxHealth())),
                 new SpiritView(control, false, status == RunStatus.RUNNING),
                 spirit.isInWater(),
-                stockTools);
+                stockTools,
+                SpiritVitals.needs(spirit));
     }
 }

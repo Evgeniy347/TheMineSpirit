@@ -15,7 +15,7 @@ from collections import Counter
 
 import search
 import sim_gpu
-from graph_model import BUILT, Graph, Planner, State, plan
+from graph_model import ABSENT, BUILT, PLANNED, Graph, Planner, State, plan
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -975,6 +975,43 @@ def test_stage_two_worlds():
     print("OK: миры этапа 2 доходят до этапа 3 (склад и загоны не держат этап)")
 
 
+def test_warehouse_decision():
+    """Склад строит только решение стратега: без него узел остаётся заявкой, этап не закрывается."""
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    world = sim_gpu.World.settled(graph)
+    world.stage = 2
+    world.warehouse_order = 0
+    for building in graph.buildings.values():
+        if building.stage < 2:
+            world.buildings[building.id] = BUILT
+        elif building.stage == 2 and not building.optional:
+            world.buildings[building.id] = PLANNED
+        else:
+            world.buildings[building.id] = ABSENT
+    world.buildings["warehouse"] = ABSENT
+    world.buildings["warehouse_2"] = ABSENT
+
+    tasks = {task["id"]: task for task in world.plan()["tasks"]}
+    assert "building:warehouse" not in tasks, \
+        "Без решения стратега граф не ставит склад: " + str(sorted(tasks))
+    assert any(notice.get("building") == "warehouse" for notice in world.plan()["notices"]), \
+        "Склад без решения остаётся заявкой стратегу: " + str(world.plan()["notices"])
+    outcome = sim_gpu.run(world.copy(), limit=1600)
+    assert not outcome["finished"] and outcome["stage"] == 2, \
+        "Без решения стратега этап 2 не закрывается складом: " + str(outcome["stuck"])
+
+    decided = world.copy()
+    decided.warehouse_order = 4
+    decided.buildings["warehouse"] = PLANNED
+    tasks = {task["id"]: task for task in decided.plan()["tasks"]}
+    assert "building:warehouse" in tasks, \
+        "С решением стратега граф ставит склад: " + str(sorted(tasks))
+    outcome = sim_gpu.run(decided.copy(), limit=4000)
+    assert outcome["finished"] and outcome["stage"] >= 3, \
+        "С решением стратега этап 2 закрывается складом: " + str(outcome["stuck"])
+    print("OK: решение стратега о складе — факт модели: без него склад не строится")
+
+
 def test_failure_memory():
     """Память неудач в Python: цель отдельно, узел по разным целям (GraphFailureMemoryTests)."""
     base = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
@@ -1170,7 +1207,23 @@ def test_best_weights():
         if key.startswith("auto_"))
     assert not stale, ("в best-weights.json исторические auto_*-ключи: graphExport пересобирает эти пути, "
                        "их веса в файле мёртвые и вводят в заблуждение: " + ", ".join(stale[:5]))
-    print("OK: в best-weights.json нет исторических auto_*-ключей")
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    known = {
+        "items": set(graph.items),
+        "events": set(graph.events),
+        "ways": {way.id for way in graph.ways},
+        "buildings": set(graph.buildings),
+    }
+    dead = []
+    for section in ("weights", "absolute"):
+        for kind, ids in known.items():
+            dead.extend(
+                section + "." + kind + ":" + key
+                for key in (weights.get(section) or {}).get(kind, {})
+                if key not in ids)
+    assert not dead, ("в best-weights.json ключи, которых нет в графе: их веса мёртвые и вводят в заблуждение: "
+                      + ", ".join(sorted(dead)[:5]))
+    print("OK: в best-weights.json нет исторических auto_*-ключей и ключей вне графа")
 
 
 def test_conformance():
@@ -1222,6 +1275,7 @@ if __name__ == "__main__":
         test_base_worlds()
         test_tool_condition_and_soil()
         test_stage_two_worlds()
+        test_warehouse_decision()
         test_failure_memory()
         test_choice_mechanics()
         test_recipe_weights()

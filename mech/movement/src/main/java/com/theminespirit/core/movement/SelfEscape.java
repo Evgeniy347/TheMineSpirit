@@ -66,7 +66,7 @@ public final class SelfEscape {
     private static Optional<Plan> pit(
             BlockCoord feet, PitEscape.Exit exit, StuckSituation.Grid grid, boolean tool, int stepBlocks) {
         BlockCoord rim = new BlockCoord(feet.x() + exit.rimDx(), feet.y() + exit.rise() + 1, feet.z() + exit.rimDz());
-        if (stepBlocks >= exit.rise()) {
+        if (stepBlocks >= exit.rise() && grid.clearColumn(feet, exit.rise())) {
             return Optional.of(new Plan(Method.STEP, rim, exit.rise(), List.of()));
         }
         if (!tool) {
@@ -75,9 +75,13 @@ public final class SelfEscape {
         List<BlockCoord> blocks = new ArrayList<>();
         for (int dy = 1; dy <= StuckSituation.PASSAGE_HEIGHT; dy++) {
             BlockCoord cell = new BlockCoord(feet.x(), feet.y() + dy, feet.z());
-            if (!grid.passable(cell)) {
-                blocks.add(cell);
+            if (grid.passable(cell)) {
+                continue;
             }
+            if (!grid.breakable(cell)) {
+                return Optional.empty();
+            }
+            blocks.add(cell);
         }
         if (blocks.isEmpty()) {
             return Optional.empty();
@@ -91,9 +95,15 @@ public final class SelfEscape {
             BlockCoord above = new BlockCoord(ahead.x(), ahead.y() + 1, ahead.z());
             List<BlockCoord> blocks = new ArrayList<>();
             if (!grid.passable(ahead)) {
+                if (!grid.breakable(ahead)) {
+                    continue;
+                }
                 blocks.add(ahead);
             }
             if (!grid.passable(above)) {
+                if (!grid.breakable(above)) {
+                    continue;
+                }
                 blocks.add(above);
             }
             if (!blocks.isEmpty()) {

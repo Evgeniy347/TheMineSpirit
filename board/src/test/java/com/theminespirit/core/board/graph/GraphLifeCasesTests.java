@@ -47,14 +47,15 @@ class GraphLifeCasesTests {
     }
 
     @Test
-    void tickets_Hungry_EatStaysWithinOrdinaryCeiling() {
+    void tickets_Hungry_EatStaysWithinVitalBand() {
         GraphWorld world = busySettlement().event("hungry");
         GraphPlan plan = world.plan();
+        int work = GraphPriorities.work(GraphWorld.GRAPH);
 
         assertTrue(
-                plan.priority(EAT) > 0 && plan.priority(EAT) <= GraphPriorities.work(GraphWorld.GRAPH),
-                "Еда — обычное событие: она важна, но не выше потолка 99. Еда " + plan.priority(EAT) + ", задания "
-                        + ids(plan));
+                plan.priority(EAT) > 0 && plan.priority(EAT) <= work && plan.priority(EAT) >= work - VitalNeeds.BAND,
+                "Голод — жизненная нужда: еда в верхней полосе приоритетов, но не выше потолка обычной работы. Еда "
+                        + plan.priority(EAT) + ", задания " + ids(plan));
         assertTrue(
                 tickets(world.state()).post().stream()
                         .anyMatch(ticket -> EAT.equals(ticket.task().id())),

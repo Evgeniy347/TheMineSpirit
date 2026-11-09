@@ -35,7 +35,7 @@ MAX_INT = 2 ** 31 - 1
 class World:
     def __init__(self, graph, stock=None, kits=None, buildings=None, stage=1,
                  storage_free=60, events=None, world=None, materials=None,
-                 stations=None, distances=None, facts=None):
+                 stations=None, distances=None, facts=None, warehouse_order=None):
         self.graph = graph
         self.stock = dict(stock or {})
         self.kits = {k: dict(v) for k, v in (kits or {}).items()}
@@ -48,13 +48,14 @@ class World:
         self.stations = dict(stations or {})
         self.distances = dict(distances or {})
         self.facts = copy.deepcopy(facts or {})
+        self.warehouse_order = warehouse_order
         self.stop_stage = LAST_STAGE + 1
 
     @classmethod
     def empty(cls, graph):
         world = cls(graph)
         world.kits["spirit-1"] = {}
-        world.world = {"tree:oak", "tree:jungle", "sand", "clay", "animals",
+        world.world = {"tree:oak", "tree:jungle", "sand", "clay", "animals", "water",
                        "flower:poppy", "flower:dandelion", "soil"}
         for building in graph.buildings.values():
             world.buildings[building.id] = PLANNED if building.stage == 1 and not building.optional else ABSENT
@@ -93,7 +94,7 @@ class World:
     def copy(self):
         copied = World(self.graph, self.stock, self.kits, self.buildings, self.stage,
                        self.storage_free, self.events, self.world, self.materials,
-                       self.stations, self.distances, self.facts)
+                       self.stations, self.distances, self.facts, self.warehouse_order)
         copied.stop_stage = self.stop_stage
         return copied
 
@@ -620,13 +621,38 @@ def unbuilt(world):
             and world.buildings.get(b.id) != BUILT]
 
 
+def warehouse_level(building_id):
+    """Уровень узла склада: warehouse → 1, warehouse_2 → 2; прочее — 0."""
+    if not building_id.startswith("warehouse"):
+        return 0
+    if building_id == "warehouse":
+        return 1
+    try:
+        return int(building_id.rsplit("_", 1)[1])
+    except (IndexError, ValueError):
+        return 1
+
+
+def warehouse_approved(world, building_id):
+    """Решение стратега есть на этот уровень склада.
+
+    None — модель считает требуемый этапом уровень согласованным (как прежние миры),
+    число — разрешённый уровень: 0 означает, что решения нет и граф склад не строит.
+    """
+    level = warehouse_level(building_id)
+    if level == 0:
+        return True
+    return world.warehouse_order is None or level <= world.warehouse_order
+
+
 def promote(world):
     while world.stage <= LAST_STAGE and not unbuilt(world):
         world.stage += 1
         stage = world.stage
         for building in world.graph.buildings.values():
             if building.stage == stage and not building.optional \
-                    and world.buildings.get(building.id) != BUILT:
+                    and world.buildings.get(building.id) != BUILT \
+                    and warehouse_approved(world, building.id):
                 world.buildings[building.id] = PLANNED
 
 
@@ -661,7 +687,8 @@ def answer(world, plan, strategist=None):
     for notice in plan["notices"]:
         building_id = notice.get("building")
         wanted = world.graph.buildings.get(building_id)
-        if wanted is not None and wanted.stage <= world.stage and world.buildings.get(wanted.id) != BUILT:
+        if wanted is not None and wanted.stage <= world.stage and world.buildings.get(wanted.id) != BUILT \
+                and warehouse_approved(world, wanted.id):
             world.buildings[wanted.id] = PLANNED
             if strategist is not None:
                 strategist.append(str(world.stage) + ":" + wanted.id)

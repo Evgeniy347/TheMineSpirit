@@ -97,14 +97,14 @@ public final class BoardSources {
         failures.observe(source, String.valueOf(error.getMessage()), roundNow).ifPresent(summary -> {
             if (summary.changed()) {
                 LOGGER.error(
-                        "[incident] РёСЃС‚РѕС‡РЅРёРє РґРѕСЃРєРё {} {} СѓРїР°Р», РїСЂРѕРїСѓС‰РµРЅ РґРѕ СЃР»РµРґСѓСЋС‰РµР№ РїРµСЂРµСЃР±РѕСЂРєРё; С‚РёРє СЃРµСЂРІРµСЂР° РёРґС‘С‚",
+                        "[incident] источник доски {} {} упал, пропущен до следующей пересборки; тик сервера идёт",
                         source,
                         repeated ? "СЃРЅРѕРІР°" : "",
                         error);
                 return;
             }
             LOGGER.warn(
-                    "[incident] СЃРІРѕРґРєР°: РёСЃС‚РѕС‡РЅРёРє РґРѕСЃРєРё {} РїР°РґР°Р» {} СЂР°Р· Р·Р° РѕРєРЅРѕ СЃ С‚РѕР№ Р¶Рµ РѕС€РёР±РєРѕР№: {}",
+                    "[incident] сводка: источник доски {} падал {} раз за окно с той же ошибкой: {}",
                     source,
                     summary.count(),
                     error.getMessage());

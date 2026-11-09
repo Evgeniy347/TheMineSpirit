@@ -1,21 +1,22 @@
 package com.theminespirit.core.board.graph;
 
-import static com.theminespirit.core.board.graph.CrossActions.board;
 import static com.theminespirit.core.board.graph.CrossActions.boardTicket;
 import static com.theminespirit.core.board.graph.CrossActions.candidates;
 import static com.theminespirit.core.board.graph.CrossActions.id;
-import static com.theminespirit.core.board.graph.CrossScene.FED;
-import static com.theminespirit.core.board.graph.CrossScene.HUNGRY;
-import static com.theminespirit.core.board.graph.CrossScene.chest;
+import static com.theminespirit.core.board.graph.CrossActions.board;
+import static com.theminespirit.core.board.graph.CrossScene.stageOne;
 import static com.theminespirit.core.board.graph.CrossScene.facts;
+import static com.theminespirit.core.board.graph.CrossScene.spirit;
+import static com.theminespirit.core.board.graph.CrossScene.chest;
+import static com.theminespirit.core.board.graph.CrossScene.plan;
+import static com.theminespirit.core.board.graph.CrossScene.tickets;
+import static com.theminespirit.core.board.graph.CrossScene.ticketFor;
+import static com.theminespirit.core.board.graph.CrossScene.task;
 import static com.theminespirit.core.board.graph.CrossScene.ids;
 import static com.theminespirit.core.board.graph.CrossScene.named;
-import static com.theminespirit.core.board.graph.CrossScene.plan;
-import static com.theminespirit.core.board.graph.CrossScene.spirit;
-import static com.theminespirit.core.board.graph.CrossScene.stageOne;
-import static com.theminespirit.core.board.graph.CrossScene.task;
-import static com.theminespirit.core.board.graph.CrossScene.ticketFor;
-import static com.theminespirit.core.board.graph.CrossScene.tickets;
+import static com.theminespirit.core.board.graph.CrossScene.FED;
+import static com.theminespirit.core.board.graph.CrossScene.HUNGRY;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -90,6 +91,13 @@ class CrossHungerScenarioTests {
                         .orElse(""),
                 "Сытый дух тем временем получает шахту: " + candidates);
 
+        assertWaterFish(facts);
+        GraphWorld bare = assertBareWait(facts);
+        assertLiveSnapshot();
+        assertBareDispatch(bare, facts, candidates);
+    }
+
+    private static void assertWaterFish(GraphFacts facts) {
         GraphWorld watery = stageOne().noWorld("animals");
         watery.tools("spirit-2", 1);
         watery.with("coal", 0).with("food", 0).event("hungry");
@@ -113,7 +121,9 @@ class CrossHungerScenarioTests {
                         + tickets(watery, facts).post().stream()
                                 .map(GraphTickets.Ticket::id)
                                 .toList());
+    }
 
+    private static GraphWorld assertBareWait(GraphFacts facts) {
         GraphWorld bare = stageOne().noWorld("animals").noWorld("water");
         bare.tools("spirit-2", 1);
         bare.with("coal", 0).with("food", 0).event("hungry");
@@ -143,7 +153,10 @@ class CrossHungerScenarioTests {
                         + tickets(bare, facts).post().stream()
                                 .map(GraphTickets.Ticket::id)
                                 .toList());
+        return bare;
+    }
 
+    private static void assertLiveSnapshot() {
         GraphWorld live = GraphMutations.liveStageOne().event("hungry").with("food", 0);
         GraphFacts liveFacts =
                 facts(named(spirit("spirit-1", 20, 2), spirit("spirit-2"), spirit("spirit-3"), spirit("spirit-4")));
@@ -159,7 +172,13 @@ class CrossHungerScenarioTests {
                 Optional.of("spirit-1"),
                 liveHunt.spirit(),
                 "На живом снимке еду добывает самый голодный дух: " + liveHunt);
+    }
 
+    private static void assertBareDispatch(
+            GraphWorld bare, GraphFacts facts, List<DispatchRound.Candidate> candidates) {
+        GraphPlan barePlan = plan(bare, facts);
+        GraphPlan.Task bareWait = task(barePlan, "event:hungry:wait_food");
+        GraphPlan.Task bareMine = task(barePlan, "mine_coal");
         GraphTickets.Result bareTickets = tickets(bare, facts);
         DispatchRound bareRound = new DispatchRound(board(bare, bareTickets), 0);
         assertEquals(

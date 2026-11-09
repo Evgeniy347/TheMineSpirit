@@ -6,7 +6,7 @@ core/board/BoardTests.java	966
 core/board/BoardTicketTests.java	401
 core/board/TicketPlans.java	884
 core/board/TicketPlansTests.java	1231
-core/board/graph/GraphPlanner.java	502
+core/board/graph/GraphPlanner.java	499
 core/board/graph/GraphPlannerTests.java	933
 core/board/graph/RecipeImport.java	555
 core/board/graph/SupplyGraph.java	388
@@ -28,6 +28,8 @@ core/inventory/BaseKit.java	323
 core/inventory/BaseKitTests.java	321
 core/inventory/OverflowPolicyTests.java	464
 core/inventory/ValueTableTests.java	339
+core/movement/NavFuzzTests.java	1200
+core/movement/PitStairPlanner.java	319
 core/observation/WorldObservationTests.java	463
 core/plan/PlanValidatorRulesTests.java	359
 core/planner/AcquireScript.java	321
@@ -56,8 +58,8 @@ guards/GameTestIsolationGuardTests.java	352
 guards/GameTestTimeoutGuardTests.java	484
 guards/ProductionCommentGuardTests.java	575
 guards/SucceedWhenReturnGuardTests.java	343
-neoforge/BlockBreaker.java	422
-neoforge/BlockPlacer.java	321
+neoforge/BlockBreaker.java	416
+neoforge/BlockPlacer.java	309
 neoforge/ChopTreeScript.java	343
 neoforge/ClearAreaSession.java	541
 neoforge/DescentSession.java	360
@@ -72,13 +74,13 @@ neoforge/SpiritScripts.java	384
 neoforge/TreeChop.java	302
 neoforge/WorldScanner.java	306
 neoforge/board/BoardService.java	342
-neoforge/board/FirstStepsRunner.java	682
+neoforge/board/FirstStepsRunner.java	681
 neoforge/board/TransferWatch.java	569
 neoforge/crafting/CraftScript.java	384
 neoforge/crafting/SmeltScript.java	308
 neoforge/demo/DemoSession.java	431
 neoforge/husbandry/HerdSession.java	436
 neoforge/husbandry/HiveSession.java	410
-neoforge/policy/ProtectionGate.java	351
+neoforge/policy/ProtectionGate.java	339
 neoforge/repair/RepairScript.java	304
 neoforge/tactics/TacticsService.java	476

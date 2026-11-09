@@ -11,6 +11,7 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TransferCarriers;
 import com.theminespirit.core.board.TransferTicket;
+import com.theminespirit.core.board.VitalGate;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
@@ -116,6 +117,7 @@ final class BoardDispatchDesk {
         List<BoardTicket> claimable = DispatchRound.order(board.claimable(stock, now));
         transferWait.retain(board);
         crafters.retain(id -> board.statusOf(id).filter(TransferWatch::open).isPresent());
+        withdrawForVitals(spirits, claimable);
         DispatchRound round = new DispatchRound(board, now);
         DispatchPick pick = new DispatchPick(round, spirits, stock);
         for (BoardTicket ticket : claimable) {
@@ -125,6 +127,9 @@ final class BoardDispatchDesk {
                 board.noteWait(ticket.id(), why);
                 LOGGER.debug("Задание {} ждёт свободного духа: {}", ticket.id(), why);
                 continue;
+            }
+            for (BoardTicket displaced : round.drainDisplaced(spirit.getUUID())) {
+                settlement.displace(spirit, displaced, ticket);
             }
             board.noteWait(ticket.id(), null);
             TicketTarget target = gatherOnTop(
@@ -142,22 +147,11 @@ final class BoardDispatchDesk {
                 transferWait.await(board, crafters, ticket, spirit, spirits, round);
                 continue;
             }
-            TaskNode plan;
-            try {
-                plan = JobLaunch.plan(ticket, target);
-            } catch (RuntimeException failure) {
-                if (RepairPlan.goalless(ticket, targets.get(ticket.id()))) {
-                    dropGoallessRepair(ticket);
-                    continue;
-                }
-                LOGGER.error(
-                        "Задание {} (кейс {}): план не собран: {}",
-                        ticket.id(),
-                        ticket.boardCase(),
-                        failure.getMessage());
-                dropUnplannedTransfer(ticket, round);
+            Optional<TaskNode> planned = planTicket(ticket, target, round);
+            if (planned.isEmpty()) {
                 continue;
             }
+            TaskNode plan = planned.orElseThrow();
             if (spirit.runsBackgroundTask()) {
                 LOGGER.info(
                         "Задание {} вытесняет фоновое занятие {} духа {}",
@@ -190,6 +184,31 @@ final class BoardDispatchDesk {
         }
     }
 
+    private void withdrawForVitals(List<SpiritEntity> spirits, List<BoardTicket> claimable) {
+        for (SpiritEntity spirit : spirits) {
+            if (spirit.isRemoved()) {
+                continue;
+            }
+            Map<String, String> needs = SpiritVitals.needs(spirit);
+            if (needs.isEmpty()) {
+                continue;
+            }
+            boolean chain = claimable.stream()
+                    .anyMatch(ticket -> VitalGate.satisfies(ticket.id(), needs)
+                            && ticket.assignee().map(spirit.getUUID()::equals).orElse(true));
+            if (!chain) {
+                continue;
+            }
+            List<BoardTicket> held = List.copyOf(board.assignedTo(spirit.getUUID()));
+            for (BoardTicket ticket : held) {
+                if (VitalGate.blocksWork(ticket, needs)) {
+                    settlement.withdraw(
+                            spirit, ticket, needs.values().iterator().next());
+                }
+            }
+        }
+    }
+
     private static TicketTarget gatherOnTop(BoardTicket ticket, TicketTarget target, SpiritEntity spirit) {
         String item = target.supplyItem();
         if (ticket.boardCase() != BoardCase.GATHER_MATERIALS
@@ -202,6 +221,21 @@ final class BoardDispatchDesk {
         return held <= 0
                 ? target
                 : target.withSupply(item, Math.min(CatalogLimits.COUNT_MAX, held + target.supplyCount()));
+    }
+
+    private Optional<TaskNode> planTicket(BoardTicket ticket, TicketTarget target, DispatchRound round) {
+        try {
+            return Optional.of(JobLaunch.plan(ticket, target));
+        } catch (RuntimeException failure) {
+            if (RepairPlan.goalless(ticket, targets.get(ticket.id()))) {
+                dropGoallessRepair(ticket);
+                return Optional.empty();
+            }
+            LOGGER.error(
+                    "Задание {} (кейс {}): план не собран: {}", ticket.id(), ticket.boardCase(), failure.getMessage());
+            dropUnplannedTransfer(ticket, round);
+            return Optional.empty();
+        }
     }
 
     private void dropGoallessRepair(BoardTicket ticket) {

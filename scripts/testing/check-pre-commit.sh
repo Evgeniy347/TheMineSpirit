@@ -62,7 +62,7 @@ git reset -q "$probe"
 
 echo "правка документа" >>docs/TESTING.md
 git add docs/TESTING.md
-check docs_commit_no_run 0 нет git commit -m "docs: правка без прогона"
+check docs_commit_runs_guards 0 да git commit -m "docs: правка проходит сторожей"
 
 write_probe assertTrue 'assertTrue(true, "зелёный тест-зонд");'
 git add "$probe"

@@ -24,13 +24,13 @@ import net.minecraft.world.level.saveddata.SavedData;
 
 public final class BoardStateStore extends SavedData {
     public static final String NAME = "theminespirit_board";
+    static final String TARGETS_KEY = "Targets";
 
     private static final String VERSION_KEY = "Version";
     private static final int VERSION = 3;
     private static final String ENTRIES_KEY = "Entries";
     private static final String LEDGER_KEY = "Ledger";
     private static final String BUILD_KEY = "Build";
-    static final String TARGETS_KEY = "Targets";
     private static final String ID_KEY = "Id";
     private static final String CASE_KEY = "Case";
     private static final String PRIORITY_KEY = "Priority";

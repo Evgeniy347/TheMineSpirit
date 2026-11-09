@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.function.LongSupplier;
+import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 
 public final class NavAStarSession {
@@ -30,6 +32,7 @@ public final class NavAStarSession {
     private final int referenceY;
     private final boolean escapeStart;
     private final int escapeFall;
+    private final Set<Long> escapePlateau;
     private final LongSupplier clock;
     private final long started;
     private final Map<Long, NavNode> nodes = new HashMap<>();
@@ -62,16 +65,18 @@ public final class NavAStarSession {
         this.startX = startX;
         this.startY = startY;
         this.startZ = startZ;
-        OptionalInt escapeLanding = NavPillarEscape.isolated(context.world(), startX, startY, startZ)
-                ? NavPillarEscape.landingBelow(
-                        context.world(),
-                        startX,
-                        startY,
-                        startZ,
-                        context.settings().maxWaterFall())
-                : OptionalInt.empty();
+        Set<BlockCoord> narrow = NavPillarEscape.plateau(context.world(), startX, startY, startZ);
+        OptionalInt escapeLanding = narrow.isEmpty()
+                ? OptionalInt.empty()
+                : NavPillarEscape.landingFrom(
+                        context.world(), narrow, context.settings().maxWaterFall());
         this.escapeStart = escapeLanding.isPresent();
         this.escapeFall = escapeLanding.isPresent() ? startY - escapeLanding.getAsInt() : 0;
+        this.escapePlateau = escapeStart
+                ? narrow.stream()
+                        .map(cell -> NavNode.key(cell.x(), cell.y(), cell.z()))
+                        .collect(Collectors.toSet())
+                : Set.of();
         this.referenceY = referenceFor(goal, startY, escapeLanding);
         this.clock = Objects.requireNonNull(clock, "Часы поиска не могут быть null");
         this.started = clock.getAsLong();
@@ -145,8 +150,7 @@ public final class NavAStarSession {
         }
         for (int[] direction : FALL_DIRECTIONS) {
             move.reset(current.x, current.y, current.z);
-            NavMoveCosts.fall(
-                    context, current.x, current.y, current.z, direction[0], direction[1], groundFall(current), move);
+            NavMoveCosts.fall(context, direction[0], direction[1], groundFall(current), move);
             relax(current, move);
             move.reset(current.x, current.y, current.z);
             NavMoveCosts.jump(context, current.x, current.y, current.z, direction[0], direction[1], move);
@@ -155,7 +159,7 @@ public final class NavAStarSession {
     }
 
     private boolean onEscapeStart(NavNode node) {
-        return escapeStart && node.x == startX && node.y == startY && node.z == startZ;
+        return escapeStart && escapePlateau.contains(NavNode.key(node.x, node.y, node.z));
     }
 
     private int groundFall(NavNode node) {

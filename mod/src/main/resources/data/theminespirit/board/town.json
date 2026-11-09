@@ -1,7 +1,7 @@
 {
-  "ground": {"area": 25600, "probeRadius": 80, "cliffStep": 2, "slopeWeight": 4, "slopeMax": 6},
-  "streets": {"main": 7, "side": 5, "ring": 5, "ringInset": 2, "blockSize": 40},
-  "spacing": {"gap": 2, "stageMargin": 1, "chestFreePercent": 20, "fenceStrip": 1},
+  "ground": {"area": 32400, "probeRadius": 90, "cliffStep": 2, "slopeWeight": 4, "slopeMax": 10},
+  "streets": {"main": 7, "side": 5, "ring": 5, "ringInset": 2, "blockSize": 64},
+  "spacing": {"gap": 1, "stageMargin": 1, "chestFreePercent": 20, "fenceStrip": 1},
   "buildings": [
     {"id": "hut", "name": "Хижина", "width": 7, "depth": 9, "quarter": "nw", "level": true, "rotate": false},
     {"id": "yard", "name": "Двор", "width": 7, "depth": 5, "quarter": "any", "level": true, "rotate": false},

@@ -67,6 +67,34 @@ final class BoardSettlementDesk {
         issuedGenerations.remove(ticketId);
     }
 
+    void displace(SpiritEntity spirit, BoardTicket displaced, BoardTicket incoming) {
+        issuedGenerations.remove(displaced.id());
+        stall.forget(spirit.getUUID());
+        spirit.cancelTask();
+        WorkReserveHub.releaseAll(spirit);
+        LOGGER.info(
+                "[board] дух {} бросает работу {} ради жизни {} (кейс {}): задание возвращено на доску",
+                spirit.displayName(),
+                displaced.id(),
+                incoming.id(),
+                incoming.boardCase());
+    }
+
+    void withdraw(SpiritEntity spirit, BoardTicket ticket, String why) {
+        if (!board.release(ticket.id())) {
+            return;
+        }
+        issuedGenerations.remove(ticket.id());
+        stall.forget(spirit.getUUID());
+        spirit.cancelTask();
+        WorkReserveHub.releaseAll(spirit);
+        LOGGER.info(
+                "[board] дух {} бросает обычную работу {}: {} — задание возвращено на доску",
+                spirit.displayName(),
+                ticket.id(),
+                why);
+    }
+
     void release(SpiritEntity spirit) {
         for (BoardTicket ticket : board.assignedTo(spirit.getUUID())) {
             issuedGenerations.remove(ticket.id());

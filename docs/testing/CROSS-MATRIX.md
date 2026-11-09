@@ -41,23 +41,23 @@
 
 | | M01 | M02 | M03 | M04 | M05 | M06 | M07 | M08 | M09 | M10 | M11 | M12 | M13 | M14 | M15 | M16 | M17 | M18 | M19 | M20 | M21 | M22 | M23 | M24 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| M01 | — | Е | Е | Е | Ч | Е | Е | Е | Е | Е | Н | Ч | Е | Е | Е | Е | Ч | Е | Е | Е | н/п | Е | Н | Н |
+| M01 | — | Е | Е | Е | Е | Е | Е | Е | Е | Е | Е | Ч | Е | Е | Е | Е | Е | Е | Е | Е | н/п | Е | Н | Н |
 | M02 | Е | — | н/п | н/п | Е | Е | н/п | Е | Ч | н/п | н/п | Е | Е | н/п | н/п | н/п | н/п | н/п | н/п | Е | Н | Е | н/п | Е |
 | M03 | Е | н/п | — | Н | Н | Е | н/п | Е | Е | н/п | н/п | Е | Е | Н | Е | Н | Н | н/п | н/п | Е | Н | н/п | н/п | Н |
-| M04 | Е | н/п | Н | — | Н | Е | н/п | Н | Е | н/п | н/п | Н | н/п | Е | н/п | Е | н/п | Е | н/п | Е | Н | Ч | н/п | Н |
-| M05 | Ч | Е | Н | Н | — | Е | Е | Н | Е | Н | Е | Е | Е | Н | Е | Е | Н | Е | Н | Н | Е | Н | Е | Е |
+| M04 | Е | н/п | Н | — | Н | Е | н/п | Н | Е | н/п | н/п | Е | н/п | Е | н/п | Е | н/п | Е | н/п | Е | Н | Ч | н/п | Н |
+| M05 | Е | Е | Н | Н | — | Е | Е | Н | Е | Н | Е | Е | Е | Е | Е | Е | Е | Е | Н | Н | Е | Н | Е | Е |
 | M06 | Е | Е | Е | Е | Е | — | Е | Н | н/п | Н | н/п | н/п | н/п | н/п | н/п | н/п | н/п | н/п | н/п | Е | Е | н/п | н/п | Е |
 | M07 | Е | н/п | н/п | н/п | Е | Е | — | Е | н/п | н/п | н/п | н/п | н/п | н/п | н/п | н/п | Е | н/п | н/п | Е | Е | н/п | Е | Н |
 | M08 | Е | Е | Е | Н | Н | Н | Е | — | Е | Н | Ч | Е | н/п | Е | н/п | Е | н/п | н/п | Е | Е | Н | н/п | Е | Н |
 | M09 | Е | Ч | Е | Е | Е | н/п | н/п | Е | — | Н | Е | Е | Н | Е | Е | Е | Н | Е | Е | Е | Н | н/п | н/п | Н |
 | M10 | Е | н/п | н/п | н/п | Н | Н | н/п | Н | Н | — | Е | н/п | н/п | Е | н/п | н/п | Н | н/п | н/п | Е | Н | н/п | н/п | Е |
-| M11 | Н | н/п | н/п | н/п | Е | н/п | н/п | Ч | Е | Е | — | Е | н/п | Е | н/п | Е | Е | н/п | н/п | Е | Н | н/п | н/п | Н |
-| M12 | Ч | Е | Е | Н | Е | н/п | н/п | Е | Е | н/п | Е | — | Ч | Е | Е | Е | Е | н/п | н/п | Е | н/п | Е | Е | Н |
+| M11 | Е | н/п | н/п | н/п | Е | н/п | н/п | Ч | Е | Е | — | Е | н/п | Е | н/п | Е | Е | н/п | н/п | Е | Н | н/п | н/п | Н |
+| M12 | Ч | Е | Е | Е | Е | н/п | н/п | Е | Е | н/п | Е | — | Ч | Е | Е | Е | Е | н/п | н/п | Е | н/п | Е | Е | Н |
 | M13 | Е | Е | Е | н/п | Е | н/п | н/п | н/п | Н | н/п | н/п | Ч | — | н/п | Е | н/п | Е | н/п | н/п | Е | н/п | Е | н/п | н/п |
-| M14 | Е | н/п | Н | Е | Н | н/п | н/п | Е | Е | Е | Е | Е | н/п | — | н/п | н/п | н/п | н/п | н/п | Е | н/п | Е | н/п | н/п |
+| M14 | Е | н/п | Н | Е | Е | н/п | н/п | Е | Е | Е | Е | Е | н/п | — | н/п | н/п | н/п | н/п | н/п | Е | н/п | Е | н/п | н/п |
 | M15 | Е | н/п | Е | н/п | Е | н/п | н/п | н/п | Е | н/п | н/п | Е | Е | н/п | — | н/п | н/п | н/п | н/п | Е | н/п | Н | н/п | Н |
 | M16 | Е | н/п | Н | Е | Е | н/п | н/п | Е | Е | н/п | Е | Е | н/п | н/п | н/п | — | Е | н/п | н/п | Е | Е | Н | н/п | Е |
-| M17 | Ч | н/п | Н | н/п | Н | н/п | Е | н/п | Н | Н | Е | Е | Е | н/п | н/п | Е | — | н/п | н/п | Е | Н | Е | Е | н/п |
+| M17 | Е | н/п | Н | н/п | Е | н/п | Е | н/п | Н | Н | Е | Е | Е | н/п | н/п | Е | — | н/п | н/п | Е | Н | Е | Е | н/п |
 | M18 | Е | н/п | н/п | Е | Е | н/п | н/п | н/п | Е | н/п | н/п | н/п | н/п | н/п | н/п | н/п | н/п | — | н/п | Е | н/п | н/п | н/п | Н |
 | M19 | Е | н/п | н/п | н/п | Н | н/п | н/п | Е | Е | н/п | н/п | н/п | н/п | н/п | н/п | н/п | н/п | н/п | — | Е | н/п | Е | н/п | н/п |
 | M20 | Е | Е | Е | Е | Н | Е | Е | Е | Е | Е | Е | Е | Е | Е | Е | Е | Е | Е | Е | — | Е | Е | Е | Е |
@@ -98,12 +98,12 @@
 | 3-8 | `StoreGraphTests.plan_GroupMinimumShortage_PostsChop` | минимум `#logs` 80 → `chop_oak_log` | рубка валит дерево, склад ждёт | ОК | слабо |
 | 3-9 | `ChopToolGraphTests.case68_LogsToPlanksTableAxe_ThenChopWithAxe` | доски → верстак → деревянный топор → chop | крафт идёт до рубки, рубит топором | ОК | слабо |
 | 3-12 | `CrossLifeWorkScenarioTests.chop_ThreatAtChopper_DefendAtCeilingAndChopStaysPosted` | defend 100 выше рубки, defend первым билетом | защита `defend`, затем `chop_tree` | ОК | полный |
-| 3-13 | `CrossFleeScenarioTests.flee_WhileChopping_GraphKeepsChopAndRetreatWaits` | retreat есть, chop остаётся ASSIGNED | рубящий дух не берёт бегство | НЕ ОК | полный |
+| 3-13 | `CrossFleeScenarioTests.flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard` | retreat 100 вытесняет рубку, рубка возвращается PENDING | рубящий дух уходит от мобов, дерево берёт другой | ОК | полный |
 | 3-15 | `GraphNightDefenseTests.plan_NightAndFarTree_DoesNotGiveDistantGather` | ночью нет далёкой добычи | NightLeash не пускает духа за радиус | ОК | слабо |
 | 3-20 | `ChopToolGraphTests.case70_AxeBroke_TicketStaysWithSpiritAndSameTree` | тот же билет рубки остаётся за духом | поломка топора не отдаёт дерево другому | ОК | слабо |
 | 4-6 | `CleanupCasesTests.cleanup_FillDirtInStock_DoesNotDigAgain` | засыпка берёт землю со склада | новая добыча земли не ставится | ОК | слабо |
 | 4-9 | `GraphPlannerTests.plan_NoIronPickaxe_LowersMineCoal` | железная кирка поднимает крафт и топит шахту | шахта ждёт инструмент, а не копает руками | ОК | слабо |
-| 4-14 | `CrossHungerScenarioTests.hunger_NoFoodInStock_HungrySpiritGetsFoodNotMine` | еды нет: `event:hungry:hunt` 60 выше `mine_coal` 54, без источника `event:hungry:wait_food` 56 выше шахты | голодный дух охотится или ждёт, сытый получает шахту | ОК | полный |
+| 4-14 | `CrossVitalScenarioTests.vital_HungryOrInjured_OrdinaryWorkIsBlockedAndVitalChainPreempts` | еды нет: охота в верхней полосе приоритетов выше шахты; VitalGate не отдаёт шахту голодному и вытесняет её ради еды | голодный дух охотится или ждёт, сытый получает шахту | ОК | полный |
 | 4-16 | `CrossSettlementScenarioTests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool` | tool_worn без наковальни невыполним | изношенная кирка продолжает шахту | ОК | полный |
 | 4-18 | `CrossSettlementScenarioTests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | тьма шахты → mine_coal 82 первым | уголь добывается шахтой | ОК | полный |
 | 4-20 | `GraphPlannerTests.plan_NoCoal_PostsMineAndCharcoal` | `mine_coal` и `smelt_charcoal` | уголь добывается, затем жжётся | ОК | слабо |
@@ -111,8 +111,8 @@
 | 5-7 | `BuildPlanCasesTests.plan_StrayBesidePlannedHouse_DemolishesOnlyStray` | лишний забор → `demolish_stray` | снос убирает только чужое, дом не трогает | ОК | слабо |
 | 5-9 | `StageOneAcceptanceTests.plan_FencePart_CraftsFromOwnWoodInsteadOfWithdraw` | деталь забора крафтится из своего дерева | крафт закрывает нехватку без похода в сундук | ОК | полный |
 | 5-11 | `FarmGraphTests.plan_PenAbsentAtStageTwo_GraphDemandsPen` | на этапе 2 нет загона → стройка загона | животноводство ждёт постройку | ОК | слабо |
-| 5-12 | `CrossBattleWorkScenarioTests.combat_MobsAtBuilderAndChopper_DefendCeilingButWorkStays` | defend 100, стройка `building:hut` остаётся | строитель не берёт retreat и строит под мобами | НЕ ОК | полный |
-| 5-13 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_GraphPostsRetreatButDispatchKeepsBuilderBusy` | retreat есть в графе, но стройка остаётся ASSIGNED | занятый строитель не берёт бегство | НЕ ОК | полный |
+| 5-12 | `CrossBattleWorkScenarioTests.combat_MobsAtBuilderAndChopper_RetreatPreemptsWork` | defend 100, retreat 96 вытесняет стройку | строитель бросает хижину, рубка второго ждёт | ОК | полный |
+| 5-13 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard` | retreat 100 вытесняет стройку, стройка возвращается PENDING | строитель уходит от мобов, хижину достраивает другой | ОК | полный |
 | 5-15 | `CrossLifeWorkScenarioTests.night_FarChopAndNearBuild_NoDistantChoppingButBuildStays` | ночью `building:hut` выполним | стройка на участке продолжается | ОК | полный |
 | 5-16 | `GraphRepairPlannerTests.repair_DamagedHut_ConsumesExactlyMissingItems` | ремонт заказывает ровно недостающее | ремонт строит схему из недостающих блоков | ОК | слабо |
 | 5-18 | `RepairPlanTests.target_LightingPlan_NoRepairScheme` | свет в плане этапа | ремонт света идёт без схемы постройки | ОК | слабо |
@@ -137,7 +137,7 @@
 | 8-23 | `CrossSupplyScenarioTests.storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace` | склад переполнен → building:warehouse и store_space | стройка склада и раскладка `deposit` | ОК | полный |
 | 9-11 | `FarmGraphTests.plan_SheepInSheepPen_ShearingIsWork` | овца в загоне → стрижка | инструмент стрижёт овцу | ОК | слабо |
 | 9-12 | `CrossSupplyScenarioTests.combat_WoundedWithoutArmor_FightsBeforeCraftingArmor` | craft_armor в графе | крафт брони идёт действием `craft` | ОК | полный |
-| 9-14 | `CrossFarmSupplyScenarioTests.hunger_NoFoodButExpeditionReady_ExpeditionGoesWhileSpiritStarves` | `craft_food` без пшеницы невыполним | еда не выдумывается крафтом | ОК | полный |
+| 9-14 | `CrossFarmSupplyScenarioTests.hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave` | `craft_food` без пшеницы невыполним | еда не выдумывается крафтом | ОК | полный |
 | 9-15 | `CrossFarmSupplyScenarioTests.night_DangerAndThreat_CraftWaitsBehindRetreat` | ночной крафт кирки 39 | retreat выше крафта, сон под мобом не идёт | ОК | полный |
 | 9-16 | `CrossSettlementScenarioTests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool` | наковальня + слиток → repair_tool выполним | ремонт идёт действием `repair_tool` | ОК | полный |
 | 9-18 | `CrossSettlementScenarioTests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | уголь → craft_torch выполним | крафт факела идёт после угля | ОК | полный |
@@ -161,10 +161,10 @@
 | 12-23 | `CrossBattleWorkScenarioTests.combat_RaidAndStrategistOrder_DefendOutranksFenceAndWarehouse` | defend 100, заказ склада стратегу | заказ не отменяет бой | ОК | полный |
 | 13-15 | `CrossFleeScenarioTests.flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow` | retreat выше sleep | механика сна под мобом спать не даёт | ОК | полный |
 | 13-17 | `CrossFleeScenarioTests.flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow` | бегство через ворота | ворота закрываются после перехода | ОК | полный |
-| 13-20 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_GraphPostsRetreatButDispatchKeepsBuilderBusy` | retreat на доске, стройка не снята | доска не бросает работу ради бегства | НЕ ОК | полный |
+| 13-20 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard` | retreat 100 вытесняет стройку, стройка возвращается PENDING | доска возвращает работу и отдаёт бегство | ОК | полный |
 | 13-22 | `CrossFleeScenarioTests.flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow` | retreat выше expedition | отход важнее похода | ОК | полный |
-| 14-20 | `CrossHungerScenarioTests.hunger_NoFoodInStock_HungrySpiritGetsFoodNotMine` | голодный дух: добыча еды (охота/рыбалка) выше шахты, без источника — ожидание выше шахты | голодный дух не копает, сытый копает | ОК | полный |
-| 14-22 | `CrossFarmSupplyScenarioTests.hunger_NoFoodButExpeditionReady_ExpeditionGoesWhileSpiritStarves` | поход выполним, еды нет | поход уходит, голодный дух остаётся — НЕ ОК | НЕ ОК | полный |
+| 14-20 | `CrossVitalScenarioTests.vital_HungryOrInjured_OrdinaryWorkIsBlockedAndVitalChainPreempts` | голодный дух: добыча еды выше шахты, без источника — ожидание выше шахты и диагноз стратегу | голодный дух не копает, сытый копает | ОК | полный |
+| 14-22 | `CrossFarmSupplyScenarioTests.hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave` | еды нет, поход выполним | голодному поход не выдаётся, его получает сытый дух | ОК | полный |
 | 15-20 | `GraphNightDefenseTests.plan_NightAndFarTree_DoesNotGiveDistantGather` | ночью далёкая рубка не выдаётся | граф и NightLeash согласованы | ОК | слабо |
 | 16-17 | `CrossSettlementScenarioTests.combat_BrokenFenceUnderRaid_DefendOutranksFenceRepair` | repair_fence выполним рядом с боем | ремонт ставит схему забора | ОК | полный |
 | 16-20 | `GraphRepairPlannerTests.repair_MoreMissing_RaisesWeight` | больше недостачи — выше вес ремонта | ремонт поднимается в очереди графа | ОК | слабо |
@@ -183,11 +183,13 @@
 | 21-23 | `WarehouseChainScenarioTests.stageTwoStage_StrategistOrder_MakesWarehouseTask` | заказ стратега на этапе 2 → склад | стройка склада идёт по заказу | ОК | полный |
 | 21-24 | `GraphStageGateTests.building_UnknownChunks_NotReady` | неизвестные чанки не закрывают постройку | этап ждёт аудита, а не «наверное, готово» | ОК | полный |
 | 22-23 | `WarehouseChainScenarioTests.stageTwoStage_StrategistOrder_MakesWarehouseTask` | заказ стратега и поход/склад | склад строится по узлу, а не по порогу | ОК | полный |
+| 1-5, 1-11, 1-17 | `CrossMovementPlanTests.movement_WorkCards_MoveToTargetThenAct` | работа ставится графом; маршрут — `goto` | стройка/кормление/забор идут после перехода, без телепорта | ОК | слабо |
+| 4-12, 5-14, 5-17 | `CrossSiegeScenarioTests.siege_LifeAboveWork_WorkStaysPosted` | defend 100 выше шахты 48; еда 55 выше стройки 54; забор 61 выше стройки | бой/еда/забор вытесняют работу, задачи остаются | ОК | полный |
 
 ## Итог
 
-Пар с общим тестом — 113, частично — 7, физически непересекающихся — 109, к доработке — 47.
-Вторая партия добавила 37 крупных сценариев; слабые «Е» помечены в колонке «сила».
+Пар с общим тестом — 119, частично — 5, физически непересекающихся — 109, к доработке — 43.
+Вторая партия добавила 37 сценариев, третья — вытеснение `retreat` и 6 пар; слабые «Е» — в колонке «сила».
 Непересекающиеся пары с обоснованием — `docs/testing/CROSS-MATRIX-NO-PAIR.md`; итог, техдолг и ревью —
 `docs/testing/CROSS-MATRIX-NOTES.md`.
 

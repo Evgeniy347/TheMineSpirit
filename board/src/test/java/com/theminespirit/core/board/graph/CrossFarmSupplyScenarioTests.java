@@ -2,19 +2,26 @@ package com.theminespirit.core.board.graph;
 
 import static com.theminespirit.core.board.graph.CrossActions.scripts;
 import static com.theminespirit.core.board.graph.CrossActions.supplyTarget;
-import static com.theminespirit.core.board.graph.CrossScene.chest;
-import static com.theminespirit.core.board.graph.CrossScene.damaged;
-import static com.theminespirit.core.board.graph.CrossScene.facts;
-import static com.theminespirit.core.board.graph.CrossScene.ids;
-import static com.theminespirit.core.board.graph.CrossScene.named;
-import static com.theminespirit.core.board.graph.CrossScene.plan;
-import static com.theminespirit.core.board.graph.CrossScene.spirit;
+import static com.theminespirit.core.board.graph.CrossActions.boardTicket;
+import static com.theminespirit.core.board.graph.CrossActions.candidates;
+import static com.theminespirit.core.board.graph.CrossActions.id;
+import static com.theminespirit.core.board.graph.CrossActions.board;
 import static com.theminespirit.core.board.graph.CrossScene.stageOne;
 import static com.theminespirit.core.board.graph.CrossScene.stageTwo;
-import static com.theminespirit.core.board.graph.CrossScene.task;
+import static com.theminespirit.core.board.graph.CrossScene.facts;
+import static com.theminespirit.core.board.graph.CrossScene.spirit;
 import static com.theminespirit.core.board.graph.CrossScene.threat;
-import static com.theminespirit.core.board.graph.CrossScene.ticketFor;
+import static com.theminespirit.core.board.graph.CrossScene.chest;
+import static com.theminespirit.core.board.graph.CrossScene.damaged;
+import static com.theminespirit.core.board.graph.CrossScene.plan;
 import static com.theminespirit.core.board.graph.CrossScene.tickets;
+import static com.theminespirit.core.board.graph.CrossScene.ticketFor;
+import static com.theminespirit.core.board.graph.CrossScene.task;
+import static com.theminespirit.core.board.graph.CrossScene.ids;
+import static com.theminespirit.core.board.graph.CrossScene.named;
+import static com.theminespirit.core.board.graph.CrossScene.FED;
+import static com.theminespirit.core.board.graph.CrossScene.HUNGRY;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -22,6 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.DemolitionScope;
+import com.theminespirit.core.board.DispatchRound;
+import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.hunger.HungerRules;
 import com.theminespirit.core.hunger.SpiritHunger;
@@ -88,8 +97,9 @@ class CrossFarmSupplyScenarioTests {
     }
 
     @Test
-    void hunger_NoFoodButExpeditionReady_ExpeditionGoesWhileSpiritStarves() {
+    void hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave() {
         GraphWorld world = stageTwo();
+        world.tools("spirit-2", 1);
         world.with("food", 0).with("wheat", 0).with("oak_log", 0).with("coal", 0);
         world.event("hungry").event("expedition_ready");
         GraphFacts facts = facts(named(spirit("spirit-1", 20, 4), spirit("spirit-2")));
@@ -104,11 +114,24 @@ class CrossFarmSupplyScenarioTests {
         assertFalse(craftFood.feasible(), "Пшеницы нет — еда не появляется крафтом из воздуха: " + ids(plan));
         assertTrue(
                 SpiritHunger.of(4, 0, 0).foodLevel() < HungerRules.defaults().eatFoodThreshold(),
-                "Сытость 4 ниже порога обеда: дух голоден, а поход всё равно уходит");
+                "Сытость 4 ниже порога обеда: дух голоден");
         assertEquals(
                 BoardCase.ACTIVITY_EXPEDITION,
                 expedition.boardCase(),
                 "Поход остаётся отдельным кейсом, а не подменяет еду");
+
+        GraphTickets.Result result = tickets(world, facts);
+        DispatchRound round = new DispatchRound(board(world, result), 0);
+        List<DispatchRound.Candidate> candidates = candidates(
+                world,
+                Map.of("spirit-1", HUNGRY, "spirit-2", FED),
+                Map.of("spirit-1", SpiritView.free(), "spirit-2", SpiritView.free()));
+        assertEquals(
+                "spirit-2",
+                round.choose(boardTicket(ticketFor(result, GraphTickets.id(expedition))), candidates)
+                        .map(DispatchRound.Candidate::name)
+                        .orElse(""),
+                "Голодный дух не уходит в поход, пока нужда жива: поход достаётся сытому, а голодный ждёт еду");
     }
 
     @Test
