@@ -15,7 +15,7 @@ from collections import Counter
 
 import search
 import sim_gpu
-from graph_model import BUILT, Graph, Planner, State, plan
+from graph_model import ABSENT, BUILT, PLANNED, Graph, Planner, State, plan
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -167,6 +167,72 @@ def test_life_player_fact():
     assert not any(task["id"].startswith("event:life_threat_player:")
                    for task in plan(graph, healthy)["tasks"]),         "Здоровый игрок без угроз не поднимает жизнь в Python"
     print("OK: факт здоровья игрока и коэффициенты жизни читаются из данных графа")
+
+
+def test_life_coefficient_vector():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    saved = graph.costs.life["weakHealth"]
+    graph.costs.life["weakHealth"] = 0.5
+    try:
+        vector = (("раненый 0.45", 9, True), ("целый 0.55", 11, False))
+        for label, health, expected in vector:
+            state = State({
+                "stage": 1,
+                "kits": {"spirit-1": {}},
+                "events": [],
+                "facts": {
+                    "spirits": {},
+                    "threats": [],
+                    "players": [{"name": "Steve", "position": {"x": 0, "y": 64, "z": 0},
+                                 "health": health, "maxHealth": 20, "food": 20}],
+                },
+            })
+            raised = any(task["id"].startswith("event:life_threat_player:")
+                         for task in plan(graph, state)["tasks"])
+            assert raised == expected, \
+                "Вектор фактов жизни " + label + ": порог из graph.json даёт " + str(expected) + ", а не " + str(raised)
+    finally:
+        graph.costs.life["weakHealth"] = saved
+    print("OK: события жизни выводятся из порога graph.json, а не из константы Python")
+
+
+def test_food_need_band():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
+        cases = json.load(handle)
+    case = next((item for item in cases if "food_stage_two" in item.get("mutations", ())), None)
+    assert case is not None, "В conformance есть случай stage 2 с пустой едой и углём"
+    tasks = {task["id"]: task for task in plan(graph, State(case["state"]))["tasks"]}
+    mine = tasks["mine_coal"]
+    harvest = tasks.get("event:hungry:harvest_crop")
+    assert harvest is not None and harvest["feasible"], \
+        "Поле построено — сбор урожая подключён к голоду: " + str(harvest)
+    food = ("event:hungry:hunt", "event:hungry:fish", "event:hungry:harvest_crop",
+            "event:hungry:wait_food")
+    food_priorities = [tasks[task]["priority"] for task in food]
+    assert food_priorities == sorted(food_priorities, reverse=True), \
+        "Пути еды стоят по силе в полосе потребности: " + str(food_priorities)
+    assert min(food_priorities) >= graph.work_priority - 9, \
+        "Вся еда не ниже полосы потребности: " + str(food_priorities)
+    assert tasks["event:hungry:hunt"]["priority"] == graph.need_priority, \
+        "Голод с пустой едой идёт в полосе потребности: " + str(tasks["event:hungry:hunt"])
+    assert mine["priority"] <= graph.work_priority, \
+        "Шахта остаётся обычной работой под полосой потребности: " + str(mine["priority"])
+    fed = State({
+        "stage": 2,
+        "stock": {"food": 8, "coal": 0},
+        "kits": {"spirit-1": {}},
+        "buildings": {"wheat_field": "BUILT", "mine": "BUILT"},
+        "events": ["hungry"],
+        "world": [],
+    })
+    fed_tasks = {task["id"]: task for task in plan(graph, fed)["tasks"]}
+    eat = fed_tasks["event:hungry:eat"]["priority"]
+    assert eat >= graph.work_priority - 9, \
+        "Обед голодного духа с едой в запасе — тоже потребность: " + str(fed_tasks.get("event:hungry:eat"))
+    assert eat <= graph.need_priority, \
+        "Обед не выходит за верх полосы потребности: " + str(eat)
+    print("OK: голод на этапе 2 выше шахты, сбор урожая подключён")
 
 
 def dig_inputs(graph, facts):
@@ -975,6 +1041,43 @@ def test_stage_two_worlds():
     print("OK: миры этапа 2 доходят до этапа 3 (склад и загоны не держат этап)")
 
 
+def test_warehouse_decision():
+    """Склад строит только решение стратега: без него узел остаётся заявкой, этап не закрывается."""
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    world = sim_gpu.World.settled(graph)
+    world.stage = 2
+    world.warehouse_order = 0
+    for building in graph.buildings.values():
+        if building.stage < 2:
+            world.buildings[building.id] = BUILT
+        elif building.stage == 2 and not building.optional:
+            world.buildings[building.id] = PLANNED
+        else:
+            world.buildings[building.id] = ABSENT
+    world.buildings["warehouse"] = ABSENT
+    world.buildings["warehouse_2"] = ABSENT
+
+    tasks = {task["id"]: task for task in world.plan()["tasks"]}
+    assert "building:warehouse" not in tasks, \
+        "Без решения стратега граф не ставит склад: " + str(sorted(tasks))
+    assert any(notice.get("building") == "warehouse" for notice in world.plan()["notices"]), \
+        "Склад без решения остаётся заявкой стратегу: " + str(world.plan()["notices"])
+    outcome = sim_gpu.run(world.copy(), limit=1600)
+    assert not outcome["finished"] and outcome["stage"] == 2, \
+        "Без решения стратега этап 2 не закрывается складом: " + str(outcome["stuck"])
+
+    decided = world.copy()
+    decided.warehouse_order = 4
+    decided.buildings["warehouse"] = PLANNED
+    tasks = {task["id"]: task for task in decided.plan()["tasks"]}
+    assert "building:warehouse" in tasks, \
+        "С решением стратега граф ставит склад: " + str(sorted(tasks))
+    outcome = sim_gpu.run(decided.copy(), limit=4000)
+    assert outcome["finished"] and outcome["stage"] >= 3, \
+        "С решением стратега этап 2 закрывается складом: " + str(outcome["stuck"])
+    print("OK: решение стратега о складе — факт модели: без него склад не строится")
+
+
 def test_failure_memory():
     """Память неудач в Python: цель отдельно, узел по разным целям (GraphFailureMemoryTests)."""
     base = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
@@ -1207,6 +1310,7 @@ if __name__ == "__main__":
         test_fragments()
         test_life_priority()
         test_life_player_fact()
+        test_food_need_band()
         test_dig_inputs()
         test_area_nodes()
         test_store_nodes()
@@ -1238,6 +1342,7 @@ if __name__ == "__main__":
         test_base_worlds()
         test_tool_condition_and_soil()
         test_stage_two_worlds()
+        test_warehouse_decision()
         test_failure_memory()
         test_choice_mechanics()
         test_recipe_weights()

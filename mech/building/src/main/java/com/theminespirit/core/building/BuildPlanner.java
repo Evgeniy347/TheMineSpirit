@@ -403,15 +403,15 @@ public final class BuildPlanner {
         excluded.add(feet);
         List<BlockCoord> cells =
                 targets.stream().map(Schematic.PlacedEntry::pos).toList();
-        ReachPlanner.World world = world(lastStep);
+        ReachPlanner.World standWorld = BuildStandLevel.atOrAbove(world(lastStep), schemeCells);
         Optional<BlockCoord> stand = lastStep
-                ? ReachPlanner.nextStandFromAfar(reach, feet, cells, world, excluded, schemeCells)
-                : ReachPlanner.nextStand(reach, feet, cells, world, excluded, schemeCells);
+                ? ReachPlanner.nextStandFromAfar(reach, feet, cells, standWorld, excluded, schemeCells)
+                : ReachPlanner.nextStand(reach, feet, cells, standWorld, excluded, schemeCells);
         if (stand.isEmpty() && !lastStep) {
-            stand = ReachPlanner.nextStandFromAfar(reach, feet, cells, world, excluded, schemeCells);
+            stand = ReachPlanner.nextStandFromAfar(reach, feet, cells, standWorld, excluded, schemeCells);
         }
         if (stand.isEmpty()) {
-            stand = ReachPlanner.nextStandFromAfar(reach, feet, cells, world, excluded, standBlockers);
+            stand = ReachPlanner.nextStandFromAfar(reach, feet, cells, standWorld, excluded, standBlockers);
         }
         current = null;
         if (stand.isEmpty()) {
@@ -637,7 +637,7 @@ public final class BuildPlanner {
             return true;
         }
         Schematic.PlacedEntry entry = primaryAt.get(cell);
-        if (entry != null && SchematicBlocks.isFloor(entry.block())) {
+        if (BuildStandLevel.isAction(entry) || (entry != null && SchematicBlocks.isFloor(entry.block()))) {
             return true;
         }
         if (!touched.contains(cell)) {

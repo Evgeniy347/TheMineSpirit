@@ -47,12 +47,14 @@ final class Replanter {
     private int skipped;
     private boolean lackedSaplings;
     private final boolean areaAllowed;
+    private final boolean areaReplant;
     private boolean areaPlanned;
     private final @Nullable TownPlan town;
 
-    Replanter(SpiritEntity spirit, TreeSpecies species, List<BlockPos> cells, TreeView view) {
+    Replanter(SpiritEntity spirit, TreeSpecies species, List<BlockPos> cells, TreeView view, boolean areaReplant) {
         this.spirit = spirit;
         this.town = townOf(spirit);
+        this.areaReplant = areaReplant;
         this.saplingItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(species.saplingId()));
         this.saplingState = Block.byItem(saplingItem).defaultBlockState();
         this.data = DataTables.INSTANCE.replant().current();
@@ -70,7 +72,7 @@ final class Replanter {
     State tick() {
         while (true) {
             if (index >= targets.size()) {
-                if (!areaPlanned && areaAllowed) {
+                if (!areaPlanned && areaAllowed && areaReplant) {
                     planArea();
                     areaPlanned = true;
                     if (index < targets.size()) {

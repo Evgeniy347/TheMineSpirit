@@ -462,6 +462,18 @@ def life_priority(state, event, tasks, task, maximum):
     return min(maximum, max(0, int(math.floor(maximum * severity * share + 0.5))))
 
 
+VITAL_BAND = 9
+
+
+def vital_priority(task, tasks, work_max):
+    """VitalNeeds.priority: задача нужды в полосе над обычной работой."""
+    if work_max <= 0:
+        return 0
+    base = int(task.get("base", 0))
+    above = len({int(item.get("base", 0)) for item in tasks if int(item.get("base", 0)) > base})
+    return max(0, work_max - min(VITAL_BAND, above))
+
+
 class Choice:
     """GraphChoice: правила выбора (штраф/добавка), нейтральные по умолчанию."""
 
@@ -701,7 +713,8 @@ class Graph:
         self.build_ready_boost = int(data.get("buildReadyBoost", 0))
         self.build_start_share = float(data.get("buildStartShare", 1.0))
         self.max_priority = int(data.get("maxPriority", 100))
-        self.work_priority = self.max_priority - 1 if self.max_priority > 0 else self.max_priority
+        self.work_priority = self.max_priority - 2 if self.max_priority > 1 else self.max_priority
+        self.need_priority = self.max_priority - 1 if self.max_priority > 0 else self.max_priority
         self.tiers = list(data.get("tiers") or [])
         kit = data.get("kit") or {}
         self.kit_tiers = dict(kit.get("tiers") or {})
@@ -723,6 +736,7 @@ class Graph:
                 "push": dict(event.get("push") or {}),
                 "advice": list(event.get("advice") or []),
                 "life": bool(event.get("life", False)),
+                "vital": bool(event.get("vital", False)),
             }
         self._derive_repairs()
         self.groups = {k: list(v) for k, v in (data.get("groups") or {}).items()}
@@ -885,6 +899,7 @@ class State:
         self.player = dict(feedback.get("player") or {})
         self.players = list(self.facts.get("players") or [])
         self.failures = list(feedback.get("failures") or [])
+        self._base_events = list(self.events)
         self._derive_world_events()
 
     def _derive_world_events(self):
@@ -912,6 +927,7 @@ class State:
                 derived.append("repair_" + building_id)
         derived.extend(_life_events(self))
         derived.extend(_gear_events(self))
+        self.events = list(self._base_events)
         for name in derived:
             if name not in self.events:
                 self.events.append(name)
@@ -942,7 +958,7 @@ class State:
             "buildings": self.buildings,
             "materials": self.materials,
             "storageFreePercent": self.storage_free_percent,
-            "events": self.events,
+            "events": self._base_events,
             "world": self.world,
             "distances": self.distances,
             "stations": self.stations,
@@ -1026,7 +1042,7 @@ class Planner:
         self.graph = graph
         self.state = state
         state.life = graph.costs.life
-        state.events = list(state.events)
+        state._derive_world_events()
         self.flow = Flow()
         self.expanded = set()
         self.notices = {}
@@ -1427,7 +1443,30 @@ class Planner:
                 return dict(material)
         return dict(task.get("consumes") or {})
 
+    def event_applies(self, task):
+        world = task.get("world")
+        if world is not None and world not in self.state.world:
+            return False
+        empty = task.get("onlyWhenEmpty")
+        return empty is None or self.count(empty) == 0
+
+    def event_feasible(self, task):
+        if not self.event_applies(task):
+            return False
+        building = task.get("building")
+        fact = None if building is None else self.state.building_facts.get(building)
+        target = building is None or self.state.built(building) == BUILT or (
+            fact is not None and not fact.get("unknown", False)
+            and int(fact.get("auditPercent", 0)) > 0)
+        return self.stocked(self.event_consumes(task)) and target
+
+    def event_need(self, event, task):
+        need_event = any(candidate.get("onlyWhenEmpty") is not None for candidate in event["tasks"])
+        return need_event and self.event_feasible(task)
+
     def event_weight(self, task):
+        if not self.event_applies(task):
+            return 0
         base = int(task.get("base", 0))
         building = task.get("building")
         if building is None or building not in self.state.building_facts:
@@ -1722,15 +1761,16 @@ class Planner:
                 raise KeyError("Событие " + parts[1] + " задания не описано в графе")
             if event.get("life", False):
                 prio = life_priority(state, parts[1], event["tasks"], task, graph.max_priority)
+            elif event.get("vital", False):
+                ceiling = graph.need_priority \
+                    if any(item.get("onlyWhenEmpty") is not None for item in event["tasks"]) \
+                    else graph.work_priority
+                prio = vital_priority(task, event["tasks"], ceiling)
+            elif self.event_need(event, task):
+                prio = graph.need_priority
             consumes = self.event_consumes(task)
-            building = task.get("building")
-            fact = None if building is None else state.building_facts.get(building)
-            target = building is None or state.built(building) == BUILT or (
-                fact is not None and not fact.get("unknown", False)
-                and int(fact.get("auditPercent", 0)) > 0)
-            feasible = self.stocked(consumes) and target
             return {"id": key, "makes": task.get("id"), "spirit": None, "priority": prio,
-                    "consumes": consumes, "feasible": feasible, "chance": False,
+                    "consumes": consumes, "feasible": self.event_feasible(task), "chance": False,
                     "implemented": bool(task.get("implemented", True)),
                     "ticks": graph.costs.ticks(key, task.get("case"))}
         if key.startswith(BUILDING):

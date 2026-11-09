@@ -36,6 +36,13 @@ final class SchematicWorkPhase {
         if (host.spirit.isRemoved()) {
             return host.report.fail("дух исчез во время стройки по схеме");
         }
+        ScriptStatus escaping = host.pit.tickEscape();
+        if (escaping == ScriptStatus.RUNNING) {
+            return ScriptStatus.RUNNING;
+        }
+        if (escaping == ScriptStatus.FAILED) {
+            return host.report.fail("не удалось выйти из ямы: " + host.pit.escapeFailure());
+        }
         host.ticks++;
         if (host.pit.stalled(host.ticks, host.placed, host.cleared, host.trips)) {
             host.pit.stalledReport(host.feet(), host.placed, host.cleared, host.trips, host.blocked);

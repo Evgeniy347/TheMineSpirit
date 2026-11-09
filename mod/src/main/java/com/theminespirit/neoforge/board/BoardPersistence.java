@@ -10,7 +10,7 @@ final class BoardPersistence {
 
     static void persist(BoardService service) {
         if (service.store != null) {
-            BoardTargetsNbt.persist(service.store, service.board().snapshot(), service.targets);
+            BoardTargetsNbt.persist(service.store, service.board().snapshot(), service.targets, service.sources);
         }
     }
 

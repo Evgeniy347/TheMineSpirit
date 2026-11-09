@@ -276,7 +276,7 @@ final class TreeChop {
                 .filter(log -> log.y() == baseY)
                 .map(TreeChop::toPos)
                 .toList();
-        replanter = new Replanter(spirit, species, cells, view);
+        replanter = new Replanter(spirit, species, cells, view, !orchard);
         phase = Phase.REPLANT;
         return ChopOutcome.running();
     }

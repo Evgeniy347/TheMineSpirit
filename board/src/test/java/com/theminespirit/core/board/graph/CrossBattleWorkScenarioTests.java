@@ -1,6 +1,5 @@
 package com.theminespirit.core.board.graph;
 
-import static com.theminespirit.core.board.graph.CrossActions.board;
 import static com.theminespirit.core.board.graph.CrossActions.boardTicket;
 import static com.theminespirit.core.board.graph.CrossActions.id;
 import static com.theminespirit.core.board.graph.CrossActions.scripts;
@@ -193,7 +192,7 @@ class CrossBattleWorkScenarioTests {
         assertTrue(defend.priority() > eat.priority(), "Сначала отбиться, потом есть: " + ids(plan));
         assertTrue(
                 mine.priority() > eat.priority(),
-                "Шахта всё ещё выше еды: голодный дух копает раньше обеда — известный баг 12-14: " + ids(plan));
+                "Шахта всё ещё выше еды жизни: голодный дух копает раньше обеда — известный баг 12-14: " + ids(plan));
         assertEquals(
                 BoardCase.EAT_TO_FULL, eat.boardCase(), "Голод закрывается внешним кейсом EAT_TO_FULL, а не шахтой");
         assertEquals(

@@ -112,7 +112,7 @@ public final class BoardService {
                 store.markBuild(build);
                 store.update(board.snapshot());
             }
-            BoardTargetsNbt.restore(store, board, targets);
+            BoardTargetsNbt.restore(store, board, targets, sources);
         }
         journal.restore(board.ledger());
     }

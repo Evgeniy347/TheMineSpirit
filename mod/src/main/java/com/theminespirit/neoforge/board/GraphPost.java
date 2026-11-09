@@ -199,9 +199,7 @@ final class GraphPost {
 
     BlockCoord craftPoint() {
         if (craft == null) {
-            boolean yard = scan.facts().done().contains(BoardCase.STOCK_CHESTS);
-            craft = GraphTargets.craft(
-                    level, yard ? scan.stage().workYard() : scan.stage().anchor());
+            craft = GraphTargets.craftPoint(level, scan, service, graph, now);
         }
         return craft;
     }

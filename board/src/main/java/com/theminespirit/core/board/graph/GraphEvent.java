@@ -103,45 +103,42 @@ public record GraphEvent(
     }
 
     static int priority(GraphState state, SupplyGraph graph, String key, double value) {
-        return priority(
-                state.facts(),
-                graph.events(),
-                key,
-                value,
-                GraphPriorities.work(graph),
-                graph.maxPriority(),
-                graph.costs().life());
-    }
-
-    static int priority(
-            GraphFacts facts,
-            Map<String, GraphEvent> events,
-            String key,
-            double value,
-            int workMax,
-            int lifeMax,
-            GraphLife life) {
         if (key.startsWith("event:")) {
             int start = "event:".length();
             int end = key.indexOf(':', start);
             String name = end < 0 ? key.substring(start) : key.substring(start, end);
-            GraphEvent event = events.get(name);
-            String taskId = end < 0 ? "" : key.substring(end + 1);
-            GraphEvent.Task task = event == null
-                    ? null
-                    : event.tasks().stream()
-                            .filter(candidate -> candidate.id().equals(taskId))
-                            .findFirst()
-                            .orElse(null);
-            if (event != null && event.life() && task != null) {
-                return LifeThreats.priority(facts, event, task, lifeMax, life);
-            }
-            if (event != null && event.vital() && task != null) {
-                return VitalNeeds.priority(
-                        task.base(), event.tasks().stream().map(Task::base).toList(), workMax);
+            GraphEvent event = graph.events().get(name);
+            if (event != null) {
+                String taskId = end < 0 ? "" : key.substring(end + 1);
+                GraphEvent.Task task = event.tasks().stream()
+                        .filter(candidate -> candidate.id().equals(taskId))
+                        .findFirst()
+                        .orElse(null);
+                if (task != null) {
+                    if (event.life()) {
+                        return LifeThreats.priority(
+                                state.facts(),
+                                event,
+                                task,
+                                graph.maxPriority(),
+                                graph.costs().life());
+                    }
+                    if (event.vital()) {
+                        int ceiling = GraphEventFacts.needEvent(event)
+                                ? GraphPriorities.need(graph)
+                                : GraphPriorities.work(graph);
+                        return VitalNeeds.priority(
+                                task.base(),
+                                event.tasks().stream().map(Task::base).toList(),
+                                ceiling);
+                    }
+                    if (GraphEventFacts.need(graph, state, event, task)) {
+                        return GraphPriorities.need(graph);
+                    }
+                }
             }
         }
-        return GraphFlow.priority(value, workMax);
+        return GraphFlow.priority(value, GraphPriorities.work(graph));
     }
 
     static Map<String, Integer> counts(JsonNode node) {

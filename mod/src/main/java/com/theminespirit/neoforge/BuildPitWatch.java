@@ -4,7 +4,9 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.StallWatch;
 import com.theminespirit.core.building.BuildKey;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.script.GotoParams;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -29,12 +31,61 @@ final class BuildPitWatch {
     private final BuildKey buildKey;
     private final StallWatch watch = new StallWatch();
     private @Nullable BlockCoord lastStand;
+    private @Nullable DigOutScript escape;
+    private @Nullable String escapeFailure;
 
     BuildPitWatch(SpiritEntity spirit, Level level, SchematicSite site, BuildKey buildKey) {
         this.spirit = spirit;
         this.level = level;
         this.site = site;
         this.buildKey = buildKey;
+    }
+
+    void escape(BlockCoord feet) {
+        if (escape != null) {
+            return;
+        }
+        escapeFailure = null;
+        LOGGER.info(
+                "Стройка {}: дух в яме на y={} ниже низа схемы y={} — выходит на уровень постройки без телепорта",
+                buildKey,
+                feet.y(),
+                site.origin().y());
+        escape = new DigOutScript(spirit, new GotoParams(feet.x(), site.origin().y(), feet.z()));
+    }
+
+    @Nullable
+    ScriptStatus tickEscape() {
+        if (escape == null) {
+            return null;
+        }
+        ScriptStatus status = escape.tick();
+        if (status == ScriptStatus.RUNNING) {
+            return status;
+        }
+        if (status == ScriptStatus.FAILED) {
+            escapeFailure = escape.failureReason();
+        }
+        escape = null;
+        return status;
+    }
+
+    @Nullable
+    String escapeFailure() {
+        return escapeFailure;
+    }
+
+    void cancelEscape() {
+        if (escape != null) {
+            escape.cancel();
+            escape = null;
+        }
+    }
+
+    void suspendEscape() {
+        if (escape != null) {
+            escape.suspend();
+        }
     }
 
     boolean stalled(long ticks, int placed, int cleared, int trips) {

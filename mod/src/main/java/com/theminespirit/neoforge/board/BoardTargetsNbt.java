@@ -24,7 +24,8 @@ final class BoardTargetsNbt {
 
     private BoardTargetsNbt() {}
 
-    static void restore(BoardStateStore store, Board board, Map<String, TicketTarget> targets) {
+    static void restore(BoardStateStore store, Board board, Map<String, TicketTarget> targets, BoardSources sources) {
+        sources.restoreGraphFailures(store.failures());
         targets.putAll(store.targets());
         Set<String> alive = new HashSet<>();
         for (BoardTicket ticket : board.all()) {
@@ -33,9 +34,11 @@ final class BoardTargetsNbt {
         targets.keySet().retainAll(alive);
     }
 
-    static void persist(BoardStateStore store, BoardState snapshot, Map<String, TicketTarget> targets) {
+    static void persist(
+            BoardStateStore store, BoardState snapshot, Map<String, TicketTarget> targets, BoardSources sources) {
         store.update(snapshot);
         store.updateTargets(targets);
+        store.updateFailures(sources.graphFailureSnapshots());
     }
 
     static ListTag write(Map<String, TicketTarget> targets) {

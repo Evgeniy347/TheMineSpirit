@@ -42,6 +42,33 @@ class WaterCrossingPlannerTests {
     }
 
     @Test
+    void total_MixedStock_SumsAllTypes() {
+        int total = WaterCrossingPlanner.total(Map.of(
+                "dirt", 26,
+                "gravel", 4,
+                "jungle_planks", 8));
+
+        assertEquals(
+                38,
+                total,
+                "мост может быть смешанным: у spirit-4 observe25 не было 30 блоков одного вида, но было 38 "
+                        + "расходных всего — считать надо весь запас, иначе мост отказывает на ровном месте");
+    }
+
+    @Test
+    void total_EmptyStock_Zero() {
+        assertEquals(0, WaterCrossingPlanner.total(Map.of()), "пустой инвентарь даёт ноль блоков на мост");
+    }
+
+    @Test
+    void total_NegativeCount_Throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> WaterCrossingPlanner.total(Map.of("dirt", -1)),
+                "отрицательный запас — ошибка входа: складывать его с настоящими блоками значит врать о длине моста");
+    }
+
+    @Test
     void cheapestAvailable_NullMap_Throws() {
         assertThrows(
                 NullPointerException.class,

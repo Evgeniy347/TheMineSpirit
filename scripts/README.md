@@ -11,6 +11,7 @@
 | [changed-modules.sh](changed-modules.sh) | путь → модуль → зависящие модули для `unit --changed` | `scripts/changed-modules.sh src/main/java` | ПК, сервер | кэш в `build/tmp` |
 | [gametest.sh](gametest.sh) | обёртка над `test.sh gametest` | `scripts/gametest.sh --full` | ПК, сервер | миры `build/gametest-run` |
 | [module-paths.sh](module-paths.sh) | общие переменные путей для скриптов | `scripts/module-paths.sh` | ПК, сервер | нет |
+| [python-bin.sh](python-bin.sh) | один выбор python, пропускает заглушки WindowsApps | `. scripts/python-bin.sh && python_bin` | ПК, сервер | нет |
 | [logq.sh](logq.sh) | поиск по базе логов: клетка, дух, задание, провалы | `scripts/logq.sh cell -181,68,-518 2` | ПК, сервер, копия | дочитывает JSONL в базу |
 | [logdb/logq.py](logdb/logq.py) | команды `logq`: `cell`, `spirit`, `failures`, `schema` | `python3 scripts/logdb/logq.py --db logs/events.db health` | ПК, сервер, копия | только база логов |
 | [logdb/loader.py](logdb/loader.py) | загрузчик JSONL и старых логов в SQLite (WAL, файл+смещение) | `python3 scripts/logdb/loader.py --db logs/events.db --events logs/events` | ПК, сервер, копия | пишет `logs/events.db` |

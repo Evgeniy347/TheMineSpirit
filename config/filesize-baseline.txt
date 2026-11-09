@@ -28,6 +28,8 @@ core/inventory/BaseKit.java	323
 core/inventory/BaseKitTests.java	321
 core/inventory/OverflowPolicyTests.java	464
 core/inventory/ValueTableTests.java	339
+core/movement/NavFuzzTests.java	1200
+core/movement/PitStairPlanner.java	319
 core/observation/WorldObservationTests.java	463
 core/plan/PlanValidatorRulesTests.java	359
 core/planner/AcquireScript.java	321

@@ -50,6 +50,26 @@ class SelfRescueTests {
     }
 
     @Test
+    void mayBreakEscaping_CellAboveHead_Allowed() {
+        BlockCoord aboveHead = new BlockCoord(FEET.x(), FEET.y() + SelfRescue.ESCAPE_HEIGHT, FEET.z());
+
+        assertTrue(
+                SelfRescue.mayBreakEscaping(aboveHead, FEET),
+                "клетку над головой (" + aboveHead + ") разбирают при выходе: иначе дух в яме не распрямится "
+                        + "и не шагнёт на край (observe25 B2)");
+    }
+
+    @Test
+    void mayBreakEscaping_CellAbovePocket_NotAllowed() {
+        BlockCoord abovePocket = new BlockCoord(FEET.x(), FEET.y() + SelfRescue.ESCAPE_HEIGHT + 1, FEET.z());
+
+        assertFalse(
+                SelfRescue.mayBreakEscaping(abovePocket, FEET),
+                "выше клетки над головой (" + abovePocket + ") карман выхода кончается: это уже блок плана, "
+                        + "его не трогают, иначе спасение разбирает постройку");
+    }
+
+    @Test
     void mayBreakEscaping_TwoCellsAhead_NotAllowed() {
         BlockCoord twoAhead = new BlockCoord(FEET.x() + 2, FEET.y() + 1, FEET.z());
 

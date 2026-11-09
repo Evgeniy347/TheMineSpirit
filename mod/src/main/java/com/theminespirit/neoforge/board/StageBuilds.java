@@ -79,7 +79,7 @@ public final class StageBuilds {
     }
 
     private static WallLayout fenceLayout(StageSite site) {
-        return WallLayout.of(DataTables.INSTANCE.presets().current(), StageSchemes.fence(site.stage()));
+        return WallLayout.of(DataTables.INSTANCE.presets().current(), StageSchemes.fenceAtomic(site.stage()));
     }
 
     record FencePart(StageWork work, boolean hasPieces) {}

@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.ExpeditionRule;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.StageRules;
@@ -55,7 +56,7 @@ final class GraphInputs {
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
         LifeInputs.Input life = LifeInputs.of(level, spirits, around.events());
         Set<String> events = new LinkedHashSet<>(life.events());
-        if (ExpeditionGate.ready(stock, level)) {
+        if (ExpeditionRule.ready(buildings.get("mine"), ExpeditionGate.ready(stock, level))) {
             events.add("expedition_ready");
         }
         if (ChestDemolition.pending(level, service)) {
@@ -91,7 +92,8 @@ final class GraphInputs {
                         around.distances(),
                         GraphFactInputs.stationCounts(graph, buildings))
                 .withOrders(GraphNames.need(CraftOrders.shortage(level)))
-                .withFacts(GraphStoreInputs.of(facts, level, graph));
+                .withFacts(
+                        GraphStoreInputs.of(facts, level, graph), graph.costs().life());
         GraphState more3 = More3Inputs.apply(
                 More2Inputs.apply(
                         MoreInputs.apply(

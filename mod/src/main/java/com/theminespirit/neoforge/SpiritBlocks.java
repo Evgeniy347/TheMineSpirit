@@ -53,6 +53,21 @@ public final class SpiritBlocks {
         SpiritLog.playerBlock(level, player.getGameProfile().getName(), "place", before, placed, pos, basis);
     }
 
+    public static void record(ServerLevel level, BlockPos pos, BlockState before, SpiritEntity spirit, String basis) {
+        SpiritLog.block(
+                level,
+                spirit,
+                "spirit",
+                spirit.displayName(),
+                "place",
+                before,
+                level.getBlockState(pos),
+                pos,
+                basis,
+                LogCause.PLACE,
+                "");
+    }
+
     public static void explosion(ServerLevel level, BlockPos pos, BlockState before) {
         SpiritLog.block(
                 level,

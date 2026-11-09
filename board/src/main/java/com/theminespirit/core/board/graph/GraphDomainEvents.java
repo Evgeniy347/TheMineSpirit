@@ -8,9 +8,13 @@ public final class GraphDomainEvents {
     private GraphDomainEvents() {}
 
     public static Set<String> of(GraphFacts facts, int stage) {
+        return of(facts, stage, GraphLife.DEFAULTS);
+    }
+
+    public static Set<String> of(GraphFacts facts, int stage, GraphLife life) {
         Set<String> events = new LinkedHashSet<>(GraphWorldEvents.of(facts));
         events.addAll(GearInputs.events(facts, stage));
-        events.addAll(LifeEvents.events(Set.of(), facts.threats(), List.of(), facts.players(), GraphLife.DEFAULTS));
+        events.addAll(LifeEvents.events(Set.of(), facts.threats(), List.of(), facts.players(), life));
         return Set.copyOf(events);
     }
 }

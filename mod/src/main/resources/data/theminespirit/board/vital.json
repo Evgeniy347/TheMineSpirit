@@ -6,7 +6,7 @@
       "gate": true,
       "reason": "голод",
       "blocked": "голод: еды нет и источника нет",
-      "allow": ["graph:event:hungry:"]
+      "allow": ["graph:event:hungry:", "graph:restock_food@"]
     },
     {
       "id": "injury",

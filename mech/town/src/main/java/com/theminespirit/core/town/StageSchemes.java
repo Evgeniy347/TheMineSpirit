@@ -1,5 +1,6 @@
 package com.theminespirit.core.town;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class StageSchemes {
@@ -20,5 +21,14 @@ public final class StageSchemes {
 
     public static List<String> fence(int stage) {
         return stage >= 2 ? WALL : FENCE;
+    }
+
+    public static List<String> fenceAtomic(int stage) {
+        if (stage >= 2) {
+            return WALL;
+        }
+        List<String> atomic = new ArrayList<>(FENCE);
+        atomic.add("fence_gate");
+        return List.copyOf(atomic);
     }
 }
