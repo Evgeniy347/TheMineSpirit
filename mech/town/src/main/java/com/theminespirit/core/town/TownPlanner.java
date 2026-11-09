@@ -195,7 +195,9 @@ public final class TownPlanner {
     private static TownStreets openStreets(
             TownStreets streets, List<Placement> placements, TownRules rules, BlockCoord anchor) {
         ColumnMask reserved = placements.stream()
-                .filter(place -> rules.entry(place.id()).orElseThrow().quarter() == TownEntry.Quarter.CENTER)
+                .filter(place -> rules.template(place.id())
+                        .filter(entry -> entry.quarter() == TownEntry.Quarter.CENTER)
+                        .isPresent())
                 .map(Placement::mask)
                 .reduce(ColumnMask::union)
                 .orElse(ColumnMask.rect(anchor.x(), anchor.z(), anchor.x(), anchor.z()));
