@@ -18,7 +18,8 @@ public record TownRules(Ground ground, Streets streets, Spacing spacing, List<To
     private static final Set<String> GROUND = Set.of("area", "probeRadius", "cliffStep", "slopeWeight", "slopeMax");
     private static final Set<String> STREETS = Set.of("main", "side", "ring", "ringInset", "blockSize");
     private static final Set<String> SPACING = Set.of("gap", "stageMargin", "chestFreePercent", "fenceStrip");
-    private static final Set<String> ENTRY = Set.of("id", "name", "width", "depth", "quarter", "level", "rotate");
+    private static final Set<String> ENTRY =
+            Set.of("id", "name", "width", "depth", "quarter", "level", "rotate", "field");
 
     public record Ground(int area, int probeRadius, int cliffStep, int slopeWeight, int slopeMax) {
         public Ground {
@@ -104,7 +105,8 @@ public record TownRules(Ground ground, Streets streets, Spacing spacing, List<To
                         JsonResource.integer(node.get("depth"), origin, "depth"),
                         TownEntry.Quarter.of(JsonResource.text(node.get("quarter"), origin, "quarter")),
                         flag(node, "level", origin),
-                        flag(node, "rotate", origin)));
+                        flag(node, "rotate", origin),
+                        flag(node, "field", origin)));
             }
             return new TownRules(
                     new Ground(

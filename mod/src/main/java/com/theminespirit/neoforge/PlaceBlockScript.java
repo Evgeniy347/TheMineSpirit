@@ -9,6 +9,7 @@ import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.PlaceBlockParams;
+import com.theminespirit.core.town.PlotProtection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +44,7 @@ final class PlaceBlockScript implements ScriptInstance {
         this.target = new BlockCoord(params.x(), params.y(), params.z());
         this.wanted = BlockStates.stateFor(blockId, properties(params.block(), state));
         this.safety = new LevelSafetyView(level);
-        this.placer = new BlockPlacer(spirit);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.PLAN_BUILD);
         this.approach = new Approach(spirit);
     }
 

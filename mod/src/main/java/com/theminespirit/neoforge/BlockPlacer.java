@@ -1,8 +1,6 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.building.BlockSupport;
 import com.theminespirit.core.building.SchematicActions;
-import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
@@ -14,7 +12,6 @@ import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.List;
 import java.util.Objects;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
@@ -23,10 +20,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.ChainBlock;
 import net.minecraft.world.level.block.ChestBlock;
-import net.minecraft.world.level.block.CropBlock;
-import net.minecraft.world.level.block.NetherWartBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
@@ -56,10 +50,6 @@ public final class BlockPlacer {
 
     private final SpiritEntity spirit;
     private final PlotProtection.Ground ground;
-
-    public BlockPlacer(SpiritEntity spirit) {
-        this(spirit, PlotProtection.Ground.PLAN_BUILD);
-    }
 
     public BlockPlacer(SpiritEntity spirit, PlotProtection.Ground ground) {
         this.spirit = Objects.requireNonNull(spirit, "Дух не может быть null: без него неизвестно, кто ставит");
@@ -172,7 +162,7 @@ public final class BlockPlacer {
     }
 
     private @Nullable Begin placementGuard(Level level, BlockPos target, BlockState state, boolean supportRequired) {
-        if (supportRequired && !hasSupport(level, target, state)) {
+        if (supportRequired && !PlaceSupport.hasSupport(level, target, state)) {
             return new Refused(
                     RefuseReason.NO_SUPPORT,
                     "под клеткой " + target.toShortString() + " нет опоры (ниже "
@@ -247,63 +237,5 @@ public final class BlockPlacer {
                 LivingEntity.class,
                 new AABB(target),
                 entity -> !entity.equals(spirit) && !entity.isRemoved() && !entity.isSpectator());
-    }
-
-    static boolean hasSupport(Level level, BlockPos target, BlockState state) {
-        if (state.getBlock() instanceof CropBlock || state.getBlock() instanceof NetherWartBlock) {
-            return state.canSurvive(level, target);
-        }
-        if (upperHalfOnLower(level, target, state)) {
-            return true;
-        }
-        if (hanging(state) || onPost(level, target, state)) {
-            return state.canSurvive(level, target);
-        }
-        return BlockSupport.hasSupport(
-                        (x, y, z, face) -> {
-                            BlockPos pos = new BlockPos(x, y, z);
-                            return level.getBlockState(pos).isFaceSturdy(level, pos, direction(face));
-                        },
-                        target.getX(),
-                        target.getY(),
-                        target.getZ())
-                && state.canSurvive(level, target);
-    }
-
-    private static boolean onPost(Level level, BlockPos target, BlockState state) {
-        String block = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
-        String below = BuiltInRegistries.BLOCK
-                .getKey(level.getBlockState(target.below()).getBlock())
-                .toString();
-        return SchematicBlocks.standsOnCenter(block) && SchematicBlocks.isCenterPost(below);
-    }
-
-    private static boolean hanging(BlockState state) {
-        if (state.hasProperty(BlockStateProperties.HANGING)) {
-            return state.getValue(BlockStateProperties.HANGING);
-        }
-        return state.getBlock() instanceof ChainBlock;
-    }
-
-    private static Direction direction(BlockSupport.Face face) {
-        return switch (face) {
-            case UP -> Direction.UP;
-            case DOWN -> Direction.DOWN;
-            case NORTH -> Direction.NORTH;
-            case SOUTH -> Direction.SOUTH;
-            case EAST -> Direction.EAST;
-            case WEST -> Direction.WEST;
-        };
-    }
-
-    private static boolean upperHalfOnLower(Level level, BlockPos target, BlockState state) {
-        if (!state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)
-                || state.getValue(BlockStateProperties.DOUBLE_BLOCK_HALF) != DoubleBlockHalf.UPPER) {
-            return false;
-        }
-        BlockState lower = level.getBlockState(target.below());
-        return lower.is(state.getBlock())
-                && lower.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)
-                && lower.getValue(BlockStateProperties.DOUBLE_BLOCK_HALF) == DoubleBlockHalf.LOWER;
     }
 }

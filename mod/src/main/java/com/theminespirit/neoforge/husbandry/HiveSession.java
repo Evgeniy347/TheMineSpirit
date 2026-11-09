@@ -4,6 +4,7 @@ import com.theminespirit.core.board.HiveRules;
 import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.BlockBreaker;
 import com.theminespirit.neoforge.BlockPlacer;
@@ -63,8 +64,7 @@ public final class HiveSession {
     private BlockPos hive;
     private BlockPos fireSpot;
     private BlockPos stand;
-    private int done;
-    private int fireWaits;
+    private int done, fireWaits;
 
     private HiveSession(SpiritEntity spirit, int searchRadius, int goal) {
         this.spirit = Objects.requireNonNull(spirit, "Дух не может быть null: без него некому собирать улей");
@@ -205,7 +205,7 @@ public final class HiveSession {
     }
 
     private void fire() {
-        BlockPlacer placer = new BlockPlacer(spirit);
+        BlockPlacer placer = new BlockPlacer(spirit, PlotProtection.Ground.NONE);
         BlockPlacer.Begin begin = placer.begin(fireSpot, BlockStates.stateFor(CAMPFIRE_ID), CAMPFIRE_ID);
         if (begin instanceof BlockPlacer.Started) {
             if (!CampfireBlock.isSmokeyPos(level, hive)) {

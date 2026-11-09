@@ -5,8 +5,6 @@ import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.HashMap;
-import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -18,9 +16,7 @@ public final class PlotBreakLog {
     public static final String TAG = "[plot-break]";
     public static final int DEDUPE_TICKS = 200;
     private static final int STACK_FRAMES = 3;
-    private static final int MAX_KEYS = 4096;
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final Map<String, Long> SEEN = new HashMap<>();
 
     private PlotBreakLog() {}
 
@@ -58,14 +54,11 @@ public final class PlotBreakLog {
         String key =
                 pos.getX() + "," + pos.getY() + "," + pos.getZ() + "|" + (refusal ? "refuse|" : "break|") + subject;
         long now = level.getGameTime();
-        Long seen = SEEN.get(key);
-        if (seen != null && now - seen < DEDUPE_TICKS) {
+        PlotBreakSeen seen = PlotBreakSeen.get(level);
+        if (seen.recently(key, now, DEDUPE_TICKS)) {
             return;
         }
-        if (SEEN.size() > MAX_KEYS) {
-            SEEN.clear();
-        }
-        SEEN.put(key, now);
+        seen.remember(key, now);
         if (refusal) {
             LOGGER.warn(
                     "{} {}: отказ ломать {} в ({}, {}, {}) — {}; {}; задание {}; действие {}; основание {}; причина {}; "

@@ -17,6 +17,7 @@ public record StageSite(
         Placement orchard,
         List<BlockCoord> orchardSaplings,
         List<OrchardPlot> extraOrchards,
+        List<Placement> fields,
         ColumnMask level,
         ColumnMask streets,
         ColumnMask enclosure,
@@ -49,6 +50,8 @@ public record StageSite(
                 orchardSaplings, "Места деревьев сада не могут быть null: пусто — пустой список"));
         extraOrchards = List.copyOf(
                 Objects.requireNonNull(extraOrchards, "Дополнительные сады не могут быть null: пусто — пустой список"));
+        fields =
+                List.copyOf(Objects.requireNonNull(fields, "Площадки полей не могут быть null: пусто — пустой список"));
         Objects.requireNonNull(level, "Площадки выравнивания не могут быть null");
         Objects.requireNonNull(streets, "Улицы плана не могут быть null: по ним дух не берёт материалы плана");
         Objects.requireNonNull(enclosure, "Огороженная область не может быть null");
@@ -147,6 +150,10 @@ public record StageSite(
         return streets.contains(x, z);
     }
 
+    public boolean fieldColumn(int x, int z) {
+        return fields.stream().anyMatch(field -> field.covers(x, z));
+    }
+
     public boolean planCell(int x, int y, int z) {
         if (y > anchor.y() + BUILDING_HEIGHT) {
             return false;
@@ -164,6 +171,7 @@ public record StageSite(
                 || yard.covers(x, z)
                 || orchard.covers(x, z)
                 || extraOrchardCell(x, z)
+                || fieldColumn(x, z)
                 || mine.covers(x, z);
     }
 
@@ -181,6 +189,9 @@ public record StageSite(
             }
             if (orchard.covers(x, z) || extraOrchardCell(x, z)) {
                 return PlanBuilding.ORCHARD;
+            }
+            if (fieldColumn(x, z)) {
+                return PlanBuilding.FIELD;
             }
         }
         if (minePlan(x, z)) {
@@ -242,6 +253,9 @@ public record StageSite(
         if (orchard.covers(x, z) || extraOrchardCell(x, z) || orchardTree(x, y, z)) {
             return PlanBuilding.ORCHARD;
         }
+        if (fieldColumn(x, z)) {
+            return PlanBuilding.FIELD;
+        }
         if (ringPost(x, z) || fenceStrip.contains(x, z)) {
             return PlanBuilding.FENCE;
         }
@@ -252,15 +266,7 @@ public record StageSite(
     }
 
     public String protectionArea(int x, int y, int z) {
-        return switch (protectionBuilding(x, y, z)) {
-            case HOUSE -> "дом";
-            case YARD -> "двор";
-            case ORCHARD -> "сад";
-            case MINE -> "шахта";
-            case FENCE -> "ограда";
-            case STREET -> "улица";
-            case NONE -> "план поселения";
-        };
+        return protectionBuilding(x, y, z).area();
     }
 
     private boolean extraOrchardCell(int x, int z) {

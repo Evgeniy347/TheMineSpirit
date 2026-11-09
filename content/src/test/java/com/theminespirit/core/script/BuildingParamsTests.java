@@ -141,6 +141,33 @@ class BuildingParamsTests {
     }
 
     @Test
+    void buildSchematic_PreviousScheme_ComesFromTask() {
+        BuildSchematicParams params = BuildSchematicParams.from(Map.of(
+                "file", "stone_house",
+                "x", 0,
+                "y", 64,
+                "z", 0,
+                "previous", "hut_1"));
+
+        assertEquals(
+                "hut_1",
+                params.previous(),
+                "Старая схема едет в задании стройки: по её клеткам снимаются лишние блоки уровня, "
+                        + "а не угадываются метками духа в габарите");
+    }
+
+    @Test
+    void buildSchematic_BlankPrevious_TreatedAsAbsent() {
+        BuildSchematicParams params =
+                BuildSchematicParams.from(Map.of("file", "stone_house", "x", 0, "y", 64, "z", 0, "previous", " "));
+
+        assertEquals(
+                null,
+                params.previous(),
+                "Пустая старая схема — то же, что отсутствие: умолчание каталога не должно ронять стройку");
+    }
+
+    @Test
     void buildSchematic_RotationName_ParsesQuarterTurns() {
         BuildSchematicParams params = BuildSchematicParams.from(
                 Map.of("file", "house", "x", 0, "y", 64, "z", 0, "rotation", "clockwise_90", "segments", 0));
