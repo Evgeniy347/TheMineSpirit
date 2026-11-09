@@ -37,46 +37,11 @@ class MiningScenarioTests {
         Set<BlockCoord> dug = new HashSet<>();
         int rounds = 0;
         while (!remaining.isEmpty() && rounds++ < 20) {
-            List<Choice> chosen = new ArrayList<>();
-            Set<BlockCoord> takenTargets = new HashSet<>();
-            Set<BlockCoord> excluded = new HashSet<>();
-            for (int index = 0; index < spirits.size(); index++) {
-                MiningPlanner.Outcome outcome =
-                        MiningPlanner.next(spirits.get(index), remaining, world, excluded, stand -> true);
-                if (!(outcome instanceof MiningPlanner.Next next)) {
-                    continue;
-                }
-                if (takenTargets.contains(next.target())) {
-                    continue;
-                }
-                assertTrue(
-                        MiningSafety.canBreak(next.target(), world) instanceof BreakSafety.Safe,
-                        "Планировщик выбрал небезопасную цель " + next.target() + ": дух затопит выработку");
-                assertFalse(
-                        excluded.contains(next.stand()),
-                        "Два духа встали на одну стоянку " + next.stand() + ": второй не сможет копать");
-                takenTargets.add(next.target());
-                excluded.add(next.stand());
-                chosen.add(new Choice(index, next));
-            }
+            List<Choice> chosen = chooseRound(spirits, remaining, world);
             if (chosen.isEmpty()) {
                 break;
             }
-            for (Choice choice : chosen) {
-                MiningPlanner.Next next = choice.next();
-                assertTrue(
-                        MiningSafety.canStand(next.stand(), world),
-                        "Дух " + choice.spirit() + " выбрал стоянку " + next.stand() + " без пола или у опасности");
-                assertTrue(
-                        next.stand().y() - spirits.get(choice.spirit()).y() <= MiningTuning.MAX_STAND_RISE,
-                        "Стоянка " + next.stand() + " выше духа больше предела: он туда не поднимется");
-                spirits.set(choice.spirit(), next.stand());
-                stands.add(next.stand());
-                assertTrue(remaining.remove(next.target()), "Цель " + next.target() + " добыта дважды");
-                world.set(next.target().x(), next.target().y(), next.target().z(), Cell.PASSABLE);
-                minedBy.merge(choice.spirit(), 1, Integer::sum);
-                dug.add(next.target());
-            }
+            applyRound(chosen, spirits, remaining, world, minedBy, stands, dug);
         }
 
         assertEquals(
@@ -104,6 +69,57 @@ class MiningScenarioTests {
                     Cell.SOLID,
                     world.peek(new BlockCoord(stand.x(), FLOOR_Y, stand.z())),
                     "Стоянка " + stand + " без пола: дух упадёт или зависнет");
+        }
+    }
+
+    private static List<Choice> chooseRound(List<BlockCoord> spirits, List<BlockCoord> remaining, CellWorld world) {
+        List<Choice> chosen = new ArrayList<>();
+        Set<BlockCoord> takenTargets = new HashSet<>();
+        Set<BlockCoord> excluded = new HashSet<>();
+        for (int index = 0; index < spirits.size(); index++) {
+            MiningPlanner.Outcome outcome =
+                    MiningPlanner.next(spirits.get(index), remaining, world, excluded, stand -> true);
+            if (!(outcome instanceof MiningPlanner.Next next)) {
+                continue;
+            }
+            if (takenTargets.contains(next.target())) {
+                continue;
+            }
+            assertTrue(
+                    MiningSafety.canBreak(next.target(), world) instanceof BreakSafety.Safe,
+                    "Планировщик выбрал небезопасную цель " + next.target() + ": дух затопит выработку");
+            assertFalse(
+                    excluded.contains(next.stand()),
+                    "Два духа встали на одну стоянку " + next.stand() + ": второй не сможет копать");
+            takenTargets.add(next.target());
+            excluded.add(next.stand());
+            chosen.add(new Choice(index, next));
+        }
+        return chosen;
+    }
+
+    private static void applyRound(
+            List<Choice> chosen,
+            List<BlockCoord> spirits,
+            List<BlockCoord> remaining,
+            CellWorld world,
+            Map<Integer, Integer> minedBy,
+            Set<BlockCoord> stands,
+            Set<BlockCoord> dug) {
+        for (Choice choice : chosen) {
+            MiningPlanner.Next next = choice.next();
+            assertTrue(
+                    MiningSafety.canStand(next.stand(), world),
+                    "Дух " + choice.spirit() + " выбрал стоянку " + next.stand() + " без пола или у опасности");
+            assertTrue(
+                    next.stand().y() - spirits.get(choice.spirit()).y() <= MiningTuning.MAX_STAND_RISE,
+                    "Стоянка " + next.stand() + " выше духа больше предела: он туда не поднимется");
+            spirits.set(choice.spirit(), next.stand());
+            stands.add(next.stand());
+            assertTrue(remaining.remove(next.target()), "Цель " + next.target() + " добыта дважды");
+            world.set(next.target().x(), next.target().y(), next.target().z(), Cell.PASSABLE);
+            minedBy.merge(choice.spirit(), 1, Integer::sum);
+            dug.add(next.target());
         }
     }
 

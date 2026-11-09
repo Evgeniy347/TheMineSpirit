@@ -25,6 +25,8 @@ class StageConfirmationTests {
         assertEquals(2, confirmation.observe(1), "Второй плохой аудит этап не откатывает");
         assertEquals(1, confirmation.observe(1), "Третий одинаковый аудит — граница подтверждения отката");
         assertEquals(1, confirmation.stage(), "Этап откатился на подтверждённый мир");
+        assertEquals(1, confirmation.candidate(), "Кандидат после отката совпадает с новым этапом");
+        assertEquals(0, confirmation.streak(), "Подтверждённый откат начинает счёт подтверждений заново");
         assertEquals(1, confirmation.observe(1), "Откат держится, пока мир не восстановлен");
     }
 

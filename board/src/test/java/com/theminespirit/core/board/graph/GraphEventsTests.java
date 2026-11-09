@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.BoardCase;
@@ -39,6 +40,7 @@ class GraphEventsTests {
         GraphEvent repaired = GraphEvent.withRepairs(Map.of("building_damaged", template), Map.of("hut", building))
                 .get(GraphWorldEvents.REPAIR + "hut");
 
+        assertInstanceOf(GraphEvent.class, repaired, "повреждённая постройка обязана дать событие ремонта");
         assertTrue(
                 repaired != null && !repaired.tasks().isEmpty(), "повреждённая постройка обязана дать событие ремонта");
         assertEquals(

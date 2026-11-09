@@ -1,7 +1,15 @@
 package com.theminespirit.core.board.graph;
 
-import static com.theminespirit.core.board.graph.CrossActions.*;
-import static com.theminespirit.core.board.graph.CrossScene.*;
+import static com.theminespirit.core.board.graph.CrossActions.scripts;
+import static com.theminespirit.core.board.graph.CrossScene.chest;
+import static com.theminespirit.core.board.graph.CrossScene.damaged;
+import static com.theminespirit.core.board.graph.CrossScene.ids;
+import static com.theminespirit.core.board.graph.CrossScene.named;
+import static com.theminespirit.core.board.graph.CrossScene.plan;
+import static com.theminespirit.core.board.graph.CrossScene.spirit;
+import static com.theminespirit.core.board.graph.CrossScene.stageOne;
+import static com.theminespirit.core.board.graph.CrossScene.task;
+import static com.theminespirit.core.board.graph.CrossScene.threat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -14,24 +22,8 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class CrossSiegeScenarioTests {
-    @Test
-    void siege_LifeAboveWork_WorkStaysPosted() {
-        GraphWorld world = stageOne();
-        world.built("hut", Built.PLANNED).built("fence", Built.PLANNED);
-        world.with("oak_log", 0).with("oak_planks", 64).with("cobblestone", 64).with("dirt", 64);
-        world.with("coal", 8)
-                .with("torch", 0)
-                .with("stick", 64)
-                .with("iron_ingot", 64)
-                .with("food", 8)
-                .with("oak_fence", 16)
-                .with("birch_log", 8);
-        world.event("night")
-                .event("hungry")
-                .event("expedition_ready")
-                .event("more4_player_near")
-                .event("more5_mine_dark");
-        GraphFacts facts = new GraphFacts(
+    private static GraphFacts siegeFacts() {
+        return new GraphFacts(
                 named(spirit("spirit-1", 4, 2), spirit("spirit-2"), spirit("spirit-3")),
                 List.of(
                         threat("mob-a", "spirit-1", GraphFacts.TargetKind.SPIRIT, 1),
@@ -51,7 +43,26 @@ class CrossSiegeScenarioTests {
                 GraphFeedback.none(),
                 List.of(),
                 List.of());
-        GraphPlan plan = plan(world, facts);
+    }
+
+    @Test
+    void siege_LifeAboveWork_WorkStaysPosted() {
+        GraphWorld world = stageOne();
+        world.built("hut", Built.PLANNED).built("fence", Built.PLANNED);
+        world.with("oak_log", 0).with("oak_planks", 64).with("cobblestone", 64).with("dirt", 64);
+        world.with("coal", 8)
+                .with("torch", 0)
+                .with("stick", 64)
+                .with("iron_ingot", 64)
+                .with("food", 8)
+                .with("oak_fence", 16)
+                .with("birch_log", 8);
+        world.event("night")
+                .event("hungry")
+                .event("expedition_ready")
+                .event("more4_player_near")
+                .event("more5_mine_dark");
+        GraphPlan plan = plan(world, siegeFacts());
 
         GraphPlan.Task defend = task(plan, "event:life_threat:defend");
         GraphPlan.Task retreat = task(plan, "event:life_threat:retreat");

@@ -101,8 +101,13 @@ public final class SettlementTreeScreen extends Screen {
             return;
         }
         graphics.enableScissor(inner.x(), inner.y(), inner.x() + inner.width(), inner.y() + inner.height());
-        SettlementTree.Node hovered =
-                SettlementTreeView.draw(graphics, font, model, inner, offsetX, offsetY, mouseX, mouseY);
+        SettlementTree.Node hovered = SettlementTreeView.draw(
+                graphics,
+                font,
+                model,
+                inner,
+                new SettlementTreeView.Viewpoint((int) Math.round(offsetX), (int) Math.round(offsetY)),
+                new SettlementTreeView.Viewpoint(mouseX, mouseY));
         graphics.disableScissor();
         if (hovered != null) {
             graphics.renderComponentTooltip(font, SettlementTreeView.tooltip(hovered), mouseX, mouseY);

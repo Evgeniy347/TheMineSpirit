@@ -61,32 +61,9 @@ final class PlanDemolition {
             return;
         }
         String world = level.dimension().location().toString();
-        boolean yardReady = service.board().ledger().has(BoardCase.STOCK_CHESTS, 1)
-                && service.board().ledger().has(BoardCase.CRAFT_FURNACE, 1);
-        PlotPlanBlocks.Plan plan = PlotPlanBlocks.of(site);
         List<FloatingBlocks.Finding> findings = FloatingScanCycle.find(level, site, town.region());
-        Collected base = DemolitionCollect.collect(
-                new DemolitionCollect.Ctx(
-                        level, service, site, plan, yardReady, findings, UnreachableCellsStore.of(level)),
-                scope);
-        Collected collected =
-                scope == DemolitionScope.FLOATING ? base : FarmStray.withFarm(base, level, site, town, plan);
-        List<BlockCoord> candidates = collected.treeCells().isEmpty() ? collected.remove() : collected.treeCells();
-        List<BlockCoord> stray = collected.treeCells().isEmpty()
-                ? DemolitionKey.piece(candidates.stream()
-                        .distinct()
-                        .sorted(Comparator.comparingInt(BlockCoord::y)
-                                .reversed()
-                                .thenComparing(Comparator.naturalOrder()))
-                        .toList())
-                : DemolitionKey.treePiece(
-                        candidates.stream()
-                                .distinct()
-                                .sorted(Comparator.comparingInt(BlockCoord::y)
-                                        .reversed()
-                                        .thenComparing(Comparator.naturalOrder()))
-                                .toList(),
-                        collected.stand());
+        Collected collected = collect(level, service, site, town, scope, findings);
+        List<BlockCoord> stray = stray(collected);
         List<PlannedBlock> blocks = stray.stream()
                 .map(cell -> new PlannedBlock(cell, StagePlans.AIR))
                 .toList();
@@ -134,6 +111,34 @@ final class PlanDemolition {
                         List.of("blocks=" + stray.size(), "first=" + stray.get(0)),
                         null,
                         ConfigStamp.current()));
+    }
+
+    private static Collected collect(
+            ServerLevel level,
+            BoardService service,
+            StageSite site,
+            TownPlan town,
+            DemolitionScope scope,
+            List<FloatingBlocks.Finding> findings) {
+        boolean yardReady = service.board().ledger().has(BoardCase.STOCK_CHESTS, 1)
+                && service.board().ledger().has(BoardCase.CRAFT_FURNACE, 1);
+        PlotPlanBlocks.Plan plan = PlotPlanBlocks.of(site);
+        Collected base = DemolitionCollect.collect(
+                new DemolitionCollect.Ctx(
+                        level, service, site, plan, yardReady, findings, UnreachableCellsStore.of(level)),
+                scope);
+        return scope == DemolitionScope.FLOATING ? base : FarmStray.withFarm(base, level, site, town, plan);
+    }
+
+    private static List<BlockCoord> stray(Collected collected) {
+        List<BlockCoord> candidates = collected.treeCells().isEmpty() ? collected.remove() : collected.treeCells();
+        List<BlockCoord> sorted = candidates.stream()
+                .distinct()
+                .sorted(Comparator.comparingInt(BlockCoord::y).reversed().thenComparing(Comparator.naturalOrder()))
+                .toList();
+        return collected.treeCells().isEmpty()
+                ? DemolitionKey.piece(sorted)
+                : DemolitionKey.treePiece(sorted, collected.stand());
     }
 
     static int shown() {

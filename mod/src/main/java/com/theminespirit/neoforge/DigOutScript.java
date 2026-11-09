@@ -46,10 +46,6 @@ public final class DigOutScript implements ScriptInstance {
     private boolean routeFallback;
     private final DigOutRestore restore;
 
-    static ScriptFactory factory(SpiritEntity spirit) {
-        return params -> new DigOutScript(spirit, GotoParams.from(params), GotoParams.rescue(params));
-    }
-
     public DigOutScript(SpiritEntity spirit, GotoParams target) {
         this(spirit, target, false);
     }
@@ -70,6 +66,10 @@ public final class DigOutScript implements ScriptInstance {
                 placer,
                 !descending && !sealedNow && target.y() > spirit.blockPosition().getY(),
                 restore);
+    }
+
+    static ScriptFactory factory(SpiritEntity spirit) {
+        return params -> new DigOutScript(spirit, GotoParams.from(params), GotoParams.rescue(params));
     }
 
     public static boolean sealed(Level level, BlockPos feet) {

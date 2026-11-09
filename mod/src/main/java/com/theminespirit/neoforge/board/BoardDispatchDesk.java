@@ -145,22 +145,11 @@ final class BoardDispatchDesk {
                 transferWait.await(board, crafters, ticket, spirit, spirits, round);
                 continue;
             }
-            TaskNode plan;
-            try {
-                plan = JobLaunch.plan(ticket, target);
-            } catch (RuntimeException failure) {
-                if (RepairPlan.goalless(ticket, targets.get(ticket.id()))) {
-                    dropGoallessRepair(ticket);
-                    continue;
-                }
-                LOGGER.error(
-                        "Задание {} (кейс {}): план не собран: {}",
-                        ticket.id(),
-                        ticket.boardCase(),
-                        failure.getMessage());
-                dropUnplannedTransfer(ticket, round);
+            Optional<TaskNode> planned = planTicket(ticket, target, round);
+            if (planned.isEmpty()) {
                 continue;
             }
+            TaskNode plan = planned.orElseThrow();
             if (spirit.runsBackgroundTask()) {
                 LOGGER.info(
                         "Задание {} вытесняет фоновое занятие {} духа {}",
@@ -205,6 +194,21 @@ final class BoardDispatchDesk {
         return held <= 0
                 ? target
                 : target.withSupply(item, Math.min(CatalogLimits.COUNT_MAX, held + target.supplyCount()));
+    }
+
+    private Optional<TaskNode> planTicket(BoardTicket ticket, TicketTarget target, DispatchRound round) {
+        try {
+            return Optional.of(JobLaunch.plan(ticket, target));
+        } catch (RuntimeException failure) {
+            if (RepairPlan.goalless(ticket, targets.get(ticket.id()))) {
+                dropGoallessRepair(ticket);
+                return Optional.empty();
+            }
+            LOGGER.error(
+                    "Задание {} (кейс {}): план не собран: {}", ticket.id(), ticket.boardCase(), failure.getMessage());
+            dropUnplannedTransfer(ticket, round);
+            return Optional.empty();
+        }
     }
 
     private void dropGoallessRepair(BoardTicket ticket) {
