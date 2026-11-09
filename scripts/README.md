@@ -14,8 +14,8 @@
 | [python-bin.sh](python-bin.sh) | один выбор python, пропускает заглушки WindowsApps | `. scripts/python-bin.sh && python_bin` | ПК, сервер | нет |
 | [logq.sh](logq.sh) | поиск по базе логов: клетка, дух, задание, провалы | `scripts/logq.sh cell -181,68,-518 2` | ПК, сервер, копия | дочитывает JSONL в базу |
 | [logdb/logq.py](logdb/logq.py) | команды `logq`: `cell`, `spirit`, `failures`, `schema` | `python3 scripts/logdb/logq.py --db logs/events.db health` | ПК, сервер, копия | только база логов |
-| [logdb/loader.py](logdb/loader.py) | загрузчик JSONL и старых логов в SQLite (WAL, файл+смещение) | `python3 scripts/logdb/loader.py --db logs/events.db --events logs/events` | ПК, сервер, копия | пишет `logs/events.db` |
-| [logdb/import_legacy.py](logdb/import_legacy.py) | импорт `latest.log`, `*.log.gz`, `debug.log` в базу | `python3 scripts/logdb/import_legacy.py --db events.db --logs logs` | ПК, сервер | пишет базу и отчёт |
+| [logdb/loader.py](logdb/loader.py) | загрузчик JSONL и старых логов в SQLite (WAL, файл+смещение); на сервере cron дочитывает JSONL раз в минуту | `python3 scripts/logdb/loader.py --db logs/events.db --events logs/events` | ПК, сервер, копия | пишет `logs/events.db` |
+| [logdb/import_legacy.py](logdb/import_legacy.py) | импорт старых логов в базу, сверка строк с событиями; удаляет только сошедшиеся `*.log.gz` | `python3 scripts/logdb/import_legacy.py --db events.db --logs logs --delete-verified` | ПК, сервер | пишет базу и отчёт, удаляет сверенные `*.log.gz` |
 | [logdb/schema.json](logdb/schema.json) | единственное описание таблиц, причин и типов JSONL | `python3 scripts/logdb/logq.py --db events.db schema` | ПК, сервер | нет |
 | [logdb/tests/test_loader.py](logdb/tests/test_loader.py) | тесты загрузчика, импорта и `logq` на маленькой базе | `python -m unittest tests.test_loader` | ПК, сервер | временная база |
 | [logdb/fixtures/](logdb/fixtures/) | обезличенные старые строки для тестов разбора | `scripts/test.sh unit --tests "*Logdb*"` | ПК, сервер | нет |

@@ -20,7 +20,7 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
 SSH = os.environ.get("LIVE_SSH", "domovoy@192.168.0.147")
 MAIN_SERVER = "/opt/minecraft/server"
-MAIN_SCRIPTS = "/opt/minecraft/tmp/logdb"
+MAIN_SCRIPTS = "/opt/minecraft/scripts/logdb"
 FTS = "messages_fts"
 
 
@@ -285,10 +285,13 @@ def remote(args):
         )
     subprocess.run(ssh + ["mkdir -p " + MAIN_SCRIPTS], check=True)
     for name in ("schema.json", "loader.py", "logq.py"):
-        path = HERE / name
+        destination = "%s/%s" % (MAIN_SCRIPTS, name)
+        present = subprocess.run(ssh + ["test -f " + destination], capture_output=True)
+        if present.returncode == 0:
+            continue
         subprocess.run(
-            ssh + ["cat > %s/%s" % (MAIN_SCRIPTS, name)],
-            input=path.read_bytes(),
+            ssh + ["cat > " + destination],
+            input=(HERE / name).read_bytes(),
             check=True,
         )
     command = [
