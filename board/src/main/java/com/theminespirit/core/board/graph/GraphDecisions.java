@@ -3,13 +3,29 @@ package com.theminespirit.core.board.graph;
 import java.util.List;
 import java.util.Objects;
 
-public record GraphDecisions(long tick, List<Row> decisions) {
+public record GraphDecisions(long tick, List<Row> decisions, List<Vital> vital) {
     public GraphDecisions {
         if (tick < 0) {
             throw new IllegalArgumentException("Тик объяснения решений " + tick + " отрицателен: время идёт вперёд");
         }
         decisions = List.copyOf(
                 Objects.requireNonNull(decisions, "Список решений не может быть null: без решений — пустой список"));
+        vital = List.copyOf(
+                Objects.requireNonNull(vital, "Список жизненных нужд не может быть null: без нужд — пустой список"));
+    }
+
+    public GraphDecisions(long tick, List<Row> decisions) {
+        this(tick, decisions, List.of());
+    }
+
+    public record Vital(String spirit, String need, String reason, String task, String doing) {
+        public Vital {
+            Objects.requireNonNull(spirit, "Дух метрики нужды не может быть null: нужда принадлежит конкретному духу");
+            Objects.requireNonNull(need, "Нужда метрики не может быть null: без неё непонятно, что живо");
+            Objects.requireNonNull(reason, "Причина нужды не может быть null: наблюдателю нужен текст");
+            task = task == null ? "" : task;
+            doing = doing == null ? "" : doing;
+        }
     }
 
     public record Row(

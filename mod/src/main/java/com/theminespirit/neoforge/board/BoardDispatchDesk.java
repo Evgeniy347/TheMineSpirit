@@ -11,6 +11,7 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TransferCarriers;
 import com.theminespirit.core.board.TransferTicket;
+import com.theminespirit.core.board.VitalGate;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
@@ -116,6 +117,7 @@ final class BoardDispatchDesk {
         List<BoardTicket> claimable = DispatchRound.order(board.claimable(stock, now));
         transferWait.retain(board);
         crafters.retain(id -> board.statusOf(id).filter(TransferWatch::open).isPresent());
+        withdrawForVitals(spirits, claimable);
         DispatchRound round = new DispatchRound(board, now);
         DispatchPick pick = new DispatchPick(round, spirits, stock);
         for (BoardTicket ticket : claimable) {
@@ -189,6 +191,31 @@ final class BoardDispatchDesk {
                 host.notices.assigned(board, ticket, target, pick.whyChosen(ticket, spirit, crafters), spirit);
             } else {
                 JobLaunch.dropUnclaimed(spirit, ticket.id(), outcome);
+            }
+        }
+    }
+
+    private void withdrawForVitals(List<SpiritEntity> spirits, List<BoardTicket> claimable) {
+        for (SpiritEntity spirit : spirits) {
+            if (spirit.isRemoved()) {
+                continue;
+            }
+            Map<String, String> needs = SpiritVitals.needs(spirit);
+            if (needs.isEmpty()) {
+                continue;
+            }
+            boolean chain = claimable.stream()
+                    .anyMatch(ticket -> VitalGate.satisfies(ticket.id(), needs)
+                            && ticket.assignee().map(spirit.getUUID()::equals).orElse(true));
+            if (chain) {
+                continue;
+            }
+            List<BoardTicket> held = List.copyOf(board.assignedTo(spirit.getUUID()));
+            for (BoardTicket ticket : held) {
+                if (!VitalGate.satisfies(ticket.id(), needs)) {
+                    settlement.withdraw(
+                            spirit, ticket, needs.values().iterator().next());
+                }
             }
         }
     }

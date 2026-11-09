@@ -18,6 +18,7 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -122,9 +123,34 @@ final class CrossActions {
                     eat.getOrDefault(spirit, CrossScene.FED),
                     views.getOrDefault(spirit, SpiritView.free()),
                     false,
-                    List.of()));
+                    List.of(),
+                    needs(eat.getOrDefault(spirit, CrossScene.FED))));
         });
         return spirits;
+    }
+
+    static DispatchRound.Candidate busy(DispatchRound.Candidate candidate, String busyWith) {
+        return new DispatchRound.Candidate(
+                candidate.id(),
+                candidate.name(),
+                busyWith,
+                candidate.items(),
+                candidate.eat(),
+                candidate.view(),
+                candidate.wet(),
+                candidate.stockTools(),
+                candidate.needs());
+    }
+
+    static Map<String, String> needs(EatNeed eat) {
+        Map<String, String> needs = new LinkedHashMap<>();
+        if (eat.needsFood()) {
+            needs.put("hunger", VitalNeeds.byId("hunger").orElseThrow().blocked());
+        }
+        if (eat.maxHealth() > 0 && eat.health() / (double) eat.maxHealth() < 0.35) {
+            needs.put("injury", VitalNeeds.byId("injury").orElseThrow().blocked());
+        }
+        return Map.copyOf(needs);
     }
 
     static UUID id(String spirit) {

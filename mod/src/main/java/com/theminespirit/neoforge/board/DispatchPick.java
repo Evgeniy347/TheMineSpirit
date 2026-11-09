@@ -146,6 +146,7 @@ final class DispatchPick {
                                 Math.ceil(spirit.getMaxHealth())),
                 new SpiritView(control, false, status == RunStatus.RUNNING),
                 spirit.isInWater(),
-                stockTools);
+                stockTools,
+                SpiritVitals.needs(spirit));
     }
 }

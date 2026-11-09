@@ -103,7 +103,7 @@
 | 3-20 | `ChopToolGraphTests.case70_AxeBroke_TicketStaysWithSpiritAndSameTree` | тот же билет рубки остаётся за духом | поломка топора не отдаёт дерево другому | ОК | слабо |
 | 4-6 | `CleanupCasesTests.cleanup_FillDirtInStock_DoesNotDigAgain` | засыпка берёт землю со склада | новая добыча земли не ставится | ОК | слабо |
 | 4-9 | `GraphPlannerTests.plan_NoIronPickaxe_LowersMineCoal` | железная кирка поднимает крафт и топит шахту | шахта ждёт инструмент, а не копает руками | ОК | слабо |
-| 4-14 | `CrossHungerScenarioTests.hunger_NoFoodInStock_HungrySpiritGetsFoodNotMine` | еды нет: `event:hungry:hunt` 60 выше `mine_coal` 54, без источника `event:hungry:wait_food` 56 выше шахты | голодный дух охотится или ждёт, сытый получает шахту | ОК | полный |
+| 4-14 | `CrossVitalScenarioTests.vital_HungryOrInjured_OrdinaryWorkIsBlockedAndVitalChainPreempts` | еды нет: охота в верхней полосе приоритетов выше шахты; VitalGate не отдаёт шахту голодному и вытесняет её ради еды | голодный дух охотится или ждёт, сытый получает шахту | ОК | полный |
 | 4-16 | `CrossSettlementScenarioTests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool` | tool_worn без наковальни невыполним | изношенная кирка продолжает шахту | ОК | полный |
 | 4-18 | `CrossSettlementScenarioTests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | тьма шахты → mine_coal 82 первым | уголь добывается шахтой | ОК | полный |
 | 4-20 | `GraphPlannerTests.plan_NoCoal_PostsMineAndCharcoal` | `mine_coal` и `smelt_charcoal` | уголь добывается, затем жжётся | ОК | слабо |
@@ -137,7 +137,7 @@
 | 8-23 | `CrossSupplyScenarioTests.storage_FullWarehouseNotBuilt_GraphBuildsStorageAndPostsSpace` | склад переполнен → building:warehouse и store_space | стройка склада и раскладка `deposit` | ОК | полный |
 | 9-11 | `FarmGraphTests.plan_SheepInSheepPen_ShearingIsWork` | овца в загоне → стрижка | инструмент стрижёт овцу | ОК | слабо |
 | 9-12 | `CrossSupplyScenarioTests.combat_WoundedWithoutArmor_FightsBeforeCraftingArmor` | craft_armor в графе | крафт брони идёт действием `craft` | ОК | полный |
-| 9-14 | `CrossFarmSupplyScenarioTests.hunger_NoFoodButExpeditionReady_ExpeditionGoesWhileSpiritStarves` | `craft_food` без пшеницы невыполним | еда не выдумывается крафтом | ОК | полный |
+| 9-14 | `CrossFarmSupplyScenarioTests.hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave` | `craft_food` без пшеницы невыполним | еда не выдумывается крафтом | ОК | полный |
 | 9-15 | `CrossFarmSupplyScenarioTests.night_DangerAndThreat_CraftWaitsBehindRetreat` | ночной крафт кирки 39 | retreat выше крафта, сон под мобом не идёт | ОК | полный |
 | 9-16 | `CrossSettlementScenarioTests.repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool` | наковальня + слиток → repair_tool выполним | ремонт идёт действием `repair_tool` | ОК | полный |
 | 9-18 | `CrossSettlementScenarioTests.mining_DarkMine_CoalThenTorchThenLightInGraphOrder` | уголь → craft_torch выполним | крафт факела идёт после угля | ОК | полный |
@@ -163,8 +163,8 @@
 | 13-17 | `CrossFleeScenarioTests.flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow` | бегство через ворота | ворота закрываются после перехода | ОК | полный |
 | 13-20 | `CrossLifeWorkScenarioTests.flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard` | retreat 100 вытесняет стройку, стройка возвращается PENDING | доска возвращает работу и отдаёт бегство | ОК | полный |
 | 13-22 | `CrossFleeScenarioTests.flee_NightMobsAndExpedition_RetreatBeatsSleepAndFollow` | retreat выше expedition | отход важнее похода | ОК | полный |
-| 14-20 | `CrossHungerScenarioTests.hunger_NoFoodInStock_HungrySpiritGetsFoodNotMine` | голодный дух: добыча еды (охота/рыбалка) выше шахты, без источника — ожидание выше шахты | голодный дух не копает, сытый копает | ОК | полный |
-| 14-22 | `CrossFarmSupplyScenarioTests.hunger_NoFoodButExpeditionReady_ExpeditionGoesWhileSpiritStarves` | поход выполним, еды нет | поход уходит, голодный дух остаётся — НЕ ОК | НЕ ОК | полный |
+| 14-20 | `CrossVitalScenarioTests.vital_HungryOrInjured_OrdinaryWorkIsBlockedAndVitalChainPreempts` | голодный дух: добыча еды выше шахты, без источника — ожидание выше шахты и диагноз стратегу | голодный дух не копает, сытый копает | ОК | полный |
+| 14-22 | `CrossFarmSupplyScenarioTests.hunger_NoFoodButExpeditionReady_HungrySpiritDoesNotLeave` | еды нет, поход выполним | голодному поход не выдаётся, его получает сытый дух | ОК | полный |
 | 15-20 | `GraphNightDefenseTests.plan_NightAndFarTree_DoesNotGiveDistantGather` | ночью далёкая рубка не выдаётся | граф и NightLeash согласованы | ОК | слабо |
 | 16-17 | `CrossSettlementScenarioTests.combat_BrokenFenceUnderRaid_DefendOutranksFenceRepair` | repair_fence выполним рядом с боем | ремонт ставит схему забора | ОК | полный |
 | 16-20 | `GraphRepairPlannerTests.repair_MoreMissing_RaisesWeight` | больше недостачи — выше вес ремонта | ремонт поднимается в очереди графа | ОК | слабо |
