@@ -66,6 +66,24 @@ class QuarryRoutesTests {
     }
 
     @Test
+    void search_BadCoordinate_RejectedInsteadOfZero() {
+        RecordingGateway gateway = new RecordingGateway();
+        Router router = Router.of(new QuarryRoutes(gateway).routes());
+
+        RestResponse response = router.handle(new RestRequest(
+                "GET",
+                QuarryRoutes.SEARCH,
+                Map.of("resource", "dirt", "x", "восток", "y", "64", "z", "0"),
+                Map.of(),
+                new byte[0]));
+
+        assertEquals(
+                400,
+                response.status(),
+                "Нечисловая координата — ошибка запроса, а не точка (0,64,0): иначе поиск молча ищет не там");
+    }
+
+    @Test
     void install_StrategistBody_SetsSite() {
         RecordingGateway gateway = new RecordingGateway();
         Router router = Router.of(new QuarryRoutes(gateway).routes());
