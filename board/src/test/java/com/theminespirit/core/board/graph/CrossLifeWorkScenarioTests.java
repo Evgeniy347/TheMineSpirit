@@ -10,6 +10,7 @@ import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.board.graph.GraphState.Built;
@@ -96,7 +97,7 @@ class CrossLifeWorkScenarioTests {
     }
 
     @Test
-    void flee_WhileBuilding_GraphPostsRetreatButDispatchKeepsBuilderBusy() {
+    void flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard() {
         GraphWorld world = stageOne();
         world.with("oak_log", 64).with("oak_planks", 64).with("cobblestone", 64);
         world.built("hut", Built.PLANNED);
@@ -124,24 +125,31 @@ class CrossLifeWorkScenarioTests {
                 .filter(ticket -> ticket.id().endsWith(":retreat"))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Нет бегства в графе: " + dangerTickets.post()));
-        board.submit(boardTicket(retreat));
+        board.submit(boardTicket(retreat, Optional.of(id("spirit-2"))));
 
         DispatchRound.Candidate builder = new DispatchRound.Candidate(
                 id("spirit-2"), "spirit-2", "build_schematic", List.of(), FED, SpiritView.free(), false, List.of());
         DispatchRound round = new DispatchRound(board, 0);
-        Optional<String> refusal = round.refusal(boardTicket(retreat), builder);
 
+        assertTrue(
+                round.choose(boardTicket(retreat, Optional.of(id("spirit-2"))), List.of(builder))
+                        .isPresent(),
+                "Жизнь выше стройки: занятый дух бросает хижину и уходит от мобов");
         assertEquals(
-                BoardStatus.ASSIGNED,
+                List.of(build.id()),
+                round.drainDisplaced(id("spirit-2")).stream()
+                        .map(BoardTicket::id)
+                        .toList(),
+                "Вытесненная стройка возвращается на доску, а не пропадает");
+        assertEquals(
+                BoardStatus.PENDING,
                 board.statusOf(build.id()).orElseThrow(),
-                "Стройка остаётся за духом: граф не снимает метку работы при угрозе");
-        assertTrue(refusal.isPresent(), "Занятый стройкой дух не берёт бегство вторым заданием: " + refusal);
+                "Стройка больше не держится за убегающим духом: её возьмёт другой или он сам после бегства");
         assertTrue(
-                refusal.orElseThrow().contains("занят"),
-                "Причина отказа называет занятость стройкой, а не молчит: " + refusal);
-        assertTrue(
-                round.choose(boardTicket(retreat), List.of(builder)).isEmpty(),
-                "Дух не бросает стройку ради бегства: графу это не по силам, решает координатор");
+                round.refusal(boardTicket(retreat, Optional.of(id("spirit-2"))), builder)
+                        .isEmpty(),
+                "После вытеснения строитель свободен для бегства: "
+                        + round.refusal(boardTicket(retreat, Optional.of(id("spirit-2"))), builder));
     }
 
     @Test

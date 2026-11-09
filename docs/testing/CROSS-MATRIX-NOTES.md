@@ -4,23 +4,21 @@
 
 ## Итог
 
-Механик — 24, неупорядоченных пар — 24·23/2 = 276. После второй партии: общий тест — 113, частично — 7,
-физически непересекающихся — 109, к доработке — 47. Первая партия дала 35 парных сценариев
+Механик — 24, неупорядоченных пар — 24·23/2 = 276. После второй и третьей партий: общий тест — 119,
+частично — 5, физически непересекающихся — 109, к доработке — 43. Первая партия дала 35 парных сценариев
 (`CrossLifeWorkScenarioTests`, `CrossSettlementScenarioTests`, `CrossRouteStageScenarioTests`), вторая — 37
-крупных сценариев по живым багам observe25 и слабым «Е», плюс отметку «слабо» у 31 старой пары.
+крупных сценариев по живым багам observe25 и слабым «Е», плюс отметку «слабо» у 31 старой пары; третья закрыла
+6 новых пар (движение × стройка/стадо/забор и жизнь × работа) и вытеснение `retreat` в 13-3/5-12/5-13/13-20.
 
 ## Техдолг (найдено отметкой «НЕ ОК», не чинится здесь)
 
-- **13-3** (`CrossFleeScenarioTests.flee_WhileChopping_GraphKeepsChopAndRetreatWaits`): рубящий дух так же не
-  берёт `retreat`; рубка остаётся ASSIGNED. Та же причина, что ниже.
-- **13-5, 13-20** (`CrossLifeWorkScenarioTests.flee_WhileBuilding_GraphPostsRetreatButDispatchKeepsBuilderBusy`):
-  `retreat` есть в графе, но занятый стройкой дух не берёт его: доска держит одну активную задачу и не
-  вытесняет стройку. Цена: дух продолжает строить под мобами. Предложение: вытеснение по приоритету жизни.
-- **2-5 (наблюдение)**: узел `pillar` из ямы требует `trail_clean`, поэтому первый прогон графа даёт только
-  `rescue`; выход появляется со следующего прогона. Это не «НЕ ОК» (следующий прогон решает), но сценарий
-  зависит от порядка прогонов — проверять при пересчёте весов.
-
-Закрыто: **14-4, 14-20** — crossfood поднял узел «добыть еду» выше шахты (охота/рыбалка, без источника —
+Закрыто третьей партией: **13-3, 13-5, 13-20** — `retreat` вытесняет работу по приоритету жизни, вытесненная
+задача возвращается на доску (`CrossFleeScenarioTests.flee_WhileChopping_RetreatPreemptsChopAndChopReturnsToBoard`,
+`CrossLifeWorkScenarioTests.flee_WhileBuilding_RetreatPreemptsBuildAndBuildReturnsToBoard`); **5-12** — тот же
+механизм для строителя под мобами (`CrossBattleWorkScenarioTests.combat_MobsAtBuilderAndChopper_RetreatPreemptsWork`).
+**2-5** закреплено `CrossRouteStageScenarioTests.pit_PillarNeedsTrailClean_SecondRunOpensExit` (первый прогон —
+`restore_trace`, второй — `pillar`).
+Закрыто ранее: **14-4, 14-20** — crossfood поднял узел «добыть еду» выше шахты (охота/рыбалка, без источника —
 ожидание); пары `ОК`, сценарий переписан в `CrossHungerScenarioTests`.
 
 ## Отметки главного агента (08.11, ревью)
@@ -45,9 +43,8 @@
 - **6-24** (`CrossPathScenarioTests.path_UnknownFieldAndTerrain_GraphWaitsInsteadOfGuessing`): неизвестный
   рельеф всё равно получает `event:backfill:backfill`, хотя `plant_crop` и `building:hut` ждут загрузки чанка.
   Цена: засыпка вслепую может испортить участок. Предложение: `Terrain.unknown` запрещает засыпку, как посев.
-- **5-12** (`CrossBattleWorkScenarioTests.combat_MobsAtBuilderAndChopper_DefendCeilingButWorkStays`): занятый
-  стройкой дух не берёт `retreat` и продолжает строить под мобами. Та же причина, что 13-5/13-20; чинится
-  вытеснением активной задачи по приоритету жизни.
+- **5-12 — закрыто третьей партией**: занятый стройкой дух бросает работу ради `retreat`
+  (`CrossBattleWorkScenarioTests.combat_MobsAtBuilderAndChopper_RetreatPreemptsWork`).
 - **12-14** (`CrossBattleWorkScenarioTests.combat_HungryWoundedSpirit_FightsBeforeEating`): раненый голодный дух
   сначала отбивается, но при острой нехватке угля (`mine_coal` 60) копает раньше обеда (55), хотя еда лежит в
   сундуке. crossfood закрыл общий случай 14-20 (охота/ожидание выше шахты), но база шахты 60 всё ещё обгоняет
