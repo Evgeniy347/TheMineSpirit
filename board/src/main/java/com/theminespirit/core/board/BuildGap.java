@@ -7,6 +7,7 @@ import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SchematicGround;
 import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.mining.MineOres;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ConditionNode;
 import com.theminespirit.core.plan.FallbackNode;
@@ -208,7 +209,7 @@ public final class BuildGap {
                         cell,
                         floor,
                         "minecraft:cobblestone",
-                        () -> SchematicBlocks.isFloorClass(standing),
+                        () -> SchematicBlocks.isFloorClass(standing) || ore(standing),
                         " ожидается " + floor + ", стоит " + standing);
             }
             for (BlockCoord cell : layout.air()) {
@@ -218,8 +219,12 @@ public final class BuildGap {
                     continue;
                 }
                 String standing = probe.block(cell);
-                count(cell, DIG, "minecraft:air", () -> probe.passable(cell), " копать: " + standing);
+                count(cell, DIG, "minecraft:air", () -> probe.passable(cell) || ore(standing), " копать: " + standing);
             }
+        }
+
+        private static boolean ore(String blockId) {
+            return MineOres.kindOf(blockId) != MineOres.Kind.NONE;
         }
 
         private void count(BlockCoord at, String item, String block, BooleanSupplier done, String suffix) {

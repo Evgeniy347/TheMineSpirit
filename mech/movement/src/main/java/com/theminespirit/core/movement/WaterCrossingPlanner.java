@@ -16,4 +16,19 @@ public final class WaterCrossingPlanner {
         }
         return Optional.empty();
     }
+
+    public static int total(Map<String, Integer> countByBlock) {
+        Objects.requireNonNull(
+                countByBlock, "Наличие блоков не может быть null: без него неизвестно, хватит ли на мост");
+        int total = 0;
+        for (Map.Entry<String, Integer> entry : countByBlock.entrySet()) {
+            Integer count = entry.getValue();
+            if (count == null || count < 0) {
+                throw new IllegalArgumentException(
+                        "Запас блока '" + entry.getKey() + "' " + count + ": отрицательный запас не бывает");
+            }
+            total = Math.addExact(total, count);
+        }
+        return total;
+    }
 }

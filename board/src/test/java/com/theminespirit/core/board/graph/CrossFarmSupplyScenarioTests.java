@@ -1,6 +1,10 @@
 package com.theminespirit.core.board.graph;
 
-import static com.theminespirit.core.board.graph.CrossActions.*;
+import static com.theminespirit.core.board.graph.CrossActions.board;
+import static com.theminespirit.core.board.graph.CrossActions.boardTicket;
+import static com.theminespirit.core.board.graph.CrossActions.candidates;
+import static com.theminespirit.core.board.graph.CrossActions.scripts;
+import static com.theminespirit.core.board.graph.CrossActions.supplyTarget;
 import static com.theminespirit.core.board.graph.CrossScene.FED;
 import static com.theminespirit.core.board.graph.CrossScene.HUNGRY;
 import static com.theminespirit.core.board.graph.CrossScene.chest;

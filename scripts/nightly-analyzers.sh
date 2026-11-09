@@ -48,6 +48,8 @@ die() {
     exit "$code"
 }
 
+. "$(dirname "$0")/python-bin.sh" || die 4 "нет python-bin.sh рядом с nightly-analyzers.sh: один выбор python на все скрипты"
+
 usage() {
     sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'
     exit 2
@@ -156,20 +158,6 @@ elapsed=$(( $(date +%s) - started ))
 result="ЗЕЛЁНЫЙ"
 [ "$code" -ne 0 ] && result="КРАСНЫЙ"
 [ "$code" -eq 124 ] && result="КРАСНЫЙ (предел ${TIMEOUT} с)"
-
-python_bin() {
-    local path
-    for path in "${THEMINESPIRIT_PYTHON:-}" "${PYTHON:-}" python3 python; do
-        [ -n "$path" ] || continue
-        path="$(command -v "$path" 2>/dev/null)" || continue
-        case "$path" in
-            */WindowsApps/*) continue ;;
-        esac
-        printf '%s' "$path"
-        return 0
-    done
-    return 1
-}
 
 summary=""
 PYTHON_EXE="$(python_bin || true)"

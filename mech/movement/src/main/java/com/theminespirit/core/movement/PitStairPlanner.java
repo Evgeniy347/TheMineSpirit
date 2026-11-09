@@ -47,7 +47,7 @@ final class PitStairPlanner {
                 .thenComparingInt(node -> node.at().y()));
         Map<BlockCoord, Step> came = new HashMap<>();
         Map<BlockCoord, Integer> best = new HashMap<>();
-        queue.add(new Node(feet, 0));
+        queue.add(new Node(feet, 0, Set.of(), Set.of()));
         best.put(feet, 0);
         Context context = new Context(feet, world, supplies, protectedCells, came, best, queue);
         while (!queue.isEmpty()) {
@@ -55,7 +55,8 @@ final class PitStairPlanner {
             if (node.cost() > best.getOrDefault(node.at(), Integer.MAX_VALUE)) {
                 continue;
             }
-            if (node.at().y() > feet.y() && reachedSurface(node.at(), feet, world, came.get(node.at()), surface)) {
+            if (node.at().y() > feet.y()
+                    && reachedSurface(node.at(), feet, world, node.dug(), node.placed(), surface)) {
                 return new Search(node.at(), came);
             }
             explore(node, context);
@@ -84,19 +85,19 @@ final class PitStairPlanner {
                     node.at().x() + side[0], node.at().y(), node.at().z() + side[1]);
             if (within(feet, flat)
                     && !protectedCells.contains(flat)
-                    && standable(flat, world)
+                    && standableAfter(flat, world, node.dug(), node.placed())
                     && best.getOrDefault(flat, Integer.MAX_VALUE) > node.cost() + 1) {
                 Step walk = new Step(node.at(), List.of(), List.of(), 1);
                 best.put(flat, node.cost() + 1);
                 came.put(flat, walk);
-                queue.add(new Node(flat, node.cost() + 1));
+                queue.add(new Node(flat, node.cost() + 1, node.dug(), node.placed()));
             }
             BlockCoord next = new BlockCoord(
                     node.at().x() + side[0], node.at().y() + 1, node.at().z() + side[1]);
             if (!within(feet, next) || next.y() > feet.y() + PitExitPlanner.MAX_RISE) {
                 continue;
             }
-            Step step = step(node.at(), next, world, context.supplies(), protectedCells);
+            Step step = step(node.at(), next, world, context.supplies(), protectedCells, node.dug(), node.placed());
             if (step == null) {
                 continue;
             }
@@ -104,9 +105,11 @@ final class PitStairPlanner {
             if (cost >= best.getOrDefault(next, Integer.MAX_VALUE)) {
                 continue;
             }
+            Set<BlockCoord> dug = union(node.dug(), step.dig());
+            Set<BlockCoord> placed = union(node.placed(), step.place());
             best.put(next, cost);
             came.put(next, step);
-            queue.add(new Node(next, cost));
+            queue.add(new Node(next, cost, dug, placed));
         }
     }
 
@@ -115,17 +118,18 @@ final class PitStairPlanner {
         BlockCoord goal = Objects.requireNonNull(search.goal(), "Цель лестницы без клетки выхода");
         List<BlockCoord> dig = new ArrayList<>();
         List<BlockCoord> place = new ArrayList<>();
-        Set<BlockCoord> seen = new LinkedHashSet<>();
+        Set<BlockCoord> seenDig = new LinkedHashSet<>();
+        Set<BlockCoord> seenPlace = new LinkedHashSet<>();
         BlockCoord cursor = goal;
         Step step = search.came().get(cursor);
         while (step != null) {
             for (BlockCoord cell : step.dig()) {
-                if (seen.add(cell)) {
+                if (seenDig.add(cell)) {
                     dig.add(cell);
                 }
             }
             for (BlockCoord cell : step.place()) {
-                if (seen.add(cell)) {
+                if (seenPlace.add(cell)) {
                     place.add(cell);
                 }
             }
@@ -187,29 +191,44 @@ final class PitStairPlanner {
     }
 
     private static boolean reachedSurface(
-            BlockCoord cell, BlockCoord feet, PitExitPlanner.World world, @Nullable Step step, int surface) {
-        if (!standableAfter(cell, world, step) || cell.y() < surface - 1) {
+            BlockCoord cell,
+            BlockCoord feet,
+            PitExitPlanner.World world,
+            Set<BlockCoord> dug,
+            Set<BlockCoord> placed,
+            int surface) {
+        if (!standableAfter(cell, world, dug, placed) || cell.y() < surface - 1) {
             return false;
         }
         OptionalInt ground = groundY(cell.x(), cell.z(), feet.y(), world);
         return ground.isPresent() && cell.y() == ground.getAsInt();
     }
 
-    private static boolean standableAfter(BlockCoord cell, PitExitPlanner.World world, @Nullable Step step) {
-        Set<BlockCoord> dig = step == null ? Set.of() : Set.copyOf(step.dig());
-        Set<BlockCoord> place = step == null ? Set.of() : Set.copyOf(step.place());
-        return (PitExitPlanner.passable(world.at(cell)) || dig.contains(cell))
-                && (PitExitPlanner.passable(world.at(above(cell))) || dig.contains(above(cell)))
-                && (PitExitPlanner.supported(world.at(below(cell))) || place.contains(below(cell)));
+    private static boolean standableAfter(
+            BlockCoord cell, PitExitPlanner.World world, Set<BlockCoord> dug, Set<BlockCoord> placed) {
+        return (PitExitPlanner.passable(world.at(cell)) || dug.contains(cell))
+                && (PitExitPlanner.passable(world.at(above(cell))) || dug.contains(above(cell)))
+                && supportAfter(below(cell), world, dug, placed);
     }
 
-    private static boolean standable(BlockCoord cell, PitExitPlanner.World world) {
-        return PitExitPlanner.passable(world.at(cell))
-                && PitExitPlanner.passable(world.at(above(cell)))
-                && PitExitPlanner.supported(world.at(below(cell)));
+    private static boolean supportAfter(
+            BlockCoord cell, PitExitPlanner.World world, Set<BlockCoord> dug, Set<BlockCoord> placed) {
+        if (placed.contains(cell)) {
+            return true;
+        }
+        return !dug.contains(cell) && PitExitPlanner.supported(world.at(cell));
     }
 
-    private record Node(BlockCoord at, int cost) {}
+    private static Set<BlockCoord> union(Set<BlockCoord> first, List<BlockCoord> second) {
+        if (second.isEmpty()) {
+            return first;
+        }
+        Set<BlockCoord> all = new LinkedHashSet<>(first);
+        all.addAll(second);
+        return Set.copyOf(all);
+    }
+
+    private record Node(BlockCoord at, int cost, Set<BlockCoord> dug, Set<BlockCoord> placed) {}
 
     private record Step(BlockCoord from, List<BlockCoord> dig, List<BlockCoord> place, int cost) {}
 
@@ -218,10 +237,21 @@ final class PitStairPlanner {
             BlockCoord next,
             PitExitPlanner.World world,
             PitExitPlanner.Supplies supplies,
-            Set<BlockCoord> protectedCells) {
+            Set<BlockCoord> protectedCells,
+            Set<BlockCoord> dugBefore,
+            Set<BlockCoord> placedBefore) {
         List<BlockCoord> dig = new ArrayList<>();
         List<BlockCoord> place = new ArrayList<>();
         int cost = DIG_COST;
+        BlockCoord over = above(above(from));
+        if (!PitExitPlanner.passable(world.at(over))) {
+            PitExitPlanner.Kind kind = world.at(over);
+            if (!PitExitPlanner.breakable(kind)) {
+                return null;
+            }
+            dig.add(over);
+            cost += kind == PitExitPlanner.Kind.HARD ? HARD_COST : 0;
+        }
         BlockCoord head = above(next);
         for (BlockCoord cell : List.of(next, head)) {
             if (PitExitPlanner.passable(world.at(cell))) {
@@ -239,8 +269,13 @@ final class PitStairPlanner {
         if (floorKind == PitExitPlanner.Kind.LAVA || floorKind == PitExitPlanner.Kind.BEDROCK) {
             return null;
         }
-        if (!PitExitPlanner.supported(floorKind)) {
-            if (!PitExitPlanner.supported(world.at(below(floor)))) {
+        boolean floorSolid =
+                placedBefore.contains(floor) || (!dugBefore.contains(floor) && PitExitPlanner.supported(floorKind));
+        if (!floorSolid) {
+            BlockCoord belowFloor = below(floor);
+            boolean base = placedBefore.contains(belowFloor)
+                    || (!dugBefore.contains(belowFloor) && PitExitPlanner.supported(world.at(belowFloor)));
+            if (!base) {
                 return null;
             }
             place.add(floor);

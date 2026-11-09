@@ -196,7 +196,7 @@ final class BoardDispatchDesk {
             boolean chain = claimable.stream()
                     .anyMatch(ticket -> VitalGate.satisfies(ticket.id(), needs)
                             && ticket.assignee().map(spirit.getUUID()::equals).orElse(true));
-            if (chain) {
+            if (!chain) {
                 continue;
             }
             List<BoardTicket> held = List.copyOf(board.assignedTo(spirit.getUUID()));

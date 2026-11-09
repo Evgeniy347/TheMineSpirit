@@ -68,6 +68,42 @@ public final class WallLayout {
         }
     }
 
+    public List<WallPiece> closedOrAtomic(List<ColumnMask.Cell> line, Collection<Integer> gates) {
+        try {
+            return closed(line, gates);
+        } catch (IllegalStateException unfolded) {
+            return atomic(line, gates);
+        }
+    }
+
+    private List<WallPiece> atomic(List<ColumnMask.Cell> line, Collection<Integer> gates) {
+        List<WallPiece> pieces = new ArrayList<>(line.size());
+        for (int index = 0; index < line.size(); index++) {
+            ColumnMask.Cell cell = line.get(index);
+            Variant variant = single(gates.contains(index));
+            pieces.add(new WallPiece(
+                    variant.scheme(),
+                    variant.rotation(),
+                    cell.x() - variant.shape().minX(),
+                    cell.z() - variant.shape().minZ(),
+                    index,
+                    1));
+        }
+        return List.copyOf(pieces);
+    }
+
+    private Variant single(boolean gate) {
+        List<Variant> candidates =
+                variants.getOrDefault(WallFragment.key(List.of(new ColumnMask.Cell(0, 0))), List.of());
+        for (Variant variant : candidates) {
+            if ((variant.shape().gate() != null) == gate) {
+                return variant;
+            }
+        }
+        throw new IllegalStateException("Нет односотового фрагмента линии (" + (gate ? "калитка" : "столб")
+                + "): линию ограды не из чего сложить по частям — добавьте односотовую схему в StageSchemes");
+    }
+
     public List<List<WallPiece>> parts(List<ColumnMask.Cell> line, Collection<Integer> gates, int count) {
         if (count < 1) {
             throw new IllegalArgumentException("Частей " + count + ": ограда делится хотя бы на одну часть");

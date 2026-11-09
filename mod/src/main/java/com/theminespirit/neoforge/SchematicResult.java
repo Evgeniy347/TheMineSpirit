@@ -152,6 +152,7 @@ final class SchematicResult {
             host.planPending = null;
         }
         stopSupply();
+        host.pit.cancelEscape();
         host.approach.cancel();
         host.breaker.cancel();
         host.breaking = null;
@@ -161,6 +162,7 @@ final class SchematicResult {
 
     void suspend() {
         stopSupply();
+        host.pit.suspendEscape();
         host.approach.suspend();
         host.breaker.cancel();
         host.breaking = null;

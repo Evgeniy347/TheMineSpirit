@@ -1,7 +1,21 @@
 package com.theminespirit.core.board.graph;
 
-import static com.theminespirit.core.board.graph.CrossActions.*;
-import static com.theminespirit.core.board.graph.CrossScene.*;
+import static com.theminespirit.core.board.graph.CrossActions.board;
+import static com.theminespirit.core.board.graph.CrossActions.boardTicket;
+import static com.theminespirit.core.board.graph.CrossActions.busy;
+import static com.theminespirit.core.board.graph.CrossActions.candidates;
+import static com.theminespirit.core.board.graph.CrossActions.id;
+import static com.theminespirit.core.board.graph.CrossScene.FED;
+import static com.theminespirit.core.board.graph.CrossScene.HUNGRY;
+import static com.theminespirit.core.board.graph.CrossScene.facts;
+import static com.theminespirit.core.board.graph.CrossScene.ids;
+import static com.theminespirit.core.board.graph.CrossScene.named;
+import static com.theminespirit.core.board.graph.CrossScene.plan;
+import static com.theminespirit.core.board.graph.CrossScene.spirit;
+import static com.theminespirit.core.board.graph.CrossScene.stageOne;
+import static com.theminespirit.core.board.graph.CrossScene.task;
+import static com.theminespirit.core.board.graph.CrossScene.ticketFor;
+import static com.theminespirit.core.board.graph.CrossScene.tickets;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -154,5 +168,25 @@ class CrossVitalScenarioTests {
                         .map(DispatchRound.Candidate::name)
                         .orElse(""),
                 "На живом снимке обычную работу получает сытый дух: " + liveCandidates);
+    }
+
+    @Test
+    void vital_HungryWithoutPathOnBoard_KeepsWorkingAndWorkIsNotBlocked() {
+        GraphWorld world = GraphMutations.liveStageOne().with("food", 0).tools("spirit-2", 1);
+        GraphPlan plan = plan(world, world.facts);
+        GraphTickets.Result result = tickets(world, world.facts);
+        DispatchRound round = new DispatchRound(board(world, result), 0);
+        List<DispatchRound.Candidate> candidates = candidates(
+                world,
+                Map.of("spirit-1", HUNGRY, "spirit-2", FED),
+                Map.of("spirit-1", SpiritView.free(), "spirit-2", SpiritView.free()));
+
+        assertFalse(
+                round.refusal(
+                                boardTicket(ticketFor(result, GraphTickets.id(task(plan, "dig_dirt")))),
+                                candidates.get(0))
+                        .orElse("")
+                        .contains("голод"),
+                "Пути к еде на доске нет: простой её не добудет, дух работает, а граф поднимает источник");
     }
 }

@@ -157,4 +157,52 @@ class BuildGapMineTests {
                 BuildGap.need(minePlan(), gap, FAKE),
                 "Достроенной шахте не нужны материалы: пустая недостача не тянет ремонт");
     }
+
+    @Test
+    void trace_OreInDescentWithoutPickaxe_CountsAsDone() {
+        MineLayout layout = layout();
+        BlockCoord ore = layout.air().get(layout.air().size() / 2);
+
+        BuildGap.Gap gap = BuildGap.trace(minePlan(), "oak", probeWithOre(layout, ore), schemes(layout));
+
+        assertEquals(
+                layout.floors().size() + layout.air().size(),
+                gap.done(),
+                "Клетка руды в проходке считается выполненной: задание left_ore ждёт кирку, а постройка идёт в обход");
+        assertEquals(0, gap.shortage(), "Руда в спуске не должна держать готовность шахты ниже 100%");
+        assertEquals(
+                Map.of(), BuildGap.need(minePlan(), gap, FAKE), "Руде не нужен булыжник: ремонт шахты её не требует");
+    }
+
+    @Test
+    void trace_OreInWallAndFloor_CountsAsDone() {
+        MineLayout layout = layout();
+        BlockCoord floorOre = layout.floors().get(0);
+        BlockCoord wallOre = layout.floors().get(layout.floors().size() - 1);
+
+        BuildGap.Gap gap = BuildGap.trace(minePlan(), "oak", probeWithOre(layout, floorOre, wallOre), schemes(layout));
+
+        assertEquals(0, gap.shortage(), "Руда в полу и стенке спуска считается выполненной клеткой: 100% без кирки");
+    }
+
+    private static BuildGap.Probe probeWithOre(MineLayout layout, BlockCoord... ores) {
+        Set<BlockCoord> oreCells = Set.of(ores);
+        return new BuildGap.Probe() {
+            @Override
+            public String block(BlockCoord at) {
+                if (oreCells.contains(at)) {
+                    return "minecraft:diamond_ore";
+                }
+                if (layout.floors().contains(at)) {
+                    return "minecraft:cobblestone";
+                }
+                return "minecraft:air";
+            }
+
+            @Override
+            public boolean passable(BlockCoord at) {
+                return !layout.floors().contains(at) && !oreCells.contains(at);
+            }
+        };
+    }
 }

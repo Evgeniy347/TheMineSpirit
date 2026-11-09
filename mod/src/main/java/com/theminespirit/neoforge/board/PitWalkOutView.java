@@ -25,7 +25,8 @@ public final class PitWalkOutView implements PitWalkOut.World {
 
     @Override
     public boolean clear(int x, int y, int z) {
-        return cells.at(new BlockCoord(x, y, z)) == PitExitPlanner.Kind.AIR;
+        PitExitPlanner.Kind kind = cells.at(new BlockCoord(x, y, z));
+        return kind == PitExitPlanner.Kind.AIR || kind == PitExitPlanner.Kind.WATER;
     }
 
     @Override
