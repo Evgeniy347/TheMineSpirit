@@ -122,7 +122,7 @@ public final class PitExitPlanner {
     }
 
     private static boolean columnClear(BlockCoord feet, int rise, World world) {
-        for (int dy = 0; dy <= rise + 1; dy++) {
+        for (int dy = 0; dy <= rise + 2; dy++) {
             if (!passable(world.at(new BlockCoord(feet.x(), feet.y() + dy, feet.z())))) {
                 return false;
             }
@@ -150,7 +150,9 @@ public final class PitExitPlanner {
                 return Optional.of(same);
             }
             BlockCoord up = new BlockCoord(same.x(), same.y() + 1, same.z());
-            if (passable(world.at(above(feet))) && standable(up, world)) {
+            if (passable(world.at(above(feet)))
+                    && passable(world.at(new BlockCoord(feet.x(), feet.y() + 2, feet.z())))
+                    && standable(up, world)) {
                 return Optional.of(up);
             }
         }
