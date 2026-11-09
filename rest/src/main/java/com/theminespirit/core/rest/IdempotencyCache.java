@@ -14,7 +14,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import org.jspecify.annotations.Nullable;
 
-public final class IdempotencyCache {
+public class IdempotencyCache {
     public static final int CAPACITY = 1024;
 
     private static final ObjectMapper CANONICAL =

@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
@@ -66,8 +65,8 @@ class IdempotencyCacheTests {
     }
 
     @Test
-    void check_SecondCallWhileFirstInFlight_WaitsAndReplaysStoredResponse() throws Exception {
-        IdempotencyCache cache = new IdempotencyCache();
+    void check_SecondCallWhileFirstInFlight_WaitsAndReplaysStoredResponse() {
+        CountingIdempotencyCache cache = new CountingIdempotencyCache(2);
         String requestId = UUID.randomUUID().toString();
         assertInstanceOf(
                 IdempotencyCache.Result.New.class,
@@ -78,10 +77,10 @@ class IdempotencyCacheTests {
         Thread duplicate = new Thread(() -> waited.set(cache.check(requestId, FP_ONE)));
         duplicate.setDaemon(true);
         duplicate.start();
-        ThreadStates.awaitWaiting(duplicate, "Дубликат обязан ждать завершения первого запроса, а не получить New");
+        cache.awaitChecks("Дубликат обязан дойти до проверки request_id, пока первый запрос ещё в работе");
 
         cache.remember(requestId, FP_ONE, "{\"task_id\":\"t-1\"}");
-        duplicate.join(TimeUnit.SECONDS.toMillis(5));
+        Threads.join(duplicate, "Дубликат обязан дождаться ответа первого запроса и вернуть его");
 
         IdempotencyCache.Result.Replay replay = assertInstanceOf(
                 IdempotencyCache.Result.Replay.class,
@@ -92,7 +91,7 @@ class IdempotencyCacheTests {
     }
 
     @Test
-    void check_DuplicateWaitsLongerThanLimit_ThrowsInsteadOfHangingForever() throws Exception {
+    void check_DuplicateWaitsLongerThanLimit_ThrowsInsteadOfHangingForever() {
         IdempotencyCache cache = new IdempotencyCache(Duration.ofMillis(200));
         String requestId = UUID.randomUUID().toString();
         assertInstanceOf(
@@ -110,7 +109,7 @@ class IdempotencyCacheTests {
         });
         duplicate.setDaemon(true);
         duplicate.start();
-        duplicate.join(TimeUnit.SECONDS.toMillis(5));
+        Threads.join(duplicate, "Дубликат обязан прекратить ждать по пределу 200 мс, а не висеть вечно");
 
         assertFalse(
                 duplicate.isAlive(),

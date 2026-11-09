@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -73,6 +72,12 @@ class TaskRoutesTests {
 
     private RestResponse send(String method, String path, String body) {
         return send(method, path, body, Map.of());
+    }
+
+    private void observing(IdempotencyCache cache, SseSlots streams) {
+        idempotency = cache;
+        slots = streams;
+        router = Router.of(new TaskRoutes(registry, gateway, planning, cache, streams, board).routes());
     }
 
     private String postTasks(String goalJson) {
@@ -366,11 +371,13 @@ class TaskRoutesTests {
 
     @Test
     void create_SecondIdenticalRequestWhileFirstInFlight_ReplaysInsteadOfConflict() throws Exception {
+        CountingIdempotencyCache cache = new CountingIdempotencyCache(2);
+        observing(cache, slots);
         CountDownLatch firstInStart = new CountDownLatch(1);
         CountDownLatch releaseFirst = new CountDownLatch(1);
         gateway.runsOnStart(() -> {
             firstInStart.countDown();
-            await(releaseFirst);
+            Threads.await(releaseFirst, "Первый запрос обязан ждать шлюза, пока тест не отпустит дубликат");
         });
         String body =
                 "{\"request_id\":\"" + uuid() + "\",\"goal\":\"следуй за мной\",\"params\":{\"target\":\"Стейв\"}}";
@@ -378,18 +385,18 @@ class TaskRoutesTests {
         AtomicReference<Throwable> firstFailure = new AtomicReference<>();
         Thread first = postInBackground(body, firstOpened, firstFailure);
         first.start();
-        assertTrue(firstInStart.await(5, TimeUnit.SECONDS), "Первый запрос обязан дойти до шлюза до старта дубликата");
+        Threads.await(firstInStart, "Первый запрос обязан дойти до шлюза до старта дубликата");
 
         AtomicReference<RestResponse> secondOpened = new AtomicReference<>();
         AtomicReference<Throwable> secondFailure = new AtomicReference<>();
         Thread second = postInBackground(body, secondOpened, secondFailure);
         second.start();
-        ThreadStates.awaitWaiting(
-                second, "Дубликат с тем же request_id обязан ждать результат первого, а не получить 409 «дух занят»");
+        cache.awaitChecks("Дубликат с тем же request_id обязан дойти до проверки request_id раньше, чем "
+                + "первый запрос отпустит шлюз, а не получить 409 «дух занят»");
 
         releaseFirst.countDown();
-        first.join(TimeUnit.SECONDS.toMillis(5));
-        second.join(TimeUnit.SECONDS.toMillis(5));
+        Threads.join(first, "Первый запрос обязан завершиться ответом");
+        Threads.join(second, "Дубликат обязан завершиться ответом");
 
         assertNull(firstFailure.get(), "Первый запрос обязан завершиться ответом: " + firstFailure.get());
         assertNull(secondFailure.get(), "Дубликат обязан завершиться ответом: " + secondFailure.get());
@@ -411,13 +418,15 @@ class TaskRoutesTests {
 
     @Test
     void create_FirstRequestFailsWhileDuplicateWaits_SecondGoesItsOwnWay() throws Exception {
+        CountingIdempotencyCache cache = new CountingIdempotencyCache(2);
+        observing(cache, slots);
         CountDownLatch firstInStart = new CountDownLatch(1);
         CountDownLatch releaseFirst = new CountDownLatch(1);
         AtomicInteger starts = new AtomicInteger();
         gateway.runsOnStart(() -> {
             int attempt = starts.incrementAndGet();
             firstInStart.countDown();
-            await(releaseFirst);
+            Threads.await(releaseFirst, "Первый запрос обязан ждать шлюза, пока тест не отпустит дубликат");
             if (attempt == 1) {
                 throw new ApiException(ErrorCode.CONFLICT, "Дух занят задачей вне REST", Map.of());
             }
@@ -428,17 +437,17 @@ class TaskRoutesTests {
         AtomicReference<Throwable> firstFailure = new AtomicReference<>();
         Thread first = postInBackground(body, firstOpened, firstFailure);
         first.start();
-        assertTrue(firstInStart.await(5, TimeUnit.SECONDS), "Первый запрос обязан дойти до шлюза до старта дубликата");
+        Threads.await(firstInStart, "Первый запрос обязан дойти до шлюза до старта дубликата");
 
         AtomicReference<RestResponse> secondOpened = new AtomicReference<>();
         AtomicReference<Throwable> secondFailure = new AtomicReference<>();
         Thread second = postInBackground(body, secondOpened, secondFailure);
         second.start();
-        ThreadStates.awaitWaiting(second, "Дубликат обязан ждать результат первого, пока тот не провалится");
+        cache.awaitChecks("Дубликат обязан дойти до проверки request_id раньше, чем первый запрос провалится");
 
         releaseFirst.countDown();
-        first.join(TimeUnit.SECONDS.toMillis(5));
-        second.join(TimeUnit.SECONDS.toMillis(5));
+        Threads.join(first, "Первый запрос обязан завершиться ответом");
+        Threads.join(second, "Дубликат обязан завершиться ответом");
 
         assertNull(firstFailure.get(), "Первый запрос обязан завершиться ответом: " + firstFailure.get());
         assertNull(secondFailure.get(), "Дубликат обязан завершиться ответом: " + secondFailure.get());
@@ -466,14 +475,6 @@ class TaskRoutesTests {
         });
         worker.setDaemon(true);
         return worker;
-    }
-
-    private static void await(CountDownLatch latch) {
-        try {
-            latch.await();
-        } catch (InterruptedException interrupted) {
-            Thread.currentThread().interrupt();
-        }
     }
 
     @Test
@@ -700,8 +701,7 @@ class TaskRoutesTests {
         });
         locker.setDaemon(true);
         locker.start();
-        assertTrue(
-                slotsLocked.await(5, TimeUnit.SECONDS), "Тест обязан удерживать монитор слотов до старта HTTP-запроса");
+        Threads.await(slotsLocked, "Тест обязан удерживать монитор слотов до старта HTTP-запроса");
 
         AtomicReference<RestResponse> opened = new AtomicReference<>();
         AtomicReference<Throwable> failure = new AtomicReference<>();
@@ -722,9 +722,8 @@ class TaskRoutesTests {
 
         registry.observe(taskId, TaskState.SUCCEEDED, null, null);
         proceed.countDown();
-        http.join(TimeUnit.SECONDS.toMillis(5));
-        locker.join(TimeUnit.SECONDS.toMillis(5));
-        assertFalse(http.isAlive(), "HTTP-запрос обязан завершиться после освобождения слотов");
+        Threads.join(http, "HTTP-запрос обязан завершиться после освобождения слотов");
+        Threads.join(locker, "Поток, державший слоты, обязан завершиться");
         assertNull(failure.get(), "HTTP-запрос обязан вернуть ответ, а не упасть исключением: " + failure.get());
         assertEquals(
                 200,
