@@ -133,7 +133,8 @@ public final class DispatchRound {
                         + ": ждёт выход из ловушки (граф ставит rescue)");
             }
         }
-        Optional<String> vital = VitalGate.refusal(ticket, spirit.needs(), VitalNeeds.needs());
+        Optional<String> vital =
+                VitalGate.refusal(ticket, VitalChain.withPath(spirit.needs(), board, spirit.id()), VitalNeeds.needs());
         if (vital.isPresent()) {
             return vital;
         }

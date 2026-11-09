@@ -155,4 +155,24 @@ class CrossVitalScenarioTests {
                         .orElse(""),
                 "На живом снимке обычную работу получает сытый дух: " + liveCandidates);
     }
+
+    @Test
+    void vital_HungryWithoutPathOnBoard_KeepsWorkingAndWorkIsNotBlocked() {
+        GraphWorld world = GraphMutations.liveStageOne().with("food", 0).tools("spirit-2", 1);
+        GraphPlan plan = plan(world, world.facts);
+        GraphTickets.Result result = tickets(world, world.facts);
+        DispatchRound round = new DispatchRound(board(world, result), 0);
+        List<DispatchRound.Candidate> candidates = candidates(
+                world,
+                Map.of("spirit-1", HUNGRY, "spirit-2", FED),
+                Map.of("spirit-1", SpiritView.free(), "spirit-2", SpiritView.free()));
+
+        assertFalse(
+                round.refusal(
+                                boardTicket(ticketFor(result, GraphTickets.id(task(plan, "dig_dirt")))),
+                                candidates.get(0))
+                        .orElse("")
+                        .contains("голод"),
+                "Пути к еде на доске нет: простой её не добудет, дух работает, а граф поднимает источник");
+    }
 }
