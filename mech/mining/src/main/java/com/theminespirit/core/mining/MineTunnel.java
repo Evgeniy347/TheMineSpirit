@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
+import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 
 public final class MineTunnel {
@@ -49,14 +50,21 @@ public final class MineTunnel {
     private MineTunnel() {}
 
     public static Plan plan(BlockCoord target, BlockCoord feet, SafetyView view, int maxSteps) {
+        return plan(target, feet, view, maxSteps, cell -> false);
+    }
+
+    public static Plan plan(
+            BlockCoord target, BlockCoord feet, SafetyView view, int maxSteps, Predicate<BlockCoord> blocked) {
         Objects.requireNonNull(target, "Цель прохода не может быть null: без неё неизвестно, куда копать");
         Objects.requireNonNull(feet, "Точка духа не может быть null: проход начинается от ног");
         Objects.requireNonNull(view, "Вид мира не может быть null: по нему проверяется порода на пути");
+        Objects.requireNonNull(
+                blocked, "Признак защищённой клетки не может быть null: без него проход выломает блок постройки");
         if (maxSteps < 1) {
             throw new IllegalArgumentException(
                     "Предел шагов " + maxSteps + " меньше единицы: проход не копают на " + "ноль шагов");
         }
-        return new Search(target, feet, view, maxSteps).run();
+        return new Search(target, feet, view, maxSteps, blocked).run();
     }
 
     private static final class Search {
@@ -69,15 +77,23 @@ public final class MineTunnel {
         private final Queue<Open> queue =
                 new PriorityQueue<>(Comparator.comparingLong(Open::estimate).thenComparingInt(Open::steps));
         private boolean unsafeSeen;
+        private boolean blockedSeen;
+        private final Predicate<BlockCoord> blocked;
 
-        private Search(BlockCoord target, BlockCoord feet, SafetyView view, int maxSteps) {
+        private Search(
+                BlockCoord target, BlockCoord feet, SafetyView view, int maxSteps, Predicate<BlockCoord> blocked) {
             this.target = target;
             this.feet = feet;
             this.view = view;
             this.maxSteps = maxSteps;
+            this.blocked = blocked;
         }
 
         private Plan run() {
+            if (blocked.test(target)) {
+                return new Plan(
+                        target, List.of(), "руда " + target + " — блок постройки/плана поселения: её не добывают");
+            }
             best.put(feet, 0);
             queue.add(new Open(feet, 0, estimate(feet, target)));
             while (!queue.isEmpty()) {
@@ -98,6 +114,9 @@ public final class MineTunnel {
             if (unsafeSeen) {
                 refusal += ": на пути жидкость или опасный блок";
             }
+            if (blockedSeen) {
+                refusal += ": на пути блок постройки/плана поселения";
+            }
             return new Plan(target, List.of(), refusal);
         }
 
@@ -109,6 +128,10 @@ public final class MineTunnel {
                             open.stand().y() + rise,
                             open.stand().z() + side[1]);
                     if (!inside(next) || next.equals(target)) {
+                        continue;
+                    }
+                    if (blocked.test(next) || blocked.test(new BlockCoord(next.x(), next.y() + 1, next.z()))) {
+                        blockedSeen = true;
                         continue;
                     }
                     List<BlockCoord> dig = digCells(next, view);

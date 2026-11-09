@@ -8,6 +8,7 @@ import com.theminespirit.core.movement.SealedSpace;
 import com.theminespirit.core.movement.WaterCrossingPlanner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
+import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.movement.CheapBlocks;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,7 @@ public final class DigOutScript implements ScriptInstance {
         this.fromPit = open(level, spirit.blockPosition());
         this.descending = target.y() < spirit.blockPosition().getY();
         this.breaker = BlockBreaker.escaping(spirit, rescue);
-        this.placer = new BlockPlacer(spirit);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.NONE);
         this.restore = new DigOutRestore(spirit, level);
         boolean sealedNow = sealed(level, spirit.blockPosition());
         this.backfill = new DigOutBackfill(

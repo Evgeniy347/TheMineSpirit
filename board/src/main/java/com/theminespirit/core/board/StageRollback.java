@@ -2,6 +2,7 @@ package com.theminespirit.core.board;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -81,8 +82,6 @@ public final class StageRollback {
         Objects.requireNonNull(world, "Мир не может быть null: готовность построек проверяется по нему");
         Optional<StageGate> confirmed = ledger.confirmedGate();
         int stage = confirmed.map(StageGate::stage).orElseGet(() -> rules.stageOf(ledger));
-        Map<String, Integer> missing =
-                confirmed.map(StageGate::missing).orElseGet(() -> rules.missingOf(ledger, stage));
         int stages = rules.stages().size();
         List<StageView.Requirement> requirements = new ArrayList<>();
         int shown = Math.min(stage, stages);
@@ -117,7 +116,20 @@ public final class StageRollback {
                             world.ready(null, entry.getKey(), entry.getValue()),
                             true)));
         }
-        return new StageView(stage, stages, missing, requirements);
+        return new StageView(stage, stages, liveMissing(requirements, stage), requirements);
+    }
+
+    private static Map<String, Integer> liveMissing(List<StageView.Requirement> requirements, int stage) {
+        Map<String, Integer> missing = new LinkedHashMap<>();
+        for (StageView.Requirement requirement : requirements) {
+            if (requirement.stage() != stage || requirement.optional()) {
+                continue;
+            }
+            if (!requirement.closed() || requirement.world() != Readiness.READY) {
+                missing.put(requirement.id(), requirement.level());
+            }
+        }
+        return missing;
     }
 
     public static Plan plan(

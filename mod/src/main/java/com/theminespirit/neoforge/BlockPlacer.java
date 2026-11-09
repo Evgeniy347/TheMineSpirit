@@ -7,6 +7,9 @@ import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.PolicyId;
+import com.theminespirit.core.town.PlotProtection;
+import com.theminespirit.core.town.StageSite;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.List;
 import java.util.Objects;
@@ -52,9 +55,16 @@ public final class BlockPlacer {
     public record Protected(PolicyId policy, String reason) implements Begin {}
 
     private final SpiritEntity spirit;
+    private final PlotProtection.Ground ground;
 
     public BlockPlacer(SpiritEntity spirit) {
+        this(spirit, PlotProtection.Ground.PLAN_BUILD);
+    }
+
+    public BlockPlacer(SpiritEntity spirit, PlotProtection.Ground ground) {
         this.spirit = Objects.requireNonNull(spirit, "Дух не может быть null: без него неизвестно, кто ставит");
+        this.ground =
+                Objects.requireNonNull(ground, "Основание постановки не может быть null: без него не отличить стройку");
     }
 
     public Begin begin(BlockPos target, BlockState state, String blockId) {
@@ -75,18 +85,10 @@ public final class BlockPlacer {
                     RefuseReason.CHUNK_NOT_LOADED,
                     "чанк с клеткой " + target.toShortString() + " не загружен: дух не грузит чанки ради стройки");
         }
-        BlockState current = level.getBlockState(target);
         boolean action = SchematicActions.isActionPlaced(blockId);
-        if (!action && !replaceable(current)) {
-            return new Refused(
-                    RefuseReason.OCCUPIED,
-                    "клетка " + target.toShortString() + " занята блоком " + BlockStates.idOf(current)
-                            + ": ставить некуда");
-        }
-        if (!livingEntities(level, target, spirit).isEmpty()) {
-            return new Refused(
-                    RefuseReason.OCCUPIED,
-                    "клетку " + target.toShortString() + " занимает живое существо: ставить в него нельзя");
+        Begin occupied = PlaceOccupancy.check(spirit, level, target, action);
+        if (occupied != null) {
+            return occupied;
         }
         BlockCoord feet = feet();
         BlockCoord cell = new BlockCoord(target.getX(), target.getY(), target.getZ());
@@ -99,6 +101,11 @@ public final class BlockPlacer {
         }
         if (spirit.protectionGate().checkPlace(target) instanceof BlockProtection.Refused refused) {
             return new Protected(refused.policy(), refused.reason());
+        }
+        PlotProtection.Decision plot =
+                PlotProtection.check(site(level), cell, PlotProtection.Action.PLACE, ground, BuildPlanOwner.of(spirit));
+        if (plot instanceof PlotProtection.Refused refused) {
+            return new Protected(PolicyId.PROTECTED_BLOCKS, refused.reason());
         }
         if (action) {
             return SchematicActions.isTilled(blockId)
@@ -144,8 +151,10 @@ public final class BlockPlacer {
         return new Started(target.immutable());
     }
 
-    private static boolean replaceable(BlockState state) {
-        return state.isAir() || state.canBeReplaced() || !state.getFluidState().isEmpty();
+    private static @Nullable StageSite site(Level level) {
+        return level instanceof ServerLevel server
+                ? SettlementPlotStore.get(server).site().orElse(null)
+                : null;
     }
 
     private static Begin farmland(SpiritEntity spirit, Level level, BlockPos target) {

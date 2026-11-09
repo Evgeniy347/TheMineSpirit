@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge.policy;
 
-import com.theminespirit.neoforge.board.PlotEditLog;
+import com.theminespirit.neoforge.board.PlotBreakLog;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.IEventBus;
@@ -29,7 +29,7 @@ public final class PolicyEvents {
     public static void onBlockBroken(BlockEvent.BreakEvent event) {
         if (event.getLevel() instanceof ServerLevel level) {
             PlacedBlocksData data = PlacedBlocksData.get(level);
-            PlotEditLog.broken(level, event.getPos(), event.getPlayer());
+            PlotBreakLog.brokenBy(level, event.getPos(), event.getPlayer(), "BREAK", "команда игрока");
             data.unmark(event.getPos());
             data.unmarkSpirit(event.getPos());
         }
@@ -40,7 +40,7 @@ public final class PolicyEvents {
         if (event.getLevel() instanceof ServerLevel level) {
             PlacedBlocksData data = PlacedBlocksData.get(level);
             event.getAffectedBlocks().forEach(pos -> {
-                PlotEditLog.broken(level, pos, null);
+                PlotBreakLog.brokenBy(level, pos, null, "EXPLOSION", "взрыв");
                 data.unmark(pos);
                 data.unmarkSpirit(pos);
             });

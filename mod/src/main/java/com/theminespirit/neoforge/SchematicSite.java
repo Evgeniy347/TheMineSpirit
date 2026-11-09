@@ -8,12 +8,17 @@ import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SchematicGround;
+import com.theminespirit.core.building.SchematicUpgrade;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.forestry.TreeSpan;
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.PlanBuilding;
+import com.theminespirit.core.town.StageSite;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -25,6 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -239,8 +245,39 @@ final class SchematicSite {
             }
             cells.add(entry.pos());
         }
+        addOldSchemeExtras(cells);
         cells.sort(Comparator.comparingInt(BlockCoord::y).reversed().thenComparing(Comparator.naturalOrder()));
         return cells;
+    }
+
+    private void addOldSchemeExtras(List<BlockCoord> cells) {
+        if (!(level instanceof ServerLevel server)) {
+            return;
+        }
+        StageSite site = SettlementPlotStore.get(server).site().orElse(null);
+        if (site == null) {
+            return;
+        }
+        PlanBuilding own = site.protectionBuilding(origin.x(), origin.y(), origin.z());
+        if (own == PlanBuilding.NONE) {
+            return;
+        }
+        PlacedBlocksData placed = PlacedBlocksData.get(server);
+        List<BlockCoord> previous = new ArrayList<>();
+        for (int y = minY; y <= maxY + StageSite.BUILDING_HEIGHT; y++) {
+            for (int x = minX; x <= maxX; x++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    if (site.protectionBuilding(x, y, z) != own) {
+                        continue;
+                    }
+                    BlockPos pos = new BlockPos(x, y, z);
+                    if (placed.isSpiritMarked(pos) && !level.getBlockState(pos).isAir()) {
+                        previous.add(new BlockCoord(x, y, z));
+                    }
+                }
+            }
+        }
+        cells.addAll(SchematicUpgrade.extraPositions(previous, schematic, origin, BuildRotation.NONE));
     }
 
     boolean freeForPlacing(Schematic.PlacedEntry entry) {

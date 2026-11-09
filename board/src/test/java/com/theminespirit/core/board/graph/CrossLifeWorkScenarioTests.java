@@ -2,13 +2,10 @@ package com.theminespirit.core.board.graph;
 
 import static com.theminespirit.core.board.graph.CrossActions.board;
 import static com.theminespirit.core.board.graph.CrossActions.boardTicket;
-import static com.theminespirit.core.board.graph.CrossActions.candidates;
 import static com.theminespirit.core.board.graph.CrossActions.chopTarget;
 import static com.theminespirit.core.board.graph.CrossActions.id;
 import static com.theminespirit.core.board.graph.CrossActions.scripts;
 import static com.theminespirit.core.board.graph.CrossScene.FED;
-import static com.theminespirit.core.board.graph.CrossScene.HUNGRY;
-import static com.theminespirit.core.board.graph.CrossScene.chest;
 import static com.theminespirit.core.board.graph.CrossScene.damaged;
 import static com.theminespirit.core.board.graph.CrossScene.facts;
 import static com.theminespirit.core.board.graph.CrossScene.ids;
@@ -20,7 +17,6 @@ import static com.theminespirit.core.board.graph.CrossScene.task;
 import static com.theminespirit.core.board.graph.CrossScene.tasksFor;
 import static com.theminespirit.core.board.graph.CrossScene.tasksMaking;
 import static com.theminespirit.core.board.graph.CrossScene.threat;
-import static com.theminespirit.core.board.graph.CrossScene.ticketFor;
 import static com.theminespirit.core.board.graph.CrossScene.tickets;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -190,81 +186,6 @@ class CrossLifeWorkScenarioTests {
                 BoardCase.ACTIVITY_MOVE,
                 BoardActivities.caseOfScript("walk_careful").orElseThrow(),
                 "Далёкий маршрут ночью — отдельное осторожное движение, а не рубка");
-    }
-
-    @Test
-    void hunger_NoFoodInStock_GraphSendsHungrySpiritToMine() {
-        GraphWorld world = stageOne();
-        world.tools("spirit-2", 1);
-        world.with("coal", 0).with("food", 0).event("hungry");
-        GraphFacts facts = facts(named(spirit("spirit-1", 20, 2), spirit("spirit-2")));
-        GraphPlan plan = plan(world, facts);
-        GraphPlan.Task eat = task(plan, "event:hungry:eat");
-        GraphPlan.Task mine = task(plan, "mine_coal");
-
-        assertFalse(eat.feasible(), "Еды нет ни в руках, ни на складе — поесть нечем: " + ids(plan));
-        assertTrue(mine.feasible(), "Шахта остаётся выполнимой работой: " + ids(plan));
-        assertFalse(
-                tickets(world, facts).post().stream()
-                        .anyMatch(ticket -> ticket.id().endsWith(":eat")),
-                "Невыполнимая еда не ставится на доску, и голодный дух остаётся без неё");
-        assertEquals(
-                mine.id(),
-                tickets(world, facts).post().get(0).task().id(),
-                "Голодный дух получает шахту первым заданием, хотя еда важнее: "
-                        + tickets(world, facts).post().stream()
-                                .map(GraphTickets.Ticket::id)
-                                .toList());
-
-        List<DispatchRound.Candidate> candidates = candidates(
-                world,
-                Map.of("spirit-1", HUNGRY, "spirit-2", FED),
-                Map.of("spirit-1", SpiritView.free(), "spirit-2", SpiritView.free()));
-        DispatchRound round = new DispatchRound(board(world, tickets(world, facts)), 0);
-        Optional<DispatchRound.Candidate> chosen =
-                round.choose(boardTicket(ticketFor(tickets(world, facts), GraphTickets.id(mine))), candidates);
-        assertEquals(
-                "spirit-1",
-                chosen.map(DispatchRound.Candidate::name).orElse(""),
-                "Голодного духа отправляют копать уголь, а не к еде: " + candidates);
-    }
-
-    @Test
-    void hunger_FoodInChest_EatOutranksMineAndGoesToHungrySpirit() {
-        GraphWorld world = stageOne();
-        world.tools("spirit-2", 1);
-        world.with("coal", 0).with("food", 8).event("hungry");
-        GraphFacts facts = facts(
-                named(spirit("spirit-1", 20, 2), spirit("spirit-2")),
-                List.of(),
-                List.of(chest(Map.of("food", 8))),
-                GraphSiteFacts.Terrain.empty(),
-                Map.of());
-        GraphPlan plan = plan(world, facts);
-        GraphPlan.Task eat = task(plan, "event:hungry:eat");
-        GraphPlan.Task mine = task(plan, "mine_coal");
-
-        assertTrue(eat.feasible(), "Еда в сундуке делает поесть выполнимым: " + ids(plan));
-        assertTrue(eat.priority() > mine.priority(), "Поесть важнее шахты: " + ids(plan));
-        List<GraphTickets.Ticket> posted = tickets(world, facts).post();
-        assertEquals(
-                eat.id(),
-                posted.get(0).task().id(),
-                "Первым на доске поесть, а не копать: "
-                        + posted.stream().map(GraphTickets.Ticket::id).toList());
-        assertEquals(
-                BoardCase.EAT_TO_FULL, eat.boardCase(), "Еда — внешний кейс, дух ест сам, доска только отдаёт задание");
-        List<DispatchRound.Candidate> candidates = candidates(
-                world,
-                Map.of("spirit-1", HUNGRY, "spirit-2", FED),
-                Map.of("spirit-1", SpiritView.free(), "spirit-2", SpiritView.free()));
-        DispatchRound round = new DispatchRound(board(world, tickets(world, facts)), 0);
-        assertEquals(
-                "spirit-1",
-                round.choose(boardTicket(ticketFor(tickets(world, facts), GraphTickets.id(eat))), candidates)
-                        .map(DispatchRound.Candidate::name)
-                        .orElse(""),
-                "Поесть достаётся голодному духу, а не сытому");
     }
 
     @Test

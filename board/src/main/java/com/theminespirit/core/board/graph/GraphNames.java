@@ -106,6 +106,7 @@ public final class GraphNames {
         Map<String, Set<String>> tags = new HashMap<>();
         tag(tags, "sand", "sand");
         tag(tags, "red_sand", "red_sand");
+        tag(tags, "water", "water");
         tag(tags, "clay", "clay");
         tag(tags, "lava", "lava");
         tag(tags, "cactus", "cactus");

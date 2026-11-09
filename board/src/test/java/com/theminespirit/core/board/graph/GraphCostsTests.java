@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +23,38 @@ class GraphCostsTests {
                 GraphLife.DEFAULTS.pressureWound(),
                 tuned.pressureWound(),
                 "Недостающее поле формулы жизни остаётся значением по умолчанию");
+    }
+
+    @Test
+    void life_DefaultGraph_ReadsCoefficientsFromData() {
+        GraphLife life = GraphWorld.GRAPH.costs().life();
+
+        assertEquals(1.5, life.fullPressureMobs(), "Полное давление мобов лежит в graph.json → life");
+        assertEquals(0.4, life.pressureBase(), "Базовое давление раны лежит в данных графа");
+        assertEquals(0.7, life.pressureWound(), "Вклад раны в давление лежит в данных графа");
+        assertEquals(0.2, life.hurtShare(), "Доля свежего урона лежит в данных графа");
+        assertEquals(0.8, life.injuryWound(), "Вес жизни раненого духа лежит в данных графа");
+        assertEquals(0.4, life.injuryHurt(), "Вес свежего урона духа лежит в данных графа");
+        assertEquals(16.0, life.threatRadius(), "Радиус угрозы жизни лежит в graph.json → life");
+        assertEquals(200, life.damageWindowTicks(), "Окно урона жизни лежит в graph.json → life");
+        assertEquals(0.35, life.weakHealth(), "Порог слабого здоровья игрока лежит в данных графа");
+        assertEquals(6, life.weakFood(), "Порог слабой еды игрока лежит в данных графа");
+    }
+
+    @Test
+    void life_InvalidCoefficients_Rejected() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new GraphLife(1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 16.0, 200, 1.2F, 6),
+                "Доля здоровья больше 1 не бывает: порог живёт в [0, 1]");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new GraphLife(1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 16.0, 0, 0.35F, 6),
+                "Нулевое окно урона ломает деление: оно положительно");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new GraphLife(1.5, 0.4, 0.7, 0.2, 0.8, 0.4, 16.0, 200, 0.35F, -1),
+                "Отрицательный порог еды отвергается: голод начинается с нуля");
     }
 
     @Test

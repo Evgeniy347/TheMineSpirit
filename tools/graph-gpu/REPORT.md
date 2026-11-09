@@ -199,7 +199,7 @@
 Python-модель уже читала аудит (`GraphBuildingMaterials`, `GraphEventFacts`); добавлен тест
 `test_audit_inputs`: недостача становится материалами ремонта, а вес ремонта растёт от
 `auditPercent` и важности этапа. `test_dead_inputs` проверяет, что мир `more5` действительно
-вызывает `more5_defend_player`, `more5_pickup_wood_drop`, `more5_light_mine`.
+вызывает `more5_pickup_wood_drop`, `more5_light_mine`.
 
 **Пересчёт.** 87 категорий (добавлены `event:more4…more7`). Ограниченный прогон
 `--fixed "decay,way:CRAFT_*_AXE,way:dig"`: 9 поколений × 8 × 2 сида, доля **0.8184**,

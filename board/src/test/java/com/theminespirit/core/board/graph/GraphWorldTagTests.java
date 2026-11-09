@@ -17,6 +17,7 @@ class GraphWorldTagTests {
                         "stripped_oak_log",
                         "red_sand",
                         "clay",
+                        "water",
                         "poppy",
                         "blue_orchid",
                         "lilac",
@@ -45,6 +46,7 @@ class GraphWorldTagTests {
                         "tree:birch",
                         "red_sand",
                         "clay",
+                        "water",
                         "flower:poppy",
                         "flower:blue_orchid",
                         "flower:lilac",
@@ -68,8 +70,8 @@ class GraphWorldTagTests {
                         "sheep:black"),
                 world,
                 "Округа для путей графа: породы по брёвнам (ободранные — не дерево), красный песок отдельно, глина, "
-                        + "цветы, грибы, бамбук, ламинария, лианы, грязь и корни мангров, найденная алмазная руда, "
-                        + "живность; иначе путь «world» не активируется: " + world);
+                        + "вода для рыбалки, цветы, грибы, бамбук, ламинария, лианы, грязь и корни мангров, "
+                        + "найденная алмазная руда, живность; иначе путь «world» не активируется: " + world);
     }
 
     @Test
@@ -77,6 +79,7 @@ class GraphWorldTagTests {
         Map<String, String> tags = Map.of(
                 "minecraft:blue_orchid", "flower:blue_orchid",
                 "lilac", "flower:lilac",
+                "water", "water",
                 "brown_mushroom", "mushrooms",
                 "bamboo", "bamboo_jungle",
                 "kelp_plant", "ocean",

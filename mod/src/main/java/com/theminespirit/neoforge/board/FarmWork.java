@@ -40,13 +40,7 @@ final class FarmWork {
         if (spot.isEmpty()) {
             return false;
         }
-        FarmPost.submit(
-                post,
-                ticket.id(),
-                BoardCase.FISH,
-                ticket.task().priority(),
-                TicketTarget.at(spot.orElseThrow()),
-                Map.of());
+        post.submit(ticket, BoardCase.FISH, TicketTarget.at(spot.orElseThrow()), Map.of());
         return true;
     }
 

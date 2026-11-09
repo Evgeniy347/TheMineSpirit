@@ -724,6 +724,7 @@ class Graph:
                 "advice": list(event.get("advice") or []),
                 "life": bool(event.get("life", False)),
             }
+        self._derive_repairs()
         self.groups = {k: list(v) for k, v in (data.get("groups") or {}).items()}
         self.triggers = [dict(t) for t in (data.get("triggers") or [])]
         self.herd_caps = {k: HerdCap(v) for k, v in (data.get("herdCaps") or {}).items()}
@@ -742,6 +743,22 @@ class Graph:
         for way in self.ways:
             self._way_by_id.setdefault(way.id, way)
         self.costs = Costs(data, data.get("ways") or [])
+
+    def _derive_repairs(self):
+        template = self.events.get("building_damaged")
+        if not template or not template["tasks"]:
+            return
+        for building in self.buildings:
+            name = "repair_" + building
+            if name in self.events:
+                continue
+            self.events[name] = {
+                "tasks": [dict(task, id="repair:" + building, building=building)
+                          for task in template["tasks"]],
+                "push": dict(template["push"]),
+                "advice": list(template["advice"]),
+                "life": bool(template["life"]),
+            }
 
     @classmethod
     def load(cls, path):

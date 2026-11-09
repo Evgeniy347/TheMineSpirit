@@ -1,9 +1,10 @@
 package com.theminespirit.neoforge.policy;
 
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.PolicyId;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.BedBlock;
@@ -27,7 +28,8 @@ public final class RescueBreach {
         if (!rescue || !(spirit.level() instanceof ServerLevel server)) {
             return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, "не спасение");
         }
-        if (!ProtectionGate.inPlan(server, new BlockCoord(pos.getX(), pos.getY(), pos.getZ()))) {
+        StageSite site = SettlementPlotStore.get(server).site().orElse(null);
+        if (site == null || !site.protectionCell(pos.getX(), pos.getY(), pos.getZ())) {
             return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, "не клетка плана");
         }
         if (!breakable(state)) {

@@ -51,6 +51,35 @@ class ChopPlanTests {
     }
 
     @Test
+    void of_ProtectedLogs_SkippedAndRestOfTreeChopped() {
+        ChopPlan plan = ChopPlan.of(trunk(64, 6), new BlockCoord(0, 64, 0), cell -> cell.y() == 65 || cell.y() == 68);
+
+        assertEquals(
+                List.of(
+                        new BlockCoord(0, 69, 0),
+                        new BlockCoord(0, 67, 0),
+                        new BlockCoord(0, 66, 0),
+                        new BlockCoord(0, 64, 0)),
+                plan.order(),
+                "Брёвна постройки в створе не рубятся, остальное дерево снимается целиком: иначе одно защищённое "
+                        + "бревно оставляет духа с «незавершённой» рубкой навсегда");
+    }
+
+    @Test
+    void rest_ProtectedLogLeft_IsNotCountedAsIncomplete() {
+        Tree tree = trunk(64, 3);
+        ChopPlan plan = ChopPlan.of(tree, new BlockCoord(0, 64, 0));
+        ChopPlan rest = plan.rest(
+                new MemoryTree(List.of(new BlockCoord(0, 65, 0))), new BlockCoord(0, 64, 0), cell -> cell.y() == 65);
+
+        assertEquals(
+                List.of(),
+                rest.order(),
+                "Оставшееся защищённое бревно не считается остатком работы: рубка считается законченной, а не "
+                        + "крутится вокруг постройки до таймаута");
+    }
+
+    @Test
     void of_NullTree_Throws() {
         assertThrows(
                 NullPointerException.class,
@@ -64,6 +93,33 @@ class ChopPlanTests {
                 NullPointerException.class,
                 () -> ChopPlan.of(trunk(64, 3), null),
                 "План без стоянки построить нельзя: порядок рубки считается от стоянки духа");
+    }
+
+    private record MemoryTree(List<BlockCoord> logs) implements TreeView {
+        @Override
+        public boolean isLog(BlockCoord coord) {
+            return logs.contains(coord);
+        }
+
+        @Override
+        public boolean isNaturalLeaves(BlockCoord coord) {
+            return false;
+        }
+
+        @Override
+        public boolean isSoil(BlockCoord coord) {
+            return false;
+        }
+
+        @Override
+        public boolean isArtificial(BlockCoord coord) {
+            return false;
+        }
+
+        @Override
+        public boolean isEmpty(BlockCoord coord) {
+            return !logs.contains(coord);
+        }
     }
 
     private static Tree trunk(int baseY, int count) {

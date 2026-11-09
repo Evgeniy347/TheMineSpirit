@@ -18,13 +18,21 @@ public final class RepairPlan {
     private RepairPlan() {}
 
     public static BoardTicket ticket(BoardCase step, Map<String, Integer> need, long now) {
+        return ticket(step, need, now, null);
+    }
+
+    public static BoardTicket ticket(BoardCase step, Map<String, Integer> need, long now, @Nullable String planId) {
         Objects.requireNonNull(step, "Шаг ремонта не может быть null: по нему выбирается схема восстановления");
         Objects.requireNonNull(need, "Нехватка ремонта не может быть null: пустую задают пустой картой");
         List<String> modifiers = step == BoardCase.BUILD_MINE
                 ? List.of(ToolGate.TOOL_MODIFIER + ToolGate.PICKAXE, ToolGate.CARRY_MODIFIER + "cobblestone")
                 : List.of();
+        String id = PREFIX + step.name().toLowerCase(Locale.ROOT);
+        if (planId != null && !planId.isBlank()) {
+            id = id + ":" + planId;
+        }
         return new BoardTicket(
-                PREFIX + step.name().toLowerCase(Locale.ROOT),
+                id,
                 BoardCase.REPAIR_BUILDING,
                 Optional.empty(),
                 BoardRules.repairPriorityOf(step),

@@ -22,6 +22,7 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.RemovalLog;
 import com.theminespirit.core.script.BuildSchematicParams;
+import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.movement.PathNetworkService;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -140,7 +141,7 @@ final class BuildSchematicScript implements ScriptInstance {
         this.spirit = spirit;
         this.level = spirit.level();
         this.site = new SchematicSite(level, schematic, origin, rotation);
-        this.placer = new BlockPlacer(spirit);
+        this.placer = new BlockPlacer(spirit, PlotProtection.Ground.PLAN_BUILD);
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
         this.reservations = BuildReservationHub.forLevel(level);
