@@ -54,7 +54,7 @@ public final class DemoBuildings {
     public static final String CATALOG = PresetLibrary.SCHEMATICS_ROOT + "buildings.json";
     private static final Set<String> BUILDING_FIELDS = Set.of("id", "name", "type", "levels");
     private static final Set<String> LEVEL_FIELDS = Set.of("level", "scheme");
-    private static final Set<String> RESERVED_IDS = Set.of("list", "stop", "city");
+    private static final Set<String> RESERVED_IDS = Set.of("list", "stop", "city", "wall");
 
     private static final List<Building> ALL = parse(JsonResource.readClasspath(CATALOG), CATALOG);
 
