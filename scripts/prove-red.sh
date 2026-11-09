@@ -44,19 +44,37 @@ fi
 
 classes=()
 filters=()
+patterns=()
+targets=()
+declare -A declared=()
 while IFS= read -r file; do
     git show "$fix:$file" | grep -qE '@(Test|Example|Property|ParameterizedTest|RepeatedTest|TestFactory)\b' || continue
     fqn=""
+    target=""
     for test_dir in "${TEST_DIRS[@]}"; do
         case "$file" in
-            "$test_dir"/*) fqn="${file#"$test_dir"/}"; break ;;
+            "$test_dir"/*)
+                fqn="${file#"$test_dir"/}"
+                if [ "$test_dir" = "$MOD_TEST_DIR" ]; then
+                    target=":test"
+                else
+                    module="${test_dir%/src/test/java}"
+                    target=":${module//\//:}:test"
+                fi
+                break
+                ;;
         esac
     done
     [ -n "$fqn" ] || continue
+    if [ -z "${declared[$target]:-}" ]; then
+        declared[$target]=1
+        targets+=("$target")
+    fi
     fqn="${fqn%.java}"
     fqn="${fqn//\//.}"
     classes+=("$fqn")
     filters+=("$fqn" "$fqn\$*")
+    patterns+=("$fqn" "$fqn\$*")
 done <<<"$changed_tests"
 if [ "${#classes[@]}" -eq 0 ]; then
     echo "В изменённых файлах нет тестовых методов (@Test/@Example/@Property) — доказывать нечего."
@@ -64,9 +82,14 @@ if [ "${#classes[@]}" -eq 0 ]; then
 fi
 if [ -n "$user_filter" ]; then
     filters=("$user_filter")
+    patterns=("$user_filter")
 fi
 filter_args=()
 for f in "${filters[@]}"; do filter_args+=(--tests "$f"); done
+# lib: --tests действует на все задачи test, поэтому не запускаем чужие модули без этих тестов;
+# их задачи падали бы с «No tests found for given includes» (как в многомодульной сборке).
+target_args=("${targets[@]}")
+module_filter="$(IFS=,; printf '%s' "${patterns[*]}")"
 
 cleanup() {
     if [ -z "${PROVE_RED_KEEP:-}" ]; then
@@ -86,7 +109,8 @@ run_gradle() {
     for report_dir in "${REPORT_DIRS[@]}"; do
         rm -rf "$work/$report_dir"
     done
-    (cd "$work" && ./gradlew test --rerun --console=plain "${filter_args[@]}") >"$log" 2>&1
+    (cd "$work" && ./gradlew "${target_args[@]}" --rerun --console=plain "${filter_args[@]}" \
+        -Ptheminespirit.filtered "-Ptheminespirit.tests=$module_filter") >"$log" 2>&1
     code=$?
     [ "$code" -eq 0 ] && return 0
     if grep -qE "Execution failed for task ':.*compileTestJava'" "$log"; then

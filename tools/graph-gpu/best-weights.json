@@ -2014,7 +2014,6 @@
       "more4_rare_found": 1.0568191698560463,
       "more4_rare_mixed": 1.0568191698560463,
       "more4_caution": 1.0568191698560463,
-      "more5_player_weak": 1.0769877166464,
       "more5_crops_dark": 1.0769877166464,
       "more5_saplings_dark": 1.0769877166464,
       "more5_crops_dry": 1.0769877166464,
@@ -4086,7 +4085,6 @@
         "more4_feed_hungry": 63,
         "more4_rest_injured": 59
       },
-      "more5_player_weak": {},
       "more5_crops_dark": {
         "more5_light_crops": 62
       },

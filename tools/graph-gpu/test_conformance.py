@@ -1170,7 +1170,23 @@ def test_best_weights():
         if key.startswith("auto_"))
     assert not stale, ("в best-weights.json исторические auto_*-ключи: graphExport пересобирает эти пути, "
                        "их веса в файле мёртвые и вводят в заблуждение: " + ", ".join(stale[:5]))
-    print("OK: в best-weights.json нет исторических auto_*-ключей")
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    known = {
+        "items": set(graph.items),
+        "events": set(graph.events),
+        "ways": {way.id for way in graph.ways},
+        "buildings": set(graph.buildings),
+    }
+    dead = []
+    for section in ("weights", "absolute"):
+        for kind, ids in known.items():
+            dead.extend(
+                section + "." + kind + ":" + key
+                for key in (weights.get(section) or {}).get(kind, {})
+                if key not in ids)
+    assert not dead, ("в best-weights.json ключи, которых нет в графе: их веса мёртвые и вводят в заблуждение: "
+                      + ", ".join(sorted(dead)[:5]))
+    print("OK: в best-weights.json нет исторических auto_*-ключей и ключей вне графа")
 
 
 def test_conformance():

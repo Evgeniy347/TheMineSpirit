@@ -8,6 +8,7 @@ import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.observation.BlockCoord;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -64,12 +65,45 @@ class TownPlannerLiveTests {
 
     @Test
     void savedLiveTerrain_ReplanWithCurrentRules_PlacesStorage() throws Exception {
+        TownPlan replanned = replannedLive();
+
+        assertTrue(
+                replanned.placement("storage").isPresent(),
+                "На живом рельефе при обмере " + RULES.ground().probeRadius()
+                        + " склад обязан получить лот, не поместилось " + replanned.unplaced());
+    }
+
+    @Test
+    void savedLiveTerrain_ReplanWithCurrentRules_PlacesAllStageRequirements() throws Exception {
+        TownPlan replanned = replannedLive();
+        List<String> missing = new ArrayList<>();
+        for (StageRules.Stage stage : StageRules.load().stages()) {
+            for (String id : stage.requires().keySet()) {
+                if (replanned.placement(id).isEmpty()) {
+                    missing.add("этап " + stage.stage() + ": " + id);
+                }
+            }
+        }
+
+        assertEquals(
+                List.of(),
+                missing,
+                "На живом рельефе при обмере " + RULES.ground().probeRadius()
+                        + " каждая обязательная постройка этапов 1–4 обязана получить лот: иначе этап не закроется. "
+                        + "Не поместилось " + missing);
+    }
+
+    private static TownPlan replannedLive() throws Exception {
         List<String> lines = fixture("/live/warehouselot/terrain.txt").lines().toList();
         String[] head = lines.get(0).split(" ", -1);
         BlockCoord anchor =
                 new BlockCoord(Integer.parseInt(head[0]), Integer.parseInt(head[1]), Integer.parseInt(head[2]));
         int side = lines.get(1).split(" ", -1).length;
         int radius = (side - 1) / 2;
+        assertEquals(
+                2 * RULES.ground().probeRadius() + 1,
+                side,
+                "Живой рельеф снят текущим обмером " + RULES.ground().probeRadius() + ": иначе проверка не о том мире");
         int[] heights = new int[side * side];
         BitSet wet = new BitSet(side * side);
         for (int rz = 0; rz < side; rz++) {
@@ -82,12 +116,7 @@ class TownPlannerLiveTests {
                 wet.set(index, water.charAt(rx) != '0');
             }
         }
-        TownPlan replanned = TownPlanner.plan(TerrainGrid.around(anchor, radius, heights, wet), anchor, RULES, STAGES);
-
-        assertTrue(
-                replanned.placement("storage").isPresent(),
-                "На живом рельефе при обмере " + radius + " склад обязан получить лот, не поместилось "
-                        + replanned.unplaced());
+        return TownPlanner.plan(TerrainGrid.around(anchor, radius, heights, wet), anchor, RULES, STAGES);
     }
 
     @Test
