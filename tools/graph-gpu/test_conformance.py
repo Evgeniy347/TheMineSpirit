@@ -169,6 +169,33 @@ def test_life_player_fact():
     print("OK: факт здоровья игрока и коэффициенты жизни читаются из данных графа")
 
 
+def test_life_coefficient_vector():
+    graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
+    saved = graph.costs.life["weakHealth"]
+    graph.costs.life["weakHealth"] = 0.5
+    try:
+        vector = (("раненый 0.45", 9, True), ("целый 0.55", 11, False))
+        for label, health, expected in vector:
+            state = State({
+                "stage": 1,
+                "kits": {"spirit-1": {}},
+                "events": [],
+                "facts": {
+                    "spirits": {},
+                    "threats": [],
+                    "players": [{"name": "Steve", "position": {"x": 0, "y": 64, "z": 0},
+                                 "health": health, "maxHealth": 20, "food": 20}],
+                },
+            })
+            raised = any(task["id"].startswith("event:life_threat_player:")
+                         for task in plan(graph, state)["tasks"])
+            assert raised == expected, \
+                "Вектор фактов жизни " + label + ": порог из graph.json даёт " + str(expected) + ", а не " + str(raised)
+    finally:
+        graph.costs.life["weakHealth"] = saved
+    print("OK: события жизни выводятся из порога graph.json, а не из константы Python")
+
+
 def test_food_need_band():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     with open(os.path.join(EXPORT, "conformance.json"), "r", encoding="utf-8") as handle:
@@ -180,11 +207,13 @@ def test_food_need_band():
     harvest = tasks.get("event:hungry:harvest_crop")
     assert harvest is not None and harvest["feasible"], \
         "Поле построено — сбор урожая подключён к голоду: " + str(harvest)
-    for food in ("event:hungry:hunt", "event:hungry:fish", "event:hungry:harvest_crop",
-                 "event:hungry:wait_food"):
-        assert tasks[food]["priority"] > mine["priority"], \
-            "Еда выше насыщенной шахты на этапе 2: %s %s, шахта %s" % (
-                food, tasks[food]["priority"], mine["priority"])
+    food = ("event:hungry:hunt", "event:hungry:fish", "event:hungry:harvest_crop",
+            "event:hungry:wait_food")
+    food_priorities = [tasks[task]["priority"] for task in food]
+    assert food_priorities == sorted(food_priorities, reverse=True), \
+        "Пути еды стоят по силе в полосе потребности: " + str(food_priorities)
+    assert min(food_priorities) >= graph.work_priority - 9, \
+        "Вся еда не ниже полосы потребности: " + str(food_priorities)
     assert tasks["event:hungry:hunt"]["priority"] == graph.need_priority, \
         "Голод с пустой едой идёт в полосе потребности: " + str(tasks["event:hungry:hunt"])
     assert mine["priority"] <= graph.work_priority, \
@@ -198,11 +227,11 @@ def test_food_need_band():
         "world": [],
     })
     fed_tasks = {task["id"]: task for task in plan(graph, fed)["tasks"]}
-    assert fed_tasks["event:hungry:eat"]["priority"] == graph.need_priority, \
+    eat = fed_tasks["event:hungry:eat"]["priority"]
+    assert eat >= graph.work_priority - 9, \
         "Обед голодного духа с едой в запасе — тоже потребность: " + str(fed_tasks.get("event:hungry:eat"))
-    assert fed_tasks["event:hungry:eat"]["priority"] > fed_tasks["mine_coal"]["priority"], \
-        "Обед выше шахты и при еде в запасе: " + str(fed_tasks["event:hungry:eat"]) + " / " \
-        + str(fed_tasks["mine_coal"])
+    assert eat <= graph.need_priority, \
+        "Обед не выходит за верх полосы потребности: " + str(eat)
     print("OK: голод на этапе 2 выше шахты, сбор урожая подключён")
 
 

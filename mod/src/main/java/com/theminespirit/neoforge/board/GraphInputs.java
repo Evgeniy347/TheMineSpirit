@@ -92,7 +92,8 @@ final class GraphInputs {
                         around.distances(),
                         GraphFactInputs.stationCounts(graph, buildings))
                 .withOrders(GraphNames.need(CraftOrders.shortage(level)))
-                .withFacts(GraphStoreInputs.of(facts, level, graph));
+                .withFacts(
+                        GraphStoreInputs.of(facts, level, graph), graph.costs().life());
         GraphState more3 = More3Inputs.apply(
                 More2Inputs.apply(
                         MoreInputs.apply(

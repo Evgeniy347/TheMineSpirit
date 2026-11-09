@@ -111,7 +111,7 @@ public final class BoardService {
                 store.markBuild(build);
                 store.update(board.snapshot());
             }
-            BoardTargetsNbt.restore(store, board, targets);
+            BoardTargetsNbt.restore(store, board, targets, sources);
         }
         journal.restore(board.ledger());
     }
@@ -201,7 +201,7 @@ public final class BoardService {
 
     private void persist() {
         if (store != null) {
-            BoardTargetsNbt.persist(store, board.snapshot(), targets);
+            BoardTargetsNbt.persist(store, board.snapshot(), targets, sources);
         }
     }
 

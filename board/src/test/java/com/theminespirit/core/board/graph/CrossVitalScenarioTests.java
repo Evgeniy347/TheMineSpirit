@@ -13,6 +13,7 @@ import static com.theminespirit.core.board.graph.CrossScene.named;
 import static com.theminespirit.core.board.graph.CrossScene.plan;
 import static com.theminespirit.core.board.graph.CrossScene.spirit;
 import static com.theminespirit.core.board.graph.CrossScene.stageOne;
+import static com.theminespirit.core.board.graph.CrossScene.stageTwo;
 import static com.theminespirit.core.board.graph.CrossScene.task;
 import static com.theminespirit.core.board.graph.CrossScene.ticketFor;
 import static com.theminespirit.core.board.graph.CrossScene.tickets;

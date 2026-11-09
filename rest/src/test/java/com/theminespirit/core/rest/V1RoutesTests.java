@@ -101,15 +101,15 @@ class V1RoutesTests {
                 "{\"bots\":["
                         + "{\"id\":\"" + IDLE_ID + "\",\"name\":\"spirit\",\"state\":\"idle\",\"position\":[10,64,-3],"
                         + "\"dimension\":\"minecraft:overworld\",\"current_task\":null,\"activity\":null,"
-                        + "\"script\":null,\"board_task\":null,\"tick\":0,\"position_tick\":0,"
+                        + "\"script\":null,\"board_task\":null,\"tick\":0,\"position_tick\":0,\"last_move_tick\":0,"
                         + "\"state_since_tick\":0,\"food\":0.5,\"inventory\":{}},"
                         + "{\"id\":\"" + BUSY_ID + "\",\"name\":\"Дух-2\",\"state\":\"busy\",\"position\":[0,70,5],"
                         + "\"dimension\":\"minecraft:the_nether\",\"current_task\":null,\"activity\":null,"
-                        + "\"script\":null,\"board_task\":null,\"tick\":0,\"position_tick\":0,"
+                        + "\"script\":null,\"board_task\":null,\"tick\":0,\"position_tick\":0,\"last_move_tick\":0,"
                         + "\"state_since_tick\":0,\"food\":1.0,\"inventory\":{}},"
                         + "{\"id\":\"" + DEAD_ID + "\",\"name\":\"spirit\",\"state\":\"dead\",\"position\":[1,2,3],"
                         + "\"dimension\":\"minecraft:overworld\",\"current_task\":null,\"activity\":null,"
-                        + "\"script\":null,\"board_task\":null,\"tick\":0,\"position_tick\":0,"
+                        + "\"script\":null,\"board_task\":null,\"tick\":0,\"position_tick\":0,\"last_move_tick\":0,"
                         + "\"state_since_tick\":0,\"food\":0.0,\"inventory\":{}}]}",
                 response.body(),
                 "Список духов — контракт REST: id, name, state, position [x,y,z], dimension, current_task "
@@ -141,7 +141,8 @@ class V1RoutesTests {
                         + "\"current_task\":null,\"activity\":null,\"script\":null,"
                         + "\"board_task\":{\"id\":\"chop_jungle_log:2\","
                         + "\"case\":\"GATHER_MATERIALS\",\"status\":\"ASSIGNED\"},"
-                        + "\"tick\":1350,\"position_tick\":1290,\"state_since_tick\":1350,\"food\":1.0,\"inventory\":{}}",
+                        + "\"tick\":1350,\"position_tick\":1290,\"last_move_tick\":1290,"
+                        + "\"state_since_tick\":1350,\"food\":1.0,\"inventory\":{}}",
                 response.body(),
                 "Занятый дух обязан показывать задание доски в GET /v1/bots: без него наблюдение за работой "
                         + "слепо, а отдельный observe недоступен в списке");

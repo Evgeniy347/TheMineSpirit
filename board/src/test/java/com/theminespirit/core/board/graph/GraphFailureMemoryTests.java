@@ -63,6 +63,28 @@ class GraphFailureMemoryTests {
     }
 
     @Test
+    void saved_RestoredMemory_KeepsDecayAndCause() {
+        GraphFailureMemory memory = new GraphFailureMemory();
+        memory.note("chop_jungle_log", "10,64,20", "маршрут не найден", 100);
+        memory.note("make:dirt", "", "не хватает dirt=12", 200);
+        GraphFailureMemory restored = new GraphFailureMemory();
+
+        restored.restore(memory.saved());
+
+        assertEquals(
+                Set.of("10,64,20"),
+                restored.unreachablePoints(200, 1000),
+                "После перезапуска недостижимая точка помнится: пустая цель в набор не попадает");
+        GraphFeedback.Failure half =
+                restored.recent("chop_jungle_log", "10,64,20", 1100, 1000).orElseThrow();
+        assertEquals(0.5, half.weight(), 1e-9, "Сохранённая память затухает по времени, а не начинается заново");
+        assertEquals(
+                GraphFeedback.Cause.NO_MATERIAL,
+                restored.recent("make:dirt", "", 200, 1000).orElseThrow().cause(),
+                "Причина провала переживает перезапуск вместе с целью");
+    }
+
+    @Test
     void succeed_SameTarget_ResetsItsCounter() {
         GraphFailureMemory memory = new GraphFailureMemory();
 

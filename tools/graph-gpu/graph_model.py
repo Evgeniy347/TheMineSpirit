@@ -462,6 +462,18 @@ def life_priority(state, event, tasks, task, maximum):
     return min(maximum, max(0, int(math.floor(maximum * severity * share + 0.5))))
 
 
+VITAL_BAND = 9
+
+
+def vital_priority(task, tasks, work_max):
+    """VitalNeeds.priority: задача нужды в полосе над обычной работой."""
+    if work_max <= 0:
+        return 0
+    base = int(task.get("base", 0))
+    above = len({int(item.get("base", 0)) for item in tasks if int(item.get("base", 0)) > base})
+    return max(0, work_max - min(VITAL_BAND, above))
+
+
 class Choice:
     """GraphChoice: правила выбора (штраф/добавка), нейтральные по умолчанию."""
 
@@ -724,6 +736,7 @@ class Graph:
                 "push": dict(event.get("push") or {}),
                 "advice": list(event.get("advice") or []),
                 "life": bool(event.get("life", False)),
+                "vital": bool(event.get("vital", False)),
             }
         self._derive_repairs()
         self.groups = {k: list(v) for k, v in (data.get("groups") or {}).items()}
@@ -886,6 +899,7 @@ class State:
         self.player = dict(feedback.get("player") or {})
         self.players = list(self.facts.get("players") or [])
         self.failures = list(feedback.get("failures") or [])
+        self._base_events = list(self.events)
         self._derive_world_events()
 
     def _derive_world_events(self):
@@ -913,6 +927,7 @@ class State:
                 derived.append("repair_" + building_id)
         derived.extend(_life_events(self))
         derived.extend(_gear_events(self))
+        self.events = list(self._base_events)
         for name in derived:
             if name not in self.events:
                 self.events.append(name)
@@ -943,7 +958,7 @@ class State:
             "buildings": self.buildings,
             "materials": self.materials,
             "storageFreePercent": self.storage_free_percent,
-            "events": self.events,
+            "events": self._base_events,
             "world": self.world,
             "distances": self.distances,
             "stations": self.stations,
@@ -1027,7 +1042,7 @@ class Planner:
         self.graph = graph
         self.state = state
         state.life = graph.costs.life
-        state.events = list(state.events)
+        state._derive_world_events()
         self.flow = Flow()
         self.expanded = set()
         self.notices = {}
@@ -1746,6 +1761,11 @@ class Planner:
                 raise KeyError("Событие " + parts[1] + " задания не описано в графе")
             if event.get("life", False):
                 prio = life_priority(state, parts[1], event["tasks"], task, graph.max_priority)
+            elif event.get("vital", False):
+                ceiling = graph.need_priority \
+                    if any(item.get("onlyWhenEmpty") is not None for item in event["tasks"]) \
+                    else graph.work_priority
+                prio = vital_priority(task, event["tasks"], ceiling)
             elif self.event_need(event, task):
                 prio = graph.need_priority
             consumes = self.event_consumes(task)
