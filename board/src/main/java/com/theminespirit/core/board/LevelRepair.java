@@ -28,6 +28,24 @@ public final class LevelRepair {
         return new PlotLeveling(columns(extras, true), columns(holes, false), PlotLeveling.DEFAULT_BLOCK);
     }
 
+    private static List<PlotLeveling.Box> splitColumns(List<PlotLeveling.Box> boxes) {
+        Map<String, int[]> grouped = new LinkedHashMap<>();
+        for (PlotLeveling.Box box : boxes) {
+            for (int x = box.x1(); x <= box.x2(); x++) {
+                int columnX = x;
+                for (int z = box.z1(); z <= box.z2(); z++) {
+                    int columnZ = z;
+                    String key = columnX + "," + columnZ;
+                    int[] range =
+                            grouped.computeIfAbsent(key, ignored -> new int[] {columnX, columnZ, box.y1(), box.y2()});
+                    range[2] = Math.min(range[2], box.y1());
+                    range[3] = Math.max(range[3], box.y2());
+                }
+            }
+        }
+        return columns(grouped, true);
+    }
+
     private static List<PlotLeveling.Box> columns(List<BlockCoord> cells, boolean topDown) {
         Map<String, int[]> grouped = new LinkedHashMap<>();
         for (BlockCoord cell : cells) {
@@ -36,6 +54,10 @@ public final class LevelRepair {
             range[2] = Math.min(range[2], cell.y());
             range[3] = Math.max(range[3], cell.y());
         }
+        return columns(grouped, topDown);
+    }
+
+    private static List<PlotLeveling.Box> columns(Map<String, int[]> grouped, boolean topDown) {
         List<PlotLeveling.Box> boxes = new ArrayList<>(grouped.size());
         grouped.values()
                 .forEach(range ->
@@ -90,7 +112,8 @@ public final class LevelRepair {
         PlotLeveling leveling = Objects.requireNonNull(
                 target.leveling(), "Восстановление выравнивания без плана: срезать и подсыпать нечего");
         List<TaskNode> steps = new ArrayList<>();
-        leveling.cut().forEach(box -> steps.add(retried(new ScriptCall("clear_area", params(box, Map.of())))));
+        splitColumns(leveling.cut())
+                .forEach(box -> steps.add(retried(new ScriptCall("clear_area", params(box, Map.of())))));
         if (!leveling.cut().isEmpty()) {
             steps.add(retried(new ScriptCall(
                     "collect_drops", Map.of("radius", CatalogLimits.DROP_RADIUS_MAX, "filter", dropFilter(leveling)))));

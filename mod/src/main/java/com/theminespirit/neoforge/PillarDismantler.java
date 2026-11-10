@@ -3,7 +3,6 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.adapter.Visibility;
 import com.theminespirit.core.town.PlotProtection;
-import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.lease.LeaseRun;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
@@ -65,7 +64,7 @@ final class PillarDismantler {
             if (!isOwnMarked(pos)) {
                 continue;
             }
-            if (planned(pos)) {
+            if (PlanCells.keep(level, pos)) {
                 return failed("блок столба " + cell + " принадлежит плану постройки этапа: свои столбы "
                         + "разбирают вне построек, иначе хижина и двор теряют блоки");
             }
@@ -80,7 +79,7 @@ final class PillarDismantler {
             }
             Item item = state.getBlock().asItem();
             if (level instanceof ServerLevel server) {
-                BreakNotice.broken(server, pos, state, spirit, "PILLAR_DOWN", PlotProtection.Ground.NONE);
+                BreakNotice.broken(server, pos, state, spirit, "PILLAR_DOWN", PlotProtection.Ground.TEMPORARY_MOVEMENT);
             }
             SpiritBlocks.destroy((ServerLevel) spirit.level(), pos, false, spirit, "PILLAR_DOWN");
             SpiritGesture.workOn(spirit, pos);
@@ -132,13 +131,6 @@ final class PillarDismantler {
         if (lease != null && lease.contains(pos)) {
             lease.forget(pos);
         }
-    }
-
-    private boolean planned(BlockPos pos) {
-        return level instanceof ServerLevel server
-                && SettlementPlotStore.liveSite(server)
-                        .map(site -> site.planCell(pos.getX(), pos.getY(), pos.getZ()))
-                        .orElse(false);
     }
 
     private boolean isOwnMarked(BlockPos pos) {

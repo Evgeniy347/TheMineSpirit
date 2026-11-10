@@ -12,7 +12,6 @@ public final class ChopTuning {
     public static final double STAND_DISTANCE = 2.0;
     public static final double CHOP_ARRIVAL = 0.6;
     public static final int COLLECT_RADIUS = 6;
-    public static final int MAX_REJECTED_TREES = 8;
     public static final int MAX_SEARCH_RADIUS = 256;
     public static final int GATHER_RADIUS_MAX = 32;
 
