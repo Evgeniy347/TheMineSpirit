@@ -55,6 +55,7 @@
   "theminespirit.board.status.cancelled": "отменено",
   "theminespirit.board.case.activity_arm": "Вооружиться",
   "theminespirit.board.case.activity_build": "Стройка",
+  "theminespirit.board.case.activity_undo": "Откат временной правки",
   "theminespirit.board.case.activity_chop": "Рубить деревья",
   "theminespirit.board.case.activity_guard": "Охрана зоны",
   "theminespirit.board.case.activity_retreat": "Отход от опасности",

@@ -29,6 +29,7 @@ final class LeaseInputs {
                             .thenComparingInt(BlockCoord::z))
                     .orElseThrow();
             int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, top.x(), top.z());
+            int depth = Math.max(0, ground - top.y());
             boolean inside = lease.cells().stream()
                     .anyMatch(cell ->
                             site.zone().contains(cell.pos().x(), cell.pos().z()));
@@ -46,7 +47,8 @@ final class LeaseInputs {
                     inside,
                     street,
                     lease.cells().size(),
-                    (int) Math.round(Math.sqrt((double) dx * dx + (double) dz * dz))));
+                    (int) Math.round(Math.sqrt((double) dx * dx + (double) dz * dz)),
+                    depth));
         }
         return List.copyOf(facts);
     }

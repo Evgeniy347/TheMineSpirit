@@ -4,10 +4,10 @@ import com.theminespirit.core.board.lease.Lease;
 import com.theminespirit.core.board.lease.LeaseKind;
 import com.theminespirit.core.board.lease.LeaseStatus;
 import com.theminespirit.core.board.lease.LeaseUndo;
+import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
-import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.adapter.Visibility;
 import com.theminespirit.core.town.PlotProtection;
@@ -23,22 +23,18 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
 
 public final class UndoLeaseScript implements ScriptInstance {
-    private static final double REACH = 4.5;
-    private static final double ARRIVAL = 0.6;
-
     private final SpiritEntity spirit;
     private final ServerLevel level;
     private final String leaseId;
     private final Set<BlockCoord> rolledBack = new HashSet<>();
-    private final Approach approach;
+    private final LeaseReach reach;
 
     private LeaseRun run;
     private List<LeaseUndo.Step> steps;
     private int cursor;
-    private BlockCoord walkingTo;
+    private boolean scaffoldDescendStarted;
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
     private String result;
@@ -46,7 +42,7 @@ public final class UndoLeaseScript implements ScriptInstance {
     public UndoLeaseScript(SpiritEntity spirit, Map<String, Object> params) {
         this.spirit = spirit;
         this.level = (ServerLevel) spirit.level();
-        this.approach = new Approach(spirit);
+        this.reach = new LeaseReach(spirit, new LevelSafetyView(level));
         Object id = params.get("id");
         if (!(id instanceof String text) || text.isBlank()) {
             throw new IllegalArgumentException("Откат аренды без id: граф не сказал, чью правку убирать");
@@ -68,9 +64,14 @@ public final class UndoLeaseScript implements ScriptInstance {
         if (steps == null) {
             steps = LeaseUndo.order(lease());
         }
-        if (walkingTo != null) {
-            walk();
-            return ScriptStatus.RUNNING;
+        if (reach.busy()) {
+            LeaseReach.Outcome out = reach.tick(currentCell(), base());
+            if (out == LeaseReach.Outcome.FAILED) {
+                return fail(reach.failureReason());
+            }
+            if (out == LeaseReach.Outcome.RUNNING) {
+                return ScriptStatus.RUNNING;
+            }
         }
         while (cursor < steps.size()) {
             LeaseUndo.Step step = steps.get(cursor);
@@ -89,9 +90,12 @@ public final class UndoLeaseScript implements ScriptInstance {
                 }
             }
             if (!inReach(pos)) {
-                return walkTo(step.pos());
+                return approach(step);
             }
             if (step.kind() == LeaseKind.PLACED) {
+                if (BreakSight.visible(spirit, pos, false) != Visibility.CLEAR) {
+                    return approach(step);
+                }
                 return breakPlaced(step, pos, state);
             }
             if (step.kind() == LeaseKind.BROKEN) {
@@ -99,7 +103,15 @@ public final class UndoLeaseScript implements ScriptInstance {
             }
             return restoreState(step, pos);
         }
-        return finish();
+        return finishTick();
+    }
+
+    private ScriptStatus approach(LeaseUndo.Step step) {
+        LeaseReach.Outcome out = reach.tick(step.pos(), base());
+        if (out == LeaseReach.Outcome.FAILED) {
+            return fail(reach.failureReason());
+        }
+        return ScriptStatus.RUNNING;
     }
 
     private boolean attach() {
@@ -125,9 +137,6 @@ public final class UndoLeaseScript implements ScriptInstance {
     }
 
     private ScriptStatus breakPlaced(LeaseUndo.Step step, BlockPos pos, BlockState state) {
-        if (BreakSight.visible(spirit, pos, false) != Visibility.CLEAR) {
-            return walkTo(step.pos());
-        }
         BreakNotice.broken(level, pos, state, spirit, "UNDO_LEASE", PlotProtection.Ground.NONE);
         SpiritBlocks.destroy(level, pos, true, spirit, "UNDO_LEASE");
         SpiritGesture.workOn(spirit, pos);
@@ -155,29 +164,22 @@ public final class UndoLeaseScript implements ScriptInstance {
         cursor++;
         rolledBack.add(step.pos());
         run.rolledBack(pos);
+        reach.completed(step.pos());
     }
 
-    private ScriptStatus walkTo(BlockCoord cell) {
-        walkingTo = cell;
-        if (!approach.isActive()) {
-            Optional<BlockCoord> stand = StandSpots.of(cell, new LevelSafetyView(level), feet()).stream()
-                    .findFirst();
-            if (stand.isEmpty()) {
-                return fail("к клетке " + cell + " нет подхода: откат ждёт пути");
+    private ScriptStatus finishTick() {
+        ScaffoldReach scaffold = reach.scaffold();
+        if (scaffold.climbed() && !scaffoldDescendStarted) {
+            scaffoldDescendStarted = true;
+            ScaffoldReach.Result down = scaffold.descend();
+            if (down == ScaffoldReach.Result.FAILED) {
+                return fail(scaffold.failureReason());
             }
-            approach.begin(Vec3.atBottomCenterOf(pos(stand.orElseThrow())), ARRIVAL);
-        }
-        return ScriptStatus.RUNNING;
-    }
-
-    private void walk() {
-        switch (approach.tick()) {
-            case MOVING -> {
-                return;
+            if (down == ScaffoldReach.Result.RUNNING) {
+                return ScriptStatus.RUNNING;
             }
-            case ARRIVED -> walkingTo = null;
-            case STUCK, TIMEOUT -> fail("не подошёл к " + walkingTo + ": " + approach.refusal());
         }
+        return finish();
     }
 
     private ScriptStatus finish() {
@@ -189,8 +191,25 @@ public final class UndoLeaseScript implements ScriptInstance {
         return outcome;
     }
 
+    private BlockCoord currentCell() {
+        if (steps != null && cursor < steps.size()) {
+            return steps.get(cursor).pos();
+        }
+        return feet();
+    }
+
+    private BlockCoord base() {
+        BlockCoord lowest = null;
+        for (LeaseUndo.Step step : steps) {
+            if (lowest == null || step.pos().y() < lowest.y()) {
+                lowest = step.pos();
+            }
+        }
+        return lowest == null ? feet() : lowest;
+    }
+
     private boolean inReach(BlockPos pos) {
-        return spirit.getEyePosition().distanceToSqr(Vec3.atCenterOf(pos)) <= REACH * REACH;
+        return SpiritReach.reachable(feet(), new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
     }
 
     private BlockCoord feet() {
@@ -205,13 +224,13 @@ public final class UndoLeaseScript implements ScriptInstance {
     private ScriptStatus fail(String reason) {
         failureReason = reason;
         outcome = ScriptStatus.FAILED;
-        approach.cancel();
+        reach.cancel();
         return outcome;
     }
 
     @Override
     public void cancel() {
-        approach.cancel();
+        reach.cancel();
     }
 
     @Override

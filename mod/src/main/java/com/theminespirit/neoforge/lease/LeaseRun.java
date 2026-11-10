@@ -49,6 +49,19 @@ public final class LeaseRun {
                 .orElse(null);
     }
 
+    public static @Nullable LeaseRun ownedAnywhereAt(SpiritEntity spirit, BlockPos pos) {
+        if (!(spirit.level() instanceof ServerLevel level)) {
+            return null;
+        }
+        LeaseData data = LeaseData.get(level);
+        return data.book()
+                .owner(coord(pos))
+                .filter(lease -> lease.ownedBy(spirit.getUUID()))
+                .filter(lease -> lease.status() == LeaseStatus.ACTIVE || lease.status() == LeaseStatus.ORPHANED)
+                .map(lease -> new LeaseRun(data, LeaseSession.attach(data.book(), lease.id())))
+                .orElse(null);
+    }
+
     public static @Nullable LeaseRun attach(ServerLevel level, String id) {
         LeaseData data = LeaseData.get(level);
         return data.book()

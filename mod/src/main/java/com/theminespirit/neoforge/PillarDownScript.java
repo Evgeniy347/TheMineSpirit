@@ -71,10 +71,10 @@ public final class PillarDownScript implements ScriptInstance {
         }
         if (!own.isEmpty()) {
             BlockCoord top = own.get(0);
-            lease = LeaseRun.ownedAt(spirit, new BlockPos(top.x(), top.y(), top.z()));
+            lease = LeaseRun.ownedAnywhereAt(spirit, new BlockPos(top.x(), top.y(), top.z()));
             return;
         }
-        LeaseRun found = LeaseRun.ownedAt(spirit, feet.below());
+        LeaseRun found = LeaseRun.ownedAnywhereAt(spirit, feet.below());
         if (found == null) {
             return;
         }

@@ -152,6 +152,26 @@ class LeaseUndoTests {
     }
 
     @Test
+    void reach_HighAndLowCells_ChooseClimbOrDig() {
+        assertEquals(
+                new RollbackReach.Step(RollbackReach.Action.CLIMB, 9),
+                RollbackReach.next(9, false),
+                "Клетка выше духа добирается своими подмостями: отдельной ветки «если высоко» нет");
+        assertEquals(
+                RollbackReach.Action.DIG,
+                RollbackReach.next(0, false).action(),
+                "Клетка на уровне духа без стоянки вскрывается подходом копкой: рядом нет места для ног");
+        assertEquals(
+                RollbackReach.Action.STEP_DOWN,
+                RollbackReach.next(-1, true).action(),
+                "Клетка ниже, а под духом свои подмости — шаг вниз по ним, а не прыжок в шахту");
+        assertEquals(
+                RollbackReach.Action.DIG,
+                RollbackReach.next(-4, false).action(),
+                "Клетка ниже без своих подмостей — подход копкой; спускаться не по чему");
+    }
+
+    @Test
     void activeLease_AfterCommit_StopsCleanup() {
         LeaseBook book = new LeaseBook();
         BlockCoord cell = new BlockCoord(0, 70, 0);

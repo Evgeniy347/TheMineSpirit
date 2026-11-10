@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.board.lease.LeaseStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.adapter.Visibility;
 import com.theminespirit.core.town.PlotProtection;
@@ -98,8 +99,10 @@ final class PillarDismantler {
         outcome = Outcome.DONE;
         if (lease != null && !keepLease) {
             if (lease.cells().isEmpty()) {
-                lease.commit();
-            } else {
+                if (lease.status() == LeaseStatus.ACTIVE) {
+                    lease.commit();
+                }
+            } else if (lease.status() == LeaseStatus.ACTIVE) {
                 lease.orphan();
             }
         }
@@ -121,7 +124,7 @@ final class PillarDismantler {
     private Outcome failed(String reason) {
         failureReason = reason;
         outcome = Outcome.FAILED;
-        if (lease != null && !keepLease) {
+        if (lease != null && !keepLease && lease.status() == LeaseStatus.ACTIVE) {
             lease.orphan();
         }
         return outcome;
@@ -129,7 +132,11 @@ final class PillarDismantler {
 
     private void forget(BlockPos pos) {
         if (lease != null && lease.contains(pos)) {
-            lease.forget(pos);
+            if (lease.status() == LeaseStatus.ORPHANED) {
+                lease.rolledBack(pos);
+            } else {
+                lease.forget(pos);
+            }
         }
     }
 
