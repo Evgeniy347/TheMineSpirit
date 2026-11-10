@@ -65,6 +65,19 @@ class NavRouteStepsTests {
     }
 
     @Test
+    void toRoute_SolidHeadNotBreakable_StillWalks() {
+        NavTestWorld world = NavTestWorld.flat(0).solid(1, 2, 0);
+        Route route = convert(world, NavSearchStatus.FOUND, cell(0, 1, 0), cell(1, 1, 0));
+
+        assertEquals(Route.Status.FOUND, route.status(), "Твёрдый потолок над проходимой клеткой не отменяет маршрут");
+        assertEquals(1, route.steps().size(), "Один шаг без лишних ломок: " + route.steps());
+        assertEquals(
+                RouteStep.Action.WALK,
+                route.steps().get(0).action(),
+                "Клетку головы ломают только если она ломаемая: иначе узкий проход dig_out снова упирается в тупик");
+    }
+
+    @Test
     void toRoute_BreakableCell_BreaksThenWalks() {
         NavTestWorld world = NavTestWorld.flat(0).breakable(1, 1, 0).breakable(1, 2, 0);
         Route route = convert(world, NavSearchStatus.FOUND, cell(0, 1, 0), cell(1, 1, 0));
