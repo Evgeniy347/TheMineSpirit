@@ -2,7 +2,7 @@ package com.theminespirit.core.movement;
 
 import com.theminespirit.core.observation.BlockCoord;
 
-public sealed interface Goal permits GoalBlock, GoalXZ, GoalNear, GoalComposite {
+public sealed interface Goal permits GoalNear, GoalComposite {
     double DIAGONAL_EXTRA = Math.sqrt(2.0) - 1.0;
 
     boolean isSatisfied(BlockCoord feet);

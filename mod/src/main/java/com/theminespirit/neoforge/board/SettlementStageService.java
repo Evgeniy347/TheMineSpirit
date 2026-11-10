@@ -119,7 +119,7 @@ public final class SettlementStageService {
             SettlementChange change,
             long now) {
         List<String> cancelled = new ArrayList<>();
-        for (BoardTicket ticket : List.copyOf(service.board().all())) {
+        for (BoardTicket ticket : List.copyOf(service.board().tickets())) {
             if (BoardActivities.isActivity(ticket.boardCase())) {
                 continue;
             }

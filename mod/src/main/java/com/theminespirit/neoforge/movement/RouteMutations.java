@@ -24,10 +24,10 @@ final class RouteMutations {
     private boolean pillarPlaced;
     private String breakingId = "-";
 
-    RouteMutations(SpiritEntity spirit, RouteWalk walk) {
+    RouteMutations(SpiritEntity spirit, RouteWalk walk, boolean rescue) {
         this.spirit = spirit;
         this.walk = walk;
-        this.breaker = new BlockBreaker(spirit);
+        this.breaker = rescue ? BlockBreaker.escaping(spirit, true) : new BlockBreaker(spirit);
         this.placer = new BlockPlacer(spirit, PlotProtection.Ground.TEMPORARY_MOVEMENT);
     }
 

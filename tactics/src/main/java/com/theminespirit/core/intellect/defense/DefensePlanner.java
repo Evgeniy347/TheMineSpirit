@@ -30,6 +30,21 @@ public final class DefensePlanner {
         }
         Point center = state.defendedPoint().orElseThrow();
         List<EnemyFact> visible = trim(enemies, center);
+        DefenseWeights weights = DefenseWeights.loadDefault();
+        List<DefenseSquad> squads =
+                SquadClusters.group(defenders.stream().map(DefenseMember::of).toList(), weights.squadRadius());
+        if (squads.size() > 1) {
+            return team(
+                    center,
+                    state.defendedRadius(),
+                    TeamDefensePlanner.plan(
+                            center,
+                            defenders.stream().map(DefenseMember::of).toList(),
+                            visible,
+                            profiles,
+                            profile,
+                            weights));
+        }
         List<DefenseAssignment> posts =
                 DefenseAllocator.allocate(center, state.defendedRadius(), defenders, visible, profiles);
         if (visible.isEmpty()) {
@@ -86,6 +101,41 @@ public final class DefensePlanner {
                     decision.reason()));
         }
         return new DefensePlan(Optional.of(center), posts, List.copyOf(orders));
+    }
+
+    private static DefensePlan team(Point center, double radius, TeamDefensePlan plan) {
+        Map<UUID, DefenseMember> byId = new LinkedHashMap<>();
+        for (DefenseSquad squad : plan.squads()) {
+            for (DefenseMember member : squad.members()) {
+                byId.put(member.id(), member);
+            }
+        }
+        List<DefenseAssignment> posts = new ArrayList<>(plan.memberOrders().size());
+        List<DefenderOrder> orders = new ArrayList<>(plan.memberOrders().size());
+        Set<String> claimed = new HashSet<>();
+        for (MemberOrder order : plan.memberOrders()) {
+            DefenseMember member = byId.get(order.member());
+            if (member == null) {
+                throw new IllegalStateException(
+                        "дух " + order.member() + " получил приказ, но не входит ни в один отряд: снимок разошёлся");
+            }
+            Point post = order.post().distanceTo(center) <= radius
+                    ? order.post()
+                    : SquadPlacement.toward(center, order.post(), radius);
+            posts.add(new DefenseAssignment(order.member(), post, SquadPlacement.bearing(center, post)));
+            Optional<EnemyFact> target = order.target().filter(enemy -> claimed.add(enemy.id()));
+            orders.add(new DefenderOrder(
+                    order.member(),
+                    member.role(),
+                    target,
+                    order.stance(),
+                    order.holdDistance(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    order.potion(),
+                    order.reason()));
+        }
+        return new DefensePlan(Optional.of(center), posts, orders);
     }
 
     private static void requireInputs(

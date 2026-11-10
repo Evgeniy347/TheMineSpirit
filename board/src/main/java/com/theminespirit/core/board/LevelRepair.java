@@ -63,12 +63,7 @@ public final class LevelRepair {
         leveling.cut().forEach(box -> steps.add(retried(new ScriptCall("clear_area", params(box, Map.of())))));
         if (!leveling.cut().isEmpty()) {
             steps.add(retried(new ScriptCall(
-                    "collect_drops",
-                    Map.of(
-                            "radius",
-                            CatalogLimits.DROP_RADIUS_MAX,
-                            "filter",
-                            List.of("minecraft:" + PlotLeveling.DEFAULT_BLOCK)))));
+                    "collect_drops", Map.of("radius", CatalogLimits.DROP_RADIUS_MAX, "filter", dropFilter(leveling)))));
         }
         List<FillOrder.Box> layers = FillOrder.layers(leveling.fill());
         int batch = Math.min(LevelingRules.current().batch(), CatalogLimits.COUNT_MAX);
@@ -92,6 +87,13 @@ public final class LevelRepair {
                     new ScriptCall("fill", params(box, Map.of("block", PlotLeveling.DEFAULT_BLOCK))))));
         }
         return new SequenceNode(steps);
+    }
+
+    private static List<String> dropFilter(PlotLeveling leveling) {
+        String dirt = "minecraft:" + PlotLeveling.DEFAULT_BLOCK;
+        String raw = leveling.block();
+        String block = raw.contains(":") ? raw : "minecraft:" + raw;
+        return block.equals(dirt) ? List.of(dirt) : List.of(dirt, block);
     }
 
     private static TaskNode retried(ScriptCall call) {

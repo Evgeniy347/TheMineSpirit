@@ -5,6 +5,7 @@ import com.theminespirit.core.movement.PitExitPlanner;
 import com.theminespirit.core.movement.PitWalkOut;
 import com.theminespirit.core.movement.SurfaceLevel;
 import com.theminespirit.core.movement.ToolBreakCost;
+import com.theminespirit.core.movement.WalkOutRules;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
@@ -49,7 +50,8 @@ final class PitRescue {
     }
 
     private static boolean walkOut(Level level, BlockPos feet) {
-        return PitWalkOut.exists(new PitWalkOutView(level), feet.getX(), feet.getZ(), feet.getY());
+        return PitWalkOut.exists(
+                new PitWalkOutView(level), WalkOutRules.current(), feet.getX(), feet.getZ(), feet.getY());
     }
 
     static Optional<PitExitPlanner.Plan> trapped(SpiritEntity spirit) {

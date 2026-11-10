@@ -14,6 +14,7 @@ public record DefenderOrder(
         Optional<Double> holdDistance,
         Optional<Point> cover,
         Optional<UUID> handOff,
+        Optional<DefensePotion> potion,
         String reason) {
     public DefenderOrder {
         Objects.requireNonNull(defender, "defender не может быть null: приказ адресуется конкретному духу");
@@ -23,8 +24,21 @@ public record DefenderOrder(
         Objects.requireNonNull(holdDistance, "holdDistance не может быть null: нет дистанции — Optional.empty()");
         Objects.requireNonNull(cover, "cover не может быть null: нет укрытия — Optional.empty()");
         Objects.requireNonNull(handOff, "handOff не может быть null: нет приёмника — Optional.empty()");
+        Objects.requireNonNull(potion, "potion не может быть null: не пьёт — Optional.empty()");
         if (reason == null || reason.isBlank()) {
             throw new IllegalArgumentException("reason не может быть пустым: trace приказа обязан объяснять стойку");
         }
+    }
+
+    public DefenderOrder(
+            UUID defender,
+            DefenderRole role,
+            Optional<EnemyFact> target,
+            CombatStance stance,
+            Optional<Double> holdDistance,
+            Optional<Point> cover,
+            Optional<UUID> handOff,
+            String reason) {
+        this(defender, role, target, stance, holdDistance, cover, handOff, Optional.empty(), reason);
     }
 }

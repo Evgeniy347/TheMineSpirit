@@ -134,7 +134,7 @@
 | `board` → `inventory` | 14 файлов `board` → `inventory.JsonResource` (обратной связи нет) | `JsonResource` в API |
 | `inventory` ↔ `observation` | `ObservationLimits` → `JsonResource`; `ContainerCell` и др. → `BlockCoord` | оба в API |
 | `mining` ↔ `policy` | `BlockProtection`, `BreakVeto`, `DropPolicy`, `ExplosionAvoidance` → `SafetyView`, `Cell` | `SafetyView`/`Cell` в API |
-| `movement` → `mining` | `ApproachRoute`, `BodyStep`, `StandChoice`, сеть троп → `MiningSafety` | `SafetyView` в API, `MiningSafety` — реализация в шахте |
+| `movement` → `mining` | `BodyStep`, `StandChoice`, сеть троп → `MiningSafety` | `SafetyView` в API, `MiningSafety` — реализация в шахте |
 | `engine` → `policy` | `NodeExecutor`, `ScriptExecutor` → `PolicyExemptions` | интерфейс в API |
 | `plan`/`engine` → `script` | `PlanValidator` → `ScriptCatalog`, `ConditionCatalog`, `ParamSpec` | контракты в API |
 | `base` ↔ `reload`, `base` → `tactics` | `RespawnRules` → `DataTables`; `Camp` → `tactics.Point` | `Point` и `DataTables` в API |

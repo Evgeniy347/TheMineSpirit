@@ -28,25 +28,6 @@ public final class RouteCell {
         return cell & KIND_MASK;
     }
 
-    public static int breakTicks(int cell) {
-        return cell >>> KIND_BITS;
-    }
-
-    static boolean open(int cell) {
-        int kind = kind(cell);
-        return kind == AIR || kind == CLIMB;
-    }
-
-    static boolean supports(int cell) {
-        int kind = kind(cell);
-        return kind == SOLID || kind == BLOCKED;
-    }
-
-    static boolean breakable(int cell) {
-        int kind = kind(cell);
-        return kind == SOLID || kind == TALL;
-    }
-
     public static Cell safety(int cell) {
         return switch (kind(cell)) {
             case SOLID, BLOCKED, TALL -> Cell.SOLID;

@@ -53,6 +53,33 @@ class ProjectileDodgeTests {
     }
 
     @Test
+    void fireballTowardsSpirit_AcceleratingFlight_StepsAcrossAndMisses() {
+        Projectile fireball = new Projectile(10.5, 65.0, 15.0, 0.0, 0.0, -0.1, 0.0, 0.95, 0.1);
+
+        assertTrue(
+                RULES.threat(fireball, BODY).isPresent(),
+                "Огненный шар набирает скорость вдоль полёта: без ускорения в модели он «не долетает» за горизонт "
+                        + "предсказания, и дух стоит под ударом (debtmisc6: AbstractHurtingProjectile не покрыт)");
+
+        Dodge step = RULES.decide(request(List.of(fireball)), FLAT).orElseThrow();
+
+        assertEquals(0, step.dz(), "Шар летит вдоль Z — уклонение поперёк траектории по X, а не назад/вперёд");
+        assertEquals(1, Math.abs(step.dx()), "Уклонение от шара — ровно одна соседняя клетка");
+        assertTrue(
+                RULES.threat(fireball, BODY.shift(step.dx(), 0, step.dz())).isEmpty(),
+                "После шага поперёк траектории шар обязан пройти мимо: иначе ускорение в модели не совпало с полётом");
+    }
+
+    @Test
+    void projectile_NegativeAcceleration_IsRejected() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new Projectile(0, 0, 0, 1, 0, 0, 0, 0.95, -0.1),
+                "Отрицательное ускорение вдоль полёта обязано отклоняться: торможение задаёт сопротивление, "
+                        + "а минус означал бы снаряд, летящий назад");
+    }
+
+    @Test
     void arrowPastSpirit_PassesBeside_DoesNotMove() {
         Projectile past = new Projectile(13.5, 65.0, 20.5, 0.0, 0.0, -3.0, 0.05, 0.99);
 

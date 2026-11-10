@@ -167,7 +167,7 @@ final class More3Inputs {
 
     private static Set<String> busyStations(BoardService service) {
         Set<String> busy = new HashSet<>();
-        for (var ticket : service.board().all()) {
+        for (var ticket : service.board().tickets()) {
             if (!open(service.board().statusOf(ticket.id()).orElse(BoardStatus.DONE))) {
                 continue;
             }

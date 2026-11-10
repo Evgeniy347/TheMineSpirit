@@ -90,6 +90,44 @@ class QueueOrderTests {
     }
 
     @Test
+    void inherited_DeepDependencyChain_PropagatesPriorityToTheRoot() {
+        List<BoardTicket> tickets = List.of(
+                ticket("third", BoardCase.GATHER_MATERIALS, 20, List.of("second")),
+                ticket("second", BoardCase.CRAFT_WOODEN_PICKAXE, 30, List.of("first")),
+                ticket("first", BoardCase.CRAFT_WOODEN_AXE, 70, List.of()));
+        Map<String, BoardStatus> statuses =
+                Map.of("third", BoardStatus.PENDING, "second", BoardStatus.PENDING, "first", BoardStatus.PENDING);
+
+        Map<String, Integer> effective = QueueOrder.inherited(tickets, statuses);
+
+        assertEquals(
+                70,
+                effective.get("first"),
+                "Приоритет высокой задачи доходит до самого корня цепочки: сбор под неё не тонет ниже обычной работы");
+    }
+
+    @Test
+    void inherited_DiamondDependency_KeepsHighestPriority() {
+        List<BoardTicket> tickets = List.of(
+                ticket("top", BoardCase.BUILD_HOUSE, 90, List.of("left", "right")),
+                ticket("left", BoardCase.GATHER_MATERIALS, 40, List.of("base")),
+                ticket("right", BoardCase.GATHER_MATERIALS, 50, List.of("base")),
+                ticket("base", BoardCase.CRAFT_WOODEN_PICKAXE, 10, List.of()));
+        Map<String, BoardStatus> statuses = Map.of(
+                "top", BoardStatus.PENDING,
+                "left", BoardStatus.PENDING,
+                "right", BoardStatus.PENDING,
+                "base", BoardStatus.PENDING);
+
+        Map<String, Integer> effective = QueueOrder.inherited(tickets, statuses);
+
+        assertEquals(
+                90,
+                effective.get("base"),
+                "Общий предшественник наследует максимум из ветвей, а не последнюю встреченную");
+    }
+
+    @Test
     void prune_FailedDependency_CancelsDependants() {
         long[] clock = {0};
         Board board = new Board(() -> clock[0]);

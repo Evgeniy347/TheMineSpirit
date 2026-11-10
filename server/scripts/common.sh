@@ -3,7 +3,7 @@
 
 SERVER_DIR="${SERVER_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 MOD_DIR="${MOD_DIR:-/opt/minecraft/the-mine-spirit}"
-TMUX_SESSION="minecraft"
+TMUX_SESSION="${TMUX_SESSION:-minecraft}"
 NEOFORGE_VERSION="21.1.257"
 PUBLISH_SYNC_LOG="${PUBLISH_SYNC_LOG:-/opt/minecraft/logs/publish-sync.log}"
 TMP_DIR="${TMP_DIR:-/opt/minecraft/tmp}"
@@ -13,9 +13,13 @@ is_running() {
     tmux has-session -t "$TMUX_SESSION" 2>/dev/null
 }
 
-# Отправляет команду в консоль сервера.
+# Отправляет команду в консоль сервера. Замки снимка (fd 8/9) в tmux не наследуются: иначе замок
+# держится вечно после выхода скрипта, и следующий снимок видит «занято».
 send_command() {
-    tmux send-keys -t "$TMUX_SESSION" "$1" Enter
+    if ! tmux send-keys -t "$TMUX_SESSION" "$1" Enter 8>&- 9>&-; then
+        echo "не отправить «$1» в консоль tmux «$TMUX_SESSION»: сессия пропала" >&2
+        return 1
+    fi
 }
 
 # Ждёт появления строки в логе после указанной позиции (в байтах).

@@ -102,6 +102,7 @@ final class GraphRoutes {
             if (plan.fill().isEmpty()) {
                 return false;
             }
+            routes.noteTrail(known, plan);
             target = TicketTarget.at(to).withRelocate(scan.stage().anchor(), to).withLeveling(plan);
         } else if (known.isRoute(ticket.node())) {
             target = TicketTarget.at(to);

@@ -173,6 +173,15 @@ class ServerPublishGuardTests {
         assertFalse(
                 code.contains("publish.sh") || code.contains("world-snapshot.sh") || code.contains("stop.sh"),
                 "Ночной анализатор не публикует мод и не перезапускает сервер: только сборка и отчёт");
+        assertFalse(
+                code.contains("python_bin") || code.contains("python3") || code.contains("count_xml"),
+                "Сводка находок ночного прогона снова зависит от python (и от grep-запасного пути без имён "
+                        + "файлов): на машине без python находки теряются, а разбор отчётов расходится на две "
+                        + "реализации. Как надо: один разбор XML на java из toolchain Gradle, без запасного пути");
+        assertTrue(
+                code.contains("AnalyzerSummary") && code.contains("build/reports/"),
+                "Ночной прогон обязан строить сводку находок сам (AnalyzerSummary по отчётам build/reports/…): "
+                        + "иначе SpotBugs/PMD/Checkstyle/TESTS остаются без имён файлов или без сводки вовсе");
     }
 
     @Test
@@ -180,14 +189,14 @@ class ServerPublishGuardTests {
         assertTrue(
                 Files.isRegularFile(PYTHON),
                 "Нет scripts/python-bin.sh: выбор python (THEMINESPIRIT_PYTHON → PYTHON → python3 → python) "
-                        + "скопирован в publish.sh, nightly-analyzers.sh и check-publish.sh, и три копии расходятся: "
-                        + "на сервере один скрипт находит python, другой нет");
+                        + "скопирован в publish.sh и check-publish.sh, и две копии расходятся: на сервере один "
+                        + "скрипт находит python, другой нет");
         String helper = read(PYTHON);
         assertTrue(
                 helper.contains("python_bin") && helper.contains("THEMINESPIRIT_PYTHON"),
                 "scripts/python-bin.sh обязан объявлять python_bin и порядок THEMINESPIRIT_PYTHON → PYTHON → "
                         + "python3 → python: один выбор python на все скрипты");
-        for (Path script : List.of(PUBLISH, NIGHTLY, CHECK)) {
+        for (Path script : List.of(PUBLISH, CHECK)) {
             String text = read(script);
             assertTrue(
                     text.contains("python-bin.sh"),
@@ -198,10 +207,6 @@ class ServerPublishGuardTests {
                     script + " всё ещё перебирает python сам, а не зовёт python_bin из scripts/python-bin.sh: "
                             + "правка порядка поиска должна быть одна на все скрипты");
         }
-        assertTrue(
-                read(PUBLISH).contains("$CLEANUP_SCRIPT_DIR/python-bin.sh"),
-                "publish.sh не раскладывает python-bin.sh рядом с nightly-analyzers.sh: на сервере ночной "
-                        + "прогон не найдёт helper и останется без сводки находок");
     }
 
     @Test

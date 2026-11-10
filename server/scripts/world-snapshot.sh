@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SERVER_DIR="${SERVER_DIR:-/opt/minecraft/server}"
-TMUX_SESSION="${TMUX_SESSION:-minecraft}"
+source "$(dirname "$0")/common.sh"
+
 WORLD_BACKUPS="${WORLD_BACKUPS:-/opt/minecraft/backups/world}"
 
 KEEP_ALL_HOURS="${KEEP_ALL_HOURS:-24}"
@@ -34,15 +34,7 @@ esac
 label="${1:-}"
 label="$(printf '%s' "$label" | tr ' ' '-' | tr -cd 'A-Za-z0-9._-')"
 
-is_running() { tmux has-session -t "$TMUX_SESSION" 2>/dev/null; }
-send_command() {
-    if ! tmux send-keys -t "$TMUX_SESSION" "$1" Enter 9>&- 8>&-; then
-        echo "не отправить «$1» в консоль tmux «$TMUX_SESSION»: сессия пропала" >&2
-        return 1
-    fi
-}
 LOG="$SERVER_DIR/logs/latest.log"
-log_size() { stat -c %s "$LOG" 2>/dev/null || echo 0; }
 
 # lib: консоль подтверждает каждую команду сохранения строкой в latest.log; без подтверждения нельзя ни disabled
 # lib: считать, ни звать save-on. Читаем только новые байты (лог шумит на мегабайты) и переживаем ротацию.
@@ -152,7 +144,12 @@ mkdir -p "$WORLD_BACKUPS"
 # lib: падала с «уже идёт другой снимок», не сказав, кто держит замок (10.11, PUBLISH_EXIT=2).
 LOCK_WAIT="${SNAPSHOT_LOCK_WAIT:-0}"
 lock_holder() {
-    fuser "$WORLD_BACKUPS/.snapshot.lock" 2>/dev/null | tr -s ' ' | sed 's/^ //' || true
+    command -v fuser >/dev/null 2>&1 || return 0
+    if command -v timeout >/dev/null 2>&1; then
+        timeout 2 fuser "$WORLD_BACKUPS/.snapshot.lock" 2>/dev/null | tr -s ' ' | sed 's/^ //' || true
+    else
+        fuser "$WORLD_BACKUPS/.snapshot.lock" 2>/dev/null | tr -s ' ' | sed 's/^ //' || true
+    fi
 }
 exec 9>"$WORLD_BACKUPS/.snapshot.lock"
 if [ "$LOCK_WAIT" -gt 0 ]; then

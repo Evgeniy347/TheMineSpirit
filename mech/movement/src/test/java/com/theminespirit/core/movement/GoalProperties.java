@@ -21,10 +21,10 @@ class GoalProperties {
         BlockCoord first = new BlockCoord(ax, 0, 0);
         BlockCoord second = new BlockCoord(bx, 0, 0);
         BlockCoord from = new BlockCoord(fx, y, 0);
-        GoalComposite composite = new GoalComposite(List.of(new GoalBlock(first), new GoalBlock(second)));
+        GoalComposite composite = new GoalComposite(List.of(new GoalNear(first, 0), new GoalNear(second, 0)));
 
         assertEquals(
-                Math.min(new GoalBlock(first).heuristic(from), new GoalBlock(second).heuristic(from)),
+                Math.min(new GoalNear(first, 0).heuristic(from), new GoalNear(second, 0).heuristic(from)),
                 composite.heuristic(from),
                 EPS,
                 "Эвристика composite обязана равняться минимуму эвристик вложенных: иначе goto_block "
@@ -43,11 +43,8 @@ class GoalProperties {
         BlockCoord target = new BlockCoord(tx, ty, tz);
         BlockCoord from = new BlockCoord(fx, fy, fz);
         double octile = Goal.octile(from, target);
-        List<Goal> goals = List.of(
-                new GoalBlock(target),
-                new GoalXZ(tx, tz),
-                new GoalNear(target, radius),
-                new GoalComposite(List.of(new GoalBlock(target), new GoalXZ(tx, tz))));
+        List<Goal> goals =
+                List.of(new GoalNear(target, radius), new GoalComposite(List.of(new GoalNear(target, radius))));
 
         for (Goal goal : goals) {
             assertTrue(

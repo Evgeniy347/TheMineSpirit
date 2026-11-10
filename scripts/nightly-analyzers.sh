@@ -48,8 +48,6 @@ die() {
     exit "$code"
 }
 
-. "$(dirname "$0")/python-bin.sh" || die 4 "нет python-bin.sh рядом с nightly-analyzers.sh: один выбор python на все скрипты"
-
 usage() {
     sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'
     exit 2
@@ -159,130 +157,216 @@ result="ЗЕЛЁНЫЙ"
 [ "$code" -ne 0 ] && result="КРАСНЫЙ"
 [ "$code" -eq 124 ] && result="КРАСНЫЙ (предел ${TIMEOUT} с)"
 
-summary=""
-PYTHON_EXE="$(python_bin || true)"
-if [ -n "$PYTHON_EXE" ]; then
-summary="$("$PYTHON_EXE" - "$WORK" <<'PY' 2>/dev/null
-import glob
-import os
-import sys
-import xml.etree.ElementTree as ET
-
-work = sys.argv[1]
-LIMIT = 15
-
-
-def module_of(path):
-    rel = os.path.relpath(path, work).replace(os.sep, '/')
-    return rel.split('/build/', 1)[0]
-
-
-def local(tag):
-    return tag.rsplit('}', 1)[-1]
-
-
-def report(kind, title, files, extract):
-    total = 0
-    rows = []
-    for path in files:
-        try:
-            root = ET.parse(path).getroot()
-        except Exception:
-            continue
-        parents = {child: parent for parent in root.iter() for child in parent}
-        for item in root.iter():
-            if local(item.tag) != kind:
-                continue
-            values = extract(item, parents)
-            if values is None:
-                continue
-            total += 1
-            if len(rows) < LIMIT:
-                rows.append('  %s %s' % (module_of(path), values))
-    print('%s %d' % (title, total))
-    for row in rows:
-        print(row)
-    if total > LIMIT:
-        print('  … ещё %d' % (total - LIMIT))
-
-
-def text(item, tag, default=''):
-    child = item.find(tag)
-    return (child.text or '').strip() if child is not None else default
-
-
-def spot(item, parents):
-    return '%s %s' % (item.get('type', '?'), text(item, 'ShortMessage'))
-
-
-def located(item, parents):
-    parent = parents.get(item)
-    if parent is None:
-        return ''
-    return os.path.basename(parent.get('name', '') or '')
-
-
-def pmd(item, parents):
-    where = located(item, parents)
-    return '%s%s %s' % (where + ':' if where else '', item.get('beginline', '?'), item.get('rule', '?'))
-
-
-def check(item, parents):
-    where = located(item, parents)
-    return '%s%s %s' % (
-        where + ':' if where else '', item.get('line', '?'), (item.get('message') or '')[:160])
-
-
-def test(item):
-    bad = item.find('failure') if item.find('failure') is not None else item.find('error')
-    return '%s.%s %s' % (
-        item.get('classname', '?'), item.get('name', '?'), ((bad.get('message') if bad is not None else '') or '')[:160])
-
-
-report('BugInstance', 'SPOTBUGS', glob.glob(os.path.join(work, '**', 'build', 'reports', 'spotbugs', '*.xml'), recursive=True), spot)
-report('violation', 'PMD', glob.glob(os.path.join(work, '**', 'build', 'reports', 'pmd', '*.xml'), recursive=True), pmd)
-report('error', 'CHECKSTYLE', glob.glob(os.path.join(work, '**', 'build', 'reports', 'checkstyle', '*.xml'), recursive=True), check)
-
-failures = 0
-rows = []
-for path in glob.glob(os.path.join(work, '**', 'build', 'test-results', 'test', 'TEST-*.xml'), recursive=True):
-    try:
-        root = ET.parse(path).getroot()
-    except Exception:
-        continue
-    for case in (node for node in root.iter() if local(node.tag) == 'testcase'):
-        if case.find('failure') is not None or case.find('error') is not None:
-            failures += 1
-            if len(rows) < LIMIT:
-                rows.append('  ' + test(case))
-print('TESTS %d' % failures)
-for row in rows:
-    print(row)
-if failures > LIMIT:
-    print('  … ещё %d' % (failures - LIMIT))
-PY
-)"
+# lib: сводка находок — один разбор XML на java из toolchain Gradle (python не нужен): два разбора расходились,
+# а grep-запасной путь терял имена файлов и ошибки тестов. Java-исходник собирается source-лаунчером на месте,
+# поэтому на сервер доезжает только этот скрипт.
+JAVA_EXE=""
+if [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/java" ]; then
+    JAVA_EXE="$JAVA_HOME/bin/java"
+else
+    JAVA_EXE="$(command -v java 2>/dev/null || true)"
 fi
+[ -n "$JAVA_EXE" ] || die 4 "нужен java 21 (toolchain Gradle): без него не построить сводку находок"
 
-if [ -z "$summary" ]; then
-    # lib: python нет — считаем нарушения по XML и печатаем типы/правила, чтобы находки были видны без python.
-    count_xml() {
-        local pattern="$1" tag="$2"
-        find "$WORK" -path "*/$pattern/*.xml" -exec grep -ho "$tag" {} + 2>/dev/null | wc -l | tr -d ' '
+summary_dir="$(mktemp -d "${TMPDIR:-/tmp}/theminespirit-summary.XXXXXX")" \
+    || die 4 "не создать каталог для сводки находок"
+cat >"$summary_dir/AnalyzerSummary.java" <<'JAVA'
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
+public final class AnalyzerSummary {
+    private static final int LIMIT = 15;
+    private static final int MESSAGE = 160;
+
+    public static void main(String[] args) throws IOException {
+        if (args.length != 1) {
+            System.err.println("Использование: AnalyzerSummary <каталог сборки>");
+            System.exit(2);
+        }
+        Path work = Paths.get(args[0]).toAbsolutePath().normalize();
+        List<String> broken = new ArrayList<>();
+        section(work, "SPOTBUGS", "spotbugs", "BugInstance", AnalyzerSummary::spot, broken);
+        section(work, "PMD", "pmd", "violation", AnalyzerSummary::pmd, broken);
+        section(work, "CHECKSTYLE", "checkstyle", "error", AnalyzerSummary::check, broken);
+        tests(work, broken);
+        for (String path : broken) {
+            System.out.println("НЕ ПРОЧИТАН " + path);
+        }
     }
-    tags_xml() {
-        local pattern="$1" tag="$2"
-        find "$WORK" -path "*/$pattern/*.xml" -exec grep -ho "$tag" {} + 2>/dev/null \
-            | sort | uniq -c | sort -rn | head -15 | sed 's/^/  /'
+
+    private static void section(
+            Path work, String title, String kind, String element, Function<Element, String> row, List<String> broken)
+            throws IOException {
+        int total = 0;
+        List<String> rows = new ArrayList<>();
+        for (Path file : files(work, "build/reports/" + kind + "/")) {
+            for (Element item : elements(work, file, element, broken)) {
+                String value = row.apply(item);
+                if (value == null) {
+                    continue;
+                }
+                total++;
+                if (rows.size() < LIMIT) {
+                    rows.add("  " + module(work, file) + " " + value);
+                }
+            }
+        }
+        print(title, total, rows);
     }
-    summary="SPOTBUGS $(count_xml reports/spotbugs '<BugInstance')
-$(tags_xml reports/spotbugs 'type="[^"]*"')
-PMD $(count_xml reports/pmd '<violation')
-$(tags_xml reports/pmd 'rule="[^"]*"')
-CHECKSTYLE $(count_xml reports/checkstyle '<error')
-TESTS $(count_xml test-results/test '<failure')
-(подробности: нет python3)"
+
+    private static void tests(Path work, List<String> broken) throws IOException {
+        int total = 0;
+        List<String> rows = new ArrayList<>();
+        for (Path file : files(work, "build/test-results/test/")) {
+            if (!file.getFileName().toString().startsWith("TEST-")) {
+                continue;
+            }
+            for (Element test : elements(work, file, "testcase", broken)) {
+                Element bad = child(test, "failure");
+                if (bad == null) {
+                    bad = child(test, "error");
+                }
+                if (bad == null) {
+                    continue;
+                }
+                total++;
+                if (rows.size() < LIMIT) {
+                    String message = bad.hasAttribute("message") ? bad.getAttribute("message") : bad.getTextContent();
+                    rows.add("  " + test.getAttribute("classname") + "." + test.getAttribute("name") + " " + cut(message));
+                }
+            }
+        }
+        print("TESTS", total, rows);
+    }
+
+    private static void print(String title, int total, List<String> rows) {
+        StringBuilder out = new StringBuilder(title).append(' ').append(total).append('\n');
+        for (String row : rows) {
+            out.append(row).append('\n');
+        }
+        if (total > LIMIT) {
+            out.append("  … ещё ").append(total - LIMIT).append('\n');
+        }
+        System.out.print(out);
+    }
+
+    private static List<Path> files(Path work, String marker) throws IOException {
+        List<Path> found = new ArrayList<>();
+        try (var walk = Files.walk(work)) {
+            walk.filter(Files::isRegularFile)
+                    .filter(path -> relative(work, path).contains(marker))
+                    .filter(path -> path.getFileName().toString().endsWith(".xml"))
+                    .sorted()
+                    .forEach(found::add);
+        }
+        return found;
+    }
+
+    private static List<Element> elements(Path work, Path file, String local, List<String> broken) {
+        List<Element> found = new ArrayList<>();
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+            factory.setExpandEntityReferences(false);
+            factory.setNamespaceAware(true);
+            collect(factory.newDocumentBuilder().parse(file.toFile()), local, found);
+        } catch (Exception error) {
+            broken.add(relative(work, file));
+        }
+        return found;
+    }
+
+    private static void collect(Node node, String local, List<Element> found) {
+        if (node.getNodeType() == Node.ELEMENT_NODE && local.equals(name(node))) {
+            found.add((Element) node);
+        }
+        for (Node child = node.getFirstChild(); child != null; child = child.getNextSibling()) {
+            collect(child, local, found);
+        }
+    }
+
+    private static String name(Node node) {
+        if (node.getLocalName() != null) {
+            return node.getLocalName();
+        }
+        String name = node.getNodeName();
+        int colon = name.indexOf(':');
+        return colon < 0 ? name : name.substring(colon + 1);
+    }
+
+    private static String spot(Element item) {
+        String message = text(item, "ShortMessage");
+        String type = item.getAttribute("type");
+        return message.isEmpty() ? type : type + " " + message;
+    }
+
+    private static String pmd(Element item) {
+        return where(item, "beginline") + item.getAttribute("rule");
+    }
+
+    private static String check(Element item) {
+        return where(item, "line") + cut(item.getAttribute("message"));
+    }
+
+    private static String where(Element item, String line) {
+        String file = base(item.getParentNode() instanceof Element parent ? parent.getAttribute("name") : "");
+        return (file.isEmpty() ? "" : file + ":") + item.getAttribute(line) + " ";
+    }
+
+    private static String base(String path) {
+        int slash = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+        return slash < 0 ? path : path.substring(slash + 1);
+    }
+
+    private static String cut(String message) {
+        String text = message.replaceAll("\\s+", " ").trim();
+        return text.length() <= MESSAGE ? text : text.substring(0, MESSAGE);
+    }
+
+    private static String module(Path work, Path file) {
+        String relative = relative(work, file);
+        int build = relative.indexOf("/build/");
+        return build < 0 ? relative : relative.substring(0, build);
+    }
+
+    private static String relative(Path work, Path file) {
+        return work.relativize(file).toString().replace('\\', '/');
+    }
+
+    private static String text(Element item, String tag) {
+        Element child = child(item, tag);
+        return child == null ? "" : child.getTextContent().trim();
+    }
+
+    private static Element child(Element item, String tag) {
+        for (Node node = item.getFirstChild(); node != null; node = node.getNextSibling()) {
+            if (node.getNodeType() == Node.ELEMENT_NODE && tag.equals(name(node))) {
+                return (Element) node;
+            }
+        }
+        return null;
+    }
+}
+JAVA
+# lib: вывод java принудительно UTF-8: иначе на Windows-консоли он пишет cp866 и сводка расходится с остальным
+# статус-файлом (bash пишет UTF-8).
+if ! summary="$("$JAVA_EXE" -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 \
+    "$summary_dir/AnalyzerSummary.java" "$WORK")"; then
+    rm -rf "$summary_dir"
+    die 4 "не разобрать отчёты анализаторов в $WORK"
 fi
+rm -rf "$summary_dir"
 
 spotless="ok"
 if grep -qE "Execution failed for task ':?[^']*spotless" "$BUILD_LOG"; then

@@ -1,10 +1,10 @@
 core/board/AnimalLifecycleTests.java	303
-core/board/Board.java	670
+core/board/Board.java	650
 core/board/BoardConfigTests.java	401
 core/board/BoardLogTests.java	422
 core/board/BoardTests.java	966
 core/board/BoardTicketTests.java	401
-core/board/TicketPlans.java	877
+core/board/TicketPlans.java	864
 core/board/TicketPlansTests.java	1231
 core/board/graph/GraphPlanner.java	499
 core/board/graph/GraphPlannerTests.java	933
@@ -28,7 +28,6 @@ core/inventory/BaseKit.java	323
 core/inventory/BaseKitTests.java	321
 core/inventory/OverflowPolicyTests.java	464
 core/inventory/ValueTableTests.java	339
-core/movement/NavFuzzTests.java	1199
 core/movement/PitStairPlanner.java	319
 core/observation/WorldObservationTests.java	463
 core/plan/PlanValidatorRulesTests.java	359
@@ -38,11 +37,9 @@ core/planner/FallbackPlannerTests.java	325
 core/planner/ResourceResolver.java	305
 core/planner/ResourceResolverTests.java	566
 core/policy/BlockProtectionTests.java	314
-core/reload/DataTables.java	360
 core/rest/BoardRoutesTests.java	364
 core/rest/BoardTaskRequest.java	412
 core/rest/TaskRoutesTests.java	883
-core/script/CoreScripts.java	1369
 core/script/ScriptCatalogTests.java	1108
 core/tactics/FactorTests.java	422
 core/tactics/TacticsConfigTests.java	370

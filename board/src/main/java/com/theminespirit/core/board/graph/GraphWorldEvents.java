@@ -9,6 +9,7 @@ public final class GraphWorldEvents {
     public static final String CLEAR_FLOATING = "clear_floating";
     public static final String LEVEL_LOT = "level_lot";
     public static final String RESTORE_TRACE = "restore_trace";
+    public static final String REMOVE_ROUTE = "remove_route";
     public static final String REPAIR = "repair_";
 
     private GraphWorldEvents() {}

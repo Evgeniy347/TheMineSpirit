@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# lib: один выбор python на все скрипты (publish.sh, nightly-analyzers.sh, check-publish.sh): иначе копии
-# расходятся, и на сервере один скрипт находит python, а другой молча остаётся без сводки.
+# lib: один выбор python на все скрипты (publish.sh, check-publish.sh): иначе копии расходятся, и на сервере
+# один скрипт находит python, а другой молча остаётся без проверки jar.
 #
 # python_bin [модуль] — печатает путь к рабочему python: THEMINESPIRIT_PYTHON → PYTHON → python3 → python.
 # Заглушки WindowsApps (магазинная установка) пропускаются. С аргументом проверяет, что python импортирует

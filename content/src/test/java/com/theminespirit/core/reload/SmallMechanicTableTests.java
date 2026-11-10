@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 import com.theminespirit.core.hunger.HungerRules;
 import com.theminespirit.core.movement.ProjectileDodge;
+import com.theminespirit.core.movement.WalkOutRules;
 import com.theminespirit.core.repair.RepairData;
 import java.time.Clock;
 import java.util.Map;
@@ -45,6 +46,32 @@ class SmallMechanicTableTests {
                 ProjectileDodge.current(),
                 "Навык обязан читать версию из держателя DataTables, а не classpath: иначе /reload не выключит "
                         + "уклонение без перезапуска");
+    }
+
+    @Test
+    void walkout_ReloadChangedJson_HolderReturnsNewSpread() {
+        TableRegistry registry = new TableRegistry(Clock.systemUTC());
+        TableHolder<WalkOutRules> holder = registry.registerLazy(registeredWalkOut(), WalkOutRules::load);
+        ContentSource source = ContentSource.of(Map.of(
+                WalkOutRules.RESOURCE,
+                new LoadedContent("{\"surfaceSpread\": 48}", "test datapack", TableStatus.Source.DATAPACK)));
+
+        registry.reload(source);
+
+        assertEquals(
+                48,
+                holder.current().surfaceSpread(),
+                "После /reload с новым surfaceSpread держатель обязан нести новое число: иначе предел проверки "
+                        + "поверхности останется прежним до перезапуска, хотя walkout.json числится горячим");
+    }
+
+    @Test
+    void walkout_Current_ReadsLiveHolder() {
+        assertSame(
+                DataTables.INSTANCE.registry().holder("walkout").orElseThrow().current(),
+                WalkOutRules.current(),
+                "Выход из ямы обязан читать walkout.json из держателя DataTables, а не classpath: иначе "
+                        + "/reload не поменяет область проверки поверхности");
     }
 
     @Test
@@ -107,6 +134,16 @@ class SmallMechanicTableTests {
             }
         }
         throw new AssertionError("таблица dodge не зарегистрирована в DataTables: /reload её не перечитает");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static TableDefinition<WalkOutRules> registeredWalkOut() {
+        for (TableDefinition<?> definition : DataTables.INSTANCE.registry().definitions()) {
+            if ("walkout".equals(definition.id())) {
+                return (TableDefinition<WalkOutRules>) definition;
+            }
+        }
+        throw new AssertionError("таблица walkout не зарегистрирована в DataTables: /reload её не перечитает");
     }
 
     @SuppressWarnings("unchecked")

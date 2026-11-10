@@ -33,7 +33,7 @@
 | [publish.sh](publish.sh) | публикация мода, пака и страницы (только по согласованию) | `scripts/publish.sh --temp -y` | ПК, сервер | сервер и пак |
 | [publish-status.sh](publish-status.sh) | состояние публикации | `scripts/publish-status.sh` | ПК, сервер | нет |
 | [server-cleanup.sh](server-cleanup.sh) | уборка временного на `/opt/minecraft` по cron | `scripts/server-cleanup.sh` | сервер | удаляет старое в `/opt/minecraft/tmp` |
-| [nightly-analyzers.sh](nightly-analyzers.sh) | ночной полный набор анализаторов и unit по main | `scripts/nightly-analyzers.sh` | сервер | `/opt/minecraft/nightly`, логи |
+| [nightly-analyzers.sh](nightly-analyzers.sh) | ночной полный набор анализаторов и unit по main; сводка находок — один разбор XML на java | `scripts/nightly-analyzers.sh` | сервер | `/opt/minecraft/nightly`, логи |
 | [warm-gradle-cache.sh](warm-gradle-cache.sh) | прогрев кэша Gradle | `scripts/warm-gradle-cache.sh` | ПК, сервер | кэш Gradle |
 | [mem-guard.sh](mem-guard.sh) | сторож памяти агентов и Gradle | `scripts/mem-guard.sh` | ПК | нет |
 | [strategist.sh](strategist.sh) | запуск внешнего стратега | `scripts/strategist.sh status` | ПК, сервер | процесс стратега |
@@ -70,7 +70,7 @@
 | [testing/check-prove-red.sh](testing/check-prove-red.sh) | проверка `prove-red.sh` | `scripts/testing/check-prove-red.sh` | ПК, сервер | временный worktree |
 | [testing/check-mod-version.sh](testing/check-mod-version.sh) | проверка `mod-version.sh` на живых строках NeoForge и дереве | `scripts/testing/check-mod-version.sh` | ПК, сервер | временные файлы |
 | [testing/check-publish.sh](testing/check-publish.sh) | проверка публикации на подделке | `scripts/testing/check-publish.sh` | ПК, сервер | временные файлы |
-| [testing/check-world-snapshot.sh](testing/check-world-snapshot.sh) | проверка снимка мира на поддельной консоли (Linux) | `scripts/testing/check-world-snapshot.sh` | сервер | временные файлы |
+| [testing/check-world-snapshot.sh](testing/check-world-snapshot.sh) | проверка снимка мира на подделках: подтверждения save-*, возврат save-on, занятый замок, остановленный сервер | `scripts/testing/check-world-snapshot.sh` | ПК, сервер | временные файлы |
 | [testing/check-static-analysis-cache.sh](testing/check-static-analysis-cache.sh) | проверка кэша анализаторов | `scripts/testing/check-static-analysis-cache.sh` | ПК, сервер | временные файлы |
 | [testing/check-strategist.sh](testing/check-strategist.sh) | проверка запуска стратега | `scripts/testing/check-strategist.sh` | ПК, сервер | временные файлы |
 | [testing/check-test-runner.sh](testing/check-test-runner.sh) | проверка пределов и замков `test.sh` | `scripts/testing/check-test-runner.sh` | ПК, сервер | временные файлы |

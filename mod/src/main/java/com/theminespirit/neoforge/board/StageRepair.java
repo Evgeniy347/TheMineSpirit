@@ -89,7 +89,7 @@ final class StageRepair {
         if (BuildingLevels.state(step, level, service.board().ledger()) != BuildingLevels.State.UPGRADING) {
             return false;
         }
-        for (BoardTicket ticket : service.board().all()) {
+        for (BoardTicket ticket : service.board().tickets()) {
             if (ticket.boardCase() != step || ticket.level() != level) {
                 continue;
             }
