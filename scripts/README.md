@@ -32,7 +32,7 @@
 | [publish.sh](publish.sh) | публикация мода, пака и страницы (только по согласованию) | `scripts/publish.sh --temp -y` | ПК, сервер | сервер и пак |
 | [publish-status.sh](publish-status.sh) | состояние публикации | `scripts/publish-status.sh` | ПК, сервер | нет |
 | [server-cleanup.sh](server-cleanup.sh) | уборка временного на `/opt/minecraft` по cron | `scripts/server-cleanup.sh` | сервер | удаляет старое в `/opt/minecraft/tmp` |
-| [nightly-analyzers.sh](nightly-analyzers.sh) | ночной полный набор анализаторов и unit по main | `scripts/nightly-analyzers.sh` | сервер | `/opt/minecraft/nightly`, логи |
+| [nightly-analyzers.sh](nightly-analyzers.sh) | ночной полный набор анализаторов и unit по main; сводка находок — один разбор XML на java | `scripts/nightly-analyzers.sh` | сервер | `/opt/minecraft/nightly`, логи |
 | [warm-gradle-cache.sh](warm-gradle-cache.sh) | прогрев кэша Gradle | `scripts/warm-gradle-cache.sh` | ПК, сервер | кэш Gradle |
 | [mem-guard.sh](mem-guard.sh) | сторож памяти агентов и Gradle | `scripts/mem-guard.sh` | ПК | нет |
 | [strategist.sh](strategist.sh) | запуск внешнего стратега | `scripts/strategist.sh status` | ПК, сервер | процесс стратега |

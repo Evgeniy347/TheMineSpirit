@@ -108,6 +108,67 @@ code=$?
     && ok "находка: код=1, статус красный, SpotBugs-находка в списке, sha записан" \
     || fail "находка: код=$code, статус: $(cat "$NIGHTLY_STATUS" 2>/dev/null)"
 
+cat >"$work/bin/gradlew-reports" <<'FAKE'
+#!/usr/bin/env bash
+echo "$*" >>"${FAKE_ARGS:?}"
+mkdir -p mod/build/reports/spotbugs mod/build/reports/pmd mod/build/reports/checkstyle mod/build/test-results/test
+{
+    echo '<?xml version="1.0" encoding="UTF-8"?>'
+    echo '<BugCollection>'
+    for i in $(seq 0 16); do
+        echo "  <BugInstance type=\"MS_$i\"><ShortMessage>находка $i</ShortMessage></BugInstance>"
+    done
+    echo '</BugCollection>'
+} >mod/build/reports/spotbugs/main.xml
+cat >mod/build/reports/pmd/main.xml <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<pmd xmlns="http://pmd.sourceforge.net/report/2.0.0">
+  <file name="mod/src/main/java/com/theminespirit/core/Main.java">
+    <violation beginline="7" rule="Guard"/>
+  </file>
+</pmd>
+XML
+cat >mod/build/reports/checkstyle/main.xml <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle>
+  <file name="mod/src/main/java/com/theminespirit/core/Other.java">
+    <error line="9" message="строка длиннее 120"/>
+  </file>
+</checkstyle>
+XML
+printf '<not-xml' >mod/build/reports/pmd/broken.xml
+cat >mod/build/test-results/test/TEST-Main.xml <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite>
+  <testcase classname="pkg.MainTest" name="fails"><failure message="упал"/></testcase>
+  <testcase classname="pkg.OtherTest" name="errs"><error message="ошибка"/></testcase>
+  <testcase classname="pkg.OkTest" name="ok"/>
+</testsuite>
+XML
+echo "BUILD FAILED"
+exit 1
+FAKE
+chmod +x "$work/bin/gradlew-reports"
+
+export NIGHTLY_GRADLEW="$work/bin/gradlew-reports"
+: >"$FAKE_ARGS"
+out=$(NIGHTLY_FORCE=1 bash scripts/nightly-analyzers.sh 2>&1)
+code=$?
+if [ "$code" = 1 ] && grep -q "SPOTBUGS 17" "$NIGHTLY_STATUS" \
+    && grep -q "mod MS_0 находка 0" "$NIGHTLY_STATUS" \
+    && grep -q "… ещё 2" "$NIGHTLY_STATUS" \
+    && grep -q "mod Main.java:7 Guard" "$NIGHTLY_STATUS" \
+    && grep -q "mod Other.java:9 строка длиннее 120" "$NIGHTLY_STATUS" \
+    && grep -q "TESTS 2" "$NIGHTLY_STATUS" \
+    && grep -q "pkg.MainTest.fails упал" "$NIGHTLY_STATUS" \
+    && grep -q "pkg.OtherTest.errs ошибка" "$NIGHTLY_STATUS" \
+    && grep -q "НЕ ПРОЧИТАН mod/build/reports/pmd/broken.xml" "$NIGHTLY_STATUS" \
+    && ! grep -q "нет python3" "$NIGHTLY_STATUS"; then
+    ok "сводка: имена модулей и файлов (в т.ч. PMD с namespace), предел 15, ошибки тестов, битый XML назван"
+else
+    fail "сводка: код=$code, статус: $(cat "$NIGHTLY_STATUS" 2>/dev/null)"
+fi
+
 export NIGHTLY_GRADLEW="$work/bin/gradlew-green"
 : >"$FAKE_ARGS"
 out=$(NIGHTLY_FORCE=1 bash scripts/nightly-analyzers.sh 2>&1)
