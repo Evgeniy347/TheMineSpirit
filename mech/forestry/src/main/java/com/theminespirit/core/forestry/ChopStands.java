@@ -48,6 +48,7 @@ public final class ChopStands {
         Objects.requireNonNull(tree, "Дерево не может быть null: без него неизвестно, где стоянка у ствола");
         Objects.requireNonNull(view, "Взгляд на мир не может быть null: по нему проверяется стоянка");
         Set<BlockCoord> walk = new LinkedHashSet<>();
+        Set<BlockCoord> logs = Set.copyOf(tree.logs());
         Map<BlockCoord, BlockCoord> climb = new LinkedHashMap<>();
         int floor = tree.base().y() - STAND_SCAN_DEPTH;
         for (BlockCoord log : tree.logs()) {
@@ -58,6 +59,9 @@ public final class ChopStands {
                             continue;
                         }
                         BlockCoord feet = new BlockCoord(log.x() + dx, log.y() + dy, log.z() + dz);
+                        if (logs.contains(feet) || logs.contains(below(feet))) {
+                            continue;
+                        }
                         if (walk.contains(feet) || climb.containsKey(feet)) {
                             continue;
                         }
@@ -104,6 +108,10 @@ public final class ChopStands {
 
     private static BlockCoord above(BlockCoord cell) {
         return new BlockCoord(cell.x(), cell.y() + 1, cell.z());
+    }
+
+    private static BlockCoord below(BlockCoord cell) {
+        return new BlockCoord(cell.x(), cell.y() - 1, cell.z());
     }
 
     private static List<BlockCoord> groundBelow(Tree tree, View view) {

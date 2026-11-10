@@ -43,6 +43,21 @@ class ChopStandsTests {
     }
 
     @Test
+    void stands_CellDirectlyAboveLog_IsNotStand() {
+        Tree tree = new Tree(
+                new BlockCoord(0, 64, 0),
+                List.of(new BlockCoord(0, 64, 0), new BlockCoord(0, 65, 0), new BlockCoord(0, 67, 0)));
+        Set<BlockCoord> logs = Set.copyOf(tree.logs());
+
+        List<BlockCoord> stands =
+                ChopStands.stands(tree, new TestView(feet -> !logs.contains(feet), cell -> !logs.contains(cell)));
+
+        assertFalse(
+                stands.contains(new BlockCoord(0, 66, 0)),
+                "Клетка прямо над бревном — не стоянка: дух срубит ветку под собой и упадёт, " + stands);
+    }
+
+    @Test
     void stands_NoStandableGround_IsEmpty() {
         assertEquals(
                 List.of(),
