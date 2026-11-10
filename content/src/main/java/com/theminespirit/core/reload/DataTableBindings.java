@@ -21,6 +21,7 @@ import com.theminespirit.core.inventory.WarehouseCategories;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentLevels;
 import com.theminespirit.core.mining.DropTable;
+import com.theminespirit.core.movement.ProjectileDodge;
 import com.theminespirit.core.observation.ObservationLimits;
 import com.theminespirit.core.processing.ProcessingRules;
 import com.theminespirit.core.repair.RepairData;
@@ -33,6 +34,11 @@ final class DataTableBindings {
     private DataTableBindings() {}
 
     static void bind(DataTables tables) {
+        TableHolder<ProjectileDodge> dodge = tables.registry()
+                .registerLazy(
+                        TableDefinition.single("dodge", ProjectileDodge.RESOURCE, ProjectileDodge::parse),
+                        ProjectileDodge::load);
+        ProjectileDodge.useSource(dodge::current);
         ConfigStamp.useCurrent(() -> tables.board().status().hash());
         ObservationLimits.useSource(() -> tables.observation().current());
         FeedTable.useSource(() -> tables.feed().current());
