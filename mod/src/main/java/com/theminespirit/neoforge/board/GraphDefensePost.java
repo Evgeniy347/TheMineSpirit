@@ -9,8 +9,11 @@ import com.theminespirit.core.coordinator.CoordinatorTuning;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.intellect.defense.DefenderOrder;
 import com.theminespirit.core.intellect.defense.DefensePlan;
+import com.theminespirit.core.intellect.defense.DefensePotion;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
+import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -62,10 +65,12 @@ final class GraphDefensePost {
                             ticket.id(),
                             Map.of()),
                     TicketTarget.at(position(order.target().get()))
-                            .withPlan(new ScriptCall(
-                                    "defend",
-                                    Map.of(
-                                            "target",
+                            .withPlan(order.potion()
+                                    .map(potion -> (TaskNode) new SequenceNode(List.of(
+                                            new ScriptCall("drink_potion", Map.of("type", potionName(potion))),
+                                            defend(target(
+                                                    post, ticket, order.target().get())))))
+                                    .orElseGet(() -> defend(
                                             target(post, ticket, order.target().get())))));
             posted = true;
         }
@@ -119,6 +124,18 @@ final class GraphDefensePost {
                         Map.of()),
                 TicketTarget.at(target).withPlan(new ScriptCall("defend", Map.of("target", "hostile"))));
         return true;
+    }
+
+    private static ScriptCall defend(String target) {
+        return new ScriptCall("defend", Map.of("target", target));
+    }
+
+    private static String potionName(DefensePotion potion) {
+        return switch (potion) {
+            case HEAL -> "healing";
+            case STRENGTH -> "strength";
+            case SPEED -> "swiftness";
+        };
     }
 
     static int priority(GraphTickets.Ticket ticket) {
