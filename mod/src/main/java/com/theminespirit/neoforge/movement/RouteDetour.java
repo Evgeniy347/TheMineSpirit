@@ -167,7 +167,7 @@ public final class RouteDetour {
                     route.end(),
                     refusal);
             if (refusal.isEmpty()) {
-                finish(pending, new RouteWalk(spirit, route, pending.plan.target()), "");
+                finish(pending, new RouteWalk(spirit, route, pending.plan.target(), pending.plan.rescue()), "");
             } else {
                 finish(pending, null, refusal);
             }

@@ -20,8 +20,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
 
 public final class PlotPlanBlocks {
+    private static @Nullable StageSite cachedSite;
+    private static @Nullable String cachedRules;
+    private static @Nullable Plan cachedPlan;
+
     public record Plan(Map<BlockCoord, String> blocks) {
         public Plan {
             blocks = Map.copyOf(Objects.requireNonNull(blocks, "Блоки плана не могут быть null: пусто — пустая карта"));
@@ -44,6 +49,24 @@ public final class PlotPlanBlocks {
 
     public static Plan of(StageSite site) {
         Objects.requireNonNull(site, "Место этапа не может быть null: план строится по нему");
+        String rules = rulesHash();
+        Plan cached = cachedPlan;
+        if (cached != null && rules.equals(cachedRules) && site.equals(cachedSite)) {
+            return cached;
+        }
+        Plan built = build(site);
+        cachedPlan = built;
+        cachedSite = site;
+        cachedRules = rules;
+        return built;
+    }
+
+    private static String rulesHash() {
+        return DataTables.INSTANCE.stages().status().hash() + "|"
+                + DataTables.INSTANCE.presets().status().hash();
+    }
+
+    private static Plan build(StageSite site) {
         PresetLibrary presets = DataTables.INSTANCE.presets().current();
         Map<BlockCoord, String> blocks = new HashMap<>();
         String hut = DataTables.INSTANCE

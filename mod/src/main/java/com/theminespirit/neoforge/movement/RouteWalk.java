@@ -38,13 +38,17 @@ public final class RouteWalk {
     private int recorded = -1;
 
     public RouteWalk(SpiritEntity spirit, Route route, BlockCoord target) {
+        this(spirit, route, target, false);
+    }
+
+    public RouteWalk(SpiritEntity spirit, Route route, BlockCoord target, boolean rescue) {
         this.spirit = spirit;
         this.steps = route.steps();
         this.target = target;
         this.cost = route.cost();
         this.swimmer = new SwimStep(spirit);
         this.passages = new PassageWalk(spirit);
-        this.mutations = new RouteMutations(spirit, this);
+        this.mutations = new RouteMutations(spirit, this, rescue);
     }
 
     public State tick() {

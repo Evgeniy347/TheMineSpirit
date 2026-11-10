@@ -31,6 +31,7 @@ public final class DigOutScript implements ScriptInstance {
     private final SpiritEntity spirit;
     private final Level level;
     private final GotoParams target;
+    private final boolean rescue;
     private final boolean fromPit;
     private final boolean descending;
     private final DigOutBackfill backfill;
@@ -56,6 +57,7 @@ public final class DigOutScript implements ScriptInstance {
         this.spirit = spirit;
         this.level = spirit.level();
         this.target = target;
+        this.rescue = rescue;
         this.fromPit = open(level, spirit.blockPosition());
         this.descending = target.y() < spirit.blockPosition().getY();
         this.breaker = BlockBreaker.escaping(spirit, rescue);
@@ -167,7 +169,7 @@ public final class DigOutScript implements ScriptInstance {
         }
         if (routeFollow == null) {
             routeFollow = new DigOutRoute(
-                    spirit, new BlockCoord(target.x(), target.y(), target.z()), descending, HOME_RADIUS);
+                    spirit, new BlockCoord(target.x(), target.y(), target.z()), descending, HOME_RADIUS, rescue);
         }
         DigOutRoute.State state = routeFollow.tick();
         if (state == DigOutRoute.State.DESCENT_FAILED || state == DigOutRoute.State.NO_ROUTE) {
