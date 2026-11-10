@@ -28,7 +28,6 @@ core/inventory/BaseKit.java	323
 core/inventory/BaseKitTests.java	321
 core/inventory/OverflowPolicyTests.java	464
 core/inventory/ValueTableTests.java	339
-core/movement/NavFuzzTests.java	1199
 core/movement/PitStairPlanner.java	319
 core/observation/WorldObservationTests.java	463
 core/plan/PlanValidatorRulesTests.java	359
@@ -42,7 +41,6 @@ core/reload/DataTables.java	360
 core/rest/BoardRoutesTests.java	364
 core/rest/BoardTaskRequest.java	412
 core/rest/TaskRoutesTests.java	883
-core/script/CoreScripts.java	1369
 core/script/ScriptCatalogTests.java	1108
 core/tactics/FactorTests.java	422
 core/tactics/TacticsConfigTests.java	370
