@@ -33,6 +33,7 @@ final class BuildPitWatch {
     private @Nullable BlockCoord lastStand;
     private @Nullable DigOutScript escape;
     private @Nullable String escapeFailure;
+    private boolean escapeFailed;
 
     BuildPitWatch(SpiritEntity spirit, Level level, SchematicSite site, BuildKey buildKey) {
         this.spirit = spirit;
@@ -65,6 +66,7 @@ final class BuildPitWatch {
         }
         if (status == ScriptStatus.FAILED) {
             escapeFailure = escape.failureReason();
+            escapeFailed = true;
         }
         escape = null;
         return status;
@@ -73,6 +75,14 @@ final class BuildPitWatch {
     @Nullable
     String escapeFailure() {
         return escapeFailure;
+    }
+
+    boolean escapeFailed() {
+        return escapeFailed;
+    }
+
+    boolean trapped() {
+        return DigOutScript.sealed(level, spirit.blockPosition()) || DigOutScript.embedded(spirit);
     }
 
     void cancelEscape() {

@@ -23,6 +23,12 @@ public final class SiteLevels {
         return level(site) + 1;
     }
 
+    public static BlockCoord fenceOrigin(StageSite site, BlockCoord at) {
+        Objects.requireNonNull(site, "Место этапа не может быть null: низ забора берётся из площадки поселения");
+        Objects.requireNonNull(at, "Точка забора не может быть null: без неё не видно, в какой колонке ставить");
+        return new BlockCoord(at.x(), fenceY(site), at.z());
+    }
+
     public static PlotLeveling leveling(StageSite site, IntBinaryOperator tops) {
         return leveling(site, tops, at -> building(site, at.x(), at.y(), at.z()));
     }
