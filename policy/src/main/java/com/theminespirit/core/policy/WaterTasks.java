@@ -12,7 +12,7 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public final class WaterTasks {
-    private static final Set<String> SWIMMING = Set.of("swim", "cross_water", "fish", "dig_out");
+    private static final Set<String> SWIMMING = Set.of("swim", "cross_water", "fish", "dig_out", "walk_careful");
 
     private WaterTasks() {}
 

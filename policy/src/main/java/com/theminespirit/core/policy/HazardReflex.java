@@ -30,6 +30,9 @@ public final class HazardReflex {
             return escape(surroundings, "опасный блок (кактус, магма, ягоды, паутина, снег) касается духа");
         }
         if (flags.inWater() && !exemptions.has(PolicyId.WATER)) {
+            if (surroundings.cellAt(0, 1, 0) == Cell.SOLID) {
+                return new PolicyVerdict.Clear();
+            }
             return exitWater(surroundings);
         }
         return new PolicyVerdict.Clear();

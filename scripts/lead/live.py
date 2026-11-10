@@ -28,7 +28,7 @@ HELP = """scripts/live.sh <команда>  (цель: своя копия де�
   slice <x> <y> <z> [радиус] [вверх] [вниз]   карта блоков слоями
   loops [строк]          задания, которые падают снова и снова: что и почему, за весь журнал
   log <шаблон> [строк]   строки журнала мода по регулярному выражению
-  fixture <имя духа> <файл> [радиус]   мир вокруг духа в mech/movement/src/test/resources/live/<файл>.live
+  fixture <имя духа> <файл> [радиус] [--at x y z]   мир вокруг духа (или точки) в mech/movement/src/test/resources/live/<файл>.live
   check [--wait секунд]  граф жив и работа есть: код 0 — да, 1 — нет (после каждой выкладки)
 """
 
@@ -241,10 +241,13 @@ def kind_of(name):
 
 
 def fixture(target, args):
-    bot = next((b for b in bots(target) if b["name"] == args.name), None)
-    if bot is None:
-        sys.exit("нет духа %s" % args.name)
-    x, y, z = bot["position"]
+    if args.at:
+        x, y, z = args.at
+    else:
+        bot = next((b for b in bots(target) if b["name"] == args.name), None)
+        if bot is None:
+            sys.exit("нет духа %s" % args.name)
+        x, y, z = bot["position"]
     text = target.slice_args([x, y, z, args.radius, args.radius, args.radius, "--cells"])
     out = ["# %s в %d,%d,%d; снят scripts/live.sh fixture" % (args.name, x, y, z), "feet 0 0 0"]
     for line in text.splitlines():
@@ -320,6 +323,7 @@ def main():
     fix.add_argument("name")
     fix.add_argument("file")
     fix.add_argument("radius", type=int, nargs="?", default=8)
+    fix.add_argument("--at", type=int, nargs=3, metavar=("X", "Y", "Z"))
     fix.set_defaults(run=fixture)
     ok = sub.add_parser("check")
     ok.add_argument("--wait", type=int, default=0)

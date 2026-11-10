@@ -78,6 +78,13 @@ class HazardReflexTests {
                 row("вода по шею, берег на востоке", S, "WWW/WW./WWW", "WWW/WW./WWW", IN_WATER, exitWater(1, 0, 0)),
                 row("лужа 1x1 по щиколотку", S, ".../.W./...", O, IN_WATER, exitWater(-1, 0, 0)),
                 row("озеро без берега", S, "WWW/WWW/WWW", O, IN_WATER, stop(PolicyId.WATER)),
+                row(
+                        "вода под твёрдой крышей: тело замуровано, рефлекс воды не держит",
+                        S,
+                        "WWW/WWW/WWW",
+                        S,
+                        IN_WATER,
+                        clear()),
                 row("бассейн с бортом выше: выход прыжком", S, "###/#W#/###", O, IN_WATER, exitWater(-1, 1, 0)),
                 row("лава у берега важнее воды", S, ".../LW./...", O, IN_WATER, flee(1, 0, 0)),
                 row(
