@@ -81,6 +81,23 @@ public enum CropKind {
         return NAMES;
     }
 
+    public static Optional<CropKind> ofProduce(String item) {
+        Objects.requireNonNull(item, "Идентификатор урожая не может быть null: без него культуру не сопоставить");
+        String bare = item.startsWith(MINECRAFT_NAMESPACE) ? item.substring(MINECRAFT_NAMESPACE.length()) : item;
+        for (CropKind kind : values()) {
+            if (kind == ANY) {
+                continue;
+            }
+            String produce = kind.produceItem();
+            String produceBare =
+                    produce.startsWith(MINECRAFT_NAMESPACE) ? produce.substring(MINECRAFT_NAMESPACE.length()) : produce;
+            if (produceBare.equals(bare)) {
+                return Optional.of(kind);
+            }
+        }
+        return Optional.empty();
+    }
+
     public static List<String> plantableNames() {
         return PLANTABLE_NAMES;
     }

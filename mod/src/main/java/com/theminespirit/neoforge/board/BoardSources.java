@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.GraphBlock;
@@ -67,6 +68,7 @@ public final class BoardSources {
 
     public void graphFailure(
             BoardTicket ticket, @Nullable TicketTarget target, GraphBlock.@Nullable Need need, long now) {
+        rescueSettled(ticket);
         String node = GraphFailureMemory.node(ticket.id(), ticket.cause());
         if (node == null) {
             return;
@@ -75,11 +77,18 @@ public final class BoardSources {
     }
 
     public void graphSuccess(BoardTicket ticket, @Nullable TicketTarget target, long now) {
+        rescueSettled(ticket);
         String node = GraphFailureMemory.node(ticket.id(), ticket.cause());
         if (node == null) {
             return;
         }
         graphFailures.succeed(node, graphTarget(target), now);
+    }
+
+    private void rescueSettled(BoardTicket ticket) {
+        if (ticket.boardCase() == BoardCase.RESCUE_SPIRIT) {
+            rescueReach.clear();
+        }
     }
 
     public Set<String> graphUnreachablePoints(long now, double halfLifeTicks) {

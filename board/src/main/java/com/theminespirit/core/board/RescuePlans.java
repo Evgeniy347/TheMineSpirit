@@ -168,6 +168,11 @@ public final class RescuePlans {
         return new ScriptCall("bridge", Map.of("x", home.x(), "y", home.y(), "z", home.z(), "length", length));
     }
 
+    public static TaskNode walk(BlockCoord home) {
+        Objects.requireNonNull(home, "Дом не может быть null: идти некуда");
+        return new ScriptCall("walk_careful", Map.of("x", home.x(), "y", home.y(), "z", home.z()));
+    }
+
     public static Optional<TaskNode> plan(BoardCase boardCase, TicketTarget target) {
         Objects.requireNonNull(boardCase, "Кейс спасения не может быть null: план строится по кейсу");
         Objects.requireNonNull(target, "Цель спасения не может быть null: без координат духа не выручить");

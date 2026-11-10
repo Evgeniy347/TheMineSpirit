@@ -26,6 +26,7 @@ scripts/live.sh loops                   # какие задания падают
 scripts/dev-server.sh up                # своя копия живого мира; live.sh теперь смотрит в неё
 scripts/live-debug.sh --run run-live/<имя> hotswap <класс>   # правка сразу в копии, без перезапуска
 scripts/live.sh fixture spirit-5 <файл> # этот мир становится фикстурой теста
+scripts/live.sh fixture pit-вода water-pocket.live 4 --at -99 52 -417  # снимок точки, когда духа там уже нет
 scripts/test.sh unit --changed          # тест с фикстурой, затем коммит; scripts/dev-server.sh down
 ```
 

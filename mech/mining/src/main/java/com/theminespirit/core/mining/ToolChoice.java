@@ -40,6 +40,12 @@ public final class ToolChoice {
 
     public record Choice(int slot, double speed, boolean dropsAllowed) {}
 
+    public enum DigMode {
+        NORMAL,
+        ESCAPING,
+        ESCAPING_WITH_HELPER
+    }
+
     public static Choice best(List<ToolOption> options) {
         return best(options, ToolReserve.defaults(), ToolsConfig.defaults().repairTiers());
     }
@@ -52,12 +58,17 @@ public final class ToolChoice {
 
     public static boolean refusesHandDig(
             Choice choice, List<ToolOption> options, boolean pickaxeBlock, boolean escaping) {
+        return refusesHandDig(choice, options, pickaxeBlock, escaping ? DigMode.ESCAPING : DigMode.NORMAL);
+    }
+
+    public static boolean refusesHandDig(Choice choice, List<ToolOption> options, boolean pickaxeBlock, DigMode mode) {
         Objects.requireNonNull(choice, "Выбор не может быть null: по нему решается, копает ли дух руками");
         Objects.requireNonNull(options, "Набор инструментов не может быть null: по нему видно, есть ли кирка");
+        Objects.requireNonNull(mode, "Режим копания не может быть null: без него неизвестно, замурован ли дух");
         return pickaxeBlock
-                && !escaping
                 && !choice.dropsAllowed()
-                && options.stream().noneMatch(option -> option.itemId().endsWith(ToolsConfig.PICKAXE));
+                && options.stream().noneMatch(option -> option.itemId().endsWith(ToolsConfig.PICKAXE))
+                && mode != DigMode.ESCAPING;
     }
 
     public static Choice best(List<ToolOption> options, ToolReserve reserve, Collection<String> repairTiers) {

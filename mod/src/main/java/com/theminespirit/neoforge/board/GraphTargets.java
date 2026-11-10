@@ -5,6 +5,7 @@ import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.WorkStand;
 import com.theminespirit.core.board.graph.FailureTargets;
 import com.theminespirit.core.board.graph.SupplyGraph;
+import com.theminespirit.core.movement.PatrolPoints;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.pickup.LeafDropStand;
 import java.util.ArrayList;
@@ -34,6 +35,20 @@ public final class GraphTargets {
 
     static Optional<BlockCoord> leafDropStand(ServerLevel level, BlockCoord leaf) {
         return LeafDropStand.of(leaf, ground(level));
+    }
+
+    static PatrolPoints.Ground patrolGround(ServerLevel level) {
+        return new PatrolPoints.Ground() {
+            @Override
+            public int feet(int x, int z) {
+                return GroundProbe.feet(level, x, z, PatrolPoints.NO_GROUND);
+            }
+
+            @Override
+            public boolean free(BlockCoord feet) {
+                return feet.y() != PatrolPoints.NO_GROUND && GroundProbe.freeAt(level, feet);
+            }
+        };
     }
 
     static BlockCoord source(

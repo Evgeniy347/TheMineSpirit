@@ -23,13 +23,11 @@ final class More4Scripts {
 
     private More4Scripts() {}
 
-    static Map<String, Object> patrolParams(BlockCoord center) {
-        List<String> points = new ArrayList<>(5);
-        points.add(point(center));
-        points.add(point(new BlockCoord(center.x() + 4, center.y(), center.z())));
-        points.add(point(new BlockCoord(center.x(), center.y(), center.z() + 4)));
-        points.add(point(new BlockCoord(center.x() - 4, center.y(), center.z())));
-        points.add(point(new BlockCoord(center.x(), center.y(), center.z() - 4)));
+    static Map<String, Object> patrolParams(List<BlockCoord> stops) {
+        List<String> points = new ArrayList<>(stops.size());
+        for (BlockCoord stop : stops) {
+            points.add(point(stop));
+        }
         return Map.of("points", List.copyOf(points), "mode", "loop", "loops", 1);
     }
 

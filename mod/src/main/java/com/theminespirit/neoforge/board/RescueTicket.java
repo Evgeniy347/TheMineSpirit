@@ -35,8 +35,11 @@ final class RescueTicket {
 
     private RescueTicket() {}
 
-    static Escape escape(ServerLevel level, SpiritEntity spirit, BlockCoord home, boolean noPath) {
+    static Escape escape(ServerLevel level, SpiritEntity spirit, BlockCoord home, boolean noPath, boolean pathHome) {
         BlockPos feet = spirit.blockPosition();
+        if (pathHome) {
+            return new Escape(true, RescuePlans.walk(home), "путь домой открыт: идёт пешком, мир не трогает");
+        }
         Optional<PitExitPlanner.Plan> pit = PitRescue.trapped(spirit);
         if (pit.isPresent() && pit.orElseThrow().possible()) {
             PitExitPlanner.Plan exit = pit.orElseThrow();

@@ -47,6 +47,14 @@ public record TreeSpecies(String id, String logId, String leavesId, String sapli
         return ALL.stream().filter(species -> species.logId.equals(blockId)).findFirst();
     }
 
+    public static Optional<TreeSpecies> ofSapling(String itemId) {
+        Objects.requireNonNull(itemId, "Идентификатор саженца не может быть null: без него породу не сопоставить");
+        String qualified = itemId.indexOf(':') < 0 ? "minecraft:" + itemId : itemId;
+        return ALL.stream()
+                .filter(species -> species.saplingId.equals(qualified))
+                .findFirst();
+    }
+
     public static List<String> names() {
         List<String> names = new ArrayList<>(ALL.size() + 1);
         names.add(ANY);

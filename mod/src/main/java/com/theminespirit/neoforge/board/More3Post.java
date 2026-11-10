@@ -14,7 +14,6 @@ import net.minecraft.core.BlockPos;
 
 final class More3Post {
     private static final int DANGER_RADIUS = 8;
-    private static final int CONTAINER_RADIUS = 8;
     private static final Set<String> NODES = Set.of(
             "secure_danger",
             "fence_danger",
@@ -114,11 +113,11 @@ final class More3Post {
     }
 
     private static Map<String, Object> unload() {
-        return Map.of("container", "nearest", "radius", CONTAINER_RADIUS, "force", false);
+        return Map.of("container", "warehouse", "force", false);
     }
 
     private static Map<String, Object> sort() {
-        return Map.of("container", "nearest", "radius", CONTAINER_RADIUS);
+        return Map.of("container", "warehouse");
     }
 
     static boolean near(BlockCoord one, BlockCoord two, int radius) {

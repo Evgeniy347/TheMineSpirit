@@ -79,7 +79,7 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     public static boolean embedded(SpiritEntity spirit) {
-        return EmbeddedSpace.inside(spirit);
+        return !EmbeddedSpace.blocking(spirit).isEmpty();
     }
 
     public static boolean open(Level level, BlockPos cell) {
@@ -94,19 +94,17 @@ public final class DigOutScript implements ScriptInstance {
         if (spirit.isRemoved()) {
             return fail("дух исчез, выбираясь из-под земли");
         }
-        if (embedded(spirit) && !breaking) {
-            BlockPos feet = spirit.blockPosition();
-            BlockState inside = level.getBlockState(feet);
-            BlockBreaker.Begin begin = breaker.begin(feet);
+        List<BlockPos> blocked = EmbeddedSpace.blocking(spirit);
+        if (!breaking && !blocked.isEmpty()) {
+            BlockPos stuck = blocked.get(0);
+            BlockState inside = level.getBlockState(stuck);
+            BlockBreaker.Begin begin = breaker.begin(stuck);
             if (begin instanceof BlockBreaker.Started) {
-                restore.remember(feet, inside);
+                restore.remember(stuck, inside);
                 breaking = true;
                 return ScriptStatus.RUNNING;
             }
-            String why = begin instanceof BlockBreaker.Refused refused
-                    ? refused.message()
-                    : ((BlockBreaker.Protected) begin).reason();
-            return fail("не выйти из блока " + feet.toShortString() + ": " + why);
+            return fail("не выйти из блока " + stuck.toShortString() + ": " + BlockBreaker.reason(begin));
         }
         if (followRoute()) {
             return ScriptStatus.RUNNING;

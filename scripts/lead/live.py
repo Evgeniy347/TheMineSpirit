@@ -28,7 +28,7 @@ HELP = """scripts/live.sh <команда>  (цель: своя копия де�
   slice <x> <y> <z> [радиус] [вверх] [вниз]   карта блоков слоями
   loops [строк]          задания, которые падают снова и снова: что и почему, за весь журнал
   log <шаблон> [строк]   строки журнала мода по регулярному выражению
-  fixture <имя духа> <файл> [радиус]   мир вокруг духа в mech/movement/src/test/resources/live/<файл>.live
+  fixture <имя духа> <файл> [радиус] [--at x y z]   мир вокруг духа (или точки) в mech/movement/src/test/resources/live/<файл>.live
   check [--wait секунд] [--version <в>]  граф жив, работа есть, версия мода на сервере та же, что собрана
 """
 
@@ -285,10 +285,13 @@ def kind_of(name):
 
 
 def fixture(target, args):
-    bot = next((b for b in bots(target) if b["name"] == args.name), None)
-    if bot is None:
-        sys.exit("нет духа %s" % args.name)
-    x, y, z = bot["position"]
+    if args.at:
+        x, y, z = args.at
+    else:
+        bot = next((b for b in bots(target) if b["name"] == args.name), None)
+        if bot is None:
+            sys.exit("нет духа %s" % args.name)
+        x, y, z = bot["position"]
     text = target.slice_args([x, y, z, args.radius, args.radius, args.radius, "--cells"])
     out = ["# %s в %d,%d,%d; снят scripts/live.sh fixture" % (args.name, x, y, z), "feet 0 0 0"]
     for line in text.splitlines():
@@ -316,12 +319,16 @@ def expected_mod_version():
     ).stdout.decode("utf-8", "replace").strip()
     if branch != "main":
         return ""
-    built = subprocess.run(
-        ["bash", os.path.join(REPO, "scripts", "mod-version.sh"), "--built", REPO],
-        capture_output=True,
-        check=True,
-    ).stdout
-    return built.decode("utf-8", "replace").strip()
+    minor = ""
+    with open(os.path.join(REPO, "gradle.properties"), encoding="utf-8") as source:
+        for line in source:
+            if line.startswith("mod_version_minor="):
+                minor = line.strip().split("=", 1)[1]
+                break
+    count = subprocess.run(
+        ["git", "-C", REPO, "rev-list", "--count", "HEAD"], capture_output=True, check=True
+    ).stdout.decode("utf-8", "replace").strip()
+    return "%s.%s" % (minor, count) if minor and count else ""
 
 
 def check_once(target, expected=""):
@@ -409,6 +416,7 @@ def main():
     fix.add_argument("name")
     fix.add_argument("file")
     fix.add_argument("radius", type=int, nargs="?", default=8)
+    fix.add_argument("--at", type=int, nargs=3, metavar=("X", "Y", "Z"))
     fix.set_defaults(run=fixture)
     ok = sub.add_parser("check")
     ok.add_argument("--wait", type=int, default=0)
