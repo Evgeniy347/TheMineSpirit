@@ -5,6 +5,4 @@
 # exit — что остаётся при cancel/suspend/смерти и почему это видно графу.
 # test — существующий тест прерывания Class.method; имя метода содержит Interrupt.
 # Исключения формата exception | path | reason — writer без теста, только с причиной.
-# Исключений пока нет: все четыре writer-файла объявлены строками ниже.
 neoforge/DigOutFloor.java | DigOutScript | cancel: returnSpoil возвращает сломанное, кроме клеток тела; пол ступени остаётся temporary | InterruptExitTests.digOut_Interrupted_RestoreReturnsSpoilExceptBody | выход из ямы и спасение
-neoforge/movement/RouteMutations.java | GotoScript | cancel: ломка прекращена, поставленные клетки маршрута остаются temporary | InterruptExitTests.goto_Interrupted_RoutePillarStaysMarkedTemporary | подъём и постановка клеток на маршруте через Approach/RouteWalk
