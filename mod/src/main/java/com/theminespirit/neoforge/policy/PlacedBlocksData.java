@@ -148,6 +148,10 @@ public final class PlacedBlocksData extends SavedData {
         return temporarySet.inChunk(chunkX, chunkZ);
     }
 
+    public List<BlockCoord> temporaryCells() {
+        return temporarySet.cells();
+    }
+
     public int size() {
         return set.size();
     }

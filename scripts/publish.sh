@@ -227,6 +227,38 @@ server_jars() {
         | sort -rn | cut -d' ' -f2-
 }
 
+# lib: подмена файла через mv: читатель (cron-снимок, запущенный bash, сервер при старте) не должен увидеть
+# lib: обрезанный файл: cp -f пишет на месте, и запущенный bash дочитывает уже чужое (10.11: «return: can only
+# lib: return from a function»). Тот же приём для конфигов: публикация не оставляет половину файла.
+deploy_file() {
+    local src="$1" dst="$2" mode="${3:-}" tmp
+    tmp="$(dirname "$dst")/.$(basename "$dst").new.$$"
+    if ! cp -f "$src" "$tmp"; then
+        rm -f "$tmp"
+        echo "ОШИБКА: не скопировать $src в $dst" >&2
+        return 1
+    fi
+    if [ -n "$mode" ] && ! chmod "$mode" "$tmp"; then
+        rm -f "$tmp"
+        echo "ОШИБКА: не выставить права $mode на $dst" >&2
+        return 1
+    fi
+    if ! mv -f "$tmp" "$dst"; then
+        rm -f "$tmp"
+        echo "ОШИБКА: не подменить $dst" >&2
+        return 1
+    fi
+}
+
+deploy_tree() {
+    local src="$1" dst="$2" relative
+    while IFS= read -r relative; do
+        [ -n "$relative" ] || continue
+        mkdir -p "$dst/$(dirname "$relative")"
+        deploy_file "$src/$relative" "$dst/$relative" || return 1
+    done <<<"$(cd "$src" && find . -type f | sed 's|^\./||' | sort)"
+}
+
 deploy_server_files() {
     local files="$SERVER_FILES" name
     if [ ! -d "$files" ]; then
@@ -239,19 +271,14 @@ deploy_server_files() {
             echo "ОШИБКА: нет $files/scripts/$name" >&2
             return 1
         fi
-        # lib: подмена через mv: cron-снимок может читать скрипт прямо сейчас, а cp -f обрезает файл на месте
-        # lib: и запущенный bash дочитывает уже чужое (10.11: «return: can only return from a function»).
-        if ! cp -f "$files/scripts/$name" "$SERVER_DIR/scripts/.$name.new.$$" \
-            || ! chmod 755 "$SERVER_DIR/scripts/.$name.new.$$" \
-            || ! mv -f "$SERVER_DIR/scripts/.$name.new.$$" "$SERVER_DIR/scripts/$name"; then
-            rm -f "$SERVER_DIR/scripts/.$name.new.$$"
+        if ! deploy_file "$files/scripts/$name" "$SERVER_DIR/scripts/$name" 755; then
             echo "ОШИБКА: не разложить $name в $SERVER_DIR/scripts" >&2
             return 1
         fi
     done
     chmod 755 "$SERVER_DIR"/scripts/*.sh
     rm -f "$SERVER_DIR/scripts/snapshot.sh"
-    if ! cp -a "$files"/config/. "$SERVER_DIR/config/"; then
+    if ! deploy_tree "$files/config" "$SERVER_DIR/config"; then
         echo "ОШИБКА: не скопировать конфиги из $files/config в $SERVER_DIR/config" >&2
         return 1
     fi
@@ -260,29 +287,27 @@ deploy_server_files() {
             echo "ОШИБКА: нет $files/$name" >&2
             return 1
         fi
-        if ! cp -f "$files/$name" "$SERVER_DIR/$name"; then
+        if ! deploy_file "$files/$name" "$SERVER_DIR/$name"; then
             echo "ОШИБКА: не скопировать $name в $SERVER_DIR" >&2
             return 1
         fi
     done
-    if ! cp -f "$files/run.sh" "$SERVER_DIR/run.sh" || ! cp -f "$files/README.md" "$SERVER_DIR/README.md"; then
+    if ! deploy_file "$files/run.sh" "$SERVER_DIR/run.sh" 755 \
+        || ! deploy_file "$files/README.md" "$SERVER_DIR/README.md"; then
         echo "ОШИБКА: не скопировать run.sh/README.md в $SERVER_DIR" >&2
         return 1
     fi
-    chmod 755 "$SERVER_DIR/run.sh"
     if [ -f "$MOD_DIR/scripts/server-cleanup.sh" ]; then
-        if ! cp -f "$MOD_DIR/scripts/server-cleanup.sh" "$CLEANUP_SCRIPT_DIR/server-cleanup.sh"; then
+        if ! deploy_file "$MOD_DIR/scripts/server-cleanup.sh" "$CLEANUP_SCRIPT_DIR/server-cleanup.sh" 755; then
             echo "ОШИБКА: не скопировать server-cleanup.sh в $CLEANUP_SCRIPT_DIR" >&2
             return 1
         fi
-        chmod 755 "$CLEANUP_SCRIPT_DIR/server-cleanup.sh"
     fi
     if [ -f "$MOD_DIR/scripts/nightly-analyzers.sh" ]; then
-        if ! cp -f "$MOD_DIR/scripts/nightly-analyzers.sh" "$CLEANUP_SCRIPT_DIR/nightly-analyzers.sh"; then
+        if ! deploy_file "$MOD_DIR/scripts/nightly-analyzers.sh" "$CLEANUP_SCRIPT_DIR/nightly-analyzers.sh" 755; then
             echo "ОШИБКА: не скопировать nightly-analyzers.sh в $CLEANUP_SCRIPT_DIR" >&2
             return 1
         fi
-        chmod 755 "$CLEANUP_SCRIPT_DIR/nightly-analyzers.sh"
     fi
     if ! install_hang_watch_cron; then
         return 1

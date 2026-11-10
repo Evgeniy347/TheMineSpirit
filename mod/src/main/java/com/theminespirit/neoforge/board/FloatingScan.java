@@ -18,6 +18,7 @@ import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.LevelTreeView;
 import com.theminespirit.neoforge.PlotGround;
 import com.theminespirit.neoforge.SettlementChestStore;
+import com.theminespirit.neoforge.lease.LeaseData;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.List;
@@ -193,6 +194,13 @@ public final class FloatingScan {
         @Override
         public boolean temporary(BlockCoord at) {
             BlockPos pos = pos(at);
+            LeaseData leases = LeaseData.get(level);
+            if (leases.isActive(pos)) {
+                return false;
+            }
+            if (leases.isOrphaned(pos)) {
+                return true;
+            }
             PlacedBlocksData placed = PlacedBlocksData.get(level);
             return placed.isTemporary(pos)
                     || (placed.isSpiritMarked(pos)

@@ -47,6 +47,48 @@ process_alive() {
     [ -n "${1:-}" ] && kill -0 "$1" 2>/dev/null
 }
 
+# lib: обновление JDK на месте (apt unattended) убивает консоль работающего сервера: тик, REST и heartbeat живы,
+# lib: а stdin/stdout мёртв — команды save-* и stop не подтверждаются, и сторож по одному REST молчал час.
+# lib: jcmd прикрепляется к JVM через механизм attach и отвечает только у живого процесса: ответ VM.version —
+# lib: доказательство живого потока консоли. Нет jcmd (JRE без JDK) — не судим.
+console_stream_alive() {
+    local dead
+    if [ "${HANG_WATCH_ASSUME_RUNNING:-0}" != 1 ]; then
+        dead="$(tmux list-panes -t "$TMUX_SESSION" -F '#{pane_dead}' 2>/dev/null | head -n 1 || true)"
+        if [ -n "$dead" ] && [ "$dead" != 0 ]; then
+            return 1
+        fi
+    fi
+    if [ -z "$pid" ] || ! process_alive "$pid"; then
+        return 0
+    fi
+    command -v "$JCMD" >/dev/null 2>&1 || return 0
+    "$JCMD" "$pid" VM.version >/dev/null 2>&1
+}
+
+console_lost() {
+    local stamp dump line
+    if [ "$MODE" = check ]; then
+        printf 'console\n'
+        exit 0
+    fi
+    stamp="$(date '+%Y%m%d-%H%M%S')"
+    dump="$LOG_DIR/console-$stamp.txt"
+    {
+        printf 'консоль не отвечает: PID %s\n' "${pid:-нет}"
+        printf 'jcmd: %s\n' "$JCMD"
+        "$JCMD" "$pid" Thread.print 2>&1 || printf 'jcmd не прикрепился к PID %s\n' "$pid"
+        printf 'tmux: %s\n' "$(tmux list-panes -t "$TMUX_SESSION" -F '#{pane_dead} #{pane_current_command}' 2>&1 || true)"
+    } >"$dump" 2>&1
+    line="$(date '+%F %T') консоль мертва: pid=${pid:-нет} jcmd не ответил — перезапуск (обновление JDK на месте?)"
+    printf '%s\n' "$line" >>"$HANG_LOG"
+    if [ "$DRY_RUN" = 1 ]; then
+        printf '%s\n' "$(date '+%F %T') перезапуск пропущен (dry-run)" >>"$HANG_LOG"
+        exit 0
+    fi
+    restart_server
+}
+
 find_java_pid() {
     if [ -n "${HANG_WATCH_PID:-}" ]; then
         printf '%s' "$HANG_WATCH_PID"
@@ -240,6 +282,9 @@ if stop_in_progress; then
 fi
 if debug_paused; then
     finish debug
+fi
+if ! console_stream_alive; then
+    console_lost
 fi
 
 verdict=""

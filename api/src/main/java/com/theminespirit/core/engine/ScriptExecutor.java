@@ -41,6 +41,7 @@ final class ScriptExecutor extends NodeExecutor {
                         scriptReason == null || scriptReason.isBlank()
                                 ? "скрипт '" + scriptId + "' завершился с ошибкой"
                                 : scriptReason);
+                failureFact(live.failureFact().orElse(null));
             }
             return result;
         } catch (UnknownScriptException error) {

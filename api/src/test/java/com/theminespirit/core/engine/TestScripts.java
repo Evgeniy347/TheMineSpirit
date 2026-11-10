@@ -14,6 +14,15 @@ final class TestScripts {
         return params -> new TimedInstance(ticks, ScriptStatus.FAILED);
     }
 
+    static ScriptFactory failingWithFact(int ticks, FailureFact fact) {
+        return params -> new TimedInstance(ticks, ScriptStatus.FAILED) {
+            @Override
+            public Optional<FailureFact> failureFact() {
+                return Optional.of(fact);
+            }
+        };
+    }
+
     static ScriptFactory counting(int ticks) {
         return params -> new CountingInstance(ticks, ScriptStatus.SUCCEEDED);
     }
@@ -48,7 +57,7 @@ final class TestScripts {
         return ConditionRegistry.of(Map.of(check, params -> value));
     }
 
-    private static final class TimedInstance implements ScriptInstance {
+    private static class TimedInstance implements ScriptInstance {
         private final int total;
         private final ScriptStatus terminal;
         private int elapsed;

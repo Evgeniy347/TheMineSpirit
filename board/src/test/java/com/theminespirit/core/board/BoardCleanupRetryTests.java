@@ -21,7 +21,7 @@ class BoardCleanupRetryTests {
 
             assertEquals(BoardOutcome.ACCEPTED, board.submit(ticket), boardCase + ": первая постановка");
             assertEquals(BoardOutcome.CLAIMED, board.claim(ticket.id(), UUID.randomUUID(), now.get()), "выдача");
-            assertEquals(true, board.fail(ticket.id(), new StockView(Map.of())), "провал задания");
+            assertEquals(true, board.fail(ticket.id(), new StockView(Map.of()), null), "провал задания");
 
             now.addAndGet(BoardTuning.failBackoffTicks());
             assertEquals(
@@ -40,7 +40,7 @@ class BoardCleanupRetryTests {
 
         assertEquals(BoardOutcome.ACCEPTED, board.submit(ticket), "первая постановка");
         board.claim(ticket.id(), UUID.randomUUID(), now.get());
-        board.fail(ticket.id(), new StockView(Map.of()));
+        board.fail(ticket.id(), new StockView(Map.of()), null);
         now.addAndGet(BoardTuning.failBackoffTicks());
 
         assertEquals(

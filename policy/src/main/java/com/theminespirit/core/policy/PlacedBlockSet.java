@@ -3,6 +3,7 @@ package com.theminespirit.core.policy;
 import static com.theminespirit.core.Lookup.present;
 
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -116,6 +117,16 @@ public final class PlacedBlockSet {
             return List.of();
         }
         return chunk.positions.stream().map(PlacedBlockSet::unpack).toList();
+    }
+
+    public List<BlockCoord> cells() {
+        List<BlockCoord> cells = new ArrayList<>(size);
+        for (Chunk chunk : chunks.values()) {
+            for (long packed : chunk.positions) {
+                cells.add(unpack(packed));
+            }
+        }
+        return List.copyOf(cells);
     }
 
     Set<Map.Entry<Long, Chunk>> chunkEntries() {
