@@ -2,6 +2,6 @@
 # Формат: путь от mod/src/main/java | причина; причина обязана называть «перевод на этапе 2».
 # Список только уменьшается: переводя механику на аренду, удалите строку.
 com/theminespirit/neoforge/PillarColumn.java | столб, подмости расчистки и опора засыпки: перевод на этапе 2
-com/theminespirit/neoforge/DigOutScript.java | пол ступени dig_out: перевод на этапе 2
+com/theminespirit/neoforge/DigOutFloor.java | пол ступени dig_out: перевод на этапе 2
 com/theminespirit/neoforge/movement/BridgeScript.java | настил моста: перевод на этапе 2
 com/theminespirit/neoforge/movement/RouteMutations.java | клетки маршрута goto: перевод на этапе 2
