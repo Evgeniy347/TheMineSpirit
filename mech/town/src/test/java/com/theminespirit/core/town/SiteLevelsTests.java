@@ -46,6 +46,38 @@ class SiteLevelsTests {
     }
 
     @Test
+    void fenceOrigin_DangerAboveSettlement_UsesFenceLevel() {
+        BlockCoord roof = new BlockCoord(321, LEVEL + 10, -654);
+
+        assertEquals(
+                new BlockCoord(roof.x(), LEVEL, roof.z()),
+                SiteLevels.fenceOrigin(SITE, roof),
+                "Низ схемы забора — уровень ограды поселения, а не высота точки опасности: иначе забор встаёт на "
+                        + "крышу склада (80), дух снизу считается «в яме» и копает вверх полным поиском пути");
+    }
+
+    @Test
+    void fenceOrigin_PointOnFenceLevel_KeepsCoordinates() {
+        BlockCoord at = new BlockCoord(321, LEVEL, -654);
+
+        assertEquals(
+                at,
+                SiteLevels.fenceOrigin(SITE, at),
+                "Точка уже на уровне ограды остаётся собой: правило не двигает забор по горизонтали");
+    }
+
+    @Test
+    void fenceOrigin_PointBelowSettlement_RisesToFenceLevel() {
+        BlockCoord below = new BlockCoord(321, LEVEL - 7, -654);
+
+        assertEquals(
+                new BlockCoord(below.x(), LEVEL, below.z()),
+                SiteLevels.fenceOrigin(SITE, below),
+                "Даже если точка опасности ниже площадки, забор ставится на уровень ограды: яма под поселением "
+                        + "не становится основанием забора");
+    }
+
+    @Test
     void extra_FencePostColumn_CutsBlocksAboveLevel() {
         ColumnMask.Cell post = SITE.ring().posts().get(0);
 
