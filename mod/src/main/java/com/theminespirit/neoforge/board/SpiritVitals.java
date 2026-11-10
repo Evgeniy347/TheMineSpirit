@@ -19,6 +19,10 @@ final class SpiritVitals {
         if (spirit.getMaxHealth() > 0 && spirit.getHealth() / spirit.getMaxHealth() < (float) injury.healthShare()) {
             needs.put(injury.id(), injury.blocked());
         }
+        VitalNeeds.Need perch = VitalNeeds.byId("perch").orElseThrow();
+        if (ScaffoldPerch.on(spirit)) {
+            needs.put(perch.id(), perch.blocked());
+        }
         return Map.copyOf(needs);
     }
 }

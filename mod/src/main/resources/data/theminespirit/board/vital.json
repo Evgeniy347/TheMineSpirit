@@ -29,6 +29,14 @@
       "allow": ["graph:rescue_spirit", "graph:event:life_threat:retreat"]
     },
     {
+      "id": "perch",
+      "event": "rescue_spirit",
+      "gate": true,
+      "reason": "на своих подмостях",
+      "blocked": "стоит на своих подмостях выше безопасного прыжка: сначала спуститься, разобрав свой столб",
+      "allow": ["graph:rescue_spirit", "repair:clear_grounds"]
+    },
+    {
       "id": "threat",
       "event": "life_threat",
       "gate": false,
