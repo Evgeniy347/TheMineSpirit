@@ -34,6 +34,7 @@ public final class AcquireGameTests {
     // остальное дух добывает, крафтит и плавит сам; замерено ~340 тиков, запас 2×.
     @SceneStep(template = "arena", timeoutTicks = 700)
     public static void acquireIronIngot_FromScratch_IngotInInventory(GameTestHelper helper) {
+        GraphForageGameTests.surroundings(helper);
         field(helper);
         placeIronOreRow(helper);
         helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);

@@ -29,7 +29,7 @@ import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
-final class GraphSurroundings {
+public final class GraphSurroundings {
     static final String DROPS = "drops_nearby";
     static final String LEAF_DECAY = "leaf_decay";
     private static final String TREE_PREFIX = "tree:";
@@ -42,7 +42,7 @@ final class GraphSurroundings {
 
     private GraphSurroundings() {}
 
-    record Around(
+    public record Around(
             Set<String> world,
             Set<String> events,
             Map<String, BlockCoord> drops,
@@ -74,7 +74,7 @@ final class GraphSurroundings {
             return new Around(Set.copyOf(allWorld), Set.copyOf(allEvents), drops, decay, nearest, distances, targets);
         }
 
-        Optional<BlockCoord> resource(String world) {
+        public Optional<BlockCoord> resource(String world) {
             return Optional.ofNullable(nearest.get(world));
         }
 
@@ -104,7 +104,7 @@ final class GraphSurroundings {
             Map<String, List<BlockCoord>> targets,
             Map<String, List<BlockCoord>> logs) {}
 
-    static Around of(
+    public static Around of(
             ServerLevel level,
             BoardService service,
             BlockCoord home,

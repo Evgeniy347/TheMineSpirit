@@ -49,6 +49,7 @@ public final class HusbandryCullGameTests {
                 SETTLE_TICKS);
         int[] phase = {0};
         int[] waited = {0};
+        SpiritRun[] brush = new SpiritRun[1];
 
         helper.onEachTick(() -> {
             if (spirit.taskStatus().isEmpty()) {
@@ -58,7 +59,8 @@ public final class HusbandryCullGameTests {
                 case 0 -> stepHunt(helper, spirit, hunt, phase);
                 case 1 -> stepCull(helper, spirit, phase, waited);
                 case 2 -> stepFish(helper, spirit, phase, waited);
-                case 3 -> stepWait(helper, spirit, phase);
+                case 3 -> stepWait(helper, spirit, phase, brush);
+                case 4 -> stepBrush(helper, spirit, brush[0]);
                 default -> throw new IllegalStateException("Лишняя фаза проверки стада и еды: " + phase[0]);
             }
         });
@@ -124,7 +126,7 @@ public final class HusbandryCullGameTests {
         spirit.startTask(new ScriptCall("scan_blocks", Map.of("radius", 8)));
     }
 
-    private static void stepWait(GameTestHelper helper, SpiritEntity spirit, int[] phase) {
+    private static void stepWait(GameTestHelper helper, SpiritEntity spirit, int[] phase, SpiritRun[] brush) {
         RunStatus status = spirit.taskStatus().orElse(null);
         if (status == RunStatus.RUNNING) {
             return;
@@ -134,7 +136,14 @@ public final class HusbandryCullGameTests {
                 "ожидание еды — осмотр места без ходьбы: статус " + status + ", причина "
                         + spirit.taskFailureReason().orElse("нет"));
         phase[0] = 4;
-        GameTestFixtures.finish(helper);
+        brush[0] = GraphForageGameTests.startBrush(helper, spirit);
+    }
+
+    private static void stepBrush(GameTestHelper helper, SpiritEntity spirit, SpiritRun brush) {
+        if (!brush.started() || spirit.taskStatus().orElse(null) == RunStatus.RUNNING) {
+            return;
+        }
+        GraphForageGameTests.assertBrush(helper, spirit, brush);
         helper.succeed();
     }
 }

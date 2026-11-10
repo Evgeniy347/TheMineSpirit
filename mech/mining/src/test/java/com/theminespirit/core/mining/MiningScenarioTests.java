@@ -153,65 +153,90 @@ class MiningScenarioTests {
     }
 
     @Test
-    void clearScaffold_TallColumnBesideOwnScaffold_ClearedStepDownToGround() {
-        List<BlockCoord> targets = new ArrayList<>();
-        for (int y = 0; y <= 9; y++) {
-            targets.add(new BlockCoord(0, y, 1));
-        }
-        Set<BlockCoord> scaffold = new HashSet<>();
-        BlockCoord feet = new BlockCoord(0, 0, 0);
-        boolean climbed = false;
-        int climbs = 0;
-        int works = 0;
-        int steps = 0;
+    void clearScaffold_ManyPillarsManySpirits_OneClimbEachAndNoScaffoldLeft() {
+        List<ClearScaffoldWorld.Pillar> pillars = List.of(
+                new ClearScaffoldWorld.Pillar(10, 10, 9),
+                new ClearScaffoldWorld.Pillar(12, 10, 7),
+                new ClearScaffoldWorld.Pillar(30, 10, 12),
+                new ClearScaffoldWorld.Pillar(30, 12, 8),
+                new ClearScaffoldWorld.Pillar(50, 50, 2));
+        List<ClearScaffoldWorld.Spirit> spirits =
+                pillars.stream().map(ClearScaffoldWorld.Spirit::new).toList();
+        Set<BlockCoord> world = new HashSet<>();
         int guard = 0;
-        while (!targets.isEmpty() && guard++ < 200) {
-            int before = targets.size();
-            ClearScaffold.Decision decision = ClearScaffold.decide(
-                    feet,
-                    ClearScaffold.highest(targets),
-                    3,
-                    scaffold.contains(new BlockCoord(feet.x(), feet.y() - 1, feet.z())));
-            switch (decision.action()) {
-                case CLIMB -> {
-                    assertFalse(climbed, "Второй столб рядом не строится: каждый лишний подъём — новый столб в зоне");
-                    climbs++;
-                    for (int y = feet.y(); y < feet.y() + decision.height(); y++) {
-                        scaffold.add(new BlockCoord(feet.x(), y, feet.z()));
-                    }
-                    feet = new BlockCoord(feet.x(), feet.y() + decision.height(), feet.z());
-                    climbed = true;
+        while (spirits.stream().anyMatch(clearing -> !clearing.done()) && guard++ < 400) {
+            for (ClearScaffoldWorld.Spirit clearing : spirits) {
+                if (!clearing.done()) {
+                    clearing.act(world);
                 }
-                case DESCEND -> {
-                    steps++;
-                    assertTrue(
-                            scaffold.remove(new BlockCoord(feet.x(), feet.y() - 1, feet.z())),
-                            "Спуск только по своим подмостям: чужой блок под ногами не опора для шага вниз");
-                    feet = new BlockCoord(feet.x(), feet.y() - 1, feet.z());
-                }
-                case WORK -> {
-                    works++;
-                    BlockCoord top = ClearScaffold.highest(targets);
-                    assertTrue(
-                            top.y() <= feet.y(),
-                            "С места бьют только клетку на уровне ног или выше: нижнюю сначала достают спуском");
-                    targets.remove(top);
-                }
-                case DONE -> {}
             }
-            assertTrue(targets.size() <= before, "Цели не размножаются: каждая итерация убирает одну или ноль");
         }
-        assertTrue(targets.isEmpty(), "Высокий столб разобран сверху вниз: осталось " + targets);
-        assertTrue(scaffold.isEmpty(), "Подмости разобраны до конца: осталось " + scaffold);
-        assertEquals(0, feet.y(), "Оба столба кончились на земле: дух стоит на " + feet);
-        assertEquals(1, climbs, "На один столб один подъём: иначе подмости сами становятся столбами");
-        assertEquals(9, steps, "Спуск шаг в шаг: каждая своя подмостка убрана по одной");
-        assertEquals(10, works, "Все клетки чужого столба сломаны, а не объявлены недостижимыми");
+        for (ClearScaffoldWorld.Spirit clearing : spirits) {
+            assertEquals(
+                    clearing.pillar.rise() > 3 ? 1 : 0,
+                    clearing.climbs,
+                    "Подъёмов на столб высотой " + clearing.pillar.rise() + ": лишний — новая башня; "
+                            + ClearScaffoldWorld.summary(spirits));
+            assertEquals(
+                    clearing.pillar.height(),
+                    clearing.works,
+                    "Клетки столба сломаны, а не объявлены недостижимыми: " + ClearScaffoldWorld.summary(spirits));
+            assertEquals(FEET_Y, clearing.feet.y(), "Дух спустился на землю: " + clearing.feet);
+            assertTrue(clearing.scaffold.isEmpty(), "Свои подмости разобраны: " + clearing.scaffold);
+        }
+        assertTrue(world.isEmpty(), "После уборки в зоне нет подмостей-столбов: " + world);
+    }
+
+    @Test
+    void clearScaffold_NeighbourPillars_EachSpiritClimbsOnceInOwnColumn() {
+        List<ClearScaffoldWorld.Spirit> spirits = List.of(
+                        new ClearScaffoldWorld.Pillar(10, 10, 15),
+                        new ClearScaffoldWorld.Pillar(12, 10, 15),
+                        new ClearScaffoldWorld.Pillar(14, 10, 15))
+                .stream()
+                .map(ClearScaffoldWorld.Spirit::new)
+                .toList();
+        Set<BlockCoord> world = new HashSet<>();
+        int guard = 0;
+        while (spirits.stream().anyMatch(clearing -> !clearing.done()) && guard++ < 400) {
+            for (ClearScaffoldWorld.Spirit clearing : spirits) {
+                if (!clearing.done()) {
+                    clearing.act(world);
+                }
+            }
+        }
+        for (ClearScaffoldWorld.Spirit clearing : spirits) {
+            assertEquals(
+                    1,
+                    clearing.climbs,
+                    "Соседний столб разбирается одним подъёмом: " + ClearScaffoldWorld.summary(spirits));
+            assertEquals(1, clearing.columns.size(), "Один подъём — одна колонка подмостей: " + clearing.columns);
+            assertEquals(
+                    clearing.feet.x() * 100_000 + clearing.feet.z(),
+                    clearing.columns.iterator().next(),
+                    "Подмости стоят в колонке духа: " + clearing.feet);
+        }
+        assertTrue(world.isEmpty(), "Соседние столбы не оставили башен: " + world);
+    }
+
+    @Test
+    void clearScaffold_LeasedCells_OwnerKeepsThemForCleanup() {
+        List<BlockCoord> column = new ClearScaffoldWorld.Pillar(10, 10, 8).cells();
+        Set<BlockCoord> leased = Set.of(column.get(column.size() - 1), column.get(column.size() - 2));
+
+        List<BlockCoord> forOwner = ClearScaffold.withoutLeased(column, leased::contains);
+        List<BlockCoord> forOther = ClearScaffold.withoutLeased(column, cell -> false);
+
         assertEquals(
-                ClearScaffold.Action.WORK,
-                ClearScaffold.decide(new BlockCoord(0, 0, 0), new BlockCoord(0, -1, 1), 3, false)
-                        .action(),
-                "Без своих подмостей спуск на шаг — падение в воздух: такую клетку разбирает планировщик стоянок");
+                column.size() - leased.size(),
+                forOwner.size(),
+                "Клетки своей аренды не цель: иначе дух ломает свои же подмости и строит новый столб");
+        assertFalse(forOwner.containsAll(leased), "Свои клетки исключены из целей: " + forOwner);
+        assertEquals(column.size(), forOther.size(), "Чужая аренда не отнимает у владельца его клетки");
+        assertEquals(
+                column.size() - leased.size(),
+                ClearScaffold.withoutLeased(forOther, leased::contains).size(),
+                "Второй дух видит только незанятые клетки: чужие подмости не его работа");
     }
 
     private static BlockCoord ore(int x, int zSide) {

@@ -29,6 +29,7 @@ public final class CraftTabGameTests {
 
     @SceneStep(template = "arena", timeoutTicks = 40)
     public static void chainCraft_LogAndCoalInChests_TorchesAndLeftoversToPlayer(GameTestHelper helper) {
+        RecipeKnowledgeGameTests.check(helper);
         GameTestFixtures.reset(helper);
         settle(helper);
         chest(helper, LOGS, new ItemStack(Items.OAK_LOG, 2));
