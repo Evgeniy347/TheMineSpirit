@@ -32,8 +32,14 @@ class RouteRemovalPlanTests {
                 calls.stream().filter(call -> "fill".equals(call.script())).toList();
 
         assertFalse(clears.isEmpty(), "Снятие старой тропы чистит её клетки скриптом clear_area: " + calls);
+        assertEquals(
+                2,
+                clears.size(),
+                "Каждая клетка тропы — своя колонка: один подъём на колонку, а не плита, к дальнему краю "
+                        + "которой дух не подойдёт: " + calls);
         assertEquals(3, clears.get(0).params().get("x1"), "Срезка начинается с первой клетки старой тропы");
-        assertEquals(4, clears.get(0).params().get("x2"), "Срезка доходит до последней клетки старой тропы");
+        assertEquals(3, clears.get(0).params().get("x2"), "Первая колонка — ровно одна клетка тропы");
+        assertEquals(4, clears.get(1).params().get("x1"), "Срезка доходит до последней клетки старой тропы");
         assertEquals(64, clears.get(0).params().get("y1"), "Срезка идёт по высоте проложенной тропы");
         assertTrue(fills.isEmpty(), "Снятие ничего не строит заново: старую тропу убирают, а не перекладывают");
     }
