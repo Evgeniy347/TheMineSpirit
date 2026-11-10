@@ -181,7 +181,6 @@ final class RestFixture {
 
     static RestFixture start(MinecraftServer minecraft) throws IOException {
         SpiritIndex index = new SpiritIndex(minecraft);
-        index.register(NeoForge.EVENT_BUS);
         SpiritBotGateway gateway = new SpiritBotGateway(minecraft, index, NeoForge.EVENT_BUS, new TaskRegistry());
         SseSlots slots = new SseSlots();
         RestServer server = RestServer.start(loopback(), 0, RestRouter.create(gateway, slots), gateway::stop);
@@ -293,7 +292,6 @@ final class RestFixture {
         }
         spirits.forEach(SpiritEntity::discard);
         players.forEach(player -> minecraft.getPlayerList().remove(player));
-        index.unregister(NeoForge.EVENT_BUS);
         server.stop();
         client.shutdownNow();
         readers.shutdownNow();

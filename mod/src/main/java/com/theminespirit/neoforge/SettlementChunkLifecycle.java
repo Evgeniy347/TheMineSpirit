@@ -1,13 +1,13 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.chunk.ChunkCoord;
-import com.theminespirit.core.chunk.SettlementChunks;
+import com.theminespirit.core.chunk.SettlementZone;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.server.MinecraftServer;
@@ -21,6 +21,7 @@ public final class SettlementChunkLifecycle {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Set<ServerLevel> WOKEN = ConcurrentHashMap.newKeySet();
     private static final Set<ServerLevel> REPORTED = ConcurrentHashMap.newKeySet();
+    private static final Map<ServerLevel, SettlementZone> ZONES = new ConcurrentHashMap<>();
 
     private SettlementChunkLifecycle() {}
 
@@ -39,17 +40,24 @@ public final class SettlementChunkLifecycle {
             if (WOKEN.add(level)) {
                 SpiritChunkTickets.wakeAll(level);
             }
-            List<BlockCoord> spirits =
-                    new ArrayList<>(SpiritRegistry.get(level).positions().values());
+            Collection<BlockCoord> spirits =
+                    SpiritRegistry.get(level).positions().values();
             TownPlan plan = SettlementPlotStore.get(level).town().orElse(null);
-            Set<ChunkCoord> zone = SettlementChunks.workZone(
-                    plan, SettlementAnchorStore.get(level).anchors(), spirits, SpiritConfig.radiusFor(level));
-            WorkZoneRegistry.update(level, zone);
-            SettlementChunkTickets.tick(level);
+            SettlementZone zone = ZONES.computeIfAbsent(level, key -> new SettlementZone());
+            boolean changed = zone.update(
+                    plan,
+                    SettlementAnchorStore.get(level).anchors(),
+                    spirits,
+                    SpiritConfig.radiusFor(level),
+                    DataTables.INSTANCE.town().current().ground().probeRadius());
+            if (changed) {
+                WorkZoneRegistry.update(level, zone.workZone());
+            }
+            SettlementChunkTickets.tick(level, zone.settlement());
             if (REPORTED.add(level)) {
                 LOGGER.info(
                         "[forceload] зона поселения и работ: {} чанков, духов {} ({}), в /forceload {}",
-                        zone.size(),
+                        zone.workZone().size(),
                         spirits.size(),
                         spirits,
                         level.getForcedChunks().size());
@@ -60,6 +68,7 @@ public final class SettlementChunkLifecycle {
     private static void clear() {
         WOKEN.clear();
         REPORTED.clear();
+        ZONES.clear();
         WorkZoneRegistry.clear();
         SettlementChunkTickets.clear();
     }

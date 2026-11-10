@@ -3,6 +3,7 @@ package com.theminespirit.gametest;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.rest.SpiritIndex;
 import java.io.IOException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -39,6 +40,26 @@ public final class RestIndexScenesGameTests {
                 ghost.discard();
             }
             rest.close();
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "arena", batch = "rest_index", timeoutTicks = 200)
+    public static void restIndex_MissedJoinEvent_SnapshotReadsWorld(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(2, 1, 2));
+        SpiritIndex index = new SpiritIndex(helper.getLevel().getServer());
+        try {
+            helper.assertTrue(
+                    index.snapshot().contains(spirit),
+                    "Снимок /v1/bots обязан читать живого духа из мира, даже если событие входа в мир потеряно: "
+                            + "реестр — подсказка, мир — истина; иначе работающий дух пропадает из списка");
+            SpiritEntity found = index.find(spirit.getUUID()).orElse(null);
+            helper.assertTrue(
+                    spirit.equals(found),
+                    "GET /v1/bots/{id} обязан найти духа по миру, а не только по реестру событий");
+        } finally {
+            spirit.discard();
         }
         helper.succeed();
     }
