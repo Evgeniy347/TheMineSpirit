@@ -1,17 +1,24 @@
 import gzip
+import io
 import json
 import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 LOGDB = HERE.parent
 sys.path.insert(0, str(LOGDB))
+sys.path.insert(0, str(LOGDB.parent))
+sys.path.insert(0, str(LOGDB.parent / "lead"))
 import loader
 import logq
+import mod_version
+import live
 
 FIXTURE = LOGDB / "fixtures" / "legacy.log"
 
@@ -172,13 +179,43 @@ class LoaderTests(unittest.TestCase):
         return path
 
     def test_remoteCommand_ReadsOnlyWithoutJsonlIngest(self):
-        args = logq.build_parser().parse_args(["--main", "cell", "--", "-177", "68", "-517"])
-        command = logq.remote_command(args, "/db/events.db")
+        arguments = ["--main", "cell", "--", "-177", "68", "-517"]
+        command = logq.remote_command(arguments, "/db/events.db")
         self.assertNotIn("--logs", command, "основная база пишется только cron, logq --main не дочитывает JSONL")
-        self.assertEqual(["cell", "-177", "68", "-517"], command[-4:])
-        failures = logq.build_parser().parse_args(["--main", "failures", "--since", "1h"])
-        command = logq.remote_command(failures, "/db/events.db")
-        self.assertEqual(["--since", "1h"], command[-2:])
+        self.assertEqual(["cell", "--", "-177", "68", "-517"], command[-5:])
+        for arguments, tail in (
+            (["--main", "failures", "--since", "1h"], ["failures", "--since", "1h"]),
+            (["--main", "deaths", "--since", "30m"], ["deaths", "--since", "30m"]),
+            (["--main", "stuck", "--since", "2h"], ["stuck", "--since", "2h"]),
+            (["--main", "health", "--since", "10m"], ["health", "--since", "10m"]),
+            (["--main", "grep", "застрял", "--since", "1h"], ["grep", "застрял", "--since", "1h"]),
+            (["--main", "text", "пути", "нет", "--since", "1h"], ["text", "пути", "нет", "--since", "1h"]),
+            (["--main", "items", "oak_log", "--since", "1h"], ["items", "oak_log", "--since", "1h"]),
+            (["--main", "blocks", "--spirit", "spirit-1", "--since", "1h"], ["blocks", "--spirit", "spirit-1", "--since", "1h"]),
+        ):
+            command = logq.remote_command(arguments, "/db/events.db")
+            self.assertEqual(
+                tail,
+                command[-len(tail):],
+                "logq --main теряет аргументы команды %s: сервер вернул бы старые строки без --since "
+                "(мониторинг считал по ts в SQL)" % (arguments,),
+            )
+        self.assertEqual(
+            ["--db", "/db/events.db", "--json", "--limit", "30", "deaths", "--since", "30m"],
+            logq.remote_command(["--main", "deaths", "--since", "30m"], "/db/events.db")[-8:],
+            "глобальные опции локальной цели не уезжают на сервер: --main/--json/--db/--logs/--limit задаёт "
+            + "получатель, а команда и её --since — отправитель",
+        )
+        self.assertEqual(
+            ["--limit", "5", "stuck"],
+            logq.remote_command(["--main", "--limit", "5", "stuck"], "/db/events.db")[-3:],
+            "свой --limit передаётся серверу один раз и его значением",
+        )
+        self.assertEqual(
+            ["stuck"],
+            logq.remote_command(["--main", "--limit=7", "stuck"], "/db/events.db")[-1:],
+            "форма --limit=7 не утекает в команду сервера",
+        )
 
     def test_remoteCommand_ForwardsSinceForEveryFilteredCommand(self):
         cases = (
@@ -194,13 +231,57 @@ class LoaderTests(unittest.TestCase):
         )
         for argv in cases:
             with self.subTest(command=argv[0]):
-                args = logq.build_parser().parse_args(["--main", *argv, "--since", "1h"])
-                command = logq.remote_command(args, "/db/events.db")
+                command = logq.remote_command(["--main", *argv, "--since", "1h"], "/db/events.db")
                 self.assertEqual(
                     ["--since", "1h"],
                     command[-2:],
                     "фильтр по времени обязан доехать до основного сервера: %s" % argv[0],
                 )
+
+    def test_remoteSync_ChangedOrMissingFile_IsUploaded(self):
+        local = self.dir / "local"
+        local.mkdir()
+        (local / "schema.json").write_bytes(b"same")
+        (local / "loader.py").write_bytes(b"new-loader")
+        (local / "logq.py").write_bytes(b"new-logq")
+        remote = {
+            "%s/schema.json" % logq.MAIN_SCRIPTS: b"same",
+            "%s/loader.py" % logq.MAIN_SCRIPTS: b"old-loader",
+        }
+        uploaded = []
+
+        def fake_run(command, **kwargs):
+            if command[-1].startswith("cat > "):
+                uploaded.append(command[-1].split("/")[-1])
+                return SimpleNamespace(returncode=0, stdout=b"")
+            return SimpleNamespace(returncode=0, stdout=remote.get(command[-1][len("cat ") :], b""))
+
+        logq.sync_remote(["ssh", "host"], run=fake_run, here=local)
+
+        self.assertEqual(
+            ["loader.py", "logq.py"],
+            uploaded,
+            "устаревший loader.py обязан обновиться, отсутствующий logq.py — залиться: иначе правка "
+            "health --since не действует на основном сервере до ручной раскладки",
+        )
+
+    def test_remoteSync_SameFiles_AreNotUploaded(self):
+        local = self.dir / "local"
+        local.mkdir()
+        for name in ("schema.json", "loader.py", "logq.py"):
+            (local / name).write_bytes(name.encode())
+        remote = {"%s/%s" % (logq.MAIN_SCRIPTS, name): name.encode() for name in ("schema.json", "loader.py", "logq.py")}
+        uploaded = []
+
+        def fake_run(command, **kwargs):
+            if command[-1].startswith("cat > "):
+                uploaded.append(command[-1])
+                return SimpleNamespace(returncode=0, stdout=b"")
+            return SimpleNamespace(returncode=0, stdout=remote[command[-1][len("cat ") :]])
+
+        logq.sync_remote(["ssh", "host"], run=fake_run, here=local)
+
+        self.assertEqual([], uploaded, "одинаковые файлы не перезаливаются при каждом logq --main")
 
     def test_health_Since_LeavesOnlyFreshRows(self):
         self.write(
@@ -316,6 +397,81 @@ class LoaderTests(unittest.TestCase):
         self.assertTrue(data["files"][0]["verified"])
         self.assertTrue(data["files"][0]["deleted"])
         self.assertEqual(1, data["files"][0]["db_rows"])
+
+
+class ModVersionTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.logs = Path(self.temp.name)
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def write_debug(self, *versions):
+        lines = []
+        for version in versions:
+            lines.append(
+                "[09Nov2026 22:45:03.191] [main/DEBUG] [net.neoforged.fml.loading.moddiscovery.ModFileInfo/LOADING]: "
+                "Found valid mod file theminespirit-%s.jar with {theminespirit} mods - versions {%s}" % (version, version)
+            )
+        (self.logs / "debug.log").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    def test_running_TakesLastLoadFromDebugLog(self):
+        self.write_debug("0.1.3454", "0.1.3480")
+
+        self.assertEqual(
+            "0.1.3480",
+            mod_version.running(str(self.logs)),
+            "После перезапуска берётся последняя запись NeoForge: иначе сервер «крутит» старую сборку, "
+            "пока в mods/ уже новая",
+        )
+
+    def test_running_MissingLog_NamesTheCause(self):
+        with self.assertRaises(SystemExit) as raised:
+            mod_version.running(str(self.logs))
+
+        self.assertIn("debug.log", str(raised.exception.code), "Без журнала версия не выдумывается, причина названа")
+
+    def test_running_NoLoadRecord_NamesVersions(self):
+        (self.logs / "debug.log").write_text(
+            "[10Nov2026 02:45:03.191] [main/INFO] [net.neoforged.fml.loading.moddiscovery.ModDiscoverer/SCAN]: "
+            "Found mod file \"theminespirit-0.1.3480.jar\"\n",
+            encoding="utf-8",
+        )
+
+        with self.assertRaises(SystemExit) as raised:
+            mod_version.running(str(self.logs))
+
+        self.assertIn("versions", str(raised.exception.code), "Имя jar в mods/ не доказывает загрузку")
+
+    def test_liveCopy_ReadsDebugLog_WithoutBash(self):
+        copy_logs = self.logs / "logs"
+        copy_logs.mkdir()
+        (copy_logs / "debug.log").write_text(
+            "[09Nov2026 22:45:03.191] [main/DEBUG] [net.neoforged.fml.loading.moddiscovery.ModFileInfo/LOADING]: "
+            "Found valid mod file theminespirit-0.1.3500.jar with {theminespirit} mods - versions {0.1.3500}\n",
+            encoding="utf-8",
+        )
+        calls = []
+        real = subprocess.run
+
+        def spy(*arguments, **keywords):
+            calls.append(arguments[0] if arguments else keywords.get("args"))
+            return real(*arguments, **keywords)
+
+        with mock.patch.object(live.subprocess, "run", side_effect=spy), redirect_stdout(io.StringIO()):
+            target = live.Target(force_main=True)
+            target.copy = str(self.logs)
+            got = target.running_mod_version()
+            self.assertEqual(
+                "0.1.3500",
+                got,
+                "Версия копии читается из debug.log: имя jar доказывает установку, а не загрузку",
+            )
+            self.assertTrue(
+                all("bash" not in command for command in calls),
+                "live.py не зовёт bash для копии: на машине, где bash = WSL, пути Windows ему чужие и проверка падает",
+            )
 
 
 if __name__ == "__main__":

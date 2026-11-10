@@ -145,7 +145,7 @@ final class BoardSettlementDesk {
                             : null;
                     settle(spirit, ticket, run == TicketRun.SUCCEEDED && empty == null, empty, spirits);
                 }
-                case RESUME -> resume(spirit, ticket, spirits);
+                case RESUME -> resume(spirit, ticket);
                 case RUNNING -> checkStall(spirit, ticket);
                 case DISPLACED -> DisplacedClaims.release(spirit, ticket, board, issuedGenerations);
             }
@@ -219,11 +219,15 @@ final class BoardSettlementDesk {
         spirit.cancelTask();
         var need = GraphNeeds.of(board, ticket, targets.get(ticket.id()), spirit, host.stock(), board.now());
         host.sources.graphFailure(ticket, targets.get(ticket.id()), need, board.now());
-        board.fail(ticket.id(), host.stock(), reason, need);
+        board.fail(ticket.id(), host.stock(), reason, need, SpiritFacts.noPath(ticket, spirit));
     }
 
-    private void resume(SpiritEntity spirit, BoardTicket ticket, List<SpiritEntity> spirits) {
-        TicketTarget target = targets.getOrDefault(ticket.id(), TicketTarget.at(SettlementHome.of(spirits)));
+    private void resume(SpiritEntity spirit, BoardTicket ticket) {
+        TicketTarget target = targets.get(ticket.id());
+        if (target == null) {
+            release(spirit);
+            return;
+        }
         TaskNode plan;
         try {
             plan = JobLaunch.plan(ticket, target);
@@ -277,7 +281,7 @@ final class BoardSettlementDesk {
                     verdict != null ? verdict : spirit.taskFailureReason().orElse(null);
             var need = GraphNeeds.of(board, ticket, targets.get(ticket.id()), spirit, host.stock(), board.now());
             host.sources.graphFailure(ticket, targets.get(ticket.id()), need, board.now());
-            board.fail(ticket.id(), host.stock(), failure, need);
+            board.fail(ticket.id(), host.stock(), failure, need, SpiritFacts.noPath(ticket, spirit));
             incidents.failed(spirit, ticket, targets.get(ticket.id()), why, board.now());
             board.failures().drainDetachments().forEach(host.journal()::recordEntry);
             host.flushBlockNotes((ServerLevel) spirit.level());

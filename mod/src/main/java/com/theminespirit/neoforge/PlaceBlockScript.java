@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.building.BuildTuning;
+import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
@@ -32,6 +33,7 @@ final class PlaceBlockScript implements ScriptInstance {
 
     private boolean approached;
     private boolean standRequired;
+    private boolean movementFailure;
     private final List<BlockCoord> stands = new ArrayList<>();
     private int standIndex;
     private BlockBreaker breaker;
@@ -71,10 +73,10 @@ final class PlaceBlockScript implements ScriptInstance {
             double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(pos));
             if (distance > BlockBreaker.REACH || standRequired) {
                 if (stands.isEmpty()) {
-                    stands.addAll(StandSpots.of(target, safety, spiritCoord()));
+                    fillStands();
                 }
                 if (standIndex >= stands.size()) {
-                    return fail(
+                    return failMovement(
                             "к клетке " + pos.toShortString() + " не подойти: стоянки недостижимы; поставлено 0 из 1");
                 }
                 if (!approach.isActive()) {
@@ -145,13 +147,13 @@ final class PlaceBlockScript implements ScriptInstance {
                 approached = false;
                 standRequired = true;
                 if (stands.isEmpty()) {
-                    stands.addAll(StandSpots.of(target, safety, spiritCoord()));
+                    fillStands();
                     standIndex = 0;
                 } else {
                     standIndex++;
                 }
                 if (standIndex >= stands.size()) {
-                    yield fail("клетка " + toPos(target).toShortString()
+                    yield failMovement("клетка " + toPos(target).toShortString()
                             + " вне досягаемости: стоянки недостижимы; поставлено 0 из 1");
                 }
                 yield ScriptStatus.RUNNING;
@@ -159,6 +161,13 @@ final class PlaceBlockScript implements ScriptInstance {
             case CHUNK_NOT_LOADED ->
                 fail("чанк с клеткой " + toPos(target).toShortString() + " не загружен; поставлено 0 из 1");
         };
+    }
+
+    private void fillStands() {
+        stands.addAll(StandSpots.of(target, safety, spiritCoord()));
+        if (stands.isEmpty()) {
+            StandSpots.above(target, safety).ifPresent(stands::add);
+        }
     }
 
     private static boolean clearable(BlockState state) {
@@ -193,6 +202,11 @@ final class PlaceBlockScript implements ScriptInstance {
         return outcome;
     }
 
+    private ScriptStatus failMovement(String reason) {
+        movementFailure = true;
+        return fail(reason);
+    }
+
     @Override
     public Optional<Progress> progress() {
         return Optional.of(new Progress(placed, 1));
@@ -218,6 +232,11 @@ final class PlaceBlockScript implements ScriptInstance {
     @Override
     public String failureReason() {
         return failureReason;
+    }
+
+    @Override
+    public Optional<FailureFact> failureFact() {
+        return movementFailure ? Optional.of(FailureFact.NO_PATH) : Optional.empty();
     }
 
     @Override

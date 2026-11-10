@@ -40,7 +40,7 @@ class BoardNoticeTextTests {
             }
             board.submit(ticket());
             board.claim(ID, spirit(attempt), now[0]);
-            board.fail(ID, new StockView(Map.of()));
+            board.fail(ID, new StockView(Map.of()), null);
         }
         return board;
     }

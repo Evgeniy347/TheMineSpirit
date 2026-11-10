@@ -15,6 +15,7 @@ import com.theminespirit.core.board.VitalGate;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -124,6 +125,7 @@ final class BoardDispatchDesk {
         withdrawForVitals(spirits, claimable);
         DispatchRound round = new DispatchRound(board, now);
         DispatchPick pick = new DispatchPick(round, spirits, stock);
+        Optional<BlockCoord> settlementHome = HomePoint.of(level, spirits);
         for (BoardTicket ticket : claimable) {
             SpiritEntity spirit = pick.choose(ticket, targets.get(ticket.id()), crafters);
             if (spirit == null) {
@@ -135,12 +137,16 @@ final class BoardDispatchDesk {
             for (BoardTicket displaced : round.drainDisplaced(spirit.getUUID())) {
                 settlement.displace(spirit, displaced, ticket);
             }
+            if (targets.get(ticket.id()) == null && settlementHome.isEmpty()) {
+                board.noteWait(ticket.id(), "поселение без дома: заданию некуда идти");
+                continue;
+            }
+            TicketTarget base = targets.get(ticket.id());
+            if (base == null) {
+                base = TicketTarget.at(settlementHome.orElseThrow());
+            }
             board.noteWait(ticket.id(), null);
-            TicketTarget target = gatherOnTop(
-                    ticket,
-                    TransferTicket.restore(
-                            ticket, targets.getOrDefault(ticket.id(), TicketTarget.at(SettlementHome.of(spirits)))),
-                    spirit);
+            TicketTarget target = gatherOnTop(ticket, TransferTicket.restore(ticket, base), spirit);
             Optional<TicketTarget> fitted = fitTransfer(ticket, target, spirit);
             if (fitted.isEmpty()) {
                 dropEmptyTransfer(ticket, target, spirit);

@@ -13,4 +13,14 @@ neoForge {
         mappingsVersion = project.parchment_mappings_version
         minecraftVersion = project.parchment_minecraft_version
     }
+
+    // lib: JUnit-тесты модуля видят те же классы Minecraft, что и main: NBT-обёрткам (LeaseData)
+    // нужен CompoundTag, а отдельный NeoForge-рантайм для тестов не нужен — bootstrap игры не запускается.
+    addModdingDependenciesTo sourceSets.test
+}
+
+// lib: Minecraft держит slf4j-api 2.0.9 строго, ArchUnit в тестах просит 2.0.19; в одной JVM живёт
+// одна версия — берём версию мира, иначе testRuntimeClasspath не собирается вовсе.
+configurations.matching { it.name in ['testCompileClasspath', 'testRuntimeClasspath'] }.configureEach {
+    resolutionStrategy.force 'org.slf4j:slf4j-api:2.0.9'
 }

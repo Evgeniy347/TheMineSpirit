@@ -28,10 +28,6 @@ final class DigOutAction {
     private final Map<UUID, Long> pausedUntil = new HashMap<>();
 
     void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
-        BlockCoord settlement = SettlementPlotStore.get(level)
-                .site()
-                .map(stage -> HomeStand.of(level, stage, spirits))
-                .orElseGet(() -> SettlementHome.of(spirits));
         for (SpiritEntity spirit : spirits) {
             if (spirit.isRemoved()) {
                 continue;
@@ -53,7 +49,7 @@ final class DigOutAction {
             }
             if (DigOutScript.embedded(spirit)) {
                 pausedUntil.put(spirit.getUUID(), now + PAUSE_TICKS);
-                start(service, spirit, settlement);
+                homeOf(level, spirit, spirits).ifPresent(goal -> start(service, spirit, goal));
                 continue;
             }
             Optional<PitExitPlanner.Plan> pit = PitRescue.trapped(spirit);
@@ -72,9 +68,14 @@ final class DigOutAction {
             boolean stillInWater = inWater(level, feet) && still.still(spirit.getUUID(), coord(feet), now, PAUSE_TICKS);
             if (DigOutScript.sealed(level, feet) || stillInWater) {
                 pausedUntil.put(spirit.getUUID(), now + PAUSE_TICKS);
-                start(service, spirit, settlement);
+                homeOf(level, spirit, spirits).ifPresent(goal -> start(service, spirit, goal));
             }
         }
+    }
+
+    static Optional<BlockCoord> homeOf(ServerLevel level, SpiritEntity spirit, List<SpiritEntity> spirits) {
+        Optional<BlockCoord> own = HomePoint.of(spirit);
+        return own.isPresent() ? own : HomePoint.of(level, spirits);
     }
 
     private static void start(BoardService service, SpiritEntity spirit, BlockCoord goal) {

@@ -5,9 +5,38 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class StandSpotsTests {
+    @Test
+    void above_SealedTargetWithFreeTop_ReturnsTopStand() {
+        CellWorld world = new CellWorld()
+                .set(0, 0, 0, Cell.SOLID)
+                .set(0, 1, 0, Cell.PASSABLE)
+                .set(0, 2, 0, Cell.PASSABLE)
+                .set(1, 0, 0, Cell.SOLID)
+                .set(-1, 0, 0, Cell.SOLID)
+                .set(0, 0, 1, Cell.SOLID)
+                .set(0, 0, -1, Cell.SOLID);
+
+        assertEquals(
+                Optional.of(new BlockCoord(0, 1, 0)),
+                StandSpots.above(new BlockCoord(0, 0, 0), world),
+                "Полностью замурованная клетка с открытым верхом даёт стоянку сверху: с неё дух срывает бугор "
+                        + "и ставит блок, а не падает пять раз на «стоянки недостижимы»");
+    }
+
+    @Test
+    void above_TargetWithoutSolidTop_IsEmpty() {
+        CellWorld world = new CellWorld().set(0, 0, 0, Cell.PASSABLE).set(0, 1, 0, Cell.PASSABLE);
+
+        assertEquals(
+                Optional.empty(),
+                StandSpots.above(new BlockCoord(0, 0, 0), world),
+                "Стоянка сверху допустима только на твёрдой цели: над воздухом дух не стоит");
+    }
+
     @Test
     void of_TargetWithOpenSide_ReturnsAdjacentStand() {
         CellWorld world = new CellWorld().set(0, 0, 0, Cell.SOLID).set(1, -1, 0, Cell.SOLID);
@@ -163,6 +192,24 @@ class StandSpotsTests {
                 maxOffset,
                 "Наибольшее смещение стоянки обязано равняться 9 = 3² (столб под целью): по нему планировщик "
                         + "вычитает 3 в раннем выходе. Стоянок: " + spots.size());
+    }
+
+    @Test
+    void of_CeilingOfWaterPocket_IsUnreachable() {
+        CellWorld world = new CellWorld()
+                .set(0, 10, 0, Cell.SOLID)
+                .set(0, 9, 0, Cell.WATER)
+                .set(1, 10, 0, Cell.SOLID)
+                .set(-1, 10, 0, Cell.SOLID)
+                .set(0, 10, 1, Cell.SOLID)
+                .set(0, 10, -1, Cell.SOLID)
+                .set(0, 11, 0, Cell.SOLID);
+
+        assertEquals(
+                List.of(),
+                StandSpots.of(new BlockCoord(0, 10, 0), world, new BlockCoord(0, 5, 0)),
+                "Клетка на потолке водяного кармана не даёт стоянок (живой случай -103,75,-411): вода под ней "
+                        + "не пол, а бока замурованы. Ремонт такой клетки не ставится, а «пути нет» уходит в граф");
     }
 
     @Test

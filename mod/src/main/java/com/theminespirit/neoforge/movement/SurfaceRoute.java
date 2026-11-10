@@ -2,8 +2,10 @@ package com.theminespirit.neoforge.movement;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.movement.DescentPath;
+import com.theminespirit.core.movement.DigOutGoal;
 import com.theminespirit.core.movement.SearchMillis;
 import com.theminespirit.core.movement.SurfaceEscape;
+import com.theminespirit.core.movement.SurfaceGoal;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.route.Route;
 import com.theminespirit.core.route.RouteStep;
@@ -44,6 +46,24 @@ public final class SurfaceRoute {
         return Optional.of(route(spirit, level, found.orElseThrow(), "к небу", started, rescue));
     }
 
+    public static Optional<RouteWalk> planToHome(SpiritEntity spirit, BlockCoord target, boolean rescue) {
+        BlockPos feet = spirit.blockPosition();
+        BlockCoord start = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
+        Level level = spirit.level();
+        long started = System.nanoTime();
+        Optional<List<BlockCoord>> found = SurfaceEscape.path(
+                start,
+                new RouteLevelView(spirit, rescue),
+                cell -> SurfaceGoal.home(cell, target, DigOutGoal.HOME_RADIUS),
+                target,
+                cell -> PlanDetour.foreign(spirit, cell));
+        if (found.isEmpty()) {
+            LOGGER.info("[dig_out] дух {}: пути к дому из {} нет — ищу любое небо", spirit.displayName(), start);
+            return Optional.empty();
+        }
+        return Optional.of(route(spirit, level, found.orElseThrow(), "к дому", started, rescue));
+    }
+
     public static Optional<RouteWalk> planDescent(SpiritEntity spirit, BlockCoord target) {
         return planDescent(spirit, target, false);
     }
@@ -56,10 +76,7 @@ public final class SurfaceRoute {
         Optional<List<BlockCoord>> found = SurfaceEscape.path(
                 start,
                 new RouteLevelView(spirit, rescue),
-                cell -> Math.abs(cell.x() - target.x()) <= 2
-                        && Math.abs(cell.z() - target.z()) <= 2
-                        && cell.y() >= target.y() - 2
-                        && cell.y() <= target.y() + 2,
+                cell -> SurfaceGoal.home(cell, target, DigOutGoal.HOME_RADIUS),
                 target,
                 cell -> PlanDetour.foreign(spirit, cell));
         if (found.isEmpty()) {

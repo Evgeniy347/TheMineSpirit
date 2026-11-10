@@ -127,6 +127,42 @@ class RescueGroupsTests {
                 "Один дух не может быть в двух группах: спасение адресное");
     }
 
+    @Test
+    void walkers_OnlyReachableAndOnSurface_GoHomeByThemselves() {
+        RescueGroups.Member leader = member(1, PIT, 3, 0);
+        RescueGroups.Member surfaced = member(2, new BlockCoord(11, 67, -5), 0, 0);
+        RescueGroups.Member inShaft = member(3, new BlockCoord(12, 40, -5), 0, 0);
+        RescueGroups.Group group = new RescueGroups.Group(leader.id(), List.of(leader, surfaced, inShaft));
+
+        List<RescueGroups.Member> walkers = RescueGroups.walkers(
+                group,
+                member -> member.id().equals(surfaced.id()) || member.id().equals(inShaft.id()),
+                member -> member.id().equals(surfaced.id()));
+
+        assertEquals(
+                List.of(surfaced),
+                walkers,
+                "Ведомый в шахте не получает walk(home): шахту закрывают за спиной ведущего, и путь, "
+                        + "посчитанный по открытому проходу, кончается DeadEndRefusal. Идут сами только те, "
+                        + "кто уже на поверхности; остальные ждут ведущего");
+    }
+
+    @Test
+    void walkers_LeaderWithoutSurface_IsNotSentHomeAlone() {
+        RescueGroups.Member leader = member(1, PIT, 3, 0);
+        RescueGroups.Member follower = member(2, PIT, 0, 0);
+        RescueGroups.Group group = new RescueGroups.Group(leader.id(), List.of(leader, follower));
+
+        List<RescueGroups.Member> walkers = RescueGroups.walkers(
+                group, member -> true, member -> member.id().equals(follower.id()));
+
+        assertEquals(
+                List.of(follower),
+                walkers,
+                "Ведущий в шахте не уходит пешком: путь по открытому проходу исчезнет после засыпки, "
+                        + "а группа останется без того, кто прокладывает выход");
+    }
+
     private static RescueGroups.Member member(int id, BlockCoord at, int toolTier, int blocks) {
         return new RescueGroups.Member(new UUID(0, id), at, toolTier, blocks);
     }

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class SupplyTickets {
@@ -25,15 +26,22 @@ final class SupplyTickets {
             ServerLevel level,
             BoardService service,
             Map<String, TicketTarget> targets,
-            BlockCoord home,
+            @Nullable BlockCoord home,
             SupplyGate.Request request,
             BoardCase boardCase,
             long now) {
         String id = (boardCase == BoardCase.GATHER_MATERIALS ? "supply_gather:" : "supply:") + request.item();
-        TicketTarget target = targets.values().stream()
+        Optional<TicketTarget> centre = targets.values().stream()
                 .filter(candidate -> request.item().equals(candidate.supplyItem()))
-                .findFirst()
-                .orElse(TicketTarget.at(home));
+                .findFirst();
+        TicketTarget target;
+        if (centre.isPresent()) {
+            target = centre.orElseThrow();
+        } else if (home != null) {
+            target = TicketTarget.at(home);
+        } else {
+            return;
+        }
         Optional<BlockCoord> point =
                 StorageFinder.depositPoint(level, target.target(), request.item(), request.count());
         if (point.isPresent()) {

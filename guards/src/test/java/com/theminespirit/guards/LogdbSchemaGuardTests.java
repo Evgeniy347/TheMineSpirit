@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.log.LogCause;
 import com.theminespirit.core.log.LogSchema;
 import com.theminespirit.core.log.LogType;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -15,7 +16,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
@@ -87,23 +87,78 @@ class LogdbSchemaGuardTests {
     @Test
     void pythonScripts_LoaderAndImport_Pass() throws Exception {
         Path root = Path.of("scripts/logdb");
-        String python = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win") ? "python" : "python3";
-        ProcessBuilder builder = new ProcessBuilder(python, "-m", "unittest", "tests.test_loader", "-q");
-        builder.directory(root.toFile());
-        builder.environment().put("PYTHONUTF8", "1");
-        builder.redirectErrorStream(true);
-        Process process = builder.start();
-        boolean finished = process.waitFor(120, TimeUnit.SECONDS);
-        String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-        if (!finished) {
-            process.destroyForcibly();
+        Path output = Files.createTempFile("logdb-guard", ".log");
+        try {
+            ProcessBuilder builder = new ProcessBuilder(python(), "-m", "unittest", "tests.test_loader", "-q");
+            builder.directory(root.toFile());
+            builder.environment().put("PYTHONUTF8", "1");
+            builder.redirectErrorStream(true);
+            // lib: вывод — в файл, а не в трубу: под нагрузкой потомок python (logq) держит трубу дольше
+            // lib: родителя, и чтение после waitFor ждало его вечно; голод машины выглядел как код теста.
+            builder.redirectOutput(output.toFile());
+            Process process = builder.start();
+            boolean finished = process.waitFor(120, TimeUnit.SECONDS);
+            if (!finished) {
+                process.destroyForcibly();
+            }
+            String text = Files.readString(output, StandardCharsets.UTF_8);
+            assertTrue(finished, "Тесты загрузчика не уложились в 120 секунд: проверьте, не ждут ли они базу");
+            assertEquals(
+                    0,
+                    process.exitValue(),
+                    "Тесты загрузчика и скриптов упали: база логов не должна ломаться на обрывках, ротации и старых "
+                            + "координатах. Вывод: " + text);
+        } finally {
+            Files.deleteIfExists(output);
         }
-        assertTrue(finished, "Тесты загрузчика не уложились в 120 секунд: проверьте, не ждут ли они базу");
-        assertEquals(
-                0,
-                process.exitValue(),
-                "Тесты загрузчика и скриптов упали: база логов не должна ломаться на обрывках, ротации и старых "
-                        + "координатах. Вывод: " + output);
+    }
+
+    private static String python() {
+        List<String> candidates = new ArrayList<>();
+        for (String variable : List.of("THEMINESPIRIT_PYTHON", "PYTHON")) {
+            String value = System.getenv(variable);
+            if (value != null && !value.isBlank()) {
+                candidates.add(value.trim());
+            }
+        }
+        candidates.add("python3");
+        candidates.add("python");
+        List<String> tried = new ArrayList<>();
+        for (String candidate : candidates) {
+            Path found = locate(candidate);
+            if (found == null) {
+                continue;
+            }
+            tried.add(found.toString());
+            if (found.toString().replace('\\', '/').contains("/WindowsApps/")) {
+                continue;
+            }
+            return found.toString();
+        }
+        throw new IllegalStateException(
+                "нет рабочего python 3 (искали " + candidates + ", нашли " + tried + "): тесты загрузчика логов "
+                        + "не проверить. Как надо: поставить python 3 или указать THEMINESPIRIT_PYTHON; "
+                        + "заглушки WindowsApps не годятся");
+    }
+
+    private static Path locate(String candidate) {
+        if (candidate.contains("/") || candidate.contains("\\") || candidate.startsWith(".")) {
+            Path direct = Path.of(candidate);
+            return Files.isRegularFile(direct) ? direct : null;
+        }
+        String path = System.getenv().getOrDefault("PATH", "");
+        for (String directory : path.split(File.pathSeparator, -1)) {
+            if (directory.isBlank()) {
+                continue;
+            }
+            for (String name : List.of(candidate, candidate + ".exe")) {
+                Path found = Path.of(directory, name);
+                if (Files.isRegularFile(found)) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 
     private static JsonNode schema() {

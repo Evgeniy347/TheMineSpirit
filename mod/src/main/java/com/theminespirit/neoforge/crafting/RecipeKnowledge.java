@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.crafting;
 
+import com.theminespirit.core.board.HiveRules;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.crafting.IngredientSpec;
 import com.theminespirit.core.crafting.RecipeChooser;
@@ -13,6 +14,7 @@ import com.theminespirit.core.mining.GatherPolicy;
 import com.theminespirit.core.planner.GatherSources;
 import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.planner.ResourceKnowledge;
+import com.theminespirit.core.script.CatalogLimits;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -79,7 +81,16 @@ public final class RecipeKnowledge implements ResourceKnowledge {
 
     @Override
     public boolean isGatherable(String item) {
-        return gatherable(item);
+        return sourceScript(item).isPresent() || gatherable(item);
+    }
+
+    @Override
+    public Optional<SourceScript> sourceScript(String item) {
+        if (!"honeycomb".equals(ItemIds.normalize(item))) {
+            return Optional.empty();
+        }
+        return Optional.of(new SourceScript(
+                "harvest_hive", Map.of("radius", HiveRules.hiveRadius()), CatalogLimits.HERD_COUNT_MAX));
     }
 
     static boolean gatherable(String item) {

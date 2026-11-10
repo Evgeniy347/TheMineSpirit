@@ -107,6 +107,14 @@ cat >"$work/bin/tmux" <<'FAKE'
 #!/usr/bin/env bash
 exit 1
 FAKE
+REAL_CP="$(command -v cp)"
+cat >"$work/bin/cp" <<FAKE
+#!/usr/bin/env bash
+if [ -n "\${FAKE_CP_LOG:-}" ]; then
+    printf '%s\n' "\${@: -1}" >>"\$FAKE_CP_LOG"
+fi
+exec "$REAL_CP" "\$@"
+FAKE
 cat >"$work/bin/crontab" <<'FAKE'
 #!/usr/bin/env bash
 case "${1:-}" in
@@ -152,7 +160,7 @@ run_publish() {
     printf '#!/usr/bin/env bash\nexit 0\n' >"$client/publish.sh"
     chmod +x "$client/publish.sh"
     make_gateway "$gateway"
-    FAKE_JAR="$jar" PATH="$work/bin:$PATH" \
+    FAKE_JAR="$jar" FAKE_CP_LOG="${CP_LOG:-}" PATH="$work/bin:$PATH" \
         SERVER_DIR="$server" CLIENT_DIR="$client" GATEWAY_DIR="$gateway" \
         CLEANUP_SCRIPT_DIR="$work/cleanup" HANG_WATCH_LOG="$work/hang-watch.log" \
         BUILD_LOCK="$work/build.lock" TMUX_SESSION=publish-check \
@@ -161,6 +169,7 @@ run_publish() {
 
 repo="$work/repo-good"
 make_repo "$repo"
+CP_LOG="$work/cp-good.log"
 out=$(run_publish "$repo" "$work/good/server" "$work/good/client" "$work/good/gateway" "$good_jar")
 code=$?
 [ "$code" = 0 ] && echo "$out" | grep -q "Временная публикация" \
@@ -169,6 +178,18 @@ code=$?
     && grep -q '"version": "0.1.9"' "$work/good/gateway/users/admin/sites/the-mine-spirit/server/mod.json" \
     && ok "годный jar: публикация дошла до установки, пака и страницы (код=0)" \
     || fail "годный jar: код=$code, вывод: $out"
+
+# lib: конфиги раскладываются тем же приёмом, что скрипты: копия во временного соседа, затем mv.
+# lib: cp -a писал на месте, и стартующий сервер мог прочитать половину файла.
+full_config="$work/good/server/config/theminespirit-rest.toml"
+nested_config="$work/good/server/config/jei/server/world/default/jei-server.ini"
+[ -f "$full_config" ] && [ -f "$nested_config" ] && cmp -s "$full_config" server/config/theminespirit-rest.toml \
+    && ok "конфиги доехали до сервера, включая вложенные каталоги" \
+    || fail "конфиги не доехали: $full_config / $nested_config"
+direct=$(grep -F "$work/good/server/" "$CP_LOG" 2>/dev/null | grep -v '/\.' | grep -v '/mods/' | head -n 3)
+[ -z "$direct" ] \
+    && ok "конфиги и скрипты кладутся через временного соседа + mv (прямых cp на место нет)" \
+    || fail "публикация пишет прямо в цель без подмены: $direct"
 
 # lib: след сборки в выводе: по нему разбирают инцидент выкладки (какой коммит, какой файл, когда собран).
 echo "$out" | grep -q "Коммит: " && echo "$out" | grep -q "изменён " && echo "$out" | grep -q "sha256 " \

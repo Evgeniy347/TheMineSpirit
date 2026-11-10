@@ -22,6 +22,7 @@ final class ParallelExecutor extends NodeExecutor {
     private final ScriptStatus[] results;
     private final @Nullable String[] reasons;
     private final @Nullable Throwable[] causes;
+    private final FailureFact[] facts;
 
     ParallelExecutor(ParallelNode node, ScriptRegistry scripts, ConditionRegistry conditions) {
         this.mode = node.mode();
@@ -31,6 +32,7 @@ final class ParallelExecutor extends NodeExecutor {
         this.results = new ScriptStatus[steps.size()];
         this.reasons = new String[steps.size()];
         this.causes = new Throwable[steps.size()];
+        this.facts = new FailureFact[steps.size()];
         Arrays.fill(results, ScriptStatus.RUNNING);
     }
 
@@ -57,6 +59,7 @@ final class ParallelExecutor extends NodeExecutor {
                 if (results[i] == ScriptStatus.FAILED) {
                     reasons[i] = children.get(i).failureReason();
                     causes[i] = children.get(i).failureCause().orElse(null);
+                    facts[i] = children.get(i).failureFact().orElse(null);
                 }
             }
         }
@@ -74,6 +77,7 @@ final class ParallelExecutor extends NodeExecutor {
             if (results[i] == ScriptStatus.FAILED) {
                 cancelAll();
                 fail(reasons[i] != null ? reasons[i] : STEP_FAILED, causes[i]);
+                failureFact(facts[i]);
                 return ScriptStatus.FAILED;
             }
         }
@@ -110,13 +114,16 @@ final class ParallelExecutor extends NodeExecutor {
         }
         String lastReason = null;
         Throwable lastCause = null;
+        FailureFact lastFact = null;
         for (int i = 0; i < reasons.length; i++) {
             if (reasons[i] != null) {
                 lastReason = reasons[i];
                 lastCause = causes[i];
+                lastFact = facts[i];
             }
         }
         fail(lastReason != null ? lastReason : ALL_STEPS_FAILED, lastCause);
+        failureFact(lastFact);
         return ScriptStatus.FAILED;
     }
 

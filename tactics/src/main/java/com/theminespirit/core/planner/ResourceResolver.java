@@ -102,7 +102,6 @@ public final class ResourceResolver {
         private final Set<String> path = new HashSet<>();
         private final Set<String> plannedStations = new HashSet<>();
         private final Set<String> plannedTools = new HashSet<>();
-
         private final @Nullable AcquireSupplies chests;
         private final Set<String> withdrawn = new HashSet<>();
 
@@ -131,15 +130,15 @@ public final class ResourceResolver {
                 if (knowledge.isBrushed(item)) {
                     return batched("brush", item, count, topLevel);
                 }
+                TaskNode special = SourcePlans.source(knowledge, item, count);
+                if (special != null) return special;
                 if (dropsFromAnotherBlock(item)) {
                     return gatherPlan(item, count, topLevel);
                 }
                 if (knowledge.isSmeltable(item)) {
                     return smeltPlan(item, count, topLevel);
                 }
-                if (knowledge.isCraftedProduct(item)) {
-                    throw CraftedItems.error(item);
-                }
+                if (knowledge.isCraftedProduct(item)) throw CraftedItems.error(item);
                 if (knowledge.isGatherable(item)) {
                     return gatherPlan(item, count, topLevel);
                 }

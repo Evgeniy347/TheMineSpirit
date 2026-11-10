@@ -405,7 +405,61 @@ fi
     && ok "wait-cpu: ожидание надзора не порождает процессов sleep (внешних: 0), прогон зелёный" \
     || fail "wait-cpu: код=$code, gradle pid=$hold_pid, внешних sleep=$foreign, вывод: $out"
 
-: >"$FAKE_KIDS"; : >"$FAKE_HB"; : >"$FAKE_SELF"; : >"$FAKE_WORKER"
+# lib: общий fifo паузы на Cygwin вырождается в опрос: лидер жжёт ~50 % ядра, каждый читатель 8–14 %.
+# Поэтому у каждого ждущего процесса (главный, монитор, пульс, родитель) обязан быть свой fifo.
+: >"$work/pause-fds.txt"; : >"$work/gradle-pause.pid"
+pause_left_before=$(ls "${TMPDIR:-/tmp}"/theminespirit-test-pause.* 2>/dev/null | wc -l | tr -d ' ')
+HOLD_SECONDS=6 FAKE_SELF="$work/gradle-pause.pid" THEMINESPIRIT_GRADLEW="$work/bin/unit-hold" \
+    bash scripts/test.sh unit >"$work/pause-fd.out" 2>&1 &
+pause_main=$!
+i=0
+while [ "$i" -lt 100 ] && [ ! -s "$work/gradle-pause.pid" ]; do sleep 0.1; i=$((i + 1)); done
+sleep 1
+for pid in "$pause_main" $(tree_of "$pause_main"); do
+    cmd=$(tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null)
+    case "$cmd" in
+        *"scripts/test.sh unit"*) ;;
+        *) continue ;;
+    esac
+    target=$(readlink "/proc/$pid/fd/9" 2>/dev/null)
+    [ -n "$target" ] && printf '%s|%s\n' "$pid" "$target" >>"$work/pause-fds.txt"
+done
+wait "$pause_main"; pause_code=$?
+pause_holders=$(wc -l <"$work/pause-fds.txt" | tr -d ' ')
+pause_targets=$(awk -F'|' '{ print $2 }' "$work/pause-fds.txt" | sort -u | wc -l | tr -d ' ')
+pause_left=$(ls "${TMPDIR:-/tmp}"/theminespirit-test-pause.* 2>/dev/null | wc -l | tr -d ' ')
+[ "$pause_code" = 0 ] && [ "$pause_holders" -ge 3 ] && [ "$pause_targets" = "$pause_holders" ] \
+    && [ "$pause_left" -le "$pause_left_before" ] \
+    && ok "pause-fd: $pause_holders ждущих процесса, у каждого свой fifo, файлов не осталось" \
+    || fail "pause-fd: код=$pause_code, ждущих=$pause_holders, разных fifo=$pause_targets, файлов=$pause_left/$pause_left_before, $(tr '\n' ' ' <"$work/pause-fds.txt")"
+
+# lib: слежение за стартом сцен читает только новые байты лога: grep всем файлом раз в секунду жёг ЦП.
+mkdir -p "$work/bin/grep-log"
+cat >"$work/bin/grep-log/grep" <<FAKE
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >>"$work/grep-spawns"
+exec /usr/bin/grep "\$@"
+FAKE
+chmod +x "$work/bin/grep-log/grep"
+cat >"$work/bin/gametest-slow-start" <<'FAKE'
+#!/usr/bin/env bash
+sleep 2
+echo "[10:18:40] [Server thread/INFO] [minecraft/GameTestRunner]: 1 tests are now running at position 0, 0, 0!"
+sleep 1
+echo "[10:18:43] [Server thread/INFO] [minecraft/GameTestServer]: All 1 required tests passed :)"
+exit 0
+FAKE
+chmod +x "$work/bin/gametest-slow-start"
+: >"$work/grep-spawns"
+out=$(PATH="$work/bin/grep-log:$PATH" THEMINESPIRIT_GRADLEW="$work/bin/gametest-slow-start" \
+    bash scripts/test.sh gametest scene_pause_probe 2>&1)
+code=$?
+scene_greps=$(awk '/tests are now running/ { n++ } END { print n + 0 }' "$work/grep-spawns")
+[ "$code" = 0 ] && echo "$out" | grep -q "OK gametest: 1 тест" && [ "$scene_greps" = 0 ] \
+    && ok "scene-wait: маркер сцен найден без grep-опроса лога (grep: 0), прогон зелёный" \
+    || fail "scene-wait: код=$code, grep по маркеру=$scene_greps, вывод: $out"
+
+: >"$work/kids.pids"; : >"$work/hb.pid"; : >"$work/gradle.pid"; : >"$work/worker.pid"
 FAKE_HANG=1 FAKE_KIDS="$work/kids.pids" FAKE_HB="$work/hb.pid" FAKE_SELF="$work/gradle.pid" \
     FAKE_WORKER="$work/worker.pid" THEMINESPIRIT_GRADLEW="$work/bin/record-kids" \
     bash scripts/test.sh unit >"$work/killmain.out" 2>&1 &
@@ -435,7 +489,7 @@ echo $! >"$HOLD_KID"
 sleep 2
 FAKE
 chmod +x "$work/bin/hold-launch"
-: >"$FAKE_SELF"; : >"$FAKE_WORKER"; : >"$work/parent.out"; : >"$work/testsh.pid"
+: >"$work/gradle2.pid"; : >"$work/worker2.pid"; : >"$work/parent.out"; : >"$work/testsh.pid"
 HOLD_OUT="$work/parent.out" HOLD_KID="$work/testsh.pid" \
     FAKE_HANG=1 FAKE_KIDS="$work/kids2.pids" FAKE_HB="$work/hb2.pid" \
     FAKE_SELF="$work/gradle2.pid" FAKE_WORKER="$work/worker2.pid" \

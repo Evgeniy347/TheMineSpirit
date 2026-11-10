@@ -8,9 +8,9 @@ import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.CraterProfiles;
 import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.SupplyGate;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.husbandry.Species;
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.HashMap;
@@ -161,7 +161,15 @@ public final class BoardService {
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
             BoardPersistence.persist(this);
         } else if (outcome == BoardOutcome.DUPLICATE) {
-            targets.putIfAbsent(ticket.id(), target);
+            if (SupplyGate.isSupply(ticket.id()) && targets.containsKey(ticket.id())) {
+                TicketTarget merged = SupplyGate.merge(targets.get(ticket.id()), target);
+                if (!merged.equals(targets.get(ticket.id()))) {
+                    targets.put(ticket.id(), merged);
+                    BoardPersistence.persist(this);
+                }
+            } else {
+                targets.putIfAbsent(ticket.id(), target);
+            }
         }
         return outcome;
     }
@@ -240,15 +248,11 @@ public final class BoardService {
         notices.blocks(level, board, journal, stock(), board.now());
     }
 
-    public TicketTarget targetOf(String ticketId, List<SpiritEntity> spirits) {
-        return tickets.targetOf(ticketId, spirits);
+    public Optional<TicketTarget> targetOf(String ticketId, ServerLevel level, List<SpiritEntity> spirits) {
+        return tickets.targetOf(ticketId, level, spirits);
     }
 
     boolean hasTarget(String ticketId) {
         return tickets.hasTarget(ticketId);
-    }
-
-    BlockCoord targetPoint(String ticketId, List<SpiritEntity> spirits) {
-        return tickets.targetPoint(ticketId, spirits);
     }
 }

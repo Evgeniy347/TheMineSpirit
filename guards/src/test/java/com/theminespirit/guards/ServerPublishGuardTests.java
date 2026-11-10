@@ -125,6 +125,17 @@ class ServerPublishGuardTests {
                 script.contains("hang-watch.sh") && script.contains("crontab"),
                 "publish.sh не ставит cron сторожа зависания: server/scripts/hang-watch.sh доедет до сервера, "
                         + "но не запустится по расписанию, и зависший сервер снова никто не заметит");
+        assertTrue(
+                script.contains("deploy_file")
+                        && script.contains("deploy_tree")
+                        && read(CHECK).contains("прямых cp"),
+                "publish.sh раскладывает файлы сервера через deploy_file/deploy_tree, и это проверяется на "
+                        + "подделке: иначе конфиги снова поедут cp -a на место, и стартующий сервер прочитает "
+                        + "половину файла");
+        assertFalse(
+                script.contains("cp -a "),
+                "publish.sh снова копирует на место (cp -a): копия обязана идти во временного соседа и подменяться "
+                        + "mv, как скрипты. Прямой cp читатель видит обрезанным");
     }
 
     @Test

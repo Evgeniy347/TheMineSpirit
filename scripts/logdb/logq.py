@@ -276,40 +276,77 @@ def dispatch(args, conn):
     raise SystemExit("неизвестная команда: %s" % command)
 
 
-def remote_command(args, db):
+GLOBAL_OPTIONS = ("--db", "--logs", "--limit")
+GLOBAL_FLAGS = ("--main", "--json")
+
+
+def remote_arguments(arguments):
+    """Аргументы команды без того, что задаёт локальная цель и вывод.
+
+    Список не собирается заново по частям: ручная сборка теряла `--since` у `deaths`/`stuck`
+    (мониторинг считал по `ts` в SQL) и повторилась бы у каждой новой команды.
+    """
+    forwarded = []
+    index = 0
+    while index < len(arguments):
+        item = arguments[index]
+        name = item.split("=", 1)[0]
+        if name in GLOBAL_OPTIONS:
+            index += 2 if item == name else 1
+            continue
+        if item in GLOBAL_FLAGS:
+            index += 1
+            continue
+        forwarded.append(item)
+        index += 1
+    return forwarded
+
+
+def remote_command(arguments, db):
     """Команда для основного сервера: только чтение базы, JSONL грузит cron."""
-    command = [
-        "python3", MAIN_SCRIPTS + "/logq.py",
-        "--db", db,
+    return [
+        "python3",
+        MAIN_SCRIPTS + "/logq.py",
+        "--db",
+        db,
         "--json",
-        "--limit", str(args.limit),
-        args.command,
+        "--limit",
+        str(remote_limit(arguments)),
+        *remote_arguments(arguments),
     ]
-    if args.command == "cell":
-        command.extend(args.coords)
-    elif args.command == "spirit":
-        command.extend([args.name])
-    elif args.command == "ticket":
-        command.extend([args.ticket])
-    elif args.command == "blocks":
-        command.extend(["--spirit", args.spirit])
-    elif args.command == "items":
-        command.extend([args.item])
-    elif args.command == "where":
-        command.extend([args.name, "--at", args.at])
-    elif args.command == "grep":
-        command.extend([args.pattern])
-    elif args.command == "text":
-        command.extend(args.words)
-    elif args.command == "sql":
-        command.extend([args.query])
-    since = getattr(args, "since", None)
-    if since and args.command in SINCE_COMMANDS:
-        command.extend(["--since", since])
-    return command
 
 
-def remote(args):
+def remote_limit(arguments):
+    for index, item in enumerate(arguments):
+        if item == "--limit" and index + 1 < len(arguments):
+            return arguments[index + 1]
+        if item.startswith("--limit="):
+            return item.split("=", 1)[1]
+    return 30
+
+
+REMOTE_FILES = ("schema.json", "loader.py", "logq.py")
+
+
+def sync_remote(ssh, run=subprocess.run, here=HERE):
+    """Раскладывает код logq на основном сервере по расхождению содержимого.
+
+    Без сверки содержимого правка logq (например health --since) не действует через --main,
+    пока кто-то вручную не перезальёт файл: издалека видно только прежнее поведение.
+    """
+    uploaded = []
+    for name in REMOTE_FILES:
+        local = (here / name).read_bytes()
+        destination = "%s/%s" % (MAIN_SCRIPTS, name)
+        current = run(ssh + ["cat " + destination], capture_output=True)
+        if current.returncode == 0 and current.stdout == local:
+            continue
+        run(ssh + ["cat > " + destination], input=local, check=True)
+        uploaded.append(name)
+    return uploaded
+
+
+def remote(args, arguments):
     ssh = ["ssh", "-o", "ConnectTimeout=10", SSH]
     db = MAIN_SERVER + "/logs/events.db"
     probe = subprocess.run(ssh + ["test -f " + db], capture_output=True)
@@ -319,17 +356,8 @@ def remote(args):
             "пока ищите в своей копии (scripts/dev-server.sh up)" % db
         )
     subprocess.run(ssh + ["mkdir -p " + MAIN_SCRIPTS], check=True)
-    for name in ("schema.json", "loader.py", "logq.py"):
-        destination = "%s/%s" % (MAIN_SCRIPTS, name)
-        present = subprocess.run(ssh + ["test -f " + destination], capture_output=True)
-        if present.returncode == 0:
-            continue
-        subprocess.run(
-            ssh + ["cat > " + destination],
-            input=(HERE / name).read_bytes(),
-            check=True,
-        )
-    command = remote_command(args, db)
+    sync_remote(ssh)
+    command = remote_command(arguments, db)
     output = subprocess.run(ssh + [" ".join(_quote(part) for part in command)], capture_output=True, check=True)
     return output.stdout.decode("utf-8", "replace")
 
@@ -385,7 +413,7 @@ def main(argv=None):
     copy = find_copy()
     use_remote = args.main or (not args.db and not args.logs and copy is None)
     if use_remote:
-        output = remote(args)
+        output = remote(args, arguments)
         if args.json:
             print(output, end="")
         else:

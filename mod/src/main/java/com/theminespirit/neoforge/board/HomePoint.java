@@ -18,4 +18,12 @@ public final class HomePoint {
         Optional<StageSite> site = SettlementPlotStore.liveSite(level);
         return site.map(stage -> HomeStand.of(level, stage, List.of(spirit)));
     }
+
+    public static Optional<BlockCoord> of(ServerLevel level, List<SpiritEntity> spirits) {
+        Optional<BlockCoord> home = SettlementHome.center(SettlementHome.homes(spirits));
+        if (home.isPresent()) {
+            return home;
+        }
+        return SettlementPlotStore.liveSite(level).map(stage -> HomeStand.of(level, stage, spirits));
+    }
 }

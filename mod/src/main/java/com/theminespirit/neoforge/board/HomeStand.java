@@ -13,8 +13,8 @@ final class HomeStand {
     private HomeStand() {}
 
     static BlockCoord of(ServerLevel level, StageSite stage, List<SpiritEntity> spirits) {
-        BlockCoord anchor = stage.anchor();
         LevelSafetyView view = new LevelSafetyView(level);
-        return StandSearch.nearest(anchor, cell -> MiningSafety.canStand(cell, view));
+        return SettlementHome.center(SettlementHome.homes(spirits))
+                .orElseGet(() -> StandSearch.nearest(stage.anchor(), cell -> MiningSafety.canStand(cell, view)));
     }
 }

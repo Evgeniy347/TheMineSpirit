@@ -265,42 +265,42 @@ public final class Board {
     }
 
     public boolean fail(String ticketId) {
-        return fail(ticketId, new StockView(Map.of()));
-    }
-
-    public boolean fail(String ticketId, StockView stock) {
-        return fail(ticketId, stock, null);
+        return fail(ticketId, new StockView(Map.of()), null);
     }
 
     public boolean fail(String ticketId, StockView stock, @Nullable String reason) {
-        return fail(ticketId, stock, reason, null);
+        return fail(ticketId, stock, reason, null, false);
     }
 
     public boolean fail(String ticketId, StockView stock, @Nullable String reason, GraphBlock.@Nullable Need need) {
-        Objects.requireNonNull(ticketId, "ticketId не может быть null: провал идёт по id задания");
-        Objects.requireNonNull(stock, "stock не может быть null: по нему фиксируются условия блокировки");
-        BoardTicket ticket = tickets.get(ticketId);
-        if (ticket == null || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
+        return fail(ticketId, stock, reason, need, false);
+    }
+
+    public boolean fail(String id, StockView s, @Nullable String why, GraphBlock.@Nullable Need need, boolean lost) {
+        Objects.requireNonNull(id, "ticketId не может быть null: провал идёт по id задания");
+        Objects.requireNonNull(s, "stock не может быть null: по нему фиксируются условия блокировки");
+        BoardTicket ticket = tickets.get(id);
+        if (ticket == null || statuses.get(id) != BoardStatus.ASSIGNED) {
             return false;
         }
         long now = nowTicks.getAsLong();
-        statuses.put(ticketId, BoardStatus.FAILED);
-        failTicks.put(ticketId, now);
+        statuses.put(id, BoardStatus.FAILED);
+        failTicks.put(id, now);
         UUID holder = holder(ticket);
         if (holder != null) {
             noteCaseFailure(holder, ticket, now);
-            if (need instanceof GraphBlock.Path) {
-                stuckSpirits.mark(holder, now, reason == null ? "провал движения" : reason, true);
+            if (lost || need instanceof GraphBlock.Path) {
+                stuckSpirits.mark(holder, now, why == null ? "провал движения" : why, true);
             }
         }
-        String previous = reason == null ? null : lastFailReasons.put(ticketId, reason);
-        failHistory.note(ticketId, now, reason);
-        if (reason != null && reason.equals(previous)) {
-            ticketFailures.put(ticketId, BoardTuning.ticketFailLimit() - 1);
+        String previous = why == null ? null : lastFailReasons.put(id, why);
+        failHistory.note(id, now, why);
+        if (why != null && why.equals(previous)) {
+            ticketFailures.put(id, BoardTuning.ticketFailLimit() - 1);
         }
-        noteTicketFailure(ticket, now, stock, need);
-        holds.release(ticketId);
-        events.transition(BoardLog.Event.FAILED, ticket.withFailure(reason), claimAssignees.get(ticketId), now);
+        noteTicketFailure(ticket, now, s, need);
+        holds.release(id);
+        events.transition(BoardLog.Event.FAILED, ticket.withFailure(why), claimAssignees.get(id), now);
         return true;
     }
 

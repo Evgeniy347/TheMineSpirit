@@ -11,6 +11,7 @@ import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.movement.ToolBreakCost;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.movement.LevelNavWorld;
 import com.theminespirit.neoforge.movement.RescueReach;
@@ -31,10 +32,7 @@ final class RescueGroupPost {
     private RescueGroupPost() {}
 
     static boolean rescue(GraphPost post, GraphPlan.Task task) {
-        BlockCoord home = SettlementPlotStore.get(post.level)
-                .site()
-                .map(stage -> HomeStand.of(post.level, stage, post.spirits))
-                .orElseGet(() -> SettlementHome.of(post.spirits));
+        Optional<BlockCoord> settlement = HomePoint.of(post.level, post.spirits);
         LevelNavWorld world = new LevelNavWorld(post.level);
         Predicate<BlockCoord> water = cell -> post.level
                 .getFluidState(new BlockPos(cell.x(), cell.y(), cell.z()))
@@ -44,6 +42,7 @@ final class RescueGroupPost {
         Map<UUID, SpiritEntity> entities = new LinkedHashMap<>();
         Map<UUID, StuckSpirits.Stuck> marks = new LinkedHashMap<>();
         Map<UUID, Boolean> pathHome = new LinkedHashMap<>();
+        Map<UUID, BlockCoord> homes = new LinkedHashMap<>();
         boolean pending = false;
         for (GraphFacts.Spirit fact : post.facts.spirits().values()) {
             if (!fact.stuck()) {
@@ -59,6 +58,12 @@ final class RescueGroupPost {
                 continue;
             }
             BlockCoord at = GraphRescuePost.at(spirit);
+            Optional<BlockCoord> target = HomePoint.of(spirit).or(() -> settlement);
+            if (target.isEmpty()) {
+                pending = true;
+                continue;
+            }
+            BlockCoord home = target.orElseThrow();
             RescueReach.Verdict reach = cache.verdict(spirit.getUUID(), at, home, post.now);
             if (reach == null) {
                 cache.request(world, water, spirit.getUUID(), at, home, post.now);
@@ -68,6 +73,7 @@ final class RescueGroupPost {
             }
             members.add(new RescueGroups.Member(spirit.getUUID(), at, toolTier(fact), blocks(fact)));
             entities.put(spirit.getUUID(), spirit);
+            homes.put(spirit.getUUID(), home);
             marks.put(spirit.getUUID(), mark.orElseThrow());
         }
         if (pending) {
@@ -80,11 +86,11 @@ final class RescueGroupPost {
         RescueGroups.Passage passage =
                 cell -> world.available(cell.x(), cell.z()) && world.passable(cell.x(), cell.y(), cell.z());
         for (RescueGroups.Group group : RescueGroups.form(members, passage)) {
-            if (follow(post, group, home, pathHome, marks, task)) {
+            if (follow(post, group, homes, pathHome, marks, task, entities)) {
                 posted = true;
                 continue;
             }
-            posted |= rescueLeader(post, group, home, marks, entities, task);
+            posted |= rescueLeader(post, group, homes, marks, entities, task);
         }
         return posted;
     }
@@ -92,13 +98,15 @@ final class RescueGroupPost {
     private static boolean follow(
             GraphPost post,
             RescueGroups.Group group,
-            BlockCoord home,
+            Map<UUID, BlockCoord> homes,
             Map<UUID, Boolean> pathHome,
             Map<UUID, StuckSpirits.Stuck> marks,
-            GraphPlan.Task task) {
-        List<RescueGroups.Member> walkers = group.members().stream()
-                .filter(member -> pathHome.getOrDefault(member.id(), false))
-                .toList();
+            GraphPlan.Task task,
+            Map<UUID, SpiritEntity> entities) {
+        List<RescueGroups.Member> walkers = RescueGroups.walkers(
+                group,
+                member -> pathHome.getOrDefault(member.id(), false),
+                member -> onSurface(post, entities.get(member.id())));
         if (walkers.isEmpty()) {
             return false;
         }
@@ -108,7 +116,8 @@ final class RescueGroupPost {
                 continue;
             }
             StuckSpirits.Stuck mark = marks.get(walker.id());
-            if (mark == null) {
+            BlockCoord home = homes.get(walker.id());
+            if (mark == null || home == null) {
                 continue;
             }
             post.submit(
@@ -128,7 +137,7 @@ final class RescueGroupPost {
     private static boolean rescueLeader(
             GraphPost post,
             RescueGroups.Group group,
-            BlockCoord home,
+            Map<UUID, BlockCoord> homes,
             Map<UUID, StuckSpirits.Stuck> marks,
             Map<UUID, SpiritEntity> entities,
             GraphPlan.Task task) {
@@ -137,7 +146,8 @@ final class RescueGroupPost {
         for (RescueGroups.Member member : group.members()) {
             SpiritEntity spirit = entities.get(member.id());
             StuckSpirits.Stuck mark = marks.get(member.id());
-            if (spirit == null || mark == null) {
+            BlockCoord home = homes.get(member.id());
+            if (spirit == null || mark == null || home == null) {
                 continue;
             }
             RescueTicket.Escape escape = RescueTicket.escape(post.level, spirit, home, mark.noPath(), false);
@@ -156,7 +166,8 @@ final class RescueGroupPost {
         }
         SpiritEntity spirit = entities.get(leader.id());
         StuckSpirits.Stuck mark = marks.get(leader.id());
-        if (spirit == null || mark == null || chosen == null) {
+        BlockCoord home = homes.get(leader.id());
+        if (spirit == null || mark == null || home == null || chosen == null) {
             return false;
         }
         String ticketId = GraphRescuePost.RESCUE + leader.id();
@@ -187,6 +198,10 @@ final class RescueGroupPost {
                         Map.of()),
                 TicketTarget.at(leader.at()).withPlan(plan));
         return true;
+    }
+
+    private static boolean onSurface(GraphPost post, SpiritEntity spirit) {
+        return spirit != null && !spirit.isRemoved() && DigOutScript.open(post.level, spirit.blockPosition());
     }
 
     private static int toolTier(GraphFacts.Spirit fact) {

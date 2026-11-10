@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.mining.LeftOreRules;
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,6 +15,44 @@ import org.junit.jupiter.api.Test;
 class SupplyGateTests {
 
     private static final long BACKOFF = BoardTuning.FAIL_BACKOFF_TICKS;
+
+    @Test
+    void merge_GrownDemand_KeepsSingleRequestWithNewCount() {
+        TicketTarget before = TicketTarget.at(new BlockCoord(0, 64, 0))
+                .withSupply("cobblestone", 4)
+                .withDeposit(new BlockCoord(1, 64, 0));
+        TicketTarget next = TicketTarget.at(new BlockCoord(0, 64, 0)).withSupply("cobblestone", 12);
+
+        TicketTarget merged = SupplyGate.merge(before, next);
+
+        assertEquals(
+                12,
+                merged.supplyCount(),
+                "Повторная заявка обязана поднять количество, а не остаться старой: "
+                        + "иначе дух несёт 4 камня при нехватке 12 и доска ставит заявку снова и снова");
+        assertEquals(
+                new BlockCoord(1, 64, 0),
+                merged.deposit(),
+                "Точка сдачи не теряется, если в новой заявке её не нашли: консолидация не ломает маршрут");
+    }
+
+    @Test
+    void merge_SmallerDemand_KeepsExistingRequest() {
+        TicketTarget before = TicketTarget.at(new BlockCoord(0, 64, 0)).withSupply("cobblestone", 12);
+        TicketTarget next = TicketTarget.at(new BlockCoord(9, 64, 9)).withSupply("cobblestone", 4);
+
+        assertEquals(
+                before,
+                SupplyGate.merge(before, next),
+                "Меньшая заявка не откатывает уже заказанное количество: иначе снабжение топчется на месте");
+    }
+
+    @Test
+    void isSupply_SupplyPrefixes_OnlySupplyTickets() {
+        assertTrue(SupplyGate.isSupply("supply:cobblestone"), "Снабжение со склада — заявка снабжения");
+        assertTrue(SupplyGate.isSupply("supply_gather:coal"), "Сбор на склад — та же заявка снабжения");
+        assertFalse(SupplyGate.isSupply("graph:make:coal"), "Графовая работа не сливается как снабжение");
+    }
 
     @Test
     void needsDepositPoint_GatherMaterials_StartsWithoutContainer() {
