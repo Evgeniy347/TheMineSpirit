@@ -4,14 +4,9 @@ import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.chunk.ChunkCoord;
 import com.theminespirit.core.chunk.ChunkDiff;
 import com.theminespirit.core.chunk.ChunkSquare;
-import com.theminespirit.core.chunk.SettlementChunks;
-import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.town.TownPlan;
-import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.resources.ResourceLocation;
@@ -36,22 +31,17 @@ public final class SettlementChunkTickets {
         event.register(CONTROLLER);
     }
 
-    static void tick(ServerLevel level) {
-        TownPlan plan = SettlementPlotStore.get(level).town().orElse(null);
-        var anchors = SettlementAnchorStore.get(level).anchors();
-        Set<ChunkCoord> settlement =
-                new TreeSet<>(SettlementChunks.forPlan(plan, anchors, SettlementChunks.WORK_RADIUS_BLOCKS));
-        settlement.addAll(SettlementChunks.around(
-                anchors, DataTables.INSTANCE.town().current().ground().probeRadius()));
+    static void tick(ServerLevel level, Set<ChunkCoord> settlement) {
         Set<ChunkCoord> held = HELD.getOrDefault(level, Set.of());
+        if (held.equals(settlement)) {
+            return;
+        }
         ChunkDiff diff = ChunkDiff.between(held, settlement);
-        if (!diff.isEmpty()) {
-            for (ChunkCoord chunk : diff.toRemove()) {
-                CONTROLLER.forceChunk(level, OWNER, chunk.x(), chunk.z(), false, true);
-            }
-            for (ChunkCoord chunk : diff.toAdd()) {
-                CONTROLLER.forceChunk(level, OWNER, chunk.x(), chunk.z(), true, true);
-            }
+        for (ChunkCoord chunk : diff.toRemove()) {
+            CONTROLLER.forceChunk(level, OWNER, chunk.x(), chunk.z(), false, true);
+        }
+        for (ChunkCoord chunk : diff.toAdd()) {
+            CONTROLLER.forceChunk(level, OWNER, chunk.x(), chunk.z(), true, true);
         }
         HELD.put(level, ChunkSquare.apply(held, diff));
     }

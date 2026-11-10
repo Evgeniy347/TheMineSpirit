@@ -139,7 +139,8 @@ if is_running; then
     save_disabled=true
     send_command "save-all flush"
     if ! wait_for_log 'Saved the game' "$offset" 120; then
-        echo "снимок отменён: сервер не подтвердил сохранение мира" >&2
+        echo "снимок отменён: сервер не подтвердил сохранение мира — save-all flush не выполнен;" \
+            "проверь консоль (scripts/console.sh): жива ли она, иначе нужен перезапуск" >&2
         exit 1
     fi
     echo "мир сброшен на диск, автосохранение приостановлено"

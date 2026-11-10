@@ -70,6 +70,16 @@ public final class SettlementChunks {
         return ChunkDiff.between(held, desired);
     }
 
+    public static Set<ChunkCoord> settlement(@Nullable TownPlan plan, Collection<BlockCoord> anchors, int probeRadius) {
+        Objects.requireNonNull(anchors, "anchors не может быть null: поселение без якорей держит только участок плана");
+        if (probeRadius < 0) {
+            throw new IllegalArgumentException("Радиус обмера поселения не может быть отрицательным: " + probeRadius);
+        }
+        Set<ChunkCoord> chunks = new TreeSet<>(forPlan(plan, anchors, WORK_RADIUS_BLOCKS));
+        chunks.addAll(around(anchors, probeRadius));
+        return Collections.unmodifiableSet(chunks);
+    }
+
     public static Set<ChunkCoord> workZone(
             @Nullable TownPlan plan, Collection<BlockCoord> anchors, Collection<BlockCoord> spirits, int spiritRadius) {
         Objects.requireNonNull(spirits, "spirits не может быть null: без них зона работ — только поселение");

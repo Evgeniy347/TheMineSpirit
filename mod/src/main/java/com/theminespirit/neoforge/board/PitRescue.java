@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.movement.BlockKind;
+import com.theminespirit.core.movement.PerchLevel;
 import com.theminespirit.core.movement.PitExitPlanner;
 import com.theminespirit.core.movement.PitWalkOut;
 import com.theminespirit.core.movement.SurfaceLevel;
@@ -46,7 +47,7 @@ final class PitRescue {
         }
         boolean open = DigOutScript.open(level, feet);
         boolean walkExit = (!open || feet.getY() + SurfaceLevel.MARGIN < highest) && walkOut(level, feet);
-        return SurfaceLevel.escaped(open, feet.getY(), heights, walkExit);
+        return PerchLevel.escaped(open, feet.getY(), heights, walkExit);
     }
 
     private static boolean walkOut(Level level, BlockPos feet) {

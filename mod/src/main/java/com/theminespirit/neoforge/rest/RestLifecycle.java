@@ -74,7 +74,6 @@ public final class RestLifecycle {
 
     private static void onAboutToStart(ServerAboutToStartEvent event) {
         index = new SpiritIndex(event.getServer());
-        index.register(gameBus);
     }
 
     private static void onStarted(ServerStartedEvent event) {
@@ -114,9 +113,6 @@ public final class RestLifecycle {
     }
 
     private static void onStopped(ServerStoppedEvent ignoredEvent) {
-        if (index != null) {
-            index.unregister(gameBus);
-            index = null;
-        }
+        index = null;
     }
 }
