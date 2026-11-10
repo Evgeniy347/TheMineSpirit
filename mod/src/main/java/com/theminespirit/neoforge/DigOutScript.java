@@ -23,7 +23,6 @@ import org.jspecify.annotations.Nullable;
 public final class DigOutScript implements ScriptInstance {
     private static final int MAX_STEPS = 160;
     private static final int STEP_TICKS = 60;
-    private static final int HOME_RADIUS = 2;
 
     private final SpiritEntity spirit;
     private final Level level;
@@ -120,7 +119,7 @@ public final class DigOutScript implements ScriptInstance {
                 : DigOutGoal.ascent(
                         new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
                         new BlockCoord(target.x(), target.y(), target.z()),
-                        HOME_RADIUS);
+                        DigOutGoal.HOME_RADIUS);
         if ((DigOutExit.surfaced(level, feet) && !restore.pendingOver(feet)) || goalReached) {
             backfill.report();
             restore.returnSpoil();
@@ -167,7 +166,11 @@ public final class DigOutScript implements ScriptInstance {
         }
         if (routeFollow == null) {
             routeFollow = new DigOutRoute(
-                    spirit, new BlockCoord(target.x(), target.y(), target.z()), descending, HOME_RADIUS, rescue);
+                    spirit,
+                    new BlockCoord(target.x(), target.y(), target.z()),
+                    descending,
+                    DigOutGoal.HOME_RADIUS,
+                    rescue);
         }
         DigOutRoute.State state = routeFollow.tick();
         if (state == DigOutRoute.State.DESCENT_FAILED || state == DigOutRoute.State.NO_ROUTE) {

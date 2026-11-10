@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.movement;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.movement.DescentPath;
+import com.theminespirit.core.movement.DigOutGoal;
 import com.theminespirit.core.movement.SearchMillis;
 import com.theminespirit.core.movement.SurfaceEscape;
 import com.theminespirit.core.movement.SurfaceGoal;
@@ -20,7 +21,6 @@ import org.slf4j.Logger;
 
 public final class SurfaceRoute {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int HOME_RADIUS = 2;
 
     private SurfaceRoute() {}
 
@@ -54,7 +54,7 @@ public final class SurfaceRoute {
         Optional<List<BlockCoord>> found = SurfaceEscape.path(
                 start,
                 new RouteLevelView(spirit, rescue),
-                cell -> SurfaceGoal.home(cell, target, HOME_RADIUS),
+                cell -> SurfaceGoal.home(cell, target, DigOutGoal.HOME_RADIUS),
                 target,
                 cell -> PlanDetour.foreign(spirit, cell));
         if (found.isEmpty()) {
@@ -76,7 +76,7 @@ public final class SurfaceRoute {
         Optional<List<BlockCoord>> found = SurfaceEscape.path(
                 start,
                 new RouteLevelView(spirit, rescue),
-                cell -> SurfaceGoal.home(cell, target, HOME_RADIUS),
+                cell -> SurfaceGoal.home(cell, target, DigOutGoal.HOME_RADIUS),
                 target,
                 cell -> PlanDetour.foreign(spirit, cell));
         if (found.isEmpty()) {

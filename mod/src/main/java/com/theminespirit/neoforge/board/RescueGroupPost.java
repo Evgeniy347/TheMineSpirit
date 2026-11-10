@@ -32,7 +32,7 @@ final class RescueGroupPost {
     private RescueGroupPost() {}
 
     static boolean rescue(GraphPost post, GraphPlan.Task task) {
-        BlockCoord settlement = HomePoint.of(post.level, post.spirits);
+        Optional<BlockCoord> settlement = HomePoint.of(post.level, post.spirits);
         LevelNavWorld world = new LevelNavWorld(post.level);
         Predicate<BlockCoord> water = cell -> post.level
                 .getFluidState(new BlockPos(cell.x(), cell.y(), cell.z()))
@@ -58,7 +58,12 @@ final class RescueGroupPost {
                 continue;
             }
             BlockCoord at = GraphRescuePost.at(spirit);
-            BlockCoord home = HomePoint.of(spirit).orElse(settlement);
+            Optional<BlockCoord> target = HomePoint.of(spirit).or(() -> settlement);
+            if (target.isEmpty()) {
+                pending = true;
+                continue;
+            }
+            BlockCoord home = target.orElseThrow();
             RescueReach.Verdict reach = cache.verdict(spirit.getUUID(), at, home, post.now);
             if (reach == null) {
                 cache.request(world, water, spirit.getUUID(), at, home, post.now);

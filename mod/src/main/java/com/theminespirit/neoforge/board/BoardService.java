@@ -10,7 +10,6 @@ import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.husbandry.Species;
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.HashMap;
@@ -240,15 +239,11 @@ public final class BoardService {
         notices.blocks(level, board, journal, stock(), board.now());
     }
 
-    public TicketTarget targetOf(String ticketId, List<SpiritEntity> spirits) {
-        return tickets.targetOf(ticketId, spirits);
+    public Optional<TicketTarget> targetOf(String ticketId, ServerLevel level, List<SpiritEntity> spirits) {
+        return tickets.targetOf(ticketId, level, spirits);
     }
 
     boolean hasTarget(String ticketId) {
         return tickets.hasTarget(ticketId);
-    }
-
-    BlockCoord targetPoint(String ticketId, List<SpiritEntity> spirits) {
-        return tickets.targetPoint(ticketId, spirits);
     }
 }

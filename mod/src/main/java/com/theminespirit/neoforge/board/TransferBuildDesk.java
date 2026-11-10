@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.TicketPlans;
+import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TransferCarriers;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
@@ -22,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Items;
 import org.slf4j.Logger;
@@ -39,9 +41,13 @@ final class TransferBuildDesk {
             List<SpiritEntity> spirits,
             BoardTicket build,
             SpiritEntity builder) {
+        Optional<TicketTarget> target = service.targetOf(build.id(), level, spirits);
+        if (target.isEmpty()) {
+            return false;
+        }
         Map<String, Integer> need;
         try {
-            TaskNode plan = TicketPlans.plan(build.boardCase(), build.level(), service.targetOf(build.id(), spirits));
+            TaskNode plan = TicketPlans.plan(build.boardCase(), build.level(), target.orElseThrow());
             need = BuildRemainder.left(
                     level, build.boardCase(), plan, CaseMaterials.need(plan, FirstStepsRunner.materialSource(level)));
         } catch (RuntimeException failure) {
