@@ -149,4 +149,5 @@ mech/mining/com/theminespirit/core/mining/UnreachableCellsTests.java
 mech/mining/com/theminespirit/core/mining/VeinWalkerProperties.java
 mech/mining/com/theminespirit/core/mining/VeinWalkerTests.java
 mech/building/com/theminespirit/core/building/SchematicUpgradeTests.java # снятие старых клеток схемы N→N+1: отдельная геометрия, сюита засыпки её не проверяет
+mech/building/com/theminespirit/core/building/BuildPitTests.java # правило «копать вверх только запертому»: чистая граница BuildPit, сюита засыпки её не проверяет
 mech/forestry/com/theminespirit/core/forestry/LiveJungleStandTests.java # живая фикстура 2×2 jungle: сюита рубки уже на пределе 300 строк

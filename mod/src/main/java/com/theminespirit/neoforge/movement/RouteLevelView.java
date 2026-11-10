@@ -36,6 +36,8 @@ public final class RouteLevelView implements RouteWorld {
     private final boolean rescue;
     private final BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
     private final Map<BlockState, Integer> breakTicks = new HashMap<>();
+    private final Map<Long, Integer> cells = new HashMap<>();
+    private long cellsTick = Long.MIN_VALUE;
 
     public RouteLevelView(SpiritEntity spirit) {
         this(spirit, false);
@@ -57,6 +59,22 @@ public final class RouteLevelView implements RouteWorld {
 
     @Override
     public int cell(int x, int y, int z) {
+        long tick = level.getGameTime();
+        if (tick != cellsTick) {
+            cells.clear();
+            cellsTick = tick;
+        }
+        long key = BlockPos.asLong(x, y, z);
+        Integer known = cells.get(key);
+        if (known != null) {
+            return known;
+        }
+        int value = evaluate(x, y, z);
+        cells.put(key, value);
+        return value;
+    }
+
+    private int evaluate(int x, int y, int z) {
         cursor.set(x, y, z);
         if (y < level.getMinBuildHeight() || y >= level.getMaxBuildHeight() || !level.isLoaded(cursor)) {
             return RouteCell.BLOCKED;

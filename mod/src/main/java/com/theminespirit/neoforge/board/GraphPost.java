@@ -10,6 +10,7 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.board.graph.GraphFacts;
+import com.theminespirit.core.board.graph.GraphFailureMemory;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphTickets;
@@ -280,6 +281,13 @@ final class GraphPost {
 
     boolean open(String id) {
         return service.board().statusOf(id).filter(BoardStatus::open).isPresent();
+    }
+
+    boolean unreachable(BlockCoord at) {
+        double halfLife = graph.costs().choice().failureHalfLife();
+        return service.sources
+                .graphUnreachablePoints(now, halfLife)
+                .contains(GraphFailureMemory.target(at.x(), at.y(), at.z()));
     }
 
     Set<String> waiting() {
