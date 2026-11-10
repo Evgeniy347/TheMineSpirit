@@ -60,6 +60,23 @@ class GraphUndoTests {
         assertTrue(graph.costs().undo().inside() > 0, "Поправка поселения задана данными");
     }
 
+    @Test
+    void deepPocketOutsideSettlement_ComparedToDamageInside_WeighsLess() {
+        GraphSiteFacts.Lease pocket = new GraphSiteFacts.Lease(
+                "dig-1", "dig_out", null, new GraphFacts.Position(20, 58, 0), 0, false, false, 2, 20, 12);
+        GraphSiteFacts.Lease inside = new GraphSiteFacts.Lease(
+                "dig-2", "dig_out", null, new GraphFacts.Position(0, 58, 0), 0, true, false, 2, 4, 12);
+
+        assertTrue(
+                UNDO.weight(inside, false, 100) > UNDO.weight(pocket, false, 100),
+                "Сломанное под поселением возвращают раньше кармана вне зоны: " + "под поселением "
+                        + UNDO.weight(inside, false, 100) + " против кармана " + UNDO.weight(pocket, false, 100));
+        assertTrue(
+                UNDO.weight(pocket, false, 100) < 90,
+                "Карман глубоко вне зоны — низкий вес: иначе граф снова и снова шлёт духа к недостижимой клетке; "
+                        + "получено " + UNDO.weight(pocket, false, 100));
+    }
+
     private static GraphSiteFacts.Lease lease(
             int height, boolean inside, boolean street, int cells, int distance, String owner) {
         return new GraphSiteFacts.Lease(

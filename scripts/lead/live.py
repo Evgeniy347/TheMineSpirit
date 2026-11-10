@@ -28,7 +28,8 @@ HELP = """scripts/live.sh <команда>  (цель: своя копия де�
   slice <x> <y> <z> [радиус] [вверх] [вниз]   карта блоков слоями
   loops [строк]          задания, которые падают снова и снова: что и почему, за весь журнал
   log <шаблон> [строк]   строки журнала мода по регулярному выражению
-  fixture <имя духа> <файл> [радиус] [--at x y z]   мир вокруг духа (или точки) в mech/movement/src/test/resources/live/<файл>.live
+  fixture <имя духа> <файл> [радиус] [--at x y z] [--json] [--up N] [--down N]   мир вокруг духа (или точки):
+                         .live для :mech:movement или JSON с именами блоков для :mech:forestry (--json)
   check [--wait секунд] [--version <в>]  граф жив, работа есть, версия мода на сервере та же, что собрана
 """
 
@@ -296,7 +297,33 @@ def fixture(target, args):
         if bot is None:
             sys.exit("нет духа %s" % args.name)
         x, y, z = bot["position"]
-    text = target.slice_args([x, y, z, args.radius, args.radius, args.radius, "--cells"])
+    up = args.up if args.up is not None else args.radius
+    down = args.down if args.down is not None else args.radius
+    text = target.slice_args([x, y, z, args.radius, up, down, "--cells"])
+    if args.json:
+        blocks = []
+        species = args.species
+        for line in text.splitlines():
+            parts = line.split()
+            if len(parts) != 4:
+                continue
+            block = parts[3]
+            if block in ("minecraft:air", "minecraft:cave_air"):
+                continue
+            blocks.append({"x": int(parts[0]), "y": int(parts[1]), "z": int(parts[2]), "block": block})
+            if species is None and block.endswith("_log"):
+                species = block.replace("minecraft:", "").replace("_log", "")
+        doc = {
+            "note": "%s в %d,%d,%d; снят scripts/live.sh fixture" % (args.name, x, y, z),
+            "tree": {"species": species or "unknown", "base": [x, y, z]},
+            "blocks": blocks,
+        }
+        path = os.path.join(REPO, "src/test/resources/live", args.file + ".json")
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
+            f.write(json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + "\n")
+        print("%s: %d блоков. Чтение в тесте: blocks(Path.of(\"%s\"))" % (
+            os.path.relpath(path, REPO), len(blocks), os.path.relpath(path, REPO)))
+        return
     out = ["# %s в %d,%d,%d; снят scripts/live.sh fixture" % (args.name, x, y, z), "feet 0 0 0"]
     for line in text.splitlines():
         parts = line.split()
@@ -420,6 +447,10 @@ def main():
     fix.add_argument("name")
     fix.add_argument("file")
     fix.add_argument("radius", type=int, nargs="?", default=8)
+    fix.add_argument("--up", type=int, default=None, help="слоёв вверх (по умолчанию радиус)")
+    fix.add_argument("--down", type=int, default=None, help="слоёв вниз (по умолчанию радиус)")
+    fix.add_argument("--json", action="store_true", help="JSON с именами блоков для тестов :mech:forestry")
+    fix.add_argument("--species", default=None, help="порода дерева для JSON (по умолчанию из бревна в точке)")
     fix.add_argument("--at", type=int, nargs=3, metavar=("X", "Y", "Z"))
     fix.set_defaults(run=fixture)
     ok = sub.add_parser("check")

@@ -5,6 +5,7 @@ import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
+import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -30,8 +31,13 @@ public final class StageSites {
 
     public static Optional<StageSite> find(
             TownPlan plan, int stage, int levelY, TownRules rules, String orchardScheme) {
+        return find(plan, stage, levelY, rules, orchardScheme, WoodSpecies.OAK);
+    }
+
+    public static Optional<StageSite> find(
+            TownPlan plan, int stage, int levelY, TownRules rules, String orchardScheme, String wood) {
         Objects.requireNonNull(plan, "План не может быть null: этап берёт места из него");
-        return complete(plan) ? Optional.of(of(plan, stage, levelY, rules, orchardScheme)) : Optional.empty();
+        return complete(plan) ? Optional.of(of(plan, stage, levelY, rules, orchardScheme, wood)) : Optional.empty();
     }
 
     public static boolean complete(TownPlan plan) {
@@ -46,13 +52,19 @@ public final class StageSites {
     }
 
     public static StageSite of(TownPlan plan, int stage, int levelY, TownRules rules) {
-        return of(plan, stage, levelY, rules, ORCHARD_SCHEME);
+        return of(plan, stage, levelY, rules, ORCHARD_SCHEME, WoodSpecies.OAK);
     }
 
     public static StageSite of(TownPlan plan, int stage, int levelY, TownRules rules, String orchardScheme) {
+        return of(plan, stage, levelY, rules, orchardScheme, WoodSpecies.OAK);
+    }
+
+    public static StageSite of(
+            TownPlan plan, int stage, int levelY, TownRules rules, String orchardScheme, String wood) {
         Objects.requireNonNull(plan, "План не может быть null: этап берёт места из него");
         Objects.requireNonNull(rules, "Правила плана не могут быть null: поле ограды этапа — данные");
         Objects.requireNonNull(orchardScheme, "Схема сада не может быть null: саду нужны места деревьев");
+        WoodSpecies.check(wood);
         Layout layout = layout(plan, stage, rules)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "У этапа " + stage + " нет ни одной площадки под выравнивание: план без построек этапа"));
@@ -69,6 +81,7 @@ public final class StageSites {
                 mine,
                 minePlot(mine, levelY),
                 orchard,
+                wood,
                 orchardSaplings(orchard, levelY, orchardScheme),
                 extraOrchards(own, levelY, orchardScheme),
                 fields(plan, stage, rules),

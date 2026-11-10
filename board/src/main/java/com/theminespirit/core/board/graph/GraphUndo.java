@@ -13,22 +13,33 @@ public record GraphUndo(
         int cellCap,
         int farDistance,
         double farShare,
-        double ownerFactor) {
+        double ownerFactor,
+        int buriedDepth,
+        double buriedShare) {
     public static final int DEFAULT_BASE = 120;
-    public static final GraphUndo DEFAULTS = new GraphUndo(DEFAULT_BASE, 120, 20, 1.0, 30, 6.0, 60, 256, 0.8, 0.8);
+    public static final GraphUndo DEFAULTS =
+            new GraphUndo(DEFAULT_BASE, 120, 20, 1.0, 30, 6.0, 60, 256, 0.8, 0.8, 8, 0.6);
 
     public GraphUndo {
         if (base < 1) {
             throw new IllegalArgumentException("Базовый вес отката " + base + " меньше 1: задание не выйдет из нуля");
         }
-        if (inside < 0 || street < 0 || heightCap < 0 || cellCap < 0 || farDistance < 1) {
+        if (inside < 0 || street < 0 || heightCap < 0 || cellCap < 0 || farDistance < 1 || buriedDepth < 1) {
             throw new IllegalArgumentException("Поправки отката (поселение " + inside + ", улица " + street
-                    + ", пределы " + heightCap + "/" + cellCap + ", даль " + farDistance
-                    + ") не отрицательны, даль больше нуля");
+                    + ", пределы " + heightCap + "/" + cellCap + ", даль " + farDistance + ", глубина "
+                    + buriedDepth + ") не отрицательны, даль и глубина больше нуля");
         }
-        if (perHeight < 0 || perCell < 0 || farShare < 0 || farShare > 1 || ownerFactor < 0 || ownerFactor > 1) {
+        if (perHeight < 0
+                || perCell < 0
+                || farShare < 0
+                || farShare > 1
+                || ownerFactor < 0
+                || ownerFactor > 1
+                || buriedShare < 0
+                || buriedShare > 1) {
             throw new IllegalArgumentException("Доли отката (высота " + perHeight + ", клетки " + perCell + ", даль "
-                    + farShare + ", владелец " + ownerFactor + ") лежат в 0..1, кроме высоты и клеток");
+                    + farShare + ", владелец " + ownerFactor + ", глубина " + buriedShare
+                    + ") лежат в 0..1, кроме высоты и клеток");
         }
     }
 
@@ -47,7 +58,9 @@ public record GraphUndo(
                 undo.path("cellCap").asInt(DEFAULTS.cellCap()),
                 undo.path("farDistance").asInt(DEFAULTS.farDistance()),
                 undo.path("farShare").asDouble(DEFAULTS.farShare()),
-                undo.path("owner").asDouble(DEFAULTS.ownerFactor()));
+                undo.path("owner").asDouble(DEFAULTS.ownerFactor()),
+                undo.path("buriedDepth").asInt(DEFAULTS.buriedDepth()),
+                undo.path("buriedShare").asDouble(DEFAULTS.buriedShare()));
     }
 
     public int weight(GraphSiteFacts.Lease lease, boolean ownerAlive, int maxPriority) {
@@ -63,6 +76,10 @@ public record GraphUndo(
         weight += Math.min(cellCap, perCell * lease.cells());
         double far = Math.min(1.0, (double) lease.distance() / farDistance);
         weight -= base * farShare * far;
+        if (!lease.inside() && !lease.street()) {
+            double buried = Math.min(1.0, (double) lease.depth() / buriedDepth);
+            weight -= base * buriedShare * buried;
+        }
         if (ownerAlive && lease.owner() != null) {
             weight *= ownerFactor;
         }

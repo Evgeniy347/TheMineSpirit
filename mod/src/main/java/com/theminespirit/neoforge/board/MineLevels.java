@@ -44,19 +44,26 @@ final class MineLevels {
             return true;
         }
         Optional<StageSite> stage = SettlementPlotStore.liveSite(level);
-        BlockCoord home = stage.map(StageSite::mineEntrance)
-                .orElseGet(() -> SettlementPlotStore.get(level)
-                        .plot()
-                        .map(plot -> plot.anchor())
-                        .orElseGet(() -> homeOf(spirits)));
+        Optional<BlockCoord> home = home(
+                stage.map(StageSite::mineEntrance),
+                SettlementPlotStore.get(level).plot().map(plot -> plot.anchor()),
+                spirits.stream().flatMap(spirit -> spirit.home().stream()).toList());
+        if (home.isEmpty()) {
+            LOGGER.warn(
+                    "Уровень шахты {} не поставлен: нет ни размеченного участка, ни дома духа — место спуска "
+                            + "неизвестно",
+                    levelValue);
+            return false;
+        }
+        BlockCoord homePoint = home.orElseThrow();
         BlockCoord site;
         try {
-            site = MineDescentBottom.standOf(home).orElse(null);
+            site = MineDescentBottom.standOf(homePoint).orElse(null);
         } catch (IllegalStateException | IllegalArgumentException unbuildable) {
             LOGGER.warn(
                     "Уровень шахты {} не поставлен: низ спуска не считается от дома {}: {}",
                     levelValue,
-                    home,
+                    homePoint,
                     unbuildable.getMessage());
             return false;
         }
@@ -80,10 +87,8 @@ final class MineLevels {
         return true;
     }
 
-    private static BlockCoord homeOf(List<SpiritEntity> spirits) {
-        return spirits.stream()
-                .flatMap(spirit -> spirit.home().stream())
-                .findFirst()
-                .orElse(new BlockCoord(0, 64, 0));
+    static Optional<BlockCoord> home(
+            Optional<BlockCoord> entrance, Optional<BlockCoord> plotAnchor, List<BlockCoord> spiritHomes) {
+        return entrance.or(() -> plotAnchor).or(() -> spiritHomes.stream().findFirst());
     }
 }

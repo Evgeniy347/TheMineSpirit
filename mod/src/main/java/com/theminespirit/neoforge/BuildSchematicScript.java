@@ -12,6 +12,7 @@ import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicWood;
 import com.theminespirit.core.building.SchemeFilter;
 import com.theminespirit.core.engine.ConditionRegistry;
+import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
@@ -176,6 +177,11 @@ final class BuildSchematicScript implements ScriptInstance {
     @Override
     public ScriptStatus tick() {
         return workPhase.tick();
+    }
+
+    @Override
+    public Optional<FailureFact> failureFact() {
+        return pit.escapeFailed() ? Optional.of(FailureFact.NO_PATH) : Optional.empty();
     }
 
     Optional<ScriptStatus> placeOne(Schematic.PlacedEntry entry) {

@@ -20,12 +20,12 @@ import org.junit.jupiter.api.Test;
 class BoardCaseV2Tests {
 
     @Test
-    void cases_TotalCount_IsEightySeven() {
+    void cases_TotalCount_IsEightyEight() {
         assertEquals(
-                87,
+                88,
                 BoardCase.values().length,
-                "Кейсов доски — 87: 82 прежних плюс BUILD_PLACED и четыре занятия вне очереди (стройка, перемещение, "
-                        + "осмотр, общение) — по ним любой скрипт духа становится видимой карточкой. "
+                "Кейсов доски — 88: 82 прежних плюс BUILD_PLACED, четыре занятия вне очереди (стройка, перемещение, "
+                        + "осмотр, общение) и ACTIVITY_UNDO — работа по откату временной правки. "
                         + "Новый кейс без приоритета, гейта и плана роняет сортировку выдачи");
     }
 

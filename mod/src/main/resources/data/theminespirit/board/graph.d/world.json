@@ -269,7 +269,7 @@
       "tasks": [
         {
           "id": "undo_lease",
-          "case": "CLEAR_GROUNDS",
+          "case": "ACTIVITY_UNDO",
           "base": 30,
           "consumes": {}
         }

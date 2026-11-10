@@ -24,8 +24,8 @@ final class ClearAreaScript implements ScriptInstance {
     private static final int MAX_RESTOCKS = 2;
 
     private final ClearAreaSession session;
-    private final @Nullable SpiritEntity spirit;
-    private final @Nullable ClearScaffoldWork scaffold;
+    private final SpiritEntity spirit;
+    private final ClearScaffoldWork scaffold;
     private @Nullable TaskRunner restock;
     private boolean restockChecked;
     private int restockAttempts;
@@ -38,12 +38,6 @@ final class ClearAreaScript implements ScriptInstance {
                 params.demolish(),
                 params.keepGround());
         this.scaffold = new ClearScaffoldWork(spirit, session);
-    }
-
-    ClearAreaScript(ClearAreaSession session) {
-        this.session = session;
-        this.spirit = null;
-        this.scaffold = null;
     }
 
     @Override
@@ -63,9 +57,6 @@ final class ClearAreaScript implements ScriptInstance {
                 return ScriptStatus.RUNNING;
             }
             restock = null;
-        }
-        if (scaffold == null) {
-            return tickSession();
         }
         ClearScaffoldWork.Result work = scaffold.tick();
         if (work == ClearScaffoldWork.Result.RUNNING) {
@@ -111,7 +102,7 @@ final class ClearAreaScript implements ScriptInstance {
     }
 
     private @Nullable TaskRunner shovelRestock() {
-        if (spirit == null || usableShovel(spirit)) {
+        if (usableShovel(spirit)) {
             return null;
         }
         boolean cobble = spirit.getInventory().countItem(Items.COBBLESTONE) > 0;
@@ -149,9 +140,7 @@ final class ClearAreaScript implements ScriptInstance {
             restock.cancel();
             restock = null;
         }
-        if (scaffold != null) {
-            scaffold.cancel();
-        }
+        scaffold.cancel();
         session.cancel();
     }
 
