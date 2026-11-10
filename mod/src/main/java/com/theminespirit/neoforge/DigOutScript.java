@@ -128,8 +128,8 @@ public final class DigOutScript implements ScriptInstance {
                         DigOutGoal.HOME_RADIUS);
         if ((DigOutExit.surfaced(level, feet) && !restore.pendingOver(feet)) || goalReached) {
             backfill.report();
-            forgetReturned(restore.returnSpoil());
-            closeLease();
+            rollback.forgetReturned(restore.returnSpoil());
+            rollback.close();
             PlanBreachRestore.restore(spirit, level, placer, feet);
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
@@ -256,7 +256,7 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     private ScriptStatus fail(String reason) {
-        forgetReturned(restore.returnSpoil());
+        rollback.forgetReturned(restore.returnSpoil());
         lease.orphan();
         failureReason = reason;
         outcome = ScriptStatus.FAILED;
@@ -279,7 +279,7 @@ public final class DigOutScript implements ScriptInstance {
             breaking = false;
         }
         spirit.getNavigation().stop();
-        forgetReturned(restore.returnSpoil());
+        rollback.forgetReturned(restore.returnSpoil());
         lease.orphan();
     }
 
@@ -290,12 +290,4 @@ public final class DigOutScript implements ScriptInstance {
 
     @Override
     public void restoreState(Map<String, Object> state) {}
-
-    private void forgetReturned(List<BlockPos> returned) {
-        rollback.forgetReturned(returned);
-    }
-
-    private void closeLease() {
-        rollback.close();
-    }
 }
