@@ -41,6 +41,7 @@ final class CraftStationCheck {
                 new Placement("mine", "mine", 1, x, z + 9, 3, 3, Placement.Facing.SOUTH),
                 new MinePlot(anchor, anchor, x, z + 9, x + 3, z + 12),
                 new Placement("orchard", "orchard", 1, x + 14, z, 5, 5, Placement.Facing.SOUTH),
+                "oak",
                 List.of(),
                 List.of(),
                 List.of(),

@@ -43,6 +43,10 @@ public final class TownFixtures {
         return StageSites.of(FLAT, 1, LEVEL, TownRules.load());
     }
 
+    public static StageSite flatSite(String wood) {
+        return StageSites.of(FLAT, 1, LEVEL, TownRules.load(), StageSites.ORCHARD_SCHEME, wood);
+    }
+
     public static TownPlan hillyPlan(long seed) {
         Relief relief = new Relief(seed);
         return plan(relief::feet, relief::water);
