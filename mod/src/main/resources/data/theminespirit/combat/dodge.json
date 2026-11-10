@@ -1,0 +1,10 @@
+{
+  "enabled": true,
+  "scanRadius": 20.0,
+  "minReactionTicks": 3,
+  "maxPredictionTicks": 12,
+  "cooldownTicks": 8,
+  "stepSpeed": 0.45,
+  "bodyMargin": 0.3,
+  "mobClearance": 1.5
+}

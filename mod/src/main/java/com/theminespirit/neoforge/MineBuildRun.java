@@ -62,24 +62,13 @@ final class MineBuildRun implements MineBuildCells.Host, MineBuildCycle.Host {
         this.cells = new MineCells(level, walls);
         this.finish = new MineFinish(spirit, placer, approach, rotation, torches, parents, open);
         this.entranceOpening = MineOpening.of(safety);
-        this.ore =
-                new MineBuildCells(spirit, level, placer, breaker, aim, plan, parents, cells, closed, openCells, this);
+        this.ore = new MineBuildCells(
+                new MineBuildCells.Setup(spirit, level, placer, breaker, aim),
+                new MineBuildCells.Grid(plan, parents, cells, closed, openCells, this));
         this.cycle = new MineBuildCycle(
-                spirit,
-                level,
-                safety,
-                breaker,
-                finish,
-                plan,
-                open,
-                closed,
-                openCells,
-                parents,
-                cells,
-                entranceOpening,
-                stepWalker,
-                ore,
-                this);
+                new MineBuildCycle.Setup(spirit, level, safety, breaker, finish),
+                new MineBuildCycle.Grid(plan, open, closed, openCells, parents),
+                new MineBuildCycle.Parts(cells, entranceOpening, stepWalker, ore, this));
         if (plan.isEmpty()) {
             LOGGER.info(
                     "[mine] {}: вход {} уже на глубине цели спуска — 0 ступеней, уровень считается достигнутым",

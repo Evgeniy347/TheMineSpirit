@@ -36,7 +36,7 @@ public final class TownMapScreen extends Screen {
     private static final MapLegend.Text LEGEND_TEXT = (key, args) ->
             Component.translatable(key, Arrays.stream(args).boxed().toArray()).getString();
 
-    private static MapLegend legend = MapLegend.initial();
+    private MapLegend legend = MapLegend.initial();
     private @Nullable TownMapView view;
     private TerrainRaster terrain = TerrainRaster.EMPTY;
     private @Nullable TerrainTexture texture;

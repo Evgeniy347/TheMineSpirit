@@ -66,12 +66,19 @@ public final class ModLog {
     }
 
     public static void stop() {
-        EventLog current;
+        close(detach());
+    }
+
+    private static @Nullable EventLog detach() {
         synchronized (LOCK) {
-            current = log;
+            EventLog current = log;
             log = null;
             build = null;
+            return current;
         }
+    }
+
+    private static void close(@Nullable EventLog current) {
         if (current != null) {
             current.close();
         }

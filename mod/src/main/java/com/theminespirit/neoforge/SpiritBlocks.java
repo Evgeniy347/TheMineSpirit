@@ -27,15 +27,16 @@ public final class SpiritBlocks {
         SpiritLog.block(
                 level,
                 spirit,
-                "spirit",
-                spirit.displayName(),
-                "break",
-                before,
-                level.getBlockState(pos),
-                pos,
-                basis,
-                LogCause.BREAK,
-                "");
+                new SpiritLog.BlockChange(
+                        "spirit",
+                        spirit.displayName(),
+                        "break",
+                        before,
+                        level.getBlockState(pos),
+                        pos,
+                        basis,
+                        LogCause.BREAK,
+                        ""));
         return changed;
     }
 
@@ -57,30 +58,32 @@ public final class SpiritBlocks {
         SpiritLog.block(
                 level,
                 spirit,
-                "spirit",
-                spirit.displayName(),
-                "place",
-                before,
-                level.getBlockState(pos),
-                pos,
-                basis,
-                LogCause.PLACE,
-                "");
+                new SpiritLog.BlockChange(
+                        "spirit",
+                        spirit.displayName(),
+                        "place",
+                        before,
+                        level.getBlockState(pos),
+                        pos,
+                        basis,
+                        LogCause.PLACE,
+                        ""));
     }
 
     public static void explosion(ServerLevel level, BlockPos pos, BlockState before) {
         SpiritLog.block(
                 level,
                 null,
-                "world",
-                "взрыв",
-                "break",
-                before,
-                Blocks.AIR.defaultBlockState(),
-                pos,
-                "взрыв",
-                LogCause.BREAK,
-                "");
+                new SpiritLog.BlockChange(
+                        "world",
+                        "взрыв",
+                        "break",
+                        before,
+                        Blocks.AIR.defaultBlockState(),
+                        pos,
+                        "взрыв",
+                        LogCause.BREAK,
+                        ""));
     }
 
     public static void refuse(
@@ -95,15 +98,16 @@ public final class SpiritBlocks {
         SpiritLog.block(
                 level,
                 spirit,
-                "spirit",
-                spirit.displayName(),
-                action,
-                before,
-                level.getBlockState(pos),
-                pos,
-                basis,
-                "restore".equals(action) ? LogCause.RESTORE : LogCause.PLACE,
-                "");
+                new SpiritLog.BlockChange(
+                        "spirit",
+                        spirit.displayName(),
+                        action,
+                        before,
+                        level.getBlockState(pos),
+                        pos,
+                        basis,
+                        "restore".equals(action) ? LogCause.RESTORE : LogCause.PLACE,
+                        ""));
         return changed;
     }
 }

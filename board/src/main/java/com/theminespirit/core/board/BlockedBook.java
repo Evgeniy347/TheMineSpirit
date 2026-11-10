@@ -41,7 +41,7 @@ final class BlockedBook {
         this.notes = Objects.requireNonNull(notes, "Журнал блокировок не может быть null: переходы пишутся в него");
     }
 
-    void note(
+    record BlockedNote(
             BoardTicket ticket,
             int failuresSoFar,
             Map<String, Integer> missingNow,
@@ -49,16 +49,22 @@ final class BlockedBook {
             long now,
             String node,
             String target,
-            GraphBlock.@Nullable Need need) {
+            GraphBlock.@Nullable Need need) {}
+
+    void note(BlockedNote note) {
+        BoardTicket ticket = note.ticket();
+        int failuresSoFar = note.failuresSoFar();
+        Map<String, Integer> missingNow = note.missingNow();
+        long now = note.now();
         statuses.put(ticket.id(), BoardStatus.BLOCKED);
-        if (need != null) {
-            blocks.put(ticket.id(), new GraphBlock(node, target, need));
+        if (note.need() != null) {
+            blocks.put(ticket.id(), new GraphBlock(note.node(), note.target(), note.need()));
         }
         missing.put(ticket.id(), missingNow);
         Map<String, Integer> have = new LinkedHashMap<>();
         ticket.requiredItems()
                 .keySet()
-                .forEach(item -> have.put(item, stock.available().getOrDefault(item, 0)));
+                .forEach(item -> have.put(item, note.stock().available().getOrDefault(item, 0)));
         available.put(ticket.id(), Map.copyOf(have));
         since.putIfAbsent(ticket.id(), now);
         notes.add(new BoardLogEntry(

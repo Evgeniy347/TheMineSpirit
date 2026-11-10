@@ -193,6 +193,7 @@ class SettlementScanTests {
     }
 
     static final class Fake implements SettlementScan.World {
+        long reads;
         private final Map<BlockCoord, String> blocks = new HashMap<>();
         private final Set<BlockCoord> planned = new HashSet<>();
         private final Set<BlockCoord> player = new HashSet<>();
@@ -201,7 +202,6 @@ class SettlementScanTests {
         private final Set<String> plants = new HashSet<>();
         private final Set<ColumnMask.Cell> lots = new HashSet<>();
         private final Map<ColumnMask.Cell, Integer> dug = new HashMap<>();
-        long reads;
 
         void put(int x, int y, int z, String id) {
             blocks.put(new BlockCoord(x, y, z), id);

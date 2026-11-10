@@ -38,6 +38,7 @@ class NavFuzzTests {
     private static final int WORLDS = 2_000;
     private static final int MAX_VISITS = 20_000;
     private static final RouteRules RULES = new RouteRules(1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 3, 12, 4, 1200, 1.0, 1);
+    private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
     @Test
     void navFuzz_GeneratedWorlds_EveryPlanExecutableByBody() {
@@ -192,8 +193,6 @@ class NavFuzzTests {
         }
         return false;
     }
-
-    private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
     private static void checkSurfaceEscape(long seed, FuzzWorld world, List<String> failures) {
         Optional<List<BlockCoord>> found = SurfaceEscape.path(world.start(), world, world::sky);

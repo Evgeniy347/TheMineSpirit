@@ -41,28 +41,28 @@ final class HarvestWork {
 
     private WorkTarget reserved;
 
-    HarvestWork(
-            SpiritEntity spirit,
-            HarvestSpec spec,
-            LevelSafetyView safety,
-            BlockBreaker breaker,
-            HarvestRearm rearm,
+    record Setup(
+            SpiritEntity spirit, HarvestSpec spec, LevelSafetyView safety, BlockBreaker breaker, HarvestRearm rearm) {}
+
+    record Helpers(
             HarvestSearch search,
             HarvestLoot loot,
             HarvestCounters counters,
             Consumer<String> fail,
-            Function<BlockCoord, BlockBreaker.Begin> beginBreak) {
-        this.spirit = spirit;
-        this.level = spirit.level();
-        this.spec = spec;
-        this.safety = safety;
-        this.breaker = breaker;
-        this.rearm = rearm;
-        this.search = search;
-        this.loot = loot;
-        this.counters = counters;
-        this.fail = fail;
-        this.beginBreak = beginBreak;
+            Function<BlockCoord, BlockBreaker.Begin> beginBreak) {}
+
+    HarvestWork(Setup setup, Helpers helpers) {
+        this.spirit = setup.spirit();
+        this.level = this.spirit.level();
+        this.spec = setup.spec();
+        this.safety = setup.safety();
+        this.breaker = setup.breaker();
+        this.rearm = setup.rearm();
+        this.search = helpers.search();
+        this.loot = helpers.loot();
+        this.counters = helpers.counters();
+        this.fail = helpers.fail();
+        this.beginBreak = helpers.beginBreak();
     }
 
     HarvestSession.State acceptTarget(BlockCoord target) {

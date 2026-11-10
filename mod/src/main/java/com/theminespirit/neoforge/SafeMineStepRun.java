@@ -42,19 +42,14 @@ final class SafeMineStepRun {
     private String stopReason;
     private State state = State.PLAN_CHECK;
 
+    record World(SpiritEntity spirit, Level level, LevelSafetyView safety, BlockBreaker breaker) {}
+
     SafeMineStepRun(
-            SpiritEntity spirit,
-            Level level,
-            LevelSafetyView safety,
-            BlockBreaker breaker,
-            BlockPlacer placer,
-            Approach approach,
-            BuildReservations reservations,
-            SafeMinePlan plan) {
-        this.spirit = spirit;
-        this.level = level;
-        this.safety = safety;
-        this.breaker = breaker;
+            World world, BlockPlacer placer, Approach approach, BuildReservations reservations, SafeMinePlan plan) {
+        this.spirit = world.spirit();
+        this.level = world.level();
+        this.safety = world.safety();
+        this.breaker = world.breaker();
         this.placer = placer;
         this.reservations = reservations;
         this.plan = plan;
