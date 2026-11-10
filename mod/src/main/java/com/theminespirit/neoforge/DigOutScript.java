@@ -9,6 +9,7 @@ import com.theminespirit.core.movement.SealedSpace;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.core.town.PlotProtection;
+import com.theminespirit.neoforge.lease.LeaseRun;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,6 +45,8 @@ public final class DigOutScript implements ScriptInstance {
     private @Nullable DigOutRoute routeFollow;
     private boolean routeFallback;
     private final DigOutRestore restore;
+    private final LeaseRun lease;
+    private final DigOutRollback rollback;
 
     public DigOutScript(SpiritEntity spirit, GotoParams target) {
         this(spirit, target, false);
@@ -57,7 +60,9 @@ public final class DigOutScript implements ScriptInstance {
         this.descending = target.y() < spirit.blockPosition().getY();
         this.breaker = BlockBreaker.escaping(spirit, rescue);
         this.placer = new BlockPlacer(spirit, PlotProtection.Ground.TEMPORARY_MOVEMENT);
-        this.stepFloor = new DigOutFloor(spirit, level, placer);
+        this.lease = LeaseRun.open(spirit, "dig_out");
+        this.rollback = new DigOutRollback(lease);
+        this.stepFloor = new DigOutFloor(spirit, level, placer, lease);
         this.restore = new DigOutRestore(spirit, level);
         boolean sealedNow = sealed(level, spirit.blockPosition());
         this.backfill = new DigOutBackfill(
@@ -99,6 +104,7 @@ public final class DigOutScript implements ScriptInstance {
             BlockBreaker.Begin begin = breaker.begin(stuck);
             if (begin instanceof BlockBreaker.Started) {
                 restore.remember(stuck, inside);
+                lease.broken(stuck, inside);
                 breaking = true;
                 return ScriptStatus.RUNNING;
             }
@@ -122,7 +128,8 @@ public final class DigOutScript implements ScriptInstance {
                         DigOutGoal.HOME_RADIUS);
         if ((DigOutExit.surfaced(level, feet) && !restore.pendingOver(feet)) || goalReached) {
             backfill.report();
-            restore.returnSpoil();
+            rollback.forgetReturned(restore.returnSpoil());
+            rollback.close();
             PlanBreachRestore.restore(spirit, level, placer, feet);
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
@@ -219,6 +226,7 @@ public final class DigOutScript implements ScriptInstance {
         return switch (breaker.begin(cell)) {
             case BlockBreaker.Started ignored -> {
                 restore.remember(cell, before);
+                lease.broken(cell, before);
                 breaking = true;
                 yield ScriptStatus.RUNNING;
             }
@@ -248,7 +256,8 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     private ScriptStatus fail(String reason) {
-        restore.returnSpoil();
+        rollback.forgetReturned(restore.returnSpoil());
+        lease.orphan();
         failureReason = reason;
         outcome = ScriptStatus.FAILED;
         return outcome;
@@ -270,7 +279,8 @@ public final class DigOutScript implements ScriptInstance {
             breaking = false;
         }
         spirit.getNavigation().stop();
-        restore.returnSpoil();
+        rollback.forgetReturned(restore.returnSpoil());
+        lease.orphan();
     }
 
     @Override

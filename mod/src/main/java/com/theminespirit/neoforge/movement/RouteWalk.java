@@ -56,7 +56,7 @@ public final class RouteWalk {
             return State.FAILED;
         }
         if (next >= steps.size()) {
-            return State.DONE;
+            return done();
         }
         RouteStep step = steps.get(next);
         if (passages.openToward(step.cell())) {
@@ -87,7 +87,12 @@ public final class RouteWalk {
         if (refusal.isPresent()) {
             return fail(step.action() + " в " + step.cell() + ": " + refusal.get());
         }
-        return next >= steps.size() ? State.DONE : State.RUNNING;
+        return next >= steps.size() ? done() : State.RUNNING;
+    }
+
+    private State done() {
+        mutations.complete();
+        return State.DONE;
     }
 
     public int ticksBudget() {

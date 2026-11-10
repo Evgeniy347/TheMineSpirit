@@ -82,6 +82,172 @@ class LeaseScenarioTests {
     }
 
     @Test
+    void pillarAndScaffold_CancelDeathRestart_LeaveCellsInOrphanedLease() {
+        LeaseBook book = new LeaseBook();
+        LeaseSession column = LeaseSession.open(book, BUILDER, null, "scaffold", 100);
+        BlockCoord low = new BlockCoord(0, 70, 0);
+        BlockCoord high = new BlockCoord(0, 71, 0);
+        column.placed(low, "minecraft:dirt");
+        column.placed(high, "minecraft:dirt");
+
+        column.orphan();
+
+        assertOrphaned(book, column.id(), List.of(low, high), "cancel посреди столба");
+        assertEquals(
+                List.of(high, low),
+                book.orphanedCells().stream().map(LeaseCell::pos).toList(),
+                "Скан видит обе клетки брошенного столба и разбирает его сверху вниз");
+
+        LeaseSession death = LeaseSession.open(book, BUILDER, null, "scaffold", 110);
+        death.placed(new BlockCoord(2, 70, 0), "minecraft:dirt");
+        book.orphanSpirit(BUILDER);
+        assertOrphaned(book, death.id(), List.of(new BlockCoord(2, 70, 0)), "смерть духа");
+
+        LeaseSession restart = LeaseSession.open(book, WALKER, null, "scaffold", 120);
+        restart.placed(new BlockCoord(4, 70, 0), "minecraft:dirt");
+        book.orphanAllActive();
+        assertOrphaned(book, restart.id(), List.of(new BlockCoord(4, 70, 0)), "рестарт сервера");
+    }
+
+    @Test
+    void pillarDown_Success_RollsBackOwnCellsAndCommits() {
+        LeaseBook book = new LeaseBook();
+        LeaseSession column = LeaseSession.open(book, BUILDER, null, "scaffold", 100);
+        BlockCoord first = new BlockCoord(0, 70, 0);
+        BlockCoord second = new BlockCoord(0, 71, 0);
+        column.placed(first, "minecraft:dirt");
+        column.placed(second, "minecraft:dirt");
+
+        column.forget(second);
+        column.forget(first);
+        column.commit();
+
+        assertEquals(LeaseStatus.DONE, column.status(), "Успешный разбор закрывает аренду столба");
+        assertTrue(book.orphanedCells().isEmpty(), "После успешного разбора уборке нечего делать");
+        assertFalse(book.isActive(first), "Разобранная клетка больше не держится арендой");
+    }
+
+    @Test
+    void bridge_CancelAndSuccess_DifferByStatusAndCleanup() {
+        LeaseBook book = new LeaseBook();
+        LeaseSession deck = LeaseSession.open(book, WALKER, null, "bridge", 100);
+        BlockCoord first = new BlockCoord(10, 64, 0);
+        BlockCoord second = new BlockCoord(11, 64, 0);
+        deck.placed(first, "minecraft:oak_planks");
+        deck.placed(second, "minecraft:oak_planks");
+
+        deck.orphan();
+
+        assertOrphaned(book, deck.id(), List.of(first, second), "cancel посреди моста");
+
+        LeaseSession done = LeaseSession.open(book, DIGGER, null, "bridge", 120);
+        BlockCoord crossed = new BlockCoord(20, 64, 0);
+        done.placed(crossed, "minecraft:oak_planks");
+        done.commit();
+        assertEquals(LeaseStatus.DONE, done.status(), "Перейдённый мост закрывает аренду");
+        assertFalse(book.isOrphaned(crossed), "Перейдённый настил не попадает в уборку брошенных правок");
+    }
+
+    @Test
+    void route_PassCommits_BreakAndCancelOrphans() {
+        LeaseBook book = new LeaseBook();
+        LeaseSession passed = LeaseSession.open(book, WALKER, null, "route", 100);
+        BlockCoord placed = new BlockCoord(30, 71, 0);
+        BlockCoord broken = new BlockCoord(31, 70, 0);
+        passed.placed(placed, "minecraft:dirt");
+        passed.broken(broken, "minecraft:stone");
+        passed.commit();
+
+        assertEquals(LeaseStatus.DONE, passed.status(), "Пройденный маршрут закрывает аренду");
+        assertTrue(book.orphanedCells().isEmpty(), "Клетки пройденного маршрута не ждут уборки");
+
+        LeaseSession abandoned = LeaseSession.open(book, BUILDER, null, "route", 120);
+        BlockCoord hole = new BlockCoord(40, 70, 0);
+        abandoned.broken(hole, "minecraft:stone");
+        abandoned.orphan();
+
+        assertOrphaned(book, abandoned.id(), List.of(hole), "cancel посреди маршрута");
+        assertEquals(
+                "minecraft:stone",
+                book.require(abandoned.id()).cells().get(0).before(),
+                "Пролом маршрута помнит прежний блок: брошенная аренда вернёт его по before");
+    }
+
+    @Test
+    void digOut_SuccessClosesLease_InterruptOrphansEverything() {
+        LeaseBook book = new LeaseBook();
+        LeaseSession escape = LeaseSession.open(book, DIGGER, null, "dig_out", 100);
+        BlockCoord broken = new BlockCoord(50, 50, 0);
+        BlockCoord floor = new BlockCoord(51, 51, 0);
+        escape.broken(broken, "minecraft:stone");
+        escape.placed(floor, "minecraft:dirt");
+
+        escape.forget(broken);
+        escape.commit();
+
+        assertEquals(LeaseStatus.DONE, escape.status(), "Успешный выход возвращает spoil и закрывает аренду");
+        assertFalse(book.isOrphaned(floor), "Пол ступени остаётся частью выхода и не ждёт уборки");
+        assertTrue(book.orphanedCells().isEmpty(), "После возврата spoil уборке нечего делать");
+
+        LeaseSession interrupted = LeaseSession.open(book, BUILDER, null, "dig_out", 120);
+        BlockCoord hole = new BlockCoord(60, 50, 0);
+        BlockCoord step = new BlockCoord(61, 51, 0);
+        interrupted.broken(hole, "minecraft:dirt");
+        interrupted.placed(step, "minecraft:cobblestone");
+        interrupted.orphan();
+
+        assertOrphaned(book, interrupted.id(), List.of(hole, step), "cancel посреди dig_out");
+        assertEquals(
+                List.of(step, hole),
+                book.orphanedCells().stream().map(LeaseCell::pos).toList(),
+                "Брошенный dig_out откатывается сверху вниз: сначала свой пол, потом возврат spoil");
+    }
+
+    @Test
+    void twoSpirits_Hunger_LeavesBothLeasesOrphaned() {
+        LeaseBook book = new LeaseBook();
+        LeaseSession pillar = LeaseSession.open(book, BUILDER, "pillar-ticket", "scaffold", 100);
+        LeaseSession bridge = LeaseSession.open(book, WALKER, "bridge-ticket", "bridge", 100);
+        BlockCoord columnLow = new BlockCoord(0, 70, 0);
+        BlockCoord columnHigh = new BlockCoord(0, 73, 0);
+        BlockCoord deckA = new BlockCoord(10, 64, 0);
+        BlockCoord deckB = new BlockCoord(11, 64, 0);
+        pillar.placed(columnLow, "minecraft:dirt");
+        pillar.placed(columnHigh, "minecraft:dirt");
+        bridge.placed(deckA, "minecraft:oak_planks");
+        bridge.placed(deckB, "minecraft:oak_planks");
+
+        Map<UUID, LeaseSupervisor.SpiritState> hungry = new HashMap<>();
+        hungry.put(BUILDER, new LeaseSupervisor.SpiritState(true, Set.of("pillar-ticket")));
+        hungry.put(WALKER, new LeaseSupervisor.SpiritState(true, Set.of("bridge-ticket")));
+        Map<String, Long> suspendedSince = new HashMap<>();
+        assertTrue(
+                LeaseSupervisor.due(book, hungry, suspendedSince, 200, 100).isEmpty(),
+                "Сразу после прерывания аренда ещё действует: пауза начинается с этого тика");
+        List<Lease> due = LeaseSupervisor.due(book, hungry, suspendedSince, 400, 100);
+        assertEquals(2, due.size(), "Оба духа прерваны голодом: обе аренды ждут уборки, а не только одна");
+        for (Lease lease : due) {
+            book.orphan(lease.id());
+        }
+
+        List<BlockCoord> cleanup =
+                book.orphanedCells().stream().map(LeaseCell::pos).toList();
+        assertEquals(
+                List.of(deckB, deckA, columnHigh, columnLow),
+                cleanup,
+                "Скан видит обе брошенные правки: настил второго духа и столб первого, сверху вниз");
+        assertTrue(book.active().isEmpty(), "Действующих аренд после голода нет: активные клетки скан не трогает");
+    }
+
+    private static void assertOrphaned(LeaseBook book, String id, List<BlockCoord> cells, String reason) {
+        assertEquals(LeaseStatus.ORPHANED, book.require(id).status(), reason + ": аренда обязана быть брошена");
+        for (BlockCoord cell : cells) {
+            assertTrue(book.isOrphaned(cell), reason + ": клетка " + cell + " обязана быть видна скану как брошенная");
+            assertFalse(book.isActive(cell), reason + ": брошенная клетка не считается действующей");
+        }
+    }
+
+    @Test
     void activeLease_AfterCommit_StopsCleanup() {
         LeaseBook book = new LeaseBook();
         BlockCoord cell = new BlockCoord(0, 70, 0);

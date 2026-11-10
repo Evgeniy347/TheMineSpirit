@@ -124,12 +124,6 @@ public final class PlacedBlocksData extends SavedData {
         return spiritSet.inChunk(chunkX, chunkZ);
     }
 
-    public void markTemporary(BlockPos pos) {
-        if (temporarySet.add(toCoord(pos))) {
-            setDirty();
-        }
-    }
-
     public void unmarkTemporary(BlockPos pos) {
         if (temporarySet.remove(toCoord(pos))) {
             setDirty();

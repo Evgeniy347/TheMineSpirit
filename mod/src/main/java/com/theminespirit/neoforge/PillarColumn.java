@@ -4,17 +4,17 @@ import com.theminespirit.core.movement.CellCentering;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.town.PlotProtection;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
+import com.theminespirit.neoforge.lease.LeaseRun;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
+import org.jspecify.annotations.Nullable;
 
 final class PillarColumn {
     enum Outcome {
@@ -41,6 +41,7 @@ final class PillarColumn {
     private int stallTicks;
     private Outcome outcome = Outcome.RUNNING;
     private String failureReason;
+    private @Nullable LeaseRun lease;
 
     private boolean waterOk;
 
@@ -133,6 +134,18 @@ final class PillarColumn {
         return List.copyOf(cells);
     }
 
+    @Nullable
+    LeaseRun lease() {
+        return lease;
+    }
+
+    LeaseRun requireLease() {
+        if (lease == null) {
+            lease = LeaseRun.open(spirit, "scaffold");
+        }
+        return lease;
+    }
+
     int built() {
         return built;
     }
@@ -190,9 +203,7 @@ final class PillarColumn {
         BlockPlacer.Begin begin = placer.begin(target, state, blockId);
         if (begin instanceof BlockPlacer.Started) {
             cells.add(new BlockCoord(target.getX(), target.getY(), target.getZ()));
-            if (level instanceof ServerLevel server) {
-                PlacedBlocksData.get(server).markTemporary(target);
-            }
+            requireLease().placed(target, blockId);
             built++;
             stallTicks = 0;
             return Outcome.RUNNING;

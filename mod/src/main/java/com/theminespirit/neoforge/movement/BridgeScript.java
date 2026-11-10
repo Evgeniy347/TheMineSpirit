@@ -12,12 +12,11 @@ import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.BlockPlacer;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
+import com.theminespirit.neoforge.lease.LeaseRun;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -37,6 +36,7 @@ public final class BridgeScript implements ScriptInstance {
 
     private BlockCoord step;
     private List<BlockCoord> cells;
+    private LeaseRun lease;
     private int placed;
     private int used;
     private boolean walking;
@@ -82,6 +82,9 @@ public final class BridgeScript implements ScriptInstance {
     @Override
     public void cancel() {
         approach.cancel();
+        if (lease != null) {
+            lease.orphan();
+        }
     }
 
     @Override
@@ -203,9 +206,10 @@ public final class BridgeScript implements ScriptInstance {
         if (begin instanceof BlockPlacer.Started) {
             placed++;
             used++;
-            if (level instanceof ServerLevel server) {
-                PlacedBlocksData.get(server).markTemporary(new BlockPos(cell.x(), cell.y(), cell.z()));
+            if (lease == null) {
+                lease = LeaseRun.open(spirit, "bridge");
             }
+            lease.placed(new BlockPos(cell.x(), cell.y(), cell.z()), id);
             return ScriptStatus.RUNNING;
         }
         if (begin instanceof BlockPlacer.Protected protectedBlock) {
@@ -239,6 +243,9 @@ public final class BridgeScript implements ScriptInstance {
     private ScriptStatus tickWalk() {
         return switch (approach.tick()) {
             case ARRIVED -> {
+                if (lease != null) {
+                    lease.commit();
+                }
                 outcome = ScriptStatus.SUCCEEDED;
                 yield outcome;
             }
@@ -254,6 +261,9 @@ public final class BridgeScript implements ScriptInstance {
 
     private ScriptStatus fail(String reason) {
         approach.cancel();
+        if (lease != null) {
+            lease.orphan();
+        }
         failureReason = reason;
         outcome = ScriptStatus.FAILED;
         return outcome;

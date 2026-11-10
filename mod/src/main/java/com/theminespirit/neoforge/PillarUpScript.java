@@ -59,7 +59,7 @@ public final class PillarUpScript implements ScriptInstance {
                     outcome = ScriptStatus.SUCCEEDED;
                     yield outcome;
                 }
-                dismantler = new PillarDismantler(spirit, topDown(column.cells()));
+                dismantler = new PillarDismantler(spirit, topDown(column.cells()), column.lease());
                 yield ScriptStatus.RUNNING;
             }
             case FAILED -> fail(column.failureReason());
@@ -90,7 +90,17 @@ public final class PillarUpScript implements ScriptInstance {
     private ScriptStatus fail(String reason) {
         failureReason = reason;
         outcome = ScriptStatus.FAILED;
+        if (column != null && column.lease() != null) {
+            column.lease().orphan();
+        }
         return outcome;
+    }
+
+    @Override
+    public void cancel() {
+        if (column != null && column.lease() != null) {
+            column.lease().orphan();
+        }
     }
 
     @Override
