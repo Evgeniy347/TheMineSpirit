@@ -160,7 +160,11 @@ final class DeadCodeExemptions {
             new Exemption(
                     "core/board/TicketTarget.java|method|TicketTarget#withRescue",
                     "Заготовка под узел графа спасения: RESCUE_SPIRIT ставит граф, а не RescueWatch; "
-                            + "TestResults/task.md B8"));
+                            + "TestResults/task.md B8"),
+            new Exemption(
+                    "core/board/lease/LeaseBook.java|method|LeaseBook#commit",
+                    "Заготовка под открытую задачу: TestResults/task.md lease1 — перевод механик на аренду "
+                            + "(этап 2) закрывает успешную аренду через commit"));
 
     static final List<Probe> SCALE_PROBES = List.of(
             new Probe(

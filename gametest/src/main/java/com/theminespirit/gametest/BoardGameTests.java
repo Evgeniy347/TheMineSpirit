@@ -8,6 +8,8 @@ import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphFailureMemory;
 import com.theminespirit.core.board.graph.GraphFeedback;
+import com.theminespirit.core.board.lease.Lease;
+import com.theminespirit.core.board.lease.LeaseCell;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
@@ -17,9 +19,11 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
 import com.theminespirit.neoforge.board.BoardStateStore;
+import com.theminespirit.neoforge.lease.LeaseData;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -83,6 +87,7 @@ public final class BoardGameTests {
                                         home.x(), home.y(), home.z(), home.x(), home.y(), home.z())),
                                 PlotLeveling.DEFAULT_BLOCK)));
         assertFailuresSurviveReload(helper);
+        assertLeasesSurviveReload(helper);
 
         helper.succeedWhen(() -> {
             helper.assertTrue(
@@ -220,6 +225,34 @@ public final class BoardGameTests {
                 "Цель задания " + id + " обязана пережить сохранение доски: иначе после перезапуска яма "
                         + "ставится второй раз или продолжение теряет клетки; в NBT "
                         + loaded.targets().get(id));
+    }
+
+    private static void assertLeasesSurviveReload(GameTestHelper helper) {
+        LeaseData data = new LeaseData();
+        UUID spirit = UUID.fromString("11111111-2222-3333-4444-555555555555");
+        Lease active = data.book().open(spirit, "ticket-restart", "scaffold", 10);
+        data.book()
+                .record(
+                        active.id(),
+                        List.of(
+                                LeaseCell.placed(new BlockCoord(0, 64, 0), "minecraft:dirt"),
+                                LeaseCell.broken(new BlockCoord(1, 64, 0), "minecraft:stone")));
+        Lease orphan = data.book().open(spirit, null, "bridge", 20);
+        data.book().record(orphan.id(), LeaseCell.state(new BlockCoord(2, 64, 0), "open", "closed"));
+        data.book().orphan(orphan.id());
+        data.migrateLegacy(List.of(new BlockCoord(3, 64, 0)), 30);
+
+        CompoundTag saved = data.save(new CompoundTag(), helper.getLevel().registryAccess());
+        LeaseData loaded = LeaseData.load(saved, helper.getLevel().registryAccess());
+
+        helper.assertTrue(
+                loaded.book().all().equals(data.book().all()),
+                "Аренды временных правок обязаны пережить перезапуск: иначе брошенные подмости и мосты исчезнут "
+                        + "из скана, а действующие потеряют владельца; в NBT "
+                        + loaded.book().all());
+        helper.assertTrue(
+                loaded.migrated(),
+                "Признак миграции старых T-меток обязан пережить перезапуск: иначе они мигрируют снова");
     }
 
     private static void assertFailuresSurviveReload(GameTestHelper helper) {

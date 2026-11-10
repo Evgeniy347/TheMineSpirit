@@ -23,6 +23,7 @@ import com.theminespirit.neoforge.demo.DemoLifecycle;
 import com.theminespirit.neoforge.doors.DoorWatchService;
 import com.theminespirit.neoforge.experience.SpiritExperienceEvents;
 import com.theminespirit.neoforge.inventory.ContainerOpenService;
+import com.theminespirit.neoforge.lease.LeaseLifecycle;
 import com.theminespirit.neoforge.log.LogLifecycle;
 import com.theminespirit.neoforge.movement.PathNetworkService;
 import com.theminespirit.neoforge.net.BoardViewChannel;
@@ -83,6 +84,7 @@ public final class TheMineSpirit {
         More3Events.register(NeoForge.EVENT_BUS);
         More5Events.register(NeoForge.EVENT_BUS);
         SpiritRespawnService.register(NeoForge.EVENT_BUS);
+        LeaseLifecycle.register(NeoForge.EVENT_BUS);
         LOGGER.info("The Mine Spirit {} загружен", modContainer.getModInfo().getVersion());
         NeoForge.EVENT_BUS.addListener((ServerStartedEvent event) ->
                 LOGGER.info("The Mine Spirit {}: сервер запущен", BuildFingerprint.version()));
