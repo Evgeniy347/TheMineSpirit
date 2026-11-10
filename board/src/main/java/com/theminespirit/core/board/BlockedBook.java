@@ -49,7 +49,7 @@ final class BlockedBook {
             long now,
             String node,
             String target,
-            GraphBlock.@Nullable Need need) {}
+            GraphBlock.Need need) {}
 
     void note(BlockedNote note) {
         BoardTicket ticket = note.ticket();
@@ -57,9 +57,7 @@ final class BlockedBook {
         Map<String, Integer> missingNow = note.missingNow();
         long now = note.now();
         statuses.put(ticket.id(), BoardStatus.BLOCKED);
-        if (note.need() != null) {
-            blocks.put(ticket.id(), new GraphBlock(note.node(), note.target(), note.need()));
-        }
+        blocks.put(ticket.id(), new GraphBlock(note.node(), note.target(), note.need()));
         missing.put(ticket.id(), missingNow);
         Map<String, Integer> have = new LinkedHashMap<>();
         ticket.requiredItems()
@@ -249,12 +247,13 @@ final class BlockedBook {
         since.clear();
         blocks.clear();
         for (BoardState.Blocked state : states) {
+            if (state.block() == null) {
+                continue;
+            }
             missing.put(state.ticketId(), state.missing());
             available.put(state.ticketId(), state.available());
             since.put(state.ticketId(), state.since());
-            if (state.block() != null) {
-                blocks.put(state.ticketId(), state.block());
-            }
+            blocks.put(state.ticketId(), state.block());
         }
     }
 

@@ -39,7 +39,16 @@ class CrossMovementPlanTests {
         assertMovesFirst("крафт", ActivityPlans.craft(at, "torch", 4).task(), "craft");
         assertMovesFirst(
                 "броня", ActivityPlans.equip(chest, at, "iron_chestplate").task(), "equip");
-        assertMovesFirst("склад", ActivityPlans.unload(at).task(), "unload");
+        List<String> unloadScripts = new ArrayList<>();
+        collect(ActivityPlans.unload(at).task(), unloadScripts);
+        assertEquals(
+                List.of("unload"),
+                unloadScripts,
+                "Выгрузка не идёт отдельным goto в занятую клетку сундука: " + unloadScripts);
+        assertEquals(
+                "3,64,3",
+                ((ScriptCall) ActivityPlans.unload(at).task()).params().get("container"),
+                "Сундук назван координатами — подход ищет стоянку у самой цели");
         assertMovesFirst(
                 "перенос", ActivityPlans.moveItem(chest, at, at, "bread", 1).task(), "deposit");
         assertMovesFirst("еда", ActivityPlans.withdraw(chest, at, "bread", 2).task(), "withdraw");

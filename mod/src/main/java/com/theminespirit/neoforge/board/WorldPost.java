@@ -3,7 +3,6 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardStatus;
-import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.FillIndex;
@@ -101,7 +100,7 @@ final class WorldPost {
             case "backfill" -> holes(post, ticket, found, priority);
             case "level_lot" -> lot(post, ticket, found, priority);
             case "restore_trace" -> {
-                boolean plan = breaches(post);
+                boolean plan = breaches(post, ticket.id());
                 boolean trace = traces(post, ticket, found, priority);
                 yield plan || trace;
             }
@@ -217,7 +216,7 @@ final class WorldPost {
         return true;
     }
 
-    private static boolean breaches(GraphPost post) {
+    private static boolean breaches(GraphPost post, String cause) {
         PlanBreachData data = PlanBreachData.get(post.level);
         boolean posted = false;
         for (Map.Entry<BlockPos, PlanBreachData.Breach> entry : data.open().entrySet()) {
@@ -232,21 +231,20 @@ final class WorldPost {
                 posted = true;
                 continue;
             }
+            String block = EarthCover.restoreBlock(entry.getValue().blockId());
             post.submit(
                     post.ticket(
                             id,
                             BoardCase.REPAIR_BUILDING,
                             Optional.empty(),
                             BoardTuning.MAX_PRIORITY,
-                            BoardTicket.ALWAYS_CAUSE,
-                            Map.of()),
+                            cause,
+                            Map.of(block, 1)),
                     TicketTarget.at(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()))
                             .withPlan(new ScriptCall(
                                     "place_block",
                                     Map.of(
-                                            "block",
-                                                    EarthCover.restoreBlock(
-                                                            entry.getValue().blockId()),
+                                            "block", block,
                                             "x", pos.getX(),
                                             "y", pos.getY(),
                                             "z", pos.getZ()))));

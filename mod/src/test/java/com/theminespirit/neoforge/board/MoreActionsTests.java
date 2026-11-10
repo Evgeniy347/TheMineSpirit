@@ -78,16 +78,16 @@ class MoreActionsTests {
     }
 
     @Test
-    void patrolParams_WalkAroundPoint_WithoutBreakingWorld() {
-        Map<String, Object> params = More4Scripts.patrolParams(new BlockCoord(10, 64, -5));
+    void patrolParams_StopsGiven_KeepsRouteAndLoop() {
+        List<BlockCoord> stops = List.of(new BlockCoord(10, 64, -5), new BlockCoord(14, 64, -5));
+        Map<String, Object> params = More4Scripts.patrolParams(stops);
 
         @SuppressWarnings("unchecked")
         List<String> points = (List<String>) params.get("points");
-        assertEquals(5, points.size(), "Патруль обходит центр и четыре стороны");
+        assertEquals(2, points.size(), "В маршрут идут только проверенные стоянки, а не слепые ±4");
         assertEquals("loop", params.get("mode"), "Патруль ходит кругом");
         assertEquals(1, params.get("loops"), "Один круг за задание");
-        assertTrue(points.contains("10,64,-5"), "Центр входит в маршрут");
-        assertTrue(points.contains("14,64,-5"), "Соседняя точка маршрута на месте");
+        assertEquals(List.of("10,64,-5", "14,64,-5"), points, "Точки маршрута сохраняют порядок");
     }
 
     @Test
