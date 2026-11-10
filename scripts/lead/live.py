@@ -70,17 +70,21 @@ class Target:
 
     def running_mod_version(self):
         _, logs = self.mod_dirs()
-        script = os.path.join(REPO, "scripts", "mod-version.sh")
-        if self.copy:
-            out = subprocess.run(["bash", script, logs], capture_output=True, check=True).stdout
-        else:
-            with open(script, "rb") as source:
-                out = subprocess.run(
-                    ["ssh", "-o", "ConnectTimeout=8", SSH, "bash -s -- " + logs],
-                    stdin=source,
-                    capture_output=True,
-                    check=True,
-                ).stdout
+        script = os.path.join(REPO, "scripts", "mod_version.py")
+        try:
+            if self.copy:
+                out = subprocess.run([sys.executable, script, logs], capture_output=True, check=True).stdout
+            else:
+                with open(script, "rb") as source:
+                    out = subprocess.run(
+                        ["ssh", "-o", "ConnectTimeout=8", SSH, "python3 - " + logs],
+                        stdin=source,
+                        capture_output=True,
+                        check=True,
+                    ).stdout
+        except subprocess.CalledProcessError as error:
+            detail = (error.stderr or b"").decode("utf-8", "replace").strip()
+            raise OSError(detail or "версию мода не прочитать") from error
         return out.decode("utf-8", "replace").strip()
 
     def installed_mod_version(self):
