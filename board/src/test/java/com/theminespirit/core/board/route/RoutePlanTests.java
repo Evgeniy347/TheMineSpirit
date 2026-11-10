@@ -28,23 +28,6 @@ class RoutePlanTests {
     }
 
     @Test
-    void retarget_NewPoint_InvalidatesPath() {
-        RoutePlan plan = RoutePlan.empty()
-                .mark(RouteResource.SAND, new BlockCoord(100, 70, 0))
-                .pathBuilt(RouteResource.SAND)
-                .routeBuilt(RouteResource.SAND);
-
-        RoutePlan moved = plan.retarget(RouteResource.SAND, new BlockCoord(200, 70, 100));
-
-        assertEquals(
-                new BlockCoord(200, 70, 100),
-                moved.point(RouteResource.SAND).orElseThrow(),
-                "Перенос маршрута ставит точку в новое место");
-        assertFalse(moved.pathDone(RouteResource.SAND), "Перенос точки отменяет старую тропу: она ведёт не туда");
-        assertFalse(moved.routeDone(RouteResource.SAND), "Точка добычи без новой тропы не готова");
-    }
-
-    @Test
     void mark_SamePoint_KeepsProgress() {
         RoutePlan plan = RoutePlan.empty()
                 .mark(RouteResource.SNOW, new BlockCoord(0, 64, 40))

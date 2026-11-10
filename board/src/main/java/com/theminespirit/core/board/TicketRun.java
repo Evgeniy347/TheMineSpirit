@@ -15,6 +15,12 @@ public enum TicketRun {
         return currentGeneration == SpiritReading.UNKNOWN_GENERATION;
     }
 
+    public static boolean ownsTask(long issuedGeneration, long currentGeneration) {
+        return issuedGeneration == SpiritReading.UNKNOWN_GENERATION
+                || currentGeneration == SpiritReading.UNKNOWN_GENERATION
+                || issuedGeneration == currentGeneration;
+    }
+
     public static TicketRun decide(
             long issuedGeneration, long currentGeneration, @Nullable RunStatus status, boolean externalControl) {
         return decide(issuedGeneration, currentGeneration, status, externalControl, true);

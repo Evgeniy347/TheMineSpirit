@@ -32,7 +32,7 @@ final class ToolCraftPlan {
         steps.addAll(materials(item, count, target.wood()));
         steps.add(new ScriptCall(
                 CRAFT, Map.of(ITEM, item, COUNT, count, "radius", CatalogLimits.STATION_RADIUS_DEFAULT)));
-        return TicketPlans.withLeftovers(new SequenceNode(steps), target);
+        return Leftovers.with(new SequenceNode(steps), target);
     }
 
     private static List<TaskNode> materials(String item, int tools, @Nullable String wood) {

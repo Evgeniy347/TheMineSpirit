@@ -1,9 +1,11 @@
 package com.theminespirit.core.reload;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 import com.theminespirit.core.hunger.HungerRules;
+import com.theminespirit.core.movement.ProjectileDodge;
 import com.theminespirit.core.repair.RepairData;
 import java.time.Clock;
 import java.util.Map;
@@ -16,6 +18,34 @@ class SmallMechanicTableTests {
              "sprintExhaustionPerMeter": 0.1, "combatExhaustionPerAttack": 0.1,
              "digExhaustionPerBlock": 0.005, "damageExhaustionPerHit": 0.1}
             """;
+
+    @Test
+    void dodge_ReloadChangedJson_HolderDisablesSkill() {
+        TableRegistry registry = new TableRegistry(Clock.systemUTC());
+        TableHolder<ProjectileDodge> holder = registry.registerLazy(registeredDodge(), ProjectileDodge::load);
+        String changed = """
+                {"enabled": false, "scanRadius": 20.0, "minReactionTicks": 3, "maxPredictionTicks": 12,
+                 "cooldownTicks": 8, "stepSpeed": 0.45, "bodyMargin": 0.3, "mobClearance": 1.5}
+                """;
+        ContentSource source = ContentSource.of(Map.of(
+                ProjectileDodge.RESOURCE, new LoadedContent(changed, "test datapack", TableStatus.Source.DATAPACK)));
+
+        registry.reload(source);
+
+        assertFalse(
+                holder.current().enabled(),
+                "После /reload с enabled:false навык уклонения обязан выключиться: иначе defcases не могут "
+                        + "сравнить поведение духа с навыком и без него");
+    }
+
+    @Test
+    void dodge_Current_ReadsLiveHolder() {
+        assertSame(
+                DataTables.INSTANCE.registry().holder("dodge").orElseThrow().current(),
+                ProjectileDodge.current(),
+                "Навык обязан читать версию из держателя DataTables, а не classpath: иначе /reload не выключит "
+                        + "уклонение без перезапуска");
+    }
 
     @Test
     void hunger_ReloadChangedJson_HolderReturnsNewInterval() {
@@ -67,6 +97,16 @@ class SmallMechanicTableTests {
                 RepairData.loadDefault(),
                 "Потребитель обязан брать версию из держателя, а не читать classpath/константу: иначе /reload "
                         + "не поменяет ему порог, хотя таблица перечитана");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static TableDefinition<ProjectileDodge> registeredDodge() {
+        for (TableDefinition<?> definition : DataTables.INSTANCE.registry().definitions()) {
+            if ("dodge".equals(definition.id())) {
+                return (TableDefinition<ProjectileDodge>) definition;
+            }
+        }
+        throw new AssertionError("таблица dodge не зарегистрирована в DataTables: /reload её не перечитает");
     }
 
     @SuppressWarnings("unchecked")

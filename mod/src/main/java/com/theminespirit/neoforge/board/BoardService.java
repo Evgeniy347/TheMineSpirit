@@ -196,6 +196,10 @@ public final class BoardService {
         dispatch.activityIssued(id, generation);
     }
 
+    long issuedGeneration(String ticketId) {
+        return dispatch.issuedGeneration(ticketId);
+    }
+
     void detachForAction(SpiritEntity spirit) {
         board.assignedTo(spirit.getUUID()).forEach(ticket -> board.release(ticket.id()));
     }

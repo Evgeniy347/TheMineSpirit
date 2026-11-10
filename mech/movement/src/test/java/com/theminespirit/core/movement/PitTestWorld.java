@@ -11,7 +11,7 @@ final class PitTestWorld implements PitExitPlanner.World {
     static final BlockCoord FEET = new BlockCoord(0, 64, 0);
     static final BlockCoord LIVE_FEET = new BlockCoord(0, 0, 0);
 
-    private final Map<BlockCoord, PitExitPlanner.Kind> cells = new HashMap<>();
+    private final Map<BlockCoord, BlockKind> cells = new HashMap<>();
 
     private PitTestWorld() {}
 
@@ -21,7 +21,7 @@ final class PitTestWorld implements PitExitPlanner.World {
         return world;
     }
 
-    static PitTestWorld pit(int depth, int half, PitExitPlanner.Kind wall) {
+    static PitTestWorld pit(int depth, int half, BlockKind wall) {
         PitTestWorld world = new PitTestWorld();
         int surface = FEET.y() + depth;
         world.surface(surface);
@@ -31,7 +31,7 @@ final class PitTestWorld implements PitExitPlanner.World {
     }
 
     static PitTestWorld indoorPit() {
-        PitTestWorld world = pit(5, 0, PitExitPlanner.Kind.SOFT);
+        PitTestWorld world = pit(5, 0, BlockKind.SOFT);
         int floor = FEET.y() + 5;
         world.surface(floor);
         world.roof(floor + 3);
@@ -40,8 +40,7 @@ final class PitTestWorld implements PitExitPlanner.World {
 
     static PitTestWorld live() throws IOException {
         PitTestWorld world = new PitTestWorld();
-        LiveFixture.load(PitExitPlanner.Kind.class, "/live/pit-warehouse-0611.live")
-                .forEach(world::set);
+        LiveFixture.load("/live/pit-warehouse-0611.live").forEach(world::set);
         return world;
     }
 
@@ -55,7 +54,7 @@ final class PitTestWorld implements PitExitPlanner.World {
         return new BlockCoord(cell.x(), cell.y() - 1, cell.z());
     }
 
-    void set(BlockCoord cell, PitExitPlanner.Kind kind) {
+    void set(BlockCoord cell, BlockKind kind) {
         cells.put(cell, kind);
     }
 
@@ -63,7 +62,7 @@ final class PitTestWorld implements PitExitPlanner.World {
         for (int x = -8; x <= 8; x++) {
             for (int z = -8; z <= 8; z++) {
                 for (int above = y; above <= y + 6; above++) {
-                    set(new BlockCoord(x, above, z), PitExitPlanner.Kind.AIR);
+                    set(new BlockCoord(x, above, z), BlockKind.AIR);
                 }
             }
         }
@@ -73,18 +72,18 @@ final class PitTestWorld implements PitExitPlanner.World {
         for (int x = -half; x <= half; x++) {
             for (int z = -half; z <= half; z++) {
                 for (int y = bottom; y <= top; y++) {
-                    set(new BlockCoord(x, y, z), PitExitPlanner.Kind.AIR);
+                    set(new BlockCoord(x, y, z), BlockKind.AIR);
                 }
             }
         }
     }
 
-    private void walls(int half, int bottom, int top, PitExitPlanner.Kind wall) {
+    private void walls(int half, int bottom, int top, BlockKind wall) {
         for (int x = -half; x <= half; x++) {
             for (int z = -half; z <= half; z++) {
                 for (int y = bottom; y <= top; y++) {
                     BlockCoord cell = new BlockCoord(x, y, z);
-                    if (at(cell) == PitExitPlanner.Kind.HARD) {
+                    if (at(cell) == BlockKind.HARD) {
                         set(cell, wall);
                     }
                 }
@@ -96,14 +95,14 @@ final class PitTestWorld implements PitExitPlanner.World {
         for (int x = -8; x <= 8; x++) {
             for (int z = -8; z <= 8; z++) {
                 for (int above = y; above <= y + 3; above++) {
-                    set(new BlockCoord(x, above, z), PitExitPlanner.Kind.HARD);
+                    set(new BlockCoord(x, above, z), BlockKind.HARD);
                 }
             }
         }
     }
 
     @Override
-    public PitExitPlanner.Kind at(BlockCoord cell) {
-        return cells.getOrDefault(cell, PitExitPlanner.Kind.HARD);
+    public BlockKind at(BlockCoord cell) {
+        return cells.getOrDefault(cell, BlockKind.HARD);
     }
 }

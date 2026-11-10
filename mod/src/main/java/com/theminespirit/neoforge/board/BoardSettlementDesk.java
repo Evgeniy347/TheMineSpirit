@@ -59,6 +59,10 @@ final class BoardSettlementDesk {
         issuedGenerations.put(ticketId, generation);
     }
 
+    long issuedGeneration(String ticketId) {
+        return issuedGenerations.getOrDefault(ticketId, SpiritReading.UNKNOWN_GENERATION);
+    }
+
     void progressIssued(ServerLevel level, BoardTicket ticket, TicketTarget target) {
         progress.issued(level, ticket, target);
     }
