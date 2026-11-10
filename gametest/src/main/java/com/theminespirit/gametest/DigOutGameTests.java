@@ -60,6 +60,8 @@ public final class DigOutGameTests {
 
     private static void pocket(GameTestHelper helper, List<List<BlockPos>> pockets) {
         GameTestFixtures.reset(helper, 16);
+        GameTestFixtures.restoreFrame(helper);
+        assertContained(helper);
         BoardService board = BoardRegistry.get(helper.getLevel());
         board.board().restore(new BoardState(List.of(), Set.of()));
         List<BlockPos> planks = prepareArena(helper, pockets);
@@ -227,6 +229,21 @@ public final class DigOutGameTests {
         tickets.add(ticket);
         starts.add(feet.getY());
         return spirit;
+    }
+
+    private static void assertContained(GameTestHelper helper) {
+        for (BlockPos cell : List.of(
+                new BlockPos(-1, TOP + 1, 5),
+                new BlockPos(11, TOP + 1, 5),
+                new BlockPos(5, TOP + 1, -1),
+                new BlockPos(5, TOP + 1, 11))) {
+            helper.assertTrue(
+                    helper.getBlockState(cell).is(Blocks.BARRIER),
+                    "Рама GameTest вокруг арены обязана пережить зачистку сцены: в " + cell + " сейчас "
+                            + helper.getBlockState(cell) + ". Снесённая стена — дыра из арены в пустоту: дух уходит "
+                            + "через неё, падает и шаг dig_out краснеет по чужой причине (INC-45). Верни раму "
+                            + "GameTestFixtures.restoreFrame после зачистки");
+        }
     }
 
     private static void assertBreachStore(GameTestHelper helper) {
