@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import org.jspecify.annotations.Nullable;
 
 public final class SupplyGate {
 
@@ -54,6 +55,26 @@ public final class SupplyGate {
         }
         int at = cause.indexOf('@');
         return at < 0 ? cause : cause.substring(0, at);
+    }
+
+    public static boolean isSupply(String ticketId) {
+        Objects.requireNonNull(ticketId, "Id задания не может быть null: вид заявки читается по его префиксу");
+        return ticketId.startsWith("supply:") || ticketId.startsWith("supply_gather:");
+    }
+
+    public static TicketTarget merge(@Nullable TicketTarget before, TicketTarget next) {
+        Objects.requireNonNull(next, "Новая заявка не может быть null: сливать нечего");
+        if (before == null || next.supplyItem() == null) {
+            return next;
+        }
+        if (next.supplyCount() <= before.supplyCount()) {
+            return before.deposit() == null && next.deposit() != null ? before.withDeposit(next.deposit()) : before;
+        }
+        TicketTarget merged = next;
+        if (merged.deposit() == null && before.deposit() != null) {
+            merged = merged.withDeposit(before.deposit());
+        }
+        return merged;
     }
 
     public static boolean isToolTierSupply(String ticketId) {
