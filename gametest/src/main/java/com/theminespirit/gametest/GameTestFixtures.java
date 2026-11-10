@@ -26,7 +26,6 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.GameTestInfo;
 import net.minecraft.gametest.framework.GameTestListener;
 import net.minecraft.gametest.framework.GameTestRunner;
-import net.minecraft.gametest.framework.StructureUtils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
@@ -127,16 +126,6 @@ final class GameTestFixtures {
                 }
             }
         }
-    }
-
-    /**
-     * Вернуть раму GameTest (стены и крышку на ±1 от структуры) после зачистки: {@link #clearBlocks} снимает её
-     * вместе с мусором сцены, потому что часть сцен работает и за шаблоном. Сцене, у которой дух ходит по верхней
-     * грани, рама нужна: без неё дух уходит с арены в пустоту, падает и сцена краснеет от чужого падения
-     * (minescene_minearenasteps_allpass).
-     */
-    static void restoreFrame(GameTestHelper helper) {
-        StructureUtils.encaseStructure(helper.getBounds(), helper.getLevel(), true);
     }
 
     private static void clearEntities(GameTestHelper helper, int clearHeight) {
