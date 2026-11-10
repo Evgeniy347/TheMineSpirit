@@ -10,9 +10,9 @@ import com.theminespirit.core.board.FillIndex;
 import com.theminespirit.core.board.LevelRepair;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.SupplyGraph;
+import com.theminespirit.core.board.route.RouteRetired;
 import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
@@ -41,7 +41,7 @@ final class WorldPost {
 
     static boolean handles(String node) {
         return switch (node) {
-            case "backfill", "level_lot", "restore_trace" -> true;
+            case "backfill", "level_lot", "restore_trace", "remove_route" -> true;
             default -> node.startsWith("repair:");
         };
     }
@@ -88,7 +88,7 @@ final class WorldPost {
                 new StageRepair.Gap(
                         gap.shortage(),
                         gap.total(),
-                        need(post.graph, ticket.task().consumes(), post.scan.wood())),
+                        WorldNeeds.of(post.graph, ticket.task().consumes(), post.scan.wood())),
                 step == BoardCase.BUILD_PLACED ? id : null);
         return StageAudit.keeps(outcome);
     }
@@ -104,6 +104,7 @@ final class WorldPost {
                 boolean trace = traces(post, ticket, found, priority);
                 yield plan || trace;
             }
+            case "remove_route" -> removeRoute(post, ticket, priority);
             default -> false;
         };
     }
@@ -151,7 +152,7 @@ final class WorldPost {
 
     private static FillIndex openFills(GraphPost post) {
         Map<String, PlotLeveling> fills = new LinkedHashMap<>();
-        for (var ticket : post.service.board().all()) {
+        for (var ticket : post.service.board().tickets()) {
             if (!ticket.id().startsWith("world:backfill:")) {
                 continue;
             }
@@ -168,6 +169,28 @@ final class WorldPost {
             }
         }
         return FillIndex.of(fills);
+    }
+
+    private static boolean removeRoute(GraphPost post, GraphTickets.Ticket ticket, int priority) {
+        RouteStore store = RouteStore.get(post.level);
+        boolean posted = false;
+        for (RouteRetired stale : store.retired()) {
+            String id = "world:route_stale:" + stale.id();
+            if (post.done(id)) {
+                store.retireDone(stale.id());
+                continue;
+            }
+            if (post.open(id)) {
+                posted = true;
+                continue;
+            }
+            BlockCoord first = stale.trail().first();
+            post.submit(
+                    post.ticket(id, BoardCase.CLEAR_GROUNDS, Optional.empty(), priority, ticket.id(), Map.of()),
+                    TicketTarget.at(first).withLeveling(stale.trail().removal()));
+            posted = true;
+        }
+        return posted;
     }
 
     private static boolean lot(GraphPost post, GraphTickets.Ticket ticket, SettlementScan.Strays found, int priority) {
@@ -270,14 +293,6 @@ final class WorldPost {
     }
 
     static Map<String, Integer> need(SupplyGraph graph, Map<String, Integer> consumes, String wood) {
-        Map<String, Integer> need = new LinkedHashMap<>();
-        consumes.forEach((item, count) -> {
-            String named = GraphNames.item(graph, item, wood);
-            need.merge(
-                    named.startsWith("minecraft:") ? named.substring("minecraft:".length()) : named,
-                    count,
-                    Integer::sum);
-        });
-        return Map.copyOf(need);
+        return WorldNeeds.of(graph, consumes, wood);
     }
 }

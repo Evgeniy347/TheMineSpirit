@@ -3,8 +3,10 @@ package com.theminespirit.core.board.graph;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class GraphRouteTests {
@@ -72,5 +74,20 @@ class GraphRouteTests {
         assertTrue(
                 plan.task("dig_sand_route").map(task -> !task.feasible()).orElse(true),
                 "Без маршрута песок с точки не добывают: " + plan.task("dig_sand_route"));
+    }
+
+    @Test
+    void removeRoute_Event_PostsCleanupWithoutMaterials() {
+        GraphPlan plan =
+                GraphWorld.settled().event(GraphWorldEvents.REMOVE_ROUTE).plan();
+        GraphPlan.Task task = plan.task("event:remove_route:remove_route")
+                .orElseThrow(() -> new AssertionError("Нет задания снять старую тропу: " + plan.tasks()));
+
+        assertEquals(
+                BoardCase.CLEAR_GROUNDS,
+                task.boardCase(),
+                "Старую тропу убирают расчисткой: ломать и возвращать блоки — узел мира, а не стройка");
+        assertEquals(Map.of(), task.consumes(), "Снятию тропы не нужны материалы: оно только убирает проложенное");
+        assertTrue(task.feasible(), "Задание снятия выполнимо, когда мир сообщил о старой тропе: " + plan.tasks());
     }
 }
