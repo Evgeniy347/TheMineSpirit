@@ -1,5 +1,6 @@
 package com.theminespirit.core.movement;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -141,6 +142,16 @@ class PitWalkOutTests {
     }
 
     @Test
+    void walkOut_MinimumSpreadOnRamp_IsAnExit() {
+        Grid pit = Grid.enclosedPit();
+
+        assertTrue(
+                PitWalkOut.exists(pit, new WalkOutRules(PitWalkOut.EXIT_RADIUS), 0, 0, START),
+                "область проверки не меньше радиуса выхода: склон к краю ямы — выход и при минимальной области, "
+                        + "а общий буфер обязан вмещать её край без выхода за границы");
+    }
+
+    @Test
     void walkOut_WideSkylight_OutcomeFollowsConfiguredSpread() {
         Grid cave = Grid.cave();
         for (int x = 6; x <= 45; x++) {
@@ -158,6 +169,28 @@ class PitWalkOutTests {
                 PitWalkOut.exists(cave, new WalkOutRules(64), 0, 0, START),
                 "При области 64 поиск видит потолок за проёмом и не выдаёт дно склепа за поверхность: "
                         + "значит число области читается из правил, а не зашито в PitWalkOut");
+    }
+
+    @Test
+    void walkOut_ManyExitNodesInClosedArena_AskSurfaceOncePerCell() {
+        Grid arena = Grid.cave();
+        for (int x = -20; x <= 20; x++) {
+            for (int z = -20; z <= 20; z++) {
+                arena.skyAt(x, z, START);
+            }
+        }
+        CountingPitWorld counting = new CountingPitWorld(arena);
+
+        assertFalse(
+                PitWalkOut.exists(counting, new WalkOutRules(32), 0, 0, START),
+                "арена 41×41 внутри области проверки 32 — не поверхность: за краем снова потолок пещеры");
+
+        assertEquals(
+                counting.surfaceCalls(),
+                counting.distinctSurfaceCells(),
+                "высота поверхности — факт мира, неизменный за один вызов: каждый выходной узел обязан брать её "
+                        + "из общей области ямы, а не заново у мира. Повторные запросы на spread=64 (16 641 клетка "
+                        + "на узел) греют поиск и грузят сервер");
     }
 
     @Test

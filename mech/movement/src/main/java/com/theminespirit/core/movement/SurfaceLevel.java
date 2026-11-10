@@ -16,10 +16,13 @@ public final class SurfaceLevel {
         if (!skyOpen) {
             return false;
         }
-        int highest = feetY;
-        for (int height : surroundingHeights) {
-            highest = Math.max(highest, height);
+        if (surroundingHeights.isEmpty()) {
+            return true;
         }
-        return feetY + MARGIN >= highest;
+        int around = Integer.MIN_VALUE;
+        for (int height : surroundingHeights) {
+            around = Math.max(around, height);
+        }
+        return feetY + MARGIN >= around && feetY <= around + MARGIN;
     }
 }

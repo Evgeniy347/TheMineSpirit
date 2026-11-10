@@ -140,6 +140,10 @@ public final class PlacedBlocksData extends SavedData {
         return temporarySet.contains(toCoord(pos));
     }
 
+    public boolean isOwn(BlockPos pos) {
+        return isSpiritMarked(pos) || isTemporary(pos);
+    }
+
     public List<BlockCoord> temporaryIn(int chunkX, int chunkZ) {
         return temporarySet.inChunk(chunkX, chunkZ);
     }
