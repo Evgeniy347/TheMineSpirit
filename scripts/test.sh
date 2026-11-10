@@ -300,11 +300,19 @@ file_mtime() {
 }
 
 init_pause_tick() {
-    local dir="${TMPDIR:-/tmp}"
-    PAUSE_FIFO="$dir/theminespirit-test-pause.$$"
+    local dir="${TMPDIR:-/tmp}" owner
+    # lib: fd паузы — личный для процесса, который ждёт. На Cygwin общий fifo с несколькими
+    # читателями вырождается в опрос: лидер жжёт ~50 % ядра, каждый читатель 8–14 %.
+    # Поэтому наследованный fd закрываем и заводим свой (имя — по BASHPID).
+    if [ "$PAUSE_FD_OPEN" = 1 ]; then
+        exec 9<&-
+        PAUSE_FD_OPEN=0
+    fi
+    owner="${BASHPID:-$$}"
+    PAUSE_FIFO="$dir/theminespirit-test-pause.$owner"
     if ! mkfifo "$PAUSE_FIFO" 2>/dev/null; then
-        PAUSE_FIFO="$PROJECT_ROOT/TestResults/.test-pause.$$"
-        mkdir -p "$PROJECT_ROOT/TestResults" 2>/dev/null || true
+        PAUSE_FIFO="${PROJECT_ROOT:-$PWD}/TestResults/.test-pause.$owner"
+        mkdir -p "${PROJECT_ROOT:-$PWD}/TestResults" 2>/dev/null || true
         mkfifo "$PAUSE_FIFO" 2>/dev/null || { PAUSE_FIFO=""; return 0; }
     fi
     if exec 9<>"$PAUSE_FIFO"; then
@@ -491,6 +499,7 @@ stop_lock_beat() {
 
 start_lock_beat() {
     (
+        init_pause_tick
         beat=0
         while kill -0 "$$" 2>/dev/null; do
             tok=""
@@ -504,6 +513,7 @@ start_lock_beat() {
             fi
             pause_tick 1
         done
+        close_pause_tick
     ) </dev/null >/dev/null 2>&1 &
     LOCK_BEAT_PID=$!
 }
@@ -583,6 +593,7 @@ START_TIME=0
 
 monitor_loop() {
     local warned=0 now elapsed gpid
+    init_pause_tick
     while kill -0 "$MONITOR_MAIN_PID" 2>/dev/null; do
         pause_tick 1
         now_s now
@@ -611,6 +622,7 @@ monitor_loop() {
             exit 124
         fi
     done
+    close_pause_tick
 }
 
 start_monitor() {
@@ -626,8 +638,8 @@ start_monitor() {
     export MONITOR_LOG_FILE="$LOG_FILE" MONITOR_START_TIME="$START_TIME" \
            MONITOR_WARN_SECONDS="$WARN_SECONDS" MONITOR_STOP_SECONDS="$STOP_SECONDS" \
            MONITOR_MODE="$mode" MONITOR_MAIN_PID="$$" MONITOR_GRADLE_GROUP=""
-    export MODE GAMETEST_RUN_DIR GAMETEST_WORKTREE
-    export -f pid_is_live gametest_server_pids kill_gametest_server now_s own_tree_pids kill_own_tree pause_tick monitor_loop
+    export MODE GAMETEST_RUN_DIR GAMETEST_WORKTREE PROJECT_ROOT
+    export -f pid_is_live gametest_server_pids kill_gametest_server now_s own_tree_pids kill_own_tree pause_tick init_pause_tick close_pause_tick monitor_loop
     if command -v setsid >/dev/null 2>&1; then
         MONITOR_GRADLE_GROUP=group
         setsid bash -c monitor_loop </dev/null >/dev/null 2>&1 &
@@ -653,6 +665,7 @@ start_heartbeat() {
     now_s now
     deadline=$(( now + GAMETEST_WAIT + GAMETEST_PREPARE_STOP + GAMETEST_PREPARE_STOP + (UNIT_STOP > GAMETEST_FULL_STOP ? UNIT_STOP : GAMETEST_FULL_STOP) + 300 ))
     (
+        init_pause_tick
         beat=0
         while kill -0 "$$" 2>/dev/null; do
             now_s now
@@ -663,6 +676,7 @@ start_heartbeat() {
             fi
             pause_tick 1
         done
+        close_pause_tick
     ) </dev/null >/dev/null 2>&1 &
     HEARTBEAT_PID=$!
 }
@@ -681,9 +695,11 @@ start_parent_watch() {
     case "$parent" in ''|*[!0-9]*) return 0 ;; esac
     [ "$parent" -gt 1 ] || return 0
     (
+        init_pause_tick
         while kill -0 "$parent" 2>/dev/null && kill -0 "$MAIN_PID" 2>/dev/null; do
             pause_tick 1
         done
+        close_pause_tick
         kill -0 "$MAIN_PID" 2>/dev/null || exit 0
         printf '%s\n' "$parent" >"$LOG_FILE.parent-gone" 2>/dev/null
         kill -TERM "$MAIN_PID" 2>/dev/null
@@ -1049,26 +1065,60 @@ analyze_gametest() {
 }
 
 gametest_scene_started() {
-    local log="$1" pid="$2"
-    grep -q "tests are now running" "$log" 2>/dev/null && return 0
+    local fd="$1" pid="$2" shard="$3" chunk
+    local seen="${SCENE_TAIL[$shard]:-}"
+    IFS= read -r -d '' chunk <&"$fd" 2>/dev/null
+    seen="$seen$chunk"
+    case "$seen" in
+        *"tests are now running"*) SCENE_TAIL[$shard]=""; return 0 ;;
+    esac
+    # lib: хвост держим на случай, если маркер разорван между двумя чтениями.
+    SCENE_TAIL[$shard]="${seen: -40}"
     kill -0 "$pid" 2>/dev/null || return 0
     return 1
 }
 
+# lib: ожидание старта сцен читает только новые байты лога встроенным read: grep всем
+# файлом раз в секунду читает лог заново и на Windows жжёт до ~75 % ядра.
 wait_gametest_scenes() {
-    local shard pid log waiting
+    local shard log waiting fd rc=0
+    local -a logs=() fds=() started=()
+    SCENE_TAIL=()
+    for ((shard = 0; shard < ${#GRADLE_PIDS[@]}; shard++)); do
+        log="$LOG_FILE"
+        [ "$GAMETEST_SHARDS" -gt 1 ] && log="$LOG_FILE.shard-$shard"
+        logs+=("$log")
+        fds+=("")
+        started+=(0)
+    done
     while :; do
         waiting=0
         for ((shard = 0; shard < ${#GRADLE_PIDS[@]}; shard++)); do
-            pid="${GRADLE_PIDS[$shard]}"
-            log="$LOG_FILE"
-            [ "$GAMETEST_SHARDS" -gt 1 ] && log="$LOG_FILE.shard-$shard"
-            gametest_scene_started "$log" "$pid" || waiting=1
+            [ "${started[$shard]}" = 1 ] && continue
+            if [ -z "${fds[$shard]}" ]; then
+                if [ ! -e "${logs[$shard]}" ]; then
+                    kill -0 "${GRADLE_PIDS[$shard]}" 2>/dev/null || { started[$shard]=1; continue; }
+                    waiting=1
+                    continue
+                fi
+                exec {fd}<"${logs[$shard]}"
+                fds[$shard]="$fd"
+            fi
+            if gametest_scene_started "${fds[$shard]}" "${GRADLE_PIDS[$shard]}" "$shard"; then
+                started[$shard]=1
+            else
+                waiting=1
+            fi
         done
-        [ "$waiting" = 0 ] && return 0
-        [ -f "$LOG_FILE.stopped" ] && return 1
+        [ "$waiting" = 0 ] && break
+        if [ -f "$LOG_FILE.stopped" ]; then
+            rc=1
+            break
+        fi
         pause_tick 1
     done
+    for fd in "${fds[@]}"; do [ -n "$fd" ] && exec {fd}<&-; done
+    return "$rc"
 }
 
 STAMP=$(date +%Y%m%d-%H%M%S-%N)

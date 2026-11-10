@@ -105,7 +105,7 @@ final class BoardSupplyDesk {
 
     private boolean hasActiveSupply(String item) {
         for (BoardTicket ticket : board.tickets()) {
-            if (ticket.boardCase() != BoardCase.SUPPLY_SITE || !active(ticket.id())) {
+            if (!SupplyGate.isSupply(ticket.id()) || !active(ticket.id())) {
                 continue;
             }
             TicketTarget target = targets.get(ticket.id());

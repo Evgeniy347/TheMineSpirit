@@ -2,6 +2,7 @@
 package com.theminespirit.core.navigation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.route.Route;
@@ -35,6 +36,72 @@ class NavRouteStepsTests {
         assertEquals(1, route.steps().size(), "подъём — один шаг");
         assertEquals(
                 RouteStep.Action.WALK, route.steps().get(0).action(), "навигация не ставит блоки: подъём идёт ходьбой");
+    }
+
+    @Test
+    void toRoute_AStarBreakableWall_ConvertsToBreakSteps() {
+        NavTestWorld world = NavTestWorld.flat(0);
+        for (int z = -10; z <= 10; z++) {
+            world.breakable(4, 1, z).breakable(4, 2, z);
+        }
+        NavSettings settings = new NavSettings(10_000, 10_000, 200_000, 50, 3, 12, 2, 20, 2, true, false);
+        NavResult planned =
+                NavAStarTestRun.plan(new NavContext(world, settings, 0), 0, 1, 0, new NavGoalBlock(8, 1, 0));
+        assertEquals(NavSearchStatus.FOUND, planned.status(), "A* обязан найти путь сквозь ломаемую стену");
+
+        NavSegmentedRoute segmented = new NavSegmentedRoute(
+                planned.status(), planned.path().positions(), 1, planned.path().length(), 0, planned.end());
+        Route route = NavRouteSteps.toRoute(segmented, world, planned.end());
+
+        assertEquals(Route.Status.FOUND, route.status(), "путь A* сквозь свою стену обязан дойти до маршрута");
+        assertTrue(
+                route.steps().stream()
+                        .anyMatch(step -> step.action() == RouteStep.Action.BREAK
+                                && step.cell().x() == 4),
+                "маршрут обязан содержать ломку своей стены в x=4: " + route.steps());
+        assertTrue(
+                route.steps().stream().anyMatch(step -> step.cell().x() == 8),
+                "после ломки маршрут доходит до цели: " + route.steps());
+    }
+
+    @Test
+    void toRoute_SolidHeadNotBreakable_StillWalks() {
+        NavTestWorld world = NavTestWorld.flat(0).solid(1, 2, 0);
+        Route route = convert(world, NavSearchStatus.FOUND, cell(0, 1, 0), cell(1, 1, 0));
+
+        assertEquals(Route.Status.FOUND, route.status(), "Твёрдый потолок над проходимой клеткой не отменяет маршрут");
+        assertEquals(1, route.steps().size(), "Один шаг без лишних ломок: " + route.steps());
+        assertEquals(
+                RouteStep.Action.WALK,
+                route.steps().get(0).action(),
+                "Клетку головы ломают только если она ломаемая: иначе узкий проход dig_out снова упирается в тупик");
+    }
+
+    @Test
+    void toRoute_BreakableCell_BreaksThenWalks() {
+        NavTestWorld world = NavTestWorld.flat(0).breakable(1, 1, 0).breakable(1, 2, 0);
+        Route route = convert(world, NavSearchStatus.FOUND, cell(0, 1, 0), cell(1, 1, 0));
+
+        assertEquals(Route.Status.FOUND, route.status(), "ломаемая преграда оставляет найденный маршрут");
+        assertEquals(3, route.steps().size(), "две разбираемые клетки и шаг в освободившуюся: " + route.steps());
+        assertEquals(
+                RouteStep.Action.BREAK, route.steps().get(0).action(), "сначала ломают клетку ног, а не идут сквозь");
+        assertEquals(cell(1, 1, 0), route.steps().get(0).cell(), "ломают именно преграду на пути");
+        assertEquals(
+                RouteStep.Action.BREAK, route.steps().get(1).action(), "клетку головы тоже освобождают перед шагом");
+        assertEquals(cell(1, 2, 0), route.steps().get(1).cell(), "вторая ломка — над преградой");
+        assertEquals(RouteStep.Action.WALK, route.steps().get(2).action(), "после расчистки входят в клетку шагом");
+    }
+
+    @Test
+    void toRoute_BreakableHeadOnly_BreaksHeadThenWalks() {
+        NavTestWorld world = NavTestWorld.flat(0).breakable(1, 2, 0);
+        Route route = convert(world, NavSearchStatus.FOUND, cell(0, 1, 0), cell(1, 1, 0));
+
+        assertEquals(2, route.steps().size(), "преграда только на голове даёт одну ломку и шаг: " + route.steps());
+        assertEquals(RouteStep.Action.BREAK, route.steps().get(0).action(), "голову освобождают до входа");
+        assertEquals(cell(1, 2, 0), route.steps().get(0).cell(), "ломают клетку над местом шага");
+        assertEquals(RouteStep.Action.WALK, route.steps().get(1).action(), "после ломки идут вперёд");
     }
 
     @Test

@@ -8,6 +8,7 @@ import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.CraterProfiles;
 import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.SupplyGate;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -160,7 +161,15 @@ public final class BoardService {
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
             BoardPersistence.persist(this);
         } else if (outcome == BoardOutcome.DUPLICATE) {
-            targets.putIfAbsent(ticket.id(), target);
+            if (SupplyGate.isSupply(ticket.id()) && targets.containsKey(ticket.id())) {
+                TicketTarget merged = SupplyGate.merge(targets.get(ticket.id()), target);
+                if (!merged.equals(targets.get(ticket.id()))) {
+                    targets.put(ticket.id(), merged);
+                    BoardPersistence.persist(this);
+                }
+            } else {
+                targets.putIfAbsent(ticket.id(), target);
+            }
         }
         return outcome;
     }

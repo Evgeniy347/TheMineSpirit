@@ -19,7 +19,9 @@ import com.theminespirit.core.route.RouteThrottle;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.TickWatch;
 import com.theminespirit.neoforge.log.SpiritWorldLog;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -50,13 +52,15 @@ public final class RouteDetour {
     public static final class Pending {
         private final Plan plan;
         private final NavSegmentedSession session;
+        private final NavWorld world;
         private boolean done;
         private @Nullable RouteWalk walk;
         private String refusal = "";
 
-        private Pending(Plan plan, NavSegmentedSession session) {
+        private Pending(Plan plan, NavSegmentedSession session, NavWorld world) {
             this.plan = plan;
             this.session = session;
+            this.world = world;
         }
 
         public boolean done() {
@@ -104,11 +108,12 @@ public final class RouteDetour {
             }
             return null;
         }
-        NavSettings settings = new NavSettings(2000, 2000, 200_000, 50, 3, 12, 2, 20, 2, false, false);
+        NavSettings settings = new NavSettings(2000, 2000, 200_000, 50, 3, 12, 2, 20, 2, true, false);
         LevelNavWorld live = new LevelNavWorld(spirit.level());
         NavCachedWorld cache = new NavCachedWorld();
         packLocal(live, cache, from);
         NavWorld effective = RescueNavWorld.route(live, from, target, cell -> PlanDetour.foreign(spirit, cell));
+        effective = new OwnBreakNavWorld(effective, cell -> own(spirit, cell));
         NavContext context = new NavContext(new NavCacheWorld(effective, cache), settings, blocks);
         NavSegmentedSession session = new NavSegmentedSession(
                 context,
@@ -117,7 +122,15 @@ public final class RouteDetour {
                 MAX_SEGMENTS,
                 MIN_CUTOFF,
                 CUTOFF_FACTOR);
-        return new Pending(new Plan(spirit, target, why, rescue, from, key, now, System.nanoTime()), session);
+        return new Pending(
+                new Plan(spirit, target, why, rescue, from, key, now, System.nanoTime()), session, effective);
+    }
+
+    private static boolean own(SpiritEntity spirit, BlockCoord cell) {
+        if (!(spirit.level() instanceof ServerLevel server)) {
+            return false;
+        }
+        return PlacedBlocksData.get(server).isOwn(new BlockPos(cell.x(), cell.y(), cell.z()));
     }
 
     private static void packLocal(LevelNavWorld live, NavCachedWorld cache, BlockCoord from) {
@@ -142,7 +155,7 @@ public final class RouteDetour {
             if (segmented == null) {
                 return;
             }
-            Route route = NavRouteSteps.toRoute(segmented, new LevelNavWorld(spirit.level()), pending.plan.target());
+            Route route = NavRouteSteps.toRoute(segmented, pending.world, pending.plan.target());
             LOGGER.info(
                     "[route] дух {} ({}): из {} к {} — {}, сегментов {}, шагов {}, узлов {}, конец {}, {} мс",
                     spirit.displayName(),

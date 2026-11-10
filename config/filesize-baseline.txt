@@ -34,7 +34,7 @@ core/plan/PlanValidatorRulesTests.java	359
 core/planner/AcquireScript.java	321
 core/planner/AcquireScriptTests.java	998
 core/planner/FallbackPlannerTests.java	325
-core/planner/ResourceResolver.java	305
+core/planner/ResourceResolver.java	304
 core/planner/ResourceResolverTests.java	566
 core/policy/BlockProtectionTests.java	314
 core/rest/BoardRoutesTests.java	364
