@@ -111,7 +111,7 @@ final class PillarDismantler {
 
     private boolean isOwnMarked(BlockPos pos) {
         return level instanceof ServerLevel server
-                && PlacedBlocksData.get(server).isSpiritMarked(pos);
+                && PlacedBlocksData.get(server).isOwn(pos);
     }
 
     private void unmark(BlockPos pos) {

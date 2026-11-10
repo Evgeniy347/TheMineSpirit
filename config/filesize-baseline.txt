@@ -49,7 +49,7 @@ gametest/DemoAuditGameTests.java	1101
 gametest/GameTestFilter.java	305
 gametest/GameTestFixtures.java	354
 gametest/HouseMovementGameTests.java	365
-gametest/RestFixture.java	310
+gametest/RestFixture.java	308
 guards/DependencyVersionGuardTests.java	399
 guards/GameTestIsolationGuardTests.java	352
 guards/GameTestTimeoutGuardTests.java	484
