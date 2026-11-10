@@ -110,6 +110,28 @@ class LevelRepairScenarioTests {
     }
 
     @Test
+    void plan_SlabCut_SplitIntoColumnsForOneClimbEach() {
+        PlotLeveling leveling = new PlotLeveling(
+                List.of(new PlotLeveling.Box(3, 70, 3, 4, 70, 3), new PlotLeveling.Box(3, 71, 3, 4, 71, 3)),
+                List.of(),
+                PlotLeveling.DEFAULT_BLOCK);
+        TaskNode plan = TicketPlans.plan(
+                BoardCase.REPAIR_BUILDING, 1, TicketTarget.at(ANCHOR).withLeveling(leveling));
+        List<ScriptCall> clears = new ArrayList<>();
+        collect(plan, clears);
+        List<ScriptCall> cut = clears.stream()
+                .filter(call -> "clear_area".equals(call.script()))
+                .toList();
+        assertEquals(
+                2,
+                cut.size(),
+                "Плита из двух колонок — две работы: дух поднимается к своей колонке, а не пытается достать "
+                        + "дальние клетки плиты с одной стоянки («нет подхода» к y=97 в живом журнале)");
+        assertEquals(70, cut.get(0).params().get("y1"), "Колонка режется от нижней клетки плиты");
+        assertEquals(71, cut.get(0).params().get("y2"), "и до верхней: один подъём на всю колонку");
+    }
+
+    @Test
     void progress_CutColumn_NotDoneWhileBottomStands() {
         PlotLeveling leveling = LevelRepair.leveling(
                 List.of(), List.of(new BlockCoord(5, 70, 5), new BlockCoord(5, 71, 5), new BlockCoord(5, 72, 5)));
