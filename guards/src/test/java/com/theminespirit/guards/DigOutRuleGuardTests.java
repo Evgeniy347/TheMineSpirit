@@ -87,6 +87,65 @@ class DigOutRuleGuardTests {
                 "Сторож ложно срабатывает: проверка опоры перед постановкой — это правило");
     }
 
+    @Test
+    void homePoint_OneForReturnAndDigOut_NoStageOneSite() {
+        Map<String, String> sources = new LinkedHashMap<>();
+        for (String name : List.of(
+                "neoforge/board/DigOutAction.java",
+                "neoforge/board/DigOutPost.java",
+                "neoforge/board/RescueGroupPost.java")) {
+            sources.put(name, read(SourceFiles.path(name)));
+        }
+        List<String> offenders = new ArrayList<>();
+        sources.forEach((file, text) -> {
+            if ((!text.contains("HomePoint.of(") && !text.contains("homeOf("))
+                    || text.contains(".site()")
+                    || text.contains("SettlementHome.of(")) {
+                offenders.add(file);
+            }
+        });
+
+        assertEquals(
+                List.of(),
+                offenders,
+                "return_home и dig_out берут одну точку дома: HomePoint (дом самого духа, иначе живой этап). "
+                        + "site() — это всегда первый этап, а SettlementHome.of — чужая/первая точка: выход уходил "
+                        + "в другое место, чем возврат (в живой копии — на крышу). Нарушители");
+    }
+
+    @Test
+    void settlementHome_IsMedian_NotFirstSpirit() {
+        String text = read(SourceFiles.path("neoforge/board/SettlementHome.java"));
+        String stand = read(SourceFiles.path("neoforge/board/HomeStand.java"));
+
+        assertFalse(
+                text.contains("findFirst"),
+                "SettlementHome.of не берёт первый дом: от порядка духов менялись цель dig_out и сцена "
+                        + "GameTest. Как надо: SettlementPlot.center по всем домам");
+        assertTrue(
+                text.contains("SettlementPlot.center("),
+                "SettlementHome.of обязан считать середину домов: одна точка не зависит от порядка духов");
+        assertTrue(
+                stand.contains("SettlementHome.homes("),
+                "HomeStand.of обязан учитывать spirits: при заданных домах домашняя стоянка — их середина, "
+                        + "а не новая клетка у якоря этапа");
+    }
+
+    @Test
+    void digOutRoute_FromShaft_GoesHomeNotAnySkyCell() {
+        String route = read(SourceFiles.path("neoforge/DigOutRoute.java"));
+        String surface = read(SourceFiles.path("neoforge/movement/SurfaceRoute.java"));
+
+        assertTrue(
+                route.contains("SurfaceRoute.planToHome("),
+                "Маршрут dig_out ищет поверхность у дома, а не любое небо: иначе дух после выхода из кармана "
+                        + "идёт к краю площадки и падает в пустоту (падающий шаг DigOutGameTests)");
+        assertTrue(
+                surface.contains("SurfaceGoal.home("),
+                "Признак поверхности у дома живёт в SurfaceGoal.home: любой getHeight/open без x/z снова "
+                        + "уведёт маршрут на чужое небо");
+    }
+
     private static List<String> heightLifts(Map<String, String> sources) {
         List<String> offenders = new ArrayList<>();
         sources.forEach((file, text) -> {

@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.engine.ScriptFactory;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.movement.DigOutGoal;
 import com.theminespirit.core.movement.DigOutObstacle;
 import com.theminespirit.core.movement.SealedSpace;
 import com.theminespirit.core.observation.BlockCoord;
@@ -28,7 +29,6 @@ public final class DigOutScript implements ScriptInstance {
     private final Level level;
     private final GotoParams target;
     private final boolean rescue;
-    private final boolean fromPit;
     private final boolean descending;
     private final DigOutBackfill backfill;
     private final BlockBreaker breaker;
@@ -55,7 +55,6 @@ public final class DigOutScript implements ScriptInstance {
         this.level = spirit.level();
         this.target = target;
         this.rescue = rescue;
-        this.fromPit = open(level, spirit.blockPosition());
         this.descending = target.y() < spirit.blockPosition().getY();
         this.breaker = BlockBreaker.escaping(spirit, rescue);
         this.placer = new BlockPlacer(spirit, PlotProtection.Ground.TEMPORARY_MOVEMENT);
@@ -118,8 +117,11 @@ public final class DigOutScript implements ScriptInstance {
         BlockPos feet = spirit.blockPosition();
         boolean goalReached = descending
                 ? feet.getY() <= target.y() && (open(level, feet) || feet.getY() == target.y())
-                : feet.getY() >= target.y();
-        if ((DigOutExit.surfaced(level, feet) && !fromPit && !restore.pendingOver(feet)) || goalReached) {
+                : DigOutGoal.ascent(
+                        new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
+                        new BlockCoord(target.x(), target.y(), target.z()),
+                        HOME_RADIUS);
+        if ((DigOutExit.surfaced(level, feet) && !restore.pendingOver(feet)) || goalReached) {
             backfill.report();
             restore.returnSpoil();
             PlanBreachRestore.restore(spirit, level, placer, feet);

@@ -4,17 +4,16 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
-import java.util.Optional;
 
 final class SettlementHome {
     private SettlementHome() {}
 
     static BlockCoord of(List<SpiritEntity> spirits) {
-        return spirits.stream()
-                .map(SpiritEntity::home)
-                .flatMap(Optional::stream)
-                .findFirst()
-                .orElse(new BlockCoord(0, 64, 0));
+        List<BlockCoord> homes = homes(spirits);
+        if (homes.isEmpty()) {
+            return new BlockCoord(0, 64, 0);
+        }
+        return SettlementPlot.center(homes);
     }
 
     static List<BlockCoord> homes(List<SpiritEntity> spirits) {

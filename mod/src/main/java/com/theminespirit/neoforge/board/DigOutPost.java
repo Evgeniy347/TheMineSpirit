@@ -28,10 +28,6 @@ final class DigOutPost {
         if (!dig && !bridge && !pillar) {
             return false;
         }
-        BlockCoord settlement = SettlementPlotStore.get(post.level)
-                .site()
-                .map(stage -> HomeStand.of(post.level, stage, post.spirits))
-                .orElseGet(() -> SettlementHome.of(post.spirits));
         boolean matched = false;
         for (SpiritEntity spirit : post.spirits) {
             if (spirit.isRemoved()) {
@@ -50,7 +46,7 @@ final class DigOutPost {
             if ((fact != null && fact.stuck()) || post.open("rescue:" + id)) {
                 continue;
             }
-            BlockCoord goal = settlement;
+            BlockCoord goal = DigOutAction.homeOf(post.level, spirit, post.spirits);
             service.detachForAction(spirit);
             spirit.startTask(new SequenceNode(List.of(
                     new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z(), "rescue", true)),
