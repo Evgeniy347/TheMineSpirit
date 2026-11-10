@@ -50,10 +50,23 @@ public final class NavRouteSteps {
 
     private static boolean append(NavWorld world, List<RouteStep> steps, BlockCoord next) {
         boolean water = world.water(next.x(), next.y(), next.z()) || world.water(next.x(), next.y() + 1, next.z());
-        if (!water && !world.passable(next.x(), next.y(), next.z())) {
+        if (!water
+                && (!clear(world, steps, next)
+                        || !clear(world, steps, new BlockCoord(next.x(), next.y() + 1, next.z())))) {
             return false;
         }
         steps.add(new RouteStep(water ? RouteStep.Action.SWIM : RouteStep.Action.WALK, next));
+        return true;
+    }
+
+    private static boolean clear(NavWorld world, List<RouteStep> steps, BlockCoord cell) {
+        if (world.passable(cell.x(), cell.y(), cell.z()) || world.water(cell.x(), cell.y(), cell.z())) {
+            return true;
+        }
+        if (world.breakTicks(cell.x(), cell.y(), cell.z()) >= NavActionCosts.COST_INF) {
+            return false;
+        }
+        steps.add(new RouteStep(RouteStep.Action.BREAK, cell));
         return true;
     }
 }
