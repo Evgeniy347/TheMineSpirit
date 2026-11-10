@@ -6,9 +6,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class LogRecordTests {
+    @Test
+    void of_EveryLogType_RequiredFieldsAreAllowedAndCommonFieldsPresent() {
+        for (LogType type : LogType.values()) {
+            LogSchema.Spec spec = LogSchema.of(type);
+            assertTrue(
+                    spec.allowed().containsAll(spec.required()),
+                    "Каждое обязательное поле обязано быть разрешённым: иначе запись типа " + type.json()
+                            + " невозможно собрать без нарушения схемы");
+            assertTrue(
+                    spec.allowed().containsAll(Set.of("ts", "tick", "build", "source")),
+                    "Общие колонки ts, tick, build и source обязаны быть в схеме каждого типа: " + type.json());
+        }
+    }
+
     @Test
     void builder_MissingRequiredField_Throws() {
         IllegalArgumentException error = assertThrows(

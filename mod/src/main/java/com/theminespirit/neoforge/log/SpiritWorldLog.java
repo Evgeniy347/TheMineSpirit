@@ -17,6 +17,51 @@ import net.minecraft.world.entity.Entity;
 import org.jspecify.annotations.Nullable;
 
 public final class SpiritWorldLog {
+    private static final String EVENT = "event";
+
+    public record GraphDecision(
+            String node,
+            String spirit,
+            String spiritId,
+            int priority,
+            boolean feasible,
+            String next,
+            String why,
+            long tick) {}
+
+    public record Route(
+            SpiritEntity spirit,
+            String purpose,
+            BlockCoord from,
+            BlockCoord to,
+            String status,
+            int nodes,
+            long millis,
+            @Nullable BlockCoord end,
+            String reason) {}
+
+    public record Stuck(
+            UUID spiritId,
+            String event,
+            @Nullable BlockCoord at,
+            String method,
+            @Nullable String helper,
+            String reason,
+            LogCause cause,
+            long sinceTick) {}
+
+    public record Health(
+            double mspt,
+            double worstMspt,
+            int sourceFailures,
+            int pending,
+            int active,
+            int blocked,
+            long boardMs,
+            long pruneMs,
+            int tickets,
+            String event) {}
+
     private SpiritWorldLog() {}
 
     public static void death(ServerLevel level, SpiritEntity spirit, String cause, String killer) {
@@ -26,7 +71,7 @@ public final class SpiritWorldLog {
         }
         BlockPos at = spirit.blockPosition();
         Map<String, Integer> inventory = new HashMap<>(IncidentSnapshots.inventoryOf(spirit));
-        record.put("event", "death")
+        record.put(EVENT, "death")
                 .spirit(spirit.displayName(), spirit.getUUID().toString())
                 .at(at.getX(), at.getY(), at.getZ())
                 .cause(LogCause.DEATH)
@@ -44,7 +89,7 @@ public final class SpiritWorldLog {
         if (record == null) {
             return;
         }
-        record.put("event", "respawn")
+        record.put(EVENT, "respawn")
                 .spirit(spirit.displayName(), spirit.getUUID().toString())
                 .at(death.x(), death.y(), death.z())
                 .cause(LogCause.RESPAWN)
@@ -58,87 +103,67 @@ public final class SpiritWorldLog {
         ModLog.append(record);
     }
 
-    public static void graphDecision(
-            String node,
-            String spirit,
-            String spiritId,
-            int priority,
-            boolean feasible,
-            String next,
-            String why,
-            long tick) {
-        LogRecord.Builder record = ModLog.record(LogType.GRAPH_DECISION, System.currentTimeMillis(), tick);
+    public static void graphDecision(GraphDecision decision) {
+        LogRecord.Builder record = ModLog.record(LogType.GRAPH_DECISION, System.currentTimeMillis(), decision.tick());
         if (record == null) {
             return;
         }
-        record.put("node", node)
-                .spirit(spirit, spiritId)
-                .put("priority", priority)
-                .put("feasible", feasible)
+        record.put("node", decision.node())
+                .spirit(decision.spirit(), decision.spiritId())
+                .put("priority", decision.priority())
+                .put("feasible", decision.feasible())
                 .put("chosen", true)
-                .put("next_node", next)
-                .put("why", why)
-                .cause(feasible ? LogCause.CHOSEN : LogCause.INFEASIBLE);
+                .put("next_node", decision.next())
+                .put("why", decision.why())
+                .cause(decision.feasible() ? LogCause.CHOSEN : LogCause.INFEASIBLE);
         ModLog.append(record);
     }
 
-    public static void route(
-            SpiritEntity spirit,
-            String purpose,
-            BlockCoord from,
-            BlockCoord to,
-            String status,
-            int nodes,
-            long millis,
-            @Nullable BlockCoord end,
-            String reason) {
+    public static void route(Route route) {
         LogRecord.Builder record = ModLog.record(
-                LogType.ROUTE, System.currentTimeMillis(), spirit.level().getGameTime());
+                LogType.ROUTE,
+                System.currentTimeMillis(),
+                route.spirit().level().getGameTime());
         if (record == null) {
             return;
         }
-        record.spirit(spirit.displayName(), spirit.getUUID().toString())
-                .put("purpose", purpose)
-                .put("from_x", from.x())
-                .put("from_y", from.y())
-                .put("from_z", from.z())
-                .put("to_x", to.x())
-                .put("to_y", to.y())
-                .put("to_z", to.z())
-                .put("status", status)
-                .put("nodes", nodes)
-                .put("ms", millis)
-                .put("reason", reason)
-                .cause(routeCause(status));
+        record.spirit(route.spirit().displayName(), route.spirit().getUUID().toString())
+                .put("purpose", route.purpose())
+                .put("from_x", route.from().x())
+                .put("from_y", route.from().y())
+                .put("from_z", route.from().z())
+                .put("to_x", route.to().x())
+                .put("to_y", route.to().y())
+                .put("to_z", route.to().z())
+                .put("status", route.status())
+                .put("nodes", route.nodes())
+                .put("ms", route.millis())
+                .put("reason", route.reason())
+                .cause(routeCause(route.status()));
+        BlockCoord end = route.end();
         if (end != null) {
             record.put("end_x", end.x()).put("end_y", end.y()).put("end_z", end.z());
         }
         ModLog.append(record);
     }
 
-    public static void stuck(
-            ServerLevel level,
-            UUID spiritId,
-            String event,
-            @Nullable BlockCoord at,
-            String method,
-            @Nullable String helper,
-            String reason,
-            LogCause cause,
-            long sinceTick) {
+    public static void stuck(ServerLevel level, Stuck stuck) {
         LogRecord.Builder record = ModLog.record(LogType.STUCK, System.currentTimeMillis(), level.getGameTime());
         if (record == null) {
             return;
         }
-        Entity entity = level.getEntity(spiritId);
-        String name = entity instanceof SpiritEntity spirit ? spirit.displayName() : spiritId.toString();
-        record.spirit(name, spiritId.toString())
-                .put("event", event)
-                .put("method", method)
-                .put("helper", helper)
-                .put("reason", reason)
-                .cause(cause)
-                .put("since_tick", sinceTick);
+        Entity entity = level.getEntity(stuck.spiritId());
+        String name = entity instanceof SpiritEntity spirit
+                ? spirit.displayName()
+                : stuck.spiritId().toString();
+        record.spirit(name, stuck.spiritId().toString())
+                .put(EVENT, stuck.event())
+                .put("method", stuck.method())
+                .put("helper", stuck.helper())
+                .put("reason", stuck.reason())
+                .cause(stuck.cause())
+                .put("since_tick", stuck.sinceTick());
+        BlockCoord at = stuck.at();
         if (at != null) {
             record.at(at.x(), at.y(), at.z());
         }
@@ -184,18 +209,7 @@ public final class SpiritWorldLog {
         ModLog.append(record);
     }
 
-    public static void health(
-            MinecraftServer server,
-            double mspt,
-            double worstMspt,
-            int sourceFailures,
-            int pending,
-            int active,
-            int blocked,
-            long boardMs,
-            long pruneMs,
-            int tickets,
-            String event) {
+    public static void health(MinecraftServer server, Health health) {
         LogRecord.Builder record = ModLog.record(
                 LogType.SERVER_HEALTH,
                 System.currentTimeMillis(),
@@ -203,17 +217,17 @@ public final class SpiritWorldLog {
         if (record == null) {
             return;
         }
-        record.put("mspt", mspt)
-                .put("worst_mspt", worstMspt)
+        record.put("mspt", health.mspt())
+                .put("worst_mspt", health.worstMspt())
                 .put("players", server.getPlayerCount())
-                .put("source_failures", sourceFailures)
-                .put("pending", pending)
-                .put("active", active)
-                .put("blocked", blocked)
-                .put("board_ms", boardMs)
-                .put("prune_ms", pruneMs)
-                .put("tickets", tickets)
-                .put("event", event);
+                .put("source_failures", health.sourceFailures())
+                .put("pending", health.pending())
+                .put("active", health.active())
+                .put("blocked", health.blocked())
+                .put("board_ms", health.boardMs())
+                .put("prune_ms", health.pruneMs())
+                .put("tickets", health.tickets())
+                .put(EVENT, health.event());
         ModLog.append(record);
     }
 

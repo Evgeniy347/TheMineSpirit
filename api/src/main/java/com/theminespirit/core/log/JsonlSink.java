@@ -34,13 +34,12 @@ final class JsonlSink implements EventLog.Sink {
     public void write(LogRecord record) throws IOException {
         String line = record.toJson() + "\n";
         int length = line.getBytes(StandardCharsets.UTF_8).length;
-        BufferedWriter out = writer;
-        if (out == null || (size > 0 && size + length > rotateBytes)) {
+        if (writer == null || (size > 0 && size + length > rotateBytes)) {
             closeFile();
             openFile();
-            out = Objects.requireNonNull(writer, "Файл событий не открылся: писатель остался null");
         }
-        out.write(line);
+        Objects.requireNonNull(writer, "Файл событий не открылся: писатель остался null")
+                .write(line);
         size += length;
     }
 

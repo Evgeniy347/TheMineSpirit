@@ -22,7 +22,6 @@ class PillarDescentTests {
         for (int height = 1; height <= 12; height++) {
             Column world = new Column(height, height);
             BlockCoord feet = new BlockCoord(0, GROUND + height + 1, 0);
-            BlockCoord start = feet;
             int top = feet.y();
 
             PillarDescent.Plan plan = PillarDescent.plan(world, feet, world::own, 32)
@@ -40,11 +39,10 @@ class PillarDescentTests {
                     plan.dig().subList(0, Math.min(2, height)),
                     "Столб разбирают сверху вниз: иначе дух повиснет над пустотой");
 
-            BlockCoord at = start;
             Set<BlockCoord> removed = new HashSet<>();
             for (BlockCoord cell : plan.dig()) {
                 removed.add(cell);
-                at = cell;
+                BlockCoord at = cell;
                 assertTrue(
                         BodyMotion.fits(world.after(removed), at),
                         "После снятия " + cell + " тело обязано помещаться в " + at

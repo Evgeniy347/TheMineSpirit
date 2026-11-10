@@ -11,6 +11,7 @@ import http.client
 import json
 import threading
 import time
+import urllib.parse
 from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -93,6 +94,12 @@ class FakeRest:
         }
         self.warehouse_route = True
         self.warehouse_by_request_id: dict[str, str] = {}
+        self.quarry = {"sites": [
+            {"resource": "dirt", "state": "unset", "remaining_percent": 0},
+            {"resource": "sand", "state": "unset", "remaining_percent": 0},
+        ]}
+        self.quarry_candidates: dict[str, list] = {"dirt": [], "sand": []}
+        self.quarry_route = True
         self.clock = None
         self.tick = 1000
         self._lock = threading.RLock()
@@ -119,6 +126,15 @@ class FakeRest:
     def set_warehouse(self, **fields) -> None:
         with self._lock:
             self.warehouse.update(fields)
+
+    def set_quarry(self, sites=None, candidates=None) -> None:
+        with self._lock:
+            if sites is not None:
+                self.quarry = {"sites": [dict(entry) for entry in sites]}
+            if candidates is not None:
+                self.quarry_candidates = {
+                    resource: [dict(item) for item in items] for resource, items in candidates.items()
+                }
 
     def set_state(self, bot_id: str, state: str) -> None:
         with self._lock:
@@ -202,7 +218,9 @@ class FakeRest:
 
     def exchange(self, method: str, path: str, body) -> Exchange:
         """Запрос без сети: журнал, ручки, обрыв и мусорный ответ. Зовут HTTP-обработчик и in-process клиент."""
-        path = path.split("?", 1)[0]
+        raw_path = path
+        path, _, raw_query = path.partition("?")
+        query = {key: values[-1] for key, values in urllib.parse.parse_qs(raw_query).items()}
         with self._lock:
             entry = {"method": method, "path": path, "body": body, "t": time.monotonic(), "status": None}
             if self.clock is not None:
@@ -217,7 +235,7 @@ class FakeRest:
             entry["status"] = "dropped"
             return Exchange(None, None, b"", {}, True)
         with self._lock:
-            status, payload, headers = self._route(method, path, body)
+            status, payload, headers = self._route(method, path, body, query)
             entry["status"] = status
             is_task_post = method == "POST" and path.endswith("/tasks") and path.startswith("/v1/bots/")
             if is_task_post and self.task_post_lose_response and status == 202:
@@ -229,7 +247,7 @@ class FakeRest:
                 payload = None
         return Exchange(status, payload, response_bytes(payload), headers, False)
 
-    def _route(self, method: str, path: str, body):
+    def _route(self, method: str, path: str, body, query=None):
         if self.rate_limited:
             retry_after = self.rate_limited.pop(0)
             return 429, error_body("rate_limited", "Слишком много запросов: подождите"), {"Retry-After": str(retry_after)}
@@ -261,6 +279,27 @@ class FakeRest:
                 return 200, dict(self.warehouse), {}
             if method in ("POST", "PUT"):
                 return self._post_warehouse(body)
+        if parts[:1] == ["quarry"] and not self.quarry_route:
+            return 404, error_body("not_found", f"Путь {path} не найден"), {}
+        if parts == ["quarry", "status"] and method == "GET":
+            return 200, dict(self.quarry), {}
+        if parts == ["quarry", "search"] and method == "GET":
+            resource = (query or {}).get("resource", "")
+            return 200, {
+                "resource": resource,
+                "min": int((query or {}).get("min", 128)),
+                "max": int((query or {}).get("max", 512)),
+                "candidates": list(self.quarry_candidates.get(resource, [])),
+            }, {}
+        if parts == ["quarry", "site"]:
+            if method in ("POST", "PUT"):
+                return self._post_quarry(body)
+            if method == "DELETE":
+                resource = (query or {}).get("resource", "")
+                for entry in self.quarry["sites"]:
+                    if entry.get("resource") == resource:
+                        entry.update({"state": "unset", "remaining_percent": 0, "point": None})
+                return 200, {"resource": resource, "state": "unset"}, {}
         if len(parts) == 2 and parts[0] == "tasks" and method == "GET":
             return self._get_task(parts[1])
         if len(parts) == 2 and parts[0] == "tasks" and method == "DELETE":
@@ -299,6 +338,26 @@ class FakeRest:
         if self.plan_error:
             return 422, error_body("invalid_plan", self.plan_error), {}
         return 200, {"valid": True}, {}
+
+    def _post_quarry(self, body):
+        if not isinstance(body, dict):
+            return 400, error_body("invalid_request", "Тело места добычи должно быть объектом"), {}
+        for field in ("resource", "x", "y", "z", "by"):
+            if field not in body:
+                return 400, error_body("invalid_request", f"Не задано поле {field}"), {"field": field}
+        if body.get("by") == "graph":
+            return 400, error_body("invalid_request", "Место добычи выбирает стратег или игрок, а не граф"), {}
+        entry = {
+            "resource": body["resource"],
+            "state": "active",
+            "remaining_percent": 100,
+            "point": {"x": body["x"], "y": body["y"], "z": body["z"]},
+            "biome": body.get("biome", ""),
+        }
+        sites = [item for item in self.quarry["sites"] if item.get("resource") != body["resource"]]
+        sites.append(entry)
+        self.quarry = {"sites": sites}
+        return 200, entry, {}
 
     def _post_warehouse(self, body):
         if not isinstance(body, dict):

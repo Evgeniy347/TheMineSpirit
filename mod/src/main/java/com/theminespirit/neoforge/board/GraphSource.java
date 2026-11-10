@@ -36,6 +36,7 @@ public final class GraphSource {
     private final GraphReporter reporter = new GraphReporter();
     private final PetWork pets = new PetWork();
     private final GraphCadence cadence = new GraphCadence();
+    private final QuarryWatch quarries = new QuarryWatch();
 
     private long lastDeep = -1;
     private Set<String> lastLive = Set.of();
@@ -79,10 +80,11 @@ public final class GraphSource {
             return lastLive;
         }
         FirstStepsRunner.StageScan stageScan = scan.orElseThrow();
-        RouteWatch.Result routes = RouteWatch.tick(level, stageScan.home());
-        GraphSurroundings.Around around = GraphSurroundings.of(level, service, stageScan.home())
+        QuarryWatch.Result quarries = this.quarries.tick(level, stageScan.home(), now);
+        GraphSurroundings.Around around = GraphSurroundings.of(
+                        level, service, stageScan.home(), quarries.nearest(), quarries.distances())
                 .with(events)
-                .withRoutes(routes.events(), routes.world());
+                .withRoutes(quarries.events(), quarries.world());
         GraphState state = GraphInputs.state(level, service, spirits, stock, stageScan, graph, around);
         boolean deep = lastDeep < 0 || now < lastDeep || now - lastDeep >= DEEP_INTERVAL_TICKS;
         if (deep) {

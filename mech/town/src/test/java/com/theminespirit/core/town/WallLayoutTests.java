@@ -1,6 +1,7 @@
 package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -161,6 +162,96 @@ class WallLayoutTests {
                 IllegalArgumentException.class,
                 () -> FENCE.parts(line, List.of(), 0),
                 "Ноль частей — ошибка вызова: иначе ограда молча не строится");
+    }
+
+    @Test
+    void demoWall_ClosedRing_HasBothCornerKindsAndWicket() {
+        FenceLine line = WallDemo.line();
+        List<WallPiece> pieces = WallDemo.pieces(PRESETS);
+
+        assertExact(line.posts(), Set.of(line.posts().get(WallDemo.GATE)), pieces);
+        assertEquals(
+                2,
+                count(pieces, "fence_corner"),
+                "Витрина обязана показать два угла 90°: на одном угле не увидеть, что линия поворачивает в обе стороны: "
+                        + pieces);
+        assertEquals(
+                1,
+                count(pieces, "fence_corner45_left"),
+                "Витрина обязана показать угол 45° влево: иначе 45° в демо нет: " + pieces);
+        assertEquals(
+                1,
+                count(pieces, "fence_corner45_right"),
+                "Витрина обязана показать угол 45° вправо: левый и правый — разные схемы: " + pieces);
+        assertEquals(
+                1,
+                count(pieces, "fence_diagonal"),
+                "Витрина обязана показать участок диагонали, а не только повороты: " + pieces);
+        assertEquals(
+                1,
+                count(pieces, "fence_wicket"),
+                "В витрине одни ворота: калитка — единственный проход в замкнутом контуре: " + pieces);
+        assertRing(line.posts());
+    }
+
+    @Test
+    void demoWall_Contour_IsCompact() {
+        List<ColumnMask.Cell> posts = WallDemo.line().posts();
+        int minX = posts.stream().mapToInt(ColumnMask.Cell::x).min().orElseThrow();
+        int maxX = posts.stream().mapToInt(ColumnMask.Cell::x).max().orElseThrow();
+        int minZ = posts.stream().mapToInt(ColumnMask.Cell::z).min().orElseThrow();
+        int maxZ = posts.stream().mapToInt(ColumnMask.Cell::z).max().orElseThrow();
+
+        assertTrue(
+                maxX - minX + 1 <= 9 && maxZ - minZ + 1 <= 7 && posts.size() <= 30,
+                "Витрина ограды обязана быть компактной и строиться рядом с остальным демо: получено "
+                        + (maxX - minX + 1) + "×" + (maxZ - minZ + 1) + ", клеток " + posts.size());
+    }
+
+    @Test
+    void wall_StoneStage_HasNo45Schemes() {
+        assertTrue(
+                StageSchemes.FENCE.contains("fence_diagonal")
+                        && StageSchemes.FENCE.contains("fence_corner45_left")
+                        && StageSchemes.FENCE.contains("fence_corner45_right"),
+                "Уровень забора обязан иметь диагональ и оба угла 45°: на нём и держится витрина");
+        assertFalse(
+                StageSchemes.WALL.stream()
+                        .anyMatch(scheme -> scheme.contains("diagonal") || scheme.contains("corner45")),
+                "У каменной стены этапа 2 нет схем диагонали и угла 45°: витрину 45° строить не из чего, поэтому "
+                        + "витрина — забор этапа 0");
+    }
+
+    private static long count(List<WallPiece> pieces, String scheme) {
+        return pieces.stream().filter(piece -> piece.scheme().equals(scheme)).count();
+    }
+
+    private static void assertRing(List<ColumnMask.Cell> posts) {
+        Set<ColumnMask.Cell> cells = Set.copyOf(posts);
+        assertEquals(
+                posts.size(),
+                cells.size(),
+                "В контуре одна и та же клетка не повторяется: иначе столб строится дважды");
+        for (int index = 0; index < posts.size(); index++) {
+            ColumnMask.Cell here = posts.get(index);
+            ColumnMask.Cell next = posts.get((index + 1) % posts.size());
+            assertEquals(
+                    1,
+                    Math.abs(here.x() - next.x()) + Math.abs(here.z() - next.z()),
+                    "Соседние клетки контура обязаны стоять вплотную: иначе в ограде дыра между " + here + " и "
+                            + next);
+            int neighbours = 0;
+            for (ColumnMask.Cell other : cells) {
+                if (!other.equals(here) && Math.abs(here.x() - other.x()) + Math.abs(here.z() - other.z()) == 1) {
+                    neighbours++;
+                }
+            }
+            assertEquals(
+                    2,
+                    neighbours,
+                    "У клетки " + here + " обязано быть ровно два соседа по контуру: иначе ограда ветвится или "
+                            + "касается сама себя");
+        }
     }
 
     private static List<ColumnMask.Cell> run(List<ColumnMask.Cell> line, int x, int z, int dx, int dz, int count) {

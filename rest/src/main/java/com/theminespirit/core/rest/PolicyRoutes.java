@@ -9,9 +9,9 @@ import java.util.Objects;
 
 public final class PolicyRoutes {
     private final PolicyGateway gateway;
-    private final IdempotencyCache idempotency;
+    private final Idempotency idempotency;
 
-    public PolicyRoutes(PolicyGateway gateway, IdempotencyCache idempotency) {
+    public PolicyRoutes(PolicyGateway gateway, Idempotency idempotency) {
         this.gateway = Objects.requireNonNull(
                 gateway, "gateway не может быть null: разрешения читает и меняет только платформа");
         this.idempotency = Objects.requireNonNull(

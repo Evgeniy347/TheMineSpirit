@@ -2,6 +2,8 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.board.route.QuarryArea;
+import com.theminespirit.core.board.route.QuarrySite;
 import com.theminespirit.core.board.route.RouteMarker;
 import com.theminespirit.core.board.route.RoutePlan;
 import com.theminespirit.core.board.route.RouteResource;
@@ -22,6 +24,10 @@ public final class RouteStore extends SavedData {
     private static final String X = "X";
     private static final String Y = "Y";
     private static final String Z = "Z";
+    private static final String RADIUS = "Radius";
+    private static final String BIOME = "Biome";
+    private static final String RESERVE = "Reserve";
+    private static final String ALERT = "Alert";
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final SavedData.Factory<RouteStore> FACTORY =
             new SavedData.Factory<>(RouteStore::new, RouteStore::load);
@@ -51,6 +57,20 @@ public final class RouteStore extends SavedData {
 
     public void mark(RouteResource resource, BlockCoord point) {
         apply(plan.mark(resource, point));
+    }
+
+    public void mark(QuarrySite site) {
+        apply(plan.mark(site));
+    }
+
+    public void clear(RouteResource resource) {
+        apply(plan.unmark(resource));
+    }
+
+    public void noteAlerted(RouteResource resource, long tick) {
+        if (plan.marker(resource).isPresent()) {
+            apply(plan.alerted(resource, tick));
+        }
     }
 
     public void retarget(RouteResource resource, BlockCoord point) {
@@ -86,7 +106,16 @@ public final class RouteStore extends SavedData {
             CompoundTag entry = tag.getCompound(resource.name());
             try {
                 BlockCoord point = new BlockCoord(entry.getInt(X), entry.getInt(Y), entry.getInt(Z));
-                markers.add(new RouteMarker(resource, point, entry.getBoolean(PATH), entry.getBoolean(ROUTE)));
+                int radius = entry.contains(RADIUS) ? entry.getInt(RADIUS) : QuarryArea.DEFAULT_RADIUS;
+                markers.add(new RouteMarker(
+                        resource,
+                        point,
+                        entry.getBoolean(PATH),
+                        entry.getBoolean(ROUTE),
+                        radius,
+                        entry.getString(BIOME),
+                        entry.getInt(RESERVE),
+                        entry.getLong(ALERT)));
             } catch (IllegalArgumentException broken) {
                 LOGGER.error(
                         "[route] сохранённая точка {} не читается, маршрут будет найден заново: {}",
@@ -107,6 +136,10 @@ public final class RouteStore extends SavedData {
             entry.putInt(Z, marker.point().z());
             entry.putBoolean(PATH, marker.pathBuilt());
             entry.putBoolean(ROUTE, marker.routeBuilt());
+            entry.putInt(RADIUS, marker.radius());
+            entry.putString(BIOME, marker.biome());
+            entry.putInt(RESERVE, marker.initialReserve());
+            entry.putLong(ALERT, marker.alertedAt());
             tag.put(marker.resource().name(), entry);
         }
         return tag;

@@ -20,13 +20,12 @@ import org.jspecify.annotations.Nullable;
 public final class SpiritLog {
     private static final long REFUSAL_DEDUPE_TICKS = 200;
     private static final int MAX_DEDUPE_KEYS = 4096;
+    private static final String REASON = "reason";
     private static final Map<String, Long> REFUSALS = new ConcurrentHashMap<>();
 
     private SpiritLog() {}
 
-    public static void block(
-            ServerLevel level,
-            @Nullable SpiritEntity spirit,
+    public record BlockChange(
             String actorType,
             String actor,
             String action,
@@ -35,20 +34,22 @@ public final class SpiritLog {
             BlockPos pos,
             String basis,
             LogCause cause,
-            String reason) {
+            String reason) {}
+
+    public static void block(ServerLevel level, @Nullable SpiritEntity spirit, BlockChange change) {
         LogRecord.Builder record = ModLog.record(LogType.BLOCK_CHANGE, System.currentTimeMillis(), level.getGameTime());
         if (record == null) {
             return;
         }
-        record.put("actor_type", actorType)
-                .put("actor", actor)
-                .put("action", action)
-                .put("block_before", before.toString())
-                .put("block_after", after.toString())
-                .at(pos.getX(), pos.getY(), pos.getZ())
-                .put("basis", basis)
-                .cause(cause)
-                .put("reason", reason);
+        record.put("actor_type", change.actorType())
+                .put("actor", change.actor())
+                .put("action", change.action())
+                .put("block_before", change.before().toString())
+                .put("block_after", change.after().toString())
+                .at(change.pos().getX(), change.pos().getY(), change.pos().getZ())
+                .put("basis", change.basis())
+                .cause(change.cause())
+                .put(REASON, change.reason());
         if (spirit != null) {
             record.put("ticket", SpiritLogSupport.ticketOf(spirit));
         }
@@ -77,15 +78,16 @@ public final class SpiritLog {
         block(
                 level,
                 spirit,
-                spirit == null ? "world" : "spirit",
-                spirit == null ? "мир" : spirit.displayName(),
-                action,
-                state,
-                state,
-                pos,
-                basis,
-                LogCause.REFUSE,
-                reason);
+                new BlockChange(
+                        spirit == null ? "world" : "spirit",
+                        spirit == null ? "мир" : spirit.displayName(),
+                        action,
+                        state,
+                        state,
+                        pos,
+                        basis,
+                        LogCause.REFUSE,
+                        reason));
     }
 
     public static void playerBlock(
@@ -96,7 +98,7 @@ public final class SpiritLog {
             BlockState after,
             BlockPos pos,
             String basis) {
-        block(level, null, "player", actor, action, before, after, pos, basis, LogCause.BREAK, "");
+        block(level, null, new BlockChange("player", actor, action, before, after, pos, basis, LogCause.BREAK, ""));
     }
 
     public static void taskAssigned(ServerLevel level, BoardTicket ticket, TicketTarget target, SpiritEntity spirit) {
@@ -111,7 +113,7 @@ public final class SpiritLog {
                 .put("priority", ticket.priority())
                 .put("attempts", SpiritLogSupport.attempts(level, ticket.id()))
                 .cause(LogCause.CHOSEN)
-                .put("reason", "")
+                .put(REASON, "")
                 .put("source_node", SpiritLogSupport.graphSource(ticket))
                 .put("target_x", target.target().x())
                 .put("target_y", target.target().y())
@@ -132,7 +134,7 @@ public final class SpiritLog {
                 .put("event", entry.event().name())
                 .put("priority", entry.effectivePriority())
                 .cause(entry.event() == BoardLog.Event.BLOCKED ? LogCause.BLOCKED : LogCause.UNBLOCKED)
-                .put("reason", String.join("; ", entry.modifiers()))
+                .put(REASON, String.join("; ", entry.modifiers()))
                 .put("source_node", SpiritLogSupport.graphSource(entry.cause()));
         SpiritLogSupport.spirit(level, entry.spirit(), record);
         ModLog.append(record);
@@ -156,7 +158,7 @@ public final class SpiritLog {
                 .put("priority", ticket.priority())
                 .put("attempts", SpiritLogSupport.attempts(level, ticket.id()))
                 .cause(taskCause(event))
-                .put("reason", SpiritLogSupport.reason(ticket))
+                .put(REASON, SpiritLogSupport.reason(ticket))
                 .put("missing", LogJson.writeValue(ticket.requiredItems()))
                 .put("source_node", SpiritLogSupport.graphSource(ticket));
         if (holder != null) {

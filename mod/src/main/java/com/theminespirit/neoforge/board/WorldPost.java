@@ -30,6 +30,8 @@ import net.minecraft.core.BlockPos;
 
 final class WorldPost {
     static final String REPAIR_NODE = "repair:";
+    static final String BACKFILL_PREFIX = "world:backfill:";
+    static final List<String> OPEN_PREFIXES = List.of(BACKFILL_PREFIX, "world:trace:");
     private static final String REPAIR = REPAIR_NODE;
     private static final Comparator<BlockCoord> ORDER = Comparator.comparingInt(BlockCoord::y)
             .thenComparingInt(BlockCoord::x)
@@ -112,7 +114,7 @@ final class WorldPost {
         if (found.pits().isEmpty()) {
             return false;
         }
-        int room = room(open(post, "world:backfill:"), BATCH);
+        int room = room(post.openCount(BACKFILL_PREFIX), BATCH);
         if (room == 0) {
             return true;
         }
@@ -121,7 +123,7 @@ final class WorldPost {
         for (PitGroups.Pit pit : PitGroups.group(found.pits())) {
             String id = fills.covering(pit.cells()).orElse(null);
             if (id == null) {
-                id = "world:backfill:" + pit.key();
+                id = BACKFILL_PREFIX + pit.key();
                 if (post.done(id)) {
                     continue;
                 }
@@ -151,7 +153,7 @@ final class WorldPost {
     private static FillIndex openFills(GraphPost post) {
         Map<String, PlotLeveling> fills = new LinkedHashMap<>();
         for (var ticket : post.service.board().all()) {
-            if (!ticket.id().startsWith("world:backfill:")) {
+            if (!ticket.id().startsWith(BACKFILL_PREFIX)) {
                 continue;
             }
             var status = post.service.board().statusOf(ticket.id()).orElse(null);
@@ -235,7 +237,7 @@ final class WorldPost {
         if (found.traces().isEmpty()) {
             return false;
         }
-        int room = room(open(post, "world:trace:"), BATCH);
+        int room = room(post.openCount("world:trace:"), BATCH);
         if (room == 0) {
             return true;
         }
@@ -262,22 +264,6 @@ final class WorldPost {
 
     static int room(int open, int batch) {
         return Math.max(0, batch - open);
-    }
-
-    private static int open(GraphPost post, String prefix) {
-        int open = 0;
-        for (var ticket : post.service.board().all()) {
-            if (!ticket.id().startsWith(prefix)) {
-                continue;
-            }
-            var status = post.service.board().statusOf(ticket.id()).orElse(null);
-            if (status == BoardStatus.PENDING
-                    || status == BoardStatus.WAITING_RESOURCES
-                    || status == BoardStatus.ASSIGNED) {
-                open++;
-            }
-        }
-        return open;
     }
 
     private static String key(BlockCoord at) {

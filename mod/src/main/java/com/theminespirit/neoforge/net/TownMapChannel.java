@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.net;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.ui.MapMarker;
+import com.theminespirit.core.ui.MapQuarry;
 import com.theminespirit.core.ui.TerrainTile;
 import com.theminespirit.core.ui.TownMapView;
 import com.theminespirit.neoforge.board.TerrainTiles;
@@ -33,7 +34,7 @@ public final class TownMapChannel {
     public static final CustomPacketPayload.Type<MarkersReply> MARKERS_REPLY = new CustomPacketPayload.Type<>(
             ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "town_markers_reply"));
 
-    private static final String PROTOCOL_VERSION = "4";
+    private static final String PROTOCOL_VERSION = "5";
     private static final int MAX_RECTS = 32_768;
     private static final int MAX_POINTS = 16_384;
     private static final int MAX_TILES = 4096;
@@ -65,12 +66,13 @@ public final class TownMapChannel {
         }
     }
 
-    public record MarkersReply(List<MapMarker> markers) implements CustomPacketPayload {
+    public record MarkersReply(List<MapMarker> markers, List<MapQuarry> quarries) implements CustomPacketPayload {
         public static final StreamCodec<FriendlyByteBuf, MarkersReply> STREAM_CODEC =
                 StreamCodec.of(TownMapChannel::writeMarkersReply, TownMapChannel::readMarkersReply);
 
         public MarkersReply {
             markers = List.copyOf(Objects.requireNonNull(markers, "Метки карты не могут быть null"));
+            quarries = List.copyOf(Objects.requireNonNull(quarries, "Места добычи карты не могут быть null"));
         }
 
         @Override
@@ -134,7 +136,7 @@ public final class TownMapChannel {
             List<MapMarker> markers = TownSnapshots.markerBounds(level)
                     .map(bounds -> TownMarkers.around(level, bounds))
                     .orElse(List.of());
-            context.reply(new MarkersReply(markers));
+            context.reply(new MarkersReply(markers, TownMarkers.quarries(level)));
         }
     }
 
@@ -169,10 +171,11 @@ public final class TownMapChannel {
 
     private static void writeMarkersReply(FriendlyByteBuf buf, MarkersReply reply) {
         writeMarkers(buf, reply.markers());
+        TownMapQuarryCodec.write(buf, reply.quarries());
     }
 
     private static MarkersReply readMarkersReply(FriendlyByteBuf buf) {
-        return new MarkersReply(readMarkers(buf));
+        return new MarkersReply(readMarkers(buf), TownMapQuarryCodec.read(buf));
     }
 
     private static void writeMarkers(FriendlyByteBuf buf, List<MapMarker> all) {

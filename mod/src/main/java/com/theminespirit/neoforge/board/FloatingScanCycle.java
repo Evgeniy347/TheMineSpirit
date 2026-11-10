@@ -94,8 +94,8 @@ final class FloatingScanCycle {
         for (SectionSlice slice : slices(area, bottom, top, WHOLE_CYCLE)) {
             scanSlice(level, area, slice, scan, candidates, seen, found);
         }
-        collectPlaced(level, region, bottom, top, scan, seen, found, true);
-        collectPlaced(level, region, bottom, top, scan, seen, found, false);
+        collectPlaced(level, region, new Bounds(bottom, top), scan, seen, found, true);
+        collectPlaced(level, region, new Bounds(bottom, top), scan, seen, found, false);
         return List.copyOf(found);
     }
 
@@ -111,9 +111,9 @@ final class FloatingScanCycle {
         for (SectionSlice slice : batch.slices()) {
             scanSlice(level, area, slice, scan, candidates, seen, pending);
         }
-        collectPlaced(level, region, bottom, top, scan, seen, pending, true);
+        collectPlaced(level, region, new Bounds(bottom, top), scan, seen, pending, true);
         if (++placedSteps % LEGACY_EVERY == 0) {
-            collectPlaced(level, region, bottom, top, scan, seen, pending, false);
+            collectPlaced(level, region, new Bounds(bottom, top), scan, seen, pending, false);
         }
         if (batch.cycleDone()) {
             published = List.copyOf(pending);
@@ -188,17 +188,21 @@ final class FloatingScanCycle {
         }
     }
 
+    record Bounds(int bottom, int top) {}
+
     private static void collectPlaced(
             ServerLevel level,
             ColumnMask area,
-            int bottom,
-            int top,
+            Bounds bounds,
             FloatingScan.Scan scan,
             Set<BlockCoord> seen,
             List<FloatingBlocks.Finding> found,
             boolean temporary) {
         for (BlockCoord cell : temporary ? FloatingScan.placed(level, area) : FloatingScan.legacy(level, area)) {
-            if (cell.y() >= bottom && cell.y() <= top && area.contains(cell.x(), cell.z()) && seen.add(cell)) {
+            if (cell.y() >= bounds.bottom()
+                    && cell.y() <= bounds.top()
+                    && area.contains(cell.x(), cell.z())
+                    && seen.add(cell)) {
                 FloatingBlocks.classify(cell, scan)
                         .ifPresent(finding -> FloatingScan.classifyTree(finding, scan, seen, found));
             }

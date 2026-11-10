@@ -1,14 +1,9 @@
 package com.theminespirit.core.navigation;
 
+import com.theminespirit.core.movement.LiveFixture;
 import com.theminespirit.core.observation.BlockCoord;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.StringTokenizer;
 
 final class LiveNavWorld implements NavWorld {
     private enum Kind {
@@ -22,40 +17,18 @@ final class LiveNavWorld implements NavWorld {
         OBSTACLE
     }
 
-    private final Map<BlockCoord, Kind> cells = new HashMap<>();
+    private final Map<BlockCoord, Kind> cells;
 
-    private LiveNavWorld() {}
+    private LiveNavWorld(Map<BlockCoord, Kind> cells) {
+        this.cells = cells;
+    }
 
     static LiveNavWorld live() throws IOException {
         return live("/live/pit-warehouse-0611.live");
     }
 
     static LiveNavWorld live(String resource) throws IOException {
-        try (InputStream stream = LiveNavWorld.class.getResourceAsStream(resource)) {
-            if (stream == null) {
-                throw new IllegalStateException("Нет живой фикстуры: " + resource);
-            }
-            LiveNavWorld world = new LiveNavWorld();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    if (line.isBlank() || line.startsWith("#") || line.startsWith("feet")) {
-                        continue;
-                    }
-                    StringTokenizer parts = new StringTokenizer(line);
-                    if (parts.countTokens() != 4) {
-                        throw new IllegalArgumentException("Строка живой фикстуры ямы не из четырёх полей: " + line);
-                    }
-                    world.cells.put(
-                            new BlockCoord(
-                                    Integer.parseInt(parts.nextToken()),
-                                    Integer.parseInt(parts.nextToken()),
-                                    Integer.parseInt(parts.nextToken())),
-                            Kind.valueOf(parts.nextToken()));
-                }
-            }
-            return world;
-        }
+        return new LiveNavWorld(LiveFixture.load(Kind.class, resource));
     }
 
     private Kind kind(int x, int y, int z) {

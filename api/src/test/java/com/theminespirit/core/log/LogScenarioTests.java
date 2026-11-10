@@ -20,22 +20,22 @@ class LogScenarioTests {
 
     @Test
     void scenario_ThreeSpiritsWholeDay_EveryTableGetsTypedRows() throws Exception {
-        EventLog log = new EventLog(directory, "1.0+test", "live");
-        List<String> spirits = List.of("дух-1", "дух-2", "дух-3");
-        for (int index = 0; index < spirits.size(); index++) {
-            String spirit = spirits.get(index);
-            appendBlock(log, spirit, index);
-            appendTask(log, spirit, index);
-            appendGraph(log, spirit, index);
-            appendRoute(log, spirit, index);
-            appendStuck(log, spirit, index);
-            appendItem(log, spirit, index);
-            appendSample(log, spirit, index);
-            appendDeath(log, spirit, index);
+        try (EventLog log = new EventLog(directory, "1.0+test", "live")) {
+            List<String> spirits = List.of("дух-1", "дух-2", "дух-3");
+            for (int index = 0; index < spirits.size(); index++) {
+                String spirit = spirits.get(index);
+                appendBlock(log, spirit, index);
+                appendTask(log, spirit, index);
+                appendGraph(log, spirit, index);
+                appendRoute(log, spirit, index);
+                appendStuck(log, spirit, index);
+                appendItem(log, spirit, index);
+                appendSample(log, spirit, index);
+                appendDeath(log, spirit, index);
+            }
+            appendHealth(log);
+            appendMessage(log);
         }
-        appendHealth(log);
-        appendMessage(log);
-        log.close();
 
         List<Map<String, Object>> rows = readRows();
         Map<LogType, Integer> counts = new EnumMap<>(LogType.class);

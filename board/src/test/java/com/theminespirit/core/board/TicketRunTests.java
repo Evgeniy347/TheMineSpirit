@@ -1,6 +1,8 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.task.SpiritReading;
@@ -65,6 +67,21 @@ class TicketRunTests {
                 "После рестарта поколение задания неизвестно, а дух может выполнять чужой фоновый скрипт: "
                         + "прогресс такого скрипта заданию не принадлежит, поэтому задание заново стартует свой план "
                         + "(observe15 B2), иначе сторож прогресса берёт чужой RunProgress");
+    }
+
+    @Test
+    void restoredTask_UnknownGeneration_OwnedBySnapshot() {
+        assertTrue(
+                TicketRun.restoredTask(SpiritReading.UNKNOWN_GENERATION),
+                "У задачи из снимка нет поколения: сброс сборки вправе снять её как задание доски");
+    }
+
+    @Test
+    void restoredTask_KnownGeneration_NotOwnedBySnapshot() {
+        assertFalse(
+                TicketRun.restoredTask(7),
+                "Дух с новым поколением уже получил другую задачу (REST, команда, граф): сброс сборки не вправе "
+                        + "отменять её вместо старого задания доски");
     }
 
     @Test

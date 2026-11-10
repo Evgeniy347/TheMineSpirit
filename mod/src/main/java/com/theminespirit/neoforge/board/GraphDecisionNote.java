@@ -25,8 +25,8 @@ final class GraphDecisionNote {
         if (!snapshot.equals(lastSnapshot)) {
             lastSnapshot = snapshot;
             for (GraphDecisions.Row row : decisions.decisions()) {
-                SpiritWorldLog.graphDecision(
-                        row.task(), row.spirit(), "", row.weight(), row.feasible(), row.next(), row.why(), now);
+                SpiritWorldLog.graphDecision(new SpiritWorldLog.GraphDecision(
+                        row.task(), row.spirit(), "", row.weight(), row.feasible(), row.next(), row.why(), now));
             }
         }
         if (!notes.due("decisions", now)) {

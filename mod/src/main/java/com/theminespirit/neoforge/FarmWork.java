@@ -34,7 +34,7 @@ final class FarmWork {
     private BlockCoord cropPos;
     private int columnHeight;
 
-    FarmWork(
+    record Setup(
             SpiritEntity spirit,
             FarmJob job,
             CropKind crop,
@@ -43,26 +43,30 @@ final class FarmWork {
             LevelFarmView view,
             FarmActions actions,
             HarvestTargets targets,
-            FarmCounters counters,
+            FarmCounters counters) {}
+
+    record Helpers(
             FarmSearch search,
             FarmLoot loot,
             BlockBreaker breaker,
             Consumer<String> fail,
-            Function<BlockPos, BlockBreaker.Begin> beginUnlimited) {
-        this.spirit = spirit;
-        this.job = job;
-        this.crop = crop;
-        this.count = count;
-        this.replant = replant;
-        this.view = view;
-        this.actions = actions;
-        this.targets = targets;
-        this.counters = counters;
-        this.search = search;
-        this.loot = loot;
-        this.breaker = breaker;
-        this.fail = fail;
-        this.beginUnlimited = beginUnlimited;
+            Function<BlockPos, BlockBreaker.Begin> beginUnlimited) {}
+
+    FarmWork(Setup setup, Helpers helpers) {
+        this.spirit = setup.spirit();
+        this.job = setup.job();
+        this.crop = setup.crop();
+        this.count = setup.count();
+        this.replant = setup.replant();
+        this.view = setup.view();
+        this.actions = setup.actions();
+        this.targets = setup.targets();
+        this.counters = setup.counters();
+        this.search = helpers.search();
+        this.loot = helpers.loot();
+        this.breaker = helpers.breaker();
+        this.fail = helpers.fail();
+        this.beginUnlimited = helpers.beginUnlimited();
     }
 
     CropKind kind() {

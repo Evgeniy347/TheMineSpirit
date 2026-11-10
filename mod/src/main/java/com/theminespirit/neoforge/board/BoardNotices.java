@@ -80,14 +80,15 @@ final class BoardNotices {
         }
         SpiritWorldLog.stuck(
                 (ServerLevel) helper.level(),
-                rescuee,
-                "rescue_start",
-                null,
-                "board",
-                helper.displayName(),
-                RescuePlans.claimNote(helper.getUUID(), rescuee, helper.displayName(), name(helper, rescuee)),
-                LogCause.RESCUE_START,
-                helper.level().getGameTime());
+                new SpiritWorldLog.Stuck(
+                        rescuee,
+                        "rescue_start",
+                        null,
+                        "board",
+                        helper.displayName(),
+                        RescuePlans.claimNote(helper.getUUID(), rescuee, helper.displayName(), name(helper, rescuee)),
+                        LogCause.RESCUE_START,
+                        helper.level().getGameTime()));
         LOGGER.info(
                 "[rescue] {}: {}",
                 RescuePlans.claimNote(helper.getUUID(), rescuee, helper.displayName(), name(helper, rescuee)),

@@ -3,9 +3,12 @@ package com.theminespirit.neoforge.client;
 import com.theminespirit.core.ui.BoardLayout;
 import com.theminespirit.core.ui.MapHint;
 import com.theminespirit.core.ui.MapHit;
+import com.theminespirit.core.ui.MapLegend;
+import com.theminespirit.core.ui.MapLegendPaint;
 import com.theminespirit.core.ui.MapMarker;
 import com.theminespirit.core.ui.MapMarkers;
 import com.theminespirit.core.ui.MapPaint;
+import com.theminespirit.core.ui.MapQuarry;
 import com.theminespirit.core.ui.MapStyle;
 import com.theminespirit.core.ui.MapViewport;
 import com.theminespirit.core.ui.ScreenTabs;
@@ -13,6 +16,7 @@ import com.theminespirit.core.ui.TerrainRaster;
 import com.theminespirit.core.ui.TownMapView;
 import com.theminespirit.neoforge.net.TownMapChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.client.Minecraft;
@@ -29,6 +33,10 @@ public final class TownMapScreen extends Screen {
     private static final int TEXT = 0xFFFFFFFF;
     private static final int TITLE_Y = 6;
     private static final int MARKER_TICKS = 20;
+    private static final MapLegend.Text LEGEND_TEXT = (key, args) ->
+            Component.translatable(key, Arrays.stream(args).boxed().toArray()).getString();
+
+    private MapLegend legend = MapLegend.initial();
     private @Nullable TownMapView view;
     private TerrainRaster terrain = TerrainRaster.EMPTY;
     private @Nullable TerrainTexture texture;
@@ -36,6 +44,7 @@ public final class TownMapScreen extends Screen {
     private boolean answered;
     private boolean offline;
     private int markerAge;
+    private boolean legendDrag;
 
     public TownMapScreen() {
         super(Component.translatable(KEY + "title"));
@@ -52,11 +61,12 @@ public final class TownMapScreen extends Screen {
         }
     }
 
-    void showMarkers(List<MapMarker> markers) {
+    void showMarkers(List<MapMarker> markers, List<MapQuarry> quarries) {
         TownMapView current = view;
         if (current != null) {
             view = current.withMarkers(markers);
         }
+        legend = legend.withQuarries(quarries);
     }
 
     @Override
@@ -94,18 +104,29 @@ public final class TownMapScreen extends Screen {
             return;
         }
         MapPaint.Font metrics = new MapPaint.Font(font::width, font.lineHeight);
-        Optional<MapMarker> hoveredMarker = MapMarkers.at(current.markers(), window, metrics, mouseX, mouseY);
+        TownMapView shown = withPaths(current);
+        MapLegend.Frame legendFrame = legend.frame(window, metrics, LEGEND_TEXT);
+        boolean overLegend = legendFrame.inside(mouseX, mouseY);
+        Optional<MapMarker> hoveredMarker =
+                overLegend ? Optional.empty() : MapMarkers.at(shown.markers(), window, metrics, mouseX, mouseY);
         Optional<TownMapView.MapRect> hovered =
-                hoveredMarker.isPresent() ? Optional.empty() : MapHit.lotAt(current, window, mouseX, mouseY);
+                overLegend ? Optional.empty() : MapHit.lotAt(shown, window, mouseX, mouseY);
         List<MapPaint.Shape> shapes =
-                new ArrayList<>(MapPaint.of(current, Optional.of(terrain), window, hovered, metrics));
-        shapes.addAll(MapMarkers.paint(current.markers(), window, hoveredMarker, metrics));
+                new ArrayList<>(MapPaint.of(shown, Optional.of(terrain), window, hovered, metrics));
+        shapes.addAll(MapMarkers.paint(shown.markers(), window, hoveredMarker, metrics));
+        shapes.addAll(MapLegendPaint.of(legend, window, metrics, LEGEND_TEXT));
+        if (!legend.open()) {
+            shapes.addAll(MapLegendPaint.tab(window));
+        }
         for (MapPaint.Shape shape : shapes) {
             switch (shape) {
                 case MapPaint.Fill fill -> graphics.fill(fill.x1(), fill.y1(), fill.x2(), fill.y2(), fill.color());
                 case MapPaint.Text text -> graphics.drawString(font, text.text(), text.x(), text.y(), text.color());
                 case MapPaint.Raster raster -> drawTerrain(graphics, raster, window);
             }
+        }
+        if (overLegend) {
+            return;
         }
         if (hoveredMarker.isPresent()) {
             graphics.renderComponentTooltip(font, hint(MapHint.of(hoveredMarker.orElseThrow())), mouseX, mouseY);
@@ -117,6 +138,9 @@ public final class TownMapScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         MapViewport window = window();
+        if (legend.open() && legend.frame(window, metrics(), LEGEND_TEXT).inside(mouseX, mouseY)) {
+            return true;
+        }
         if (view != null && window.inside(mouseX, mouseY)) {
             viewport = window.zoom(mouseX, mouseY, scrollY);
             return true;
@@ -125,7 +149,44 @@ public final class TownMapScreen extends Screen {
     }
 
     @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0 && view != null) {
+            MapViewport window = window();
+            if (legend.open()) {
+                MapLegend.Frame frame = legend.frame(window, metrics(), LEGEND_TEXT);
+                if (frame.closeAt(mouseX, mouseY)) {
+                    legend = legend.closed();
+                    return true;
+                }
+                MapLegend.Row row = frame.rowAt(mouseX, mouseY);
+                if (row != null && row.kind() == MapLegend.Kind.PATHS) {
+                    legend = legend.toggledPaths();
+                    return true;
+                }
+                if (frame.inside(mouseX, mouseY)) {
+                    legendDrag = true;
+                    return true;
+                }
+            } else if (MapLegendPaint.tabAt(window, mouseX, mouseY)) {
+                legend = legend.opened();
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        legendDrag = false;
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (button == 0 && legendDrag && view != null) {
+            legend = legend.moved((int) Math.round(dragX), (int) Math.round(dragY), window(), metrics(), LEGEND_TEXT);
+            return true;
+        }
         if (button == 0 && view != null) {
             viewport = window().pan(dragX, dragY);
             return true;
@@ -142,6 +203,14 @@ public final class TownMapScreen extends Screen {
     public void removed() {
         closeTexture();
         super.removed();
+    }
+
+    private MapPaint.Font metrics() {
+        return new MapPaint.Font(font::width, font.lineHeight);
+    }
+
+    private TownMapView withPaths(TownMapView map) {
+        return legend.pathsVisible() ? map : map.withoutPaths();
     }
 
     private MapViewport window() {

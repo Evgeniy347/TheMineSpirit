@@ -123,11 +123,6 @@ final class BuildSchematicScript implements ScriptInstance {
     final SchematicPlacement placement;
     private final SchematicWorkPhase workPhase;
 
-    private static Schematic previous(BuildSchematicParams params) {
-        Schematic schematic = SchematicResources.load(params.previous());
-        return params.wood() == null ? schematic : SchematicWood.swap(schematic, params.wood());
-    }
-
     BuildSchematicScript(SpiritEntity spirit, BuildSchematicParams params) {
         this(
                 spirit,
@@ -171,6 +166,11 @@ final class BuildSchematicScript implements ScriptInstance {
         if (level instanceof ServerLevel server) {
             PathNetworkService.beginSite(server, buildKey, site.networkBox(SITE_NETWORK_RING), site.doorCells());
         }
+    }
+
+    private static Schematic previous(BuildSchematicParams params) {
+        Schematic schematic = SchematicResources.load(params.previous());
+        return params.wood() == null ? schematic : SchematicWood.swap(schematic, params.wood());
     }
 
     @Override

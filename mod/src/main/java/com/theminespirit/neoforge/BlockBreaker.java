@@ -20,10 +20,10 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public final class BlockBreaker {
     public static final double REACH = 4.5;
+    static final int NO_FORCED_SLOT = Integer.MIN_VALUE;
     private static final int NO_STAGE = -1;
     private static final int MAX_STAGE = 9;
     private static final int STAGES = 10;
-    static final int NO_FORCED_SLOT = Integer.MIN_VALUE;
 
     public enum Progress {
         BREAKING,
@@ -141,15 +141,16 @@ public final class BlockBreaker {
         cancel();
         this.intent = intent;
         BreakRefusal refusals = new BreakRefusal(spirit, intent);
-        this.ground = BreakRefusal.groundFor(intent);
+        PlotProtection.Ground ground = BreakRefusal.groundFor(intent);
         if (escaping) {
             BlockPos feet = spirit.blockPosition();
             if (SelfRescue.mayBreakAtFeet(
                     new BlockCoord(target.getX(), target.getY(), target.getZ()),
                     new BlockCoord(feet.getX(), feet.getY(), feet.getZ()))) {
-                this.ground = PlotProtection.Ground.SELF_RESCUE;
+                ground = PlotProtection.Ground.SELF_RESCUE;
             }
         }
+        this.ground = ground;
         Begin refusal = BreakCheck.refusal(
                 new BreakCheck.Request(spirit, target, intent, reachLimited, leavesPass, escaping, rescue, refusals));
         if (refusal != null) {
@@ -267,14 +268,8 @@ public final class BlockBreaker {
         BreakDestroy.Result result = BreakDestroy.after(
                 spirit,
                 level,
-                brokenPos,
-                broken,
-                blockEntity,
-                usedTool,
-                dropsAllowed,
-                wearsTool,
-                intent.name(),
-                ground);
+                new BreakDestroy.Break(
+                        brokenPos, broken, blockEntity, usedTool, dropsAllowed, wearsTool, intent.name(), ground));
         brokenToolSuffix = result.suffix();
     }
 

@@ -56,14 +56,44 @@ public final class RoutePlan {
     public RoutePlan mark(RouteResource resource, BlockCoord point) {
         Objects.requireNonNull(resource, "Ресурс не может быть null: маркер ставится для него");
         Objects.requireNonNull(point, "Точка не может быть null: маркер ставится в мир");
+        return mark(new QuarrySite(resource, point, QuarryArea.DEFAULT_RADIUS, "", 0));
+    }
+
+    public RoutePlan mark(QuarrySite site) {
+        Objects.requireNonNull(site, "Место добычи не может быть null: маркер ставится для него");
         Map<RouteResource, RouteMarker> next = new EnumMap<>(RouteResource.class);
         next.putAll(markers);
-        RouteMarker before = next.get(resource);
-        if (before != null && before.point().equals(point)) {
+        RouteMarker before = next.get(site.resource());
+        if (before != null && before.point().equals(site.point())) {
             return this;
         }
-        next.put(resource, new RouteMarker(resource, point, false, false));
+        next.put(
+                site.resource(),
+                new RouteMarker(
+                        site.resource(),
+                        site.point(),
+                        false,
+                        false,
+                        site.radius(),
+                        site.biome(),
+                        site.initialReserve(),
+                        0L));
         return new RoutePlan(next);
+    }
+
+    public RoutePlan unmark(RouteResource resource) {
+        Objects.requireNonNull(resource, "Ресурс не может быть null: место снимается у него");
+        if (!markers.containsKey(resource)) {
+            return this;
+        }
+        Map<RouteResource, RouteMarker> next = new EnumMap<>(RouteResource.class);
+        next.putAll(markers);
+        next.remove(resource);
+        return new RoutePlan(next);
+    }
+
+    public RoutePlan alerted(RouteResource resource, long tick) {
+        return update(resource, marker -> marker.withAlertedAt(tick));
     }
 
     public RoutePlan retarget(RouteResource resource, BlockCoord point) {

@@ -67,4 +67,48 @@ class RoutePlanTests {
         }
         assertTrue(rejected, "Готовая точка добычи без тропы — ложное состояние: порядок держит конструктор маркера");
     }
+
+    @Test
+    void mark_Site_StoresReserveAndBiome() {
+        QuarrySite site = new QuarrySite(RouteResource.DIRT, new BlockCoord(80, 64, 0), 6, "minecraft:meadow", 120);
+
+        RoutePlan plan = RoutePlan.empty().mark(site);
+
+        RouteMarker marker = plan.marker(RouteResource.DIRT).orElseThrow();
+        assertEquals(120, marker.initialReserve(), "Запас места сохраняется: от него считается остаток %");
+        assertEquals(6, marker.radius(), "Радиус области сохраняется: оценка и копание одной формы");
+        assertEquals("minecraft:meadow", marker.biome(), "Биом места сохраняется для поиска и объяснения");
+    }
+
+    @Test
+    void mark_SameSite_KeepsPathAndReserve() {
+        QuarrySite site = new QuarrySite(RouteResource.SAND, new BlockCoord(0, 64, 40), 4, "minecraft:desert", 90);
+        RoutePlan plan = RoutePlan.empty().mark(site).pathBuilt(RouteResource.SAND);
+
+        assertEquals(plan, plan.mark(site), "Повторная установка того же места не сбрасывает проложенную тропу");
+    }
+
+    @Test
+    void mark_NewSite_ResetsPathAndKeepsNewReserve() {
+        QuarrySite first = new QuarrySite(RouteResource.SAND, new BlockCoord(0, 64, 40), 4, "minecraft:desert", 90);
+        RoutePlan plan = RoutePlan.empty().mark(first).pathBuilt(RouteResource.SAND);
+
+        RoutePlan moved =
+                plan.mark(new QuarrySite(RouteResource.SAND, new BlockCoord(200, 64, 0), 4, "minecraft:beach", 60));
+
+        assertFalse(moved.pathDone(RouteResource.SAND), "Новое место отменяет старую тропу: она ведёт не туда");
+        assertEquals(60, moved.marker(RouteResource.SAND).orElseThrow().initialReserve(), "Запас пересчитан");
+    }
+
+    @Test
+    void unmark_Site_RemovesMarkerOnly() {
+        RoutePlan plan = RoutePlan.empty()
+                .mark(RouteResource.DIRT, new BlockCoord(10, 64, 0))
+                .mark(RouteResource.SAND, new BlockCoord(20, 64, 0));
+
+        RoutePlan next = plan.unmark(RouteResource.DIRT);
+
+        assertTrue(next.point(RouteResource.DIRT).isEmpty(), "Снятое место больше не ведёт граф");
+        assertTrue(next.point(RouteResource.SAND).isPresent(), "Второе место снятие первого не трогает");
+    }
 }

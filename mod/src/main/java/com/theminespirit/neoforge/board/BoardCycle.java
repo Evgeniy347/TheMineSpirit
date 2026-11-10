@@ -30,27 +30,17 @@ final class BoardCycle {
     private long lastRebuild = -1;
     private long lastActivity;
 
-    BoardCycle(
-            BoardService service,
-            Board board,
-            Map<String, TicketTarget> targets,
-            BoardDispatchDesk dispatch,
-            BoardTicketDesk tickets,
-            BoardSupplyDesk supply,
-            BoardSources sources,
-            BoardHerdDesk herd,
-            BoardNotices notices,
-            JournalService journal) {
+    BoardCycle(BoardService service) {
         this.service = service;
-        this.board = board;
-        this.targets = targets;
-        this.dispatch = dispatch;
-        this.tickets = tickets;
-        this.supply = supply;
-        this.sources = sources;
-        this.herd = herd;
-        this.notices = notices;
-        this.journal = journal;
+        this.board = service.board();
+        this.targets = service.targets;
+        this.dispatch = service.dispatch();
+        this.tickets = service.tickets;
+        this.supply = service.supply();
+        this.sources = service.sources;
+        this.herd = service.herd();
+        this.notices = service.notices;
+        this.journal = service.journal();
     }
 
     void tick(ServerLevel level, long now) {

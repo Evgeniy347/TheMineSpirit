@@ -14,7 +14,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import org.jspecify.annotations.Nullable;
 
-public final class IdempotencyCache {
+public final class IdempotencyCache implements Idempotency {
     public static final int CAPACITY = 1024;
 
     private static final ObjectMapper CANONICAL =
@@ -44,6 +44,7 @@ public final class IdempotencyCache {
         }
     }
 
+    @Override
     public synchronized Result check(String requestId, String fingerprint) {
         Objects.requireNonNull(requestId, "requestId не может быть null: идемпотентность держится на UUID клиента");
         Objects.requireNonNull(fingerprint, "fingerprint не может быть null: сравнение тел требует отпечатка");
@@ -87,6 +88,7 @@ public final class IdempotencyCache {
         return new Result.Replay(entry.stored());
     }
 
+    @Override
     public synchronized void remember(String requestId, String fingerprint, String response) {
         Objects.requireNonNull(requestId, "requestId не может быть null: идемпотентность держится на UUID клиента");
         Objects.requireNonNull(fingerprint, "fingerprint не может быть null: сравнение тел требует отпечатка");
@@ -103,6 +105,7 @@ public final class IdempotencyCache {
         notifyAll();
     }
 
+    @Override
     public synchronized void release(String requestId) {
         Entry entry = entries.get(requestId);
         if (entry != null && entry.inProgress()) {

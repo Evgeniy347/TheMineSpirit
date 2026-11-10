@@ -38,7 +38,7 @@ EXECUTOR_RULES="Правила исполнителя (AGENTS.md → «Испо�
 POLL_SECONDS=2
 current_pid=""
 finish_run() {
-    [ -n "$current_pid" ] && kill "$current_pid" 2>/dev/null
+    [ -n "$current_pid" ] && stop_attempt "$current_pid"
     if [ -f "$REPO_DIR/scripts/dev-server.sh" ]; then
         bash "$REPO_DIR/scripts/dev-server.sh" down --tree >/dev/null 2>&1 || true
     fi
@@ -148,8 +148,15 @@ record_failure() {
 }
 
 stop_attempt() {
-    kill -TERM -- "-$1" 2>/dev/null || kill -TERM "$1" 2>/dev/null
-    wait "$1" 2>/dev/null
+    # lib: Git Bash не держит группу процессов для kill -TERM: таймаут обязан гасить всё дерево
+    # (opencode → bash → gradle → java), иначе сироты продолжают прогон и шумят детектору.
+    local pid="$1" winpid=""
+    [ -r "/proc/$pid/winpid" ] && winpid="$(cat "/proc/$pid/winpid" 2>/dev/null)"
+    if [ -n "$winpid" ] && command -v taskkill >/dev/null 2>&1; then
+        taskkill //T //F //PID "$winpid" >/dev/null 2>&1 || true
+    fi
+    kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null
+    wait "$pid" 2>/dev/null
 }
 
 check_bypass() {

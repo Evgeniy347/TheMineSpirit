@@ -22,14 +22,15 @@ final class BoardIncidents {
     void rescued(SpiritEntity spirit, BoardTicket ticket) {
         SpiritWorldLog.stuck(
                 (ServerLevel) spirit.level(),
-                RescuePlans.rescuee(ticket.id()).orElse(spirit.getUUID()),
-                "rescue_done",
-                null,
-                "board",
-                spirit.displayName(),
-                "",
-                LogCause.RESCUE_DONE,
-                spirit.level().getGameTime());
+                new SpiritWorldLog.Stuck(
+                        RescuePlans.rescuee(ticket.id()).orElse(spirit.getUUID()),
+                        "rescue_done",
+                        null,
+                        "board",
+                        spirit.displayName(),
+                        "",
+                        LogCause.RESCUE_DONE,
+                        spirit.level().getGameTime()));
         LOGGER.info("[rescue] дух {} выполнил спасение {}", spirit.displayName(), ticket.id());
     }
 
@@ -53,14 +54,15 @@ final class BoardIncidents {
         if (ticket.boardCase() == BoardCase.RESCUE_SPIRIT) {
             SpiritWorldLog.stuck(
                     (ServerLevel) spirit.level(),
-                    RescuePlans.rescuee(ticket.id()).orElse(spirit.getUUID()),
-                    "rescue_failed",
-                    null,
-                    "board",
-                    spirit.displayName(),
-                    why,
-                    LogCause.RESCUE_FAILED,
-                    now);
+                    new SpiritWorldLog.Stuck(
+                            RescuePlans.rescuee(ticket.id()).orElse(spirit.getUUID()),
+                            "rescue_failed",
+                            null,
+                            "board",
+                            spirit.displayName(),
+                            why,
+                            LogCause.RESCUE_FAILED,
+                            now));
         }
         String key = "settle:" + ticket.id() + ":" + spirit.getUUID();
         failures.note(key, why, now).ifPresent(note -> {

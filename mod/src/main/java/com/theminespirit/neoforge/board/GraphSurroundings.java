@@ -105,7 +105,12 @@ final class GraphSurroundings {
 
     private record Near(BlockCoord at, int distance) {}
 
-    static Around of(ServerLevel level, BoardService service, BlockCoord home) {
+    static Around of(
+            ServerLevel level,
+            BoardService service,
+            BlockCoord home,
+            Map<String, BlockCoord> sites,
+            Map<String, Integer> siteDistances) {
         Scan scan = blocks(level, home);
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
         AABB box = new AABB(center).inflate(RADIUS);
@@ -129,13 +134,15 @@ final class GraphSurroundings {
             events.add("lava_seen");
         }
         Set<String> world = new HashSet<>(GraphNames.world(scan.blocks(), creatures));
+        if (!sites.containsKey("sand")) {
+            world.remove("sand");
+        }
+        if (!sites.containsKey(GraphNames.SOIL)) {
+            world.remove(GraphNames.SOIL);
+        }
         Map<String, Integer> distances = new HashMap<>(scan.distances());
-        SoilQuarry.Result soil = SoilQuarry.find(level, home);
-        soil.point().ifPresent(at -> {
-            world.add(GraphNames.SOIL);
-            nearest.put(GraphNames.SOIL, at);
-            distances.put(GraphNames.SOIL, soil.distance());
-        });
+        nearest.putAll(sites);
+        distances.putAll(siteDistances);
         return new Around(
                 Set.copyOf(world),
                 Set.copyOf(events),

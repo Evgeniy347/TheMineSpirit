@@ -125,7 +125,7 @@ final class WorldAreaScan {
         @Override
         public int top(int x, int z) {
             return level.isLoaded(new BlockPos(x, levelY, z))
-                    ? level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z)
+                    ? level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z)
                     : levelY;
         }
 

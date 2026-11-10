@@ -10,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -301,27 +300,6 @@ public final class GameTestFilter {
     }
 
     private static Map<String, Set<String>> classToTests() {
-        Map<String, Set<String>> classTests = new HashMap<>();
-        for (ModFileScanData scanData : ModList.get().getAllScanData()) {
-            scanData.getAnnotatedBy(GameTestHolder.class, ElementType.TYPE)
-                    .forEach(annotation -> collectTests(annotation.clazz().getClassName(), classTests));
-        }
-        return classTests;
-    }
-
-    private static void collectTests(String className, Map<String, Set<String>> classTests) {
-        try {
-            Class<?> testClass = Class.forName(className, false, GameTestFilter.class.getClassLoader());
-            for (Method method : testClass.getDeclaredMethods()) {
-                if (method.isAnnotationPresent(GameTest.class)) {
-                    String simpleName = testClass.getSimpleName().toLowerCase(Locale.ROOT);
-                    classTests
-                            .computeIfAbsent(simpleName, key -> new HashSet<>())
-                            .add(method.getName().toLowerCase(Locale.ROOT));
-                }
-            }
-        } catch (ClassNotFoundException e) {
-            LOGGER.warn("GameTest-класс {} из сканирования не загрузился для фильтра", className, e);
-        }
+        return GameTestClassIndex.byClass();
     }
 }
