@@ -3,13 +3,16 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.graph.WorldReport;
 import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.FloatingNote;
 import com.theminespirit.core.town.TownSnapshot;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
@@ -42,6 +45,30 @@ final class GraphObserve {
         if (!floating.isEmpty()) {
             LOGGER.info("[graph] висящее: {}", FloatingNote.line(floating));
         }
+        logLeases(state);
+    }
+
+    private static void logLeases(GraphState state) {
+        List<GraphSiteFacts.Lease> leases = state.facts().leases();
+        if (leases.isEmpty()) {
+            return;
+        }
+        Map<String, Integer> purposes = new LinkedHashMap<>();
+        int cells = 0;
+        int inside = 0;
+        for (GraphSiteFacts.Lease lease : leases) {
+            purposes.merge(lease.purpose(), 1, Integer::sum);
+            cells += lease.cells();
+            if (lease.inside()) {
+                inside++;
+            }
+        }
+        LOGGER.info(
+                "[graph] аренды: брошенных {} (клеток {}), внутри поселения {}: {}",
+                leases.size(),
+                cells,
+                inside,
+                purposes);
     }
 
     static void builds(
