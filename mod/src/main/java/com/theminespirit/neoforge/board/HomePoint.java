@@ -14,7 +14,7 @@ public final class HomePoint {
         Optional<BlockCoord> own = spirit.home();
         if (own.isPresent()) {
             if (spirit.level() instanceof ServerLevel level) {
-                return Optional.of(HomeStand.at(level, own.orElseThrow()));
+                return Optional.of(HomeStand.at(level, own.orElseThrow(), List.of(spirit)));
             }
             return own;
         }
@@ -28,7 +28,7 @@ public final class HomePoint {
     public static Optional<BlockCoord> of(ServerLevel level, List<SpiritEntity> spirits) {
         Optional<BlockCoord> home = SettlementHome.center(SettlementHome.homes(spirits));
         if (home.isPresent()) {
-            return Optional.of(HomeStand.at(level, home.orElseThrow()));
+            return Optional.of(HomeStand.at(level, home.orElseThrow(), spirits));
         }
         return SettlementPlotStore.liveSite(level).map(stage -> HomeStand.of(level, stage, spirits));
     }
