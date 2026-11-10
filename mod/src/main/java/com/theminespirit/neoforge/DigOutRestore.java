@@ -4,8 +4,10 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.movement.EscapeRestore;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -41,10 +43,11 @@ final class DigOutRestore {
         return broken.containsKey(cell);
     }
 
-    void returnSpoil() {
+    List<BlockPos> returnSpoil() {
         if (broken.isEmpty()) {
-            return;
+            return List.of();
         }
+        List<BlockPos> returnedCells = new ArrayList<>();
         BlockPos feet = spirit.blockPosition();
         BlockCoord body = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
         Iterator<Map.Entry<BlockPos, BlockState>> iterator = broken.entrySet().iterator();
@@ -64,10 +67,12 @@ final class DigOutRestore {
                 PlacedBlocksData.get(server).markSpirit(cell);
             }
             iterator.remove();
+            returnedCells.add(cell);
             restored++;
         }
         if (restored > 0) {
             LOGGER.info("[dig_out] {}: вернул на место {} клеток после выхода", spirit.displayName(), restored);
         }
+        return returnedCells;
     }
 }
