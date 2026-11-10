@@ -40,7 +40,11 @@ final class FallbackExecutor extends SingleChildExecutor {
         if (child == ScriptStatus.FAILED) {
             lastReason = running().failureReason();
             lastCause = running().failureCause().orElse(null);
-            lastFact = running().failureFact();
+            lastFact = lastFact.filter(FailureFact::survivesFallback);
+            Optional<FailureFact> fact = running().failureFact();
+            if (fact.isPresent()) {
+                lastFact = fact;
+            }
             index++;
             current(null);
             if (index >= steps.size()) {

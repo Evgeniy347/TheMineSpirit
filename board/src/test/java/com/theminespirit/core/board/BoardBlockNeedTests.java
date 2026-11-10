@@ -53,6 +53,28 @@ class BoardBlockNeedTests {
     }
 
     @Test
+    void blockNote_CarriesTypedNeed_EvenWhenNoItemShortage() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        board.submit(ticket());
+        board.claim(ID, spirit(1), now[0]);
+        board.fail(
+                ID,
+                new StockView(Map.of()),
+                "нет подхода",
+                new GraphBlock.Tool("pickaxe", 0, spirit(1).toString()));
+
+        List<BoardLogEntry> blocks = board.failures().drainBlocks();
+
+        assertEquals(1, blocks.size(), "Одна блокировка — одна запись журнала");
+        assertTrue(
+                blocks.get(0).modifiers().stream().anyMatch(line -> line.startsWith("need=")),
+                "Запись BLOCKED называет ключ блокировки, даже когда missing пуст: иначе в живом журнале видно "
+                        + "«BLOCKED без missing» и непонятно, что снимет блокировку: "
+                        + blocks.get(0).modifiers());
+    }
+
+    @Test
     void restore_LegacyBlockedWithoutNeed_ReturnsToPending() {
         long[] now = {0};
         Board board = new Board(() -> now[0]);

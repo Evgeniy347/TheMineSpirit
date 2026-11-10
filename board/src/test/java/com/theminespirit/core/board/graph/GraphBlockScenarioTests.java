@@ -168,6 +168,24 @@ class GraphBlockScenarioTests {
                 "Сцена держит несколько духов");
     }
 
+    @Test
+    void world_Blocked_LiftsOnlyWhenFactAppears() {
+        GraphWorld world = mining().blocks(new GraphBlock("mine_coal", "", new GraphBlock.World("tree:oak")));
+        world.world.remove("tree:oak");
+
+        GraphPlan.Task blocked = task(world.plan(), "mine_coal");
+
+        assertFalse(blocked.feasible(), "Породы в округе нет — рубка не ставится: " + blocked);
+        assertTrue(
+                blocked.blocked().contains("tree:oak"),
+                "Блокировка называет факт мира, по которому снимется: " + blocked.blocked());
+
+        world.world.add("tree:oak");
+        GraphPlan.Task back = task(world.plan(), "mine_coal");
+
+        assertTrue(back.feasible(), "Дерево появилось в округе — условие снято, задача вернулась: " + back.blocked());
+    }
+
     private static GraphWorld mining() {
         GraphWorld world = GraphWorld.empty();
         world.buildings.put("mine", Built.BUILT);

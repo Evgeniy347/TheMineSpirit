@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
+import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
@@ -43,6 +44,7 @@ public final class ChopTreeScript implements ScriptInstance {
     private int unreachable;
     private int consecutiveUnreachable;
     private String failureReason;
+    private FailureFact failureFact;
     private WorkTarget reserved;
     private Tree crowded;
 
@@ -83,6 +85,11 @@ public final class ChopTreeScript implements ScriptInstance {
     @Override
     public String failureReason() {
         return failureReason;
+    }
+
+    @Override
+    public Optional<FailureFact> failureFact() {
+        return Optional.ofNullable(failureFact);
     }
 
     @Override
@@ -271,6 +278,7 @@ public final class ChopTreeScript implements ScriptInstance {
                 ? ""
                 : "; ближайшее дерево к поселению " + far + " блоков при пределе " + search.maxDistance()
                         + " — посадите саженцы и дождитесь их роста";
+        failureFact = FailureFact.NO_TREES;
         return fail("срублено деревьев " + chopped + " из " + params.count() + ": деревья породы "
                 + ChopTreeText.speciesText(params)
                 + " в радиусе " + search.maxDistance() + " от поселения закончились (отвергнуто не-деревьев: "

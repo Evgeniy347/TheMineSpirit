@@ -1,11 +1,15 @@
 package com.theminespirit.core.board.graph;
 
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTuning;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 
 public record GraphPlan(List<Task> tasks, List<Notice> notices, List<Advice> advice) {
     public record Task(
@@ -61,5 +65,32 @@ public record GraphPlan(List<Task> tasks, List<Notice> notices, List<Advice> adv
 
     public int priority(String id) {
         return task(id).map(Task::priority).orElse(-1);
+    }
+
+    public List<Task> standing(Set<String> live, Function<String, Optional<BoardStatus>> status) {
+        return standing(tasks, live, status);
+    }
+
+    public static List<Task> standing(
+            List<Task> tasks, Set<String> live, Function<String, Optional<BoardStatus>> status) {
+        List<Task> demands = new ArrayList<>();
+        for (Task task : tasks) {
+            if (!task.implemented() || task.priority() <= 0 || !task.feasible()) {
+                continue;
+            }
+            String ticket = GraphTickets.id(task);
+            if (!live.contains(ticket)) {
+                continue;
+            }
+            Optional<BoardStatus> current = status.apply(ticket);
+            if (current.isPresent()
+                    && (current.orElseThrow() == BoardStatus.DONE
+                            || current.orElseThrow() == BoardStatus.FAILED
+                            || current.orElseThrow() == BoardStatus.CANCELLED)) {
+                continue;
+            }
+            demands.add(task);
+        }
+        return List.copyOf(demands);
     }
 }

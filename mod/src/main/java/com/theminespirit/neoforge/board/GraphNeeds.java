@@ -11,11 +11,15 @@ import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolGate;
+import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.neoforge.SpiritBrain;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.UUID;
 import net.minecraft.server.level.ServerLevel;
@@ -32,7 +36,9 @@ final class GraphNeeds {
             StockView stock,
             long now) {
         ServerLevel level = spirit.level() instanceof ServerLevel server ? server : null;
-        return of(board, ticket, target, spirit.getUUID().toString(), SpiritItems.ids(spirit), stock, now, level);
+        FailureFact fact =
+                spirit.brainIfPresent().flatMap(SpiritBrain::failureFact).orElse(null);
+        return of(board, ticket, target, spirit.getUUID().toString(), SpiritItems.ids(spirit), stock, now, level, fact);
     }
 
     static GraphBlock.@Nullable Need of(
@@ -43,7 +49,19 @@ final class GraphNeeds {
             Collection<String> items,
             StockView stock,
             long now) {
-        return of(board, ticket, target, holder, items, stock, now, null);
+        return of(board, ticket, target, holder, items, stock, now, null, null);
+    }
+
+    static GraphBlock.@Nullable Need of(
+            Board board,
+            BoardTicket ticket,
+            @Nullable TicketTarget target,
+            @Nullable String holder,
+            Collection<String> items,
+            StockView stock,
+            long now,
+            FailureFact fact) {
+        return of(board, ticket, target, holder, items, stock, now, null, fact);
     }
 
     private static GraphBlock.@Nullable Need of(
@@ -54,7 +72,8 @@ final class GraphNeeds {
             Collection<String> items,
             StockView stock,
             long now,
-            @Nullable ServerLevel level) {
+            @Nullable ServerLevel level,
+            @Nullable FailureFact fact) {
         if (holder != null && board.stuck().isStuck(UUID.fromString(holder), now)) {
             return new GraphBlock.Path(point(target));
         }
@@ -66,6 +85,12 @@ final class GraphNeeds {
         String tool = ToolGate.required(ticket).orElse(null);
         if (tool != null && holder != null && !ToolGate.allows(ticket, items)) {
             return new GraphBlock.Tool(tool, 0, holder);
+        }
+        if (fact == FailureFact.NO_TREES) {
+            String tag = treeTag(ticket, target);
+            if (tag != null) {
+                return new GraphBlock.World(tag);
+            }
         }
         if (depositOnly(ticket)) {
             return null;
@@ -87,6 +112,32 @@ final class GraphNeeds {
 
     static boolean depositOnly(BoardTicket ticket) {
         return ticket.id().startsWith("supply_gather:") || ticket.id().startsWith("supply:");
+    }
+
+    private static @Nullable String treeTag(BoardTicket ticket, @Nullable TicketTarget target) {
+        String item = target == null ? null : target.supplyItem();
+        if (item != null) {
+            Optional<String> species = WoodSpecies.speciesOf(item);
+            if (species.isPresent()) {
+                return "tree:" + species.orElseThrow();
+            }
+        }
+        String id = ticket.id();
+        int at = id.indexOf("chop_");
+        if (at < 0) {
+            return null;
+        }
+        String tail = id.substring(at + "chop_".length());
+        int cut = tail.indexOf('@');
+        if (cut >= 0) {
+            tail = tail.substring(0, cut);
+        }
+        for (String species : WoodSpecies.ALL) {
+            if (tail.startsWith(species)) {
+                return "tree:" + species;
+            }
+        }
+        return null;
     }
 
     static @Nullable String madeItem(BoardTicket ticket) {

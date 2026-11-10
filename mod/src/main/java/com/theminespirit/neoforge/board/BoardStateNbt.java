@@ -38,6 +38,7 @@ final class BoardStateNbt {
     private static final String BLOCK_TARGET_KEY = "Target";
     private static final String BLOCK_ITEM_KEY = "Item";
     private static final String BLOCK_COUNT_KEY = "Count";
+    private static final String BLOCK_TAG_KEY = "Tag";
     private static final String BLOCK_TOOL_KEY = "Tool";
     private static final String BLOCK_RANK_KEY = "Rank";
     private static final String BLOCK_SPIRIT_KEY = "Spirit";
@@ -180,6 +181,9 @@ final class BoardStateNbt {
             tag.putString(BLOCK_KIND_KEY, "holder");
             tag.putString(BLOCK_SPIRIT_KEY, holder.spirit());
             tag.putBoolean(BLOCK_STUCK_KEY, holder.stuck());
+        } else if (need instanceof GraphBlock.World world) {
+            tag.putString(BLOCK_KIND_KEY, "world");
+            tag.putString(BLOCK_TAG_KEY, world.tag());
         } else if (need instanceof GraphBlock.Impossible impossible) {
             tag.putString(BLOCK_KIND_KEY, "impossible");
             tag.putString(BLOCK_NODE_KEY, impossible.node());
@@ -200,6 +204,7 @@ final class BoardStateNbt {
             case "building" -> new GraphBlock.Building(tag.getString(BLOCK_BUILDING_KEY));
             case "path" -> new GraphBlock.Path(tag.getString(BLOCK_POINT_KEY));
             case "holder" -> new GraphBlock.Holder(tag.getString(BLOCK_SPIRIT_KEY), tag.getBoolean(BLOCK_STUCK_KEY));
+            case "world" -> new GraphBlock.World(tag.getString(BLOCK_TAG_KEY));
             case "impossible" -> new GraphBlock.Impossible(tag.getString(BLOCK_NODE_KEY));
             default -> throw new IllegalStateException("Неизвестный вид блокировки: " + tag.getString(BLOCK_KIND_KEY));
         };

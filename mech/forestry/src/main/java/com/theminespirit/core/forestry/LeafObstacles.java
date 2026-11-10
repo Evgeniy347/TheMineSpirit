@@ -10,7 +10,7 @@ import java.util.Set;
 
 public final class LeafObstacles {
     private static final int STAND_HEIGHT = 2;
-    private static final int[][] SIDES = {{1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, {0, -1}, {1, -1}};
+    private static final int STAND_DEPTH = 3;
 
     private LeafObstacles() {}
 
@@ -19,14 +19,20 @@ public final class LeafObstacles {
         Objects.requireNonNull(view, "TreeView не может быть null: по нему отличают листву от прочих блоков");
         Objects.requireNonNull(from, "Точка отсчёта не может быть null: от неё считается порядок ломки листвы");
         int baseY = tree.base().y();
+        int radius = ChopStands.FAR_RADIUS;
         Set<BlockCoord> cells = new LinkedHashSet<>();
         for (BlockCoord log : tree.logs()) {
             if (log.y() != baseY) {
                 continue;
             }
-            for (int[] side : SIDES) {
-                for (int dy = 0; dy < STAND_HEIGHT; dy++) {
-                    cells.add(new BlockCoord(log.x() + side[0], baseY + dy, log.z() + side[1]));
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (dx == 0 && dz == 0) {
+                        continue;
+                    }
+                    for (int dy = -STAND_DEPTH; dy < STAND_HEIGHT; dy++) {
+                        cells.add(new BlockCoord(log.x() + dx, baseY + dy, log.z() + dz));
+                    }
                 }
             }
         }
