@@ -38,6 +38,7 @@ class NavFuzzTests {
     private static final int WORLDS = 2_000;
     private static final int MAX_VISITS = 20_000;
     private static final RouteRules RULES = new RouteRules(1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 3, 12, 4, 1200, 1.0, 1);
+    private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
     @Test
     void navFuzz_GeneratedWorlds_EveryPlanExecutableByBody() {
@@ -192,8 +193,6 @@ class NavFuzzTests {
         }
         return false;
     }
-
-    private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
     private static void checkSurfaceEscape(long seed, FuzzWorld world, List<String> failures) {
         Optional<List<BlockCoord>> found = SurfaceEscape.path(world.start(), world, world::sky);
@@ -540,14 +539,14 @@ class NavFuzzTests {
                 };
             }
 
-            PitExitPlanner.Kind pit() {
+            BlockKind pit() {
                 return switch (this) {
-                    case AIR, LADDER -> PitExitPlanner.Kind.AIR;
-                    case WATER -> PitExitPlanner.Kind.WATER;
-                    case LAVA -> PitExitPlanner.Kind.LAVA;
-                    case DIRT -> PitExitPlanner.Kind.SOFT;
-                    case STONE -> PitExitPlanner.Kind.HARD;
-                    case CHEST, DOOR, TRAPDOOR, BED -> PitExitPlanner.Kind.BEDROCK;
+                    case AIR, LADDER -> BlockKind.AIR;
+                    case WATER -> BlockKind.WATER;
+                    case LAVA -> BlockKind.LAVA;
+                    case DIRT -> BlockKind.SOFT;
+                    case STONE -> BlockKind.HARD;
+                    case CHEST, DOOR, TRAPDOOR, BED -> BlockKind.BEDROCK;
                 };
             }
         }

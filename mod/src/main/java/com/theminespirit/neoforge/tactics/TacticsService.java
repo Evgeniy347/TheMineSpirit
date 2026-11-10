@@ -65,12 +65,12 @@ public final class TacticsService {
     String targetId;
     String shootTargetId;
     boolean active;
-    private boolean paused;
     boolean forced;
-    private boolean hurtPending;
     int lastHurtTick = -1_000_000;
-    private long suspendedUntil = Long.MIN_VALUE;
     RetreatExecutor.Progress progress = RetreatExecutor.Progress.DONE;
+    private boolean paused;
+    private boolean hurtPending;
+    private long suspendedUntil = Long.MIN_VALUE;
     private final TacticsDecision decision;
     private final TacticsExecution execution;
     private final TacticsState state;

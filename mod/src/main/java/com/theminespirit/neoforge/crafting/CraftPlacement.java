@@ -47,7 +47,7 @@ final class CraftPlacement {
         while (left > 0) {
             Optional<BlockPos> placed = Optional.empty();
             for (int pass = 0; pass < PLACE_PASSES && placed.isEmpty(); pass++) {
-                placed = placeOnce(spirit, level, placer, cells, state, id, pass, left);
+                placed = placeOnce(new Attempt(spirit, level, placer, cells, state, id, pass, left));
             }
             if (placed.isEmpty()) {
                 break;
@@ -61,7 +61,7 @@ final class CraftPlacement {
         return Optional.empty();
     }
 
-    private static Optional<BlockPos> placeOnce(
+    private record Attempt(
             SpiritEntity spirit,
             Level level,
             BlockPlacer placer,
@@ -69,7 +69,17 @@ final class CraftPlacement {
             BlockState state,
             String id,
             int pass,
-            int left) {
+            int left) {}
+
+    private static Optional<BlockPos> placeOnce(Attempt attempt) {
+        SpiritEntity spirit = attempt.spirit();
+        Level level = attempt.level();
+        BlockPlacer placer = attempt.placer();
+        List<BlockPos> cells = attempt.cells();
+        BlockState state = attempt.state();
+        String id = attempt.id();
+        int pass = attempt.pass();
+        int left = attempt.left();
         for (BlockPos cell : cells) {
             Optional<BlockState> pair = ChestPairing.paired(level, cell, state);
             boolean wanted = pass == 0

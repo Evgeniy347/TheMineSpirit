@@ -10,6 +10,7 @@ final class GraphBlocks {
     private static final String TOOL = "tool:";
     private static final char AT = '@';
 
+    @FunctionalInterface
     interface Sink {
         void push(@Nullable String from, String node, double amount);
     }

@@ -10,6 +10,7 @@ import com.theminespirit.core.board.graph.GraphFailureMemory;
 import com.theminespirit.core.board.graph.GraphFeedback;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -23,6 +24,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.monster.Husk;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -151,7 +154,7 @@ public final class BoardGameTests {
                 if (board.board().statusOf(BUILD_ID).orElse(null) == BoardStatus.ASSIGNED) {
                     phase.set(2);
                 }
-            } else {
+            } else if (phase.get() == 2) {
                 helper.assertTrue(
                         board.board().statusOf(BUILD_ID).orElse(null) == BoardStatus.ASSIGNED,
                         "После добычи стройка обязана выдаться сама, статус "
@@ -161,8 +164,44 @@ public final class BoardGameTests {
                         spirit.taskStatus().orElse(null) == RunStatus.RUNNING,
                         "Стройка обязана быть выдана духу-владельцу: статус духа "
                                 + spirit.taskStatus().orElse(null));
+                spirit.setHome(home);
+                Husk husk = helper.spawn(EntityType.HUSK, new BlockPos(2, 1, 2));
+                husk.setNoAi(true);
+                husk.setPersistenceRequired();
+                board.submit(
+                        new BoardTicket(
+                                "test:preempt_retreat",
+                                BoardCase.ACTIVITY_RETREAT,
+                                Optional.of(spirit.getUUID()),
+                                100,
+                                helper.getLevel().getGameTime(),
+                                1,
+                                BoardTicket.ALWAYS_CAUSE,
+                                List.of(),
+                                Map.of()),
+                        TicketTarget.at(home).withPlan(new ScriptCall("retreat", Map.of())));
+                phase.set(3);
+            } else {
+                if (board.board().statusOf(BUILD_ID).orElse(null) != BoardStatus.PENDING) {
+                    return;
+                }
+                String script = spirit.currentTaskScript().orElse(null);
+                boolean fleeing = "retreat".equals(script) || "flee".equals(script);
+                boolean finished = spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED;
+                if (!fleeing && !finished) {
+                    return;
+                }
+                helper.assertTrue(
+                        board.board().statusOf("test:preempt_retreat").orElse(null) == BoardStatus.ASSIGNED
+                                || board.board()
+                                                .statusOf("test:preempt_retreat")
+                                                .orElse(null)
+                                        == BoardStatus.DONE,
+                        "Вытеснение работы обязано отдать духу именно бегство: статус бегства "
+                                + board.board().statusOf("test:preempt_retreat").orElse(null));
                 board.board().cancel(BUILD_ID);
                 board.board().cancel(SUPPLY_ID);
+                board.board().cancel("test:preempt_retreat");
                 helper.succeed();
                 GameTestFixtures.finish(helper);
             }

@@ -25,9 +25,6 @@ public final class DropCollector {
     }
 
     final SpiritEntity spirit;
-    private final IdFilter items;
-    private final AABB area;
-    private final long startTick;
     final PickupTuning tuning;
     final OverflowMode overflow;
     final OverflowDecider decider;
@@ -42,15 +39,18 @@ public final class DropCollector {
     WorkTarget held;
     UnloadScript relief;
     boolean reliefTried;
+    int collected;
+    int delayWaited;
+    final DropPursuit pursuit;
+    final DropPickup pickup;
+    private final IdFilter items;
+    private final AABB area;
+    private final long startTick;
     private String failureReason;
     private int elapsed;
     private int ticksSinceQuery;
     private int entityQueries;
-    int collected;
-    int delayWaited;
     private boolean queriedThisTick;
-    final DropPursuit pursuit;
-    final DropPickup pickup;
 
     public DropCollector(
             SpiritEntity spirit,

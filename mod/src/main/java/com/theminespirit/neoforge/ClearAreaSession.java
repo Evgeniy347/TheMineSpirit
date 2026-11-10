@@ -65,11 +65,11 @@ public class ClearAreaSession {
     protected List<ClearSummary.Leftover> leftover = List.of();
 
     final BuildResult tally = new BuildResult();
-    private final Map<State, Integer> phaseTicks = new EnumMap<>(State.class);
     final boolean demolish;
     final boolean keepGround;
     final ClearBlocked blocked;
     final TreeFelling felling;
+    private final Map<State, Integer> phaseTicks = new EnumMap<>(State.class);
     private ClearAreaRun run;
 
     public ClearAreaSession(SpiritEntity spirit, BuildBox box) {

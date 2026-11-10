@@ -1,11 +1,13 @@
 package com.theminespirit.neoforge.inventory;
 
+import com.theminespirit.core.inventory.PresentStacks;
 import com.theminespirit.core.inventory.Stack;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
+import org.jspecify.annotations.Nullable;
 
 public final class StackMapper {
     private final List<ItemStack> samples = new ArrayList<>();
@@ -19,17 +21,14 @@ public final class StackMapper {
     }
 
     public List<Stack> mapPresent(Container container) {
-        List<Stack> stacks = new ArrayList<>(container.getContainerSize());
+        List<Stack> slots = new ArrayList<>(container.getContainerSize());
         for (int slot = 0; slot < container.getContainerSize(); slot++) {
-            Stack stack = of(container.getItem(slot));
-            if (stack != null) {
-                stacks.add(stack);
-            }
+            slots.add(of(container.getItem(slot)));
         }
-        return stacks;
+        return PresentStacks.of(slots);
     }
 
-    public Stack of(ItemStack stack) {
+    public @Nullable Stack of(ItemStack stack) {
         if (stack.isEmpty()) {
             return null;
         }

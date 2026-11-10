@@ -9,6 +9,7 @@ public record MapHint(String title, String key, List<Integer> args) {
     public static final String KEY_PLAYER = "theminespirit.map.player";
     public static final String KEY_NO_JOB = "theminespirit.map.no_job";
     public static final String KEY_ROUTE = "theminespirit.map.route";
+    public static final String KEY_QUARRY = "theminespirit.map.quarry";
     private static final int PERCENT = 100;
 
     public MapHint {
@@ -35,6 +36,9 @@ public record MapHint(String title, String key, List<Integer> args) {
         }
         if (marker.kind() == MapMarker.Kind.ROUTE) {
             return new MapHint(marker.name(), KEY_ROUTE, List.of());
+        }
+        if (marker.kind() == MapMarker.Kind.DIRT || marker.kind() == MapMarker.Kind.SAND) {
+            return new MapHint(marker.name(), KEY_QUARRY, List.of());
         }
         String key = marker.occupation().isEmpty() ? KEY_NO_JOB : marker.occupation();
         return new MapHint(marker.name(), key, List.of());

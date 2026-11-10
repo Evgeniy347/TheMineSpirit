@@ -9,6 +9,29 @@ public final class LogSchema {
     public static final String SOURCE_LIVE = "live";
     public static final String SOURCE_IMPORT = "import";
 
+    private static final String TS = "ts";
+    private static final String TICK = "tick";
+    private static final String BUILD = "build";
+    private static final String SOURCE = "source";
+    private static final String X = "x";
+    private static final String Y = "y";
+    private static final String Z = "z";
+    private static final String SPIRIT = "spirit";
+    private static final String SPIRIT_ID = "spirit_id";
+    private static final String TICKET = "ticket";
+    private static final String ACTION = "action";
+    private static final String EVENT = "event";
+    private static final String CAUSE = "cause";
+    private static final String REASON = "reason";
+    private static final String NODE = "node";
+    private static final String PRIORITY = "priority";
+    private static final String SCRIPT = "script";
+    private static final String ACTOR_TYPE = "actor_type";
+    private static final String ACTOR = "actor";
+    private static final String BLOCK_BEFORE = "block_before";
+    private static final String BLOCK_AFTER = "block_after";
+    private static final String BOARD_CASE = "board_case";
+
     private static final Map<LogType, Spec> SPECS = specs();
 
     private LogSchema() {}
@@ -63,152 +86,192 @@ public final class LogSchema {
     private static Map<LogType, Spec> specs() {
         return Map.of(
                 LogType.BLOCK_CHANGE,
-                spec(
-                        Set.of("actor_type", "actor", "action", "block_before", "block_after", "x", "y", "z"),
-                        "actor_type",
-                        "actor",
-                        "ticket",
-                        "action",
-                        "block_before",
-                        "block_after",
-                        "x",
-                        "y",
-                        "z",
-                        "basis",
-                        "cause",
-                        "reason"),
+                blockChange(),
                 LogType.DEATH,
-                spec(
-                        Set.of("event", "spirit", "x", "y", "z", "cause"),
-                        "event",
-                        "spirit",
-                        "spirit_id",
-                        "x",
-                        "y",
-                        "z",
-                        "cause",
-                        "reason",
-                        "killer",
-                        "inventory",
-                        "ticket",
-                        "script",
-                        "respawn_x",
-                        "respawn_y",
-                        "respawn_z",
-                        "respawn_ts",
-                        "recovered"),
+                death(),
                 LogType.TASK_EVENT,
-                spec(
-                        Set.of("ticket", "board_case", "event"),
-                        "ticket",
-                        "board_case",
-                        "event",
-                        "spirit",
-                        "spirit_id",
-                        "priority",
-                        "attempts",
-                        "cause",
-                        "reason",
-                        "missing",
-                        "target_x",
-                        "target_y",
-                        "target_z",
-                        "source_node"),
+                taskEvent(),
                 LogType.GRAPH_DECISION,
-                spec(
-                        Set.of("node", "spirit", "priority", "feasible", "chosen"),
-                        "node",
-                        "spirit",
-                        "spirit_id",
-                        "priority",
-                        "feasible",
-                        "chosen",
-                        "next_node",
-                        "why",
-                        "cause"),
+                graphDecision(),
                 LogType.ROUTE,
-                spec(
-                        Set.of("spirit", "purpose", "from_x", "from_y", "from_z", "to_x", "to_y", "to_z", "status"),
-                        "spirit",
-                        "spirit_id",
-                        "purpose",
-                        "from_x",
-                        "from_y",
-                        "from_z",
-                        "to_x",
-                        "to_y",
-                        "to_z",
-                        "status",
-                        "nodes",
-                        "ms",
-                        "end_x",
-                        "end_y",
-                        "end_z",
-                        "reason",
-                        "cause"),
+                route(),
                 LogType.STUCK,
-                spec(
-                        Set.of("spirit", "event"),
-                        "spirit",
-                        "spirit_id",
-                        "event",
-                        "x",
-                        "y",
-                        "z",
-                        "method",
-                        "helper",
-                        "reason",
-                        "cause",
-                        "since_tick"),
+                stuck(),
                 LogType.ITEM_MOVE,
-                spec(
-                        Set.of("spirit", "action", "item", "count"),
-                        "spirit",
-                        "spirit_id",
-                        "action",
-                        "item",
-                        "count",
-                        "container_x",
-                        "container_y",
-                        "container_z",
-                        "ticket"),
+                itemMove(),
                 LogType.SPIRIT_SAMPLE,
-                spec(
-                        Set.of("spirit", "x", "y", "z", "state"),
-                        "spirit",
-                        "spirit_id",
-                        "x",
-                        "y",
-                        "z",
-                        "state",
-                        "script",
-                        "ticket",
-                        "food",
-                        "health"),
+                spiritSample(),
                 LogType.SERVER_HEALTH,
-                spec(
-                        Set.of("mspt", "players"),
-                        "mspt",
-                        "worst_mspt",
-                        "players",
-                        "source_failures",
-                        "pending",
-                        "active",
-                        "blocked",
-                        "board_ms",
-                        "prune_ms",
-                        "tickets",
-                        "event"),
+                serverHealth(),
                 LogType.MESSAGE,
-                spec(Set.of("level", "text"), "level", "tag", "class", "text"));
+                message());
+    }
+
+    private static Spec blockChange() {
+        return spec(
+                Set.of(ACTOR_TYPE, ACTOR, ACTION, BLOCK_BEFORE, BLOCK_AFTER, X, Y, Z),
+                ACTOR_TYPE,
+                ACTOR,
+                TICKET,
+                ACTION,
+                BLOCK_BEFORE,
+                BLOCK_AFTER,
+                X,
+                Y,
+                Z,
+                "basis",
+                CAUSE,
+                REASON);
+    }
+
+    private static Spec death() {
+        return spec(
+                Set.of(EVENT, SPIRIT, X, Y, Z, CAUSE),
+                EVENT,
+                SPIRIT,
+                SPIRIT_ID,
+                X,
+                Y,
+                Z,
+                CAUSE,
+                REASON,
+                "killer",
+                "inventory",
+                TICKET,
+                SCRIPT,
+                "respawn_x",
+                "respawn_y",
+                "respawn_z",
+                "respawn_ts",
+                "recovered");
+    }
+
+    private static Spec taskEvent() {
+        return spec(
+                Set.of(TICKET, BOARD_CASE, EVENT),
+                TICKET,
+                BOARD_CASE,
+                EVENT,
+                SPIRIT,
+                SPIRIT_ID,
+                PRIORITY,
+                "attempts",
+                CAUSE,
+                REASON,
+                "missing",
+                "target_x",
+                "target_y",
+                "target_z",
+                "source_node");
+    }
+
+    private static Spec graphDecision() {
+        return spec(
+                Set.of(NODE, SPIRIT, PRIORITY, "feasible", "chosen"),
+                NODE,
+                SPIRIT,
+                SPIRIT_ID,
+                PRIORITY,
+                "feasible",
+                "chosen",
+                "next_node",
+                "why",
+                CAUSE);
+    }
+
+    private static Spec route() {
+        return spec(
+                Set.of(SPIRIT, "purpose", "from_x", "from_y", "from_z", "to_x", "to_y", "to_z", "status"),
+                SPIRIT,
+                SPIRIT_ID,
+                "purpose",
+                "from_x",
+                "from_y",
+                "from_z",
+                "to_x",
+                "to_y",
+                "to_z",
+                "status",
+                "nodes",
+                "ms",
+                "end_x",
+                "end_y",
+                "end_z",
+                REASON,
+                CAUSE);
+    }
+
+    private static Spec stuck() {
+        return spec(
+                Set.of(SPIRIT, EVENT),
+                SPIRIT,
+                SPIRIT_ID,
+                EVENT,
+                X,
+                Y,
+                Z,
+                "method",
+                "helper",
+                REASON,
+                CAUSE,
+                "since_tick");
+    }
+
+    private static Spec itemMove() {
+        return spec(
+                Set.of(SPIRIT, ACTION, "item", "count"),
+                SPIRIT,
+                SPIRIT_ID,
+                ACTION,
+                "item",
+                "count",
+                "container_x",
+                "container_y",
+                "container_z",
+                TICKET);
+    }
+
+    private static Spec spiritSample() {
+        return spec(
+                Set.of(SPIRIT, X, Y, Z, "state"),
+                SPIRIT,
+                SPIRIT_ID,
+                X,
+                Y,
+                Z,
+                "state",
+                SCRIPT,
+                TICKET,
+                "food",
+                "health");
+    }
+
+    private static Spec serverHealth() {
+        return spec(
+                Set.of("mspt", "players"),
+                "mspt",
+                "worst_mspt",
+                "players",
+                "source_failures",
+                "pending",
+                "active",
+                "blocked",
+                "board_ms",
+                "prune_ms",
+                "tickets",
+                EVENT);
+    }
+
+    private static Spec message() {
+        return spec(Set.of("level", "text"), "level", "tag", "class", "text");
     }
 
     private static Spec spec(Set<String> required, String... allowed) {
         Set<String> names = new LinkedHashSet<>();
-        names.add("ts");
-        names.add("tick");
-        names.add("build");
-        names.add("source");
+        names.add(TS);
+        names.add(TICK);
+        names.add(BUILD);
+        names.add(SOURCE);
         names.addAll(List.of(allowed));
         return new Spec(required, names);
     }

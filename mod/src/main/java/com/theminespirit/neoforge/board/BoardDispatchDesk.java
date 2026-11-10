@@ -102,6 +102,10 @@ final class BoardDispatchDesk {
         settlement.issued(ticketId, generation);
     }
 
+    long issuedGeneration(String ticketId) {
+        return settlement.issuedGeneration(ticketId);
+    }
+
     private boolean holderFreed(ServerLevel level) {
         for (UUID holder : board.assignedCounts().keySet()) {
             if (level.getEntity(holder) instanceof SpiritEntity spirit

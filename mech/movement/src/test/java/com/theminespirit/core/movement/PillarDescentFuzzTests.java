@@ -16,16 +16,7 @@ import org.junit.jupiter.api.Test;
 
 class PillarDescentFuzzTests {
     @Test
-    void pillarDescentCases_OwnColumnsEveryHeight_StayWithinBody() {
-        ownColumnsEveryHeight();
-    }
-
-    @Test
-    void pillarDescentCases_BridgeWithoutColumn_NoDescent() {
-        bridgeWithoutColumnHasNoDescent();
-    }
-
-    static void ownColumnsEveryHeight() {
+    void ownColumns_EveryHeight_StayWithinBody() {
         for (int height = 1; height <= 8; height++) {
             FuzzWorld world = FuzzWorld.flat();
             Set<BlockCoord> own = new HashSet<>();
@@ -40,12 +31,11 @@ class PillarDescentFuzzTests {
                     .orElseThrow(() -> new AssertionError(
                             "Дух на своём столбе высотой " + top + " обязан спуститься разбором: " + feet));
 
-            BlockCoord at = feet;
             Set<BlockCoord> removed = new HashSet<>();
             for (BlockCoord cell : plan.dig()) {
                 assertTrue(own.contains(cell), "Разбирают только свои блоки, а план назвал " + cell);
                 removed.add(cell);
-                at = cell;
+                BlockCoord at = cell;
                 assertTrue(
                         BodyMotion.fits(after(world, removed), at),
                         "После снятия " + cell + " тело обязано помещаться в " + at);
@@ -60,7 +50,8 @@ class PillarDescentFuzzTests {
         }
     }
 
-    static void bridgeWithoutColumnHasNoDescent() {
+    @Test
+    void bridgeWithoutColumn_NoColumn_NoDescent() {
         FuzzWorld world = FuzzWorld.flat();
         for (int y = -6; y <= 0; y++) {
             for (int x = 0; x < FuzzWorld.SIZE; x++) {

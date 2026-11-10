@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import quarry
 from brain import BrainError, BrainStopped, BrainUnavailable, SandboxBreach
 from guard import ProviderHealth, fingerprint, request_id, warehouse_request_id
 from parse import ReplyError, parse_reply
@@ -101,6 +102,7 @@ class CycleRunner:
             return summary
         self._recover_pending(cycle)
         self._settle_warehouse(cycle)
+        self._settle_quarries(cycle)
         if self.provider.needs_probe and not self._probe(cycle):
             self.provider_down = True
         for bot in bots:
@@ -182,6 +184,83 @@ class CycleRunner:
             return
         rt.log("warehouse_decision", cycle=cycle, level=required, site=site, dry=False, outcome="posted",
                reason=reason, change=change)
+
+    def _settle_quarries(self, cycle: int) -> None:
+        """Мало/иссякло/не задано — найти лучшую выгодность и поставить место. Без модели."""
+        rt = self.rt
+        now = rt.clock.now()
+        checked = rt.state.get("quarry_checked")
+        if isinstance(checked, (int, float)) and not isinstance(checked, bool) and now - checked < rt.config.interval:
+            return
+        rt.state["quarry_checked"] = now
+        if rt.config.pause_path.exists():
+            rt.log("quarry_skipped", cycle=cycle, reason="файл PAUSE: место добычи не меняется", code="pause_file")
+            return
+        try:
+            view = rt.client.get("/v1/quarry/status")
+        except ApiError as error:
+            if error.status in ROUTE_MISSING_STATUSES:
+                rt.log("quarry_skipped", cycle=cycle, reason="маршрута /v1/quarry/status нет", code="route_missing")
+            else:
+                rt.alert(f"цикл {cycle}: места добычи недоступны ({error}); выбор отложен",
+                         code="quarry_failed", cycle=cycle)
+            return
+        except NetworkError as error:
+            rt.alert(f"цикл {cycle}: места добычи недоступны ({error}); выбор отложен",
+                     code="quarry_failed", cycle=cycle)
+            return
+        if not isinstance(view, dict):
+            rt.alert(f"цикл {cycle}: GET /v1/quarry/status вернул не объект", code="quarry_failed", cycle=cycle)
+            return
+        chosen = rt.state.get("quarry_site")
+        if not isinstance(chosen, dict):
+            chosen = {}
+            rt.state["quarry_site"] = chosen
+        for entry in quarry.weak_sites(view):
+            resource = entry["resource"]
+            try:
+                found = rt.client.get(quarry.search_path(resource))
+            except ApiError as error:
+                if error.status in ROUTE_MISSING_STATUSES:
+                    rt.log("quarry_skipped", cycle=cycle, resource=resource,
+                           reason="маршрута /v1/quarry/search нет", code="route_missing")
+                    return
+                rt.alert(f"цикл {cycle}: поиск места для {resource} не удался ({error}); повтор в следующем цикле",
+                         code="quarry_failed", cycle=cycle)
+                continue
+            except NetworkError as error:
+                rt.alert(f"цикл {cycle}: поиск места для {resource} не удался ({error}); повтор в следующем цикле",
+                         code="quarry_failed", cycle=cycle)
+                continue
+            candidates = found.get("candidates") if isinstance(found, dict) else None
+            best = quarry.best_candidate(candidates)
+            if best is None:
+                rt.log("quarry_none", cycle=cycle, resource=resource, state=entry.get("state"),
+                       reason="поиск не дал области с запасом: место не ставится", code="no_candidate")
+                continue
+            body = quarry.install_body(resource, best)
+            chosen[resource] = f"{body['x']},{body['y']},{body['z']}"
+            reason = f"{resource}: {entry.get('state')} ({entry.get('remaining_percent')}%), выбрана лучшая выгодность"
+            if self.effective_mode == "dry":
+                rt.log("quarry_decision", cycle=cycle, resource=resource, site=chosen[resource], dry=True,
+                       outcome="would_post", reason=reason)
+                continue
+            try:
+                answer = rt.client.post("/v1/quarry/site", body)
+            except ApiError as error:
+                if error.status in ROUTE_MISSING_STATUSES:
+                    rt.log("quarry_skipped", cycle=cycle, resource=resource,
+                           reason="маршрута /v1/quarry/site нет", code="route_missing")
+                    return
+                rt.alert(f"цикл {cycle}: место для {resource} не поставлено ({error}); повтор в следующем цикле",
+                         code="quarry_failed", cycle=cycle)
+                continue
+            except NetworkError as error:
+                rt.alert(f"цикл {cycle}: место для {resource} не поставлено ({error}); повтор в следующем цикле",
+                         code="quarry_failed", cycle=cycle)
+                continue
+            rt.log("quarry_decision", cycle=cycle, resource=resource, site=chosen[resource], dry=False,
+                   outcome="posted", reason=reason, answer=answer)
 
     def _skip(self, summary: CycleSummary, cycle: int, bot: str, reason: str, code: str = "") -> None:
         summary.skipped += 1

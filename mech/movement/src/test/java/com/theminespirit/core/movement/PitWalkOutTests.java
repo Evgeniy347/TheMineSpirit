@@ -102,10 +102,23 @@ class PitWalkOutTests {
     }
 
     @Test
+    void walkOut_CaveHoleWiderThanSurfaceSpread_IsNotAnExit() {
+        Grid cave = Grid.cave();
+        for (int z = 0; z <= 29; z++) {
+            cave.skyAt(6, z, START);
+        }
+
+        assertFalse(
+                PitWalkOut.exists(cave, 0, 0, START),
+                "проём в потолке шире области проверки поверхности не выход: дыра в потолке пещеры любого размера "
+                        + "не делает дно пещеры местностью, иначе дух перестаёт искать выход (debtnav3, п.1)");
+    }
+
+    @Test
     void walkOut_CaveMouthToOpenSlope_IsAnExit() {
         Grid cave = Grid.cave();
-        for (int z = -12; z <= 12; z++) {
-            for (int x = 6; x <= 12; x++) {
+        for (int z = -38; z <= 38; z++) {
+            for (int x = 6; x <= 38; x++) {
                 cave.skyAt(x, z, START);
             }
         }
@@ -125,8 +138,8 @@ class PitWalkOutTests {
     }
 
     private static final class Grid implements PitWalkOut.World {
-        private static final int MIN = -12;
-        private static final int SIZE = 25;
+        private static final int MIN = -48;
+        private static final int SIZE = 97;
         private static final int NONE = Integer.MIN_VALUE;
         private final int[][] floor = new int[SIZE][SIZE];
         private final int[][] sky = new int[SIZE][SIZE];
@@ -147,7 +160,7 @@ class PitWalkOutTests {
 
         static Grid enclosedPit() {
             Grid grid = new Grid(NONE, ROOF);
-            for (int x = 0; x <= 12; x++) {
+            for (int x = 0; x <= 38; x++) {
                 for (int z = -1; z <= 1; z++) {
                     int ground = START + Math.min(x, 6);
                     grid.floorAt(x, z, ground).skyAt(x, z, ground);

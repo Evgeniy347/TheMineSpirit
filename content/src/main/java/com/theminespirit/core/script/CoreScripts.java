@@ -16,14 +16,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class CoreScripts {
-    private static final String RADIUS = "radius", FILTER = "filter";
+    private static final String RADIUS = "radius";
+    private static final String FILTER = "filter";
     private static final String SPECIES = "species";
     private static final String TARGET = "target";
     private static final String BLOCK = "block";
     private static final String COUNT = "count";
     private static final String NEAREST = "nearest";
     private static final String DIRECTION = "direction";
-    private static final String CROP = "crop";
     private static final String ITEM = "item";
     private static final String CONTAINER = "container";
 
@@ -603,7 +603,7 @@ public final class CoreScripts {
                         "bone_meal",
                         "подкормить посевы костной мукой",
                         List.of(
-                                ParamSpec.enumeration(CROP, false, CropKind.names(), "any"),
+                                ParamSpec.enumeration("crop", false, CropKind.names(), "any"),
                                 ParamSpec.integer(
                                         RADIUS,
                                         false,
@@ -1094,7 +1094,7 @@ public final class CoreScripts {
                         "build_farm",
                         "разбить грядку прямоугольником: вспахать землю у воды и посадить культуру",
                         List.of(
-                                ParamSpec.enumeration(CROP, true, CropKind.plotNames()),
+                                ParamSpec.enumeration("crop", true, CropKind.plotNames()),
                                 ParamSpec.integer(
                                         "x1",
                                         true,

@@ -17,33 +17,33 @@ final class BreakDestroy {
 
     record Result(boolean toolBroke, String suffix) {}
 
-    static Result after(
-            SpiritEntity spirit,
-            Level level,
-            BlockPos brokenPos,
-            BlockState broken,
-            BlockEntity blockEntity,
-            ItemStack usedTool,
-            boolean dropsAllowed,
-            boolean wearsTool,
+    record Break(
+            BlockPos pos,
+            BlockState before,
+            BlockEntity entity,
+            ItemStack tool,
+            boolean drops,
+            boolean wears,
             String intent,
-            PlotProtection.Ground ground) {
+            PlotProtection.Ground ground) {}
+
+    static Result after(SpiritEntity spirit, Level level, Break broken) {
         if (level instanceof ServerLevel server) {
-            BreakNotice.broken(server, brokenPos, broken, spirit, intent, ground);
+            BreakNotice.broken(server, broken.pos(), broken.before(), spirit, broken.intent(), broken.ground());
         }
-        if (!SpiritBlocks.destroy((ServerLevel) spirit.level(), brokenPos, false, spirit, intent)) {
+        if (!SpiritBlocks.destroy((ServerLevel) spirit.level(), broken.pos(), false, spirit, broken.intent())) {
             return new Result(false, "");
         }
         spirit.hunger().onBlockBroken();
-        if (dropsAllowed) {
-            Block.dropResources(broken, level, brokenPos, blockEntity, spirit, usedTool);
+        if (broken.drops()) {
+            Block.dropResources(broken.before(), level, broken.pos(), broken.entity(), spirit, broken.tool());
         }
-        if (!usedTool.isEmpty() && wearsTool) {
+        if (!broken.tool().isEmpty() && broken.wears()) {
             String suffix = ToolSuffix.ofItem(
-                    BuiltInRegistries.ITEM.getKey(usedTool.getItem()).toString());
+                    BuiltInRegistries.ITEM.getKey(broken.tool().getItem()).toString());
             int breaksBefore = spirit.toolBreaks();
-            usedTool.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
-            boolean toolBroke = usedTool.isEmpty() || spirit.toolBreaks() > breaksBefore;
+            broken.tool().hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
+            boolean toolBroke = broken.tool().isEmpty() || spirit.toolBreaks() > breaksBefore;
             return new Result(toolBroke, toolBroke ? suffix : "");
         }
         return new Result(false, "");

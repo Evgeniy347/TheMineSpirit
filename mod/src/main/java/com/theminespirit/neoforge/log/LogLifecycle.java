@@ -89,7 +89,10 @@ public final class LogLifecycle {
             pruneMs = service.meter().pruneMillis();
         }
         double mspt = "sample".equals(event) ? server.getAverageTickTimeNanos() / 1_000_000.0 : 0;
-        SpiritWorldLog.health(server, mspt, worstMspt, 0, pending, active, blocked, boardMs, pruneMs, tickets, event);
+        SpiritWorldLog.health(
+                server,
+                new SpiritWorldLog.Health(
+                        mspt, worstMspt, 0, pending, active, blocked, boardMs, pruneMs, tickets, event));
         if ("sample".equals(event)) {
             worstMspt = 0;
         }

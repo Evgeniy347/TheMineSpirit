@@ -15,7 +15,7 @@ class PitExitGroupTests {
     @Test
     void plan_TwoSpiritsInOneByOne_DoNotBreakUnderEachOther() {
         BlockCoord upper = new BlockCoord(0, 65, 0);
-        PitExitPlanner.World world = PitTestWorld.pit(5, 0, PitExitPlanner.Kind.SOFT);
+        PitExitPlanner.World world = PitTestWorld.pit(5, 0, BlockKind.SOFT);
 
         PitExitPlanner.Plan lower =
                 PitExitPlanner.plan(FEET, world, new PitExitPlanner.Supplies(0, false), Set.of(upper));
@@ -35,7 +35,7 @@ class PitExitGroupTests {
         BlockCoord a = new BlockCoord(0, 64, 0);
         BlockCoord b = new BlockCoord(1, 64, 0);
         BlockCoord c = new BlockCoord(0, 64, 1);
-        PitExitPlanner.World world = PitTestWorld.pit(6, 1, PitExitPlanner.Kind.SOFT);
+        PitExitPlanner.World world = PitTestWorld.pit(6, 1, BlockKind.SOFT);
         Set<BlockCoord> occupied = Set.of(a, b, c);
 
         for (BlockCoord feet : occupied) {
@@ -56,7 +56,7 @@ class PitExitGroupTests {
         BlockCoord a = new BlockCoord(-1, 64, -1);
         BlockCoord b = new BlockCoord(0, 64, -1);
         BlockCoord c = new BlockCoord(-1, 64, 0);
-        PitExitPlanner.World world = PitTestWorld.pit(6, 2, PitExitPlanner.Kind.SOFT);
+        PitExitPlanner.World world = PitTestWorld.pit(6, 2, BlockKind.SOFT);
         Set<BlockCoord> occupied = Set.of(a, b, c);
 
         for (BlockCoord feet : occupied) {
@@ -71,10 +71,7 @@ class PitExitGroupTests {
         BlockCoord lower = new BlockCoord(0, 64, 0);
         BlockCoord upper = new BlockCoord(0, 66, 0);
         PitExitPlanner.Plan plan = PitExitPlanner.plan(
-                lower,
-                PitTestWorld.pit(8, 0, PitExitPlanner.Kind.SOFT),
-                new PitExitPlanner.Supplies(0, false),
-                Set.of(upper));
+                lower, PitTestWorld.pit(8, 0, BlockKind.SOFT), new PitExitPlanner.Supplies(0, false), Set.of(upper));
 
         assertFalse(
                 plan.dig().contains(PitTestWorld.below(upper)),
@@ -86,10 +83,7 @@ class PitExitGroupTests {
     void plan_NeighbourCell_IsNeverDug() {
         BlockCoord neighbour = new BlockCoord(1, 64, 0);
         PitExitPlanner.Plan plan = PitExitPlanner.plan(
-                FEET,
-                PitTestWorld.pit(6, 1, PitExitPlanner.Kind.SOFT),
-                new PitExitPlanner.Supplies(0, false),
-                Set.of(neighbour));
+                FEET, PitTestWorld.pit(6, 1, BlockKind.SOFT), new PitExitPlanner.Supplies(0, false), Set.of(neighbour));
 
         assertTrue(plan.possible(), "Сосед не лишает духа выхода: он выбирает другую сторону");
         assertFalse(plan.dig().contains(neighbour), "Клетка соседа не ломается");

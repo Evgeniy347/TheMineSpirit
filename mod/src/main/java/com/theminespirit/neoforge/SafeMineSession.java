@@ -49,7 +49,8 @@ public final class SafeMineSession {
             case TUNNEL ->
                 SafeMinePlan.tunnel(safety, entry, params.direction(), params.length(), params.torchInterval());
         };
-        this.run = new SafeMineStepRun(spirit, level, safety, breaker, placer, approach, reservations, plan);
+        this.run = new SafeMineStepRun(
+                new SafeMineStepRun.World(spirit, level, safety, breaker), placer, approach, reservations, plan);
     }
 
     public Outcome tick() {
