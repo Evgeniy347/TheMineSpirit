@@ -121,6 +121,25 @@ public final class LeaseBook {
         return next;
     }
 
+    public Lease forget(String id, BlockCoord cell) {
+        Objects.requireNonNull(cell, "Клетка не может быть null: забывать нечего");
+        Lease lease = require(id);
+        if (lease.status() != LeaseStatus.ACTIVE) {
+            throw new IllegalStateException("Аренда '" + id + "' в статусе " + lease.status()
+                    + ": клетки забывают только у действующей аренды вовремя своего отката");
+        }
+        List<LeaseCell> next = new ArrayList<>(lease.cells());
+        boolean removed = next.removeIf(recorded -> recorded.pos().equals(cell));
+        if (!removed) {
+            throw new IllegalArgumentException("Клетка " + cell + " не записана в аренде '" + id
+                    + "': забывают только то, что аренда помнит, иначе откат потеряет правку");
+        }
+        Lease updated = lease.withCells(next);
+        leases.put(id, updated);
+        activeCells.remove(cell, id);
+        return updated;
+    }
+
     public Lease commit(String id) {
         Lease lease = require(id);
         if (lease.status() == LeaseStatus.DONE) {
