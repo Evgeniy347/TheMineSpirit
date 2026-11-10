@@ -130,7 +130,7 @@ class ForestryScenarioTests {
         return cells;
     }
 
-    private static Map<BlockCoord, String> blocks(Path path) throws IOException {
+    static Map<BlockCoord, String> blocks(Path path) throws IOException {
         JsonNode incident = new ObjectMapper().readTree(Files.readString(path, StandardCharsets.UTF_8));
         Map<BlockCoord, String> blocks = new HashMap<>();
         for (JsonNode entry : incident.get("blocks")) {
@@ -144,7 +144,7 @@ class ForestryScenarioTests {
         return blocks;
     }
 
-    private record SnapshotView(Map<BlockCoord, String> blocks, String species) implements TreeView {
+    record SnapshotView(Map<BlockCoord, String> blocks, String species) implements TreeView {
         @Override
         public boolean isLog(BlockCoord coord) {
             return ("minecraft:" + species + "_log").equals(blocks.get(coord));

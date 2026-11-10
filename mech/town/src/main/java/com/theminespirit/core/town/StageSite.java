@@ -15,6 +15,7 @@ public record StageSite(
         Placement mine,
         MinePlot minePlot,
         Placement orchard,
+        String wood,
         List<BlockCoord> orchardSaplings,
         List<OrchardPlot> extraOrchards,
         List<Placement> fields,

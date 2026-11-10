@@ -5,6 +5,7 @@ import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchemeFilter;
+import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.FloatingBlocks;
@@ -89,7 +90,8 @@ public final class PlotPlanBlocks {
                     piece.rotation(),
                     List.of());
         }
-        site.orchardSaplings().forEach(at -> blocks.putIfAbsent(at, "minecraft:oak_sapling"));
+        String sapling = WoodSpecies.swap("minecraft:oak_sapling", site.wood());
+        site.orchardSaplings().forEach(at -> blocks.putIfAbsent(at, sapling));
         return new Plan(blocks);
     }
 

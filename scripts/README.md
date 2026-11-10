@@ -21,7 +21,7 @@
 | [logdb/schema.json](logdb/schema.json) | единственное описание таблиц, причин и типов JSONL | `python3 scripts/logdb/logq.py --db events.db schema` | ПК, сервер | нет |
 | [logdb/tests/test_loader.py](logdb/tests/test_loader.py) | тесты загрузчика, импорта, `logq` и версии мода на маленькой базе | `python -m unittest tests.test_loader` | ПК, сервер | временная база |
 | [logdb/fixtures/](logdb/fixtures/) | обезличенные старые строки для тестов разбора | `scripts/test.sh unit --tests "*Logdb*"` | ПК, сервер | нет |
-| [live.sh](live.sh) | духи, доска, срез мира, журнал, фикстура, проверка | `scripts/live.sh status` | ПК, сервер, копия | фикстура в `mech/movement/...` (дух или `--at x y z`) |
+| [live.sh](live.sh) | духи, доска, срез мира, журнал, фикстура, проверка | `scripts/live.sh status` | ПК, сервер, копия | фикстура: `.live` в `mech/movement/...` или JSON в `src/test/resources/live` (`--json`, дух или `--at x y z`) |
 | [lead/live.py](lead/live.py) | реализация `live.sh` и выбор цели (копия или сервер) | `scripts/live.sh spirit spirit-1` | ПК, сервер, копия | нет для `status`/`log` |
 | [dev-server.sh](dev-server.sh) | своя копия сервера: `up`, `down`, `status`, `list` | `scripts/dev-server.sh up` | ПК | `run-live/<имя>` |
 | [dev-server/fetch-jbr.py](dev-server/fetch-jbr.py) | разовая загрузка JBR SDK для копии | `python scripts/dev-server/fetch-jbr.py` | ПК | `.live-server` |

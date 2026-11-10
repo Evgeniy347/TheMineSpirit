@@ -1,8 +1,10 @@
 package com.theminespirit.neoforge.board;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownFixtures;
@@ -31,5 +33,22 @@ class PlotPlanBlocksTests {
 
         assertNotSame(
                 first, other, "План другого этапа/участка собирается заново: кэш не подменяет постройки чужого места");
+    }
+
+    @Test
+    void plan_ForeignWood_SaplingsMatchSettlementSpecies() {
+        StageSite birch = TownFixtures.flatSite("birch");
+        PlotPlanBlocks.Plan plan = PlotPlanBlocks.of(birch);
+
+        assertEquals(
+                birch.orchardSaplings().size(),
+                plan.expected("minecraft:birch_sapling").size(),
+                "Саженцы сада в плане — породы поселения: иначе план ждёт oak там, где посадка ставит birch, "
+                        + "и защита/аудит видит чужие саженцы лишними");
+        assertTrue(
+                plan.expected("minecraft:oak_sapling").isEmpty(),
+                "Порода поселения birch не оставляет в плане жёстко зашитых oak-саженцев");
+        assertEquals(
+                "birch", birch.wood(), "Порода этапа берётся из участка поселения, а не подставляется по умолчанию");
     }
 }

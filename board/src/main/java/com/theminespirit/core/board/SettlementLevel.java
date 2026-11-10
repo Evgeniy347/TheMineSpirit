@@ -51,15 +51,19 @@ public final class SettlementLevel {
 
     public static Optional<StageSite> site(TownPlan plan, int stage, int level) {
         Objects.requireNonNull(plan, "План не может быть null: места этапа берутся из него");
-        String orchardScheme = StageRules.current()
-                .scheme(BoardCase.BUILD_ORCHARD, 1)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "stages.json: нет схемы BUILD_ORCHARD уровня 1 — саду не из чего взять места деревьев"));
-        return StageSites.find(plan, stage, level, TownRules.current(), orchardScheme);
+        return StageSites.find(plan, stage, level, TownRules.current(), orchardScheme());
     }
 
     public static Optional<StageSite> site(TownPlan plan, int stage, SettlementPlot plot) {
-        return site(plan, stage, of(plot));
+        Objects.requireNonNull(plot, "Участок не может быть null: порода сада берётся из него");
+        return StageSites.find(plan, stage, of(plot), TownRules.current(), orchardScheme(), plot.wood());
+    }
+
+    private static String orchardScheme() {
+        return StageRules.current()
+                .scheme(BoardCase.BUILD_ORCHARD, 1)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "stages.json: нет схемы BUILD_ORCHARD уровня 1 — саду не из чего взять места деревьев"));
     }
 
     public static Optional<ColumnMask> finalArea(TownPlan plan) {
