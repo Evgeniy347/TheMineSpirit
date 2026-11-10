@@ -103,7 +103,7 @@ public final class MorePlans {
     }
 
     public static TaskNode unload(boolean force) {
-        return new ScriptCall("unload", Map.of("container", "nearest", "radius", CONTAINER_RADIUS, "force", force));
+        return new ScriptCall("unload", Map.of("container", "warehouse", "force", force));
     }
 
     public static TaskNode withdraw(String item, int count) {

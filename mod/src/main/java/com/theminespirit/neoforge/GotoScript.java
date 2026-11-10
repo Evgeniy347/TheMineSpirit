@@ -105,19 +105,8 @@ public final class GotoScript implements ScriptInstance {
         return new Resolved(new BlockPos(found.x(), found.y(), found.z()), null);
     }
 
-    private static boolean freeAt(Level level, BlockCoord feet) {
-        if (feet.y() == NO_GROUND) {
-            return false;
-        }
-        BlockPos pos = new BlockPos(feet.x(), feet.y(), feet.z());
-        return level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()
-                && level.getBlockState(pos.above())
-                        .getCollisionShape(level, pos.above())
-                        .isEmpty()
-                && level.getFluidState(pos).isEmpty()
-                && !level.getBlockState(pos.below())
-                        .getCollisionShape(level, pos.below())
-                        .isEmpty();
+    private static boolean freeAt(ServerLevel level, BlockCoord feet) {
+        return GroundProbe.freeAt(level, feet);
     }
 
     private static WorkStand.Ground ground(ServerLevel level) {
@@ -129,7 +118,7 @@ public final class GotoScript implements ScriptInstance {
 
             @Override
             public boolean free(BlockCoord feet) {
-                return freeAt(level, feet);
+                return feet.y() != NO_GROUND && freeAt(level, feet);
             }
         };
     }

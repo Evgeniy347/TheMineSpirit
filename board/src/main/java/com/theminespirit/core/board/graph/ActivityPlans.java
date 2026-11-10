@@ -141,17 +141,15 @@ public final class ActivityPlans {
     public static Plan unload(BlockCoord at) {
         return new Plan(
                 "unload",
-                sequence(
-                        gotoPoint(at),
-                        new ScriptCall(
-                                "unload",
-                                Map.of(
-                                        CONTAINER,
-                                        "auto",
-                                        RADIUS,
-                                        CatalogLimits.CONTAINER_RADIUS_DEFAULT,
-                                        "force",
-                                        true))));
+                new ScriptCall(
+                        "unload",
+                        Map.of(
+                                CONTAINER,
+                                container(at),
+                                RADIUS,
+                                CatalogLimits.CONTAINER_RADIUS_DEFAULT,
+                                "force",
+                                true)));
     }
 
     public static Plan sortChest(BlockCoord at) {

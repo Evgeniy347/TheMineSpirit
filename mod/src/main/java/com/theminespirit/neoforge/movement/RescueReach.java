@@ -110,6 +110,15 @@ public final class RescueReach {
             return generation;
         }
 
+        public void clear() {
+            if (verdicts.isEmpty() && pending.isEmpty()) {
+                return;
+            }
+            verdicts.clear();
+            pending.clear();
+            generation++;
+        }
+
         public String readyEvent() {
             return "rescue_reach:" + generation;
         }

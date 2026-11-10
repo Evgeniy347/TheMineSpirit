@@ -216,6 +216,44 @@ class LoaderTests(unittest.TestCase):
             "форма --limit=7 не утекает в команду сервера",
         )
 
+    def test_remoteCommand_ForwardsSinceForEveryFilteredCommand(self):
+        cases = (
+            ["spirit", "дух-1"],
+            ["failures"],
+            ["blocks", "--spirit", "дух-1"],
+            ["deaths"],
+            ["stuck"],
+            ["items", "stone"],
+            ["health"],
+            ["text", "нет пути"],
+            ["grep", "rescue"],
+        )
+        for argv in cases:
+            with self.subTest(command=argv[0]):
+                command = logq.remote_command(["--main", *argv, "--since", "1h"], "/db/events.db")
+                self.assertEqual(
+                    ["--since", "1h"],
+                    command[-2:],
+                    "фильтр по времени обязан доехать до основного сервера: %s" % argv[0],
+                )
+
+    def test_health_Since_LeavesOnlyFreshRows(self):
+        self.write(
+            "events-00001.jsonl",
+            [
+                record("server_health", ts=1_000_000_000_000, mspt=1.0, players=0),
+                record("server_health", ts=1_700_000_000_000, mspt=2.0, players=0),
+            ],
+        )
+        loader.ingest_events_dir(self.conn, self.events)
+        self.conn.commit()
+
+        args = logq.build_parser().parse_args(["health", "--since", "1500000000000"])
+        _, rows = logq.dispatch(args, self.conn)
+
+        self.assertEqual(1, len(rows), "здоровье сервера тоже фильтруется по ts, как и остальные команды")
+        self.assertEqual(2.0, rows[0][2], "свежая строка осталась, старая отсечена")
+
     def test_text_SkippedAndStored_AddUp(self):
         path = self.write_log(
             "plain.log",

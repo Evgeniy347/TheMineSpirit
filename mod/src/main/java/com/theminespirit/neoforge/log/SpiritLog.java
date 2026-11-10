@@ -4,6 +4,7 @@ import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.log.BlockAction;
 import com.theminespirit.core.log.LogCause;
 import com.theminespirit.core.log.LogJson;
 import com.theminespirit.core.log.LogRecord;
@@ -43,7 +44,7 @@ public final class SpiritLog {
         }
         record.put("actor_type", change.actorType())
                 .put("actor", change.actor())
-                .put("action", change.action())
+                .put("action", BlockAction.of(change.cause(), change.action()))
                 .put("block_before", change.before().toString())
                 .put("block_after", change.after().toString())
                 .at(change.pos().getX(), change.pos().getY(), change.pos().getZ())

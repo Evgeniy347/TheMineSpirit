@@ -5,18 +5,14 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.movement.DigOutObstacle;
 import com.theminespirit.core.movement.SealedSpace;
-import com.theminespirit.core.movement.WaterCrossingPlanner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.core.town.PlotProtection;
-import com.theminespirit.neoforge.movement.CheapBlocks;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -37,6 +33,7 @@ public final class DigOutScript implements ScriptInstance {
     private final DigOutBackfill backfill;
     private final BlockBreaker breaker;
     private final BlockPlacer placer;
+    private final DigOutFloor stepFloor;
     private Direction direction;
     private BlockPos next;
     private boolean breaking;
@@ -62,6 +59,7 @@ public final class DigOutScript implements ScriptInstance {
         this.descending = target.y() < spirit.blockPosition().getY();
         this.breaker = BlockBreaker.escaping(spirit, rescue);
         this.placer = new BlockPlacer(spirit, PlotProtection.Ground.TEMPORARY_MOVEMENT);
+        this.stepFloor = new DigOutFloor(spirit, level, placer);
         this.restore = new DigOutRestore(spirit, level);
         boolean sealedNow = sealed(level, spirit.blockPosition());
         this.backfill = new DigOutBackfill(
@@ -149,7 +147,7 @@ public final class DigOutScript implements ScriptInstance {
         BlockPos step = sideways ? ahead : ahead.above();
         BlockPos floor = step.below();
         if (DigOutBackfill.passable(level, floor) || DigOutBackfill.water(level, floor)) {
-            Optional<String> refusal = placeFloor(floor);
+            Optional<String> refusal = stepFloor.place(floor);
             if (refusal.isPresent()) {
                 return turnOrFail("пол ступени " + floor.toShortString() + " не подложить: " + refusal.get());
             }
@@ -223,24 +221,6 @@ public final class DigOutScript implements ScriptInstance {
                 turnOrFail("не сломать " + cell.toShortString() + ": " + refused.message());
             case BlockBreaker.Protected refused ->
                 turnOrFail("нельзя ломать " + cell.toShortString() + ": " + refused.reason());
-        };
-    }
-
-    private Optional<String> placeFloor(BlockPos cell) {
-        Optional<String> blockId = WaterCrossingPlanner.cheapestAvailable(CheapBlocks.counts(spirit));
-        if (blockId.isEmpty()) {
-            return Optional.of("в инвентаре нет дешёвых блоков для ступени");
-        }
-        String id = blockId.get();
-        return switch (placer.begin(cell, BlockStates.stateFor(id), id)) {
-            case BlockPlacer.Started ignored -> {
-                if (level instanceof ServerLevel server) {
-                    PlacedBlocksData.get(server).markTemporary(cell);
-                }
-                yield Optional.empty();
-            }
-            case BlockPlacer.Refused refused -> Optional.of(refused.message());
-            case BlockPlacer.Protected refused -> Optional.of(refused.reason());
         };
     }
 

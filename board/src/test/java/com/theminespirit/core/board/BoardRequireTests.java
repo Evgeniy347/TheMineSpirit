@@ -21,9 +21,10 @@ class BoardRequireTests {
                 fence.requiredItems().isEmpty(),
                 "Живая доска observe12 держит ограду с устаревшим требованием " + fence.requiredItems());
         assertEquals(
-                BoardStatus.BLOCKED,
+                BoardStatus.PENDING,
                 board.statusOf("first:build_fence").orElseThrow(),
-                "Ограда в живой доске заблокирована после провалов: тест обязан идти по этому состоянию");
+                "Старая блокировка без типизированной нужды не восстанавливается как BLOCKED: условие "
+                        + "пересчитывается, иначе доска ждёт пустоту вечно (живая доска observe12 хранит такой снимок)");
 
         assertTrue(
                 board.require("first:build_fence", Map.of()),

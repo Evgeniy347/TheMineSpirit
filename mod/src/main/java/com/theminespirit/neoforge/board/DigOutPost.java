@@ -50,7 +50,7 @@ final class DigOutPost {
             if ((fact != null && fact.stuck()) || post.open("rescue:" + id)) {
                 continue;
             }
-            BlockCoord goal = SurfacePoint.of(post.level, settlement);
+            BlockCoord goal = settlement;
             service.detachForAction(spirit);
             spirit.startTask(new SequenceNode(List.of(
                     new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z(), "rescue", true)),

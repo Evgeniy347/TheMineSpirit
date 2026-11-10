@@ -77,7 +77,9 @@ final class RescueGroupPost {
             return false;
         }
         boolean posted = false;
-        for (RescueGroups.Group group : RescueGroups.form(members)) {
+        RescueGroups.Passage passage =
+                cell -> world.available(cell.x(), cell.z()) && world.passable(cell.x(), cell.y(), cell.z());
+        for (RescueGroups.Group group : RescueGroups.form(members, passage)) {
             if (follow(post, group, home, pathHome, marks, task)) {
                 posted = true;
                 continue;

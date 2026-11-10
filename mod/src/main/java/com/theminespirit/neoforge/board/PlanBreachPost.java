@@ -26,15 +26,19 @@ final class PlanBreachPost {
             BlockCoord at = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
             String id = "world:plan_breach:" + WorldPost.key(at) + ":"
                     + entry.getValue().tick();
+            String block = EarthCover.restoreBlock(entry.getValue().blockId());
             BoardTicket repair = post.ticket(
-                    id, BoardCase.REPAIR_BUILDING, Optional.empty(), BoardTuning.MAX_PRIORITY, owner.id(), Map.of());
+                    id,
+                    BoardCase.REPAIR_BUILDING,
+                    Optional.empty(),
+                    BoardTuning.MAX_PRIORITY,
+                    owner.id(),
+                    Map.of(block, 1));
             TicketTarget target = TicketTarget.at(at)
                     .withPlan(new ScriptCall(
                             "place_block",
                             Map.of(
-                                    "block",
-                                            EarthCover.restoreBlock(
-                                                    entry.getValue().blockId()),
+                                    "block", block,
                                     "x", pos.getX(),
                                     "y", pos.getY(),
                                     "z", pos.getZ())));

@@ -6,6 +6,7 @@ import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphKits;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.More4Rules;
+import com.theminespirit.core.movement.PatrolPoints;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
@@ -71,13 +72,21 @@ final class More4Post {
         if (point == null) {
             return false;
         }
+        List<BlockCoord> stops = PatrolPoints.around(point, ground(post));
+        if (stops.size() < 2) {
+            return false;
+        }
         return ActivityLaunch.launchOrQueue(
                 post,
                 ticket.id(),
                 ticket.task().priority(),
                 BoardCase.ACTIVITY_GUARD,
                 "patrol",
-                new ScriptCall("patrol", More4Scripts.patrolParams(point)));
+                new ScriptCall("patrol", More4Scripts.patrolParams(stops)));
+    }
+
+    private static PatrolPoints.Ground ground(GraphPost post) {
+        return GraphTargets.patrolGround(post.level);
     }
 
     private static @Nullable BlockCoord chestPoint(GraphPost post) {

@@ -53,7 +53,7 @@ final class DigOutAction {
             }
             if (DigOutScript.embedded(spirit)) {
                 pausedUntil.put(spirit.getUUID(), now + PAUSE_TICKS);
-                start(service, spirit, SurfacePoint.of(level, settlement));
+                start(service, spirit, settlement);
                 continue;
             }
             Optional<PitExitPlanner.Plan> pit = PitRescue.trapped(spirit);
@@ -72,7 +72,7 @@ final class DigOutAction {
             boolean stillInWater = inWater(level, feet) && still.still(spirit.getUUID(), coord(feet), now, PAUSE_TICKS);
             if (DigOutScript.sealed(level, feet) || stillInWater) {
                 pausedUntil.put(spirit.getUUID(), now + PAUSE_TICKS);
-                start(service, spirit, SurfacePoint.of(level, settlement));
+                start(service, spirit, settlement);
             }
         }
     }
