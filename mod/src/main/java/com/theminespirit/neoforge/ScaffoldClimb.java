@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.lease.LeaseRun;
 import java.util.List;
+import net.minecraft.core.BlockPos;
 import org.jspecify.annotations.Nullable;
 
 final class ScaffoldClimb {
@@ -17,11 +18,15 @@ final class ScaffoldClimb {
     private String failureReason;
 
     ScaffoldClimb(SpiritEntity spirit, int height) {
+        this(spirit, height, spirit.blockPosition());
+    }
+
+    ScaffoldClimb(SpiritEntity spirit, int height, BlockPos base) {
         String block = PillarColumn.cheapBlock(spirit);
         if (block == null) {
             throw new IllegalArgumentException("нет материала для подмостей: нужны земля или булыжник, есть 0");
         }
-        this.column = new PillarColumn(spirit, block, height);
+        this.column = new PillarColumn(spirit, block, height, base);
     }
 
     Outcome tick() {

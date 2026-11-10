@@ -160,6 +160,22 @@ class SettlementLevelGuardTests {
     }
 
     @Test
+    void fenceFailure_UnreachableOrigin_IsSkippedBeforeSubmit() {
+        String danger = read(SourceFiles.path("neoforge/board/More3Post.java"));
+        String portal = read(SourceFiles.path("neoforge/board/More4Post.java"));
+
+        assertTrue(
+                danger.indexOf("post.unreachable(at)") >= 0
+                        && danger.indexOf("post.unreachable(at)") < danger.indexOf("post.submit("),
+                "Забор в точке опасности не ставится снова, пока граф помнит её недостижимой (post.unreachable → "
+                        + "continue): иначе DigOut повторяет полный поиск каждый заход");
+        assertTrue(
+                portal.indexOf("post.unreachable(origin)") >= 0
+                        && portal.indexOf("post.unreachable(origin)") < portal.indexOf("post.submit("),
+                "Забор у портала тоже пропускает недостижимую точку: правило общее, а не только для опасностей");
+    }
+
+    @Test
     void fenceOriginPattern_WithoutSettlementLevel_IsReported() {
         assertTrue(
                 !fenceOriginFromSite("TicketTarget.at(danger.position())"),

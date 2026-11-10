@@ -17,7 +17,7 @@ class BreakSightGuardTests {
     private static final Pattern UNLIMITED = Pattern.compile("\\.begin(?:AnyDistance|Chop)\\s*\\(");
     private static final Pattern CLEAR_AIR = Pattern.compile("setBlock\\([^;]*Blocks\\.AIR\\b");
     private static final List<String> UNLIMITED_ALLOWED =
-            List.of("TreeChop.java", "HarvestSession.java", "FarmSession.java");
+            List.of("TreeChop.java", "ChopPass.java", "HarvestSession.java", "FarmSession.java");
     private static final String BREAKER = "BlockBreaker.java";
     private static final String CHECK = "BreakCheck.java";
     private static final String DESTROY = "BreakDestroy.java";

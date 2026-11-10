@@ -2,10 +2,13 @@ package com.theminespirit.core.forestry;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class ChopStands {
     public static final int FAR_RADIUS = 3;
@@ -17,27 +20,90 @@ public final class ChopStands {
     private static final double EYE_HEIGHT = 1.5;
     private static final double MAX_LOG_DISTANCE = 4.0;
 
-    @FunctionalInterface
+    public record Stand(BlockCoord feet, @Nullable BlockCoord climbFrom) {
+        public Stand {
+            Objects.requireNonNull(feet, "Клетка стоянки не может быть null: без неё дух не знает, куда встать");
+            if (climbFrom != null && climbFrom.y() >= feet.y()) {
+                throw new IllegalArgumentException(
+                        "Опора подмостей " + climbFrom + " не ниже стоянки " + feet + ": столб строят вверх от опоры");
+            }
+        }
+    }
+
     public interface View {
         boolean standable(BlockCoord feet);
+
+        default boolean free(BlockCoord cell) {
+            return standable(cell);
+        }
     }
 
     private ChopStands() {}
 
-    public static List<BlockCoord> around(Tree tree, View view) {
-        return collect(tree, view, NEAR_RADIUS, 0, STAND_HEIGHT - 1);
+    public static List<BlockCoord> stands(Tree tree, View view) {
+        return standPoints(tree, view).stream().map(Stand::feet).toList();
     }
 
-    public static List<BlockCoord> stands(Tree tree, View view) {
-        List<BlockCoord> near = around(tree, view);
-        if (!near.isEmpty()) {
-            return near;
+    public static List<Stand> standPoints(Tree tree, View view) {
+        Objects.requireNonNull(tree, "Дерево не может быть null: без него неизвестно, где стоянка у ствола");
+        Objects.requireNonNull(view, "Взгляд на мир не может быть null: по нему проверяется стоянка");
+        Set<BlockCoord> walk = new LinkedHashSet<>();
+        Map<BlockCoord, BlockCoord> climb = new LinkedHashMap<>();
+        int floor = tree.base().y() - STAND_SCAN_DEPTH;
+        for (BlockCoord log : tree.logs()) {
+            for (int dy = 0; dy < STAND_HEIGHT; dy++) {
+                for (int dx = -NEAR_RADIUS; dx <= NEAR_RADIUS; dx++) {
+                    for (int dz = -NEAR_RADIUS; dz <= NEAR_RADIUS; dz++) {
+                        if (dx == 0 && dz == 0) {
+                            continue;
+                        }
+                        BlockCoord feet = new BlockCoord(log.x() + dx, log.y() + dy, log.z() + dz);
+                        if (walk.contains(feet) || climb.containsKey(feet)) {
+                            continue;
+                        }
+                        if (view.standable(feet)) {
+                            walk.add(feet);
+                            continue;
+                        }
+                        BlockCoord base = climbBase(feet, view, floor);
+                        if (base != null) {
+                            climb.put(feet, base);
+                        }
+                    }
+                }
+            }
         }
-        List<BlockCoord> far = collect(tree, view, FAR_RADIUS, -DROP_DEPTH, STAND_HEIGHT - 1);
-        if (!far.isEmpty()) {
-            return far;
+        List<Stand> result = new ArrayList<>(walk.size() + climb.size());
+        walk.forEach(feet -> result.add(new Stand(feet, null)));
+        if (walk.isEmpty()) {
+            collect(tree, view, FAR_RADIUS, -DROP_DEPTH, STAND_HEIGHT - 1)
+                    .forEach(feet -> result.add(new Stand(feet, null)));
         }
-        return groundBelow(tree, view);
+        if (result.isEmpty()) {
+            groundBelow(tree, view).forEach(feet -> result.add(new Stand(feet, null)));
+        }
+        climb.forEach((feet, base) -> result.add(new Stand(feet, base)));
+        return List.copyOf(result);
+    }
+
+    private static @Nullable BlockCoord climbBase(BlockCoord feet, View view, int floor) {
+        if (!view.free(feet) || !view.free(above(feet))) {
+            return null;
+        }
+        for (int y = feet.y() - 1; y >= floor; y--) {
+            BlockCoord cell = new BlockCoord(feet.x(), y, feet.z());
+            if (!view.free(cell) || !view.free(above(cell))) {
+                return null;
+            }
+            if (view.standable(cell)) {
+                return cell;
+            }
+        }
+        return null;
+    }
+
+    private static BlockCoord above(BlockCoord cell) {
+        return new BlockCoord(cell.x(), cell.y() + 1, cell.z());
     }
 
     private static List<BlockCoord> groundBelow(Tree tree, View view) {
