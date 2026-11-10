@@ -7,10 +7,8 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.engine.TaskRunner;
-import com.theminespirit.core.mining.ClimbReach;
 import com.theminespirit.core.mining.ToolReserve;
 import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.script.ClearAreaParams;
 import java.util.List;
 import java.util.Map;
@@ -24,16 +22,13 @@ import org.jspecify.annotations.Nullable;
 
 final class ClearAreaScript implements ScriptInstance {
     private static final int MAX_RESTOCKS = 2;
+
     private final ClearAreaSession session;
     private final @Nullable SpiritEntity spirit;
+    private final @Nullable ClearScaffoldWork scaffold;
     private @Nullable TaskRunner restock;
     private boolean restockChecked;
     private int restockAttempts;
-    private @Nullable TaskRunner climb;
-    private boolean climbChecked;
-    private @Nullable TaskRunner descend;
-    private boolean climbed;
-    private boolean descendTried;
 
     ClearAreaScript(SpiritEntity spirit, ClearAreaParams params) {
         this.spirit = spirit;
@@ -42,11 +37,13 @@ final class ClearAreaScript implements ScriptInstance {
                 BuildBox.of(params.x1(), params.y1(), params.z1(), params.x2(), params.y2(), params.z2()),
                 params.demolish(),
                 params.keepGround());
+        this.scaffold = new ClearScaffoldWork(spirit, session);
     }
 
     ClearAreaScript(ClearAreaSession session) {
         this.session = session;
         this.spirit = null;
+        this.scaffold = null;
     }
 
     @Override
@@ -67,71 +64,38 @@ final class ClearAreaScript implements ScriptInstance {
             }
             restock = null;
         }
-        if (climb == null && !climbChecked && spirit != null && session.picking()) {
-            climbChecked = true;
-            int rise = ClimbReach.rise(spirit.getBlockY(), session.box.minY());
-            if (ClimbReach.needed(rise)) {
-                climb = climbRunner(rise);
-                if (climb == null) {
-                    return ScriptStatus.FAILED;
-                }
-            }
+        if (scaffold == null) {
+            return tickSession();
         }
-        if (climb != null) {
-            if (climb.isSuspended()) {
-                climb.resume();
-            }
-            if (climb.tick() == RunStatus.RUNNING) {
-                return ScriptStatus.RUNNING;
-            }
-            if (climb.status() != RunStatus.SUCCEEDED) {
-                session.fail("высокая клетка: столб не построен — "
-                        + climb.failureReason().orElse("причина неизвестна"));
+        ClearScaffoldWork.Result work = scaffold.tick();
+        if (work == ClearScaffoldWork.Result.RUNNING) {
+            return ScriptStatus.RUNNING;
+        }
+        if (work == ClearScaffoldWork.Result.FAILED) {
+            return ScriptStatus.FAILED;
+        }
+        if (work == ClearScaffoldWork.Result.DONE) {
+            return ScriptStatus.SUCCEEDED;
+        }
+        ScriptStatus status = tickSession();
+        if (status != ScriptStatus.RUNNING) {
+            ClearScaffoldWork.Result after = scaffold.tick();
+            if (after == ClearScaffoldWork.Result.FAILED) {
                 return ScriptStatus.FAILED;
             }
-            climbed = true;
-            climb = null;
+            if (after == ClearScaffoldWork.Result.RUNNING) {
+                return ScriptStatus.RUNNING;
+            }
         }
-        if (descend != null) {
-            return tickDescend();
-        }
+        return status;
+    }
+
+    private ScriptStatus tickSession() {
         return switch (session.tick()) {
             case RUNNING -> ScriptStatus.RUNNING;
             case FAILED -> ScriptStatus.FAILED;
-            case SUCCEEDED -> {
-                if (!climbed || descendTried) {
-                    yield ScriptStatus.SUCCEEDED;
-                }
-                descendTried = true;
-                descend = descendRunner();
-                yield descend == null ? ScriptStatus.SUCCEEDED : tickDescend();
-            }
+            case SUCCEEDED -> ScriptStatus.SUCCEEDED;
         };
-    }
-
-    private ScriptStatus tickDescend() {
-        TaskRunner runner = descend;
-        if (runner == null) {
-            return ScriptStatus.SUCCEEDED;
-        }
-        if (runner.isSuspended()) {
-            runner.resume();
-        }
-        if (runner.tick() == RunStatus.RUNNING) {
-            return ScriptStatus.RUNNING;
-        }
-        descend = null;
-        return ScriptStatus.SUCCEEDED;
-    }
-
-    private @Nullable TaskRunner descendRunner() {
-        if (spirit == null || !PillarDownScript.ownBelow(spirit)) {
-            return null;
-        }
-        return TaskRunner.start(
-                new ScriptCall("pillar_down", Map.of()),
-                SpiritScripts.registryFor(spirit),
-                ConditionRegistry.of(Map.of()));
     }
 
     @Override
@@ -144,18 +108,6 @@ final class ClearAreaScript implements ScriptInstance {
         return session.outcome() == ClearAreaSession.Outcome.SUCCEEDED
                 ? Optional.of(new ScriptResult.Data(session.resultData()))
                 : Optional.empty();
-    }
-
-    private @Nullable TaskRunner climbRunner(int rise) {
-        if (spirit == null) {
-            return null;
-        }
-        return TaskRunner.start(
-                new SequenceNode(List.of(
-                        new ScriptCall("acquire", Map.of("item", "minecraft:dirt", "count", rise)),
-                        new ScriptCall("pillar_up", Map.of("height", rise, "block", "minecraft:dirt", "down", false)))),
-                SpiritScripts.registryFor(spirit),
-                ConditionRegistry.of(Map.of()));
     }
 
     private @Nullable TaskRunner shovelRestock() {
@@ -197,13 +149,8 @@ final class ClearAreaScript implements ScriptInstance {
             restock.cancel();
             restock = null;
         }
-        if (climb != null) {
-            climb.cancel();
-            climb = null;
-        }
-        if (descend != null) {
-            descend.cancel();
-            descend = null;
+        if (scaffold != null) {
+            scaffold.cancel();
         }
         session.cancel();
     }
