@@ -33,6 +33,7 @@ final class NavEscapeChecks {
     static void checkPitWalkOut(long seed, FuzzWorld world, List<String> failures) {
         boolean exists = PitWalkOut.exists(
                 FuzzWorldViews.pitWalkWorld(world),
+                WalkOutRules.defaults(),
                 world.start().x(),
                 world.start().z(),
                 world.start().y());

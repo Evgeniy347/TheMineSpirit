@@ -18,7 +18,6 @@ final class NavFuzzTests {
             FuzzWorld world = FuzzWorld.generate(seed);
             NavFuzzChecks.checkSurfaceEscape(seed, world, failures);
             NavFuzzChecks.checkPitExit(seed, world, failures);
-            NavFuzzChecks.checkRoutePlanner(seed, world, failures);
             NavFuzzChecks.checkSelfEscape(seed, world, failures);
             NavEscapeChecks.checkSealedSpace(seed, world, failures);
             NavEscapeChecks.checkPitWalkOut(seed, world, failures);

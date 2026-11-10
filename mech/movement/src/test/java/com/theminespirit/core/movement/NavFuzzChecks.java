@@ -1,10 +1,6 @@
 package com.theminespirit.core.movement;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.route.Route;
-import com.theminespirit.core.route.RoutePlanner;
-import com.theminespirit.core.route.RouteRules;
-import com.theminespirit.core.route.RouteStep;
 import com.theminespirit.core.route.RouteWorld;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -20,7 +16,6 @@ import java.util.function.Predicate;
 
 final class NavFuzzChecks {
     private static final int MAX_VISITS = 20_000;
-    private static final RouteRules RULES = new RouteRules(1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 3, 12, 4, 1200, 1.0, 1);
 
     private NavFuzzChecks() {}
 
@@ -94,55 +89,6 @@ final class NavFuzzChecks {
                 }
             }
             case IMPOSSIBLE -> {}
-        }
-    }
-
-    static void checkRoutePlanner(long seed, FuzzWorld world, List<String> failures) {
-        Optional<BlockCoord> target = world.surfaceTarget();
-        if (target.isEmpty()) {
-            return;
-        }
-        Overlay overlay = new Overlay(world);
-        Route route = RoutePlanner.plan(overlay, world.start(), new GoalBlock(target.orElseThrow()), RULES, 16);
-        if (!route.usable()) {
-            return;
-        }
-        BlockCoord cursor = world.start();
-        for (RouteStep step : route.steps()) {
-            BlockCoord cell = step.cell();
-            switch (step.action()) {
-                case BREAK -> {
-                    if (world.protectedAt(cell)) {
-                        failures.add(seed + " RoutePlanner: ломает защищённый блок " + cell);
-                    }
-                    overlay.set(cell, FuzzWorld.Cell.AIR);
-                }
-                case PLACE -> {
-                    if (!BodyMotion.passable(overlay, cell)) {
-                        failures.add(seed + " RoutePlanner: ставит блок в занятую клетку " + cell);
-                    }
-                    overlay.set(cell, FuzzWorld.Cell.DIRT);
-                }
-                case PILLAR -> {
-                    if (!cell.equals(cursor)) {
-                        failures.add(seed + " RoutePlanner: столб ставится в " + cell + ", а дух в " + cursor);
-                        overlay.set(cell, FuzzWorld.Cell.DIRT);
-                        cursor = BodyMotion.above(cursor);
-                        continue;
-                    }
-                    overlay.set(cell, FuzzWorld.Cell.DIRT);
-                    cursor = BodyMotion.above(cursor);
-                    if (!BodyMotion.fits(overlay, cursor)) {
-                        failures.add(seed + " RoutePlanner: после столба тело не помещается в " + cursor);
-                    }
-                }
-                case WALK, SWIM -> {
-                    if (!BodyMotion.canMove(overlay, cursor, cell)) {
-                        failures.add(seed + " RoutePlanner: шаг " + cursor + " → " + cell + " неисполним телом");
-                    }
-                    cursor = cell;
-                }
-            }
         }
     }
 

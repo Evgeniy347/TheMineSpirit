@@ -115,15 +115,6 @@ final class DeadCodeExemptions {
                     "core/navigation/NavCachedWorld.java|method|NavCachedWorld#cachedBytes",
                     "Счётчик памяти кэша для отчёта: docs/research/baritone-navigation.md"),
             new Exemption(
-                    "core/movement/ApproachRoute.java|class|<top>#ApproachRoute",
-                    "Прототип маршрута подхода: docs/research/pathfinding-range.md"),
-            new Exemption(
-                    "core/movement/ProgressWatch.java|class|<top>#ProgressWatch",
-                    "Прототип сторожа прогресса пути: docs/research/pathfinding-range.md"),
-            new Exemption(
-                    "core/route/RouteBreakAudit.java|class|<top>#RouteBreakAudit",
-                    "Старый аудит ломки RoutePlanner: навигация ходит без ломки, docs/ARCHITECTURE.md"),
-            new Exemption(
                     "core/mining/MineTunnel.java|field|MineTunnel#MAX_STEPS",
                     "Бюджет прохода шахты — доменное число: вход проверки кейса observe10; в игре передаётся из настроек"),
             new Exemption(

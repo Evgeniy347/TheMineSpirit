@@ -17,12 +17,28 @@ public record ProjectileTrajectory(double bodyMargin, int maxPredictionTicks) {
     }
 
     public record Projectile(
-            double x, double y, double z, double vx, double vy, double vz, double gravity, double drag) {
+            double x,
+            double y,
+            double z,
+            double vx,
+            double vy,
+            double vz,
+            double gravity,
+            double drag,
+            double acceleration) {
         public Projectile {
             if (gravity < 0 || drag < 0 || drag > 1) {
                 throw new IllegalArgumentException("Снаряд: гравитация " + gravity + ", сопротивление " + drag
                         + ": гравитация не отрицательная, сопротивление в пределах [0, 1]");
             }
+            if (acceleration < 0) {
+                throw new IllegalArgumentException("Снаряд: ускорение вдоль полёта " + acceleration
+                        + " отрицательно — снаряд не тормозит сам себя, торможение задаёт сопротивление");
+            }
+        }
+
+        public Projectile(double x, double y, double z, double vx, double vy, double vz, double gravity, double drag) {
+            this(x, y, z, vx, vy, vz, gravity, drag, 0);
         }
     }
 
@@ -83,6 +99,13 @@ public record ProjectileTrajectory(double bodyMargin, int maxPredictionTicks) {
             x = nextX;
             y = nextY;
             z = nextZ;
+            double speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
+            if (speed > EPSILON) {
+                double push = projectile.acceleration() / speed;
+                vx += vx * push;
+                vy += vy * push;
+                vz += vz * push;
+            }
             vx *= projectile.drag();
             vy = vy * projectile.drag() - projectile.gravity();
             vz *= projectile.drag();
