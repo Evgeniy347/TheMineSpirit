@@ -147,6 +147,11 @@ public final class RescuePlans {
         return situation.tool() ? Self.DIG : Self.NONE;
     }
 
+    public static TaskNode digToHome(BlockCoord home) {
+        Objects.requireNonNull(home, "Дом не может быть null: без него выход копает в никуда");
+        return digOut(home);
+    }
+
     public static TaskNode descent(BlockCoord home) {
         Objects.requireNonNull(home, "Дом не может быть null: после разбора столба духу надо куда-то идти");
         return new SequenceNode(List.of(new ScriptCall("pillar_down", Map.of()), digOut(home), gotoPoint(home)));

@@ -23,6 +23,23 @@ class RescuePlansTests {
     private static final BlockCoord TRAPPED = new BlockCoord(10, 40, -5);
 
     @Test
+    void digToHome_TargetsHomePoint_NotRoofAboveColumn() {
+        BlockCoord home = new BlockCoord(-171, 72, -489);
+
+        TaskNode plan = RescuePlans.digToHome(home);
+
+        assertTrue(plan instanceof ScriptCall, "Выход с киркой — один вызов dig_out: лишний шаг сдвинул бы цель");
+        ScriptCall call = (ScriptCall) plan;
+        assertEquals("dig_out", call.script(), "Выход копает скриптом dig_out");
+        assertEquals(home.x(), intParam(call, "x"), "Цель dig_out по x — точка дома");
+        assertEquals(
+                home.y(),
+                intParam(call, "y"),
+                "Цель dig_out по y — точка дома, а не верх колонки: крыша склада над домом увела бы духа наверх");
+        assertEquals(home.z(), intParam(call, "z"), "Цель dig_out по z — точка дома");
+    }
+
+    @Test
     void plan_RescueCase_ReturnsPlan() {
         TaskNode plan = RescuePlans.plan(BoardCase.RESCUE_SPIRIT, TicketTarget.at(TRAPPED))
                 .orElseThrow();
@@ -225,6 +242,12 @@ class RescuePlansTests {
                 "Мирный спасает себя",
                 RescuePlans.claimNote(rescuee, rescuee, "Мирный", "Мирный"),
                 "Выдача самому себе не выдаёт себя за помощника");
+    }
+
+    private static int intParam(ScriptCall call, String key) {
+        Object value = call.params().get(key);
+        assertTrue(value instanceof Number, "У dig_out нет числа в параметре " + key + ": цель не задать");
+        return ((Number) value).intValue();
     }
 
     private static List<String> scripts(TaskNode plan) {

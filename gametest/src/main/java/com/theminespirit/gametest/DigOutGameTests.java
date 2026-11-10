@@ -63,6 +63,33 @@ public final class DigOutGameTests {
         BoardService board = BoardRegistry.get(helper.getLevel());
         board.board().restore(new BoardState(List.of(), Set.of()));
         List<BlockPos> planks = prepareArena(helper, pockets);
+        assertBreachStore(helper);
+        BlockCoord[] homeTarget = {null, null};
+        SpiritEntity underRoof = DigOutRoofChecks.spawnEmbeddedUnderRoof(helper, homeTarget);
+        String[] floorRefusal = {null};
+        SpiritEntity onPillar = DigOutRoofChecks.spawnAboveHomeWithLowerGoal(helper);
+        boolean[] checked = {false};
+        helper.onEachTick(() -> {
+            if (checked[0]) {
+                return;
+            }
+            DigOutRoofChecks.checkTarget(helper, underRoof, homeTarget);
+            DigOutRoofChecks.checkFloor(helper, onPillar, floorRefusal);
+            if (homeTarget[1] == null || floorRefusal[0] == null) {
+                return;
+            }
+            checked[0] = true;
+            board.board().cancel("rescue:" + underRoof.getUUID());
+            board.board().cancel("rescue:" + onPillar.getUUID());
+            underRoof.discard();
+            onPillar.discard();
+            DigOutRoofChecks.cleanup(helper);
+            runPocketScene(helper, board, pockets, planks);
+        });
+    }
+
+    private static void runPocketScene(
+            GameTestHelper helper, BoardService board, List<List<BlockPos>> pockets, List<BlockPos> planks) {
         List<SpiritEntity> spirits = new ArrayList<>();
         List<String> tickets = new ArrayList<>();
         List<Integer> starts = new ArrayList<>();
@@ -70,7 +97,6 @@ public final class DigOutGameTests {
             spirits.add(spawnInPocket(helper, board, cells, tickets, starts));
         }
         PillarScene pillar = spawnOnOwnPillar(helper, board);
-        assertBreachStore(helper);
         helper.succeedWhen(() -> {
             for (int index = 0; index < spirits.size(); index++) {
                 SpiritEntity spirit = spirits.get(index);
