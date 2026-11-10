@@ -71,7 +71,7 @@ final class PlaceBlockScript implements ScriptInstance {
             double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(pos));
             if (distance > BlockBreaker.REACH || standRequired) {
                 if (stands.isEmpty()) {
-                    stands.addAll(StandSpots.of(target, safety, spiritCoord()));
+                    fillStands();
                 }
                 if (standIndex >= stands.size()) {
                     return fail(
@@ -145,7 +145,7 @@ final class PlaceBlockScript implements ScriptInstance {
                 approached = false;
                 standRequired = true;
                 if (stands.isEmpty()) {
-                    stands.addAll(StandSpots.of(target, safety, spiritCoord()));
+                    fillStands();
                     standIndex = 0;
                 } else {
                     standIndex++;
@@ -159,6 +159,13 @@ final class PlaceBlockScript implements ScriptInstance {
             case CHUNK_NOT_LOADED ->
                 fail("чанк с клеткой " + toPos(target).toShortString() + " не загружен; поставлено 0 из 1");
         };
+    }
+
+    private void fillStands() {
+        stands.addAll(StandSpots.of(target, safety, spiritCoord()));
+        if (stands.isEmpty()) {
+            StandSpots.above(target, safety).ifPresent(stands::add);
+        }
     }
 
     private static boolean clearable(BlockState state) {

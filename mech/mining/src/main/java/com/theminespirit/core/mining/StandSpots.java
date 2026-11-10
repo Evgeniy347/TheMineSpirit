@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class StandSpots {
 
@@ -58,6 +59,20 @@ public final class StandSpots {
         Comparator<BlockCoord> byDistance = Comparator.comparingLong(coord -> distanceSquared(from, coord));
         unique.sort(byDistance.thenComparing(Comparator.naturalOrder()));
         return List.copyOf(unique);
+    }
+
+    public static Optional<BlockCoord> above(BlockCoord target, SafetyView view) {
+        Objects.requireNonNull(target, "Цель не может быть null: без неё неизвестно, где искать стоянку сверху");
+        Objects.requireNonNull(view, "SafetyView не может быть null: по нему проверяется стоянка");
+        if (view.cellAt(target) != Cell.SOLID) {
+            return Optional.empty();
+        }
+        BlockCoord feet = new BlockCoord(target.x(), target.y() + 1, target.z());
+        if (view.cellAt(feet) != Cell.PASSABLE
+                || view.cellAt(new BlockCoord(feet.x(), feet.y() + 1, feet.z())) != Cell.PASSABLE) {
+            return Optional.empty();
+        }
+        return Optional.of(feet);
     }
 
     public static boolean walkable(BlockCoord stand, BlockCoord from) {

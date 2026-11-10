@@ -5,9 +5,38 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class StandSpotsTests {
+    @Test
+    void above_SealedTargetWithFreeTop_ReturnsTopStand() {
+        CellWorld world = new CellWorld()
+                .set(0, 0, 0, Cell.SOLID)
+                .set(0, 1, 0, Cell.PASSABLE)
+                .set(0, 2, 0, Cell.PASSABLE)
+                .set(1, 0, 0, Cell.SOLID)
+                .set(-1, 0, 0, Cell.SOLID)
+                .set(0, 0, 1, Cell.SOLID)
+                .set(0, 0, -1, Cell.SOLID);
+
+        assertEquals(
+                Optional.of(new BlockCoord(0, 1, 0)),
+                StandSpots.above(new BlockCoord(0, 0, 0), world),
+                "Полностью замурованная клетка с открытым верхом даёт стоянку сверху: с неё дух срывает бугор "
+                        + "и ставит блок, а не падает пять раз на «стоянки недостижимы»");
+    }
+
+    @Test
+    void above_TargetWithoutSolidTop_IsEmpty() {
+        CellWorld world = new CellWorld().set(0, 0, 0, Cell.PASSABLE).set(0, 1, 0, Cell.PASSABLE);
+
+        assertEquals(
+                Optional.empty(),
+                StandSpots.above(new BlockCoord(0, 0, 0), world),
+                "Стоянка сверху допустима только на твёрдой цели: над воздухом дух не стоит");
+    }
+
     @Test
     void of_TargetWithOpenSide_ReturnsAdjacentStand() {
         CellWorld world = new CellWorld().set(0, 0, 0, Cell.SOLID).set(1, -1, 0, Cell.SOLID);
