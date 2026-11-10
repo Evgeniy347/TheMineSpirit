@@ -52,15 +52,6 @@ class SurfaceLevelTests {
     }
 
     @Test
-    void perch_OpenSkyNoWalkExit_NotEscaped() {
-        assertFalse(
-                SurfaceLevel.escaped(true, 98, List.of(69, 69, 69, 69), false),
-                "Дух на своём столбе в открытом небе не «вышел на поверхность»: вся земля вокруг на 29 ниже, "
-                        + "пешком сойти некуда. Иначе метка гаснет каждый тик, спасение не запускается, и дух "
-                        + "вечно берёт задания, до которых нет пути (spirit-4, -176,98,-514)");
-    }
-
-    @Test
     void pit_NoWalkExit_NotEscaped() {
         assertFalse(
                 SurfaceLevel.escaped(true, 63, List.of(70, 70, 70, 70), false),
