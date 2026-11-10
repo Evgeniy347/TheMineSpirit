@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.graph.GraphNames;
+import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -31,14 +32,13 @@ import net.minecraft.world.phys.AABB;
 final class GraphSurroundings {
     static final String DROPS = "drops_nearby";
     static final String LEAF_DECAY = "leaf_decay";
+    private static final String TREE_PREFIX = "tree:";
+    private static final String NAMESPACE = "minecraft:";
     private static final int RADIUS = 32;
     private static final int STEP = 1;
     private static final int BELOW = 4;
     private static final int ABOVE = 12;
     private static final int DROP_RADIUS = 24;
-    private static final int CANDIDATE_LIMIT = 32;
-    private static final int TARGET_LIMIT = 4;
-    private static final int TARGET_SEPARATION = 8;
 
     private GraphSurroundings() {}
 
@@ -101,9 +101,8 @@ final class GraphSurroundings {
             Optional<BlockCoord> decay,
             Map<String, BlockCoord> nearest,
             Map<String, Integer> distances,
-            Map<String, List<BlockCoord>> targets) {}
-
-    private record Near(BlockCoord at, int distance) {}
+            Map<String, List<BlockCoord>> targets,
+            Map<String, List<BlockCoord>> logs) {}
 
     static Around of(
             ServerLevel level,
@@ -134,23 +133,33 @@ final class GraphSurroundings {
             events.add("lava_seen");
         }
         Set<String> world = new HashSet<>(GraphNames.world(scan.blocks(), creatures));
+        world.removeIf(tag -> tag.startsWith(TREE_PREFIX));
+        Map<String, Integer> distances = new HashMap<>(scan.distances());
+        distances.keySet().removeIf(tag -> tag.startsWith(TREE_PREFIX));
+        Map<String, List<BlockCoord>> targets = new HashMap<>(scan.targets());
+        targets.keySet().removeIf(tag -> tag.startsWith(TREE_PREFIX));
+        TreeSurroundings.Found trees = TreeSurroundings.scan(level, scan.logs(), home);
+        world.addAll(trees.nearest().keySet());
+        nearest.putAll(trees.nearest());
+        distances.putAll(trees.distances());
+        targets.putAll(trees.targets());
         if (!sites.containsKey("sand")) {
             world.remove("sand");
         }
         if (!sites.containsKey(GraphNames.SOIL)) {
             world.remove(GraphNames.SOIL);
         }
-        Map<String, Integer> distances = new HashMap<>(scan.distances());
+        Map<String, Integer> allDistances = new HashMap<>(distances);
         nearest.putAll(sites);
-        distances.putAll(siteDistances);
+        allDistances.putAll(siteDistances);
         return new Around(
                 Set.copyOf(world),
                 Set.copyOf(events),
                 drops,
                 scan.decay(),
                 Map.copyOf(nearest),
-                Map.copyOf(distances),
-                scan.targets());
+                Map.copyOf(allDistances),
+                Map.copyOf(targets));
     }
 
     private static <T extends Entity> void marked(
@@ -207,7 +216,8 @@ final class GraphSurroundings {
         Map<String, BlockCoord> nearest = new HashMap<>();
         Map<String, Integer> squared = new HashMap<>();
         Map<String, Set<String>> tagCache = new HashMap<>();
-        Map<String, List<Near>> candidates = new HashMap<>();
+        Map<String, List<SurroundingTargets.Near>> candidates = new HashMap<>();
+        Map<String, List<BlockCoord>> logs = new HashMap<>();
         for (int dx = -RADIUS; dx <= RADIUS; dx += STEP) {
             for (int dz = -RADIUS; dz <= RADIUS; dz += STEP) {
                 for (int dy = -BELOW; dy <= ABOVE; dy++) {
@@ -218,6 +228,9 @@ final class GraphSurroundings {
                     BlockState state = level.getBlockState(pos);
                     String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath();
                     blocks.add(id);
+                    TreeSpecies.ofLog(NAMESPACE + id)
+                            .ifPresent(tree -> logs.computeIfAbsent(tree.id(), key -> new ArrayList<>())
+                                    .add(new BlockCoord(pos.getX(), pos.getY(), pos.getZ())));
                     Set<String> tags = tagCache.computeIfAbsent(id, GraphNames::blockWorld);
                     if (!tags.isEmpty()) {
                         int distance = dx * dx + dy * dy + dz * dz;
@@ -227,7 +240,7 @@ final class GraphSurroundings {
                                 squared.put(tag, distance);
                                 nearest.put(tag, at);
                             }
-                            offer(candidates.computeIfAbsent(tag, key -> new ArrayList<>()), new Near(at, distance));
+                            SurroundingTargets.offer(candidates, tag, at, distance);
                         }
                     }
                     if (decay == null && decaying(state)) {
@@ -243,51 +256,8 @@ final class GraphSurroundings {
                 Optional.ofNullable(decay),
                 Map.copyOf(nearest),
                 Map.copyOf(distances),
-                Map.copyOf(targets(candidates)));
-    }
-
-    private static void offer(List<Near> known, Near candidate) {
-        for (Near before : known) {
-            if (before.at().equals(candidate.at())) {
-                return;
-            }
-        }
-        int at = 0;
-        while (at < known.size() && known.get(at).distance() <= candidate.distance()) {
-            at++;
-        }
-        known.add(at, candidate);
-        if (known.size() > CANDIDATE_LIMIT) {
-            known.remove(known.size() - 1);
-        }
-    }
-
-    private static Map<String, List<BlockCoord>> targets(Map<String, List<Near>> candidates) {
-        Map<String, List<BlockCoord>> targets = new HashMap<>();
-        candidates.forEach((tag, known) -> {
-            List<BlockCoord> chosen = new ArrayList<>();
-            for (Near candidate : known) {
-                boolean distinct = chosen.stream()
-                        .allMatch(at -> distanceSquared(at, candidate.at()) >= TARGET_SEPARATION * TARGET_SEPARATION);
-                if (distinct) {
-                    chosen.add(candidate.at());
-                }
-                if (chosen.size() >= TARGET_LIMIT) {
-                    break;
-                }
-            }
-            if (!chosen.isEmpty()) {
-                targets.put(tag, List.copyOf(chosen));
-            }
-        });
-        return targets;
-    }
-
-    private static int distanceSquared(BlockCoord one, BlockCoord two) {
-        int dx = one.x() - two.x();
-        int dy = one.y() - two.y();
-        int dz = one.z() - two.z();
-        return dx * dx + dy * dy + dz * dz;
+                Map.copyOf(SurroundingTargets.of(candidates)),
+                Map.copyOf(logs));
     }
 
     private static boolean decaying(BlockState state) {

@@ -18,9 +18,10 @@ public record GraphBlock(String node, String target, Need need) {
         @JsonSubTypes.Type(value = Building.class, name = "building"),
         @JsonSubTypes.Type(value = Path.class, name = "path"),
         @JsonSubTypes.Type(value = Holder.class, name = "holder"),
+        @JsonSubTypes.Type(value = World.class, name = "world"),
         @JsonSubTypes.Type(value = Impossible.class, name = "impossible")
     })
-    public sealed interface Need permits Item, Tool, Building, Path, Holder, Impossible {}
+    public sealed interface Need permits Item, Tool, Building, Path, Holder, World, Impossible {}
 
     public record Item(String item, int count) implements Need {
         public Item {
@@ -58,6 +59,16 @@ public record GraphBlock(String node, String target, Need need) {
     public record Holder(String spirit, boolean stuck) implements Need {
         public Holder {
             Objects.requireNonNull(spirit, "Держатель нужды не может быть null: нужда адресная");
+        }
+    }
+
+    public record World(String tag) implements Need {
+        public World {
+            Objects.requireNonNull(tag, "Метка мира нужды не может быть null: по ней граф видит, что изменилось");
+            if (tag.isBlank()) {
+                throw new IllegalArgumentException(
+                        "Метка мира нужды пуста: блокировка ждёт конкретный факт округи, например tree:oak");
+            }
         }
     }
 

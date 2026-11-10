@@ -148,7 +148,8 @@ final class ChopSearch {
     }
 
     private BlockLocator.Search newSearch(BlockCoord at) {
-        return BlockLocator.search(spirit.level(), new BlockPos(at.x(), at.y(), at.z()), radius, Set.copyOf(logBlocks));
+        int scan = ChopTuning.scanRadius(radius, maxDistance);
+        return BlockLocator.search(spirit.level(), new BlockPos(at.x(), at.y(), at.z()), scan, Set.copyOf(logBlocks));
     }
 
     private static BlockCoord coords(BlockPos pos) {

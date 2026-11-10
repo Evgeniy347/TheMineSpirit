@@ -12,6 +12,7 @@ import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.DispatchRound;
+import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolLossRelease;
@@ -136,6 +137,26 @@ class ChopToolGraphTests {
                 Optional.of(spirits.get(0).id()),
                 board.holderOf("graph:chop_oak_log"),
                 "Держатель задания не меняется от поломки топора");
+    }
+
+    @Test
+    void blockedChop_LiveButNoStandingDemand_DoesNotRepeatTheRip() {
+        GraphWorld world = GraphWorld.empty();
+        world.with("oak_log", 0).with("oak_planks", 0).with("stick", 0);
+        world.blocks(new GraphBlock("chop_oak_log", "", new GraphBlock.Item("stick", 4)));
+
+        GraphPlan plan = world.plan();
+        GraphTickets.Result result = tickets(world);
+
+        assertTrue(
+                result.live().contains("graph:chop_oak_log"),
+                "Заблокированная рубка остаётся живой причиной для доски: " + result.live());
+        assertTrue(
+                plan.standing(result.live(), id -> Optional.empty()).stream()
+                        .noneMatch(task -> "graph:chop_oak_log".equals(GraphTickets.id(task))),
+                "Заблокированный узел не даёт заявку на брёвна: иначе GraphStanding снова ставит рубку, "
+                        + "которую граф только что признал невыполнимой (живой случай 11.11): "
+                        + plan.standing(result.live(), id -> Optional.empty()));
     }
 
     @Test

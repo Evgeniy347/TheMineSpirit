@@ -5,8 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.observation.BlockCoord;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -85,6 +92,105 @@ class ForestryScenarioTests {
         assertTrue(
                 world.isLog(new BlockCoord(base(22).x(), base(22).y() + TRUNK_HEIGHT - 1, base(22).z())),
                 "Невыбранное дерево осталось целым до своей задачи");
+    }
+
+    @Test
+    void treeSight_LiveJungleTrunk_IsForest() throws IOException {
+        Map<BlockCoord, String> blocks = blocks(Path.of("src/test/resources/live/observe11-jungle-tree.json"));
+
+        List<TreeSight.Stand> found = TreeSight.detect(
+                Map.of("jungle", cells(blocks, "jungle")), species -> new SnapshotView(blocks, species));
+
+        assertTrue(
+                found.stream().anyMatch(stand -> new BlockCoord(-203, 70, -565).equals(stand.base())),
+                "Живой ствол jungle обязан найтись: метка мира tree:jungle ставится по базе ствола, иначе "
+                        + "граф рубит не то место. Найдено: " + found);
+    }
+
+    @Test
+    void treeSight_LiveHouseOfJungleLogs_IsNotForest() throws IOException {
+        Map<BlockCoord, String> blocks = blocks(Path.of("src/test/resources/live/woodchain-house-1111.json"));
+
+        List<TreeSight.Stand> found = TreeSight.detect(
+                Map.of("jungle", cells(blocks, "jungle")), species -> new SnapshotView(blocks, species));
+
+        assertTrue(
+                found.isEmpty(),
+                "Постройка поселения из jungle-брёвен не делает породу доступной: иначе граф ставит рубку "
+                        + "стен у (-180,70,-505) и повторяет её каждый час. Найдено: " + found);
+    }
+
+    private static List<BlockCoord> cells(Map<BlockCoord, String> blocks, String species) {
+        List<BlockCoord> cells = new ArrayList<>();
+        blocks.forEach((cell, block) -> {
+            if (("minecraft:" + species + "_log").equals(block)) {
+                cells.add(cell);
+            }
+        });
+        return cells;
+    }
+
+    private static Map<BlockCoord, String> blocks(Path path) throws IOException {
+        JsonNode incident = new ObjectMapper().readTree(Files.readString(path, StandardCharsets.UTF_8));
+        Map<BlockCoord, String> blocks = new HashMap<>();
+        for (JsonNode entry : incident.get("blocks")) {
+            blocks.put(
+                    new BlockCoord(
+                            entry.get("x").asInt(),
+                            entry.get("y").asInt(),
+                            entry.get("z").asInt()),
+                    entry.get("block").asText());
+        }
+        return blocks;
+    }
+
+    private record SnapshotView(Map<BlockCoord, String> blocks, String species) implements TreeView {
+        @Override
+        public boolean isLog(BlockCoord coord) {
+            return ("minecraft:" + species + "_log").equals(blocks.get(coord));
+        }
+
+        @Override
+        public boolean isNaturalLeaves(BlockCoord coord) {
+            String block = blocks.get(coord);
+            return block != null && block.endsWith("_leaves");
+        }
+
+        @Override
+        public boolean isFoliageObstacle(BlockCoord coord) {
+            String block = blocks.get(coord);
+            return block != null && (block.endsWith("_leaves") || block.endsWith(":vine") || block.endsWith("_vines"));
+        }
+
+        @Override
+        public boolean isSoil(BlockCoord coord) {
+            String block = blocks.get(coord);
+            return block != null
+                    && (block.endsWith("_dirt")
+                            || "minecraft:dirt".equals(block)
+                            || "minecraft:grass_block".equals(block));
+        }
+
+        @Override
+        public boolean isArtificial(BlockCoord coord) {
+            String block = blocks.get(coord);
+            return block != null
+                    && (block.endsWith("_planks")
+                            || block.endsWith("_fence")
+                            || block.endsWith("_stairs")
+                            || block.endsWith("_door")
+                            || block.endsWith("_torch")
+                            || "minecraft:crafting_table".equals(block));
+        }
+
+        @Override
+        public boolean isEmpty(BlockCoord coord) {
+            String block = blocks.get(coord);
+            return block == null
+                    || "minecraft:air".equals(block)
+                    || "minecraft:short_grass".equals(block)
+                    || "minecraft:fern".equals(block);
+        }
     }
 
     private static Map<BlockCoord, BlockCoord> assign(List<BlockCoord> spirits, List<BlockCoord> bases) {
