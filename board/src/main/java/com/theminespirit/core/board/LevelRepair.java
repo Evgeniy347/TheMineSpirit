@@ -12,9 +12,11 @@ import com.theminespirit.core.town.PlotLeveling;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public final class LevelRepair {
@@ -23,15 +25,31 @@ public final class LevelRepair {
     public static PlotLeveling leveling(List<BlockCoord> holes, List<BlockCoord> extras) {
         Objects.requireNonNull(holes, "Дыры участка не могут быть null: нет дыр — пустой список");
         Objects.requireNonNull(extras, "Лишние блоки не могут быть null: нет лишних — пустой список");
-        List<PlotLeveling.Box> cut = extras.stream()
-                .sorted(Comparator.comparingInt(BlockCoord::y).reversed())
-                .map(LevelRepair::box)
-                .toList();
-        List<PlotLeveling.Box> fill = holes.stream()
-                .sorted(Comparator.comparingInt(BlockCoord::y))
-                .map(LevelRepair::box)
-                .toList();
-        return new PlotLeveling(cut, fill, PlotLeveling.DEFAULT_BLOCK);
+        return new PlotLeveling(columns(extras, true), columns(holes, false), PlotLeveling.DEFAULT_BLOCK);
+    }
+
+    private static List<PlotLeveling.Box> columns(List<BlockCoord> cells, boolean topDown) {
+        Map<String, int[]> grouped = new LinkedHashMap<>();
+        for (BlockCoord cell : cells) {
+            String key = cell.x() + "," + cell.z();
+            int[] range = grouped.computeIfAbsent(key, ignored -> new int[] {cell.x(), cell.z(), cell.y(), cell.y()});
+            range[2] = Math.min(range[2], cell.y());
+            range[3] = Math.max(range[3], cell.y());
+        }
+        List<PlotLeveling.Box> boxes = new ArrayList<>(grouped.size());
+        grouped.values()
+                .forEach(range ->
+                        boxes.add(new PlotLeveling.Box(range[0], range[2], range[1], range[0], range[3], range[1])));
+        Comparator<PlotLeveling.Box> order = topDown
+                ? Comparator.comparingInt(PlotLeveling.Box::y2)
+                        .reversed()
+                        .thenComparingInt(PlotLeveling.Box::x1)
+                        .thenComparingInt(PlotLeveling.Box::z1)
+                : Comparator.comparingInt(PlotLeveling.Box::y1)
+                        .thenComparingInt(PlotLeveling.Box::x1)
+                        .thenComparingInt(PlotLeveling.Box::z1);
+        boxes.sort(order);
+        return List.copyOf(boxes);
     }
 
     public record Progress(int done, int total) {}
@@ -43,17 +61,29 @@ public final class LevelRepair {
         int done = 0;
         for (PlotLeveling.Box box : leveling.cut()) {
             total++;
-            if (empty.test(new BlockCoord(box.x1(), box.y1(), box.z1()))) {
+            if (corners(box).stream().allMatch(empty)) {
                 done++;
             }
         }
         for (PlotLeveling.Box box : leveling.fill()) {
             total++;
-            if (!empty.test(new BlockCoord(box.x1(), box.y1(), box.z1()))) {
+            if (corners(box).stream().noneMatch(empty)) {
                 done++;
             }
         }
         return new Progress(done, total);
+    }
+
+    private static List<BlockCoord> corners(PlotLeveling.Box box) {
+        Set<BlockCoord> points = new LinkedHashSet<>();
+        for (int x : new int[] {box.x1(), box.x2()}) {
+            for (int y : new int[] {box.y1(), box.y2()}) {
+                for (int z : new int[] {box.z1(), box.z2()}) {
+                    points.add(new BlockCoord(x, y, z));
+                }
+            }
+        }
+        return List.copyOf(points);
     }
 
     public static TaskNode plan(TicketTarget target) {
@@ -98,10 +128,6 @@ public final class LevelRepair {
 
     private static TaskNode retried(ScriptCall call) {
         return new FallbackNode(List.of(call, new ScriptCall("wait", Map.of("ticks", CatalogLimits.WAIT_TICKS_MIN))));
-    }
-
-    private static PlotLeveling.Box box(BlockCoord cell) {
-        return new PlotLeveling.Box(cell.x(), cell.y(), cell.z(), cell.x(), cell.y(), cell.z());
     }
 
     private static Map<String, Object> params(FillArea box, Map<String, Object> extra) {

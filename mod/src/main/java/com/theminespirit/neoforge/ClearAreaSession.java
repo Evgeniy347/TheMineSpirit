@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
 
 public class ClearAreaSession {
@@ -44,6 +43,7 @@ public class ClearAreaSession {
     protected final BlockBreaker breaker;
     protected final Approach approach;
     protected final BuildReservations reservations;
+    protected final ClearTargets targets;
 
     protected State state = State.PICK;
     protected Outcome outcome = Outcome.RUNNING;
@@ -66,7 +66,6 @@ public class ClearAreaSession {
 
     final BuildResult tally = new BuildResult();
     final boolean demolish;
-    final boolean keepGround;
     final ClearBlocked blocked;
     final TreeFelling felling;
     private final Map<State, Integer> phaseTicks = new EnumMap<>(State.class);
@@ -89,8 +88,8 @@ public class ClearAreaSession {
         this.breaker = new BlockBreaker(spirit);
         this.approach = new Approach(spirit);
         this.reservations = BuildReservationHub.forLevel(level);
+        this.targets = new ClearTargets(level, spirit.getUUID(), keepGround);
         this.demolish = demolish;
-        this.keepGround = keepGround;
         this.blocked = new ClearBlocked(level, box);
         this.felling = new TreeFelling(new LevelTreeView(level, TreeBlocks.logs(TreeSpecies.ALL)));
         this.felling.extend(remaining);
@@ -211,11 +210,6 @@ public class ClearAreaSession {
                     .limit(LEFTOVER_SHOWN)
                     .toList();
         }
-    }
-
-    boolean clear(BlockCoord cell) {
-        BlockState state = level.getBlockState(toPos(cell));
-        return state.isAir() || (keepGround && PlotGround.natural(state));
     }
 
     void finish() {
