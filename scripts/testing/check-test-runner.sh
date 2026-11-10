@@ -459,7 +459,7 @@ scene_greps=$(awk '/tests are now running/ { n++ } END { print n + 0 }' "$work/g
     && ok "scene-wait: маркер сцен найден без grep-опроса лога (grep: 0), прогон зелёный" \
     || fail "scene-wait: код=$code, grep по маркеру=$scene_greps, вывод: $out"
 
-: >"$FAKE_KIDS"; : >"$FAKE_HB"; : >"$FAKE_SELF"; : >"$FAKE_WORKER"
+: >"$work/kids.pids"; : >"$work/hb.pid"; : >"$work/gradle.pid"; : >"$work/worker.pid"
 FAKE_HANG=1 FAKE_KIDS="$work/kids.pids" FAKE_HB="$work/hb.pid" FAKE_SELF="$work/gradle.pid" \
     FAKE_WORKER="$work/worker.pid" THEMINESPIRIT_GRADLEW="$work/bin/record-kids" \
     bash scripts/test.sh unit >"$work/killmain.out" 2>&1 &
@@ -489,7 +489,7 @@ echo $! >"$HOLD_KID"
 sleep 2
 FAKE
 chmod +x "$work/bin/hold-launch"
-: >"$FAKE_SELF"; : >"$FAKE_WORKER"; : >"$work/parent.out"; : >"$work/testsh.pid"
+: >"$work/gradle2.pid"; : >"$work/worker2.pid"; : >"$work/parent.out"; : >"$work/testsh.pid"
 HOLD_OUT="$work/parent.out" HOLD_KID="$work/testsh.pid" \
     FAKE_HANG=1 FAKE_KIDS="$work/kids2.pids" FAKE_HB="$work/hb2.pid" \
     FAKE_SELF="$work/gradle2.pid" FAKE_WORKER="$work/worker2.pid" \
