@@ -248,6 +248,31 @@ class LeaseScenarioTests {
     }
 
     @Test
+    void twoMechanics_SameCell_FirstOwnerKeepsRollback() {
+        LeaseBook book = new LeaseBook();
+        BlockCoord shared = new BlockCoord(70, 50, 0);
+        LeaseSession dig = LeaseSession.open(book, DIGGER, "dig-1", "dig_out", 100);
+        assertTrue(dig.broken(shared, "minecraft:stone"), "Тоннель записывает пролом первым");
+
+        LeaseSession bridge = LeaseSession.open(book, WALKER, "bridge-1", "bridge", 110);
+        assertFalse(
+                bridge.placed(shared, "minecraft:oak_planks"),
+                "Мост не забирает клетку тоннеля: откат остаётся за первым владельцем, а перекрытие не роняет стройку");
+        assertEquals(dig.id(), book.owner(shared).orElseThrow().id(), "Владелец клетки не сменился");
+        assertTrue(bridge.cells().isEmpty(), "Вторая аренда не записала чужую клетку");
+
+        BlockCoord deck = new BlockCoord(71, 64, 0);
+        assertTrue(bridge.placed(deck, "minecraft:oak_planks"), "Свои клетки мост по-прежнему записывает");
+
+        dig.orphan();
+        assertEquals(
+                List.of(shared),
+                book.orphanedCells().stream().map(LeaseCell::pos).toList(),
+                "Уборка видит пролом тоннеля один раз: клетка осталась за брошенной арендой");
+        assertTrue(book.activeOwner(deck).isPresent(), "Настил моста остаётся за живым владельцем");
+    }
+
+    @Test
     void activeLease_AfterCommit_StopsCleanup() {
         LeaseBook book = new LeaseBook();
         BlockCoord cell = new BlockCoord(0, 70, 0);

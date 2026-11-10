@@ -4,6 +4,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
@@ -52,6 +53,11 @@ public final class LeaseSession {
             }
         }
         return false;
+    }
+
+    public Optional<Lease> foreignOwner(BlockCoord cell) {
+        Objects.requireNonNull(cell, "Клетка не может быть null: ищем чужого владельца");
+        return book.owner(cell).filter(lease -> !lease.id().equals(id));
     }
 
     public boolean placed(BlockCoord cell) {
@@ -106,7 +112,7 @@ public final class LeaseSession {
         if (contains(cell.pos())) {
             return false;
         }
-        if (book.owner(cell.pos()).isPresent()) {
+        if (foreignOwner(cell.pos()).isPresent()) {
             return false;
         }
         book.record(id, cell);

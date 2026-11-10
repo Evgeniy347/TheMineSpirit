@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.lease;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.lease.LeaseCell;
 import com.theminespirit.core.board.lease.LeaseSession;
 import com.theminespirit.core.board.lease.LeaseStatus;
@@ -12,8 +13,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 public final class LeaseRun {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private final LeaseData data;
     private final LeaseSession session;
 
@@ -66,27 +70,38 @@ public final class LeaseRun {
     }
 
     public void placed(BlockPos pos) {
-        if (session.placed(coord(pos))) {
-            data.changed();
-        }
+        BlockCoord cell = coord(pos);
+        record(cell, session.placed(cell));
     }
 
     public void placed(BlockPos pos, String block) {
-        if (session.placed(coord(pos), block)) {
-            data.changed();
-        }
+        BlockCoord cell = coord(pos);
+        record(cell, session.placed(cell, block));
     }
 
     public void broken(BlockPos pos, BlockState before) {
-        if (session.broken(coord(pos), BlockStates.idOf(before))) {
-            data.changed();
-        }
+        BlockCoord cell = coord(pos);
+        record(cell, session.broken(cell, BlockStates.idOf(before)));
     }
 
     public void broken(BlockPos pos, String before) {
-        if (session.broken(coord(pos), before)) {
+        BlockCoord cell = coord(pos);
+        record(cell, session.broken(cell, before));
+    }
+
+    private void record(BlockCoord cell, boolean recorded) {
+        if (recorded) {
             data.changed();
+            return;
         }
+        session.foreignOwner(cell)
+                .ifPresent(owner -> LOGGER.info(
+                        "[lease] клетка {} осталась за арендой {} ({}): {} не записал её в свою {}",
+                        cell,
+                        owner.id(),
+                        owner.purpose(),
+                        purpose(),
+                        id()));
     }
 
     public void forget(BlockPos pos) {
