@@ -1,6 +1,7 @@
 package com.theminespirit.core.forestry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,22 @@ class ChopTuningTests {
     @Test
     void gatherDistance_NonPositive_Throws() {
         assertThrows(IllegalArgumentException.class, () -> ChopTuning.gatherDistance(0), "Радиус 0 бессмыслен");
+    }
+
+    @Test
+    void chopDistance_RequestedHundred_IsNotCutToGatherRadius() {
+        int requested = 100;
+
+        assertEquals(
+                requested,
+                ChopTuning.maxDistance(requested),
+                "Рубка ищет дерево в запрошенном радиусе доски (chopRadius=100): срез до 32 оставлял "
+                        + "ближайшее дерево в 35–60 блоках недоступным");
+        assertNotEquals(
+                ChopTuning.gatherDistance(requested),
+                ChopTuning.maxDistance(requested),
+                "Радиус сбора у поселения (32) и радиус рубки (100) — разные пределы: применение сбора к рубке "
+                        + "и дало «ближайшее дерево 35 при пределе 32» (живой случай 11.11)");
     }
 
     @Test
