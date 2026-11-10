@@ -10,6 +10,7 @@ import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
@@ -46,11 +47,15 @@ final class DigOutPost {
             if ((fact != null && fact.stuck()) || post.open("rescue:" + id)) {
                 continue;
             }
-            BlockCoord goal = DigOutAction.homeOf(post.level, spirit, post.spirits);
+            Optional<BlockCoord> goal = DigOutAction.homeOf(post.level, spirit, post.spirits);
+            if (goal.isEmpty()) {
+                continue;
+            }
+            BlockCoord target = goal.orElseThrow();
             service.detachForAction(spirit);
             spirit.startTask(new SequenceNode(List.of(
-                    new ScriptCall(DIG_OUT, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z(), "rescue", true)),
-                    new ScriptCall(WALK_CAREFUL, Map.of("x", goal.x(), "y", goal.y(), "z", goal.z())))));
+                    new ScriptCall(DIG_OUT, Map.of("x", target.x(), "y", target.y(), "z", target.z(), "rescue", true)),
+                    new ScriptCall(WALK_CAREFUL, Map.of("x", target.x(), "y", target.y(), "z", target.z())))));
             return true;
         }
         if (matched) {

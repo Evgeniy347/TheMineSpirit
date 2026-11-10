@@ -115,15 +115,15 @@ public final class BoardViewChannel {
         List<BoardTask> tasks = new ArrayList<>();
         Map<String, List<String>> targetDetails = new LinkedHashMap<>();
         for (BoardTicket ticket : board.all()) {
-            TicketTarget target = found.targetOf(ticket.id(), List.of());
-            targetDetails.put(ticket.id(), target.details());
+            Optional<TicketTarget> target = found.targetOf(ticket.id(), level, List.of());
+            targetDetails.put(ticket.id(), target.map(TicketTarget::details).orElse(List.of()));
             tasks.add(BoardTasks.of(
                     board,
                     ticket,
                     board.statusOf(ticket.id()).orElse(BoardStatus.PENDING),
                     found.stock(),
                     timings.getOrDefault(ticket.id(), BoardTiming.NONE),
-                    target));
+                    target.orElse(null)));
         }
         Function<String, @Nullable String> names = spiritNames(level.getServer());
         return BoardPaging.pageRows(

@@ -8,7 +8,6 @@ import com.theminespirit.core.board.BuildProgressSnapshots;
 import com.theminespirit.core.board.TicketRun;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.IncidentSnapshots;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
@@ -134,17 +133,16 @@ final class BoardTicketDesk {
         return Optional.ofNullable(targets.get(ticketId));
     }
 
-    TicketTarget targetOf(String ticketId, List<SpiritEntity> spirits) {
-        return targets.getOrDefault(ticketId, TicketTarget.at(SettlementHome.of(spirits)));
+    Optional<TicketTarget> targetOf(String ticketId, ServerLevel level, List<SpiritEntity> spirits) {
+        TicketTarget stored = targets.get(ticketId);
+        if (stored != null) {
+            return Optional.of(stored);
+        }
+        return HomePoint.of(level, spirits).map(TicketTarget::at);
     }
 
     boolean hasTarget(String ticketId) {
         return targets.containsKey(ticketId);
-    }
-
-    BlockCoord targetPoint(String ticketId, List<SpiritEntity> spirits) {
-        TicketTarget target = targets.get(ticketId);
-        return target != null ? target.target() : SettlementHome.of(spirits);
     }
 
     private void collectHolders(String ticketId, Map<UUID, Set<String>> holders, Set<String> visited) {

@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
@@ -20,13 +19,11 @@ public final class HomePoint {
         return site.map(stage -> HomeStand.of(level, stage, List.of(spirit)));
     }
 
-    public static BlockCoord of(ServerLevel level, List<SpiritEntity> spirits) {
-        List<BlockCoord> homes = SettlementHome.homes(spirits);
-        if (!homes.isEmpty()) {
-            return SettlementPlot.center(homes);
+    public static Optional<BlockCoord> of(ServerLevel level, List<SpiritEntity> spirits) {
+        Optional<BlockCoord> home = SettlementHome.center(SettlementHome.homes(spirits));
+        if (home.isPresent()) {
+            return home;
         }
-        return SettlementPlotStore.liveSite(level)
-                .map(stage -> HomeStand.of(level, stage, spirits))
-                .orElseGet(() -> SettlementHome.of(spirits));
+        return SettlementPlotStore.liveSite(level).map(stage -> HomeStand.of(level, stage, spirits));
     }
 }

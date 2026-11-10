@@ -4,6 +4,8 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.Objects;
 
 public final class DigOutGoal {
+    public static final int HOME_RADIUS = 2;
+
     private DigOutGoal() {}
 
     public static boolean ascent(BlockCoord feet, BlockCoord target, int radius) {
