@@ -42,7 +42,7 @@ final class RepairWatch {
         Map<BlockCoord, Boolean> anvils = new HashMap<>();
         for (SpiritEntity spirit : spirits) {
             String id = ticketId(spirit);
-            Optional<BlockCoord> home = spirit.home();
+            Optional<BlockCoord> home = HomePoint.of(spirit);
             Optional<String> item = home.isEmpty()
                     ? Optional.empty()
                     : repairableTool(spirit, () -> anvils.computeIfAbsent(home.get(), at -> anvilNear(level, at)));
