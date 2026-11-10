@@ -107,6 +107,45 @@ class HomeStandLiveTests {
                 "Нет проходимых компонент — нет домашней стоянки: выдуманную точку не подставляем");
     }
 
+    @Test
+    void largest_RememberedCellInComponent_KeepsHome() {
+        Set<BlockCoord> component =
+                Set.of(new BlockCoord(-175, 70, -493), new BlockCoord(-174, 70, -493), new BlockCoord(-173, 70, -493));
+        BlockCoord remembered = new BlockCoord(-175, 70, -493);
+
+        assertEquals(
+                Optional.of(remembered),
+                HomeStand.largest(BASE, List.of(component), Optional.of(remembered)),
+                "Запомненная домашняя стоянка внутри проходимой компоненты остаётся домом, даже если ближе к центру "
+                        + "есть другая клетка: иначе цель уже выданного задания дрейфует между пересборами");
+    }
+
+    @Test
+    void largest_RememberedCellOutsideComponents_Recomputed() {
+        Set<BlockCoord> component = Set.of(new BlockCoord(-173, 70, -493), new BlockCoord(-174, 70, -493));
+        BlockCoord sealed = new BlockCoord(-168, 70, -492);
+
+        assertEquals(
+                Optional.of(new BlockCoord(-173, 70, -493)),
+                HomeStand.largest(BASE, List.of(component), Optional.of(sealed)),
+                "Запомненная стоянка, к которой духи больше не ходят (заперта), заменяется ближайшей клеткой "
+                        + "проходимой компоненты: дом не остаётся за преградой");
+    }
+
+    @Test
+    void largest_RememberedCellInSmallerComponent_KeepsReachableHome() {
+        Set<BlockCoord> big =
+                Set.of(new BlockCoord(-175, 70, -493), new BlockCoord(-174, 70, -493), new BlockCoord(-173, 70, -493));
+        Set<BlockCoord> small = Set.of(new BlockCoord(-160, 70, -480), new BlockCoord(-159, 70, -480));
+        BlockCoord remembered = new BlockCoord(-160, 70, -480);
+
+        assertEquals(
+                Optional.of(remembered),
+                HomeStand.largest(BASE, List.of(big, small), Optional.of(remembered)),
+                "Проходимость важнее размера компоненты: раз духи уже ходят к запомненной клетке, дом не "
+                        + "переезжает в более крупную компоненту и не тянет за собой выданное задание");
+    }
+
     private static boolean standable(Map<BlockCoord, String> cells, BlockCoord feet) {
         return "AIR".equals(kind(cells, feet))
                 && "AIR".equals(kind(cells, above(feet)))
