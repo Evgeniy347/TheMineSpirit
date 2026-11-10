@@ -47,21 +47,38 @@ final class BoardTicketDesk {
     }
 
     boolean cancel(ServerLevel level, String ticketId) {
-        Set<UUID> holders = new HashSet<>();
+        Map<UUID, Set<String>> holders = new HashMap<>();
         collectHolders(ticketId, holders, new HashSet<>());
         boolean cancelled = board.cancel(ticketId);
         if (!cancelled) {
             return false;
         }
         targets.keySet().removeIf(id -> board.statusOf(id).orElse(null) == BoardStatus.CANCELLED);
-        for (UUID holder : holders) {
-            if (level.getEntity(holder) instanceof SpiritEntity spirit) {
-                spirit.cancelTask();
-                WorkReserveHub.releaseAll(spirit);
+        for (Map.Entry<UUID, Set<String>> holder : holders.entrySet()) {
+            if (!(level.getEntity(holder.getKey()) instanceof SpiritEntity spirit)) {
+                continue;
             }
+            if (!ownsAny(holder.getValue(), spirit)) {
+                LOGGER.info(
+                        "[board] задание {} снято с доски, но духа {} не трогаем: он выполняет другую задачу",
+                        ticketId,
+                        spirit.displayName());
+                continue;
+            }
+            spirit.cancelTask();
+            WorkReserveHub.releaseAll(spirit);
         }
         host.persistBoard();
         return true;
+    }
+
+    private boolean ownsAny(Set<String> ticketIds, SpiritEntity spirit) {
+        for (String id : ticketIds) {
+            if (TicketRun.ownsTask(host.issuedGeneration(id), spirit.taskGeneration())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     void cancelOrphans(ServerLevel level, List<SpiritEntity> spirits) {
@@ -130,12 +147,17 @@ final class BoardTicketDesk {
         return target != null ? target.target() : SettlementHome.of(spirits);
     }
 
-    private void collectHolders(String ticketId, Set<UUID> holders, Set<String> visited) {
+    private void collectHolders(String ticketId, Map<UUID, Set<String>> holders, Set<String> visited) {
         if (!visited.add(ticketId)) {
             return;
         }
-        board.holderOf(ticketId).ifPresent(holders::add);
-        board.find(ticketId).ifPresent(ticket -> holders.addAll(ticket.executors()));
+        board.holderOf(ticketId)
+                .ifPresent(holder ->
+                        holders.computeIfAbsent(holder, id -> new HashSet<>()).add(ticketId));
+        board.find(ticketId)
+                .ifPresent(ticket -> ticket.executors()
+                        .forEach(executor -> holders.computeIfAbsent(executor, id -> new HashSet<>())
+                                .add(ticketId)));
         for (BoardTicket ticket : board.all()) {
             if (ticket.dependsOn().contains(ticketId)) {
                 collectHolders(ticket.id(), holders, visited);

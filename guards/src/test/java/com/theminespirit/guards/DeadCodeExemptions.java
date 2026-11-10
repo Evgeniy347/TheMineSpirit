@@ -112,23 +112,8 @@ final class DeadCodeExemptions {
                     "core/tactics/adapter/TacticsSchedule.java|method|TacticsSchedule#everEvaluated",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
             new Exemption(
-                    "core/movement/network/TrailTrack.java|class|<top>#TrailTrack",
-                    "Прототип графа внешних троп для разведки дальности пути: docs/research/pathfinding-range.md"),
-            new Exemption(
-                    "core/movement/network/BreadcrumbTrail.java|class|<top>#BreadcrumbTrail",
-                    "Прототип обратного маршрута по крошкам: docs/research/pathfinding-range.md"),
-            new Exemption(
                     "core/navigation/NavCachedWorld.java|method|NavCachedWorld#cachedBytes",
                     "Счётчик памяти кэша для отчёта: docs/research/baritone-navigation.md"),
-            new Exemption(
-                    "core/navigation/NavGoalComposite.java|class|<top>#NavGoalComposite",
-                    "Прототип цели Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
-            new Exemption(
-                    "core/navigation/NavGoalGetToBlock.java|class|<top>#NavGoalGetToBlock",
-                    "Прототип цели Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
-            new Exemption(
-                    "core/navigation/NavPathSplicer.java|class|<top>#NavPathSplicer",
-                    "Склейка сегментов Baritone: используется при встраивании, docs/research/baritone-navigation.md"),
             new Exemption(
                     "core/movement/ApproachRoute.java|class|<top>#ApproachRoute",
                     "Прототип маршрута подхода: docs/research/pathfinding-range.md"),
@@ -138,9 +123,6 @@ final class DeadCodeExemptions {
             new Exemption(
                     "core/route/RouteBreakAudit.java|class|<top>#RouteBreakAudit",
                     "Старый аудит ломки RoutePlanner: навигация ходит без ломки, docs/ARCHITECTURE.md"),
-            new Exemption(
-                    "core/route/RouteDeadline.java|class|<top>#RouteDeadline",
-                    "Прототип бюджета времени пути: docs/research/baritone-navigation.md"),
             new Exemption(
                     "core/mining/MineTunnel.java|field|MineTunnel#MAX_STEPS",
                     "Бюджет прохода шахты — доменное число: вход проверки кейса observe10; в игре передаётся из настроек"),

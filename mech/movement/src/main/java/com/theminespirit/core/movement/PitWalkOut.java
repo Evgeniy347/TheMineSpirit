@@ -11,7 +11,8 @@ public final class PitWalkOut {
     public static final int EXIT_RADIUS = 6;
     private static final int STEP_UP = 1;
     private static final int SAFE_DROP = 3;
-    private static final int SURFACE_REACH = EXIT_RADIUS;
+    private static final int SURFACE_SPREAD = 32;
+    private static final int SURFACE_CELLS = (2 * SURFACE_SPREAD + 1) * (2 * SURFACE_SPREAD + 1);
     private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
     public interface World {
@@ -70,22 +71,33 @@ public final class PitWalkOut {
         if (world.surfaceY(x, z) > y) {
             return false;
         }
-        for (int[] side : SIDES) {
-            if (openSide(world, x, y, z, side)) {
+        return openSurface(world, x, y, z);
+    }
+
+    private static boolean openSurface(World world, int x, int y, int z) {
+        Set<Long> seen = new HashSet<>();
+        Deque<int[]> queue = new ArrayDeque<>();
+        seen.add(key(0, 0));
+        queue.add(new int[] {x, z});
+        int visited = 0;
+        while (!queue.isEmpty() && visited < SURFACE_CELLS) {
+            int[] cell = queue.poll();
+            visited++;
+            if (Math.abs(cell[0] - x) >= SURFACE_SPREAD || Math.abs(cell[1] - z) >= SURFACE_SPREAD) {
                 return true;
+            }
+            for (int[] side : SIDES) {
+                int nx = cell[0] + side[0];
+                int nz = cell[1] + side[1];
+                if (!seen.add(key(nx - x, nz - z))) {
+                    continue;
+                }
+                if (world.surfaceY(nx, nz) <= y + SurfaceLevel.MARGIN) {
+                    queue.add(new int[] {nx, nz});
+                }
             }
         }
         return false;
-    }
-
-    private static boolean openSide(World world, int x, int y, int z, int[] side) {
-        for (int step = 1; step <= SURFACE_REACH; step++) {
-            int surface = world.surfaceY(x + step * side[0], z + step * side[1]);
-            if (surface > y + SurfaceLevel.MARGIN) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private static long key(int dx, int dz) {

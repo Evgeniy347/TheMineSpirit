@@ -9,19 +9,9 @@ import java.util.OptionalInt;
 import java.util.Set;
 
 public final class PitExitPlanner {
-    public enum Kind {
-        AIR,
-        SOFT,
-        HARD,
-        FALLING,
-        WATER,
-        LAVA,
-        BEDROCK
-    }
-
     @FunctionalInterface
     public interface World {
-        Kind at(BlockCoord cell);
+        BlockKind at(BlockCoord cell);
     }
 
     public record Supplies(int blocks, boolean pickaxe) {
@@ -161,13 +151,17 @@ public final class PitExitPlanner {
 
     private static Optional<BlockCoord> swim(
             BlockCoord feet, World world, Set<BlockCoord> protectedCells, int surface) {
-        if (world.at(feet) != Kind.WATER) {
+        if (world.at(feet) != BlockKind.WATER) {
             return Optional.empty();
         }
         for (int dy = 1; dy <= MAX_RISE; dy++) {
             BlockCoord column = new BlockCoord(feet.x(), feet.y() + dy, feet.z());
-            Kind here = world.at(column);
-            if (here == Kind.HARD || here == Kind.SOFT || here == Kind.FALLING || here == Kind.BEDROCK) {
+            BlockKind here = world.at(column);
+            if (here == BlockKind.HARD
+                    || here == BlockKind.SOFT
+                    || here == BlockKind.FALLING
+                    || here == BlockKind.BEDROCK
+                    || here == BlockKind.OBSTACLE) {
                 return Optional.empty();
             }
             for (int[] side : sides()) {
@@ -200,25 +194,31 @@ public final class PitExitPlanner {
         return passable(world.at(cell)) && passable(world.at(above(cell))) && supported(world.at(below(cell)));
     }
 
-    static boolean supported(Kind kind) {
-        return kind == Kind.SOFT || kind == Kind.HARD || kind == Kind.FALLING || kind == Kind.BEDROCK;
+    static boolean supported(BlockKind kind) {
+        return kind == BlockKind.SOFT
+                || kind == BlockKind.HARD
+                || kind == BlockKind.FALLING
+                || kind == BlockKind.BEDROCK;
     }
 
-    static boolean passable(Kind kind) {
-        return kind == Kind.AIR || kind == Kind.WATER;
+    static boolean passable(BlockKind kind) {
+        return kind == BlockKind.AIR || kind == BlockKind.WATER;
     }
 
-    static boolean breakable(Kind kind) {
-        return kind == Kind.SOFT || kind == Kind.HARD || kind == Kind.FALLING;
+    static boolean breakable(BlockKind kind) {
+        return kind == BlockKind.SOFT
+                || kind == BlockKind.HARD
+                || kind == BlockKind.FALLING
+                || kind == BlockKind.OBSTACLE;
     }
 
     static boolean touchesLava(BlockCoord cell, World world) {
         for (int[] side : sides()) {
-            if (world.at(new BlockCoord(cell.x() + side[0], cell.y(), cell.z() + side[1])) == Kind.LAVA) {
+            if (world.at(new BlockCoord(cell.x() + side[0], cell.y(), cell.z() + side[1])) == BlockKind.LAVA) {
                 return true;
             }
         }
-        return world.at(above(cell)) == Kind.LAVA || world.at(below(cell)) == Kind.LAVA;
+        return world.at(above(cell)) == BlockKind.LAVA || world.at(below(cell)) == BlockKind.LAVA;
     }
 
     private static BlockCoord above(BlockCoord cell) {

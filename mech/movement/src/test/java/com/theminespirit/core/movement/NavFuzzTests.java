@@ -540,14 +540,14 @@ class NavFuzzTests {
                 };
             }
 
-            PitExitPlanner.Kind pit() {
+            BlockKind pit() {
                 return switch (this) {
-                    case AIR, LADDER -> PitExitPlanner.Kind.AIR;
-                    case WATER -> PitExitPlanner.Kind.WATER;
-                    case LAVA -> PitExitPlanner.Kind.LAVA;
-                    case DIRT -> PitExitPlanner.Kind.SOFT;
-                    case STONE -> PitExitPlanner.Kind.HARD;
-                    case CHEST, DOOR, TRAPDOOR, BED -> PitExitPlanner.Kind.BEDROCK;
+                    case AIR, LADDER -> BlockKind.AIR;
+                    case WATER -> BlockKind.WATER;
+                    case LAVA -> BlockKind.LAVA;
+                    case DIRT -> BlockKind.SOFT;
+                    case STONE -> BlockKind.HARD;
+                    case CHEST, DOOR, TRAPDOOR, BED -> BlockKind.BEDROCK;
                 };
             }
         }

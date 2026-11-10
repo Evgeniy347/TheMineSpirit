@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.movement.BlockKind;
 import com.theminespirit.core.movement.PitExitPlanner;
 import com.theminespirit.core.movement.PitWalkOut;
 import com.theminespirit.core.movement.SurfaceLevel;
@@ -91,7 +92,7 @@ final class PitRescue {
         BlockPos feet = spirit.blockPosition();
         BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
         PitWorldView live = new PitWorldView(level);
-        PitExitPlanner.World cleared = cell -> inClearBox(cell, feet) ? PitExitPlanner.Kind.AIR : live.at(cell);
+        PitExitPlanner.World cleared = cell -> inClearBox(cell, feet) ? BlockKind.AIR : live.at(cell);
         return PitExitPlanner.plan(from, cleared, supplies(spirit));
     }
 

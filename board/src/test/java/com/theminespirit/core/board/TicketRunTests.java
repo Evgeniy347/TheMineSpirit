@@ -85,6 +85,37 @@ class TicketRunTests {
     }
 
     @Test
+    void ownsTask_SameGeneration_IsCancellable() {
+        assertTrue(TicketRun.ownsTask(5, 5), "Дух выполняет задачу этого билета: явная отмена снимает её");
+    }
+
+    @Test
+    void ownsTask_ForeignGeneration_IsNotCancellable() {
+        assertFalse(
+                TicketRun.ownsTask(5, 6),
+                "Дух уже получил другую задачу (REST, команда, граф): отмена задания доски не вправе снимать её "
+                        + "вместо своего билета (debtmisc3)");
+    }
+
+    @Test
+    void ownsTask_UnknownIssuedGeneration_IsCancellable() {
+        long unknown = SpiritReading.UNKNOWN_GENERATION;
+
+        assertTrue(
+                TicketRun.ownsTask(unknown, 6),
+                "Поколение выдачи неизвестно (снимок/старый билет): сверять нечем, поэтому задача считается своей");
+    }
+
+    @Test
+    void ownsTask_UnknownCurrentGeneration_IsCancellable() {
+        long unknown = SpiritReading.UNKNOWN_GENERATION;
+
+        assertTrue(
+                TicketRun.ownsTask(5, unknown),
+                "У восстановленной задачи нет поколения: она принадлежит снимку, и отмена билета вправе её снять");
+    }
+
+    @Test
     void decide_UnknownGenerationRunningWithoutTarget_StaysRunning() {
         long unknown = SpiritReading.UNKNOWN_GENERATION;
 
