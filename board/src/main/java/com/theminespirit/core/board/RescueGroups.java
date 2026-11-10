@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 public final class RescueGroups {
     private static final int MAX_SEARCH_CELLS = 4096;
@@ -81,6 +82,13 @@ public final class RescueGroups {
         }
         groups.sort(Comparator.comparing(group -> group.leader().toString()));
         return List.copyOf(groups);
+    }
+
+    public static List<Member> walkers(Group group, Predicate<Member> pathHome, Predicate<Member> onSurface) {
+        Objects.requireNonNull(group, "Группа спасения не может быть null: по ней идут ведомые");
+        Objects.requireNonNull(pathHome, "Признак пути домой не может быть null: без него некому идти");
+        Objects.requireNonNull(onSurface, "Признак поверхности не может быть null: путь по шахте закроют");
+        return group.members().stream().filter(pathHome).filter(onSurface).toList();
     }
 
     public static Member leader(List<Member> members) {

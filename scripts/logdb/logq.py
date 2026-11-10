@@ -325,6 +325,27 @@ def remote_limit(arguments):
     return 30
 
 
+REMOTE_FILES = ("schema.json", "loader.py", "logq.py")
+
+
+def sync_remote(ssh, run=subprocess.run, here=HERE):
+    """Раскладывает код logq на основном сервере по расхождению содержимого.
+
+    Без сверки содержимого правка logq (например health --since) не действует через --main,
+    пока кто-то вручную не перезальёт файл: издалека видно только прежнее поведение.
+    """
+    uploaded = []
+    for name in REMOTE_FILES:
+        local = (here / name).read_bytes()
+        destination = "%s/%s" % (MAIN_SCRIPTS, name)
+        current = run(ssh + ["cat " + destination], capture_output=True)
+        if current.returncode == 0 and current.stdout == local:
+            continue
+        run(ssh + ["cat > " + destination], input=local, check=True)
+        uploaded.append(name)
+    return uploaded
+
+
 def remote(args, arguments):
     ssh = ["ssh", "-o", "ConnectTimeout=10", SSH]
     db = MAIN_SERVER + "/logs/events.db"
@@ -335,16 +356,7 @@ def remote(args, arguments):
             "пока ищите в своей копии (scripts/dev-server.sh up)" % db
         )
     subprocess.run(ssh + ["mkdir -p " + MAIN_SCRIPTS], check=True)
-    for name in ("schema.json", "loader.py", "logq.py"):
-        destination = "%s/%s" % (MAIN_SCRIPTS, name)
-        present = subprocess.run(ssh + ["test -f " + destination], capture_output=True)
-        if present.returncode == 0:
-            continue
-        subprocess.run(
-            ssh + ["cat > " + destination],
-            input=(HERE / name).read_bytes(),
-            check=True,
-        )
+    sync_remote(ssh)
     command = remote_command(arguments, db)
     output = subprocess.run(ssh + [" ".join(_quote(part) for part in command)], capture_output=True, check=True)
     return output.stdout.decode("utf-8", "replace")

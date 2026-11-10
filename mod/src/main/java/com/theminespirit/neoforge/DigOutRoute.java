@@ -36,8 +36,13 @@ final class DigOutRoute {
 
     State tick() {
         if (route == null && pending == null && retries < RETRIES && !routeFailed) {
-            route = (descending ? SurfaceRoute.planDescent(spirit, target, rescue) : SurfaceRoute.plan(spirit, rescue))
-                    .orElse(null);
+            if (descending) {
+                route = SurfaceRoute.planDescent(spirit, target, rescue).orElse(null);
+            } else {
+                route = SurfaceRoute.planToHome(spirit, target, rescue)
+                        .or(() -> SurfaceRoute.plan(spirit, rescue))
+                        .orElse(null);
+            }
             if (route == null) {
                 pending = RouteDetour.begin(spirit, target, radius, "dig_out");
             }
