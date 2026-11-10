@@ -65,7 +65,7 @@ final class TransferStockDesk {
                 }
             }
         }
-        for (BoardTicket ticket : service.board().all()) {
+        for (BoardTicket ticket : service.board().tickets()) {
             if (ticket.boardCase() != BoardCase.TRANSFER_ITEM
                     || TransferWatch.cause(craftId).equals(ticket.cause())
                     || !ticket.modifiers().contains("from=warehouse")

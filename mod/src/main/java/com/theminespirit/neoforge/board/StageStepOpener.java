@@ -144,7 +144,7 @@ final class StageStepOpener {
     }
 
     static void dropOtherWood(ServerLevel level, BoardService service, Set<String> woods) {
-        for (BoardTicket ticket : List.copyOf(service.board().all())) {
+        for (BoardTicket ticket : List.copyOf(service.board().tickets())) {
             if (!ticket.id().startsWith(GATHER_PREFIX) || !StageWorldFacts.active(service, ticket.id())) {
                 continue;
             }

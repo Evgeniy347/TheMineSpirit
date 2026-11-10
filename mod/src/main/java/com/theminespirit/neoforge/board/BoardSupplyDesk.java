@@ -52,7 +52,7 @@ final class BoardSupplyDesk {
             return;
         }
         Map<String, Integer> missing = new HashMap<>();
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             BoardStatus status = board.statusOf(ticket.id()).orElse(null);
             if (status != BoardStatus.PENDING && status != BoardStatus.WAITING_RESOURCES) {
                 continue;
@@ -81,7 +81,7 @@ final class BoardSupplyDesk {
 
     private List<BlockCoord> gateCenters(List<SpiritEntity> spirits) {
         List<BlockCoord> centers = new ArrayList<>();
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             BoardStatus status = board.statusOf(ticket.id()).orElse(null);
             if (status != BoardStatus.PENDING && status != BoardStatus.WAITING_RESOURCES) {
                 continue;
@@ -102,7 +102,7 @@ final class BoardSupplyDesk {
     }
 
     private boolean hasActiveSupply(String item) {
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             if (ticket.boardCase() != BoardCase.SUPPLY_SITE || !active(ticket.id())) {
                 continue;
             }

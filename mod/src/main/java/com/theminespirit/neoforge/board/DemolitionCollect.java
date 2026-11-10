@@ -215,7 +215,7 @@ final class DemolitionCollect {
     private static void reopen(BoardService service, String blockId) {
         BoardCase wanted =
                 "furnace".equals(FloatingBlocks.pathOf(blockId)) ? BoardCase.CRAFT_FURNACE : BoardCase.STOCK_CHESTS;
-        for (BoardTicket ticket : List.copyOf(service.board().all())) {
+        for (BoardTicket ticket : List.copyOf(service.board().tickets())) {
             if (ticket.boardCase() != wanted) {
                 continue;
             }

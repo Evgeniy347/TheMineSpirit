@@ -9,7 +9,7 @@ public final class BoardStages {
     public static List<String> held(Board board) {
         int stage = board.ledger().stage();
         List<String> held = new ArrayList<>();
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             BoardStatus status = board.statusOf(ticket.id()).orElse(null);
             if (status == null
                     || status == BoardStatus.DONE

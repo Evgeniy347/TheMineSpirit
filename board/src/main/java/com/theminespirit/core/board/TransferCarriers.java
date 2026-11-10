@@ -28,7 +28,7 @@ public final class TransferCarriers {
         Objects.requireNonNull(board, "Доска не может быть null: передачи берутся с неё");
         Objects.requireNonNull(running, "Набор духов с задачей не может быть null: без него каждый донор «несёт»");
         Set<UUID> carriers = new HashSet<>();
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             if (ticket.boardCase() != BoardCase.TRANSFER_ITEM || !cause(craftId).equals(ticket.cause())) {
                 continue;
             }
@@ -43,7 +43,7 @@ public final class TransferCarriers {
 
     public static boolean awaitsDelivery(Board board, String craftId) {
         Objects.requireNonNull(board, "Доска не может быть null: ожидание передачи считается по ней");
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             if (ticket.boardCase() != BoardCase.TRANSFER_ITEM || !cause(craftId).equals(ticket.cause())) {
                 continue;
             }
@@ -60,7 +60,7 @@ public final class TransferCarriers {
     public static Set<UUID> planned(Board board, String craftId) {
         Objects.requireNonNull(board, "Доска не может быть null: передачи берутся с неё");
         Set<UUID> holders = new HashSet<>();
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             if (ticket.boardCase() != BoardCase.TRANSFER_ITEM || !cause(craftId).equals(ticket.cause())) {
                 continue;
             }

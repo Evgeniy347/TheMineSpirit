@@ -19,7 +19,7 @@ final class DemolitionHistory {
     private DemolitionHistory() {}
 
     static boolean busy(BoardService service, long now, DemolitionScope scope) {
-        return service.board().all().stream()
+        return service.board().tickets().stream()
                 .filter(ticket -> ticket.id().startsWith(PlanDemolition.PREFIX))
                 .filter(ticket -> DemolitionScope.of(ticket.cause()) == scope || scope == DemolitionScope.BOTH)
                 .anyMatch(ticket ->
@@ -28,7 +28,7 @@ final class DemolitionHistory {
     }
 
     static List<BoardTicket> open(BoardService service, DemolitionScope scope) {
-        return service.board().all().stream()
+        return service.board().tickets().stream()
                 .filter(ticket -> ticket.id().startsWith(PlanDemolition.PREFIX))
                 .filter(ticket -> DemolitionScope.of(ticket.cause()) == scope || scope == DemolitionScope.BOTH)
                 .filter(ticket ->
@@ -37,7 +37,7 @@ final class DemolitionHistory {
     }
 
     static void supersede(ServerLevel level, BoardService service, String keep, DemolitionScope scope) {
-        for (BoardTicket ticket : List.copyOf(service.board().all())) {
+        for (BoardTicket ticket : List.copyOf(service.board().tickets())) {
             if (ticket.id().startsWith(PlanDemolition.PREFIX)
                     && !ticket.id().equals(keep)
                     && (DemolitionScope.of(ticket.cause()) == scope || scope == DemolitionScope.BOTH)
@@ -49,7 +49,7 @@ final class DemolitionHistory {
     }
 
     static String previous(BoardService service, DemolitionScope scope) {
-        return service.board().all().stream()
+        return service.board().tickets().stream()
                 .filter(ticket -> ticket.id().startsWith(PlanDemolition.PREFIX))
                 .filter(ticket -> DemolitionScope.of(ticket.cause()) == scope || scope == DemolitionScope.BOTH)
                 .max(Comparator.comparingLong(BoardTicket::createdAt))

@@ -34,7 +34,7 @@ final class BoardNotices {
 
     void blocks(ServerLevel level, Board board, JournalService journal, StockView stock, long now) {
         Set<String> alive = new HashSet<>();
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             alive.add(ticket.id());
         }
         blockNotes.retain(alive);
@@ -110,7 +110,7 @@ final class BoardNotices {
 
     void watchPending(Board board, StockView stock, long now) {
         Set<String> waiting = new HashSet<>();
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             if (board.statusOf(ticket.id()).orElse(null) != BoardStatus.PENDING) {
                 continue;
             }

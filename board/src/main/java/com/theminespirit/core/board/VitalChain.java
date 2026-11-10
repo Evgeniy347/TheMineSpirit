@@ -18,7 +18,7 @@ public final class VitalChain {
         Map<String, String> reachable = new LinkedHashMap<>();
         for (Map.Entry<String, String> need : live.entrySet()) {
             Map<String, String> one = Map.of(need.getKey(), need.getValue());
-            for (BoardTicket ticket : board.all()) {
+            for (BoardTicket ticket : board.tickets()) {
                 if (leads(ticket, board, spirit) && VitalGate.satisfies(ticket.id(), one)) {
                     reachable.put(need.getKey(), need.getValue());
                     break;

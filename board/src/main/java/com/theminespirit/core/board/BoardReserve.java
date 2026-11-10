@@ -10,7 +10,7 @@ public final class BoardReserve {
     public static Map<String, Integer> items(Board board) {
         Objects.requireNonNull(board, "Бронь без доски не считается: материалы держат её задания");
         Map<String, Integer> reserved = new HashMap<>();
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             if (!board.statusOf(ticket.id()).orElse(BoardStatus.DONE).open()) {
                 continue;
             }

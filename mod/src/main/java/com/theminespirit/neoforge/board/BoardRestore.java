@@ -66,7 +66,7 @@ final class BoardRestore {
     }
 
     private static void cancelRestoredRescues(Board board) {
-        board.all().stream()
+        board.tickets().stream()
                 .filter(ticket -> ticket.boardCase() == BoardCase.RESCUE_SPIRIT)
                 .forEach(ticket -> board.cancel(ticket.id()));
     }

@@ -172,7 +172,7 @@ final class GraphSurroundings {
     }
 
     private static Map<String, BlockCoord> drops(ServerLevel level, BoardService service, BlockCoord home) {
-        boolean collecting = service.board().all().stream()
+        boolean collecting = service.board().tickets().stream()
                 .filter(ticket -> ticket.boardCase() == BoardCase.COLLECT_DROPS)
                 .anyMatch(ticket -> service.board()
                         .statusOf(ticket.id())
