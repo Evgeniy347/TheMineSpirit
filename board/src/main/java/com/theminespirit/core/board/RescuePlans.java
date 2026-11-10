@@ -135,7 +135,7 @@ public final class RescuePlans {
         if (situation.pit()) {
             return situation.steps() || situation.tool() ? Self.PIT : Self.NONE;
         }
-        if (situation.open() && situation.descent()) {
+        if (situation.descent()) {
             return Self.DESCEND;
         }
         if (situation.open() && situation.noPath() && situation.blocks() > 0) {

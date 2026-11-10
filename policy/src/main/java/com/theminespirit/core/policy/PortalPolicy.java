@@ -1,6 +1,7 @@
 package com.theminespirit.core.policy;
 
 import com.theminespirit.core.mining.Cell;
+import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Objects;
 import java.util.Optional;
@@ -8,14 +9,15 @@ import java.util.Optional;
 public final class PortalPolicy {
     private PortalPolicy() {}
 
-    public static PolicyVerdict evaluate(LocalSurroundings surroundings, PolicyExemptions exemptions) {
+    public static PolicyVerdict evaluate(
+            LocalSurroundings surroundings, PolicyExemptions exemptions, SafetyView world) {
         Objects.requireNonNull(surroundings, "Снимок не может быть null: по нему решается, стоит ли дух в портале");
         Objects.requireNonNull(exemptions, "Исключения не могут быть null: пустые задаются PolicyExemptions.empty()");
         boolean inPortal = surroundings.cellAt(0, 0, 0) == Cell.PORTAL || surroundings.cellAt(0, 1, 0) == Cell.PORTAL;
         if (!inPortal || exemptions.has(PolicyId.PORTAL)) {
             return new PolicyVerdict.Clear();
         }
-        Optional<BlockCoord> exit = NearestExit.find(surroundings, surroundings);
+        Optional<BlockCoord> exit = NearestExit.find(surroundings, surroundings, world);
         if (exit.isPresent()) {
             return new PolicyVerdict.Reflex(
                     PolicyId.PORTAL, new ReflexAction.StepOutOfPortal(exit.get()), "дух стоит в клетке портала");

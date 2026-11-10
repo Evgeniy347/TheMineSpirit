@@ -12,10 +12,11 @@ public final class HazardReflex {
 
     private HazardReflex() {}
 
-    public static PolicyVerdict evaluate(LocalSurroundings surroundings, PolicyExemptions exemptions) {
+    public static PolicyVerdict evaluate(
+            LocalSurroundings surroundings, PolicyExemptions exemptions, SafetyView world) {
         BodyFlags flags = surroundings.flags();
         if (flags.inLava() || burningInColumn(surroundings)) {
-            return escape(surroundings, "дух в лаве или огне");
+            return escape(surroundings, world, "дух в лаве или огне");
         }
         if (flags.onFire() && !flags.inWater() && surroundings.nearestWater().isPresent()) {
             return new PolicyVerdict.Reflex(
@@ -24,16 +25,16 @@ public final class HazardReflex {
                     "дух горит: цель — вода");
         }
         if (burningBeside(surroundings)) {
-            return escape(surroundings, "лава или огонь вплотную на уровне ног или пола");
+            return escape(surroundings, world, "лава или огонь вплотную на уровне ног или пола");
         }
         if (hazardTouching(surroundings)) {
-            return escape(surroundings, "опасный блок (кактус, магма, ягоды, паутина, снег) касается духа");
+            return escape(surroundings, world, "опасный блок (кактус, магма, ягоды, паутина, снег) касается духа");
         }
         if (flags.inWater() && !exemptions.has(PolicyId.WATER)) {
             if (surroundings.cellAt(0, 1, 0) == Cell.SOLID) {
                 return new PolicyVerdict.Clear();
             }
-            return exitWater(surroundings);
+            return exitWater(surroundings, world);
         }
         return new PolicyVerdict.Clear();
     }
@@ -75,8 +76,8 @@ public final class HazardReflex {
         return false;
     }
 
-    private static PolicyVerdict escape(LocalSurroundings surroundings, String reason) {
-        Optional<BlockCoord> cell = nearestStandable(surroundings, false);
+    private static PolicyVerdict escape(LocalSurroundings surroundings, SafetyView world, String reason) {
+        Optional<BlockCoord> cell = nearestStandable(surroundings, false, world);
         if (cell.isPresent()) {
             return new PolicyVerdict.Reflex(PolicyId.LAVA_FIRE, new ReflexAction.Flee(cell.get()), reason);
         }
@@ -84,23 +85,27 @@ public final class HazardReflex {
                 PolicyId.LAVA_FIRE, new ReflexAction.StopMoving(), reason + ", безопасной клетки рядом нет");
     }
 
-    private static PolicyVerdict exitWater(LocalSurroundings surroundings) {
-        Optional<BlockCoord> cell = nearestStandable(surroundings, true);
+    private static PolicyVerdict exitWater(LocalSurroundings surroundings, SafetyView world) {
+        Optional<BlockCoord> cell = nearestStandable(surroundings, true, world);
         if (cell.isPresent()) {
             return new PolicyVerdict.Reflex(PolicyId.WATER, new ReflexAction.ExitWater(cell.get()), "дух в воде");
         }
-        return new PolicyVerdict.Reflex(PolicyId.WATER, new ReflexAction.StopMoving(), "дух в воде, берега рядом нет");
+        // lib: берега рядом нет — дух в ловушке, а не в рефлексе: держать его на поверхности вечно нельзя,
+        // lib: иначе спасение (dig_out) не выполнится (10.11: шестеро стояли в -99,52,-417 больше трёх часов).
+        return new PolicyVerdict.Clear();
     }
 
-    private static Optional<BlockCoord> nearestStandable(LocalSurroundings surroundings, boolean tolerateWater) {
-        return NearestExit.find(surroundings, new ExitView(surroundings, tolerateWater));
+    private static Optional<BlockCoord> nearestStandable(
+            LocalSurroundings surroundings, boolean tolerateWater, SafetyView world) {
+        return NearestExit.find(surroundings, new ExitView(surroundings, world, tolerateWater), world);
     }
 
-    private record ExitView(LocalSurroundings surroundings, boolean tolerateWater) implements SafetyView {
+    private record ExitView(LocalSurroundings surroundings, SafetyView world, boolean tolerateWater)
+            implements SafetyView {
         @Override
         public Cell cellAt(BlockCoord coord) {
             BlockCoord feet = surroundings.feet();
-            Cell cell = surroundings.cellAt(coord);
+            Cell cell = world.cellAt(coord);
             if (coord.equals(feet)) {
                 return Cell.PASSABLE;
             }

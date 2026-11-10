@@ -41,23 +41,23 @@ final class RescueTicket {
             return new Escape(true, RescuePlans.walk(home), "путь домой открыт: идёт пешком, мир не трогает");
         }
         Optional<PitExitPlanner.Plan> pit = PitRescue.trapped(spirit);
-        if (pit.isPresent()) {
+        if (pit.isPresent() && pit.orElseThrow().possible()) {
             PitExitPlanner.Plan exit = pit.orElseThrow();
-            if (!exit.possible()) {
-                return new Escape(false, null, "яма без выхода: " + exit.why());
-            }
             return new Escape(
                     true,
                     new FallbackNode(List.of(PitRescue.plan(spirit, exit), digOut(exit.exit()))),
                     "яма: " + exit.why());
         }
+        BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
+        PillarDescent.@Nullable Plan descent = ownPillar(level, spirit, at);
+        boolean descend = descent != null && noPath;
+        if (pit.isPresent() && !descend) {
+            PitExitPlanner.Plan exit = pit.orElseThrow();
+            return new Escape(false, null, "яма без выхода: " + exit.why());
+        }
         boolean tool = PickaxeCheck.has(spirit);
         boolean open = DigOutScript.open(level, feet);
         int blocks = PitRescue.supplies(spirit).blocks();
-        BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-        PillarDescent.@Nullable Plan descent = ownPillar(level, spirit, at);
-        boolean descend =
-                descent != null && open && noPath && (blocks < 1 || descent.depth() <= Math.max(1, span(at, home)));
         RescuePlans.Self method =
                 RescuePlans.self(new RescuePlans.Situation(false, false, tool, open, noPath, blocks, descend));
         return switch (method) {
@@ -80,8 +80,7 @@ final class RescueTicket {
                         true,
                         RescuePlans.descent(home),
                         "пути домой нет, но стоит на своём столбе: разбирает " + plan.depth()
-                                + " блоков под собой и спускается на " + plan.landing() + " (мост "
-                                + Math.max(1, span(at, home)) + " блоков дороже и висит над землёй)");
+                                + " блоков под собой и спускается на " + plan.landing());
             }
             case NONE -> new Escape(false, null, refusal(open, noPath, blocks));
         };
@@ -92,13 +91,9 @@ final class RescueTicket {
         return PillarDescent.plan(
                         new RouteLevelView(spirit),
                         at,
-                        cell -> placed.isSpiritMarked(new BlockPos(cell.x(), cell.y(), cell.z())),
+                        cell -> placed.isOwn(new BlockPos(cell.x(), cell.y(), cell.z())),
                         64)
                 .orElse(null);
-    }
-
-    private static int span(BlockCoord from, BlockCoord home) {
-        return Math.max(Math.abs(home.x() - from.x()), Math.abs(home.z() - from.z()));
     }
 
     private static Escape dig(ServerLevel level, BlockPos feet, BlockCoord home, boolean open) {

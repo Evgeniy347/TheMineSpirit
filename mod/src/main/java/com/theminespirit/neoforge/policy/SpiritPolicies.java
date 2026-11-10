@@ -85,7 +85,7 @@ public final class SpiritPolicies {
         if (explosion instanceof PolicyVerdict.Reflex || ReflexSchedule.tierTwoDue(now, phase())) {
             scanThreats();
         }
-        verdict = guardTimeout(combine(), now);
+        verdict = guardTimeout(combine(), now, blockChanged);
         Layer owner = arbiter.step(verdict, spirit.tactics().wantsControl(), hasRunningTask());
         updateSuspension(owner);
         if (verdict instanceof PolicyVerdict.Reflex reflex) {
@@ -183,8 +183,8 @@ public final class SpiritPolicies {
         LocalSurroundings surroundings = SurroundingsReader.read(spirit, view, flags, water);
         blockReads += view.reads();
         tierOneRuns++;
-        hazard = HazardReflex.evaluate(surroundings, exemptions);
-        portal = PortalPolicy.evaluate(surroundings, exemptions);
+        hazard = HazardReflex.evaluate(surroundings, exemptions, view);
+        portal = PortalPolicy.evaluate(surroundings, exemptions, view);
     }
 
     private void scanThreats() {
@@ -229,7 +229,7 @@ public final class SpiritPolicies {
                 spirit.tactics().wantsControl());
     }
 
-    private PolicyVerdict guardTimeout(PolicyVerdict candidate, long now) {
+    private PolicyVerdict guardTimeout(PolicyVerdict candidate, long now, boolean moving) {
         if (now < suppressedUntil) {
             return CLEAR;
         }
@@ -238,7 +238,7 @@ public final class SpiritPolicies {
             return candidate;
         }
         String key = reflex.policy() + ":" + reflex.action().getClass().getSimpleName();
-        if (!reflexTimeout.expired(reflex.policy(), key, REFLEX_TIMEOUT_TICKS, spirit.isInWater())) {
+        if (!reflexTimeout.expired(reflex.policy(), key, REFLEX_TIMEOUT_TICKS, spirit.isUnderWater(), moving)) {
             return candidate;
         }
         LOGGER.warn(

@@ -239,8 +239,13 @@ deploy_server_files() {
             echo "ОШИБКА: нет $files/scripts/$name" >&2
             return 1
         fi
-        if ! cp -f "$files/scripts/$name" "$SERVER_DIR/scripts/$name"; then
-            echo "ОШИБКА: не скопировать $name в $SERVER_DIR/scripts" >&2
+        # lib: подмена через mv: cron-снимок может читать скрипт прямо сейчас, а cp -f обрезает файл на месте
+        # lib: и запущенный bash дочитывает уже чужое (10.11: «return: can only return from a function»).
+        if ! cp -f "$files/scripts/$name" "$SERVER_DIR/scripts/.$name.new.$$" \
+            || ! chmod 755 "$SERVER_DIR/scripts/.$name.new.$$" \
+            || ! mv -f "$SERVER_DIR/scripts/.$name.new.$$" "$SERVER_DIR/scripts/$name"; then
+            rm -f "$SERVER_DIR/scripts/.$name.new.$$"
+            echo "ОШИБКА: не разложить $name в $SERVER_DIR/scripts" >&2
             return 1
         fi
     done
@@ -362,7 +367,7 @@ snapshot_world() {
         return 1
     fi
     echo "Снимок мира ($snapshot_label)..."
-    if ! "$script" "$snapshot_label"; then
+    if ! SNAPSHOT_LOCK_WAIT="${SNAPSHOT_LOCK_WAIT:-900}" "$script" "$snapshot_label"; then
         echo "ОШИБКА: снимок мира не создан, публикация остановлена до остановки сервера" >&2
         return 1
     fi

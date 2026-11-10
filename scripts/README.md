@@ -11,6 +11,7 @@
 | [changed-modules.sh](changed-modules.sh) | путь → модуль → зависящие модули для `unit --changed` | `scripts/changed-modules.sh src/main/java` | ПК, сервер | кэш в `build/tmp` |
 | [gametest.sh](gametest.sh) | обёртка над `test.sh gametest` | `scripts/gametest.sh --full` | ПК, сервер | миры `build/gametest-run` |
 | [module-paths.sh](module-paths.sh) | общие переменные путей для скриптов | `scripts/module-paths.sh` | ПК, сервер | нет |
+| [mod-version.sh](mod-version.sh) | версия мода: загруженная сервером (`debug.log`) и собранная из дерева | `scripts/mod-version.sh /opt/minecraft/server/logs` | ПК, сервер, копия | нет |
 | [python-bin.sh](python-bin.sh) | один выбор python, пропускает заглушки WindowsApps | `. scripts/python-bin.sh && python_bin` | ПК, сервер | нет |
 | [logq.sh](logq.sh) | поиск по базе логов: клетка, дух, задание, провалы | `scripts/logq.sh cell -181,68,-518 2` | ПК, сервер, копия | дочитывает JSONL в базу (на основном сервере — cron) |
 | [logdb/logq.py](logdb/logq.py) | команды `logq`: `cell`, `spirit`, `failures`, `schema` | `python3 scripts/logdb/logq.py --db logs/events.db health` | ПК, сервер, копия | только база логов |
@@ -67,11 +68,12 @@
 | [testing/check-orphan-sweep-win.sh](testing/check-orphan-sweep-win.sh) | проверка сторожа осиротевших копий | `scripts/testing/check-orphan-sweep-win.sh` | ПК | временные файлы |
 | [testing/check-pre-commit.sh](testing/check-pre-commit.sh) | проверка хука `pre-commit` | `scripts/testing/check-pre-commit.sh` | ПК, сервер | временный репозиторий |
 | [testing/check-prove-red.sh](testing/check-prove-red.sh) | проверка `prove-red.sh` | `scripts/testing/check-prove-red.sh` | ПК, сервер | временный worktree |
+| [testing/check-mod-version.sh](testing/check-mod-version.sh) | проверка `mod-version.sh` на живых строках NeoForge и дереве | `scripts/testing/check-mod-version.sh` | ПК, сервер | временные файлы |
 | [testing/check-publish.sh](testing/check-publish.sh) | проверка публикации на подделке | `scripts/testing/check-publish.sh` | ПК, сервер | временные файлы |
+| [testing/check-world-snapshot.sh](testing/check-world-snapshot.sh) | проверка снимка мира на подделках: подтверждения save-*, возврат save-on, занятый замок, остановленный сервер | `scripts/testing/check-world-snapshot.sh` | ПК, сервер | временные файлы |
 | [testing/check-static-analysis-cache.sh](testing/check-static-analysis-cache.sh) | проверка кэша анализаторов | `scripts/testing/check-static-analysis-cache.sh` | ПК, сервер | временные файлы |
 | [testing/check-strategist.sh](testing/check-strategist.sh) | проверка запуска стратега | `scripts/testing/check-strategist.sh` | ПК, сервер | временные файлы |
 | [testing/check-test-runner.sh](testing/check-test-runner.sh) | проверка пределов и замков `test.sh` | `scripts/testing/check-test-runner.sh` | ПК, сервер | временные файлы |
-| [testing/check-world-snapshot.sh](testing/check-world-snapshot.sh) | проверка снимка мира: подтверждение сохранения и снимок остановленного сервера на подделках | `scripts/testing/check-world-snapshot.sh` | ПК, сервер | временные файлы |
 | [testing/fake-codegraph.sh](testing/fake-codegraph.sh) | подделка codegraph для проверок | `scripts/testing/fake-codegraph.sh` | ПК | временные файлы |
 | [testing/fake-opencode.sh](testing/fake-opencode.sh) | подделка OpenCode для проверок | `scripts/testing/fake-opencode.sh` | ПК | временные файлы |
 | [testing/measure-analyzers.sh](testing/measure-analyzers.sh) | замер анализаторов | `scripts/testing/measure-analyzers.sh` | ПК, сервер | временный отчёт |

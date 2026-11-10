@@ -151,6 +151,10 @@ class RescueAssignTests {
                 RescuePlans.self(new RescuePlans.Situation(false, false, true, true, true, 10, true)),
                 "Дух на своём столбе без пути домой обязан разобрать столб и спуститься: мост по воздуху "
                         + "дороже и опаснее, даже когда блоки есть");
+        assertEquals(
+                RescuePlans.Self.DESCEND,
+                RescuePlans.self(new RescuePlans.Situation(false, false, false, false, true, 0, true)),
+                "Свой столб разбирают и под крышей: небо — не условие спуска, иначе дух уходит в отказ");
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.theminespirit.core.chunk;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -112,5 +113,126 @@ class WorkZoneTests {
         assertTrue(
                 zone.contains(new ChunkCoord(-11, -32)),
                 "Зона работ обязана включать чанки поселения (регион плана), а не только духов");
+    }
+
+    @Test
+    void zone_SamePlanAnchorsAndSpiritChunks_ReusesZone() {
+        SettlementZone zone = new SettlementZone();
+        TownPlan plan = town(live());
+        Set<BlockCoord> anchors = Set.of(new BlockCoord(-160, 70, -480));
+        List<BlockCoord> spirits = List.of(new BlockCoord(200, 64, 200));
+
+        assertTrue(zone.update(plan, anchors, spirits, 1, 8), "Первый расчёт зоны обязан её построить");
+        assertFalse(
+                zone.update(plan, anchors, spirits, 1, 8),
+                "Повторный тик с теми же планом, якорями и чанками духов не пересобирает зону: "
+                        + "пересборка каждого тика и есть всплеск BoardService");
+        assertSame(
+                zone.workZone(),
+                zone.workZone(),
+                "Кэш отдаёт тот же набор чанков, а не копию: иначе тик снова аллоцирует сотни чанков");
+    }
+
+    @Test
+    void zone_SpiritMovesWithinSameChunk_NoRebuild() {
+        SettlementZone zone = new SettlementZone();
+        TownPlan plan = town(live());
+        Set<BlockCoord> anchors = Set.of(new BlockCoord(-160, 70, -480));
+
+        zone.update(plan, anchors, List.of(new BlockCoord(200, 64, 200)), 1, 8);
+        assertFalse(
+                zone.update(plan, anchors, List.of(new BlockCoord(205, 64, 207)), 1, 8),
+                "Шаг духа внутри чанка не меняет зону работ: пересборка нужна только при смене чанка");
+        assertTrue(
+                zone.workZone().contains(new ChunkCoord(12, 12)),
+                "Чанк духа остаётся в зоне, пока дух не вышел из него");
+    }
+
+    @Test
+    void zone_SpiritMovesToAnotherChunk_WorkZoneFollows() {
+        SettlementZone zone = new SettlementZone();
+        TownPlan plan = town(live());
+        Set<BlockCoord> anchors = Set.of(new BlockCoord(-160, 70, -480));
+        zone.update(plan, anchors, List.of(new BlockCoord(200, 64, 200)), 1, 8);
+
+        assertTrue(
+                zone.update(plan, anchors, List.of(new BlockCoord(400, 64, 400)), 1, 8),
+                "Смена чанка духа обязана пересобрать зону: иначе новый чанк не держится, и дух застревает");
+        assertTrue(zone.workZone().contains(new ChunkCoord(25, 25)), "Зона работ следует за духом в новый чанк");
+        assertFalse(
+                zone.workZone().contains(new ChunkCoord(13, 13)),
+                "Старый чанк духа снимается с зоны: за пределами радиуса чанки не держатся");
+    }
+
+    @Test
+    void zone_PlanRegionChanges_SettlementFollowsPlan() {
+        SettlementZone zone = new SettlementZone();
+        Set<BlockCoord> anchors = Set.of(new BlockCoord(0, 70, 0));
+        List<BlockCoord> spirits = List.of(new BlockCoord(0, 64, 0));
+        TownPlan first = planAt(0, 0);
+        TownPlan second = planAt(1000, 1000);
+
+        zone.update(first, anchors, spirits, 1, 8);
+        assertTrue(zone.settlement().contains(new ChunkCoord(0, 0)), "Участок первого плана держится");
+        assertTrue(
+                zone.update(second, anchors, spirits, 1, 8),
+                "Новый план поселения обязан пересобрать зону: иначе стройка идёт в незагруженных чанках");
+        assertTrue(
+                zone.settlement().contains(new ChunkCoord(62, 62)),
+                "Чанки нового участка плана попадают в зону поселения");
+        assertFalse(
+                zone.settlement().contains(new ChunkCoord(5, 5)),
+                "Чанки прежнего участка снимаются: план один, а не сумма всех прошлых");
+    }
+
+    @Test
+    void zone_ProbeRadiusChanges_SettlementCoversRing() {
+        SettlementZone zone = new SettlementZone();
+        TownPlan plan = planAt(0, 0);
+        Set<BlockCoord> anchors = Set.of(new BlockCoord(0, 70, 0));
+        List<BlockCoord> spirits = List.of(new BlockCoord(0, 64, 0));
+
+        zone.update(plan, anchors, spirits, 1, 8);
+        assertFalse(zone.settlement().contains(new ChunkCoord(2, 0)), "При обмере 8 чанк на 32 блока не нужен");
+        assertTrue(
+                zone.update(plan, anchors, spirits, 1, 32),
+                "Смена радиуса обмера — новое состояние мира, зону поселения надо пересобрать");
+        assertTrue(
+                zone.settlement().contains(new ChunkCoord(2, 0)),
+                "Обмер 32 блока держит чанк на расстоянии 32: иначе аудит читает незагруженный чанк");
+    }
+
+    @Test
+    void zone_LiveSixSpirits_MatchesWorkZoneAndStaysCached() {
+        JsonNode root = live();
+        TownPlan plan = town(root);
+        List<BlockCoord> spirits = spirits(root);
+        Set<BlockCoord> anchors = new LinkedHashSet<>();
+        anchors.add(point(root.path("town").path("anchor")));
+        int radius = root.path("radiusChunks").asInt();
+        SettlementZone zone = new SettlementZone();
+
+        zone.update(plan, anchors, spirits, radius, 8);
+
+        assertTrue(
+                zone.workZone().contains(new ChunkCoord(-48 >> 4, -518 >> 4)),
+                "Живой прогон observe16: чанк духа на востоке обязан держаться и после кэша");
+        assertTrue(
+                zone.workZone().contains(new ChunkCoord(-324 >> 4, -472 >> 4)),
+                "Живой прогон observe16: чанк духа в шахте/лесу обязан держаться и после кэша");
+        assertFalse(
+                zone.update(plan, anchors, spirits, radius, 8),
+                "Живой снимок с теми же шестью духами не пересобирает зону каждый тик");
+    }
+
+    private static TownPlan planAt(int minX, int minZ) {
+        ColumnMask empty = new ColumnMask(minX, minZ, 20, 20, new BitSet());
+        return new TownPlan(
+                new BlockCoord(minX, 70, minZ),
+                ColumnMask.rect(minX, minZ, minX + 19, minZ + 19),
+                new TownStreets(empty, empty, empty),
+                List.of(),
+                new FenceLine(List.of(), List.of()),
+                List.of());
     }
 }

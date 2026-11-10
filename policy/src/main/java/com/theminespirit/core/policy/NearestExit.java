@@ -14,13 +14,14 @@ final class NearestExit {
 
     private NearestExit() {}
 
-    static Optional<BlockCoord> find(LocalSurroundings surroundings, SafetyView standView) {
+    static Optional<BlockCoord> find(LocalSurroundings surroundings, SafetyView standView, SafetyView world) {
         BlockCoord feet = surroundings.feet();
+        boolean canClimb = MiningSafety.roomToClimb(feet, world);
         List<BlockCoord> candidates = new ArrayList<>();
         for (int dy : LEVELS) {
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dz = -1; dz <= 1; dz++) {
-                    if ((dx != 0 || dz != 0) && (dy == 0 || surroundings.cellAt(0, 1, 0) != Cell.SOLID)) {
+                    if ((dx != 0 || dz != 0) && (dy == 0 || (canClimb && surroundings.cellAt(0, 1, 0) != Cell.SOLID))) {
                         candidates.add(new BlockCoord(feet.x() + dx, feet.y() + dy, feet.z() + dz));
                     }
                 }
@@ -30,8 +31,9 @@ final class NearestExit {
                 .thenComparing(Comparator.naturalOrder()));
         for (BlockCoord candidate : candidates) {
             BlockCoord head = new BlockCoord(candidate.x(), candidate.y() + 1, candidate.z());
+            Cell headCell = candidate.y() == feet.y() ? surroundings.cellAt(head) : world.cellAt(head);
             if (surroundings.cellAt(candidate) == Cell.PASSABLE
-                    && surroundings.cellAt(head) == Cell.PASSABLE
+                    && headCell == Cell.PASSABLE
                     && MiningSafety.canStand(candidate, standView)) {
                 return Optional.of(candidate);
             }

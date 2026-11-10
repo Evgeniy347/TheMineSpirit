@@ -15,6 +15,18 @@ class DigGraphPlannerTests {
     private static final GraphFacts.Position AT = new GraphFacts.Position(1, 64, 2);
 
     @Test
+    void planBreach_FreeSpirit_GetsRestoreTraceTicket() {
+        GraphPlan plan = GraphWorld.settled()
+                .facts(facts(spirit(false, null), List.of(new GraphFacts.Position(3, 64, 4))))
+                .plan();
+
+        assertTrue(
+                ids(plan).contains("restore_trace"),
+                "Открытый пролом плана обязан дать узел restore_trace даже свободному духу: заделку клеток "
+                        + "вне досягаемости духа ставит доска, а не тишина; иначе дыра в постройке остаётся навсегда");
+    }
+
+    @Test
     void digOut_SealedSpirit_AddsDigAndRestore() {
         GraphPlan plan = plan("sealed");
 
@@ -111,6 +123,10 @@ class DigGraphPlannerTests {
     }
 
     private static GraphFacts facts(GraphFacts.Spirit spirit) {
+        return facts(spirit, List.of());
+    }
+
+    private static GraphFacts facts(GraphFacts.Spirit spirit, List<GraphFacts.Position> breaches) {
         return new GraphFacts(
                 Map.of("spirit-1", spirit),
                 List.of(),
@@ -123,7 +139,7 @@ class DigGraphPlannerTests {
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
-                List.of());
+                breaches);
     }
 
     private static GraphFacts.Spirit spirit(boolean trapped, String trap) {

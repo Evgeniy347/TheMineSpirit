@@ -29,7 +29,7 @@ HELP = """scripts/live.sh <команда>  (цель: своя копия де�
   loops [строк]          задания, которые падают снова и снова: что и почему, за весь журнал
   log <шаблон> [строк]   строки журнала мода по регулярному выражению
   fixture <имя духа> <файл> [радиус] [--at x y z]   мир вокруг духа (или точки) в mech/movement/src/test/resources/live/<файл>.live
-  check [--wait секунд]  граф жив и работа есть: код 0 — да, 1 — нет (после каждой выкладки)
+  check [--wait секунд] [--version <в>]  граф жив, работа есть, версия мода на сервере та же, что собрана
 """
 
 
@@ -62,6 +62,49 @@ class Target:
     def get(self, path):
         with urllib.request.urlopen(self.rest + path, timeout=10) as reply:
             return json.load(reply)
+
+    def mod_dirs(self):
+        if self.copy:
+            return os.path.join(self.copy, "mods"), os.path.join(self.copy, "logs")
+        return MAIN_SERVER + "/mods", MAIN_SERVER + "/logs"
+
+    def running_mod_version(self):
+        _, logs = self.mod_dirs()
+        script = os.path.join(REPO, "scripts", "mod-version.sh")
+        if self.copy:
+            out = subprocess.run(["bash", script, logs], capture_output=True, check=True).stdout
+        else:
+            with open(script, "rb") as source:
+                out = subprocess.run(
+                    ["ssh", "-o", "ConnectTimeout=8", SSH, "bash -s -- " + logs],
+                    stdin=source,
+                    capture_output=True,
+                    check=True,
+                ).stdout
+        return out.decode("utf-8", "replace").strip()
+
+    def installed_mod_version(self):
+        mods, _ = self.mod_dirs()
+        prefix = "theminespirit-"
+        if self.copy:
+            if not os.path.isdir(mods):
+                return None
+            jars = [
+                os.path.join(mods, name)
+                for name in os.listdir(mods)
+                if name.startswith(prefix) and name.endswith(".jar")
+            ]
+            if not jars:
+                return None
+            newest = max(jars, key=os.path.getmtime)
+            return os.path.basename(newest)[len(prefix) : -len(".jar")]
+        out = subprocess.run(
+            ["ssh", "-o", "ConnectTimeout=8", SSH, "ls -1t %s/%s*.jar 2>/dev/null || true" % (mods, prefix)],
+            capture_output=True,
+            check=True,
+        ).stdout
+        names = [os.path.basename(line) for line in out.decode("utf-8", "replace").splitlines() if line.strip()]
+        return names[0][len(prefix) : -len(".jar")] if names else None
 
     def log(self, lines):
         if self.copy:
@@ -135,6 +178,7 @@ def status(target, _args):
     all_bots = bots(target)
     desk = board(target)
     print("тик %s  доска %s" % (all_bots[0]["tick"] if all_bots else "?", desk["groups"]))
+    print(mod_versions(target))
     for bot in sorted(all_bots, key=lambda b: b["name"]):
         print(spirit_row(bot))
     lines = target.log(4000)
@@ -260,7 +304,30 @@ def fixture(target, args):
     print("%s: %d клеток; ноги в 0,0,0. Чтение в тесте: PitTestWorld.live(...)" % (os.path.relpath(path, REPO), len(out) - 2))
 
 
-def check_once(target):
+def mod_versions(target):
+    try:
+        running = target.running_mod_version()
+    except (OSError, subprocess.CalledProcessError):
+        running = "неизвестна"
+    installed = target.installed_mod_version() or "нет"
+    return "мод: загружен %s, в mods/ %s" % (running, installed)
+
+
+def expected_mod_version():
+    branch = subprocess.run(
+        ["git", "-C", REPO, "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, check=True
+    ).stdout.decode("utf-8", "replace").strip()
+    if branch != "main":
+        return ""
+    built = subprocess.run(
+        ["bash", os.path.join(REPO, "scripts", "mod-version.sh"), "--built", REPO],
+        capture_output=True,
+        check=True,
+    ).stdout
+    return built.decode("utf-8", "replace").strip()
+
+
+def check_once(target, expected=""):
     problems = []
     all_bots = bots(target)
     desk = board(target)
@@ -272,18 +339,40 @@ def check_once(target):
     recent = [line for line in target.log(600) if "источник доски" in line]
     if recent:
         problems.append("источник доски падает: " + recent[-1][:220])
+    try:
+        running = target.running_mod_version()
+    except (OSError, subprocess.CalledProcessError) as error:
+        problems.append("не узнать загруженную версию мода: %s" % error)
+        running = ""
+    try:
+        installed = target.installed_mod_version()
+    except (OSError, subprocess.CalledProcessError):
+        installed = None
+    if not installed:
+        problems.append("в mods/ нет jar мода: сервер не загрузит мод")
+    elif running and running != installed:
+        problems.append(
+            "сервер загрузил мод %s, а в mods/ лежит %s: сборка не вступила в силу (нужен перезапуск)"
+            % (running, installed)
+        )
+    if expected and installed and installed != expected:
+        problems.append(
+            "в mods/ версия %s, а собранная из этого дерева %s: выкладка не доехала до сервера"
+            % (installed, expected)
+        )
     return problems
 
 
 def check(target, args):
+    expected = args.version or expected_mod_version()
     deadline = time.time() + args.wait
     while True:
         try:
-            problems = check_once(target)
+            problems = check_once(target, expected)
         except OSError as error:
             problems = ["сервер не отвечает: %s" % error]
         if not problems:
-            print("ОК: граф жив, работа есть")
+            print("ОК: граф жив, работа есть, мод %s" % (expected or "на месте"))
             return
         if time.time() >= deadline:
             print("НЕ ОК:")
@@ -327,6 +416,7 @@ def main():
     fix.set_defaults(run=fixture)
     ok = sub.add_parser("check")
     ok.add_argument("--wait", type=int, default=0)
+    ok.add_argument("--version", default="")
     ok.set_defaults(run=check)
     args = parser.parse_args()
     args.run(Target(args.main), args)
