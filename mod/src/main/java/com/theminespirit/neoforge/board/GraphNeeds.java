@@ -3,7 +3,9 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.GraphBlock;
+import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
@@ -14,7 +16,9 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Collection;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
+import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;
 
 final class GraphNeeds {
@@ -27,7 +31,8 @@ final class GraphNeeds {
             SpiritEntity spirit,
             StockView stock,
             long now) {
-        return of(board, ticket, target, spirit.getUUID().toString(), SpiritItems.ids(spirit), stock, now);
+        ServerLevel level = spirit.level() instanceof ServerLevel server ? server : null;
+        return of(board, ticket, target, spirit.getUUID().toString(), SpiritItems.ids(spirit), stock, now, level);
     }
 
     static GraphBlock.@Nullable Need of(
@@ -38,6 +43,18 @@ final class GraphNeeds {
             Collection<String> items,
             StockView stock,
             long now) {
+        return of(board, ticket, target, holder, items, stock, now, null);
+    }
+
+    private static GraphBlock.@Nullable Need of(
+            Board board,
+            BoardTicket ticket,
+            @Nullable TicketTarget target,
+            @Nullable String holder,
+            Collection<String> items,
+            StockView stock,
+            long now,
+            @Nullable ServerLevel level) {
         if (holder != null && board.stuck().isStuck(UUID.fromString(holder), now)) {
             return new GraphBlock.Path(point(target));
         }
@@ -58,9 +75,9 @@ final class GraphNeeds {
             int count = target == null ? 1 : Math.max(1, target.supplyCount());
             return new GraphBlock.Item(made, count);
         }
-        String placed = placedBlock(ticket, target);
-        if (placed != null && stock.available().getOrDefault(placed, 0) < 1) {
-            return new GraphBlock.Item(placed, 1);
+        GraphBlock.Item planned = plannedItem(ticket, target, stock, level);
+        if (planned != null) {
+            return planned;
         }
         if (target != null) {
             return new GraphBlock.Path(point(target));
@@ -94,17 +111,54 @@ final class GraphNeeds {
                 + target.target().z();
     }
 
-    private static @Nullable String placedBlock(BoardTicket ticket, @Nullable TicketTarget target) {
-        if (ticket.boardCase() != BoardCase.REPAIR_BUILDING || target == null) {
+    private static GraphBlock.@Nullable Item plannedItem(
+            BoardTicket ticket, @Nullable TicketTarget target, StockView stock, @Nullable ServerLevel level) {
+        if (ticket.boardCase() != BoardCase.REPAIR_BUILDING || target == null || target.plan() == null) {
             return null;
         }
         TaskNode plan = target.plan();
         if (plan instanceof ScriptCall call
                 && "place_block".equals(call.script())
                 && call.params().get("block") instanceof String block) {
-            int state = block.indexOf('[');
-            return state < 0 ? block : block.substring(0, state);
+            String placed = withoutState(block);
+            return stock.available().getOrDefault(placed, 0) < 1 ? new GraphBlock.Item(placed, 1) : null;
+        }
+        MaterialSource source = level == null ? null : FirstStepsRunner.materialSource(level);
+        if (source == null) {
+            return null;
+        }
+        Map<String, Integer> need;
+        try {
+            need = CaseMaterials.need(plan, source);
+        } catch (RuntimeException failure) {
+            return null;
+        }
+        return firstMissing(BuildRemainder.left(level, ticket.boardCase(), plan, need), stock);
+    }
+
+    static GraphBlock.@Nullable Item materialNeed(
+            BoardCase boardCase, TaskNode plan, MaterialSource source, StockView stock) {
+        Map<String, Integer> need;
+        try {
+            need = CaseMaterials.need(plan, source);
+        } catch (RuntimeException failure) {
+            return null;
+        }
+        return firstMissing(need, stock);
+    }
+
+    private static GraphBlock.@Nullable Item firstMissing(Map<String, Integer> need, StockView stock) {
+        for (Map.Entry<String, Integer> entry : new TreeMap<>(need).entrySet()) {
+            int have = stock.available().getOrDefault(entry.getKey(), 0);
+            if (have < entry.getValue()) {
+                return new GraphBlock.Item(entry.getKey(), Math.max(1, entry.getValue() - have));
+            }
         }
         return null;
+    }
+
+    private static String withoutState(String block) {
+        int state = block.indexOf('[');
+        return state < 0 ? block : block.substring(0, state);
     }
 }
