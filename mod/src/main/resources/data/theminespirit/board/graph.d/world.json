@@ -256,7 +256,7 @@
       "tasks": [
         {
           "id": "remove_route",
-          "case": "CLEAR_GROUNDS",
+          "case": "REPAIR_BUILDING",
           "base": 50,
           "consumes": {}
         }

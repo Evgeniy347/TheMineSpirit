@@ -48,6 +48,7 @@ public record RouteTrail(List<BlockCoord> cells, String block) {
         for (BlockCoord cell : cells) {
             cut.add(new PlotLeveling.Box(cell.x(), cell.y(), cell.z(), cell.x(), cell.y(), cell.z()));
         }
-        return new PlotLeveling(cut, List.of(), block);
+        PlotLeveling raw = new PlotLeveling(cut, List.of(), block);
+        return new PlotLeveling(raw.cutTopDown(), List.of(), block);
     }
 }

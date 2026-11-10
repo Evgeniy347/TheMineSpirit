@@ -186,7 +186,7 @@ final class WorldPost {
             }
             BlockCoord first = stale.trail().first();
             post.submit(
-                    post.ticket(id, BoardCase.CLEAR_GROUNDS, Optional.empty(), priority, ticket.id(), Map.of()),
+                    post.ticket(id, BoardCase.REPAIR_BUILDING, Optional.empty(), priority, ticket.id(), Map.of()),
                     TicketTarget.at(first).withLeveling(stale.trail().removal()));
             posted = true;
         }

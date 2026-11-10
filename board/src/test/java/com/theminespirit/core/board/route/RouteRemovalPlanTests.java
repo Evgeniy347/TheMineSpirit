@@ -23,7 +23,7 @@ class RouteRemovalPlanTests {
     void removal_ClearGroundsPlan_ClearsTrailWithoutBuildingItBack() {
         RouteTrail trail = new RouteTrail(List.of(new BlockCoord(3, 64, 3), new BlockCoord(4, 64, 3)), "sand");
         TaskNode plan = TicketPlans.plan(
-                BoardCase.CLEAR_GROUNDS, TicketTarget.at(trail.first()).withLeveling(trail.removal()));
+                BoardCase.REPAIR_BUILDING, TicketTarget.at(trail.first()).withLeveling(trail.removal()));
 
         List<ScriptCall> calls = calls(plan);
         List<ScriptCall> clears =
@@ -42,7 +42,7 @@ class RouteRemovalPlanTests {
     void removal_PathMaterial_IsCollectedAndDeposited() {
         RouteTrail trail = new RouteTrail(List.of(new BlockCoord(3, 64, 3)), "sand");
         TaskNode plan = TicketPlans.plan(
-                BoardCase.CLEAR_GROUNDS, TicketTarget.at(trail.first()).withLeveling(trail.removal()));
+                BoardCase.REPAIR_BUILDING, TicketTarget.at(trail.first()).withLeveling(trail.removal()));
 
         List<ScriptCall> calls = calls(plan);
         ScriptCall collect = calls.stream()
@@ -54,10 +54,8 @@ class RouteRemovalPlanTests {
                 String.valueOf(filter).contains("minecraft:sand"),
                 "Песчаная тропа собирает песок, а не только землю: иначе след остаётся предметами на земле");
         assertTrue(
-                calls.stream()
-                        .filter(call -> "deposit".equals(call.script()))
-                        .anyMatch(call -> "minecraft:sand".equals(call.params().get("item"))),
-                "Собранный материал тропы уходит в сундук, а не висит в руках духа: " + calls);
+                calls.stream().noneMatch(call -> "fill".equals(call.script())),
+                "Снятие не подсыпает материал: земля под старой тропой уже на месте");
     }
 
     private static List<ScriptCall> calls(TaskNode node) {

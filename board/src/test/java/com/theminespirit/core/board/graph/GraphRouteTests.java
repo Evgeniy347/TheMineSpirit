@@ -84,9 +84,9 @@ class GraphRouteTests {
                 .orElseThrow(() -> new AssertionError("Нет задания снять старую тропу: " + plan.tasks()));
 
         assertEquals(
-                BoardCase.CLEAR_GROUNDS,
+                BoardCase.REPAIR_BUILDING,
                 task.boardCase(),
-                "Старую тропу убирают расчисткой: ломать и возвращать блоки — узел мира, а не стройка");
+                "Старую тропу убирают восстановлением участка: clear_area по клеткам без стройки и без ям");
         assertEquals(Map.of(), task.consumes(), "Снятию тропы не нужны материалы: оно только убирает проложенное");
         assertTrue(task.feasible(), "Задание снятия выполнимо, когда мир сообщил о старой тропе: " + plan.tasks());
     }
