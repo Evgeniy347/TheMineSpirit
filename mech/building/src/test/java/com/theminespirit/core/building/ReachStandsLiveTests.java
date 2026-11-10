@@ -53,6 +53,39 @@ class ReachStandsLiveTests {
     }
 
     @Test
+    void search_SkippedStand_IsNotProbedAtNextTick() {
+        Set<BlockCoord> standable = new HashSet<>();
+        standable.add(BEHIND_WALL);
+        standable.add(AROUND);
+        ReachPlanner.World world = new ReachPlanner.World() {
+            @Override
+            public boolean ready(BlockCoord cell) {
+                return true;
+            }
+
+            @Override
+            public boolean standable(BlockCoord feet) {
+                return standable.contains(feet);
+            }
+        };
+        Set<BlockCoord> tried = new HashSet<>();
+        ReachStands.Search search = ReachStands.search(new SpiritReach(3, 6, 3), FEET, List.of(CHEST), world, tried);
+
+        BlockCoord first = search.nextCandidate().orElseThrow();
+        search.skip(first);
+        Optional<BlockCoord> second = search.nextCandidate();
+
+        assertTrue(
+                second.isPresent(), "После отказа от первой стоянки поиск обязан назвать следующую, а не закончиться");
+        assertNotEquals(
+                first,
+                second.orElseThrow(),
+                "Отказанная стоянка запоминается: иначе один и тот же дорогой поиск пути повторяется каждый тик "
+                        + "(сервер 0.1.3614: UndoLeaseScript держал поток 1,5 с на тик)");
+        assertTrue(tried.contains(first), "Отказ попал в общий список проверенных стоянок подхода");
+    }
+
+    @Test
     void livePit_AllStandsBehindBarrier_NoStandInsteadOfFirst() {
         Set<BlockCoord> standable = new HashSet<>();
         standable.add(BEHIND_WALL);
