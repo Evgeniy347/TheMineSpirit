@@ -140,6 +140,62 @@ class CrossMatrixGuardTests {
                 "Сторож ослеп: строка пары без графа обязана попасть в нарушения");
     }
 
+    @Test
+    void interrupt_OkWithoutTest_IsReported() {
+        String text = interruptDocument().replace("`ATests.ok`", "—");
+
+        assertTrue(
+                CrossMatrixInterrupt.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
+                        .anyMatch(issue -> issue.contains("без существующего теста")),
+                "Сторож ослеп: отметка ОК без теста обязана попасть в нарушения оси прерывания");
+    }
+
+    @Test
+    void interrupt_UnknownMechanic_IsReported() {
+        String text = interruptDocument().replace("| I01 | столб |", "| I01 | лес |");
+
+        assertTrue(
+                CrossMatrixInterrupt.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
+                        .anyMatch(issue -> issue.contains("вне столб/мост/расчистка/шахта/dig_out")),
+                "Сторож ослеп: механика вне пяти обязательных обязана попасть в нарушения");
+    }
+
+    @Test
+    void interrupt_BrokenPairWithoutTask_IsReported() {
+        String text = interruptDocument().replace("| Н | задача мост |", "| Н |  |");
+
+        assertTrue(
+                CrossMatrixInterrupt.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
+                        .anyMatch(issue -> issue.contains("Н без задачи починки")),
+                "Сторож ослеп: клетка Н без задачи починки обязана попасть в нарушения");
+    }
+
+    @Test
+    void interrupt_FewerThanMinimumRows_IsReported() {
+        assertTrue(
+                CrossMatrixInterrupt.issues("""
+                                | id | механика | прерывание | что остаётся | видит ли граф | отметка | тест |
+                                |---|---|---|---|---|---|---|
+                                | I01 | столб | голод | след | да | ОК | `ATests.ok` |
+                                """, Map.of("ATests", "class ATests { void ok() {} }")).stream()
+                        .anyMatch(issue -> issue.contains("меньше 25")),
+                "Сторож ослеп: недобор пар первой партии обязана попасть в нарушения");
+    }
+
+    private static String interruptDocument() {
+        StringBuilder text = new StringBuilder("""
+                | id | механика | прерывание | что остаётся | видит ли граф | отметка | тест или задача |
+                |---|---|---|---|---|---|---|
+                """);
+        for (int index = 1; index <= CrossMatrixInterrupt.MIN; index++) {
+            text.append("| I")
+                    .append(index < 10 ? "0" + index : Integer.toString(index))
+                    .append(" | столб | голод | след | да | ОК | `ATests.ok` |\n");
+        }
+        text.append("| I99 | мост | ночь | настил | нет | Н | задача мост |\n");
+        return text.toString();
+    }
+
     private static Map<String, String> testSources() {
         Map<String, String> sources = new TreeMap<>();
         for (Path root : SourceFiles.moduleTestRoots()) {
