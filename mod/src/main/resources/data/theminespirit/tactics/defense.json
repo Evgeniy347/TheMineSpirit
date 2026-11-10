@@ -1,0 +1,26 @@
+{
+  "squadRadius": 6.0,
+  "localRadius": 24.0,
+  "baseCapacity": 2.0,
+  "healthFloor": 0.5,
+  "healthShare": 0.5,
+  "armorFull": 10,
+  "armorFloor": 0.75,
+  "weaponFull": 4.0,
+  "weaponFloor": 0.6,
+  "foodFull": 0.9,
+  "foodPenalty": 0.7,
+  "strengthBonus": 0.25,
+  "maxHelpersPerThreat": 6,
+  "woundedFraction": 0.35,
+  "allWoundedShare": 0.75,
+  "healPotionMinHealth": 0.5,
+  "threatWeight": {
+    "MELEE": 1.0,
+    "SKELETON": 1.1,
+    "RANGED": 1.2,
+    "CREEPER": 1.5,
+    "FLYER": 1.2,
+    "HEAVY": 2.0
+  }
+}
