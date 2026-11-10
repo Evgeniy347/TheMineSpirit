@@ -6,10 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.mining.LeftOreRules;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class SupplyGateTests {
@@ -200,5 +202,85 @@ class SupplyGateTests {
                 List.of(new SupplyGate.Request("dirt", 59)),
                 decision.gather(),
                 "Минимум не даёт взять материал со склада: добычу нельзя откладывать из-за отката снабжения");
+    }
+
+    @Test
+    void hasActiveSupply_OpenOrAssigned_True() {
+        Board board = new Board(() -> 0L);
+        BoardTicket pending = supplyTicket("supply:cobblestone");
+        board.submit(pending);
+        Map<String, TicketTarget> targets = new HashMap<>();
+        targets.put(pending.id(), TicketTarget.at(SITE).withSupply("cobblestone", 4));
+
+        assertTrue(
+                SupplyGate.hasActiveSupply(board, targets, "cobblestone"),
+                "Открытая заявка снабжения держит предмет: иначе доска ставит вторую такую же каждый пересбор, "
+                        + "и духи носят один материал двумя маршрутами");
+
+        board.claim(pending.id(), SPIRIT, 100);
+        assertTrue(
+                SupplyGate.hasActiveSupply(board, targets, "cobblestone"),
+                "Выданная духу заявка тоже активна: пока её несут, новую на тот же предмет не ставят");
+    }
+
+    @Test
+    void hasActiveSupply_ClosedOrForeign_False() {
+        Board board = new Board(() -> 0L);
+        BoardTicket pending = supplyTicket("supply:cobblestone");
+        board.submit(pending);
+        Map<String, TicketTarget> targets = new HashMap<>();
+        targets.put(pending.id(), TicketTarget.at(SITE).withSupply("cobblestone", 4));
+
+        board.cancel(pending.id());
+        assertFalse(
+                SupplyGate.hasActiveSupply(board, targets, "cobblestone"),
+                "Закрытая заявка не держит предмет: иначе нехватка после отмены не закрывалась бы никогда");
+    }
+
+    @Test
+    void hasActiveSupply_OtherItemOrNonSupplyTicket_False() {
+        Board board = new Board(() -> 0L);
+        BoardTicket coal = supplyTicket("supply:coal");
+        BoardTicket graph = new BoardTicket(
+                "graph:make:cobblestone",
+                BoardCase.GATHER_MATERIALS,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.GATHER_MATERIALS),
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
+        BoardTicket withoutTarget = supplyTicket("supply:dirt");
+        board.submit(coal);
+        board.submit(graph);
+        board.submit(withoutTarget);
+        Map<String, TicketTarget> targets = new HashMap<>();
+        targets.put(coal.id(), TicketTarget.at(SITE).withSupply("coal", 4));
+        targets.put(graph.id(), TicketTarget.at(SITE).withSupply("cobblestone", 4));
+
+        assertFalse(
+                SupplyGate.hasActiveSupply(board, targets, "cobblestone"),
+                "Заявка на уголь не держит камень, а графовая работа — не заявка снабжения: иначе камень "
+                        + "ждал бы чужого задания");
+        assertFalse(
+                SupplyGate.hasActiveSupply(board, targets, "dirt"),
+                "Заявка без цели-предмета не держит ничего: сравнивать нечего, нужды в добыче это не отменяет");
+    }
+
+    private static final BlockCoord SITE = new BlockCoord(0, 64, 0);
+    private static final UUID SPIRIT = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+    private static BoardTicket supplyTicket(String id) {
+        return new BoardTicket(
+                id,
+                BoardCase.SUPPLY_SITE,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.SUPPLY_SITE),
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
     }
 }

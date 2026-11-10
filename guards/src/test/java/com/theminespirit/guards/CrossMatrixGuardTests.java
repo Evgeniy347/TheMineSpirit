@@ -156,7 +156,7 @@ class CrossMatrixGuardTests {
 
         assertTrue(
                 CrossMatrixInterrupt.issues(text, Map.of("ATests", "class ATests { void ok() {} }")).stream()
-                        .anyMatch(issue -> issue.contains("вне столб/мост/расчистка/шахта/dig_out")),
+                        .anyMatch(issue -> issue.contains("вне столб/мост/расчистка/шахта/dig_out/маршрут")),
                 "Сторож ослеп: механика вне пяти обязательных обязана попасть в нарушения");
     }
 

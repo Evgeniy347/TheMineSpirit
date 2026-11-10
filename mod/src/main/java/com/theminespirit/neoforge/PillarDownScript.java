@@ -1,10 +1,13 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.board.lease.LeaseCell;
+import com.theminespirit.core.board.lease.LeaseKind;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.neoforge.lease.LeaseRun;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,11 +16,13 @@ import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import org.jspecify.annotations.Nullable;
 
 public final class PillarDownScript implements ScriptInstance {
     private final SpiritEntity spirit;
     private final List<BlockCoord> own = new ArrayList<>();
     private PillarDismantler dismantler;
+    private @Nullable LeaseRun lease;
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
 
@@ -36,7 +41,7 @@ public final class PillarDownScript implements ScriptInstance {
         if (dismantler == null) {
             scan();
             if (!own.isEmpty()) {
-                dismantler = new PillarDismantler(spirit, own);
+                dismantler = new PillarDismantler(spirit, own, lease);
             }
             return dismantler == null ? fail("под духом нет своего столба: разбирать нечего") : ScriptStatus.RUNNING;
         }
@@ -64,6 +69,23 @@ public final class PillarDownScript implements ScriptInstance {
                 own.add(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
             }
         }
+        if (!own.isEmpty()) {
+            BlockCoord top = own.get(0);
+            lease = LeaseRun.ownedAt(spirit, new BlockPos(top.x(), top.y(), top.z()));
+            return;
+        }
+        LeaseRun found = LeaseRun.ownedAt(spirit, feet.below());
+        if (found == null) {
+            return;
+        }
+        lease = found;
+        List<LeaseCell> cells = found.cells();
+        for (int index = cells.size() - 1; index >= 0; index--) {
+            LeaseCell cell = cells.get(index);
+            if (cell.kind() == LeaseKind.PLACED) {
+                own.add(cell.pos());
+            }
+        }
     }
 
     public static boolean ownBelow(SpiritEntity spirit) {
@@ -78,7 +100,17 @@ public final class PillarDownScript implements ScriptInstance {
     private ScriptStatus fail(String reason) {
         failureReason = reason;
         outcome = ScriptStatus.FAILED;
+        if (lease != null) {
+            lease.orphan();
+        }
         return outcome;
+    }
+
+    @Override
+    public void cancel() {
+        if (lease != null) {
+            lease.orphan();
+        }
     }
 
     @Override

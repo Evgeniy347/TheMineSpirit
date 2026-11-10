@@ -89,18 +89,24 @@ class TestRunnerLifecycleGuardTests {
     }
 
     @Test
-    void testScript_SceneWait_DoesNotGrepLogEachSecond() {
+    void testScript_SceneWait_ReadsLogInBoundedChunks() {
         String script = read(SCRIPT);
         String scene = body(script, "gametest_scene_started");
         assertFalse(
                 scene.contains("grep"),
                 "Ожидание старта сцен не должно опрашивать лог через grep: на Windows grep читает весь лог "
                         + "заново раз в секунду и жжёт до ~75 % ядра, пока грузится мир. "
-                        + "Как надо: дочитывать только новые байты встроенным read (read -r -d '')");
+                        + "Как надо: дочитывать только новые байты по сохранённому смещению fd");
         assertTrue(
+                scene.contains("dd bs=1048576 count=1"),
+                "Ожидание маркера сцен читает лог порцией по 1 МиБ с сохранённым смещением fd (dd count=1): "
+                        + "без порции одно чтение поднимает в память весь накопленный лог (мегабайты), "
+                        + "а встроенный read читает его побайтно и тормозит старт сцен");
+        assertFalse(
                 scene.contains("read -r -d ''"),
-                "Ожидание маркера сцен читает новые байты лога встроенным read (read -r -d ''): "
-                        + "без него остаётся только опрос файла внешней командой");
+                "В ожидании сцен вернулось чтение всего лога разом (read -d ''): на выросшем логе оно "
+                        + "поднимает мегабайты в переменную. Правило: scripts/test.sh → gametest_scene_started, "
+                        + "порция по 1 МиБ через dd");
     }
 
     private static String body(String script, String name) {

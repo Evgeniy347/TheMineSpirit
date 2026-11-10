@@ -9,6 +9,7 @@ import com.theminespirit.core.movement.SealedSpace;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.core.town.PlotProtection;
+import com.theminespirit.neoforge.lease.LeaseRun;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,7 +24,6 @@ import org.jspecify.annotations.Nullable;
 public final class DigOutScript implements ScriptInstance {
     private static final int MAX_STEPS = 160;
     private static final int STEP_TICKS = 60;
-    private static final int HOME_RADIUS = 2;
 
     private final SpiritEntity spirit;
     private final Level level;
@@ -45,6 +45,8 @@ public final class DigOutScript implements ScriptInstance {
     private @Nullable DigOutRoute routeFollow;
     private boolean routeFallback;
     private final DigOutRestore restore;
+    private final LeaseRun lease;
+    private final DigOutRollback rollback;
 
     public DigOutScript(SpiritEntity spirit, GotoParams target) {
         this(spirit, target, false);
@@ -58,7 +60,9 @@ public final class DigOutScript implements ScriptInstance {
         this.descending = target.y() < spirit.blockPosition().getY();
         this.breaker = BlockBreaker.escaping(spirit, rescue);
         this.placer = new BlockPlacer(spirit, PlotProtection.Ground.TEMPORARY_MOVEMENT);
-        this.stepFloor = new DigOutFloor(spirit, level, placer);
+        this.lease = LeaseRun.open(spirit, "dig_out");
+        this.rollback = new DigOutRollback(lease);
+        this.stepFloor = new DigOutFloor(spirit, level, placer, lease);
         this.restore = new DigOutRestore(spirit, level);
         boolean sealedNow = sealed(level, spirit.blockPosition());
         this.backfill = new DigOutBackfill(
@@ -100,6 +104,7 @@ public final class DigOutScript implements ScriptInstance {
             BlockBreaker.Begin begin = breaker.begin(stuck);
             if (begin instanceof BlockBreaker.Started) {
                 restore.remember(stuck, inside);
+                lease.broken(stuck, inside);
                 breaking = true;
                 return ScriptStatus.RUNNING;
             }
@@ -120,10 +125,11 @@ public final class DigOutScript implements ScriptInstance {
                 : DigOutGoal.ascent(
                         new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
                         new BlockCoord(target.x(), target.y(), target.z()),
-                        HOME_RADIUS);
+                        DigOutGoal.HOME_RADIUS);
         if ((DigOutExit.surfaced(level, feet) && !restore.pendingOver(feet)) || goalReached) {
             backfill.report();
-            restore.returnSpoil();
+            rollback.forgetReturned(restore.returnSpoil());
+            rollback.close();
             PlanBreachRestore.restore(spirit, level, placer, feet);
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
@@ -167,7 +173,11 @@ public final class DigOutScript implements ScriptInstance {
         }
         if (routeFollow == null) {
             routeFollow = new DigOutRoute(
-                    spirit, new BlockCoord(target.x(), target.y(), target.z()), descending, HOME_RADIUS, rescue);
+                    spirit,
+                    new BlockCoord(target.x(), target.y(), target.z()),
+                    descending,
+                    DigOutGoal.HOME_RADIUS,
+                    rescue);
         }
         DigOutRoute.State state = routeFollow.tick();
         if (state == DigOutRoute.State.DESCENT_FAILED || state == DigOutRoute.State.NO_ROUTE) {
@@ -216,6 +226,7 @@ public final class DigOutScript implements ScriptInstance {
         return switch (breaker.begin(cell)) {
             case BlockBreaker.Started ignored -> {
                 restore.remember(cell, before);
+                lease.broken(cell, before);
                 breaking = true;
                 yield ScriptStatus.RUNNING;
             }
@@ -245,7 +256,8 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     private ScriptStatus fail(String reason) {
-        restore.returnSpoil();
+        rollback.forgetReturned(restore.returnSpoil());
+        lease.orphan();
         failureReason = reason;
         outcome = ScriptStatus.FAILED;
         return outcome;
@@ -267,7 +279,8 @@ public final class DigOutScript implements ScriptInstance {
             breaking = false;
         }
         spirit.getNavigation().stop();
-        restore.returnSpoil();
+        rollback.forgetReturned(restore.returnSpoil());
+        lease.orphan();
     }
 
     @Override

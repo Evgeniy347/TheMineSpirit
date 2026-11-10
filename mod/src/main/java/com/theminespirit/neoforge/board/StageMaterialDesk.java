@@ -147,8 +147,10 @@ final class StageMaterialDesk {
 
             @Override
             public Map<String, Integer> schematicBlocks(String file) {
-                return SchematicMaterials.count(
-                        DataTables.INSTANCE.presets().current().byId(file).map(preset -> preset.type()),
+                // lib: у пресета материалы уже посчитаны при разборе — не пересчитываем сотни/тысячи
+                // блоков схемы на каждый провал ремонта (GraphNeeds) и на каждый вход графа.
+                return SchematicMaterials.of(
+                        DataTables.INSTANCE.presets().current().byId(file),
                         () -> PresetLibrary.countMaterials(SchematicResources.load(file)));
             }
         };

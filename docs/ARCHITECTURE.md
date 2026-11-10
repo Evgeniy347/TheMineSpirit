@@ -82,8 +82,9 @@
 Смерть духа бросает его аренды, старт сервера — все `ACTIVE` (скрипты рестарт не пережили), пауза без
 возобновления дольше `leaseSuspendTimeoutTicks` или ушедший тикет — тоже `ORPHANED`. Скан
 (`FloatingScan`, `WorldAreaScan`) видит временными только клетки `ORPHANED`: чужие действующие подмости не сносит.
-Старые T-метки при первой загрузке сливаются в одну аренду `legacy` со статусом `ORPHANED`; прямой
-`PlacedBlocksData.markTemporary` остаётся только у механик до их перевода (сторож `LeaseBypassGuardTests`).
+Старые T-метки при первой загрузке сливаются в одну аренду `legacy` со статусом `ORPHANED`; прямого
+`PlacedBlocksData.markTemporary` у механик нет — правка идёт только через `LeaseBook` (сторож
+`LeaseBypassGuardTests`).
 
 ## Фундамент — снизу вверх
 

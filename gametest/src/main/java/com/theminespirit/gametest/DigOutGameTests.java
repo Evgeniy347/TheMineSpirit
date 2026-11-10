@@ -8,6 +8,7 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.RescuePlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.lease.LeaseStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
@@ -16,6 +17,8 @@ import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
+import com.theminespirit.neoforge.lease.LeaseData;
+import com.theminespirit.neoforge.lease.LeaseRun;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import com.theminespirit.neoforge.policy.PlanBreachData;
 import com.theminespirit.neoforge.policy.RescueBreach;
@@ -25,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
@@ -119,6 +123,15 @@ public final class DigOutGameTests {
                         helper.getBlockState(cell).isAir(),
                         "свой столб разобран до конца: в " + cell + " остался блок, и блоки не вернулись в работу");
             }
+            helper.assertTrue(
+                    LeaseData.get(helper.getLevel())
+                                    .book()
+                                    .require(pillar.leaseId())
+                                    .status()
+                            == LeaseStatus.DONE,
+                    "успешный разбор столба закрывает аренду подмостей DONE: иначе клетки остались бы в уборке "
+                            + "графа, а не вернулись в работу");
+            assertDigOutLeasesClosed(helper, spirits);
             helper.assertFalse(
                     board.board()
                             .stuck()
@@ -136,19 +149,21 @@ public final class DigOutGameTests {
         });
     }
 
-    private record PillarScene(SpiritEntity spirit, List<BlockPos> column, int groundY) {}
+    private record PillarScene(SpiritEntity spirit, List<BlockPos> column, int groundY, String leaseId) {}
 
     private static PillarScene spawnOnOwnPillar(GameTestHelper helper, BoardService board) {
         BlockPos base = new BlockPos(0, TOP + 1, 0);
         List<BlockPos> column = new ArrayList<>();
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), base.above(5));
+        LeaseRun lease = LeaseRun.open(spirit, "scaffold");
         PlacedBlocksData placed = PlacedBlocksData.get(helper.getLevel());
         for (int dy = 0; dy < 5; dy++) {
             BlockPos cell = base.above(dy);
             helper.setBlock(cell, Blocks.DIRT);
-            placed.markTemporary(helper.absolutePos(cell));
+            placed.markSpirit(helper.absolutePos(cell));
+            lease.placed(helper.absolutePos(cell), "minecraft:dirt");
             column.add(cell);
         }
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), base.above(5));
         spirit.getInventory().setItem(0, new ItemStack(Items.IRON_SHOVEL));
         BlockPos home = helper.absolutePos(new BlockPos(8, TOP + 1, 5));
         spirit.setHome(new BlockCoord(home.getX(), home.getY(), home.getZ()));
@@ -172,7 +187,19 @@ public final class DigOutGameTests {
                         List.of(),
                         Map.of()),
                 TicketTarget.at(at).withPlan(plan));
-        return new PillarScene(spirit, column, helper.absolutePos(base).getY());
+        return new PillarScene(spirit, column, helper.absolutePos(base).getY(), lease.id());
+    }
+
+    private static void assertDigOutLeasesClosed(GameTestHelper helper, List<SpiritEntity> spirits) {
+        Set<UUID> owners = spirits.stream().map(SpiritEntity::getUUID).collect(Collectors.toSet());
+        for (var lease : LeaseData.get(helper.getLevel()).book().all()) {
+            if ("dig_out".equals(lease.purpose()) && lease.spirit() != null && owners.contains(lease.spirit())) {
+                helper.assertTrue(
+                        lease.status() != LeaseStatus.ACTIVE,
+                        "после выхода у духа не остаётся действующей аренды dig_out: иначе скан не увидит "
+                                + "брошенный spoil и пол, сейчас " + lease.status() + " в клетках " + lease.cells());
+            }
+        }
     }
 
     private static List<BlockPos> prepareArena(GameTestHelper helper, List<List<BlockPos>> pockets) {

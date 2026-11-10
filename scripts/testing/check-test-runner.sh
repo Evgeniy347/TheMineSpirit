@@ -241,26 +241,65 @@ kill_from() {
     for pid in $(cat "$@" 2>/dev/null); do kill -KILL "$pid" 2>/dev/null; done
 }
 
+# lib: на Linux дерево процессов читаем из /proc, а не из колонок ps -ef: раскладка
+# колонок у Cygwin/MSYS и Linux своя, проверка не должна зависеть от платформы.
+os_is_windows() {
+    case "${OSTYPE:-}" in
+        msys*|cygwin*|win*) return 0 ;;
+    esac
+    return 1
+}
+
 tree_of() {
-    ps -ef 2>/dev/null | awk -v root="$1" '
-        $2 ~ /^[0-9]+$/ && $3 ~ /^[0-9]+$/ { kids[$3] = kids[$3] " " $2 }
-        END {
-            q[1] = root; head = 1; tail = 1
-            while (head <= tail) {
-                p = q[head++]
-                n = split(kids[p], list, " ")
-                for (k = 1; k <= n; k++) { q[++tail] = list[k]; print list[k] }
-            }
-        }'
+    local root="$1" pid ppid d stat_line child
+    if os_is_windows; then
+        ps -ef 2>/dev/null | awk -v root="$root" '
+            $2 ~ /^[0-9]+$/ && $3 ~ /^[0-9]+$/ { kids[$3] = kids[$3] " " $2 }
+            END {
+                q[1] = root; head = 1; tail = 1
+                while (head <= tail) {
+                    p = q[head++]
+                    n = split(kids[p], list, " ")
+                    for (k = 1; k <= n; k++) { q[++tail] = list[k]; print list[k] }
+                }
+            }'
+        return 0
+    fi
+    declare -A kids=()
+    for d in /proc/[0-9]*; do
+        pid="${d#/proc/}"
+        { read -r stat_line <"$d/stat"; } 2>/dev/null || continue
+        stat_line="${stat_line##*) }"
+        ppid="${stat_line#* }"
+        ppid="${ppid%% *}"
+        case "$ppid" in ''|*[!0-9]*) continue ;; esac
+        kids[$ppid]="${kids[$ppid]:-} $pid"
+    done
+    local -a queue=("$root")
+    local head=0
+    while [ "$head" -lt "${#queue[@]}" ]; do
+        pid="${queue[$head]}"
+        head=$((head + 1))
+        for child in ${kids[$pid]:-}; do
+            queue+=("$child")
+            printf '%s\n' "$child"
+        done
+    done
 }
 
 test_sh_alive() {
     local pid
     for pid in "$@"; do
         kill -0 "$pid" 2>/dev/null || continue
-        ps -ef 2>/dev/null | awk -v p="$pid" '$2 == p && /scripts\/test\.sh/ { found = 1 } END { exit !found }' && printf '%s ' "$pid"
+        if os_is_windows; then
+            ps -ef 2>/dev/null | awk -v p="$pid" '$2 == p && /scripts\/test\.sh/ { found = 1 } END { exit !found }' && printf '%s ' "$pid"
+        else
+            tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null | grep -q 'scripts/test\.sh' && printf '%s ' "$pid"
+        fi
     done
 }
+
+export -f os_is_windows tree_of test_sh_alive
 
 run_limited() {
     local limit="$1" pid i=0 start
@@ -291,15 +330,7 @@ echo $$ >"${FAKE_SELF:?}"
 i=0
 while [ "$i" -lt 50 ] && [ ! -s "${THEMINESPIRIT_TEST_HEARTBEAT:?}" ]; do sleep 0.1; i=$((i + 1)); done
 cat "$THEMINESPIRIT_TEST_HEARTBEAT" >"${FAKE_HB:?}"
-ps -ef | awk -v root="$PPID" -v me="$$" '
-    $2 ~ /^[0-9]+$/ && $3 ~ /^[0-9]+$/ { kids[$3] = kids[$3] " " $2 }
-    END {
-        q[1] = root; h = 1; t = 1
-        while (h <= t) {
-            p = q[h++]; n = split(kids[p], l, " ")
-            for (k = 1; k <= n; k++) if (l[k] != me) { q[++t] = l[k]; print l[k] }
-        }
-    }' >"${FAKE_KIDS:?}"
+tree_of "$PPID" | awk -v me="$$" '$1 != me' >"${FAKE_KIDS:?}"
 if [ -n "${FAKE_HANG:-}" ]; then
     sleep 300 &
     echo $! >"${FAKE_WORKER:?}"
@@ -434,6 +465,8 @@ pause_left=$(ls "${TMPDIR:-/tmp}"/theminespirit-test-pause.* 2>/dev/null | wc -l
     || fail "pause-fd: код=$pause_code, ждущих=$pause_holders, разных fifo=$pause_targets, файлов=$pause_left/$pause_left_before, $(tr '\n' ' ' <"$work/pause-fds.txt")"
 
 # lib: слежение за стартом сцен читает только новые байты лога: grep всем файлом раз в секунду жёг ЦП.
+# Лог перед маркером делаем большим (≈2,5 МиБ): ожидание обязано дойти до маркера порциями, не
+# поднимая весь накопленный лог в одну переменную.
 mkdir -p "$work/bin/grep-log"
 cat >"$work/bin/grep-log/grep" <<FAKE
 #!/usr/bin/env bash
@@ -443,7 +476,7 @@ FAKE
 chmod +x "$work/bin/grep-log/grep"
 cat >"$work/bin/gametest-slow-start" <<'FAKE'
 #!/usr/bin/env bash
-sleep 2
+awk 'BEGIN { for (i = 0; i < 30000; i++) print "[10:18:39] [Server thread/INFO] [minecraft/GameTestServer]: подготовка мира " i }'
 echo "[10:18:40] [Server thread/INFO] [minecraft/GameTestRunner]: 1 tests are now running at position 0, 0, 0!"
 sleep 1
 echo "[10:18:43] [Server thread/INFO] [minecraft/GameTestServer]: All 1 required tests passed :)"
@@ -456,7 +489,7 @@ out=$(PATH="$work/bin/grep-log:$PATH" THEMINESPIRIT_GRADLEW="$work/bin/gametest-
 code=$?
 scene_greps=$(awk '/tests are now running/ { n++ } END { print n + 0 }' "$work/grep-spawns")
 [ "$code" = 0 ] && echo "$out" | grep -q "OK gametest: 1 тест" && [ "$scene_greps" = 0 ] \
-    && ok "scene-wait: маркер сцен найден без grep-опроса лога (grep: 0), прогон зелёный" \
+    && ok "scene-wait: маркер сцен найден после 2,5 МиБ лога без grep-опроса (grep: 0), прогон зелёный" \
     || fail "scene-wait: код=$code, grep по маркеру=$scene_greps, вывод: $out"
 
 : >"$work/kids.pids"; : >"$work/hb.pid"; : >"$work/gradle.pid"; : >"$work/worker.pid"
@@ -552,6 +585,24 @@ unset THEMINESPIRIT_GAMETEST_WARN_SECONDS THEMINESPIRIT_GAMETEST_STOP_SECONDS
 [ "$code" = 124 ] && echo "$out" | grep -q "стоп по пределу 2 с" \
     && ok "gametest-limit: код=124, стоп по пределу" \
     || fail "gametest-limit: код=$code, вывод: $out"
+
+# lib: при падении прогона список java-процессов спрашивают надзор и уборка подряд.
+# На Windows это два запуска PowerShell (~0.5 с каждый); снимок с TTL обязан свести их в один.
+mkdir -p "$work/bin/powershell-count"
+cat >"$work/bin/powershell-count/powershell" <<'FAKE'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >>"${PS_CALLS:?}"
+FAKE
+chmod +x "$work/bin/powershell-count/powershell"
+: >"$work/ps-calls"
+out=$(PATH="$work/bin/powershell-count:$PATH" PS_CALLS="$work/ps-calls" \
+    THEMINESPIRIT_GAMETEST_WARN_SECONDS=1 THEMINESPIRIT_GAMETEST_STOP_SECONDS=2 \
+    bash scripts/test.sh gametest 2>&1)
+code=$?
+ps_calls=$(wc -l <"$work/ps-calls" | tr -d ' ')
+[ "$code" = 124 ] && [ "$ps_calls" -le 1 ] \
+    && ok "gametest-pids: список java-процессов спрошен $ps_calls раз за прогон (надзор и уборка делят снимок)" \
+    || fail "gametest-pids: код=$code, запусков powershell=$ps_calls, вывод: $out"
 
 export THEMINESPIRIT_GRADLEW="$work/bin/gametest-success"
 out=$(bash scripts/test.sh gametest 2>&1)

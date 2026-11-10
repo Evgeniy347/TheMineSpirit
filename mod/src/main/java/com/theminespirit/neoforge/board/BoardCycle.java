@@ -59,6 +59,18 @@ final class BoardCycle {
 
     void rebuild(ServerLevel level, long now) {
         service.meter().rebuildStart();
+        // lib: за один пересбор доска ставит и сливает десятки заявок; пишем её на диск один раз в конце,
+        // а не на каждую слитую заявку. Исключение тоже закрывает пакет — накопленное не теряется.
+        service.beginPersistBatch();
+        try {
+            rebuildBoard(level, now);
+        } finally {
+            service.meter().rebuildEnd();
+            service.endPersistBatch();
+        }
+    }
+
+    private void rebuildBoard(ServerLevel level, long now) {
         service.meter().pruneStart();
         board.prune(now, liveCauses);
         service.meter().pruneEnd();
@@ -90,8 +102,6 @@ final class BoardCycle {
         flushBlockNotes(level);
         lastRebuild = now;
         journal.flush(JournalService.FLUSH_BUDGET);
-        BoardPersistence.persist(service);
-        service.meter().rebuildEnd();
     }
 
     private Set<String> liveDropCauses(ServerLevel level) {

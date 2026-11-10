@@ -50,6 +50,9 @@ TestResults/
 # База jqwik: seed упавших прогонов, коммитить не нужно (docs/TESTING.md)
 .jqwik-database*
 
+# Лог log4j от JUnit :mod: тесты видят классы Minecraft, его конфиг пишет logs/latest.log
+/logs/
+
 # Python (агент-стратег)
 __pycache__/
 *.pyc

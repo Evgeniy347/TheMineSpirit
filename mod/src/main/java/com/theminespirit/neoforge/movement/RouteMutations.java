@@ -8,11 +8,11 @@ import com.theminespirit.neoforge.BlockBreaker;
 import com.theminespirit.neoforge.BlockPlacer;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
+import com.theminespirit.neoforge.lease.LeaseRun;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import org.jspecify.annotations.Nullable;
 
 final class RouteMutations {
     private final SpiritEntity spirit;
@@ -20,6 +20,7 @@ final class RouteMutations {
     private final BlockBreaker breaker;
     private final BlockPlacer placer;
     private final RemovalLog removals = new RemovalLog();
+    private @Nullable LeaseRun lease;
     private boolean breaking;
     private boolean pillarPlaced;
     private String breakingId = "-";
@@ -50,6 +51,7 @@ final class RouteMutations {
             active = false;
             if (progress == BlockBreaker.Progress.BROKEN) {
                 removals.removed(breakingId, new BlockCoord(cell.getX(), cell.getY(), cell.getZ()));
+                lease().broken(cell, breakingId);
             }
         }
         if (level.getBlockState(cell).getCollisionShape(level, cell).isEmpty()) {
@@ -108,6 +110,22 @@ final class RouteMutations {
             breaker.cancel();
             breaking = false;
         }
+        if (lease != null) {
+            lease.orphan();
+        }
+    }
+
+    void complete() {
+        if (lease != null) {
+            lease.commit();
+        }
+    }
+
+    private LeaseRun lease() {
+        if (lease == null) {
+            lease = LeaseRun.open(spirit, "route");
+        }
+        return lease;
     }
 
     private Optional<String> place(BlockPos cell) {
@@ -118,9 +136,7 @@ final class RouteMutations {
         String id = blockId.get();
         return switch (placer.beginWithoutSupport(cell, BlockStates.stateFor(id), id)) {
             case BlockPlacer.Started ignored -> {
-                if (spirit.level() instanceof ServerLevel server) {
-                    PlacedBlocksData.get(server).markTemporary(cell);
-                }
+                lease().placed(cell, id);
                 yield Optional.empty();
             }
             case BlockPlacer.Refused refused -> Optional.of(refused.message());

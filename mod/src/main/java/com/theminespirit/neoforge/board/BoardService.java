@@ -7,11 +7,11 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.CraterProfiles;
 import com.theminespirit.core.board.HerdCycles;
+import com.theminespirit.core.board.PersistBatch;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.SupplyGate;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.husbandry.Species;
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.HashMap;
@@ -39,6 +39,7 @@ public final class BoardService {
     private final BoardDispatchDesk dispatch;
     private final BoardCycle cycle;
     private final BoardBuildMeter meter = new BoardBuildMeter();
+    private final PersistBatch persistBatch = new PersistBatch();
 
     public BoardService(
             Board board, HerdCycles animals, StockReader stockReader, BoardSources sources, JournalService journal) {
@@ -123,7 +124,20 @@ public final class BoardService {
     }
 
     void persistBoard() {
+        if (persistBatch.deferred()) {
+            return;
+        }
         BoardPersistence.persistBoard(this);
+    }
+
+    void beginPersistBatch() {
+        persistBatch.begin();
+    }
+
+    void endPersistBatch() {
+        if (persistBatch.end()) {
+            BoardPersistence.persist(this);
+        }
     }
 
     Map<String, Long> supplyClosed() {
@@ -160,13 +174,13 @@ public final class BoardService {
             dispatch.submitted();
             targets.put(ticket.id(), target);
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
-            BoardPersistence.persist(this);
+            persistBoard();
         } else if (outcome == BoardOutcome.DUPLICATE) {
             if (SupplyGate.isSupply(ticket.id()) && targets.containsKey(ticket.id())) {
                 TicketTarget merged = SupplyGate.merge(targets.get(ticket.id()), target);
                 if (!merged.equals(targets.get(ticket.id()))) {
                     targets.put(ticket.id(), merged);
-                    BoardPersistence.persist(this);
+                    persistBoard();
                 }
             } else {
                 targets.putIfAbsent(ticket.id(), target);
@@ -179,7 +193,7 @@ public final class BoardService {
         BoardOutcome outcome = board.submit(ticket);
         if (outcome == BoardOutcome.ACCEPTED) {
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
-            BoardPersistence.persist(this);
+            persistBoard();
         }
         return outcome;
     }
@@ -249,15 +263,11 @@ public final class BoardService {
         notices.blocks(level, board, journal, stock(), board.now());
     }
 
-    public TicketTarget targetOf(String ticketId, List<SpiritEntity> spirits) {
-        return tickets.targetOf(ticketId, spirits);
+    public Optional<TicketTarget> targetOf(String ticketId, ServerLevel level, List<SpiritEntity> spirits) {
+        return tickets.targetOf(ticketId, level, spirits);
     }
 
     boolean hasTarget(String ticketId) {
         return tickets.hasTarget(ticketId);
-    }
-
-    BlockCoord targetPoint(String ticketId, List<SpiritEntity> spirits) {
-        return tickets.targetPoint(ticketId, spirits);
     }
 }

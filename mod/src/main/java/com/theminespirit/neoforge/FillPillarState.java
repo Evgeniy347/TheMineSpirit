@@ -16,12 +16,14 @@ final class FillPillarState {
         switch (host.pillar.tick()) {
             case RUNNING -> {}
             case BUILT -> {
+                abandonScaffold();
                 host.passPlaced++;
                 host.tally.placed(host.blockId());
                 host.releaseAndAdvance();
                 host.state = FillSession.State.PICK;
             }
             case FAILED -> {
+                abandonScaffold();
                 LOGGER.info(
                         "[fill] {}: столб в {} не вышел: {}",
                         host.spirit.getName().getString(),
@@ -32,6 +34,12 @@ final class FillPillarState {
                 host.releaseAndAdvance();
                 host.state = FillSession.State.PICK;
             }
+        }
+    }
+
+    private void abandonScaffold() {
+        if (host.pillar.lease() != null) {
+            host.pillar.lease().orphan();
         }
     }
 }

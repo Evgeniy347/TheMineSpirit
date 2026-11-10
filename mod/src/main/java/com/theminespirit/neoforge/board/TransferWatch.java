@@ -57,7 +57,11 @@ public final class TransferWatch {
             return TransferBuildDesk.ensureBuildTransfers(level, service, spirits, craftTicket, crafter);
         }
         Optional<String> craftItem = TicketPlans.craftItem(craftTicket.boardCase());
-        TicketTarget target = service.targetOf(craftTicket.id(), spirits);
+        Optional<TicketTarget> maybeTarget = service.targetOf(craftTicket.id(), level, spirits);
+        if (maybeTarget.isEmpty()) {
+            return false;
+        }
+        TicketTarget target = maybeTarget.orElseThrow();
         boolean gather = craftItem.isEmpty()
                 && craftTicket.boardCase() == BoardCase.GATHER_MATERIALS
                 && target.supplyItem() != null;
@@ -99,8 +103,7 @@ public final class TransferWatch {
         if (TransferBuildDesk.ownWoodCovers(crafter, need)) {
             return false;
         }
-        if (TransferCraftNeed.needsTable(
-                        level, recipes, craftItem.orElseThrow(), service.targetPoint(craftTicket.id(), spirits))
+        if (TransferCraftNeed.needsTable(level, recipes, craftItem.orElseThrow(), target.target())
                 && !TransferCraftNeed.placesOwnTable(craftTicket, target)) {
             ingredients.add(new Ingredient(ItemIds.normalize(TABLE_ITEM), 1));
         }

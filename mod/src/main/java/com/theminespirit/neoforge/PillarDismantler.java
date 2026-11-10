@@ -4,6 +4,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.adapter.Visibility;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
+import com.theminespirit.neoforge.lease.LeaseRun;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
 
 final class PillarDismantler {
     enum Outcome {
@@ -26,6 +28,7 @@ final class PillarDismantler {
     private final SpiritEntity spirit;
     private final Level level;
     private final List<BlockCoord> pending;
+    private final @Nullable LeaseRun lease;
     private int cursor;
     private int returned;
     private int dropped;
@@ -33,9 +36,14 @@ final class PillarDismantler {
     private String failureReason;
 
     PillarDismantler(SpiritEntity spirit, List<BlockCoord> topDown) {
+        this(spirit, topDown, null);
+    }
+
+    PillarDismantler(SpiritEntity spirit, List<BlockCoord> topDown, @Nullable LeaseRun lease) {
         this.spirit = spirit;
         this.level = spirit.level();
         this.pending = new ArrayList<>(topDown);
+        this.lease = lease;
     }
 
     Outcome tick() {
@@ -43,9 +51,7 @@ final class PillarDismantler {
             return outcome;
         }
         if (spirit.isRemoved()) {
-            failureReason = "дух исчез во время разбора столба";
-            outcome = Outcome.FAILED;
-            return outcome;
+            return failed("дух исчез во время разбора столба");
         }
         while (cursor < pending.size()) {
             BlockCoord cell = pending.get(cursor++);
@@ -54,20 +60,17 @@ final class PillarDismantler {
                 continue;
             }
             if (planned(pos)) {
-                failureReason = "блок столба " + cell + " принадлежит плану постройки этапа: свои столбы "
-                        + "разбирают вне построек, иначе хижина и двор теряют блоки";
-                outcome = Outcome.FAILED;
-                return outcome;
+                return failed("блок столба " + cell + " принадлежит плану постройки этапа: свои столбы "
+                        + "разбирают вне построек, иначе хижина и двор теряют блоки");
             }
             BlockState state = level.getBlockState(pos);
             if (state.isAir()) {
                 unmark(pos);
+                forget(pos);
                 continue;
             }
             if (BreakSight.visible(spirit, pos, false) != Visibility.CLEAR) {
-                failureReason = "блок столба " + cell + " не виден из глаз духа: разбор остановлен";
-                outcome = Outcome.FAILED;
-                return outcome;
+                return failed("блок столба " + cell + " не виден из глаз духа: разбор остановлен");
             }
             Item item = state.getBlock().asItem();
             if (level instanceof ServerLevel server) {
@@ -76,6 +79,7 @@ final class PillarDismantler {
             SpiritBlocks.destroy((ServerLevel) spirit.level(), pos, false, spirit, "PILLAR_DOWN");
             SpiritGesture.workOn(spirit, pos);
             unmark(pos);
+            forget(pos);
             if (!Items.AIR.equals(item)) {
                 ItemStack leftover = spirit.getInventory().addItem(new ItemStack(item));
                 if (!leftover.isEmpty()) {
@@ -87,6 +91,9 @@ final class PillarDismantler {
             return Outcome.RUNNING;
         }
         outcome = Outcome.DONE;
+        if (lease != null) {
+            lease.commit();
+        }
         return outcome;
     }
 
@@ -102,6 +109,21 @@ final class PillarDismantler {
         return failureReason;
     }
 
+    private Outcome failed(String reason) {
+        failureReason = reason;
+        outcome = Outcome.FAILED;
+        if (lease != null) {
+            lease.orphan();
+        }
+        return outcome;
+    }
+
+    private void forget(BlockPos pos) {
+        if (lease != null && lease.contains(pos)) {
+            lease.forget(pos);
+        }
+    }
+
     private boolean planned(BlockPos pos) {
         return level instanceof ServerLevel server
                 && SettlementPlotStore.liveSite(server)
@@ -111,7 +133,7 @@ final class PillarDismantler {
 
     private boolean isOwnMarked(BlockPos pos) {
         return level instanceof ServerLevel server
-                && PlacedBlocksData.get(server).isOwn(pos);
+                && (PlacedBlocksData.get(server).isOwn(pos) || (lease != null && lease.contains(pos)));
     }
 
     private void unmark(BlockPos pos) {

@@ -114,7 +114,7 @@ public final class SpiritBoardGateway implements BoardGateway {
                     board.statusOf(ticket.id()).orElse(BoardStatus.PENDING),
                     stock,
                     timings.getOrDefault(ticket.id(), BoardTiming.NONE),
-                    service.targetOf(ticket.id(), List.of())));
+                    service.targetOf(ticket.id(), server.overworld(), List.of()).orElse(null)));
         }
         return List.copyOf(tasks);
     }
@@ -130,7 +130,8 @@ public final class SpiritBoardGateway implements BoardGateway {
                         service.stock(),
                         BoardTiming.fromJournal(service.journal().last(BoardTiming.JOURNAL_LOOKBACK))
                                 .getOrDefault(ticket.id(), BoardTiming.NONE),
-                        service.targetOf(ticket.id(), List.of())));
+                        service.targetOf(ticket.id(), server.overworld(), List.of())
+                                .orElse(null)));
     }
 
     private BoardTask createTask(BoardTaskRequest request) {
@@ -183,7 +184,7 @@ public final class SpiritBoardGateway implements BoardGateway {
                 board.statusOf(stored.id()).orElse(BoardStatus.PENDING),
                 service.stock(),
                 BoardTiming.NONE,
-                service.targetOf(stored.id(), List.of()));
+                service.targetOf(stored.id(), level, List.of()).orElse(null));
     }
 
     private static TicketTarget relocationTarget(BoardTaskRequest request) {
@@ -213,6 +214,11 @@ public final class SpiritBoardGateway implements BoardGateway {
                         "Задание доски '" + ticketId + "' исчезло после отмены: список заданий — GET /v1/board",
                         Map.of("id", ticketId)));
         return BoardTasks.of(
-                board, ticket, status, service.stock(), BoardTiming.NONE, service.targetOf(ticket.id(), List.of()));
+                board,
+                ticket,
+                status,
+                service.stock(),
+                BoardTiming.NONE,
+                service.targetOf(ticket.id(), level, List.of()).orElse(null));
     }
 }

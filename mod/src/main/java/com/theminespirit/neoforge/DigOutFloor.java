@@ -1,11 +1,10 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.movement.WaterCrossingPlanner;
+import com.theminespirit.neoforge.lease.LeaseRun;
 import com.theminespirit.neoforge.movement.CheapBlocks;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -13,11 +12,13 @@ final class DigOutFloor {
     private final SpiritEntity spirit;
     private final Level level;
     private final BlockPlacer placer;
+    private final LeaseRun lease;
 
-    DigOutFloor(SpiritEntity spirit, Level level, BlockPlacer placer) {
+    DigOutFloor(SpiritEntity spirit, Level level, BlockPlacer placer, LeaseRun lease) {
         this.spirit = spirit;
         this.level = level;
         this.placer = placer;
+        this.lease = lease;
     }
 
     Optional<String> place(BlockPos cell) {
@@ -32,9 +33,7 @@ final class DigOutFloor {
         }
         return switch (placer.begin(cell, state, id)) {
             case BlockPlacer.Started ignored -> {
-                if (level instanceof ServerLevel server) {
-                    PlacedBlocksData.get(server).markTemporary(cell);
-                }
+                lease.placed(cell, id);
                 yield Optional.empty();
             }
             case BlockPlacer.Refused refused -> Optional.of(refused.message());

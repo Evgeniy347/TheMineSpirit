@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 
 final class BoardSupplyDesk {
@@ -42,7 +43,7 @@ final class BoardSupplyDesk {
     }
 
     StockParts refresh(ServerLevel level, List<SpiritEntity> spirits) {
-        StockReader.Snapshot snapshot = reader.collect(level, spirits, gateCenters(spirits));
+        StockReader.Snapshot snapshot = reader.collect(level, spirits, gateCenters(level, spirits));
         stock = snapshot.parts().total();
         return snapshot.parts();
     }
@@ -70,17 +71,18 @@ final class BoardSupplyDesk {
                 closed,
                 now,
                 BoardTuning.failBackoffTicks());
-        BlockCoord home = SettlementHome.of(spirits);
+        BlockCoord center = HomePoint.of(level, spirits).orElse(null);
         for (SupplyGate.Request request : decision.supply()) {
-            SupplyTickets.issue(level, service, targets, home, request, BoardCase.SUPPLY_SITE, now);
+            SupplyTickets.issue(level, service, targets, center, request, BoardCase.SUPPLY_SITE, now);
         }
         for (SupplyGate.Request request : decision.gather()) {
-            SupplyTickets.issue(level, service, targets, home, request, BoardCase.GATHER_MATERIALS, now);
+            SupplyTickets.issue(level, service, targets, center, request, BoardCase.GATHER_MATERIALS, now);
         }
     }
 
-    private List<BlockCoord> gateCenters(List<SpiritEntity> spirits) {
+    private List<BlockCoord> gateCenters(ServerLevel level, List<SpiritEntity> spirits) {
         List<BlockCoord> centers = new ArrayList<>();
+        Optional<BlockCoord> home = HomePoint.of(level, spirits);
         for (BoardTicket ticket : board.tickets()) {
             BoardStatus status = board.statusOf(ticket.id()).orElse(null);
             if (status != BoardStatus.PENDING && status != BoardStatus.WAITING_RESOURCES) {
@@ -90,34 +92,18 @@ final class BoardSupplyDesk {
                 continue;
             }
             TicketTarget target = targets.get(ticket.id());
-            BlockCoord center = target != null ? target.target() : SettlementHome.of(spirits);
-            if (!centers.contains(center)) {
+            BlockCoord center = target != null ? target.target() : home.orElse(null);
+            if (center != null && !centers.contains(center)) {
                 centers.add(center);
             }
         }
-        if (centers.isEmpty()) {
-            centers.add(SettlementHome.of(spirits));
+        if (centers.isEmpty() && home.isPresent()) {
+            centers.add(home.orElseThrow());
         }
         return centers;
     }
 
     private boolean hasActiveSupply(String item) {
-        for (BoardTicket ticket : board.tickets()) {
-            if (!SupplyGate.isSupply(ticket.id()) || !active(ticket.id())) {
-                continue;
-            }
-            TicketTarget target = targets.get(ticket.id());
-            if (target != null && item.equals(target.supplyItem())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean active(String id) {
-        BoardStatus status = board.statusOf(id).orElse(null);
-        return status == BoardStatus.PENDING
-                || status == BoardStatus.WAITING_RESOURCES
-                || status == BoardStatus.ASSIGNED;
+        return SupplyGate.hasActiveSupply(board, targets, item);
     }
 }
