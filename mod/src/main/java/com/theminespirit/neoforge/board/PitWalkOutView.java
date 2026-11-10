@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.movement.BlockKind;
 import com.theminespirit.core.movement.PitExitPlanner;
 import com.theminespirit.core.movement.PitWalkOut;
 import com.theminespirit.core.observation.BlockCoord;
@@ -25,8 +26,8 @@ public final class PitWalkOutView implements PitWalkOut.World {
 
     @Override
     public boolean clear(int x, int y, int z) {
-        PitExitPlanner.Kind kind = cells.at(new BlockCoord(x, y, z));
-        return kind == PitExitPlanner.Kind.AIR || kind == PitExitPlanner.Kind.WATER;
+        BlockKind kind = cells.at(new BlockCoord(x, y, z));
+        return kind == BlockKind.AIR || kind == BlockKind.WATER;
     }
 
     @Override

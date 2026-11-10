@@ -84,9 +84,9 @@ public final class GraphPlanner {
             }
         }
         for (SupplyGraph.Building building : graph.buildings().values()) {
-            if (!building.optional()
-                    && building.stage() <= state.stage()
-                    && state.built(building.id()) != Built.BUILT) {
+            if (building.stage() <= state.stage()
+                    && state.built(building.id()) != Built.BUILT
+                    && (!building.optional() || state.built(building.id()) == Built.PLANNED)) {
                 requireBuilding(null, building.id(), building.base(), "постройка этапа " + building.stage());
             }
         }

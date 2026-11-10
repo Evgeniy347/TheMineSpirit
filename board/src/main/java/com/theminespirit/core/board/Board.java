@@ -43,6 +43,7 @@ public final class Board {
     private final List<BoardLogEntry> blockNotes = new ArrayList<>();
     private final FailureHistory failHistory = new FailureHistory();
     private final BoardLedger ledger = new BoardLedger();
+    private final BoardDependencies dependencies;
     private final LongSupplier nowTicks;
     private final BoardEvents events;
 
@@ -59,6 +60,7 @@ public final class Board {
                 statuses, tickets, claimAssignees, ticketFailures, lastFailReasons, failHistory, blockNotes);
         this.failures =
                 new BoardFailureDesk(blocked, tickets, statuses, claimAssignees, stuckSpirits, blockNotes, detachments);
+        this.dependencies = new BoardDependencies(tickets, statuses, ledger);
     }
 
     public long now() {
@@ -519,6 +521,10 @@ public final class Board {
         return List.copyOf(all);
     }
 
+    public List<BoardTicket> tickets() {
+        return List.copyOf(tickets.values());
+    }
+
     public Optional<BoardTicket> find(String ticketId) {
         Objects.requireNonNull(ticketId, "ticketId не может быть null: поиск идёт по id задания");
         return Optional.ofNullable(tickets.get(ticketId));
@@ -559,37 +565,11 @@ public final class Board {
 
     public boolean dependenciesMet(BoardTicket ticket) {
         Objects.requireNonNull(ticket, "ticket не может быть null: предшественники считаются у задания");
-        return dependenciesDone(ticket);
+        return dependencies.met(ticket);
     }
 
     private boolean dependenciesDone(BoardTicket ticket) {
-        for (String dependency : ticket.dependsOn()) {
-            Optional<BoardLedger.BuildingMark> mark = BoardLedger.parse(dependency);
-            if (mark.isPresent()) {
-                if (!buildingDone(mark.orElseThrow())) {
-                    return false;
-                }
-                continue;
-            }
-            if (statuses.getOrDefault(dependency, null) != BoardStatus.DONE) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean buildingDone(BoardLedger.BuildingMark mark) {
-        if (ledger.has(mark.boardCase(), mark.level())) {
-            return true;
-        }
-        for (BoardTicket ticket : tickets.values()) {
-            if (ticket.boardCase() == mark.boardCase()
-                    && ticket.level() == mark.level()
-                    && statuses.get(ticket.id()) == BoardStatus.DONE) {
-                return true;
-            }
-        }
-        return false;
+        return dependencies.met(ticket);
     }
 
     private void cancelDependants(String ticketId) {

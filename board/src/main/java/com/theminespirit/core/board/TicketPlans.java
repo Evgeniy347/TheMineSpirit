@@ -69,15 +69,6 @@ public final class TicketPlans {
     private static final String ENCHANT_ROOM_SHELVES_SCHEME = "enchant_room_v2";
     private static final String ENCHANT_ROOM_HALL_SCHEME = "enchant_room_v3";
     private static final int SUPPLY_CONTAINER_RADIUS = 8;
-    static final List<String> LEFTOVERS = List.of(
-            "minecraft:stick",
-            "minecraft:*_planks",
-            "minecraft:*_log",
-            "minecraft:cobblestone",
-            "minecraft:charcoal",
-            "minecraft:coal",
-            TORCH);
-
     private static final int MINE_STEPS_SIZE = 3;
     private static final int RELOCATE_CLEAR_RADIUS = 4;
 
@@ -141,7 +132,7 @@ public final class TicketPlans {
             case SUPPLY_SITE -> TicketStoragePlans.supplySite(target);
             case GATHER_MATERIALS ->
                 target.leveling() == null ? TicketStoragePlans.gatherMaterials(target) : RoutePlans.dig(target);
-            case CLEAR_GROUNDS -> withLeftovers(GroundsPlan.plan(target), target);
+            case CLEAR_GROUNDS -> Leftovers.with(GroundsPlan.plan(target), target);
             case COLLECT_DROPS -> collectDrops(target);
             case REPAIR_BUILDING -> repairBuilding(target);
             case REPAIR_TOOL -> repairTool(target);
@@ -405,7 +396,7 @@ public final class TicketPlans {
     }
 
     static TaskNode placeInYard(String item, int count, TicketTarget target) {
-        return withLeftovers(
+        return Leftovers.with(
                 sequence(
                         gotoTarget(target),
                         new ScriptCall(
@@ -423,7 +414,7 @@ public final class TicketPlans {
     }
 
     private static TaskNode tableNearSpirit(TicketTarget target) {
-        return withLeftovers(
+        return Leftovers.with(
                 new ScriptCall(
                         CRAFT,
                         Map.of(
@@ -439,7 +430,7 @@ public final class TicketPlans {
     }
 
     private static TaskNode yard(TicketTarget target) {
-        return withLeftovers(
+        return Leftovers.with(
                 sequence(
                         gotoTarget(target),
                         new ScriptCall(
@@ -493,7 +484,7 @@ public final class TicketPlans {
                 new ScriptCall(
                         "smelt",
                         Map.of(ITEM, "charcoal", COUNT, charcoal, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)),
-                store(target, LEFTOVERS.toArray(String[]::new)));
+                store(target, Leftovers.ITEMS.toArray(String[]::new)));
     }
 
     static TaskNode store(TicketTarget target, String... items) {
@@ -517,10 +508,6 @@ public final class TicketPlans {
                     new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
         }
         return new SequenceNode(steps);
-    }
-
-    static TaskNode withLeftovers(TaskNode step, TicketTarget target) {
-        return sequence(step, store(target, LEFTOVERS.toArray(String[]::new)));
     }
 
     private static TaskNode dismantleShelter(TicketTarget target) {

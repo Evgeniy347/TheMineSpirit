@@ -1,10 +1,13 @@
 package com.theminespirit.core.board;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.PriorityQueue;
 import org.jspecify.annotations.Nullable;
 
 public final class QueueOrder {
@@ -36,25 +39,36 @@ public final class QueueOrder {
         Objects.requireNonNull(tickets, "Задания очереди не могут быть null: пустую очередь задают пустым списком");
         Objects.requireNonNull(statuses, "Статусы очереди не могут быть null: по ним видно открытые задания");
         Map<String, Integer> effective = new HashMap<>();
+        Map<String, List<String>> dependencies = new HashMap<>();
         for (BoardTicket ticket : tickets) {
             if (open(statuses.get(ticket.id()))) {
                 effective.put(ticket.id(), ticket.priority());
             }
         }
-        boolean changed = true;
-        for (int pass = 0; changed && pass <= tickets.size(); pass++) {
-            changed = false;
-            for (BoardTicket ticket : tickets) {
-                Integer own = effective.get(ticket.id());
-                if (own == null) {
-                    continue;
+        for (BoardTicket ticket : tickets) {
+            if (!effective.containsKey(ticket.id())) {
+                continue;
+            }
+            List<String> openDependencies = new ArrayList<>();
+            for (String dependency : ticket.dependsOn()) {
+                if (effective.containsKey(dependency)) {
+                    openDependencies.add(dependency);
                 }
-                for (String dependency : ticket.dependsOn()) {
-                    Integer before = effective.get(dependency);
-                    if (before != null && before < own) {
-                        effective.put(dependency, own);
-                        changed = true;
-                    }
+            }
+            dependencies.put(ticket.id(), openDependencies);
+        }
+        PriorityQueue<Map.Entry<String, Integer>> queue = new PriorityQueue<>(
+                Comparator.comparingInt(Map.Entry<String, Integer>::getValue).reversed());
+        for (Map.Entry<String, Integer> entry : effective.entrySet()) {
+            queue.add(Map.entry(entry.getKey(), entry.getValue()));
+        }
+        while (!queue.isEmpty()) {
+            Map.Entry<String, Integer> top = queue.poll();
+            for (String dependency : dependencies.getOrDefault(top.getKey(), List.of())) {
+                Integer known = effective.get(dependency);
+                if (known != null && known < top.getValue()) {
+                    effective.put(dependency, top.getValue());
+                    queue.add(Map.entry(dependency, top.getValue()));
                 }
             }
         }

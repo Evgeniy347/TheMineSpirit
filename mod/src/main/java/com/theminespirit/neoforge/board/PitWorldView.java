@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.movement.BlockKind;
 import com.theminespirit.core.movement.PitExitPlanner;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Set;
@@ -48,31 +49,31 @@ final class PitWorldView implements PitExitPlanner.World {
     }
 
     @Override
-    public PitExitPlanner.Kind at(BlockCoord cell) {
+    public BlockKind at(BlockCoord cell) {
         BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
         if (!level.isLoaded(pos)) {
-            return PitExitPlanner.Kind.HARD;
+            return BlockKind.HARD;
         }
         BlockState state = level.getBlockState(pos);
         if (state.getFluidState().is(FluidTags.LAVA)) {
-            return PitExitPlanner.Kind.LAVA;
+            return BlockKind.LAVA;
         }
         if (state.getFluidState().is(FluidTags.WATER)) {
-            return PitExitPlanner.Kind.WATER;
+            return BlockKind.WATER;
         }
         if (state.isAir() || (state.getCollisionShape(level, pos).isEmpty() && state.canBeReplaced())) {
-            return PitExitPlanner.Kind.AIR;
+            return BlockKind.AIR;
         }
         if (state.getDestroySpeed(level, pos) < 0) {
-            return PitExitPlanner.Kind.BEDROCK;
+            return BlockKind.BEDROCK;
         }
         String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath();
         if (FALLING.contains(id)) {
-            return PitExitPlanner.Kind.FALLING;
+            return BlockKind.FALLING;
         }
         if (SOFT.contains(id)) {
-            return PitExitPlanner.Kind.SOFT;
+            return BlockKind.SOFT;
         }
-        return PitExitPlanner.Kind.HARD;
+        return BlockKind.HARD;
     }
 }

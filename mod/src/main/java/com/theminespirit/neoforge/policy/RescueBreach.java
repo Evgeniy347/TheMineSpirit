@@ -24,9 +24,9 @@ public final class RescueBreach {
                 && !(state.getBlock() instanceof BedBlock);
     }
 
-    static BlockProtection.Decision allow(SpiritEntity spirit, BlockPos pos, BlockState state, boolean rescue) {
-        if (!rescue || !(spirit.level() instanceof ServerLevel server)) {
-            return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, "не спасение");
+    static BlockProtection.Decision permit(SpiritEntity spirit, BlockPos pos, BlockState state) {
+        if (!(spirit.level() instanceof ServerLevel server)) {
+            return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, "не серверный мир");
         }
         StageSite site = SettlementPlotStore.liveSite(server).orElse(null);
         if (site == null || !site.protectionCell(pos.getX(), pos.getY(), pos.getZ())) {
@@ -35,12 +35,19 @@ public final class RescueBreach {
         if (!breakable(state)) {
             return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, "сундук, дверь или люк не ломаются");
         }
-        PlanBreachData.get(server)
-                .record(
-                        pos,
-                        ProtectionGate.blockId(state),
-                        spirit.getUUID(),
-                        spirit.level().getGameTime());
         return new BlockProtection.Allowed();
+    }
+
+    static BlockProtection.Decision allow(SpiritEntity spirit, BlockPos pos, BlockState state) {
+        BlockProtection.Decision decision = permit(spirit, pos, state);
+        if (decision instanceof BlockProtection.Allowed && spirit.level() instanceof ServerLevel server) {
+            PlanBreachData.get(server)
+                    .record(
+                            pos,
+                            ProtectionGate.blockId(state),
+                            spirit.getUUID(),
+                            spirit.level().getGameTime());
+        }
+        return decision;
     }
 }

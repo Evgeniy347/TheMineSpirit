@@ -24,8 +24,8 @@ class PitExitPlannerTests {
 
     @Test
     void plan_ChestAboveHeadInTwoDeepPit_DoesNotChoosePillar() {
-        PitTestWorld world = PitTestWorld.pit(2, 0, PitExitPlanner.Kind.SOFT);
-        world.set(new BlockCoord(FEET.x(), FEET.y() + 2, FEET.z()), PitExitPlanner.Kind.HARD);
+        PitTestWorld world = PitTestWorld.pit(2, 0, BlockKind.SOFT);
+        world.set(new BlockCoord(FEET.x(), FEET.y() + 2, FEET.z()), BlockKind.HARD);
 
         PitExitPlanner.Plan plan = PitExitPlanner.plan(FEET, world, new PitExitPlanner.Supplies(8, false));
 
@@ -37,7 +37,7 @@ class PitExitPlannerTests {
     @Test
     void plan_PitThreeWithBlocks_PlacesTwoSteps() {
         PitExitPlanner.Plan plan = PitExitPlanner.plan(
-                FEET, PitTestWorld.pit(3, 0, PitExitPlanner.Kind.HARD), new PitExitPlanner.Supplies(2, false));
+                FEET, PitTestWorld.pit(3, 0, BlockKind.HARD), new PitExitPlanner.Supplies(2, false));
 
         assertEquals(PitExitPlanner.Method.PILLAR, plan.method(), "С двумя блоками дух поднимается столбом");
         assertEquals(2, plan.rise(), "Из ямы в три блока столб на два — и шаг на край");
@@ -47,7 +47,7 @@ class PitExitPlannerTests {
     @Test
     void plan_PitFiveWithBlocks_PlacesFourSteps() {
         PitExitPlanner.Plan plan = PitExitPlanner.plan(
-                FEET, PitTestWorld.pit(5, 0, PitExitPlanner.Kind.HARD), new PitExitPlanner.Supplies(4, false));
+                FEET, PitTestWorld.pit(5, 0, BlockKind.HARD), new PitExitPlanner.Supplies(4, false));
 
         assertEquals(PitExitPlanner.Method.PILLAR, plan.method(), "Пятиблочная яма с четырьмя блоками — столбом");
         assertEquals(4, plan.rise(), "Подъём на четыре блока");
@@ -56,7 +56,7 @@ class PitExitPlannerTests {
     @Test
     void plan_PitTenWithBlocks_PlacesNineSteps() {
         PitExitPlanner.Plan plan = PitExitPlanner.plan(
-                FEET, PitTestWorld.pit(10, 0, PitExitPlanner.Kind.HARD), new PitExitPlanner.Supplies(9, false));
+                FEET, PitTestWorld.pit(10, 0, BlockKind.HARD), new PitExitPlanner.Supplies(9, false));
 
         assertEquals(PitExitPlanner.Method.PILLAR, plan.method(), "Десятиблочная яма с девятью блоками — столбом");
         assertEquals(9, plan.rise(), "Подъём на девять блоков");
@@ -65,7 +65,7 @@ class PitExitPlannerTests {
     @Test
     void plan_PitTwentyWithBlocks_PlacesNineteenSteps() {
         PitExitPlanner.Plan plan = PitExitPlanner.plan(
-                FEET, PitTestWorld.pit(20, 0, PitExitPlanner.Kind.HARD), new PitExitPlanner.Supplies(19, false));
+                FEET, PitTestWorld.pit(20, 0, BlockKind.HARD), new PitExitPlanner.Supplies(19, false));
 
         assertEquals(PitExitPlanner.Method.PILLAR, plan.method(), "Двадцать блоков глубины: столб на девятнадцать");
         assertEquals(19, plan.rise(), "Подъём на девятнадцать блоков");
@@ -74,7 +74,7 @@ class PitExitPlannerTests {
     @Test
     void plan_PitThreeNoBlocksSoftWalls_DigsSoftStairs() {
         PitExitPlanner.Plan plan = PitExitPlanner.plan(
-                FEET, PitTestWorld.pit(3, 0, PitExitPlanner.Kind.SOFT), new PitExitPlanner.Supplies(0, false));
+                FEET, PitTestWorld.pit(3, 0, BlockKind.SOFT), new PitExitPlanner.Supplies(0, false));
 
         assertEquals(
                 PitExitPlanner.Method.STAIRS, plan.method(), "Без блоков и кирки дух режет земляную лестницу руками");
@@ -85,7 +85,7 @@ class PitExitPlannerTests {
     @Test
     void plan_PitFiveNoBlocksHardWalls_DigsEmergencyStairs() {
         PitExitPlanner.Plan plan = PitExitPlanner.plan(
-                FEET, PitTestWorld.pit(5, 0, PitExitPlanner.Kind.HARD), new PitExitPlanner.Supplies(0, false));
+                FEET, PitTestWorld.pit(5, 0, BlockKind.HARD), new PitExitPlanner.Supplies(0, false));
 
         assertEquals(
                 PitExitPlanner.Method.STAIRS,
@@ -96,8 +96,8 @@ class PitExitPlannerTests {
 
     @Test
     void plan_PitThreeWithPickaxe_DigsStairs() {
-        PitExitPlanner.Plan plan = PitExitPlanner.plan(
-                FEET, PitTestWorld.pit(3, 0, PitExitPlanner.Kind.HARD), new PitExitPlanner.Supplies(0, true));
+        PitExitPlanner.Plan plan =
+                PitExitPlanner.plan(FEET, PitTestWorld.pit(3, 0, BlockKind.HARD), new PitExitPlanner.Supplies(0, true));
 
         assertEquals(PitExitPlanner.Method.STAIRS, plan.method(), "С киркой дух режет каменную лестницу");
         assertFalse(plan.why().contains("аварийно"), "С киркой ломка обычная, а не аварийная");
@@ -106,7 +106,7 @@ class PitExitPlannerTests {
     @Test
     void plan_PitTenWithPickaxe_DigsStairs() {
         PitExitPlanner.Plan plan = PitExitPlanner.plan(
-                FEET, PitTestWorld.pit(10, 0, PitExitPlanner.Kind.HARD), new PitExitPlanner.Supplies(0, true));
+                FEET, PitTestWorld.pit(10, 0, BlockKind.HARD), new PitExitPlanner.Supplies(0, true));
 
         assertEquals(PitExitPlanner.Method.STAIRS, plan.method(), "Десять блоков с киркой — лестница в стене");
         assertTrue(plan.rise() >= 9, "Лестница поднимает на высоту ямы");
@@ -115,7 +115,7 @@ class PitExitPlannerTests {
     @Test
     void plan_PitTwentyNoBlocksNoTool_DigsEmergencyStairs() {
         PitExitPlanner.Plan plan = PitExitPlanner.plan(
-                FEET, PitTestWorld.pit(20, 0, PitExitPlanner.Kind.HARD), new PitExitPlanner.Supplies(0, false));
+                FEET, PitTestWorld.pit(20, 0, BlockKind.HARD), new PitExitPlanner.Supplies(0, false));
 
         assertEquals(
                 PitExitPlanner.Method.STAIRS,
@@ -127,7 +127,7 @@ class PitExitPlannerTests {
     @Test
     void plan_StoneNoToolWithBlocks_ChoosesPillarNotDig() {
         PitExitPlanner.Plan plan = PitExitPlanner.plan(
-                FEET, PitTestWorld.pit(4, 0, PitExitPlanner.Kind.HARD), new PitExitPlanner.Supplies(3, false));
+                FEET, PitTestWorld.pit(4, 0, BlockKind.HARD), new PitExitPlanner.Supplies(3, false));
 
         assertEquals(
                 PitExitPlanner.Method.PILLAR,
@@ -137,8 +137,8 @@ class PitExitPlannerTests {
 
     @Test
     void plan_WaterOnBottom_StillFindsDryEscape() {
-        PitTestWorld world = PitTestWorld.pit(4, 0, PitExitPlanner.Kind.SOFT);
-        world.set(FEET, PitExitPlanner.Kind.WATER);
+        PitTestWorld world = PitTestWorld.pit(4, 0, BlockKind.SOFT);
+        world.set(FEET, BlockKind.WATER);
 
         PitExitPlanner.Plan plan = PitExitPlanner.plan(FEET, world, new PitExitPlanner.Supplies(0, false));
 
@@ -148,16 +148,16 @@ class PitExitPlannerTests {
 
     @Test
     void plan_GravelAbove_EscapesWithoutDiggingUnderIt() {
-        PitTestWorld world = PitTestWorld.pit(5, 0, PitExitPlanner.Kind.SOFT);
-        world.set(new BlockCoord(1, 66, 0), PitExitPlanner.Kind.FALLING);
-        world.set(new BlockCoord(1, 67, 0), PitExitPlanner.Kind.FALLING);
+        PitTestWorld world = PitTestWorld.pit(5, 0, BlockKind.SOFT);
+        world.set(new BlockCoord(1, 66, 0), BlockKind.FALLING);
+        world.set(new BlockCoord(1, 67, 0), BlockKind.FALLING);
 
         PitExitPlanner.Plan plan = PitExitPlanner.plan(FEET, world, new PitExitPlanner.Supplies(0, false));
 
         assertTrue(plan.possible(), "Гравий сверху не запирает духа: он выбирает сторону без падающих блоков");
         for (BlockCoord cell : plan.dig()) {
             assertFalse(
-                    world.at(PitTestWorld.below(cell)) == PitExitPlanner.Kind.FALLING
+                    world.at(PitTestWorld.below(cell)) == BlockKind.FALLING
                             && !plan.dig().contains(PitTestWorld.below(cell)),
                     "Клетка под падающим гравием не выбивается без самого гравия: иначе он падает на духа");
         }
@@ -174,9 +174,9 @@ class PitExitPlannerTests {
 
     @Test
     void plan_MineBelowWaterLevel_EscapesUp() {
-        PitTestWorld world = PitTestWorld.pit(9, 0, PitExitPlanner.Kind.HARD);
-        world.set(new BlockCoord(1, 64, 0), PitExitPlanner.Kind.WATER);
-        world.set(new BlockCoord(1, 65, 0), PitExitPlanner.Kind.WATER);
+        PitTestWorld world = PitTestWorld.pit(9, 0, BlockKind.HARD);
+        world.set(new BlockCoord(1, 64, 0), BlockKind.WATER);
+        world.set(new BlockCoord(1, 65, 0), BlockKind.WATER);
 
         PitExitPlanner.Plan plan = PitExitPlanner.plan(FEET, world, new PitExitPlanner.Supplies(0, true));
 
@@ -185,7 +185,7 @@ class PitExitPlannerTests {
 
     @Test
     void plan_CaveWithoutExit_DigsToSurface() {
-        PitTestWorld world = PitTestWorld.pit(12, 2, PitExitPlanner.Kind.HARD);
+        PitTestWorld world = PitTestWorld.pit(12, 2, BlockKind.HARD);
 
         PitExitPlanner.Plan plan = PitExitPlanner.plan(FEET, world, new PitExitPlanner.Supplies(0, true));
 
@@ -196,9 +196,9 @@ class PitExitPlannerTests {
 
     @Test
     void plan_PitUnderPlanCeiling_ChoosesStairsNotPillar() {
-        PitTestWorld world = PitTestWorld.pit(4, 0, PitExitPlanner.Kind.SOFT);
+        PitTestWorld world = PitTestWorld.pit(4, 0, BlockKind.SOFT);
         BlockCoord ceiling = new BlockCoord(FEET.x(), FEET.y() + 2, FEET.z());
-        world.set(ceiling, PitExitPlanner.Kind.HARD);
+        world.set(ceiling, BlockKind.HARD);
 
         PitExitPlanner.Plan plan = PitExitPlanner.plan(FEET, world, new PitExitPlanner.Supplies(3, false));
 
@@ -238,7 +238,7 @@ class PitExitPlannerTests {
 
     @Test
     void plan_LavaAround_RefusesWithoutBlocks() {
-        PitTestWorld world = PitTestWorld.pit(4, 0, PitExitPlanner.Kind.LAVA);
+        PitTestWorld world = PitTestWorld.pit(4, 0, BlockKind.LAVA);
 
         PitExitPlanner.Plan plan = PitExitPlanner.plan(FEET, world, new PitExitPlanner.Supplies(0, false));
 

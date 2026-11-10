@@ -140,7 +140,7 @@ final class PitStairPlanner {
         Collections.reverse(place);
         int soft = 0;
         for (BlockCoord cell : dig) {
-            if (world.at(cell) == PitExitPlanner.Kind.SOFT || world.at(cell) == PitExitPlanner.Kind.FALLING) {
+            if (world.at(cell) == BlockKind.SOFT || world.at(cell) == BlockKind.FALLING) {
                 soft++;
             }
         }
@@ -149,7 +149,7 @@ final class PitStairPlanner {
         }
         boolean hardOnly = !dig.isEmpty()
                 && !supplies.pickaxe()
-                && dig.stream().allMatch(cell -> world.at(cell) == PitExitPlanner.Kind.HARD);
+                && dig.stream().allMatch(cell -> world.at(cell) == BlockKind.HARD);
         return new PitExitPlanner.Plan(
                 PitExitPlanner.Method.STAIRS,
                 goal,
@@ -245,28 +245,28 @@ final class PitStairPlanner {
         int cost = DIG_COST;
         BlockCoord over = above(above(from));
         if (!PitExitPlanner.passable(world.at(over))) {
-            PitExitPlanner.Kind kind = world.at(over);
+            BlockKind kind = world.at(over);
             if (!PitExitPlanner.breakable(kind)) {
                 return null;
             }
             dig.add(over);
-            cost += kind == PitExitPlanner.Kind.HARD ? HARD_COST : 0;
+            cost += kind == BlockKind.HARD ? HARD_COST : 0;
         }
         BlockCoord head = above(next);
         for (BlockCoord cell : List.of(next, head)) {
             if (PitExitPlanner.passable(world.at(cell))) {
                 continue;
             }
-            PitExitPlanner.Kind kind = world.at(cell);
+            BlockKind kind = world.at(cell);
             if (!PitExitPlanner.breakable(kind)) {
                 return null;
             }
             dig.add(cell);
-            cost += kind == PitExitPlanner.Kind.HARD ? HARD_COST : 0;
+            cost += kind == BlockKind.HARD ? HARD_COST : 0;
         }
         BlockCoord floor = below(next);
-        PitExitPlanner.Kind floorKind = world.at(floor);
-        if (floorKind == PitExitPlanner.Kind.LAVA || floorKind == PitExitPlanner.Kind.BEDROCK) {
+        BlockKind floorKind = world.at(floor);
+        if (floorKind == BlockKind.LAVA || floorKind == BlockKind.BEDROCK) {
             return null;
         }
         boolean floorSolid =
@@ -285,7 +285,7 @@ final class PitStairPlanner {
             if (protectedCells.contains(cell) || PitExitPlanner.touchesLava(cell, world)) {
                 return null;
             }
-            if (world.at(below(cell)) == PitExitPlanner.Kind.FALLING && !dig.contains(below(cell))) {
+            if (world.at(below(cell)) == BlockKind.FALLING && !dig.contains(below(cell))) {
                 return null;
             }
         }
