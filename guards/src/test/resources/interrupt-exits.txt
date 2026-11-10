@@ -7,5 +7,4 @@
 # Исключения формата exception | path | reason — writer без теста, только с причиной.
 # Исключений пока нет: все четыре writer-файла объявлены строками ниже.
 neoforge/DigOutFloor.java | DigOutScript | cancel: returnSpoil возвращает сломанное, кроме клеток тела; пол ступени остаётся temporary | InterruptExitTests.digOut_Interrupted_RestoreReturnsSpoilExceptBody | выход из ямы и спасение
-neoforge/movement/BridgeScript.java | BridgeScript | cancel: подход отменён, поставленный настил остаётся temporary и виден скану | InterruptExitTests.bridge_Interrupted_PlacedCellsStayMarkedTemporary | переправа мостом
 neoforge/movement/RouteMutations.java | GotoScript | cancel: ломка прекращена, поставленные клетки маршрута остаются temporary | InterruptExitTests.goto_Interrupted_RoutePillarStaysMarkedTemporary | подъём и постановка клеток на маршруте через Approach/RouteWalk
