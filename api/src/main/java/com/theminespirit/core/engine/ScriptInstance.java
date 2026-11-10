@@ -39,6 +39,10 @@ public interface ScriptInstance {
         return null;
     }
 
+    default Optional<FailureFact> failureFact() {
+        return Optional.empty();
+    }
+
     default Optional<ScriptResult> result() {
         return Optional.empty();
     }

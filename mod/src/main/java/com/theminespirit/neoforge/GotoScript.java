@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.board.WalkableStand;
 import com.theminespirit.core.board.WorkStand;
 import com.theminespirit.core.building.RetreatPath;
+import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
@@ -36,6 +37,7 @@ public final class GotoScript implements ScriptInstance {
     private final String noPath;
     private String failureReason;
     private boolean zoneChecked;
+    private boolean movementFailure;
 
     public GotoScript(SpiritEntity spirit, GotoParams params) {
         this(spirit, params, PathMode.NORMAL);
@@ -191,6 +193,7 @@ public final class GotoScript implements ScriptInstance {
         if (noPath != null) {
             approach.cancel();
             failureReason = noPath;
+            movementFailure = true;
             return ScriptStatus.FAILED;
         }
         if (!zoneChecked) {
@@ -209,10 +212,12 @@ public final class GotoScript implements ScriptInstance {
             case MOVING -> ScriptStatus.RUNNING;
             case TIMEOUT -> {
                 failureReason = failedToArriveReason();
+                movementFailure = true;
                 yield ScriptStatus.FAILED;
             }
             case STUCK -> {
                 failureReason = stuckReason();
+                movementFailure = true;
                 yield ScriptStatus.FAILED;
             }
         };
@@ -231,6 +236,11 @@ public final class GotoScript implements ScriptInstance {
     @Override
     public String failureReason() {
         return failureReason;
+    }
+
+    @Override
+    public Optional<FailureFact> failureFact() {
+        return movementFailure ? Optional.of(FailureFact.NO_PATH) : Optional.empty();
     }
 
     private String failedToArriveReason() {

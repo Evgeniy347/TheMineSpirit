@@ -11,14 +11,15 @@
 | [changed-modules.sh](changed-modules.sh) | путь → модуль → зависящие модули для `unit --changed` | `scripts/changed-modules.sh src/main/java` | ПК, сервер | кэш в `build/tmp` |
 | [gametest.sh](gametest.sh) | обёртка над `test.sh gametest` | `scripts/gametest.sh --full` | ПК, сервер | миры `build/gametest-run` |
 | [module-paths.sh](module-paths.sh) | общие переменные путей для скриптов | `scripts/module-paths.sh` | ПК, сервер | нет |
-| [mod-version.sh](mod-version.sh) | версия мода: загруженная сервером (`debug.log`) и собранная из дерева | `scripts/mod-version.sh /opt/minecraft/server/logs` | ПК, сервер, копия | нет |
+| [mod-version.sh](mod-version.sh) | версия мода: обёртка над `mod_version.py` (без своего разбора) | `scripts/mod-version.sh /opt/minecraft/server/logs` | ПК, сервер, копия | нет |
+| [mod_version.py](mod_version.py) | версия мода одним разбором `debug.log`: загруженная сервером и собранная из дерева; зовут `mod-version.sh`, `live.py` | `python3 scripts/mod_version.py /opt/minecraft/server/logs` | ПК, сервер, копия | нет |
 | [python-bin.sh](python-bin.sh) | один выбор python, пропускает заглушки WindowsApps | `. scripts/python-bin.sh && python_bin` | ПК, сервер | нет |
 | [logq.sh](logq.sh) | поиск по базе логов: клетка, дух, задание, провалы | `scripts/logq.sh cell -181,68,-518 2` | ПК, сервер, копия | дочитывает JSONL в базу (на основном сервере — cron) |
 | [logdb/logq.py](logdb/logq.py) | команды `logq`: `cell`, `spirit`, `failures`, `schema` | `python3 scripts/logdb/logq.py --db logs/events.db health` | ПК, сервер, копия | только база логов |
 | [logdb/loader.py](logdb/loader.py) | загрузчик JSONL и старых логов в SQLite (WAL, файл+смещение); на сервере cron дочитывает JSONL раз в минуту | `python3 scripts/logdb/loader.py --db logs/events.db --events logs/events` | ПК, сервер, копия | пишет `logs/events.db` |
 | [logdb/import_legacy.py](logdb/import_legacy.py) | импорт старых логов в базу, сверка строк с событиями; удаляет только сошедшиеся `*.log.gz` | `python3 scripts/logdb/import_legacy.py --db events.db --logs logs --delete-verified` | ПК, сервер | пишет базу и отчёт, удаляет сверенные `*.log.gz` |
 | [logdb/schema.json](logdb/schema.json) | единственное описание таблиц, причин и типов JSONL | `python3 scripts/logdb/logq.py --db events.db schema` | ПК, сервер | нет |
-| [logdb/tests/test_loader.py](logdb/tests/test_loader.py) | тесты загрузчика, импорта и `logq` на маленькой базе | `python -m unittest tests.test_loader` | ПК, сервер | временная база |
+| [logdb/tests/test_loader.py](logdb/tests/test_loader.py) | тесты загрузчика, импорта, `logq` и версии мода на маленькой базе | `python -m unittest tests.test_loader` | ПК, сервер | временная база |
 | [logdb/fixtures/](logdb/fixtures/) | обезличенные старые строки для тестов разбора | `scripts/test.sh unit --tests "*Logdb*"` | ПК, сервер | нет |
 | [live.sh](live.sh) | духи, доска, срез мира, журнал, фикстура, проверка | `scripts/live.sh status` | ПК, сервер, копия | фикстура в `mech/movement/...` (дух или `--at x y z`) |
 | [lead/live.py](lead/live.py) | реализация `live.sh` и выбор цели (копия или сервер) | `scripts/live.sh spirit spirit-1` | ПК, сервер, копия | нет для `status`/`log` |
