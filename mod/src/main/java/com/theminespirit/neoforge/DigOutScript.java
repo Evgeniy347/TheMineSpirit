@@ -5,7 +5,6 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.movement.DigOutGoal;
 import com.theminespirit.core.movement.DigOutObstacle;
-import com.theminespirit.core.movement.SealedSpace;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.core.town.PlotProtection;
@@ -17,8 +16,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 public final class DigOutScript implements ScriptInstance {
@@ -47,6 +44,7 @@ public final class DigOutScript implements ScriptInstance {
     private final DigOutRestore restore;
     private final LeaseRun lease;
     private final DigOutRollback rollback;
+    private @Nullable DigOutCleanup cleanup;
 
     public DigOutScript(SpiritEntity spirit, GotoParams target) {
         this(spirit, target, false);
@@ -78,15 +76,15 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     public static boolean sealed(Level level, BlockPos feet) {
-        return SealedSpace.sealed(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), new DigOutSealedView(level));
+        return DigOutSpace.sealed(level, feet);
     }
 
     public static boolean embedded(SpiritEntity spirit) {
-        return !EmbeddedSpace.blocking(spirit).isEmpty();
+        return DigOutSpace.embedded(spirit);
     }
 
     public static boolean open(Level level, BlockPos cell) {
-        return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cell.getX(), cell.getZ()) <= cell.getY();
+        return DigOutSpace.open(level, cell);
     }
 
     @Override
@@ -94,8 +92,17 @@ public final class DigOutScript implements ScriptInstance {
         if (outcome != ScriptStatus.RUNNING) {
             return outcome;
         }
+        if (cleanup != null) {
+            if (!cleanup.tick()) {
+                return ScriptStatus.RUNNING;
+            }
+            String reason = cleanup.failure();
+            cleanup.finish();
+            cleanup = null;
+            return failNow(reason);
+        }
         if (spirit.isRemoved()) {
-            return fail("дух исчез, выбираясь из-под земли");
+            return failNow("дух исчез, выбираясь из-под земли");
         }
         List<BlockPos> blocked = EmbeddedSpace.blocking(spirit);
         if (!breaking && !blocked.isEmpty()) {
@@ -120,17 +127,10 @@ public final class DigOutScript implements ScriptInstance {
             breaking = false;
         }
         BlockPos feet = spirit.blockPosition();
-        boolean goalReached = descending
-                ? feet.getY() <= target.y() && (open(level, feet) || feet.getY() == target.y())
-                : DigOutGoal.ascent(
-                        new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
-                        new BlockCoord(target.x(), target.y(), target.z()),
-                        DigOutGoal.HOME_RADIUS);
+        boolean goalReached =
+                DigOutEnd.reached(level, feet, new BlockCoord(target.x(), target.y(), target.z()), descending);
         if ((DigOutExit.surfaced(level, feet) && !restore.pendingOver(feet)) || goalReached) {
-            backfill.report();
-            rollback.forgetReturned(restore.returnSpoil());
-            rollback.close();
-            PlanBreachRestore.restore(spirit, level, placer, feet);
+            DigOutEnd.finish(spirit, level, feet, backfill, restore, rollback, placer);
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;
         }
@@ -163,7 +163,7 @@ public final class DigOutScript implements ScriptInstance {
         backfill.remember(feet);
         next = step;
         stepTicks = 0;
-        moveTo(next);
+        DigOutStep.moveTo(spirit, next);
         return ScriptStatus.RUNNING;
     }
 
@@ -201,21 +201,8 @@ public final class DigOutScript implements ScriptInstance {
             next = null;
             return turnOrFail("не шагнул на ступень " + missed.toShortString() + " за " + STEP_TICKS + " тиков");
         }
-        moveTo(next);
+        DigOutStep.moveTo(spirit, next);
         return ScriptStatus.RUNNING;
-    }
-
-    private void moveTo(BlockPos cell) {
-        if (spirit.isInWater()) {
-            spirit.getNavigation().stop();
-            spirit.getMoveControl().setWantedPosition(cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5, 1.0);
-            Vec3 motion = spirit.getDeltaMovement();
-            spirit.setDeltaMovement(motion.x, Math.max(motion.y, 0.2), motion.z);
-            spirit.getJumpControl().jump();
-            return;
-        }
-        spirit.getNavigation().stop();
-        spirit.getMoveControl().setWantedPosition(cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5, 1.0);
     }
 
     private ScriptStatus dig(BlockPos cell) {
@@ -256,6 +243,15 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     private ScriptStatus fail(String reason) {
+        DigOutCleanup started = DigOutCleanup.begin(spirit, level, restore, lease, rollback, reason);
+        if (started == null) {
+            return failNow(reason);
+        }
+        cleanup = started;
+        return ScriptStatus.RUNNING;
+    }
+
+    private ScriptStatus failNow(String reason) {
         rollback.forgetReturned(restore.returnSpoil());
         lease.orphan();
         failureReason = reason;
@@ -273,6 +269,10 @@ public final class DigOutScript implements ScriptInstance {
         if (routeFollow != null) {
             routeFollow.cancel();
             routeFollow = null;
+        }
+        if (cleanup != null) {
+            cleanup.cancel();
+            cleanup = null;
         }
         if (breaking) {
             breaker.cancel();

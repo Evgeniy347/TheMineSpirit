@@ -10558,6 +10558,8 @@
     "cellCap": 60,
     "farDistance": 256,
     "farShare": 0.8,
-    "owner": 0.8
+    "owner": 0.8,
+    "buriedDepth": 8,
+    "buriedShare": 0.6
   }
 }

@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphEvent;
 import com.theminespirit.core.board.graph.GraphTickets;
@@ -31,14 +30,11 @@ final class UndoLeasePost {
             return true;
         }
         BlockCoord at = LeaseUndo.order(lease).get(0).pos();
-        Optional<BlockCoord> stand = GraphTargets.standNear(post.level, at);
-        if (stand.isEmpty()) {
-            return false;
-        }
+        BlockCoord stand = GraphTargets.standNear(post.level, at).orElse(at);
         post.submit(
                 ticket,
-                BoardCase.ACTIVITY_BUILD,
-                TicketTarget.at(stand.orElseThrow()).withPlan(new ScriptCall("undo_lease", Map.of("id", id))),
+                ticket.task().boardCase(),
+                TicketTarget.at(stand).withPlan(new ScriptCall("undo_lease", Map.of("id", id))),
                 Map.of());
         return true;
     }

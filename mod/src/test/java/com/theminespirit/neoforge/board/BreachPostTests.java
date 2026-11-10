@@ -1,7 +1,15 @@
 package com.theminespirit.neoforge.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.observation.BlockCoord;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class BreachPostTests {
@@ -50,5 +58,55 @@ class BreachPostTests {
                 BreachPost.Act.CLEAR,
                 BreachPost.decide(facts(true, false, false, false)),
                 "Блок вернулся в клетку сам — пролом закрывается без задания");
+    }
+
+    @Test
+    void batch_MoreBreachesThanPortion_TakesOnlySmallestCells() {
+        List<PlanBreachPost.Repair> ready = List.of(
+                repair("world:plan_breach:3,64,0:9"),
+                repair("world:plan_breach:1,64,0:9"),
+                repair("world:plan_breach:2,64,0:9"));
+
+        assertEquals(
+                List.of("world:plan_breach:1,64,0:9", "world:plan_breach:2,64,0:9"),
+                ids(PlanBreachPost.batch(ready, 2)),
+                "Проломов на доску идёт порция, а не все разом: сотни world:plan_breach вытесняли снабжение "
+                        + "с доски. Клетки берутся по порядку id, чтобы порция не зависела от порядка карты");
+    }
+
+    @Test
+    void batch_NoRoomLeft_IsEmpty() {
+        assertEquals(
+                List.of(),
+                PlanBreachPost.batch(List.of(repair("world:plan_breach:1,64,0:9")), 0),
+                "Порция уже занята открытыми заданиями — новых проломов не ставим: иначе пересбор снова "
+                        + "добавит сотни заданий сверх общего предела доски");
+    }
+
+    @Test
+    void openPrefixes_PlanBreach_WatchedForPortion() {
+        assertTrue(
+                WorldPost.OPEN_PREFIXES.contains(PlanBreachPost.PREFIX),
+                "Префикс проломов обязан считаться в OpenPrefixes: без него openCount всегда 0, порция не "
+                        + "кончается и сотни ремонтов снова забивают доску");
+    }
+
+    private static PlanBreachPost.Repair repair(String id) {
+        return new PlanBreachPost.Repair(
+                new BoardTicket(
+                        id,
+                        BoardCase.REPAIR_BUILDING,
+                        Optional.empty(),
+                        100,
+                        0,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
+                TicketTarget.at(new BlockCoord(0, 64, 0)));
+    }
+
+    private static List<String> ids(List<PlanBreachPost.Repair> repairs) {
+        return repairs.stream().map(repair -> repair.ticket().id()).toList();
     }
 }

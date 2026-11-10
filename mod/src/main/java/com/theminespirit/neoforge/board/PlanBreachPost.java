@@ -11,21 +11,29 @@ import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.policy.PlanBreachData;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 
 final class PlanBreachPost {
+    static final String PREFIX = "world:plan_breach:";
+
     private PlanBreachPost() {}
+
+    record Repair(BoardTicket ticket, TicketTarget target) {}
 
     static boolean post(GraphPost post, GraphTickets.Ticket owner) {
         PlanBreachData data = PlanBreachData.get(post.level);
+        int room = WorldPost.room(post.openCount(PREFIX), WorldPost.BATCH);
+        List<Repair> ready = new ArrayList<>();
         boolean posted = false;
         for (Map.Entry<BlockPos, PlanBreachData.Breach> entry : data.open().entrySet()) {
             BlockPos pos = entry.getKey();
             BlockCoord at = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-            String id = "world:plan_breach:" + WorldPost.key(at) + ":"
-                    + entry.getValue().tick();
+            String id = PREFIX + WorldPost.key(at) + ":" + entry.getValue().tick();
             String block = EarthCover.restoreBlock(entry.getValue().blockId());
             BoardTicket repair = post.ticket(
                     id,
@@ -54,14 +62,22 @@ final class PlanBreachPost {
             switch (BreachPost.decide(new BreachPost.Facts(occupied, open, reachable, known))) {
                 case CLEAR -> data.clear(pos);
                 case SKIP -> posted = true;
-                case POST -> {
-                    post.submit(repair, target);
-                    posted = true;
-                }
+                case POST -> ready.add(new Repair(repair, target));
                 case REMEMBER_UNREACHABLE ->
                     post.service.sources.graphFailure(repair, target, new GraphBlock.Path(point), post.now);
             }
         }
+        for (Repair repair : batch(ready, room)) {
+            post.submit(repair.ticket(), repair.target());
+            posted = true;
+        }
         return posted;
+    }
+
+    static List<Repair> batch(List<Repair> ready, int room) {
+        return ready.stream()
+                .sorted(Comparator.comparing((Repair repair) -> repair.ticket().id()))
+                .limit(Math.max(0, room))
+                .toList();
     }
 }

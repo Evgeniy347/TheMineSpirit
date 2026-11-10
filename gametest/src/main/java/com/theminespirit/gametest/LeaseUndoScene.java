@@ -74,13 +74,20 @@ final class LeaseUndoScene {
                 new BlockPos(3, 2, 3),
                 Blocks.REDSTONE_LAMP.defaultBlockState(),
                 Blocks.REDSTONE_LAMP.defaultBlockState().setValue(BlockStateProperties.LIT, true)));
+        BlockPos brokenLocal = new BlockPos(5, 2, 2);
+        helper.setBlock(brokenLocal, Blocks.STONE);
+        BlockPos brokenAt = helper.absolutePos(brokenLocal);
+        BlockCoord brokenCell = new BlockCoord(brokenAt.getX(), brokenAt.getY(), brokenAt.getZ());
+        helper.setBlock(brokenLocal, Blocks.AIR);
+        rollback.add(LeaseCell.broken(brokenCell, "minecraft:stone"));
+        states.add(new StateCell(brokenCell, Blocks.STONE.defaultBlockState()));
         leases.book().record(lease.id(), rollback);
         leases.book().orphan(lease.id());
         BlockPos stand = helper.absolutePos(new BlockPos(1, 1, 1));
         board.submit(
                 new BoardTicket(
                         TICKET,
-                        BoardCase.ACTIVITY_BUILD,
+                        BoardCase.ACTIVITY_UNDO,
                         Optional.of(spirit.getUUID()),
                         95,
                         helper.getLevel().getGameTime(),

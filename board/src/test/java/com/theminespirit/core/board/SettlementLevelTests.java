@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.SettlementPlot;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageSites;
 import com.theminespirit.core.town.TownFixtures;
 import com.theminespirit.core.town.TownPlan;
@@ -73,6 +74,21 @@ class SettlementLevelTests {
                 SettlementLevel.remeasure(stored, ColumnMask.rect(-1, -1, 1, 1), (x, z) -> 60, 70, RULES);
 
         assertEquals(70, SettlementLevel.of(moved), "Высота после миграции не опускается под воду: 70");
+    }
+
+    @Test
+    void site_PlotWood_GoesIntoStageSaplings() {
+        TownPlan plan = TownFixtures.flatPlan();
+        SettlementPlot plot = new SettlementPlot(new BlockCoord(200, 70, -300), 65, 80, 100, "birch");
+
+        StageSite site = SettlementLevel.site(plan, 1, plot)
+                .orElseThrow(() -> new AssertionError("План этапа 1 собирается по размеченному участку"));
+
+        assertEquals(
+                "birch",
+                site.wood(),
+                "Порода главного сада берётся из участка поселения: иначе план сажает oak при выбранной birch "
+                        + "и посадка расходится с проверкой плана");
     }
 
     @Test

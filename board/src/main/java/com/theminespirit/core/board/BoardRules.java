@@ -135,6 +135,7 @@ public final class BoardRules {
 
     private static void extendedActivities(Map<BoardCase, Integer> priorities) {
         priorities.put(BoardCase.ACTIVITY_BUILD, 94);
+        priorities.put(BoardCase.ACTIVITY_UNDO, 60);
         priorities.put(BoardCase.ACTIVITY_MOVE, 93);
         priorities.put(BoardCase.ACTIVITY_SENSE, 92);
         priorities.put(BoardCase.ACTIVITY_SOCIAL, 91);

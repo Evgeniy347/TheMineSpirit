@@ -79,6 +79,7 @@ final class BoardPriorityTable {
             Map.entry("ACTIVITY_EXPEDITION", 95),
             Map.entry("ACTIVITY_ESCAPE", 95),
             Map.entry("ACTIVITY_BUILD", 94),
+            Map.entry("ACTIVITY_UNDO", 60),
             Map.entry("ACTIVITY_MOVE", 93),
             Map.entry("ACTIVITY_SENSE", 92),
             Map.entry("ACTIVITY_SOCIAL", 91),

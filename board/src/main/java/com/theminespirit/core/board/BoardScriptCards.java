@@ -98,6 +98,7 @@ final class BoardScriptCards {
         put(cases, BoardCase.ACTIVITY_ARM, "equip", "swap_tool");
         put(cases, BoardCase.ACTIVITY_FORAGE, "gather", "collect_drops", "acquire", "acquire_at");
         put(cases, BoardCase.ACTIVITY_ESCAPE, "dig_out");
+        put(cases, BoardCase.ACTIVITY_UNDO, "undo_lease");
     }
 
     private static void movementScripts(Map<String, BoardCase> cases) {

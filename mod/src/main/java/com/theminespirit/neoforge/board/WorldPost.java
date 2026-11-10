@@ -25,12 +25,12 @@ import java.util.Optional;
 final class WorldPost {
     static final String REPAIR_NODE = "repair:";
     static final String BACKFILL_PREFIX = "world:backfill:";
-    static final List<String> OPEN_PREFIXES = List.of(BACKFILL_PREFIX, "world:trace:");
+    static final List<String> OPEN_PREFIXES = List.of(BACKFILL_PREFIX, "world:trace:", PlanBreachPost.PREFIX);
     private static final String REPAIR = REPAIR_NODE;
     private static final Comparator<BlockCoord> ORDER = Comparator.comparingInt(BlockCoord::y)
             .thenComparingInt(BlockCoord::x)
             .thenComparingInt(BlockCoord::z);
-    private static final int BATCH = 8;
+    static final int BATCH = 8;
 
     private WorldPost() {}
 
