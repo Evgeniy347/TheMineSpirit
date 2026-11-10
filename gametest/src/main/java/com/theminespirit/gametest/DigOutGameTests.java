@@ -64,6 +64,8 @@ public final class DigOutGameTests {
 
     private static void pocket(GameTestHelper helper, List<List<BlockPos>> pockets) {
         GameTestFixtures.reset(helper, 16);
+        SceneFrame.restore(helper);
+        SceneFrame.assertContained(helper, TOP + 1);
         BoardService board = BoardRegistry.get(helper.getLevel());
         board.board().restore(new BoardState(List.of(), Set.of()));
         List<BlockPos> planks = prepareArena(helper, pockets);
