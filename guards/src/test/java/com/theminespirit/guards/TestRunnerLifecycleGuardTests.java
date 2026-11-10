@@ -70,6 +70,51 @@ class TestRunnerLifecycleGuardTests {
                         + "с CPU и worktree, прежде чем гасить их по PID");
     }
 
+    @Test
+    void testScript_PauseFd_IsPrivatePerWaiter() {
+        String script = read(SCRIPT);
+        assertTrue(
+                script.contains("owner=\"${BASHPID:-$$}\""),
+                "fd паузы test.sh должен быть личным для процесса, который ждёт (имя fifo по BASHPID). "
+                        + "Общий fifo с несколькими читателями на Cygwin вырождается в опрос: лидер жжёт ~50 % "
+                        + "ядра, каждый читатель 8–14 %. Правило: каждый ожидающий — свой init_pause_tick");
+        for (String waiter :
+                new String[] {"monitor_loop", "start_lock_beat", "start_heartbeat", "start_parent_watch"}) {
+            assertTrue(
+                    body(script, waiter).contains("init_pause_tick"),
+                    "Ожидающий процесс «" + waiter + "» обязан завести собственный fd паузы через "
+                            + "init_pause_tick: унаследованный общий fifo жжёт ядро у всех исполнителей. "
+                            + "Правило: один ждущий — один fifo (scripts/test.sh → pause_tick)");
+        }
+    }
+
+    @Test
+    void testScript_SceneWait_DoesNotGrepLogEachSecond() {
+        String script = read(SCRIPT);
+        String scene = body(script, "gametest_scene_started");
+        assertFalse(
+                scene.contains("grep"),
+                "Ожидание старта сцен не должно опрашивать лог через grep: на Windows grep читает весь лог "
+                        + "заново раз в секунду и жжёт до ~75 % ядра, пока грузится мир. "
+                        + "Как надо: дочитывать только новые байты встроенным read (read -r -d '')");
+        assertTrue(
+                scene.contains("read -r -d ''"),
+                "Ожидание маркера сцен читает новые байты лога встроенным read (read -r -d ''): "
+                        + "без него остаётся только опрос файла внешней командой");
+    }
+
+    private static String body(String script, String name) {
+        int start = script.indexOf(name + "() {");
+        if (start < 0) {
+            throw new IllegalStateException("В scripts/test.sh нет функции " + name);
+        }
+        int end = script.indexOf("\n}\n", start);
+        if (end < 0) {
+            throw new IllegalStateException("Не найден конец функции " + name + " в scripts/test.sh");
+        }
+        return script.substring(start, end);
+    }
+
     private static String read(Path path) {
         try {
             return Files.readString(path, StandardCharsets.UTF_8);
