@@ -27,7 +27,7 @@
 | [scripts/stop.sh](scripts/stop.sh) | корректно останавливает сервер с сохранением мира | `Сервер остановлен` |
 | [scripts/hang-watch.sh](scripts/hang-watch.sh) | сторож зависания: тик стоит дольше порога → `jcmd Thread.print` в `logs/hang-*.txt`, строка в `logs/hang.log`, перезапуск `stop.sh` → kill по PID → `start.sh`; пауза живой отладки и идущая остановка пропускаются | дамп и `hang.log` |
 | [scripts/console.sh](scripts/console.sh) | консоль сервера; выйти, не останавливая: `Ctrl+B`, затем `D` | приглашение консоли |
-| [scripts/world-snapshot.sh](scripts/world-snapshot.sh) | консистентный архив мира без остановки сервера: `save-off` → `save-all flush` → `tar --zstd` → `save-on`; метка (`before-<что>`, `publish-<версия>`) защищает архив от ротации | `снимок готов: …` |
+| [scripts/world-snapshot.sh](scripts/world-snapshot.sh) | консистентный архив мира без остановки сервера: `save-off` → `save-all flush` → `tar --zstd` → `save-on`, каждая команда ждёт подтверждения в `latest.log`; молчащая консоль — отказ с причиной; метка (`before-<что>`, `publish-<версия>`) защищает архив от ротации | `снимок готов: …` |
 | [scripts/world-restore.sh](scripts/world-restore.sh) | откат мира на архив: снимок `before-restore` → остановка → разворот → запуск; без архива печатает список | `Мир восстановлен` |
 | [scripts/install-neoforge.sh](scripts/install-neoforge.sh) | ставит библиотеки NeoForge после клона или смены версии (`NEOFORGE_VERSION` в `common.sh`) | `NeoForge <версия> установлен` |
 | [scripts/common.sh](scripts/common.sh) | общие настройки скриптов: tmux-сессия, версия NeoForge, ожидание строки в логе | — |

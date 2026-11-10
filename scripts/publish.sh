@@ -370,7 +370,7 @@ snapshot_world() {
         return 1
     fi
     echo "Снимок мира ($snapshot_label)..."
-    if ! "$script" "$snapshot_label"; then
+    if ! SNAPSHOT_LOCK_WAIT="${SNAPSHOT_LOCK_WAIT:-900}" "$script" "$snapshot_label"; then
         echo "ОШИБКА: снимок мира не создан, публикация остановлена до остановки сервера" >&2
         return 1
     fi
