@@ -84,7 +84,9 @@ public final class FirstStepsRunner {
                 .site(SettlementPlotStore.currentStage(service))
                 .orElseThrow(() -> new IllegalStateException(
                         "Участок обмерен, а места этапа 1 нет: план поселения не сохранился в мире"));
-        BlockCoord home = HomeStand.of(level, stage, spirits);
+        BlockCoord home = HomePoint.of(level, spirits)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Участок обмерен, а домашней стоянки нет: расчёт этапа без неё невозможен"));
         String wood = woodOf(level, home, stock);
         StageWorldFacts.StoneSite site = new StageWorldFacts.StoneSite(home, wood, stage);
         StageWorldFacts.Scan scan = StageWorldFacts.buildFacts(level, site, stock, service, world);

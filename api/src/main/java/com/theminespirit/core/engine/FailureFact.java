@@ -2,7 +2,8 @@ package com.theminespirit.core.engine;
 
 public enum FailureFact {
     NO_PATH(false),
-    NO_TREES(true);
+    NO_TREES(true),
+    NIGHT(true);
 
     private final boolean survivesFallback;
 

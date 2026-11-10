@@ -32,6 +32,8 @@ import net.minecraft.world.phys.AABB;
 public final class GraphSurroundings {
     static final String DROPS = "drops_nearby";
     static final String LEAF_DECAY = "leaf_decay";
+    static final String TIME_DAY = "time:day";
+    static final String TIME_NIGHT = "time:night";
     private static final String TREE_PREFIX = "tree:";
     private static final String NAMESPACE = "minecraft:";
     private static final int RADIUS = 32;
@@ -133,6 +135,7 @@ public final class GraphSurroundings {
             events.add("lava_seen");
         }
         Set<String> world = new HashSet<>(GraphNames.world(scan.blocks(), creatures));
+        world.add(level.isNight() ? TIME_NIGHT : TIME_DAY);
         world.removeIf(tag -> tag.startsWith(TREE_PREFIX));
         Map<String, Integer> distances = new HashMap<>(scan.distances());
         distances.keySet().removeIf(tag -> tag.startsWith(TREE_PREFIX));

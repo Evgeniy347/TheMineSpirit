@@ -7,7 +7,6 @@ import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
-import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.NotATree;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeDetection;
@@ -42,7 +41,6 @@ public final class ChopTreeScript implements ScriptInstance {
     private int chopped;
     private int rejected;
     private int unreachable;
-    private int consecutiveUnreachable;
     private String failureReason;
     private FailureFact failureFact;
     private WorkTarget reserved;
@@ -233,7 +231,6 @@ public final class ChopTreeScript implements ScriptInstance {
         plantedSaplings += outcome.plantedSaplings();
         skippedCells += outcome.skippedCells();
         lackedSaplings |= outcome.lackedSaplings();
-        consecutiveUnreachable = 0;
         search.markKnown(tree.logs());
         tree = null;
         chopping = false;
@@ -263,12 +260,7 @@ public final class ChopTreeScript implements ScriptInstance {
 
     private ScriptStatus unreachableLogs(List<BlockCoord> logs) {
         unreachable++;
-        consecutiveUnreachable++;
         search.markKnown(logs);
-        if (consecutiveUnreachable > ChopTuning.MAX_REJECTED_TREES) {
-            return fail("больше " + ChopTuning.MAX_REJECTED_TREES + " недоступных деревьев подряд: срублено деревьев "
-                    + chopped + " из " + params.count() + ", недоступных деревьев " + unreachable);
-        }
         return ScriptStatus.RUNNING;
     }
 
@@ -278,7 +270,7 @@ public final class ChopTreeScript implements ScriptInstance {
                 ? ""
                 : "; ближайшее дерево к поселению " + far + " блоков при пределе " + search.maxDistance()
                         + " — посадите саженцы и дождитесь их роста";
-        failureFact = FailureFact.NO_TREES;
+        failureFact = spirit.level().isNight() ? FailureFact.NIGHT : unreachable == 0 ? FailureFact.NO_TREES : null;
         return fail("срублено деревьев " + chopped + " из " + params.count() + ": деревья породы "
                 + ChopTreeText.speciesText(params)
                 + " в радиусе " + search.maxDistance() + " от поселения закончились (отвергнуто не-деревьев: "

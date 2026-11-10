@@ -23,15 +23,23 @@ final class HomeStand {
 
     private HomeStand() {}
 
-    static BlockCoord of(ServerLevel level, StageSite stage, List<SpiritEntity> spirits) {
+    static BlockCoord of(
+            ServerLevel level, StageSite stage, List<SpiritEntity> spirits, Optional<BlockCoord> remembered) {
         BlockCoord center = SettlementHome.center(SettlementHome.homes(spirits)).orElse(stage.anchor());
-        return at(level, center, spirits);
+        return at(level, center, spirits, remembered);
     }
 
-    static BlockCoord at(ServerLevel level, BlockCoord home, List<SpiritEntity> spirits) {
+    static BlockCoord at(
+            ServerLevel level, BlockCoord home, List<SpiritEntity> spirits, Optional<BlockCoord> remembered) {
         LevelSafetyView view = new LevelSafetyView(level);
-        Optional<BlockCoord> reachable = reachable(level, home, spirits);
-        return reachable.orElseGet(() -> at(home, cell -> MiningSafety.canStand(cell, view)));
+        Optional<BlockCoord> reachable = reachable(level, home, spirits, remembered);
+        if (reachable.isPresent()) {
+            return reachable.orElseThrow();
+        }
+        if (remembered.isPresent() && MiningSafety.canStand(remembered.orElseThrow(), view)) {
+            return remembered.orElseThrow();
+        }
+        return at(home, cell -> MiningSafety.canStand(cell, view));
     }
 
     static BlockCoord at(BlockCoord home, Predicate<BlockCoord> canStand) {
@@ -43,7 +51,8 @@ final class HomeStand {
         return StandSearch.nearest(center, canStand);
     }
 
-    static Optional<BlockCoord> reachable(ServerLevel level, BlockCoord center, List<SpiritEntity> spirits) {
+    static Optional<BlockCoord> reachable(
+            ServerLevel level, BlockCoord center, List<SpiritEntity> spirits, Optional<BlockCoord> remembered) {
         if (spirits.isEmpty()) {
             return Optional.empty();
         }
@@ -55,6 +64,15 @@ final class HomeStand {
                 continue;
             }
             RetreatPath.walkable(feet, world, cell -> within(center, cell)).ifPresent(components::add);
+        }
+        return largest(center, components, remembered);
+    }
+
+    static Optional<BlockCoord> largest(
+            BlockCoord center, List<Set<BlockCoord>> components, Optional<BlockCoord> remembered) {
+        if (remembered.isPresent()
+                && components.stream().anyMatch(component -> component.contains(remembered.orElseThrow()))) {
+            return remembered;
         }
         return largest(center, components);
     }
