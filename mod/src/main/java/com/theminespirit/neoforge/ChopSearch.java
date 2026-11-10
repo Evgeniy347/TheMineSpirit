@@ -38,7 +38,7 @@ final class ChopSearch {
         this.spirit = spirit;
         this.logBlocks = logBlocks;
         this.anchor = anchorFor(spirit);
-        this.radius = ChopTuning.gatherDistance(params.radius());
+        this.radius = ChopTuning.maxDistance(params.radius());
         this.maxDistance = radius;
         this.center = coords(spirit.blockPosition());
         this.search = newSearch(center);

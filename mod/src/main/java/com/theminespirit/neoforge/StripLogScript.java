@@ -66,7 +66,7 @@ public final class StripLogScript implements ScriptInstance {
         this.level = spirit.level();
         this.species = params.species();
         this.count = params.count();
-        this.radius = ChopTuning.gatherDistance(params.radius());
+        this.radius = ChopTuning.maxDistance(params.radius());
         this.logs = TreeBlocks.logs(List.of(params.species()));
         this.search = BlockLocator.search(level, spirit.blockPosition(), radius, Set.copyOf(logs));
     }

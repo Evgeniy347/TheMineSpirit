@@ -3,28 +3,27 @@ package com.theminespirit.guards;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class SourceRadiusGuardTests {
     private static final Path NEOFORGE = SourceFiles.path("neoforge");
-    private static final String LIMITER = "ChopTuning.gatherDistance";
 
     @Test
     void treeSourcePaths_CommonLimiter_IsUsedByEveryPath() {
-        Map<Path, String> sources = new LinkedHashMap<>();
         Map<Path, String> all = SourceFiles.javaUnder(NEOFORGE);
-        for (String name : new String[] {"ChopSearch.java", "GatherTargets.java", "StripLogScript.java"}) {
-            Path path = NEOFORGE.resolve(name);
-            sources.put(path, all.get(path));
-        }
+        Map<Path, String> trees = Map.of(
+                NEOFORGE.resolve("ChopSearch.java"), "ChopTuning.maxDistance",
+                NEOFORGE.resolve("StripLogScript.java"), "ChopTuning.maxDistance",
+                NEOFORGE.resolve("GatherTargets.java"), "ChopTuning.gatherDistance");
 
-        for (Map.Entry<Path, String> source : sources.entrySet()) {
+        trees.forEach((path, limiter) -> {
+            String source = all.get(path);
             assertTrue(
-                    source.getValue() != null && source.getValue().contains(LIMITER),
-                    source.getKey().getFileName() + " снова выбирает дерево/источник без общего ограничителя " + LIMITER
-                            + ": дальние деревья за 100+ блоков возвращаются (observe20 п.2)");
-        }
+                    source != null && source.contains(limiter),
+                    path.getFileName() + " снова выбирает дерево/источник без общего ограничителя " + limiter
+                            + ": рубка обязана идти в радиусе доски (100), а сбор у поселения — не дальше 32; "
+                            + "подмена одного предела другим даёт «ближайшее дерево 35 при пределе 32» (11.11)");
+        });
     }
 }
