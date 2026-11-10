@@ -319,12 +319,16 @@ def expected_mod_version():
     ).stdout.decode("utf-8", "replace").strip()
     if branch != "main":
         return ""
-    built = subprocess.run(
-        ["bash", os.path.join(REPO, "scripts", "mod-version.sh"), "--built", REPO],
-        capture_output=True,
-        check=True,
-    ).stdout
-    return built.decode("utf-8", "replace").strip()
+    minor = ""
+    with open(os.path.join(REPO, "gradle.properties"), encoding="utf-8") as source:
+        for line in source:
+            if line.startswith("mod_version_minor="):
+                minor = line.strip().split("=", 1)[1]
+                break
+    count = subprocess.run(
+        ["git", "-C", REPO, "rev-list", "--count", "HEAD"], capture_output=True, check=True
+    ).stdout.decode("utf-8", "replace").strip()
+    return "%s.%s" % (minor, count) if minor and count else ""
 
 
 def check_once(target, expected=""):
