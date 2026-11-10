@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 HERE = Path(__file__).resolve().parent
@@ -201,6 +202,51 @@ class LoaderTests(unittest.TestCase):
                     command[-2:],
                     "фильтр по времени обязан доехать до основного сервера: %s" % argv[0],
                 )
+
+    def test_remoteSync_ChangedOrMissingFile_IsUploaded(self):
+        local = self.dir / "local"
+        local.mkdir()
+        (local / "schema.json").write_bytes(b"same")
+        (local / "loader.py").write_bytes(b"new-loader")
+        (local / "logq.py").write_bytes(b"new-logq")
+        remote = {
+            "%s/schema.json" % logq.MAIN_SCRIPTS: b"same",
+            "%s/loader.py" % logq.MAIN_SCRIPTS: b"old-loader",
+        }
+        uploaded = []
+
+        def fake_run(command, **kwargs):
+            if command[-1].startswith("cat > "):
+                uploaded.append(command[-1].split("/")[-1])
+                return SimpleNamespace(returncode=0, stdout=b"")
+            return SimpleNamespace(returncode=0, stdout=remote.get(command[-1][len("cat ") :], b""))
+
+        logq.sync_remote(["ssh", "host"], run=fake_run, here=local)
+
+        self.assertEqual(
+            ["loader.py", "logq.py"],
+            uploaded,
+            "устаревший loader.py обязан обновиться, отсутствующий logq.py — залиться: иначе правка "
+            "health --since не действует на основном сервере до ручной раскладки",
+        )
+
+    def test_remoteSync_SameFiles_AreNotUploaded(self):
+        local = self.dir / "local"
+        local.mkdir()
+        for name in ("schema.json", "loader.py", "logq.py"):
+            (local / name).write_bytes(name.encode())
+        remote = {"%s/%s" % (logq.MAIN_SCRIPTS, name): name.encode() for name in ("schema.json", "loader.py", "logq.py")}
+        uploaded = []
+
+        def fake_run(command, **kwargs):
+            if command[-1].startswith("cat > "):
+                uploaded.append(command[-1])
+                return SimpleNamespace(returncode=0, stdout=b"")
+            return SimpleNamespace(returncode=0, stdout=remote[command[-1][len("cat ") :]])
+
+        logq.sync_remote(["ssh", "host"], run=fake_run, here=local)
+
+        self.assertEqual([], uploaded, "одинаковые файлы не перезаливаются при каждом logq --main")
 
     def test_health_Since_LeavesOnlyFreshRows(self):
         self.write(

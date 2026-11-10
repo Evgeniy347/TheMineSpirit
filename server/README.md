@@ -32,7 +32,8 @@
 | [scripts/install-neoforge.sh](scripts/install-neoforge.sh) | ставит библиотеки NeoForge после клона или смены версии (`NEOFORGE_VERSION` в `common.sh`) | `NeoForge <версия> установлен` |
 | [scripts/common.sh](scripts/common.sh) | общие настройки скриптов: tmux-сессия, версия NeoForge, ожидание строки в логе | — |
 
-Память JVM — в `user_jvm_args.txt` (сейчас 2–4 ГБ).
+Память JVM — в `user_jvm_args.txt` (сейчас 2–4 ГБ). JDWP постоянно выключен; отладка включается
+переменной `MINESPIRIT_JDWP_PORT=<порт>` при запуске `scripts/start.sh` и слушает только `127.0.0.1`.
 
 ## Правила
 
