@@ -1,10 +1,19 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.TicketPlans;
+import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.route.RouteResource;
+import com.theminespirit.core.board.route.RouteTrailBook;
 import com.theminespirit.core.engine.RunStatus;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
@@ -114,6 +123,57 @@ public final class PathScenesGameTests {
             helper.assertTrue(
                     !reason.contains("не хватило материала"),
                     "Предмет dirt_path не добывают, поэтому и 'не хватило материала' быть не может: " + reason);
+            GameTestFixtures.finish(helper, 16);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "scene_path_trail", timeoutTicks = 400)
+    public static void routeScene_MovedQuarry_ClearsOldTrail(GameTestHelper helper) {
+        flatGrass(helper);
+        List<BlockPos> placed = List.of(new BlockPos(3, 1, 3), new BlockPos(4, 1, 3), new BlockPos(5, 1, 3));
+        for (BlockPos at : placed) {
+            helper.setBlock(at, Blocks.SAND);
+        }
+        List<BlockCoord> cells = placed.stream()
+                .map(at -> {
+                    BlockPos absolute = helper.absolutePos(at);
+                    return new BlockCoord(absolute.getX(), absolute.getY(), absolute.getZ());
+                })
+                .toList();
+        RouteTrailBook book = new RouteTrailBook();
+        book.plan(
+                RouteResource.SAND,
+                new PlotLeveling(
+                        List.of(),
+                        cells.stream()
+                                .map(cell -> new PlotLeveling.Box(
+                                        cell.x(), cell.y(), cell.z(), cell.x(), cell.y(), cell.z()))
+                                .toList(),
+                        "sand"));
+        book.built(RouteResource.SAND);
+        book.retire(RouteResource.SAND);
+        TaskNode removal = TicketPlans.plan(
+                BoardCase.REPAIR_BUILDING,
+                TicketTarget.at(cells.get(0))
+                        .withLeveling(book.retired().get(0).trail().removal()));
+
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_SHOVEL));
+        SpiritRun run = SpiritRun.launch(helper, spirit, removal, SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "снятие старой тропы обязано закончиться, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            for (BlockPos at : placed) {
+                helper.assertTrue(
+                        helper.getBlockState(at).isAir(),
+                        "старая тропа при переносе места снята: в клетке " + at + " остался "
+                                + helper.getBlockState(at));
+            }
             GameTestFixtures.finish(helper, 16);
         });
     }

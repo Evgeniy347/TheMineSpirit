@@ -1,10 +1,10 @@
 core/board/AnimalLifecycleTests.java	303
-core/board/Board.java	670
+core/board/Board.java	650
 core/board/BoardConfigTests.java	401
 core/board/BoardLogTests.java	422
 core/board/BoardTests.java	966
 core/board/BoardTicketTests.java	401
-core/board/TicketPlans.java	877
+core/board/TicketPlans.java	864
 core/board/TicketPlansTests.java	1231
 core/board/graph/GraphPlanner.java	499
 core/board/graph/GraphPlannerTests.java	933
