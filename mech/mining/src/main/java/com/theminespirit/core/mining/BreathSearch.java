@@ -86,12 +86,18 @@ public final class BreathSearch {
             }
             if (view.cellAt(neighbour) == Cell.SOLID) {
                 BlockCoord top = new BlockCoord(neighbour.x(), neighbour.y() + 1, neighbour.z());
-                if (dryStand(view, top)) {
+                if (roomToClimb(view, water) && dryStand(view, top)) {
                     return Optional.of(top);
                 }
             }
         }
         return Optional.empty();
+    }
+
+    // lib: на берег выше воды дух попадает прыжком; прыжок требует места над головой, иначе он упирается
+    // lib: в потолок и вечно плывёт в стену (живой случай: -99,52,-417, вода под землёй, потолок y=54).
+    private static boolean roomToClimb(SafetyView view, BlockCoord water) {
+        return view.cellAt(new BlockCoord(water.x(), water.y() + 2, water.z())) == Cell.PASSABLE;
     }
 
     private static Optional<BlockCoord> surface(SafetyView view, BlockCoord feet) {

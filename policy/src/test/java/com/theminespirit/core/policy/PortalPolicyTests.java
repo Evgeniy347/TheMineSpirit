@@ -54,7 +54,7 @@ class PortalPolicyTests {
             String name, String floor, String feet, String head, PolicyVerdict expected) {
         LocalSurroundings surroundings = Pictures.of(floor, feet, head, BodyFlags.CALM);
 
-        PolicyVerdict verdict = PortalPolicy.evaluate(surroundings, PolicyExemptions.empty());
+        PolicyVerdict verdict = PortalPolicy.evaluate(surroundings, PolicyExemptions.empty(), surroundings);
 
         assertEquals(
                 expected,
@@ -67,7 +67,7 @@ class PortalPolicyTests {
     void evaluate_InPortalWithPortalExemption_IsClear() {
         LocalSurroundings surroundings = Pictures.of(S, ".../.P./...", ".../.P./...", BodyFlags.CALM);
 
-        PolicyVerdict verdict = PortalPolicy.evaluate(surroundings, PolicyExemptions.of(PolicyId.PORTAL));
+        PolicyVerdict verdict = PortalPolicy.evaluate(surroundings, PolicyExemptions.of(PolicyId.PORTAL), surroundings);
 
         assertEquals(
                 new PolicyVerdict.Clear(),

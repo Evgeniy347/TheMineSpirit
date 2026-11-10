@@ -179,4 +179,45 @@ class BreathSearchTests {
                         + "Старый бюджет 512 уходил в объём воды и возвращал поверхность — дух кружил в озере "
                         + "(observe17 A2, [air]=781)");
     }
+
+    @Test
+    void nearest_BankOneAboveWaterUnderLowCeiling_StaysOnSurface() {
+        CellWorld world = lowCeilingPocket(2);
+
+        assertEquals(
+                Optional.of(new BlockCoord(0, 0, 0)),
+                BreathSearch.nearest(world, new BlockCoord(0, 0, 0)),
+                "Живой случай -99,52,-417: вода под землёй (ноги 52, голова 53, потолок 54), берег на блок выше "
+                        + "достаётся только прыжком, а прыжок упирается в потолок. Недостижимый берег не цель: "
+                        + "дух плыл в стену 260 тысяч попыток");
+    }
+
+    @Test
+    void nearest_BankOneAboveWaterWithRoomToJump_IsFound() {
+        CellWorld world = lowCeilingPocket(3);
+
+        assertEquals(
+                Optional.of(new BlockCoord(1, 1, 0)),
+                BreathSearch.nearest(world, new BlockCoord(0, 0, 0)),
+                "Тот же карман, но потолок на блок выше: прыжок на берег возможен, и поиск обязан вести туда");
+    }
+
+    private static CellWorld lowCeilingPocket(int ceilingY) {
+        CellWorld world = new CellWorld();
+        for (int x = -2; x <= 2; x++) {
+            for (int y = -1; y <= ceilingY + 1; y++) {
+                for (int z = -2; z <= 2; z++) {
+                    world.set(x, y, z, Cell.SOLID);
+                }
+            }
+        }
+        world.set(0, -1, 0, Cell.SOLID);
+        world.set(0, 0, 0, Cell.WATER);
+        world.set(0, 1, 0, Cell.PASSABLE);
+        world.set(0, 2, 0, Cell.PASSABLE);
+        world.set(1, 1, 0, Cell.PASSABLE);
+        world.set(1, 2, 0, Cell.PASSABLE);
+        world.set(0, ceilingY, 0, Cell.SOLID);
+        return world;
+    }
 }

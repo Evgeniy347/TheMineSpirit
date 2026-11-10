@@ -38,6 +38,7 @@ public final class DigOutGameTests {
     private static final int TOP = 12;
     private static final int POCKET = TOP - 7;
     private static final BlockPos UNDER_CHEST = new BlockPos(2, TOP - 2, 2);
+    private static final BlockPos WATER_POCKET = new BlockPos(6, POCKET, 2);
 
     private DigOutGameTests() {}
 
@@ -50,7 +51,9 @@ public final class DigOutGameTests {
                         List.of(new BlockPos(2, POCKET, 5), new BlockPos(2, POCKET + 1, 5)),
                         List.of(new BlockPos(5, POCKET, 5), new BlockPos(5, POCKET + 1, 5)),
                         List.of(new BlockPos(8, TOP - 2, 8), new BlockPos(8, TOP - 1, 8)),
-                        List.of(UNDER_CHEST, UNDER_CHEST.above())));
+                        List.of(UNDER_CHEST, UNDER_CHEST.above()),
+                        List.of(WATER_POCKET, WATER_POCKET.above())));
+        helper.setBlock(WATER_POCKET, Blocks.WATER);
     }
 
     private static void pocket(GameTestHelper helper, List<List<BlockPos>> pockets) {

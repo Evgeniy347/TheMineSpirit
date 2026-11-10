@@ -7,7 +7,7 @@ public final class ReflexTimeout {
     private @Nullable String key;
     private int ticks;
 
-    public boolean expired(PolicyId policy, String key, int limit, boolean stillInWater) {
+    public boolean expired(PolicyId policy, String key, int limit, boolean underwater, boolean moving) {
         Objects.requireNonNull(policy, "Политика рефлекса не может быть null: без неё неизвестно, что считать");
         Objects.requireNonNull(key, "Ключ рефлекса не может быть null: без него тики разных рефлексов смешаются");
         if (key.isBlank()) {
@@ -16,7 +16,9 @@ public final class ReflexTimeout {
         if (limit < 1) {
             throw new IllegalArgumentException("Предел рефлекса " + limit + " тиков не положителен: рефлекс без срока");
         }
-        boolean hold = (policy == PolicyId.AIR || policy == PolicyId.WATER) && stillInWater;
+        // lib: рефлекс воды и воздуха держится только живой нуждой (голова под водой) или движением к выходу.
+        // lib: «дух в воде» без движения — не рефлекс, а ловушка: дух запирался в яме навсегда (10.11, -99,52,-417).
+        boolean hold = (policy == PolicyId.AIR || policy == PolicyId.WATER) && (underwater || moving);
         if (hold) {
             this.key = key;
             ticks = 0;
