@@ -30,6 +30,7 @@ import net.minecraft.core.BlockPos;
 
 final class WorldPost {
     static final String REPAIR_NODE = "repair:";
+    static final List<String> OPEN_PREFIXES = List.of("world:backfill:", "world:trace:");
     private static final String REPAIR = REPAIR_NODE;
     private static final Comparator<BlockCoord> ORDER = Comparator.comparingInt(BlockCoord::y)
             .thenComparingInt(BlockCoord::x)
@@ -112,7 +113,7 @@ final class WorldPost {
         if (found.pits().isEmpty()) {
             return false;
         }
-        int room = room(open(post, "world:backfill:"), BATCH);
+        int room = room(post.openCount("world:backfill:"), BATCH);
         if (room == 0) {
             return true;
         }
@@ -235,7 +236,7 @@ final class WorldPost {
         if (found.traces().isEmpty()) {
             return false;
         }
-        int room = room(open(post, "world:trace:"), BATCH);
+        int room = room(post.openCount("world:trace:"), BATCH);
         if (room == 0) {
             return true;
         }
@@ -262,22 +263,6 @@ final class WorldPost {
 
     static int room(int open, int batch) {
         return Math.max(0, batch - open);
-    }
-
-    private static int open(GraphPost post, String prefix) {
-        int open = 0;
-        for (var ticket : post.service.board().all()) {
-            if (!ticket.id().startsWith(prefix)) {
-                continue;
-            }
-            var status = post.service.board().statusOf(ticket.id()).orElse(null);
-            if (status == BoardStatus.PENDING
-                    || status == BoardStatus.WAITING_RESOURCES
-                    || status == BoardStatus.ASSIGNED) {
-                open++;
-            }
-        }
-        return open;
     }
 
     private static String key(BlockCoord at) {

@@ -25,7 +25,6 @@ import net.minecraft.world.level.saveddata.SavedData;
 
 public final class BoardStateStore extends SavedData {
     public static final String NAME = "theminespirit_board";
-    static final String TARGETS_KEY = "Targets";
 
     private static final String VERSION_KEY = "Version";
     private static final int VERSION = 4;
@@ -50,6 +49,7 @@ public final class BoardStateStore extends SavedData {
 
     private BoardState state = BoardState.empty();
     private Map<String, TicketTarget> targets = Map.of();
+    private List<String> brokenTargets = List.of();
     private List<GraphFailureMemory.Saved> failures = List.of();
     private String build = "";
 
@@ -83,7 +83,11 @@ public final class BoardStateStore extends SavedData {
         BoardStateNbt.Parts parts =
                 version >= 2 ? BoardStateNbt.read(tag) : new BoardStateNbt.Parts(List.of(), List.of(), List.of());
         store.state = new BoardState(restored, ledger, parts.blocked(), parts.pauses(), parts.stuck());
-        store.targets = version >= 3 ? BoardTargetsNbt.read(tag) : Map.of();
+        if (version >= 3) {
+            BoardTargetsNbt.Read read = BoardTargetsNbt.read(tag);
+            store.targets = read.targets();
+            store.brokenTargets = read.broken();
+        }
         store.failures = version >= 4 ? BoardFailuresNbt.read(tag) : List.of();
         store.build = tag.getString(BUILD_KEY);
         return store;
@@ -103,7 +107,7 @@ public final class BoardStateStore extends SavedData {
         }
         tag.put(LEDGER_KEY, marks);
         BoardStateNbt.write(tag, state);
-        tag.put(TARGETS_KEY, BoardTargetsNbt.write(targets));
+        tag.put(BoardTargetsNbt.KEY, BoardTargetsNbt.write(targets));
         tag.put(BoardFailuresNbt.KEY, BoardFailuresNbt.write(failures));
         tag.putString(BUILD_KEY, build);
         return tag;
@@ -124,6 +128,10 @@ public final class BoardStateStore extends SavedData {
 
     public Map<String, TicketTarget> targets() {
         return targets;
+    }
+
+    public List<String> brokenTargets() {
+        return brokenTargets;
     }
 
     public List<GraphFailureMemory.Saved> failures() {
