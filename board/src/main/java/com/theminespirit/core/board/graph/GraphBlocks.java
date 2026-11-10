@@ -104,6 +104,9 @@ final class GraphBlocks {
             }
             return holder.stuck() ? !known.stuck() : known.activity() == null;
         }
+        if (need instanceof GraphBlock.World world) {
+            return state.world().contains(world.tag());
+        }
         return false;
     }
 
@@ -176,6 +179,9 @@ final class GraphBlocks {
         }
         if (need instanceof GraphBlock.Holder holder) {
             return (holder.stuck() ? "застрял держатель " : "занят держатель ") + holder.spirit();
+        }
+        if (need instanceof GraphBlock.World world) {
+            return "нет в округе " + world.tag() + " (нужна другая порода, поход дальше или посадка)";
         }
         if (need instanceof GraphBlock.Impossible impossible) {
             return "нет источника " + impossible.node();

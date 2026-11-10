@@ -62,8 +62,9 @@ final class ClearAreaRun {
     }
 
     void pick() {
+        session.targets.dropLeased(session.remaining);
         session.noteSkipped(session.felling.dropPartial(session.remaining));
-        while (!session.remaining.isEmpty() && session.clear(session.remaining.get(0))) {
+        while (!session.remaining.isEmpty() && session.targets.clear(session.remaining.get(0))) {
             session.remaining.remove(0);
         }
         session.apply(session.blocked.dropExcluded(session.remaining));
@@ -75,7 +76,7 @@ final class ClearAreaRun {
         }
         BlockPos feet = session.spirit.blockPosition();
         BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-        List<BlockCoord> top = ClearOrder.topmost(session.remaining, cell -> !session.clear(cell));
+        List<BlockCoord> top = ClearOrder.topmost(session.remaining, cell -> !session.targets.clear(cell));
         BlockCoord near =
                 ClearReach.near(session.spirit, session.level, top, feet, session.safety, session.reservations);
         if (near != null && !session.approachFailures.excludedStands().contains(from)) {
@@ -92,7 +93,7 @@ final class ClearAreaRun {
                 session.spirit, from, top, session.safety, session.approachFailures.excludedStands());
         if (result instanceof MiningPlanner.Exhausted) {
             List<BlockCoord> solid = session.remaining.stream()
-                    .filter(cell -> !session.clear(cell))
+                    .filter(cell -> !session.targets.clear(cell))
                     .toList();
             result = ClearPlanning.next(
                     session.spirit, from, solid, session.safety, session.approachFailures.excludedStands());
@@ -100,7 +101,7 @@ final class ClearAreaRun {
         if (result instanceof MiningPlanner.Exhausted) {
             session.apply(session.blocked.exhausted(
                     session.remaining.stream()
-                            .filter(cell -> !session.clear(cell))
+                            .filter(cell -> !session.targets.clear(cell))
                             .toList(),
                     session.safety,
                     from));

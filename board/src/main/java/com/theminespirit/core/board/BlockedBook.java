@@ -74,7 +74,12 @@ final class BlockedBook {
                 ticket.cause(),
                 BoardRules.priorityOf(ticket.boardCase()),
                 ticket.priority(),
-                reason(failuresSoFar, missingNow, ticket.id()),
+                BlockedReason.of(
+                        failuresSoFar,
+                        blocks.get(ticket.id()),
+                        missingNow,
+                        reasons.get(ticket.id()),
+                        history.of(ticket.id())),
                 null,
                 ConfigStamp.current(),
                 now));
@@ -231,12 +236,16 @@ final class BlockedBook {
         Set<String> ids = new LinkedHashSet<>(missing.keySet());
         ids.addAll(blocks.keySet());
         for (String id : ids) {
+            GraphBlock block = blocks.get(id);
+            if (block == null) {
+                continue;
+            }
             states.add(new BoardState.Blocked(
                     id,
                     missing.getOrDefault(id, Map.of()),
                     available.getOrDefault(id, Map.of()),
                     since.getOrDefault(id, 0L),
-                    blocks.get(id)));
+                    block));
         }
         return List.copyOf(states);
     }
@@ -266,18 +275,6 @@ final class BlockedBook {
             return stock.available().getOrDefault(item.item(), 0) >= item.count();
         }
         return false;
-    }
-
-    private List<String> reason(int failuresSoFar, Map<String, Integer> missingNow, String ticketId) {
-        List<String> reason = new ArrayList<>();
-        reason.add("failures=" + failuresSoFar);
-        missingNow.forEach((item, count) -> reason.add("missing=" + item + ":" + count));
-        String last = reasons.get(ticketId);
-        if (last != null) {
-            reason.add("last=" + last);
-        }
-        reason.add("history=" + String.join("; ", history.of(ticketId)));
-        return List.copyOf(reason);
     }
 
     private static List<String> changed(Map<String, Integer> before, Map<String, Integer> after) {

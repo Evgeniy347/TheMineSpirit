@@ -23,6 +23,7 @@ final class BoardFailuresNbt {
     private static final String BUILDING_KEY = "Building";
     private static final String POINT_KEY = "Point";
     private static final String STUCK_KEY = "Stuck";
+    private static final String TAG_KEY = "Tag";
     private static final String LAST_TICK_KEY = "LastTick";
     private static final String TICKS_KEY = "Ticks";
     private static final String COUNT_KEY = "Count";
@@ -84,6 +85,9 @@ final class BoardFailuresNbt {
             tag.putString(KIND_KEY, "holder");
             tag.putString(SPIRIT_KEY, holder.spirit());
             tag.putBoolean(STUCK_KEY, holder.stuck());
+        } else if (need instanceof GraphBlock.World world) {
+            tag.putString(KIND_KEY, "world");
+            tag.putString(TAG_KEY, world.tag());
         } else if (need instanceof GraphBlock.Impossible impossible) {
             tag.putString(KIND_KEY, "impossible");
             tag.putString(NODE_KEY, impossible.node());
@@ -101,6 +105,7 @@ final class BoardFailuresNbt {
             case "building" -> new GraphBlock.Building(tag.getString(BUILDING_KEY));
             case "path" -> new GraphBlock.Path(tag.getString(POINT_KEY));
             case "holder" -> new GraphBlock.Holder(tag.getString(SPIRIT_KEY), tag.getBoolean(STUCK_KEY));
+            case "world" -> new GraphBlock.World(tag.getString(TAG_KEY));
             case "impossible" -> new GraphBlock.Impossible(tag.getString(NODE_KEY));
             default -> null;
         };

@@ -49,7 +49,7 @@ class TaskRunnerFactTests {
     }
 
     @Test
-    void tick_FallbackAllFailed_KeepsFactOfLastBranch() {
+    void tick_FallbackAllFailed_DropsPathFactOfEarlierBranch() {
         TaskRunner runner = TaskRunner.start(
                 new FallbackNode(List.of(new ScriptCall("go", Map.of()), new ScriptCall(SCRIPT, Map.of()))),
                 ScriptRegistry.of(Map.of(
@@ -61,7 +61,24 @@ class TaskRunnerFactTests {
         assertEquals(
                 Optional.empty(),
                 runner.failureFact(),
-                "Факт берётся у последнего провала: вторая ветка упала без факта, и выдавать ей чужое "
+                "«Пути нет» относится к оставленной ветке: вторая ветка упала без факта, и выдавать ей чужое "
                         + "«пути нет» нельзя");
+    }
+
+    @Test
+    void tick_FallbackAllFailed_KeepsWorldFactOfEarlierBranch() {
+        TaskRunner runner = TaskRunner.start(
+                new FallbackNode(List.of(new ScriptCall("go", Map.of()), new ScriptCall(SCRIPT, Map.of()))),
+                ScriptRegistry.of(Map.of(
+                        "go", TestScripts.failingWithFact(1, FailureFact.NO_TREES), SCRIPT, TestScripts.failing(1))),
+                TestScripts.condition(CHECK, true));
+
+        assertEquals(RunStatus.RUNNING, runner.tick(), "После провала первой ветки fallback пробует вторую");
+        assertEquals(RunStatus.FAILED, runner.tick(), "Второй провал второй ветки завершает fallback");
+        assertEquals(
+                Optional.of(FailureFact.NO_TREES),
+                runner.failureFact(),
+                "Факт «деревьев нет» — про мир и не исчезает от провала запасной ветки: иначе дух снова и снова "
+                        + "ставит рубку, которую нечем выполнить (живой случай 11.11)");
     }
 }

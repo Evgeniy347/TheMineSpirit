@@ -97,7 +97,6 @@ mech/mining/com/theminespirit/core/mining/BreakTimingTests.java
 mech/mining/com/theminespirit/core/mining/BreathSearchTests.java
 mech/mining/com/theminespirit/core/mining/CellWorld.java
 mech/mining/com/theminespirit/core/mining/ClearOrderTests.java
-mech/mining/com/theminespirit/core/mining/ClimbReachTests.java
 mech/mining/com/theminespirit/core/mining/CountingOreView.java
 mech/mining/com/theminespirit/core/mining/DescentDataTests.java
 mech/mining/com/theminespirit/core/mining/DescentLevelsTests.java

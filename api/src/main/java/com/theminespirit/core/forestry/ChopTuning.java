@@ -44,4 +44,12 @@ public final class ChopTuning {
         }
         return Math.min(nearestFar, MAX_SEARCH_RADIUS);
     }
+
+    public static int scanRadius(int requestedRadius, int maxDistance) {
+        if (requestedRadius < 1 || maxDistance < 1) {
+            throw new IllegalArgumentException("radius=" + requestedRadius + ", предел " + maxDistance
+                    + ": радиус поиска меньше единицы, дерево не нашлось бы никогда");
+        }
+        return Math.min(Math.max(requestedRadius, maxDistance), MAX_SEARCH_RADIUS);
+    }
 }

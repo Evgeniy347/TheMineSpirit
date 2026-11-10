@@ -152,6 +152,68 @@ class MiningScenarioTests {
                 "Отказ «без кирки» не трогает мир: блок остаётся на месте до прихода духа с инструментом");
     }
 
+    @Test
+    void clearScaffold_TallColumnBesideOwnScaffold_ClearedStepDownToGround() {
+        List<BlockCoord> targets = new ArrayList<>();
+        for (int y = 0; y <= 9; y++) {
+            targets.add(new BlockCoord(0, y, 1));
+        }
+        Set<BlockCoord> scaffold = new HashSet<>();
+        BlockCoord feet = new BlockCoord(0, 0, 0);
+        boolean climbed = false;
+        int climbs = 0;
+        int works = 0;
+        int steps = 0;
+        int guard = 0;
+        while (!targets.isEmpty() && guard++ < 200) {
+            int before = targets.size();
+            ClearScaffold.Decision decision = ClearScaffold.decide(
+                    feet,
+                    ClearScaffold.highest(targets),
+                    3,
+                    scaffold.contains(new BlockCoord(feet.x(), feet.y() - 1, feet.z())));
+            switch (decision.action()) {
+                case CLIMB -> {
+                    assertFalse(climbed, "Второй столб рядом не строится: каждый лишний подъём — новый столб в зоне");
+                    climbs++;
+                    for (int y = feet.y(); y < feet.y() + decision.height(); y++) {
+                        scaffold.add(new BlockCoord(feet.x(), y, feet.z()));
+                    }
+                    feet = new BlockCoord(feet.x(), feet.y() + decision.height(), feet.z());
+                    climbed = true;
+                }
+                case DESCEND -> {
+                    steps++;
+                    assertTrue(
+                            scaffold.remove(new BlockCoord(feet.x(), feet.y() - 1, feet.z())),
+                            "Спуск только по своим подмостям: чужой блок под ногами не опора для шага вниз");
+                    feet = new BlockCoord(feet.x(), feet.y() - 1, feet.z());
+                }
+                case WORK -> {
+                    works++;
+                    BlockCoord top = ClearScaffold.highest(targets);
+                    assertTrue(
+                            top.y() <= feet.y(),
+                            "С места бьют только клетку на уровне ног или выше: нижнюю сначала достают спуском");
+                    targets.remove(top);
+                }
+                case DONE -> {}
+            }
+            assertTrue(targets.size() <= before, "Цели не размножаются: каждая итерация убирает одну или ноль");
+        }
+        assertTrue(targets.isEmpty(), "Высокий столб разобран сверху вниз: осталось " + targets);
+        assertTrue(scaffold.isEmpty(), "Подмости разобраны до конца: осталось " + scaffold);
+        assertEquals(0, feet.y(), "Оба столба кончились на земле: дух стоит на " + feet);
+        assertEquals(1, climbs, "На один столб один подъём: иначе подмости сами становятся столбами");
+        assertEquals(9, steps, "Спуск шаг в шаг: каждая своя подмостка убрана по одной");
+        assertEquals(10, works, "Все клетки чужого столба сломаны, а не объявлены недостижимыми");
+        assertEquals(
+                ClearScaffold.Action.WORK,
+                ClearScaffold.decide(new BlockCoord(0, 0, 0), new BlockCoord(0, -1, 1), 3, false)
+                        .action(),
+                "Без своих подмостей спуск на шаг — падение в воздух: такую клетку разбирает планировщик стоянок");
+    }
+
     private static BlockCoord ore(int x, int zSide) {
         return new BlockCoord(x, FEET_Y, zSide);
     }

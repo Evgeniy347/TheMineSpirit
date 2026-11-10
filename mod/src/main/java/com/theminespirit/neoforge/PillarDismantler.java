@@ -29,6 +29,7 @@ final class PillarDismantler {
     private final Level level;
     private final List<BlockCoord> pending;
     private final @Nullable LeaseRun lease;
+    private final boolean keepLease;
     private int cursor;
     private int returned;
     private int dropped;
@@ -40,10 +41,15 @@ final class PillarDismantler {
     }
 
     PillarDismantler(SpiritEntity spirit, List<BlockCoord> topDown, @Nullable LeaseRun lease) {
+        this(spirit, topDown, lease, false);
+    }
+
+    PillarDismantler(SpiritEntity spirit, List<BlockCoord> topDown, @Nullable LeaseRun lease, boolean keepLease) {
         this.spirit = spirit;
         this.level = spirit.level();
         this.pending = new ArrayList<>(topDown);
         this.lease = lease;
+        this.keepLease = keepLease;
     }
 
     Outcome tick() {
@@ -91,7 +97,7 @@ final class PillarDismantler {
             return Outcome.RUNNING;
         }
         outcome = Outcome.DONE;
-        if (lease != null) {
+        if (lease != null && !keepLease) {
             if (lease.cells().isEmpty()) {
                 lease.commit();
             } else {
@@ -116,7 +122,7 @@ final class PillarDismantler {
     private Outcome failed(String reason) {
         failureReason = reason;
         outcome = Outcome.FAILED;
-        if (lease != null) {
+        if (lease != null && !keepLease) {
             lease.orphan();
         }
         return outcome;

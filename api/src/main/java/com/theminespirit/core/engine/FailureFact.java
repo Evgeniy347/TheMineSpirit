@@ -1,5 +1,16 @@
 package com.theminespirit.core.engine;
 
 public enum FailureFact {
-    NO_PATH
+    NO_PATH(false),
+    NO_TREES(true);
+
+    private final boolean survivesFallback;
+
+    FailureFact(boolean survivesFallback) {
+        this.survivesFallback = survivesFallback;
+    }
+
+    public boolean survivesFallback() {
+        return survivesFallback;
+    }
 }

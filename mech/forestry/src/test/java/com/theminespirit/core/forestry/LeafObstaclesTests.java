@@ -2,6 +2,7 @@ package com.theminespirit.core.forestry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
@@ -74,6 +75,18 @@ class LeafObstaclesTests {
                 LeafObstacles.blockingStand(trunk(), grid, new BlockCoord(0, 64, 0)),
                 "Стоянка занимает ровно две клетки по высоте: листва выше головы не мешает встать, "
                         + "и ломать её незачем");
+    }
+
+    @Test
+    void blockingStand_LeavesOnFarStand_AreCleared() {
+        TreeGrid grid =
+                new TreeGrid().log(0, 64, 0).soil(3, 63, 0).leaves(3, 64, 0).leaves(3, 65, 0);
+
+        assertTrue(
+                LeafObstacles.blockingStand(trunk(), grid, new BlockCoord(0, 64, 0))
+                        .containsAll(List.of(new BlockCoord(3, 64, 0), new BlockCoord(3, 65, 0))),
+                "Стоянка в трёх блоках от ствола — та же стоянка: если у ствола всё занято, листва на ней тоже "
+                        + "мешает встать, и без её ломки высокое дерево (2×2 jungle) остаётся недостижимым");
     }
 
     @Test

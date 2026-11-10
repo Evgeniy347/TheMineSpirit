@@ -87,6 +87,39 @@ class LevelRepairScenarioTests {
     }
 
     @Test
+    void plan_ExtrasInOneColumn_OneClearAreaTopDown() {
+        PlotLeveling leveling = LevelRepair.leveling(
+                List.of(), List.of(new BlockCoord(3, 70, 3), new BlockCoord(3, 71, 3), new BlockCoord(3, 72, 3)));
+        assertEquals(
+                1,
+                leveling.cut().size(),
+                "Клетки одной колонки — одна работа: иначе дух строит подмости на "
+                        + "каждую клетку и они сами становятся столбами (419 → 717 в зоне 10.11)");
+        PlotLeveling.Box column = leveling.cut().get(0);
+        assertEquals(70, column.y1(), "Разбор столба начинается снизу ящика, а подъём считается от верхней цели");
+        assertEquals(72, column.y2(), "Верхняя клетка столба — цель подъёма");
+        TaskNode plan = TicketPlans.plan(
+                BoardCase.REPAIR_BUILDING, 1, TicketTarget.at(ANCHOR).withLeveling(leveling));
+        List<ScriptCall> clears = new ArrayList<>();
+        collect(plan, clears);
+        List<ScriptCall> cut = clears.stream()
+                .filter(call -> "clear_area".equals(call.script()))
+                .toList();
+        assertEquals(1, cut.size(), "Один clear_area на высокий столб, а не на каждую клетку");
+        assertEquals(72, cut.get(0).params().get("y2"), "Верх ящика равен верхней цели: подъём доводит духа до неё");
+    }
+
+    @Test
+    void progress_CutColumn_NotDoneWhileBottomStands() {
+        PlotLeveling leveling = LevelRepair.leveling(
+                List.of(), List.of(new BlockCoord(5, 70, 5), new BlockCoord(5, 71, 5), new BlockCoord(5, 72, 5)));
+        Set<BlockCoord> empty = new HashSet<>(Set.of(new BlockCoord(5, 72, 5), new BlockCoord(5, 71, 5)));
+        LevelRepair.Progress progress = LevelRepair.progress(leveling, empty::contains);
+        assertEquals(0, progress.done(), "Срезанный верх столба не закрывает работу: нижняя клетка ещё стоит");
+        assertEquals(1, progress.total(), "Колонка — одна работа выравнивания");
+    }
+
+    @Test
     void progress_LevelingRepair_CountsCutAndFillCells() {
         BlockCoord cutDone = new BlockCoord(5, 70, 5);
         BlockCoord cutStands = new BlockCoord(6, 70, 5);
