@@ -22,6 +22,7 @@ import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -48,10 +49,24 @@ public final class SettlementLevelScenesGameTests {
         helper.assertTrue(
                 store.town().orElseThrow().anchor().y() == 90,
                 "Высота поселения попадает в план: второго источника (медианы домов) не остаётся");
+        BlockCoord stand = new BlockCoord(x + 1, 90, z + 1);
+        store.rememberHome(stand);
+        helper.assertTrue(
+                stand.equals(store.home().orElse(null)),
+                "Домашняя стоянка запоминается в мире: цель дома не пересчитывается от текущих позиций духов");
+        SettlementPlotStore restored = SettlementPlotStore.load(
+                store.save(new CompoundTag(), helper.getLevel().registryAccess()),
+                helper.getLevel().registryAccess());
+        helper.assertTrue(
+                stand.equals(restored.home().orElse(null)),
+                "Домашняя стоянка переживает сохранение и рестарт: выданное задание не остаётся со старой целью");
         store.settle(new SettlementPlot(new BlockCoord(x, 94, z), 92, 96, 9, "oak"));
         helper.assertTrue(
                 store.town().orElseThrow().anchor().y() == 90,
                 "Высота считается один раз: повторный обмер её не переносит");
+        helper.assertTrue(
+                store.home().isEmpty(),
+                "Новая разметка участка сбрасывает запомненную стоянку: дом выбирается заново по новому миру");
         store.clear();
         helper.assertFalse(store.levelMarked(), "Новый мир начинает без отметки высоты");
         GameTestFixtures.finish(helper);
