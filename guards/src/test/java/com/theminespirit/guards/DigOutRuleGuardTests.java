@@ -88,6 +88,52 @@ class DigOutRuleGuardTests {
     }
 
     @Test
+    void buildPit_SchematicPlacement_ChecksTrappedBeforeEscape() {
+        String text = read(SourceFiles.path("neoforge/SchematicPlacement.java"));
+
+        assertTrue(
+                escapeAfterTrapped(text),
+                "Стройка не запускает DigOut на любом «ниже низа схемы»: копать вверх полным поиском пути надо "
+                        + "только запертому духу (BuildPit.needsEscape → pit.escape). Цена: дух на земле под крышей "
+                        + "склада ищет путь на y=80, падает за 3,4 с и повторяет");
+    }
+
+    @Test
+    void buildPit_TrappedCheck_IsReported() {
+        assertTrue(
+                !escapeAfterTrapped("if (feet.y < origin.y - 1) { host.pit.escape(feet); return RUNNING; }"),
+                "Сторож ослеп: запуск DigOut без проверки запертости обязан быть нарушителем");
+    }
+
+    @Test
+    void buildPit_TrappedCheck_IsAccepted() {
+        assertTrue(
+                escapeAfterTrapped("if (BuildPit.needsEscape(feet.y(), origin.y(), pit.trapped())) { "
+                        + "host.pit.escape(feet); return RUNNING; }"),
+                "Сторож ложно срабатывает: проверка BuildPit.needsEscape перед pit.escape — это правило");
+    }
+
+    @Test
+    void buildPit_TrappedSpirit_IsSealedOrEmbedded() {
+        String text = read(SourceFiles.path("neoforge/BuildPitWatch.java"));
+
+        assertTrue(
+                text.contains("DigOutScript.sealed(") && text.contains("DigOutScript.embedded("),
+                "Запертость для DigOut считается тем же признаком, что у DigOutAction: sealed или embedded. "
+                        + "Иначе любая низина снова становится ямой и копает вверх");
+    }
+
+    @Test
+    void buildPit_EscapeFailure_IsTypedGraphFact() {
+        String text = read(SourceFiles.path("neoforge/BuildSchematicScript.java"));
+
+        assertTrue(
+                text.contains("pit.escapeFailed()") && text.contains("FailureFact.NO_PATH"),
+                "Провал выхода из ямы обязан быть фактом на входе графа (FailureFact.NO_PATH), а не только "
+                        + "текстом: иначе задание выдаётся снова и полный поиск пути повторяется");
+    }
+
+    @Test
     void homePoint_OneForReturnAndDigOut_NoStageOneSite() {
         Map<String, String> sources = new LinkedHashMap<>();
         for (String name : List.of(
@@ -201,6 +247,12 @@ class DigOutRuleGuardTests {
         int support = text.indexOf(SUPPORT);
         int place = text.indexOf(PLACE);
         return support >= 0 && place > support;
+    }
+
+    private static boolean escapeAfterTrapped(String text) {
+        int check = text.indexOf("BuildPit.needsEscape(");
+        int escape = text.indexOf("pit.escape(");
+        return check >= 0 && escape > check;
     }
 
     private static String read(Path file) {

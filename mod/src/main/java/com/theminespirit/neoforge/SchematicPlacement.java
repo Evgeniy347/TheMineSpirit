@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.building.BuildPit;
 import com.theminespirit.core.building.BuildStandLevel;
 import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.building.CellPartition;
@@ -180,7 +181,7 @@ final class SchematicPlacement {
     }
 
     ScriptStatus moveTowards(List<BlockCoord> cells, ReachPlanner.World base, boolean outsideOnly) {
-        if (host.feet().y() < host.site.origin().y() - 1) {
+        if (BuildPit.needsEscape(host.feet().y(), host.site.origin().y(), host.pit::trapped)) {
             host.pit.escape(host.feet());
             return ScriptStatus.RUNNING;
         }

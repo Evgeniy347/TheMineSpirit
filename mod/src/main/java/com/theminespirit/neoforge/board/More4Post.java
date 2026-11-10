@@ -12,6 +12,7 @@ import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.town.SiteLevels;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -107,7 +108,11 @@ final class More4Post {
         if (point == null) {
             return false;
         }
-        String id = "more4_fence:" + More4Scripts.point(point);
+        BlockCoord origin = SiteLevels.fenceOrigin(post.scan.stage(), point);
+        if (post.unreachable(origin)) {
+            return false;
+        }
+        String id = "more4_fence:" + More4Scripts.point(origin);
         if (post.done(id) || post.open(id)) {
             return true;
         }
@@ -119,7 +124,7 @@ final class More4Post {
                         ticket.task().priority(),
                         ticket.id(),
                         post.items(ticket.task())),
-                TicketTarget.at(point));
+                TicketTarget.at(origin));
         return true;
     }
 

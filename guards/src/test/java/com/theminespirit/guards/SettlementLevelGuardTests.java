@@ -3,6 +3,10 @@ package com.theminespirit.guards;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,6 +96,18 @@ class SettlementLevelGuardTests {
                 "Сторож ослеп: высота плана (медиана домов) снова стала вторым источником высоты поселения");
     }
 
+    private static boolean fenceOriginFromSite(String text) {
+        return text.contains("SiteLevels.fenceOrigin(");
+    }
+
+    private static String read(Path file) {
+        try {
+            return Files.readString(file, StandardCharsets.UTF_8);
+        } catch (IOException error) {
+            throw new UncheckedIOException("Сторож не прочитал " + file + ": " + error.getMessage(), error);
+        }
+    }
+
     private static List<String> violations(Map<Path, String> sources) {
         List<String> found = new ArrayList<>();
         sources.forEach((path, text) -> {
@@ -124,6 +140,53 @@ class SettlementLevelGuardTests {
                 || path.equals(HEIGHT)
                 || path.equals(PLOT)
                 || path.equals(STORE);
+    }
+
+    @Test
+    void fenceOrigins_DangerAndPortal_UseSettlementLevel() {
+        List<String> offenders = new ArrayList<>();
+        for (String file : List.of("neoforge/board/More3Post.java", "neoforge/board/More4Post.java")) {
+            if (!read(SourceFiles.path(file)).contains("SiteLevels.fenceOrigin(")) {
+                offenders.add(file);
+            }
+        }
+
+        assertEquals(
+                List.of(),
+                offenders,
+                "Основание забора берётся из SiteLevels.fenceOrigin (уровень ограды поселения), а не из точки "
+                        + "опасности/портала: иначе забор встаёт на крышу склада (y=80), дух снизу «в яме», DigOut "
+                        + "ищет путь вверх полным перебором. Нарушители");
+    }
+
+    @Test
+    void fenceFailure_UnreachableOrigin_IsSkippedBeforeSubmit() {
+        String danger = read(SourceFiles.path("neoforge/board/More3Post.java"));
+        String portal = read(SourceFiles.path("neoforge/board/More4Post.java"));
+
+        assertTrue(
+                danger.indexOf("post.unreachable(at)") >= 0
+                        && danger.indexOf("post.unreachable(at)") < danger.indexOf("post.submit("),
+                "Забор в точке опасности не ставится снова, пока граф помнит её недостижимой (post.unreachable → "
+                        + "continue): иначе DigOut повторяет полный поиск каждый заход");
+        assertTrue(
+                portal.indexOf("post.unreachable(origin)") >= 0
+                        && portal.indexOf("post.unreachable(origin)") < portal.indexOf("post.submit("),
+                "Забор у портала тоже пропускает недостижимую точку: правило общее, а не только для опасностей");
+    }
+
+    @Test
+    void fenceOriginPattern_WithoutSettlementLevel_IsReported() {
+        assertTrue(
+                !fenceOriginFromSite("TicketTarget.at(danger.position())"),
+                "Сторож ослеп: забор из точки опасности мимо SiteLevels.fenceOrigin обязан ловиться");
+    }
+
+    @Test
+    void fenceOriginPattern_FromSettlementLevel_IsAccepted() {
+        assertTrue(
+                fenceOriginFromSite("TicketTarget.at(SiteLevels.fenceOrigin(site, danger.position()))"),
+                "Сторож ложно срабатывает: забор на уровне ограды поселения — это правило");
     }
 
     @Test

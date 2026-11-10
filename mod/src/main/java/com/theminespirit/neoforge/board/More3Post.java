@@ -6,6 +6,7 @@ import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.town.SiteLevels;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import java.util.Optional;
@@ -47,7 +48,10 @@ final class More3Post {
 
     private static boolean fenceDanger(GraphPost post, GraphTickets.Ticket ticket) {
         for (More3Store.Danger danger : More3Store.get(post.level).recentDangers(post.now)) {
-            BlockCoord at = danger.position();
+            BlockCoord at = SiteLevels.fenceOrigin(post.scan.stage(), danger.position());
+            if (post.unreachable(at)) {
+                continue;
+            }
             String id = "more3_fence:" + at.x() + "," + at.y() + "," + at.z();
             if (post.done(id) || post.open(id)) {
                 return true;
