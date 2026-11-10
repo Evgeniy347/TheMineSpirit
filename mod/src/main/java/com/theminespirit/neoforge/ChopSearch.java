@@ -78,7 +78,7 @@ final class ChopSearch {
     }
 
     boolean extend() {
-        int target = ChopTuning.gatherDistance(ChopTuning.extendTo(maxDistance, nearestFar));
+        int target = ChopTuning.extendTo(maxDistance, nearestFar);
         if (target <= maxDistance) {
             return false;
         }

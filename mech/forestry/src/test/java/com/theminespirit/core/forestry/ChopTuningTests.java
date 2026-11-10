@@ -25,6 +25,21 @@ class ChopTuningTests {
     }
 
     @Test
+    void extendTo_BeyondSettlementRadius_IsNotCutBackToGatherRadius() {
+        int extended = ChopTuning.extendTo(ChopTuning.GATHER_RADIUS_MAX, 35);
+
+        assertEquals(
+                35,
+                extended,
+                "Расширение поиска деревьев не режется радиусом сбора 32: иначе extend возвращает 32, поиск "
+                        + "снова видит 32 и повторяет «ближайшее дерево 35 при пределе 32» (живой случай 11.11)");
+        assertEquals(
+                extended,
+                ChopTuning.scanRadius(ChopTuning.GATHER_RADIUS_MAX, extended),
+                "Скан обязан идти до расширенного предела, а не оставаться на 32");
+    }
+
+    @Test
     void scanRadius_ExtendedDistance_WidensTheScannedArea() {
         assertEquals(
                 35,
