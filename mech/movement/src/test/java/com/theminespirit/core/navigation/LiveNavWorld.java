@@ -1,25 +1,15 @@
 package com.theminespirit.core.navigation;
 
+import com.theminespirit.core.movement.BlockKind;
 import com.theminespirit.core.movement.LiveFixture;
 import com.theminespirit.core.observation.BlockCoord;
 import java.io.IOException;
 import java.util.Map;
 
 final class LiveNavWorld implements NavWorld {
-    private enum Kind {
-        AIR,
-        SOFT,
-        HARD,
-        FALLING,
-        WATER,
-        LAVA,
-        BEDROCK,
-        OBSTACLE
-    }
+    private final Map<BlockCoord, BlockKind> cells;
 
-    private final Map<BlockCoord, Kind> cells;
-
-    private LiveNavWorld(Map<BlockCoord, Kind> cells) {
+    private LiveNavWorld(Map<BlockCoord, BlockKind> cells) {
         this.cells = cells;
     }
 
@@ -28,11 +18,11 @@ final class LiveNavWorld implements NavWorld {
     }
 
     static LiveNavWorld live(String resource) throws IOException {
-        return new LiveNavWorld(LiveFixture.load(Kind.class, resource));
+        return new LiveNavWorld(LiveFixture.load(resource));
     }
 
-    private Kind kind(int x, int y, int z) {
-        return cells.getOrDefault(new BlockCoord(x, y, z), Kind.HARD);
+    private BlockKind kind(int x, int y, int z) {
+        return cells.getOrDefault(new BlockCoord(x, y, z), BlockKind.HARD);
     }
 
     @Override
@@ -42,19 +32,22 @@ final class LiveNavWorld implements NavWorld {
 
     @Override
     public boolean passable(int x, int y, int z) {
-        Kind kind = kind(x, y, z);
-        return kind == Kind.AIR || kind == Kind.WATER;
+        BlockKind kind = kind(x, y, z);
+        return kind == BlockKind.AIR || kind == BlockKind.WATER;
     }
 
     @Override
     public boolean walkable(int x, int y, int z) {
-        Kind kind = kind(x, y, z);
-        return kind == Kind.SOFT || kind == Kind.HARD || kind == Kind.FALLING || kind == Kind.BEDROCK;
+        BlockKind kind = kind(x, y, z);
+        return kind == BlockKind.SOFT
+                || kind == BlockKind.HARD
+                || kind == BlockKind.FALLING
+                || kind == BlockKind.BEDROCK;
     }
 
     @Override
     public boolean water(int x, int y, int z) {
-        return kind(x, y, z) == Kind.WATER;
+        return kind(x, y, z) == BlockKind.WATER;
     }
 
     @Override
@@ -64,11 +57,11 @@ final class LiveNavWorld implements NavWorld {
 
     @Override
     public double breakTicks(int x, int y, int z) {
-        Kind kind = kind(x, y, z);
-        if (kind == Kind.AIR || kind == Kind.WATER) {
+        BlockKind kind = kind(x, y, z);
+        if (kind == BlockKind.AIR || kind == BlockKind.WATER) {
             return 0;
         }
-        return kind == Kind.BEDROCK ? NavActionCosts.COST_INF : 10;
+        return kind == BlockKind.BEDROCK ? NavActionCosts.COST_INF : 10;
     }
 
     @Override

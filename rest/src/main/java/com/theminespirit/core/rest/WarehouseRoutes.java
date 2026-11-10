@@ -9,9 +9,9 @@ public final class WarehouseRoutes {
     public static final String PATH = "/v1/settlement/warehouse";
 
     private final WarehouseGateway gateway;
-    private final IdempotencyCache idempotency;
+    private final Idempotency idempotency;
 
-    public WarehouseRoutes(WarehouseGateway gateway, IdempotencyCache idempotency) {
+    public WarehouseRoutes(WarehouseGateway gateway, Idempotency idempotency) {
         this.gateway = Objects.requireNonNull(
                 gateway, "gateway не может быть null: решение о складе читает и меняет только платформа");
         this.idempotency = Objects.requireNonNull(

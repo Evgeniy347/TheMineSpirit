@@ -6,10 +6,9 @@ import java.util.Objects;
 
 public final class MapLegendPaint {
     public static final String KEY_CLOSE = "theminespirit.map.legend.close";
+    public static final int TAB = 10;
     private static final int ICON_TOP = 2;
     private static final int STRIKE = 1;
-
-    public static final int TAB = 10;
 
     private MapLegendPaint() {}
 

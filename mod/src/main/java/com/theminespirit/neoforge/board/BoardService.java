@@ -28,11 +28,11 @@ public final class BoardService {
     public final BoardSources sources;
     final BoardNotices notices = new BoardNotices();
     final BoardTicketDesk tickets;
+    final @Nullable BoardStateStore store;
+    final Map<String, TicketTarget> targets = new HashMap<>();
     private final Board board;
     private final JournalService journal;
-    final @Nullable BoardStateStore store;
     private final CraterProfiles craters = new CraterProfiles(64);
-    final Map<String, TicketTarget> targets = new HashMap<>();
     private final BoardHerdDesk herd;
     private final BoardSupplyDesk supply;
     private final BoardDispatchDesk dispatch;
@@ -64,8 +64,20 @@ public final class BoardService {
                 targets);
         this.dispatch = new BoardDispatchDesk(this, board, targets);
         this.tickets = new BoardTicketDesk(this, board, targets);
-        this.cycle = new BoardCycle(this, board, targets, dispatch, tickets, supply, sources, herd, notices, journal);
+        this.cycle = new BoardCycle(this);
         BoardRestore.restore(board, store, targets, tickets, journal, sources);
+    }
+
+    BoardDispatchDesk dispatch() {
+        return dispatch;
+    }
+
+    BoardSupplyDesk supply() {
+        return supply;
+    }
+
+    BoardHerdDesk herd() {
+        return herd;
     }
 
     public static BoardService create(ServerLevel level) {
@@ -182,6 +194,10 @@ public final class BoardService {
 
     void activityIssued(String id, long generation) {
         dispatch.activityIssued(id, generation);
+    }
+
+    long issuedGeneration(String ticketId) {
+        return dispatch.issuedGeneration(ticketId);
     }
 
     void detachForAction(SpiritEntity spirit) {

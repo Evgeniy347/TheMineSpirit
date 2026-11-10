@@ -38,17 +38,16 @@ public final class HiveSession {
     final SpiritEntity spirit;
     final Level level;
     final int searchRadius;
-    private final int goal;
     final Approach approach;
-
     State state = State.FIND;
-    private Outcome outcome = Outcome.RUNNING;
-    private String failureReason;
     BlockPos hive;
     BlockPos fireSpot;
-    private BlockPos stand;
     int done;
     int fireWaits;
+    private final int goal;
+    private Outcome outcome = Outcome.RUNNING;
+    private String failureReason;
+    private BlockPos stand;
     private final HiveSmoke smoke;
     private final HiveHarvest harvest;
 

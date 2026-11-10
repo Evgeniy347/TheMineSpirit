@@ -19,6 +19,7 @@ final class GraphEventPost {
     private static final String EAT = "eat";
     private static final String WAIT_FOOD = "wait_food";
     private static final String ORDER = "craft_player_order";
+    private static final String RETREAT = "retreat";
     private static final int HEAL_TICKS = 100;
     private static final Set<String> DEMOLITION = Set.of("demolish_stray", "clear_floating");
     private static final Set<String> COLLECT = Set.of("collect_drops", "collect_saplings");
@@ -101,7 +102,7 @@ final class GraphEventPost {
         }
         return switch (action.orElseThrow()) {
             case "defend" -> GraphDefensePost.post(post, ticket);
-            case "retreat" -> retreat(post, ticket);
+            case RETREAT -> retreat(post, ticket);
             case "heal" -> heal(post);
             default -> false;
         };
@@ -111,8 +112,8 @@ final class GraphEventPost {
         if (boardCase == BoardCase.ACTIVITY_DEFEND) {
             return Optional.of("defend");
         }
-        if (node.contains("retreat")) {
-            return Optional.of("retreat");
+        if (node.contains(RETREAT)) {
+            return Optional.of(RETREAT);
         }
         if (boardCase == BoardCase.ACTIVITY_REST && "heal".equals(node)) {
             return Optional.of("heal");
@@ -162,7 +163,7 @@ final class GraphEventPost {
                             Math.min(100, Math.max(1, ticket.task().priority())),
                             ticket.id(),
                             Map.of()),
-                    TicketTarget.at(post.scan.home()).withPlan(new ScriptCall("retreat", Map.of())));
+                    TicketTarget.at(post.scan.home()).withPlan(new ScriptCall(RETREAT, Map.of())));
             return true;
         }
         return false;

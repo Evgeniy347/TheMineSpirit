@@ -59,7 +59,8 @@ public final class HarvestSession {
         this.search = new HarvestSearch(spirit, spec, safety, counters, tunnel, this::fail);
         this.loot = new HarvestLoot(spirit, spec, search, breaker, rearm, counters);
         this.work = new HarvestWork(
-                spirit, spec, safety, breaker, rearm, search, loot, counters, this::fail, this::beginBreak);
+                new HarvestWork.Setup(spirit, spec, safety, breaker, rearm),
+                new HarvestWork.Helpers(search, loot, counters, this::fail, this::beginBreak));
         search.prepareWith(work::prepareBreak);
         search.acceptWith(work::acceptTarget);
     }

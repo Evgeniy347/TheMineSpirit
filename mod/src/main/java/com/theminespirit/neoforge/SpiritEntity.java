@@ -84,7 +84,7 @@ public final class SpiritEntity extends PathfinderMob {
     private final HungerState hunger = new HungerState(this);
     private final TacticsService tactics = new TacticsService(this);
     private final DropMagnet magnet = new DropMagnet(this);
-    private final PersonalSpaceKeeper personalSpace = new PersonalSpaceKeeper(this);
+    private final SpiritReflexes reflexes = new SpiritReflexes(this);
     private SpiritBrain spiritBrain;
     private boolean mainHandBorrowed;
     private long backgroundGeneration = SpiritReading.UNKNOWN_GENERATION;
@@ -149,7 +149,7 @@ public final class SpiritEntity extends PathfinderMob {
         NightLeashGate.arm(this);
         magnet.tick();
         policies.tick();
-        personalSpace.tick();
+        reflexes.tick();
         if (demo) {
             tactics.pause();
             if (spiritBrain != null) {

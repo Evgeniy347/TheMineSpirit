@@ -13,18 +13,17 @@ import java.util.StringTokenizer;
 public final class LiveFixture {
     private LiveFixture() {}
 
-    public static <K extends Enum<K>> Map<BlockCoord, K> load(Class<K> kinds, String resource) throws IOException {
+    public static Map<BlockCoord, BlockKind> load(String resource) throws IOException {
         try (InputStream stream = LiveFixture.class.getResourceAsStream(resource)) {
             if (stream == null) {
                 throw new IllegalStateException("Нет живой фикстуры: " + resource);
             }
-            return parse(kinds, new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8)), resource);
+            return parse(new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8)), resource);
         }
     }
 
-    static <K extends Enum<K>> Map<BlockCoord, K> parse(Class<K> kinds, BufferedReader reader, String source)
-            throws IOException {
-        Map<BlockCoord, K> cells = new HashMap<>();
+    static Map<BlockCoord, BlockKind> parse(BufferedReader reader, String source) throws IOException {
+        Map<BlockCoord, BlockKind> cells = new HashMap<>();
         String line;
         int number = 0;
         while ((line = reader.readLine()) != null) {
@@ -43,11 +42,11 @@ public final class LiveFixture {
                     Integer.parseInt(parts.nextToken()));
             String name = parts.nextToken();
             try {
-                cells.put(cell, Enum.valueOf(kinds, name));
+                cells.put(cell, BlockKind.valueOf(name));
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException(
                         "Строка " + number + " живой фикстуры " + source + ": вид блока " + name + " не из "
-                                + kinds.getSimpleName(),
+                                + BlockKind.class.getSimpleName(),
                         e);
             }
         }

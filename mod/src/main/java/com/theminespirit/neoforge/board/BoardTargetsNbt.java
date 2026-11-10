@@ -23,8 +23,8 @@ import net.minecraft.nbt.Tag;
 import org.slf4j.Logger;
 
 final class BoardTargetsNbt {
-    private static final Logger LOGGER = LogUtils.getLogger();
     static final String KEY = "Targets";
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final String TARGET_ID_KEY = "Id";
     private static final String TARGET_DATA_KEY = "Data";
 

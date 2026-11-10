@@ -38,10 +38,6 @@ final class SchematicSite {
     final List<Schematic.PlacedEntry> primaries;
     final List<BlockCoord> air;
     final Set<BlockCoord> schemeCells = new HashSet<>();
-    private final Map<Schematic.PlacedEntry, BlockState> wantedStates = new HashMap<>();
-    private final SchematicParts parts;
-    private final SchematicStanding standing;
-    private final SchematicClearance clearance;
     final LevelSafetyView safety;
     final int minX;
     final int maxX;
@@ -49,6 +45,10 @@ final class SchematicSite {
     final int maxZ;
     final int minY;
     final int maxY;
+    private final Map<Schematic.PlacedEntry, BlockState> wantedStates = new HashMap<>();
+    private final SchematicParts parts;
+    private final SchematicStanding standing;
+    private final SchematicClearance clearance;
 
     SchematicSite(Level level, Schematic schematic, BlockCoord origin, BuildRotation rotation) {
         this(level, schematic, null, origin, rotation);

@@ -7,9 +7,9 @@ import java.util.Objects;
 
 public final class BoardRoutes {
     private final BoardGateway gateway;
-    private final IdempotencyCache idempotency;
+    private final Idempotency idempotency;
 
-    public BoardRoutes(BoardGateway gateway, IdempotencyCache idempotency) {
+    public BoardRoutes(BoardGateway gateway, Idempotency idempotency) {
         this.gateway = Objects.requireNonNull(
                 gateway, "gateway не может быть null: очередь доски читает и меняет только платформа");
         this.idempotency = Objects.requireNonNull(

@@ -9,9 +9,9 @@ public final class SettlementRoutes {
     public static final String PATH = "/v1/settlement/stage";
 
     private final SettlementGateway gateway;
-    private final IdempotencyCache idempotency;
+    private final Idempotency idempotency;
 
-    public SettlementRoutes(SettlementGateway gateway, IdempotencyCache idempotency) {
+    public SettlementRoutes(SettlementGateway gateway, Idempotency idempotency) {
         this.gateway = Objects.requireNonNull(
                 gateway, "gateway не может быть null: этап поселения читает и меняет только платформа");
         this.idempotency = Objects.requireNonNull(

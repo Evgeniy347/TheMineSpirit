@@ -55,29 +55,28 @@ final class MineBuildCells {
     private int plugs;
     private int detours;
 
-    MineBuildCells(
-            SpiritEntity spirit,
-            Level level,
-            BlockPlacer placer,
-            BlockBreaker breaker,
-            MineAimStep aim,
+    record Setup(SpiritEntity spirit, Level level, BlockPlacer placer, BlockBreaker breaker, MineAimStep aim) {}
+
+    record Grid(
             List<MineColumn> plan,
             Map<MineColumn, MineColumn> parents,
             MineCells cells,
             Set<MineColumn> closed,
             Set<BlockCoord> openCells,
-            Host host) {
-        this.spirit = spirit;
-        this.level = level;
-        this.placer = placer;
-        this.breaker = breaker;
-        this.aim = aim;
-        this.plan = plan;
-        this.parents = parents;
-        this.cells = cells;
-        this.closed = closed;
-        this.openCells = openCells;
-        this.host = host;
+            Host host) {}
+
+    MineBuildCells(Setup setup, Grid grid) {
+        this.spirit = setup.spirit();
+        this.level = setup.level();
+        this.placer = setup.placer();
+        this.breaker = setup.breaker();
+        this.aim = setup.aim();
+        this.plan = grid.plan();
+        this.parents = grid.parents();
+        this.cells = grid.cells();
+        this.closed = grid.closed();
+        this.openCells = grid.openCells();
+        this.host = grid.host();
     }
 
     Set<BlockCoord> leftOres() {

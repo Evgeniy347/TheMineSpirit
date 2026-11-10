@@ -37,6 +37,12 @@ import org.junit.jupiter.api.Test;
 class CrossVitalScenarioTests {
     @Test
     void vital_HungryOrInjured_OrdinaryWorkIsBlockedAndVitalChainPreempts() {
+        assertStageOneVitalPriorities();
+        assertBareWorldKeepsDiagnosis();
+        assertLiveSnapshotHonorsGate();
+    }
+
+    private static void assertStageOneVitalPriorities() {
         GraphWorld world = stageOne();
         world.tools("spirit-2", 1);
         world.tools("spirit-3", 1);
@@ -114,6 +120,15 @@ class CrossVitalScenarioTests {
                         .orElse(""),
                 "Шахту получает только здоровый и сытый дух: " + candidates);
 
+        assertDisplacedMineReturns(result, board, mineId, candidates, hunt);
+    }
+
+    private static void assertDisplacedMineReturns(
+            GraphTickets.Result result,
+            Board board,
+            String mineId,
+            List<DispatchRound.Candidate> candidates,
+            GraphPlan.Task hunt) {
         board.claim(mineId, id("spirit-1"), 0);
         DispatchRound busy = new DispatchRound(board, 0);
         List<DispatchRound.Candidate> busyCandidates =
@@ -132,7 +147,9 @@ class CrossVitalScenarioTests {
                 BoardStatus.PENDING,
                 board.statusOf(mineId).orElseThrow(),
                 "Шахта после вытеснения снова ждёт свободного духа: " + board.statusOf(mineId));
+    }
 
+    private static void assertBareWorldKeepsDiagnosis() {
         GraphWorld bare = stageOne().noWorld("animals").noWorld("water");
         bare.with("coal", 0).with("food", 0).event("hungry");
         GraphFacts bareFacts = facts(named(spirit("spirit-1", 20, 4), spirit("spirit-2")));
@@ -144,7 +161,9 @@ class CrossVitalScenarioTests {
         assertTrue(
                 barePlan.task("event:hungry:wait_food").stream().anyMatch(GraphPlan.Task::feasible),
                 "Ждать еду — выполнимый запасной путь нужды: " + ids(barePlan));
+    }
 
+    private static void assertLiveSnapshotHonorsGate() {
         GraphWorld live =
                 GraphMutations.liveStageOne().event("hungry").with("food", 0).tools("spirit-2", 1);
         GraphPlan livePlan = plan(live, live.facts);

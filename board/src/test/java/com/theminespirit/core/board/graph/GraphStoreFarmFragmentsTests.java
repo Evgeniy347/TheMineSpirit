@@ -94,6 +94,26 @@ class GraphStoreFarmFragmentsTests {
     }
 
     @Test
+    void farmFragment_PlannedWheatFieldWithoutMaterials_IsStillRequested() {
+        GraphPlan plan = GraphWorld.settled()
+                .built("wheat_field", GraphState.Built.PLANNED)
+                .with("dirt", 0)
+                .with("wheat_seeds", 0)
+                .plan();
+
+        assertTrue(
+                plan.tasks().stream().anyMatch(task -> "building:wheat_field".equals(task.id())),
+                "Грядка этапа 1 в плане поселения обязана строиться и без остатка земли в запасе: иначе улицы "
+                        + "съедают всю землю, а грядка не заказывается никогда (obsrest B11): " + plan.tasks());
+        assertTrue(
+                plan.tasks().stream().anyMatch(task -> task.id().startsWith("dig_dirt")),
+                "Нехватку земли для грядки граф добывает сам, а не ждёт случайного остатка: " + plan.tasks());
+        assertTrue(
+                plan.tasks().stream().anyMatch(task -> task.id().startsWith("gather_seeds")),
+                "Нехватку семян для грядки граф добывает сам, а не ждёт случайного остатка: " + plan.tasks());
+    }
+
+    @Test
     void farmFragment_DirtWithoutSeeds_PostsWheatFieldTicket() {
         GraphWorld world = GraphWorld.settled()
                 .built("wheat_field", GraphState.Built.PLANNED)

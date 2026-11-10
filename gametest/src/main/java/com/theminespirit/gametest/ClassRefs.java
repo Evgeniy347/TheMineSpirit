@@ -37,26 +37,29 @@ final class ClassRefs {
             int count = in.readUnsignedShort();
             String[] names = new String[count];
             int[] classes = new int[count];
-            for (int index = 1; index < count; index++) {
+            int index = 1;
+            while (index < count) {
                 int tag = in.readUnsignedByte();
+                int step = 1;
                 switch (tag) {
                     case 1 -> names[index] = in.readUTF();
                     case 7 -> classes[index] = in.readUnsignedShort();
                     case 8, 16, 19, 20 -> in.readUnsignedShort();
-                    case 15 -> in.skipBytes(3);
-                    case 3, 4, 9, 10, 11, 12, 17, 18 -> in.skipBytes(4);
+                    case 15 -> in.skipNBytes(3);
+                    case 3, 4, 9, 10, 11, 12, 17, 18 -> in.skipNBytes(4);
                     case 5, 6 -> {
-                        in.skipBytes(8);
-                        index++;
+                        in.skipNBytes(8);
+                        step = 2;
                     }
                     default ->
                         throw new IllegalArgumentException(
                                 "Неизвестная запись constant pool (" + tag + "): формат класса не разобрать");
                 }
+                index += step;
             }
-            for (int index = 1; index < count; index++) {
-                if (classes[index] > 0 && classes[index] < count && names[classes[index]] != null) {
-                    references.add(names[classes[index]]);
+            for (int slot = 1; slot < count; slot++) {
+                if (classes[slot] > 0 && classes[slot] < count && names[classes[slot]] != null) {
+                    references.add(names[classes[slot]]);
                 }
             }
         } catch (IOException e) {

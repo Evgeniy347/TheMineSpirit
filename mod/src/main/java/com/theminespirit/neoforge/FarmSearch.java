@@ -37,6 +37,8 @@ final class FarmSearch {
 
     private BlockCoord currentGround;
 
+    record Callbacks(Consumer<String> fail, Supplier<FarmSession.State> exhausted) {}
+
     FarmSearch(
             SpiritEntity spirit,
             FarmJob job,
@@ -44,8 +46,7 @@ final class FarmSearch {
             HarvestTargets targets,
             LevelFarmView view,
             FarmCounters counters,
-            Consumer<String> fail,
-            Supplier<FarmSession.State> exhausted) {
+            Callbacks callbacks) {
         this.spirit = spirit;
         this.job = job;
         this.crop = crop;
@@ -53,8 +54,8 @@ final class FarmSearch {
         this.view = view;
         this.safety = new LevelSafetyView(spirit.level());
         this.counters = counters;
-        this.fail = fail;
-        this.exhausted = exhausted;
+        this.fail = callbacks.fail();
+        this.exhausted = callbacks.exhausted();
         this.approach = new Approach(spirit);
     }
 

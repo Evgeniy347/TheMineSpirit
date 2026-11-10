@@ -51,82 +51,90 @@ public final class HusbandryCullGameTests {
         int[] waited = {0};
 
         helper.onEachTick(() -> {
-            RunStatus status = spirit.taskStatus().orElse(null);
-            if (status == null) {
+            if (spirit.taskStatus().isEmpty()) {
                 return;
             }
             switch (phase[0]) {
-                case 0 -> {
-                    if (status == RunStatus.RUNNING) {
-                        return;
-                    }
-                    hunt.assertStarted();
-                    helper.assertTrue(
-                            status == RunStatus.SUCCEEDED,
-                            "охота на пустой еде обязана добить овцу: статус " + status + ", причина "
-                                    + spirit.taskFailureReason().orElse("нет"));
-                    helper.assertTrue(
-                            GameTestFixtures.countInInventory(spirit.getInventory(), Items.MUTTON) > 0
-                                    || GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHITE_WOOL) > 0,
-                            "охота обязана принести мясо или шерсть в инвентарь духа");
-                    phase[0] = 1;
-                    spirit.startTask(new ScriptCall("cull", Map.of("species", "cow", "keep", 3, "radius", 8)));
-                }
-                case 1 -> {
-                    if (status == RunStatus.RUNNING) {
-                        return;
-                    }
-                    HusbandrySceneSupport.assertSucceeded(helper, spirit, "из пяти коров лишние две обязаны забиться");
-                    List<Cow> cows = HusbandrySceneSupport.alive(helper, Cow.class);
-                    helper.assertTrue(
-                            cows.size() == 4,
-                            "остаться обязаны 3 взрослые и телёнок (всего 4), фактически " + cows.size());
-                    helper.assertTrue(
-                            cows.stream().filter(Cow::isBaby).count() == 1,
-                            "телёнок обязан остаться цел: детёнышей не трогают никогда");
-                    int beef = GameTestFixtures.countInInventory(spirit.getInventory(), Items.BEEF);
-                    int leather = GameTestFixtures.countInInventory(spirit.getInventory(), Items.LEATHER);
-                    helper.assertTrue(
-                            beef >= 2 && beef + leather >= 2,
-                            "говядина и кожа с двух туш обязаны подобраться (говядины " + beef + ", кожи " + leather
-                                    + ")");
-                    phase[0] = 2;
-                    waited[0] = 0;
-                    spirit.startTask(new ScriptCall("fish", Map.of("count", 1, "duration_ticks", 200, "radius", 8)));
-                }
-                case 2 -> {
-                    if (status == RunStatus.RUNNING && waited[0] < 10) {
-                        waited[0]++;
-                        return;
-                    }
-                    helper.assertTrue(
-                            waited[0] >= 10,
-                            "рыбалка обязана продержаться больше мгновенного запуска: тиков " + waited[0]);
-                    helper.assertTrue(
-                            status == RunStatus.RUNNING,
-                            "рыбалка у воды обязана идти, а не падать сразу: статус " + status + ", причина "
-                                    + spirit.taskFailureReason().orElse("нет"));
-                    helper.assertTrue(
-                            "fish".equals(spirit.currentTaskScript().orElse("")),
-                            "обработчик еды запускает именно рыбацкий скрипт: " + spirit.currentTaskScript());
-                    spirit.cancelTask();
-                    phase[0] = 3;
-                    spirit.startTask(new ScriptCall("scan_blocks", Map.of("radius", 8)));
-                }
-                case 3 -> {
-                    if (status == RunStatus.RUNNING) {
-                        return;
-                    }
-                    helper.assertTrue(
-                            status == RunStatus.SUCCEEDED,
-                            "ожидание еды — осмотр места без ходьбы: статус " + status + ", причина "
-                                    + spirit.taskFailureReason().orElse("нет"));
-                    phase[0] = 4;
-                    GameTestFixtures.finish(helper);
-                    helper.succeed();
-                }
+                case 0 -> stepHunt(helper, spirit, hunt, phase);
+                case 1 -> stepCull(helper, spirit, phase, waited);
+                case 2 -> stepFish(helper, spirit, phase, waited);
+                case 3 -> stepWait(helper, spirit, phase);
                 default -> throw new IllegalStateException("Лишняя фаза проверки стада и еды: " + phase[0]);
             }
         });
+    }
+
+    private static void stepHunt(GameTestHelper helper, SpiritEntity spirit, SpiritRun hunt, int[] phase) {
+        RunStatus status = spirit.taskStatus().orElse(null);
+        if (status == RunStatus.RUNNING) {
+            return;
+        }
+        hunt.assertStarted();
+        helper.assertTrue(
+                status == RunStatus.SUCCEEDED,
+                "охота на пустой еде обязана добить овцу: статус " + status + ", причина "
+                        + spirit.taskFailureReason().orElse("нет"));
+        helper.assertTrue(
+                GameTestFixtures.countInInventory(spirit.getInventory(), Items.MUTTON) > 0
+                        || GameTestFixtures.countInInventory(spirit.getInventory(), Items.WHITE_WOOL) > 0,
+                "охота обязана принести мясо или шерсть в инвентарь духа");
+        phase[0] = 1;
+        spirit.startTask(new ScriptCall("cull", Map.of("species", "cow", "keep", 3, "radius", 8)));
+    }
+
+    private static void stepCull(GameTestHelper helper, SpiritEntity spirit, int[] phase, int[] waited) {
+        RunStatus status = spirit.taskStatus().orElse(null);
+        if (status == RunStatus.RUNNING) {
+            return;
+        }
+        HusbandrySceneSupport.assertSucceeded(helper, spirit, "из пяти коров лишние две обязаны забиться");
+        List<Cow> cows = HusbandrySceneSupport.alive(helper, Cow.class);
+        helper.assertTrue(
+                cows.size() == 4, "остаться обязаны 3 взрослые и телёнок (всего 4), фактически " + cows.size());
+        helper.assertTrue(
+                cows.stream().filter(Cow::isBaby).count() == 1,
+                "телёнок обязан остаться цел: детёнышей не трогают никогда");
+        int beef = GameTestFixtures.countInInventory(spirit.getInventory(), Items.BEEF);
+        int leather = GameTestFixtures.countInInventory(spirit.getInventory(), Items.LEATHER);
+        helper.assertTrue(
+                beef >= 2 && beef + leather >= 2,
+                "говядина и кожа с двух туш обязаны подобраться (говядины " + beef + ", кожи " + leather + ")");
+        phase[0] = 2;
+        waited[0] = 0;
+        spirit.startTask(new ScriptCall("fish", Map.of("count", 1, "duration_ticks", 200, "radius", 8)));
+    }
+
+    private static void stepFish(GameTestHelper helper, SpiritEntity spirit, int[] phase, int[] waited) {
+        RunStatus status = spirit.taskStatus().orElse(null);
+        if (status == RunStatus.RUNNING && waited[0] < 10) {
+            waited[0]++;
+            return;
+        }
+        helper.assertTrue(
+                waited[0] >= 10, "рыбалка обязана продержаться больше мгновенного запуска: тиков " + waited[0]);
+        helper.assertTrue(
+                status == RunStatus.RUNNING,
+                "рыбалка у воды обязана идти, а не падать сразу: статус " + status + ", причина "
+                        + spirit.taskFailureReason().orElse("нет"));
+        helper.assertTrue(
+                "fish".equals(spirit.currentTaskScript().orElse("")),
+                "обработчик еды запускает именно рыбацкий скрипт: " + spirit.currentTaskScript());
+        spirit.cancelTask();
+        phase[0] = 3;
+        spirit.startTask(new ScriptCall("scan_blocks", Map.of("radius", 8)));
+    }
+
+    private static void stepWait(GameTestHelper helper, SpiritEntity spirit, int[] phase) {
+        RunStatus status = spirit.taskStatus().orElse(null);
+        if (status == RunStatus.RUNNING) {
+            return;
+        }
+        helper.assertTrue(
+                status == RunStatus.SUCCEEDED,
+                "ожидание еды — осмотр места без ходьбы: статус " + status + ", причина "
+                        + spirit.taskFailureReason().orElse("нет"));
+        phase[0] = 4;
+        GameTestFixtures.finish(helper);
+        helper.succeed();
     }
 }

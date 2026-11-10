@@ -43,7 +43,7 @@ class TaskRoutesTests {
     private TaskRegistry registry;
     private FakeTaskGateway gateway;
     private PlanningService planning;
-    private IdempotencyCache idempotency;
+    private Idempotency idempotency;
     private SseSlots slots;
     private final FakeBoardGateway board = new FakeBoardGateway();
     private Router router;
@@ -74,7 +74,7 @@ class TaskRoutesTests {
         return send(method, path, body, Map.of());
     }
 
-    private void observing(IdempotencyCache cache, SseSlots streams) {
+    private void observing(Idempotency cache, SseSlots streams) {
         idempotency = cache;
         slots = streams;
         router = Router.of(new TaskRoutes(registry, gateway, planning, cache, streams, board).routes());

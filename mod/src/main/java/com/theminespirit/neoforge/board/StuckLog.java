@@ -24,14 +24,15 @@ final class StuckLog {
                     change.reason());
             SpiritWorldLog.stuck(
                     level,
-                    change.spirit(),
-                    change.marked() ? "mark" : "clear",
-                    change.at(),
-                    "",
-                    null,
-                    change.reason(),
-                    LogCause.STUCK,
-                    change.tick());
+                    new SpiritWorldLog.Stuck(
+                            change.spirit(),
+                            change.marked() ? "mark" : "clear",
+                            change.at(),
+                            "",
+                            null,
+                            change.reason(),
+                            LogCause.STUCK,
+                            change.tick()));
         }
     }
 }
