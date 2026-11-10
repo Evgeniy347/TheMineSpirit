@@ -44,8 +44,13 @@ class SnapshotVersionGuardTests {
                 "Нет scripts/testing/check-world-snapshot.sh: нечем проверить, что мёртвая консоль не оставляет "
                         + "мир без автосохранения");
         String check = read(SNAPSHOT_CHECK);
-        for (String scenario :
-                List.of("мёртвая консоль", "save-all молчит", "save-on молчит", "занятый замок", "живая консоль")) {
+        for (String scenario : List.of(
+                "запущенный сервер",
+                "остановленный сервер",
+                "мёртвая консоль",
+                "save-all молчит",
+                "save-on молчит",
+                "занятый замок")) {
             assertTrue(
                     check.contains(scenario),
                     "Проверка check-world-snapshot.sh потеряла опыт «" + scenario + "»: подтверждения save-*, "
