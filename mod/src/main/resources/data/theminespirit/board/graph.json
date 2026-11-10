@@ -9863,10 +9863,20 @@
     },
     "night": {
       "tasks": [
-        {"id": "more4_guard_settlement", "case": "ACTIVITY_GUARD", "base": 80, "consumes": {},
-         "implemented": true},
-        {"id": "more4_watch_chests", "case": "ACTIVITY_GUARD", "base": 79, "consumes": {},
-         "implemented": true}
+        {
+          "id": "more4_guard_settlement",
+          "case": "ACTIVITY_GUARD",
+          "base": 80,
+          "consumes": {},
+          "implemented": true
+        },
+        {
+          "id": "more4_watch_chests",
+          "case": "ACTIVITY_GUARD",
+          "base": 79,
+          "consumes": {},
+          "implemented": true
+        }
       ],
       "push": {
         "building:lighting": 15,
@@ -10539,15 +10549,15 @@
     }
   },
   "undo": {
-    "base": 30,
-    "inside": 25,
-    "street": 10,
-    "perHeight": 0.5,
-    "heightCap": 10,
-    "perCell": 2.0,
-    "cellCap": 12,
-    "farDistance": 128,
-    "farShare": 0.5,
-    "owner": 0.7
+    "base": 120,
+    "inside": 120,
+    "street": 20,
+    "perHeight": 1.0,
+    "heightCap": 30,
+    "perCell": 6.0,
+    "cellCap": 60,
+    "farDistance": 256,
+    "farShare": 0.8,
+    "owner": 0.8
   }
 }

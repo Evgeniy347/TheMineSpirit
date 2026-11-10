@@ -28,6 +28,9 @@ class CrossLeaseUndoScenarioTests {
                 inside.priority() > trip.priority(),
                 "Столб внутри поселения и на улице убирается раньше моста далеко в походе: " + inside.priority()
                         + " против " + trip.priority());
+        assertTrue(
+                inside.priority() >= 85,
+                "Откат брошенной правки в поселении идёт впереди новой работы: " + inside.priority());
         assertEquals(
                 "undo:pillar-1",
                 inside.makes(),
@@ -57,7 +60,29 @@ class CrossLeaseUndoScenarioTests {
                 "После появления пути задание отката выдаётся снова: " + again.tasks());
     }
 
+    @Test
+    void settlementUndo_ComparedToDemolitionWork_GoesFirst() {
+        GraphSiteFacts.Lease pillar = new GraphSiteFacts.Lease(
+                "pillar-1", "scaffold", SPIRIT, new GraphFacts.Position(0, 78, 0), 5, true, true, 5, 4);
+        GraphFacts facts = facts(
+                List.of(pillar),
+                List.of(new GraphSiteFacts.Stray(
+                        "stray:oak_fence@1,69,1", "oak_fence", new GraphFacts.Position(1, 69, 1), "spirit-1")));
+
+        GraphPlan plan = PlanCaseFacts.plan(GraphWorld.settled(), facts);
+
+        assertTrue(
+                PlanCaseFacts.task(plan, "event:undo_lease:undo:pillar-1").priority()
+                        > PlanCaseFacts.task(plan, "event:demolish_stray:demolish_stray")
+                                .priority(),
+                "Откат брошенной правки в поселении важнее новой уборки чужого мусора: " + plan.tasks());
+    }
+
     private static GraphFacts facts(List<GraphSiteFacts.Lease> leases) {
+        return facts(leases, List.of());
+    }
+
+    private static GraphFacts facts(List<GraphSiteFacts.Lease> leases, List<GraphSiteFacts.Stray> strays) {
         return new GraphFacts(
                 Map.of(
                         SPIRIT,
@@ -82,7 +107,7 @@ class CrossLeaseUndoScenarioTests {
                 List.of(),
                 Map.of(),
                 Map.of(),
-                List.of(),
+                strays,
                 GraphSiteFacts.Terrain.empty(),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
