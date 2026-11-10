@@ -102,22 +102,6 @@ final class BoardSupplyDesk {
     }
 
     private boolean hasActiveSupply(String item) {
-        for (BoardTicket ticket : board.tickets()) {
-            if (!SupplyGate.isSupply(ticket.id()) || !active(ticket.id())) {
-                continue;
-            }
-            TicketTarget target = targets.get(ticket.id());
-            if (target != null && item.equals(target.supplyItem())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean active(String id) {
-        BoardStatus status = board.statusOf(id).orElse(null);
-        return status == BoardStatus.PENDING
-                || status == BoardStatus.WAITING_RESOURCES
-                || status == BoardStatus.ASSIGNED;
+        return SupplyGate.hasActiveSupply(board, targets, item);
     }
 }

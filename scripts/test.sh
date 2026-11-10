@@ -32,6 +32,8 @@ case "$OSTYPE" in
         ;;
 esac
 GAMETEST_WAIT="${THEMINESPIRIT_GAMETEST_WAIT:-1800}"
+GAMETEST_JAVA_CACHE_TTL="${THEMINESPIRIT_GAMETEST_PID_CACHE_SECONDS:-30}"
+GAMETEST_JAVA_CACHE=""
 GAMETEST_LOCK_DIR="$GAMETEST_LOCK.d"
 GAMETEST_TOKEN=""
 GAMETEST_BEAT_INTERVAL="${THEMINESPIRIT_GAMETEST_BEAT_SECONDS:-10}"
@@ -361,16 +363,41 @@ pid_is_live() {
     kill -0 "$pid" 2>/dev/null
 }
 
+# lib: PowerShell на Windows стоит 0.3–0.6 с на запуск, и при падении прогона список
+# java-процессов спрашивают дважды подряд (надзор по пределу и уборка при выходе).
+# Поэтому снимок живёт GAMETEST_JAVA_CACHE_TTL секунд: за это время надзор и уборка
+# делят один опрос, а kill перед отправкой сигнала проверяет pid_is_live.
 gametest_server_pids() {
-    local dir="$1" d pid exe cwd
+    local dir="$1" d pid exe cwd cache now ts pids line fresh=0
     case "$OSTYPE" in
         msys*|cygwin*|win*)
             local win_worktree win_dir
+            cache="${GAMETEST_JAVA_CACHE:-}"
+            now_s now
+            if [ -n "$cache" ] && [ -f "$cache" ]; then
+                {
+                    read -r ts || ts=""
+                    case "$ts" in ''|*[!0-9]*) ts=0 ;; esac
+                    if [ "$ts" -le "$now" ] && [ $((now - ts)) -le "$GAMETEST_JAVA_CACHE_TTL" ]; then
+                        fresh=1
+                        while IFS= read -r line; do
+                            [ -n "$line" ] && printf '%s\n' "$line"
+                        done
+                    fi
+                } <"$cache"
+                [ "$fresh" = 1 ] && return 0
+            fi
             win_worktree=$(cygpath -w "$GAMETEST_WORKTREE" 2>/dev/null || printf '%s' "$GAMETEST_WORKTREE")
             win_dir=$(cygpath -w "$dir" 2>/dev/null || printf '%s' "$dir")
-            powershell -NoProfile -Command \
+            pids=$(powershell -NoProfile -Command \
                 "Get-CimInstance Win32_Process -Filter \"Name='java.exe'\" | Where-Object { \$_.CommandLine -like '*$win_worktree*' -or \$_.CommandLine -like '*$win_dir*' } | ForEach-Object { \$_.ProcessId }" \
-                2>/dev/null | tr -d '\r'
+                2>/dev/null | tr -d '\r')
+            if [ -n "$cache" ]; then
+                printf '%s\n' "$now" >"$cache.tmp"
+                [ -n "$pids" ] && printf '%s\n' "$pids" >>"$cache.tmp"
+                mv "$cache.tmp" "$cache" 2>/dev/null || true
+            fi
+            [ -n "$pids" ] && printf '%s\n' "$pids"
             ;;
         *)
             for d in /proc/[0-9]*; do
@@ -638,7 +665,7 @@ start_monitor() {
     export MONITOR_LOG_FILE="$LOG_FILE" MONITOR_START_TIME="$START_TIME" \
            MONITOR_WARN_SECONDS="$WARN_SECONDS" MONITOR_STOP_SECONDS="$STOP_SECONDS" \
            MONITOR_MODE="$mode" MONITOR_MAIN_PID="$$" MONITOR_GRADLE_GROUP=""
-    export MODE GAMETEST_RUN_DIR GAMETEST_WORKTREE PROJECT_ROOT
+    export MODE GAMETEST_RUN_DIR GAMETEST_WORKTREE PROJECT_ROOT GAMETEST_JAVA_CACHE GAMETEST_JAVA_CACHE_TTL
     export -f pid_is_live gametest_server_pids kill_gametest_server now_s own_tree_pids kill_own_tree pause_tick init_pause_tick close_pause_tick monitor_loop
     if command -v setsid >/dev/null 2>&1; then
         MONITOR_GRADLE_GROUP=group
@@ -737,6 +764,7 @@ stop_monitor() {
 
 cleanup() {
     stop_monitor
+    [ -n "${GAMETEST_JAVA_CACHE:-}" ] && rm -f "$GAMETEST_JAVA_CACHE" "$GAMETEST_JAVA_CACHE.tmp"
     [ "$DIR_LOCK_HELD" = 1 ] && release_dir_lock
     return 0
 }
@@ -1067,13 +1095,18 @@ analyze_gametest() {
 gametest_scene_started() {
     local fd="$1" pid="$2" shard="$3" chunk
     local seen="${SCENE_TAIL[$shard]:-}"
-    IFS= read -r -d '' chunk <&"$fd" 2>/dev/null
-    seen="$seen$chunk"
-    case "$seen" in
-        *"tests are now running"*) SCENE_TAIL[$shard]=""; return 0 ;;
-    esac
-    # lib: хвост держим на случай, если маркер разорван между двумя чтениями.
-    SCENE_TAIL[$shard]="${seen: -40}"
+    # lib: на загрузке мира лог успевает вырасти на мегабайты. Читаем порциями по 1 МиБ
+    # с сохранённым смещением fd: dd берёт только новые байты, память ограничена порцией,
+    # а встроенный read тянет весь накопленный лог в переменную и читает его побайтно.
+    while chunk=$(dd bs=1048576 count=1 <&"$fd" 2>/dev/null) && [ -n "$chunk" ]; do
+        seen="$seen$chunk"
+        case "$seen" in
+            *"tests are now running"*) SCENE_TAIL[$shard]=""; return 0 ;;
+        esac
+        # lib: хвост держим на случай, если маркер разорван между двумя чтениями.
+        seen="${seen: -40}"
+    done
+    SCENE_TAIL[$shard]="$seen"
     kill -0 "$pid" 2>/dev/null || return 0
     return 1
 }
@@ -1123,6 +1156,7 @@ wait_gametest_scenes() {
 
 STAMP=$(date +%Y%m%d-%H%M%S-%N)
 LOG_FILE="$LOG_DIR/${STAMP}-${MODE}.log"
+GAMETEST_JAVA_CACHE="$LOG_FILE.javapids"
 rm -f "$LOG_FILE.stopped"
 now_s START_TIME
 ELAPSED=0

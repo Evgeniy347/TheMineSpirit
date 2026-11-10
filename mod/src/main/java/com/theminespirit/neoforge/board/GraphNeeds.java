@@ -127,10 +127,8 @@ final class GraphNeeds {
         if (source == null) {
             return null;
         }
-        Map<String, Integer> need;
-        try {
-            need = CaseMaterials.need(plan, source);
-        } catch (RuntimeException failure) {
+        Map<String, Integer> need = needOf(plan, source);
+        if (need == null) {
             return null;
         }
         return firstMissing(BuildRemainder.left(level, ticket.boardCase(), plan, need), stock);
@@ -138,13 +136,16 @@ final class GraphNeeds {
 
     static GraphBlock.@Nullable Item materialNeed(
             BoardCase boardCase, TaskNode plan, MaterialSource source, StockView stock) {
-        Map<String, Integer> need;
+        Map<String, Integer> need = needOf(plan, source);
+        return need == null ? null : firstMissing(need, stock);
+    }
+
+    private static @Nullable Map<String, Integer> needOf(TaskNode plan, MaterialSource source) {
         try {
-            need = CaseMaterials.need(plan, source);
+            return CaseMaterials.need(plan, source);
         } catch (RuntimeException failure) {
             return null;
         }
-        return firstMissing(need, stock);
     }
 
     private static GraphBlock.@Nullable Item firstMissing(Map<String, Integer> need, StockView stock) {

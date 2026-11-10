@@ -62,6 +62,23 @@ public final class SupplyGate {
         return ticketId.startsWith("supply:") || ticketId.startsWith("supply_gather:");
     }
 
+    public static boolean hasActiveSupply(Board board, Map<String, TicketTarget> targets, String item) {
+        Objects.requireNonNull(board, "Доска не может быть null: активные заявки читаются из неё");
+        Objects.requireNonNull(targets, "Цели заявок не могут быть null: предмет заявки лежит в цели");
+        Objects.requireNonNull(item, "Предмет заявки не может быть null: ищем заявку на него");
+        for (BoardTicket ticket : board.tickets()) {
+            if (!isSupply(ticket.id())
+                    || !board.statusOf(ticket.id()).map(BoardStatus::open).orElse(false)) {
+                continue;
+            }
+            TicketTarget target = targets.get(ticket.id());
+            if (target != null && item.equals(target.supplyItem())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static TicketTarget merge(@Nullable TicketTarget before, TicketTarget next) {
         Objects.requireNonNull(next, "Новая заявка не может быть null: сливать нечего");
         if (before == null || next.supplyItem() == null) {
