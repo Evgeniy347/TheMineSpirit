@@ -22,6 +22,7 @@ SSH = os.environ.get("LIVE_SSH", "domovoy@192.168.0.147")
 MAIN_SERVER = "/opt/minecraft/server"
 MAIN_SCRIPTS = "/opt/minecraft/scripts/logdb"
 FTS = "messages_fts"
+SINCE_COMMANDS = ("spirit", "failures", "blocks", "deaths", "stuck", "items", "health", "text", "grep")
 
 
 def find_copy():
@@ -212,11 +213,12 @@ def dispatch(args, conn):
         )
         return "ts,spirit,x,y,z,state,script,ticket,food,health", rows
     if command == "health":
+        since = since_ms(args.since, 0)
         rows = query(
             conn,
             "SELECT ts, event, mspt, worst_mspt, players, source_failures, pending, active, blocked, board_ms, prune_ms, tickets "
-            "FROM server_health ORDER BY ts DESC LIMIT ?",
-            (limit + 1,),
+            "FROM server_health WHERE ts>=? ORDER BY ts DESC LIMIT ?",
+            (since, limit + 1),
         )
         return "ts,event,mspt,worst_mspt,players,source_failures,pending,active,blocked,board_ms,prune_ms,tickets", rows
     if command == "text":
@@ -287,17 +289,10 @@ def remote_command(args, db):
         command.extend(args.coords)
     elif args.command == "spirit":
         command.extend([args.name])
-        if args.since:
-            command.extend(["--since", args.since])
     elif args.command == "ticket":
         command.extend([args.ticket])
-    elif args.command == "failures":
-        if args.since:
-            command.extend(["--since", args.since])
     elif args.command == "blocks":
         command.extend(["--spirit", args.spirit])
-        if args.since:
-            command.extend(["--since", args.since])
     elif args.command == "items":
         command.extend([args.item])
     elif args.command == "where":
@@ -308,6 +303,9 @@ def remote_command(args, db):
         command.extend(args.words)
     elif args.command == "sql":
         command.extend([args.query])
+    since = getattr(args, "since", None)
+    if since and args.command in SINCE_COMMANDS:
+        command.extend(["--since", since])
     return command
 
 
@@ -352,35 +350,28 @@ def build_parser():
     cell.add_argument("coords", nargs="+")
     spirit = sub.add_parser("spirit")
     spirit.add_argument("name")
-    spirit.add_argument("--since")
     ticket = sub.add_parser("ticket")
     ticket.add_argument("ticket")
     failures = sub.add_parser("failures")
-    failures.add_argument("--since")
     blocks = sub.add_parser("blocks")
     blocks.add_argument("--spirit", required=True)
-    blocks.add_argument("--since")
     deaths = sub.add_parser("deaths")
-    deaths.add_argument("--since")
     stuck = sub.add_parser("stuck")
-    stuck.add_argument("--since")
     items = sub.add_parser("items")
     items.add_argument("item")
-    items.add_argument("--since")
     where = sub.add_parser("where")
     where.add_argument("name")
     where.add_argument("--at", required=True)
     health = sub.add_parser("health")
-    health.add_argument("--since")
     text = sub.add_parser("text")
     text.add_argument("words", nargs="+")
-    text.add_argument("--since")
     grep = sub.add_parser("grep")
     grep.add_argument("pattern")
-    grep.add_argument("--since")
     sql = sub.add_parser("sql")
     sql.add_argument("query")
     sub.add_parser("schema")
+    for command in SINCE_COMMANDS:
+        sub.choices[command].add_argument("--since")
     return parser
 
 
