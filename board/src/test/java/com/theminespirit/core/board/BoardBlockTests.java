@@ -205,7 +205,7 @@ class BoardBlockTests {
             }
             board.submit(ticket());
             board.claim(ID, spirit(attempt), now[0]);
-            board.fail(ID, new StockView(Map.of("dirt", 5)));
+            board.fail(ID, new StockView(Map.of("dirt", 5)), null);
         }
         assertTrue(board.blocked(ID), "Подготовка: задание заблокировано пределом провалов");
         board.failures().drainBlocks();

@@ -1,21 +1,31 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 public final class RescueGroups {
-    public static final int RADIUS = 8;
+    private static final int MAX_SEARCH_CELLS = 4096;
+
+    @FunctionalInterface
+    public interface Passage {
+        boolean open(BlockCoord cell);
+    }
 
     public record Member(UUID id, BlockCoord at, int toolTier, int blocks) {
         public Member {
             Objects.requireNonNull(id, "Дух группы не может быть null: группа адресная");
-            Objects.requireNonNull(at, "Точка духа не может быть null: по ней видно, рядом ли духи");
+            Objects.requireNonNull(at, "Точка духа не может быть null: по ней видно, в одной ли пещере духи");
             if (toolTier < 0) {
                 throw new IllegalArgumentException("Уровень инструмента " + toolTier + " отрицателен");
             }
@@ -46,20 +56,19 @@ public final class RescueGroups {
 
     private RescueGroups() {}
 
-    public static List<Group> form(List<Member> members) {
-        return form(members, RADIUS);
-    }
-
-    public static List<Group> form(List<Member> members, int radius) {
+    public static List<Group> form(List<Member> members, Passage passage) {
         Objects.requireNonNull(members, "Список духов задаётся списком, пустой — пустым");
-        if (radius < 0) {
-            throw new IllegalArgumentException("Радиус группы " + radius + " отрицателен");
-        }
+        Objects.requireNonNull(
+                passage, "Проходимость мира не может быть null: без неё не видно, кто с кем в одной пещере");
         Set<UUID> seen = new HashSet<>();
         for (Member member : members) {
             if (!seen.add(member.id())) {
                 throw new IllegalArgumentException("Дух " + member.id() + " указан дважды: группа не определена");
             }
+        }
+        Map<BlockCoord, List<Member>> waiting = new HashMap<>();
+        for (Member member : members) {
+            waiting.computeIfAbsent(member.at(), at -> new ArrayList<>()).add(member);
         }
         List<Group> groups = new ArrayList<>();
         Set<UUID> grouped = new HashSet<>();
@@ -68,23 +77,18 @@ public final class RescueGroups {
                 continue;
             }
             List<Member> group = new ArrayList<>();
-            List<Member> queue = new ArrayList<>();
-            queue.add(start);
-            grouped.add(start.id());
-            for (int index = 0; index < queue.size(); index++) {
-                Member here = queue.get(index);
-                group.add(here);
-                for (Member other : members) {
-                    if (!grouped.contains(other.id()) && near(here.at(), other.at(), radius)) {
-                        grouped.add(other.id());
-                        queue.add(other);
-                    }
-                }
-            }
+            collect(start, waiting, grouped, group, passage);
             groups.add(groupOf(group));
         }
         groups.sort(Comparator.comparing(group -> group.leader().toString()));
         return List.copyOf(groups);
+    }
+
+    public static List<Member> walkers(Group group, Predicate<Member> pathHome, Predicate<Member> onSurface) {
+        Objects.requireNonNull(group, "Группа спасения не может быть null: по ней идут ведомые");
+        Objects.requireNonNull(pathHome, "Признак пути домой не может быть null: без него некому идти");
+        Objects.requireNonNull(onSurface, "Признак поверхности не может быть null: путь по шахте закроют");
+        return group.members().stream().filter(pathHome).filter(onSurface).toList();
     }
 
     public static Member leader(List<Member> members) {
@@ -110,9 +114,43 @@ public final class RescueGroups {
         return new Group(leader.id(), List.copyOf(sorted));
     }
 
-    private static boolean near(BlockCoord a, BlockCoord b, int radius) {
-        return Math.abs(a.x() - b.x()) <= radius
-                && Math.abs(a.y() - b.y()) <= radius
-                && Math.abs(a.z() - b.z()) <= radius;
+    private static void collect(
+            Member start,
+            Map<BlockCoord, List<Member>> waiting,
+            Set<UUID> grouped,
+            List<Member> group,
+            Passage passage) {
+        Set<BlockCoord> seen = new HashSet<>();
+        Deque<BlockCoord> queue = new ArrayDeque<>();
+        seen.add(start.at());
+        queue.add(start.at());
+        while (!queue.isEmpty()) {
+            BlockCoord here = queue.poll();
+            for (Member member : waiting.getOrDefault(here, List.of())) {
+                if (grouped.add(member.id())) {
+                    group.add(member);
+                }
+            }
+            if (seen.size() >= MAX_SEARCH_CELLS) {
+                continue;
+            }
+            for (BlockCoord next : neighbours(here)) {
+                if (seen.contains(next) || !passage.open(next)) {
+                    continue;
+                }
+                seen.add(next);
+                queue.add(next);
+            }
+        }
+    }
+
+    private static List<BlockCoord> neighbours(BlockCoord cell) {
+        return List.of(
+                new BlockCoord(cell.x() + 1, cell.y(), cell.z()),
+                new BlockCoord(cell.x() - 1, cell.y(), cell.z()),
+                new BlockCoord(cell.x(), cell.y() + 1, cell.z()),
+                new BlockCoord(cell.x(), cell.y() - 1, cell.z()),
+                new BlockCoord(cell.x(), cell.y(), cell.z() + 1),
+                new BlockCoord(cell.x(), cell.y(), cell.z() - 1));
     }
 }

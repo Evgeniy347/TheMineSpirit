@@ -14,6 +14,7 @@ public final class TaskRunner {
     private @Nullable String reason;
     private @Nullable Throwable cause;
     private @Nullable RunProgress failedAt;
+    private Optional<FailureFact> fact = Optional.empty();
     private Optional<ScriptResult> successResult = Optional.empty();
 
     private TaskRunner(@Nullable TaskNode plan, @Nullable NodeExecutor root) {
@@ -69,6 +70,7 @@ public final class TaskRunner {
             status = RunStatus.FAILED;
             reason = running.failureReason();
             cause = running.failureCause().orElse(null);
+            fact = running.failureFact();
             failedAt = running.progress();
         } else if (node == ScriptStatus.CANCELLED) {
             status = RunStatus.CANCELLED;
@@ -91,6 +93,10 @@ public final class TaskRunner {
 
     public Optional<Throwable> failureCause() {
         return Optional.ofNullable(cause);
+    }
+
+    public Optional<FailureFact> failureFact() {
+        return fact;
     }
 
     public Optional<ScriptResult> successResult() {

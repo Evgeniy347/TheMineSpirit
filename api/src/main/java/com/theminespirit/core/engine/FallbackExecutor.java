@@ -3,6 +3,7 @@ package com.theminespirit.core.engine;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.List;
+import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 final class FallbackExecutor extends SingleChildExecutor {
@@ -12,6 +13,7 @@ final class FallbackExecutor extends SingleChildExecutor {
     private int index;
     private @Nullable String lastReason;
     private @Nullable Throwable lastCause;
+    private Optional<FailureFact> lastFact = Optional.empty();
 
     FallbackExecutor(FallbackNode node, ScriptRegistry scripts, ConditionRegistry conditions) {
         super(scripts, conditions);
@@ -38,6 +40,7 @@ final class FallbackExecutor extends SingleChildExecutor {
         if (child == ScriptStatus.FAILED) {
             lastReason = running().failureReason();
             lastCause = running().failureCause().orElse(null);
+            lastFact = running().failureFact();
             index++;
             current(null);
             if (index >= steps.size()) {
@@ -50,6 +53,7 @@ final class FallbackExecutor extends SingleChildExecutor {
 
     private void failAll() {
         fail(lastReason != null ? lastReason : ALL_FAILED, lastCause);
+        failureFact(lastFact.orElse(null));
     }
 
     @Override

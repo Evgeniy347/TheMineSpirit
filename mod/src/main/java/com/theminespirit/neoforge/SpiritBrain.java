@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.StateChangeLog;
+import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptResult;
@@ -29,6 +30,7 @@ public final class SpiritBrain {
     private RunStatus lastStatus;
     private String lastReason;
     private Throwable lastCause;
+    private Optional<FailureFact> lastFact = Optional.empty();
     private String suspendReason;
     private RunProgress lastFailedAt;
     private ScriptResult lastResult;
@@ -109,6 +111,10 @@ public final class SpiritBrain {
         return Optional.ofNullable(lastReason);
     }
 
+    public Optional<FailureFact> failureFact() {
+        return lastFact;
+    }
+
     public Optional<Throwable> failureCause() {
         return Optional.ofNullable(lastCause);
     }
@@ -152,9 +158,11 @@ public final class SpiritBrain {
         if (lastStatus != RunStatus.RUNNING) {
             lastReason = runner.failureReason().orElse(null);
             lastCause = runner.failureCause().orElse(null);
+            lastFact = runner.failureFact();
         } else {
             lastReason = null;
             lastCause = null;
+            lastFact = Optional.empty();
         }
     }
 
@@ -189,6 +197,7 @@ public final class SpiritBrain {
         lastStatus = runner.status();
         lastReason = runner.failureReason().orElse(null);
         lastCause = runner.failureCause().orElse(null);
+        lastFact = runner.failureFact();
         lastFailedAt = runner.failedAt().orElse(null);
         if (lastStatus == RunStatus.SUCCEEDED) {
             lastResult = runner.successResult().orElse(null);

@@ -54,6 +54,45 @@ class RescueReachCacheTests {
     }
 
     @Test
+    void cache_ClearedAfterRescue_FindsPathLeaderDug() {
+        RescueReach.Cache cache = new RescueReach.Cache();
+        cache.request(new Blocked(), cell -> false, HELPER, FROM, TARGET, 100);
+        finish(cache, 100);
+        RescueReach.Verdict before = cache.verdict(HELPER, FROM, TARGET, 100);
+        assertTrue(before != null && !before.reachable(), "До спасения пути домой нет: " + before);
+        long generation = cache.generation();
+
+        cache.clear();
+
+        assertNull(
+                cache.verdict(HELPER, FROM, TARGET, 100),
+                "После завершения спасения старый вердикт не годится: ведущий мог прокопать путь");
+        assertTrue(
+                cache.generation() > generation,
+                "Сброс кэша обязан разбудить граф: ведомые ждут решения, а не следующего цикла до 600 тиков");
+        cache.request(FLAT, cell -> false, HELPER, FROM, TARGET, 100);
+        finish(cache, 100);
+
+        RescueReach.Verdict after = cache.verdict(HELPER, FROM, TARGET, 100);
+        assertTrue(
+                after != null && after.reachable(),
+                "После сброса путь пересчитывается по новому миру и ведомые идут следом: " + after);
+    }
+
+    @Test
+    void cache_Cleared_DropsPendingSearch() {
+        RescueReach.Cache cache = new RescueReach.Cache();
+        cache.request(FLAT, cell -> false, HELPER, FROM, TARGET, 0);
+
+        cache.clear();
+        finish(cache, 0);
+
+        assertNull(
+                cache.verdict(HELPER, FROM, TARGET, 0),
+                "Незавершённый поиск после сброса не возвращает старый мир: его результаты уже не нужны");
+    }
+
+    @Test
     void cache_Advance_CompletesWithoutFullTick() {
         RescueReach.Cache cache = new RescueReach.Cache();
         cache.request(FLAT, cell -> false, HELPER, FROM, TARGET, 0);

@@ -22,8 +22,16 @@ case "${FAKE_HEALTH:-}" in
 esac
 printf "%s\n" "$FAKE_HEALTH"'
 write_fake "$work/fake-jcmd.sh" '#!/usr/bin/env bash
-printf "jcmd\n" >>"$FAKE_CALLS"
-printf "Thread dump for %s\n" "$1"'
+case "${2:-}" in
+    VM.version)
+        printf "probe\n" >>"$FAKE_CALLS"
+        [ "${FAKE_JCMD_CODE:-0}" = 0 ] || exit "${FAKE_JCMD_CODE}"
+        ;;
+    *)
+        printf "jcmd\n" >>"$FAKE_CALLS"
+        printf "Thread dump for %s\n" "$1"
+        ;;
+esac'
 write_fake "$work/fake-stop.sh" '#!/usr/bin/env bash
 printf "stop\n" >>"$FAKE_CALLS"
 exit "${FAKE_STOP_CODE:-0}"'
@@ -52,6 +60,8 @@ export FAKE_CALLS="$calls"
 export FAKE_HEALTH=""
 export FAKE_STOP_CODE=0
 export FAKE_START_CODE=0
+export FAKE_JCMD_CODE=0
+export FAKE_JCMD_CODE=0
 export HANG_WATCH_MODE=act
 export HANG_WATCH_DRY_RUN=0
 NOW="$(date +%s)"
@@ -65,9 +75,11 @@ reset_case() {
     export FAKE_HEALTH=""
     export FAKE_STOP_CODE=0
     export FAKE_START_CODE=0
+    export FAKE_JCMD_CODE=0
     export HANG_WATCH_MODE=act
     export HANG_WATCH_DRY_RUN=0
     export HANG_WATCH_PID="$$"
+    export HANG_WATCH_JCMD="$work/fake-jcmd.sh"
 }
 
 write_heartbeat() {
@@ -80,8 +92,10 @@ run_watch() {
 }
 
 calls_of() {
+    local count
     [ -f "$calls" ] || { printf '0'; return; }
-    grep -c "^$1$" "$calls" 2>/dev/null || printf '0'
+    count="$(grep -c "^$1$" "$calls" 2>/dev/null || true)"
+    printf '%s' "${count:-0}"
 }
 
 expect() {
@@ -158,6 +172,43 @@ export FAKE_HEALTH='{"verdict":"hung","age_ms":900000,"tick":10,"last_tick_ms":1
 code="$(run_watch)"
 expect stopping_marker_exit_zero "$code" 0
 expect stopping_marker_no_stop "$(calls_of stop)" 0
+
+# lib: обновление JDK на месте убивает поток консоли: тик и REST живы, а jcmd не прикрепляется.
+# lib: без этой проверки сторож видел «ok» и молчал, пока save-* и stop не подтверждались.
+reset_case
+export FAKE_JCMD_CODE=1
+export FAKE_HEALTH='{"verdict":"ok","age_ms":120,"tick":10,"last_tick_ms":1,"threshold_ms":120000,"debug_paused":false}'
+code="$(run_watch)"
+expect console_dead_rest_ok_exit_zero "$code" 0
+expect console_dead_probes_jcmd "$(calls_of probe)" 1
+expect console_dead_stops "$(calls_of stop)" 1
+expect console_dead_starts "$(calls_of start)" 1
+expect_file console_dead_names_cause "$work/logs/hang.log" "консоль мертва"
+console_dumps="$(find "$work/logs" -maxdepth 1 -name 'console-*.txt' | wc -l | tr -d ' ')"
+expect console_dead_dump_created "$console_dumps" 1
+
+reset_case
+export FAKE_JCMD_CODE=1
+export HANG_WATCH_MODE=check
+code="$(run_watch)"
+expect console_check_exit_zero "$code" 0
+expect console_check_reports "$(cat "$work/out.txt")" "console"
+expect console_check_no_stop "$(calls_of stop)" 0
+
+reset_case
+export FAKE_JCMD_CODE=1
+export HANG_WATCH_DRY_RUN=1
+code="$(run_watch)"
+expect console_dry_run_exit_zero "$code" 0
+expect console_dry_run_no_stop "$(calls_of stop)" 0
+expect_file console_dry_run_marker "$work/logs/hang.log" "dry-run"
+
+reset_case
+export HANG_WATCH_JCMD="$work/нет-jcmd"
+export FAKE_HEALTH='{"verdict":"ok","age_ms":120,"tick":10,"last_tick_ms":1,"threshold_ms":120000,"debug_paused":false}'
+code="$(run_watch)"
+expect no_jcmd_exit_zero "$code" 0
+expect no_jcmd_no_stop "$(calls_of stop)" 0
 
 reset_case
 export FAKE_HEALTH=down
