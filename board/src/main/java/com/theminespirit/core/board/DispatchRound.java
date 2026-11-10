@@ -71,6 +71,7 @@ public final class DispatchRound {
     private final long now;
     private final Map<UUID, Integer> held;
     private final Map<UUID, String> awaiting = new HashMap<>();
+    private final Map<UUID, Map<String, String>> vitalPaths = new HashMap<>();
     private final LifePreemption preemption = new LifePreemption();
 
     public DispatchRound(Board board, long now) {
@@ -134,8 +135,7 @@ public final class DispatchRound {
                         + ": ждёт выход из ловушки (граф ставит rescue)");
             }
         }
-        Optional<String> vital =
-                VitalGate.refusal(ticket, VitalChain.withPath(spirit.needs(), board, spirit.id()), VitalNeeds.needs());
+        Optional<String> vital = VitalGate.refusal(ticket, vitalPath(spirit), VitalNeeds.needs());
         if (vital.isPresent()) {
             return vital;
         }
@@ -176,6 +176,10 @@ public final class DispatchRound {
 
     public boolean fits(BoardTicket ticket, Candidate spirit, @Nullable String supplyItem) {
         return refusal(ticket, spirit, supplyItem).isEmpty();
+    }
+
+    private Map<String, String> vitalPath(Candidate spirit) {
+        return vitalPaths.computeIfAbsent(spirit.id(), id -> VitalChain.withPath(spirit.needs(), board, id));
     }
 
     private boolean reassignable(BoardTicket ticket, long now) {

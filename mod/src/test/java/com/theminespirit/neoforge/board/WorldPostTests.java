@@ -20,6 +20,7 @@ class WorldPostTests {
                 "Уборку висящего исполняет PlanDemolition по узлу графа, а не заглушка мира");
         assertTrue(WorldPost.handles("level_lot"), "Выравнивание — узел мира");
         assertTrue(WorldPost.handles("restore_trace"), "Возврат следа — узел мира");
+        assertTrue(WorldPost.handles("remove_route"), "Снятие старой тропы — узел мира");
         assertTrue(WorldPost.handles("repair:hut"), "Ремонт хижины — узел мира");
         assertTrue(WorldPost.handles("repair:clearing"), "Ремонт расчистки — узел мира");
         assertTrue(WorldPost.handles("repair:mine"), "Ремонт шахты — узел мира");

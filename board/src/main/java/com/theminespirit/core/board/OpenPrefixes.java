@@ -23,7 +23,7 @@ public final class OpenPrefixes {
         for (String prefix : watched) {
             counts.put(prefix, 0);
         }
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             BoardStatus status = board.statusOf(ticket.id()).orElse(null);
             if (status == null || !status.open()) {
                 continue;

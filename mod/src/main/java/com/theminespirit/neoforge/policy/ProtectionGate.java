@@ -28,6 +28,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
 
 public final class ProtectionGate {
     private static final BlockProtection PROTECTION =
@@ -53,30 +54,48 @@ public final class ProtectionGate {
 
     public BlockProtection.Decision checkBreakOrEscape(
             BlockPos pos, BlockState state, boolean escaping, boolean rescue) {
-        BlockPos feet = spirit.blockPosition();
         if (escaping) {
-            BlockCoord target = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-            BlockCoord standing = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-            if (rescue) {
-                BlockProtection.Decision outside = RescueBreach.allow(spirit, pos, state, true);
-                if (outside instanceof BlockProtection.Allowed) {
-                    return outside;
-                }
-                if (!RescueBreach.breakable(state)) {
-                    return new BlockProtection.Refused(
-                            PolicyId.PROTECTED_ZONE,
-                            "клетка " + pos.toShortString() + " — сундук, дверь или люк: для самоспасения не ломается");
-                }
-            }
-            if (SelfRescue.mayBreakAtFeet(target, standing)) {
-                return new BlockProtection.Allowed();
-            }
-            if (SelfRescue.mayBreakEscaping(target, standing) && RescueBreach.breakable(state)) {
-                return new BlockProtection.Allowed();
+            BlockProtection.Decision escape = escape(pos, state, rescue, true);
+            if (escape != null) {
+                return escape;
             }
         }
         return decide(
                 pos, state, false, false, PlanBuilding.NONE, PlotProtection.Action.BREAK, PlotProtection.Ground.NONE);
+    }
+
+    public BlockProtection.Decision checkEscape(BlockPos pos, BlockState state, boolean rescue) {
+        BlockProtection.Decision escape = escape(pos, state, rescue, false);
+        if (escape != null) {
+            return escape;
+        }
+        return decide(
+                pos, state, false, false, PlanBuilding.NONE, PlotProtection.Action.BREAK, PlotProtection.Ground.NONE);
+    }
+
+    private BlockProtection.@Nullable Decision escape(BlockPos pos, BlockState state, boolean rescue, boolean record) {
+        BlockPos feet = spirit.blockPosition();
+        BlockCoord target = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+        BlockCoord standing = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
+        if (rescue) {
+            BlockProtection.Decision outside =
+                    record ? RescueBreach.allow(spirit, pos, state) : RescueBreach.permit(spirit, pos, state);
+            if (outside instanceof BlockProtection.Allowed) {
+                return outside;
+            }
+            if (!RescueBreach.breakable(state)) {
+                return new BlockProtection.Refused(
+                        PolicyId.PROTECTED_ZONE,
+                        "клетка " + pos.toShortString() + " — сундук, дверь или люк: для самоспасения не ломается");
+            }
+        }
+        if (SelfRescue.mayBreakAtFeet(target, standing)) {
+            return new BlockProtection.Allowed();
+        }
+        if (SelfRescue.mayBreakEscaping(target, standing) && RescueBreach.breakable(state)) {
+            return new BlockProtection.Allowed();
+        }
+        return null;
     }
 
     public BlockProtection.Decision checkHarvest(BlockPos pos, BlockState state) {

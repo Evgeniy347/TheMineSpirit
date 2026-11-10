@@ -96,10 +96,6 @@ public final class RoutePlan {
         return update(resource, marker -> marker.withAlertedAt(tick));
     }
 
-    public RoutePlan retarget(RouteResource resource, BlockCoord point) {
-        return mark(resource, point);
-    }
-
     public RoutePlan pathBuilt(RouteResource resource) {
         return update(resource, RouteMarker::withPathBuilt);
     }

@@ -251,6 +251,19 @@
       "advice": [
         "restore_world_as_it_was"
       ]
+    },
+    "remove_route": {
+      "tasks": [
+        {
+          "id": "remove_route",
+          "case": "REPAIR_BUILDING",
+          "base": 50,
+          "consumes": {}
+        }
+      ],
+      "advice": [
+        "restore_world_as_it_was"
+      ]
     }
   }
 }

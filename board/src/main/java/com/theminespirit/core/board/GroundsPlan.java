@@ -97,12 +97,7 @@ public final class GroundsPlan {
         }
         if (!cuts.isEmpty()) {
             steps.add(retried(new ScriptCall(
-                    "collect_drops",
-                    Map.of(
-                            "radius",
-                            CatalogLimits.DROP_RADIUS_MAX,
-                            "filter",
-                            List.of(MINECRAFT + PlotLeveling.DEFAULT_BLOCK)))));
+                    "collect_drops", Map.of("radius", CatalogLimits.DROP_RADIUS_MAX, "filter", dropFilter(leveling)))));
         }
         List<PlotLeveling.Box> fills = single ? ofPart(leveling.fill(), frame, quarter) : leveling.fill();
         for (PlotLeveling.Box box : fills) {
@@ -247,6 +242,12 @@ public final class GroundsPlan {
             parts.add(chosen);
         }
         return parts;
+    }
+
+    private static List<String> dropFilter(PlotLeveling leveling) {
+        String dirt = MINECRAFT + PlotLeveling.DEFAULT_BLOCK;
+        String block = leveling.block().contains(":") ? leveling.block() : MINECRAFT + leveling.block();
+        return block.equals(dirt) ? List.of(dirt) : List.of(dirt, block);
     }
 
     static Map<String, Object> boxParams(FillArea box, Map<String, Object> extra) {

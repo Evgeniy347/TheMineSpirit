@@ -33,12 +33,18 @@ public final class RouteLevelView implements RouteWorld {
     private static final double FULL_HEIGHT = 1.0;
     private final SpiritEntity spirit;
     private final Level level;
+    private final boolean rescue;
     private final BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
     private final Map<BlockState, Integer> breakTicks = new HashMap<>();
 
     public RouteLevelView(SpiritEntity spirit) {
+        this(spirit, false);
+    }
+
+    public RouteLevelView(SpiritEntity spirit, boolean rescue) {
         this.spirit = spirit;
         this.level = spirit.level();
+        this.rescue = rescue;
     }
 
     public static int blocks(SpiritEntity spirit) {
@@ -89,7 +95,10 @@ public final class RouteLevelView implements RouteWorld {
         if (hardness < 0) {
             return -1;
         }
-        if (spirit.protectionGate().checkBreak(cursor.immutable(), state) instanceof BlockProtection.Refused) {
+        BlockProtection.Decision decision = rescue
+                ? spirit.protectionGate().checkEscape(cursor.immutable(), state, true)
+                : spirit.protectionGate().checkBreak(cursor.immutable(), state);
+        if (decision instanceof BlockProtection.Refused) {
             return -1;
         }
         return breakTicks.computeIfAbsent(state, known -> fastest(known, hardness));

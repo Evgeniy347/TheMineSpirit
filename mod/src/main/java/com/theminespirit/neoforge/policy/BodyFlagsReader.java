@@ -17,9 +17,8 @@ final class BodyFlagsReader {
     }
 
     private static boolean swimsByTask(SpiritEntity spirit) {
-        return spirit.brainIfPresent()
-                .flatMap(SpiritBrain::currentScript)
-                .map(WaterTasks::allowsSwimming)
-                .orElse(false);
+        String script =
+                spirit.brainIfPresent().flatMap(SpiritBrain::currentScript).orElse(null);
+        return WaterTasks.allowsSwimming(script, spirit.currentPlan().orElse(null));
     }
 }

@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.graph.GraphWorldEvents;
 import com.theminespirit.core.board.route.QuarryAlerts;
 import com.theminespirit.core.board.route.QuarrySites;
 import com.theminespirit.core.board.route.QuarryStatus;
@@ -44,13 +45,16 @@ final class QuarryWatch {
         RouteStore store = RouteStore.get(level);
         List<RouteMarker> markers = List.copyOf(store.plan().markers().values());
         QuarrySites.Feed feed = QuarrySites.feed(markers, home);
+        Set<String> events = new HashSet<>(feed.events());
+        if (!store.retired().isEmpty()) {
+            events.add(GraphWorldEvents.REMOVE_ROUTE);
+        }
         if (markers.isEmpty()) {
             statuses.clear();
             checked.clear();
-            return new Result(feed.events(), feed.world(), feed.nearest(), feed.distances());
+            return new Result(events, feed.world(), feed.nearest(), feed.distances());
         }
         Optional<StageSite> stage = SettlementPlotStore.liveSite(level);
-        Set<String> events = new HashSet<>(feed.events());
         for (RouteMarker marker : markers) {
             RouteResource resource = marker.resource();
             long at = checked.getOrDefault(resource, Long.MIN_VALUE);

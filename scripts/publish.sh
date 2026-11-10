@@ -279,14 +279,6 @@ deploy_server_files() {
         fi
         chmod 755 "$CLEANUP_SCRIPT_DIR/nightly-analyzers.sh"
     fi
-    # lib: nightly-analyzers.sh зовёт python_bin из общего helper — без него на сервере нет сводки находок.
-    if [ -f "$MOD_DIR/scripts/python-bin.sh" ]; then
-        if ! cp -f "$MOD_DIR/scripts/python-bin.sh" "$CLEANUP_SCRIPT_DIR/python-bin.sh"; then
-            echo "ОШИБКА: не скопировать python-bin.sh в $CLEANUP_SCRIPT_DIR" >&2
-            return 1
-        fi
-        chmod 755 "$CLEANUP_SCRIPT_DIR/python-bin.sh"
-    fi
     if ! install_hang_watch_cron; then
         return 1
     fi
