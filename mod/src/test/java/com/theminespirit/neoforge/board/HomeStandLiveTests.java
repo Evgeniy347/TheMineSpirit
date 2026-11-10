@@ -13,6 +13,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.StringTokenizer;
 import org.junit.jupiter.api.Test;
 
@@ -72,6 +74,37 @@ class HomeStandLiveTests {
                 BASE,
                 HomeStand.of(List.of(), BASE, cell -> true),
                 "Свободный якорь остаётся домом: соседняя стоянка ищется только когда сам дом занят");
+    }
+
+    @Test
+    void largest_SealedRoomNearer_ChoosesSettlementComponent() {
+        Set<BlockCoord> sealed = Set.of(new BlockCoord(-169, 70, -490));
+        Set<BlockCoord> settlement =
+                Set.of(new BlockCoord(-175, 70, -493), new BlockCoord(-174, 70, -493), new BlockCoord(-173, 70, -493));
+
+        assertEquals(
+                Optional.of(new BlockCoord(-173, 70, -493)),
+                HomeStand.largest(BASE, List.of(sealed, settlement)),
+                "Дом не может оказаться в ближней запертой комнате: из двух компонент проходимости берут ту, где "
+                        + "ходят духи поселения, иначе цель снова за преградой");
+    }
+
+    @Test
+    void largest_SameSize_PicksNearestComponent() {
+        Set<BlockCoord> far = Set.of(new BlockCoord(-171, 65, -489), new BlockCoord(-171, 65, -488));
+        Set<BlockCoord> near = Set.of(new BlockCoord(-169, 70, -490), new BlockCoord(-168, 70, -490));
+
+        assertEquals(
+                Optional.of(new BlockCoord(-169, 70, -490)),
+                HomeStand.largest(BASE, List.of(far, near)),
+                "При равном числе клеток дом — ближайшая компонента: выбор не зависит от порядка духов");
+    }
+
+    @Test
+    void largest_NoComponents_IsEmpty() {
+        assertTrue(
+                HomeStand.largest(BASE, List.of()).isEmpty(),
+                "Нет проходимых компонент — нет домашней стоянки: выдуманную точку не подставляем");
     }
 
     private static boolean standable(Map<BlockCoord, String> cells, BlockCoord feet) {
