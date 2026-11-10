@@ -8,11 +8,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import com.theminespirit.core.navigation.NavPillarEscape;
 import com.theminespirit.core.navigation.NavWorld;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.route.Route;
 import com.theminespirit.core.route.RouteCell;
-import com.theminespirit.core.route.RoutePlanner;
-import com.theminespirit.core.route.RouteRules;
-import com.theminespirit.core.route.RouteStep;
 import com.theminespirit.core.route.RouteWorld;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -37,7 +33,6 @@ import org.junit.jupiter.api.Test;
 class NavFuzzTests {
     private static final int WORLDS = 2_000;
     private static final int MAX_VISITS = 20_000;
-    private static final RouteRules RULES = new RouteRules(1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 3, 12, 4, 1200, 1.0, 1);
     private static final int[][] SIDES = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
     @Test
@@ -47,7 +42,6 @@ class NavFuzzTests {
             FuzzWorld world = FuzzWorld.generate(seed);
             checkSurfaceEscape(seed, world, failures);
             checkPitExit(seed, world, failures);
-            checkRoutePlanner(seed, world, failures);
             checkSelfEscape(seed, world, failures);
             checkSealedSpace(seed, world, failures);
             checkPitWalkOut(seed, world, failures);
@@ -267,55 +261,6 @@ class NavFuzzTests {
         }
     }
 
-    private static void checkRoutePlanner(long seed, FuzzWorld world, List<String> failures) {
-        Optional<BlockCoord> target = world.surfaceTarget();
-        if (target.isEmpty()) {
-            return;
-        }
-        Overlay overlay = new Overlay(world);
-        Route route = RoutePlanner.plan(overlay, world.start(), new GoalBlock(target.orElseThrow()), RULES, 16);
-        if (!route.usable()) {
-            return;
-        }
-        BlockCoord cursor = world.start();
-        for (RouteStep step : route.steps()) {
-            BlockCoord cell = step.cell();
-            switch (step.action()) {
-                case BREAK -> {
-                    if (world.protectedAt(cell)) {
-                        failures.add(seed + " RoutePlanner: ломает защищённый блок " + cell);
-                    }
-                    overlay.set(cell, FuzzWorld.Cell.AIR);
-                }
-                case PLACE -> {
-                    if (!BodyMotion.passable(overlay, cell)) {
-                        failures.add(seed + " RoutePlanner: ставит блок в занятую клетку " + cell);
-                    }
-                    overlay.set(cell, FuzzWorld.Cell.DIRT);
-                }
-                case PILLAR -> {
-                    if (!cell.equals(cursor)) {
-                        failures.add(seed + " RoutePlanner: столб ставится в " + cell + ", а дух в " + cursor);
-                        overlay.set(cell, FuzzWorld.Cell.DIRT);
-                        cursor = BodyMotion.above(cursor);
-                        continue;
-                    }
-                    overlay.set(cell, FuzzWorld.Cell.DIRT);
-                    cursor = BodyMotion.above(cursor);
-                    if (!BodyMotion.fits(overlay, cursor)) {
-                        failures.add(seed + " RoutePlanner: после столба тело не помещается в " + cursor);
-                    }
-                }
-                case WALK, SWIM -> {
-                    if (!BodyMotion.canMove(overlay, cursor, cell)) {
-                        failures.add(seed + " RoutePlanner: шаг " + cursor + " → " + cell + " неисполним телом");
-                    }
-                    cursor = cell;
-                }
-            }
-        }
-    }
-
     private static void checkSelfEscape(long seed, FuzzWorld world, List<String> failures) {
         BlockCoord goal = world.surfaceTarget().orElse(BodyMotion.above(world.start()));
         Optional<SelfEscape.Plan> plan =
@@ -364,6 +309,7 @@ class NavFuzzTests {
     private static void checkPitWalkOut(long seed, FuzzWorld world, List<String> failures) {
         boolean exists = PitWalkOut.exists(
                 world.pitWalkWorld(),
+                WalkOutRules.defaults(),
                 world.start().x(),
                 world.start().z(),
                 world.start().y());

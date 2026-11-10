@@ -1,12 +1,13 @@
 package com.theminespirit.core.route;
 
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.HashMap;
 import java.util.Map;
 
 final class GridWorld implements RouteWorld {
     static final int DIRT = RouteCell.solid(15);
     private final int ground;
-    private final Map<Long, Integer> changed = new HashMap<>();
+    private final Map<BlockCoord, Integer> changed = new HashMap<>();
 
     private GridWorld(int ground) {
         this.ground = ground;
@@ -28,12 +29,12 @@ final class GridWorld implements RouteWorld {
     }
 
     void set(int x, int y, int z, int cell) {
-        changed.put(LongIntTable.key(x, y, z), cell);
+        changed.put(new BlockCoord(x, y, z), cell);
     }
 
     @Override
     public int cell(int x, int y, int z) {
-        Integer cell = changed.get(LongIntTable.key(x, y, z));
+        Integer cell = changed.get(new BlockCoord(x, y, z));
         if (cell != null) {
             return cell;
         }
