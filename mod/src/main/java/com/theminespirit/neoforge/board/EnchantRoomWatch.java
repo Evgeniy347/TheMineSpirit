@@ -33,6 +33,10 @@ public final class EnchantRoomWatch {
                 || status == BoardStatus.ASSIGNED) {
             return true;
         }
+        Optional<BlockCoord> home = HomePoint.of(post.level, spirits);
+        if (home.isEmpty()) {
+            return false;
+        }
         post.submit(
                 post.leveled(
                         post.ticket(
@@ -44,7 +48,7 @@ public final class EnchantRoomWatch {
                                 Map.copyOf(need)),
                         levelValue,
                         List.of()),
-                TicketTarget.at(homeOf(spirits)));
+                TicketTarget.at(home.orElseThrow()));
         return true;
     }
 
@@ -65,15 +69,5 @@ public final class EnchantRoomWatch {
         } catch (NumberFormatException notLevel) {
             return 0;
         }
-    }
-
-    private static BlockCoord homeOf(List<SpiritEntity> spirits) {
-        for (SpiritEntity spirit : spirits) {
-            Optional<BlockCoord> home = spirit.home();
-            if (home.isPresent()) {
-                return home.orElseThrow();
-            }
-        }
-        return new BlockCoord(0, 64, 0);
     }
 }

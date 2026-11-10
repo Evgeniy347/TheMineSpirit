@@ -37,7 +37,7 @@ final class UndoLeasePost {
         }
         post.submit(
                 ticket,
-                BoardCase.CLEAR_GROUNDS,
+                BoardCase.ACTIVITY_BUILD,
                 TicketTarget.at(stand.orElseThrow()).withPlan(new ScriptCall("undo_lease", Map.of("id", id))),
                 Map.of());
         return true;

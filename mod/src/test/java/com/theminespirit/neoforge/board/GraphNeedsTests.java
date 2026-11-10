@@ -11,6 +11,7 @@ import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
@@ -73,6 +74,27 @@ class GraphNeedsTests {
                 new GraphBlock.Path("10,64,20"),
                 need,
                 "У графовой добычи цель — место работы: провал помечает именно его недостижимым");
+    }
+
+    @Test
+    void graphGather_NoTrees_BlocksOnWorldSpeciesTag() {
+        BoardTicket ticket = ticket("graph:chop_jungle_log", BoardCase.GATHER_MATERIALS, List.of());
+
+        GraphBlock.Need need = GraphNeeds.of(
+                new Board(() -> 0L),
+                ticket,
+                TicketTarget.at(SITE).withSupply("jungle_log", 4),
+                HOLDER,
+                List.of(),
+                new StockView(Map.of()),
+                0,
+                FailureFact.NO_TREES);
+
+        assertEquals(
+                new GraphBlock.World("tree:jungle"),
+                need,
+                "«Деревьев jungle в округе нет» — факт мира с ключом: граф ждёт появления породы "
+                        + "(посадка, поход, другая порода), а не ставит ту же рубку снова");
     }
 
     @Test

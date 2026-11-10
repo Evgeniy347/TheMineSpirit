@@ -18,8 +18,6 @@ public final class GraphNames {
     private static final String DRIPSTONE_CAVES = "dripstone_caves";
     private static final String LUSH_CAVES = "lush_caves";
     private static final Map<String, Set<String>> GROUND = worldTags();
-    private static final String TREE = "tree:";
-    private static final String LOG = "_log";
     private static final String MANGROVE_SAPLING = "mangrove_sapling";
     private static final String MANGROVE_PROPAGULE = "mangrove_propagule";
 
@@ -86,11 +84,6 @@ public final class GraphNames {
     public static Set<String> blockWorld(String block) {
         Objects.requireNonNull(block, "Блок округи не может быть null: по нему ищется метка мира");
         String name = block.startsWith(NAMESPACE) ? block.substring(NAMESPACE.length()) : block;
-        if (name.endsWith(LOG)) {
-            return WoodSpecies.speciesOf(name)
-                    .map(species -> Set.of(TREE + species))
-                    .orElse(Set.of());
-        }
         return GROUND.getOrDefault(name, Set.of());
     }
 
