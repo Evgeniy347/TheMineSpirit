@@ -162,6 +162,15 @@ class RescuePlansTests {
     }
 
     @Test
+    void walk_PathHome_IsWalkCarefulWithoutDigging() {
+        TaskNode plan = RescuePlans.walk(TRAPPED);
+
+        PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
+        assertEquals(
+                List.of("walk_careful"), scripts(plan), "Путь домой уже открыт: ведомый идёт по нему и не трогает мир");
+    }
+
+    @Test
     void priority_RescueSpirit_IsHighest() {
         assertEquals(
                 100,

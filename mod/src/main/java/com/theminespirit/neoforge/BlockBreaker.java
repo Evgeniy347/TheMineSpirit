@@ -88,6 +88,10 @@ public final class BlockBreaker {
         return new BlockBreaker(spirit, true, rescue);
     }
 
+    static String reason(Begin begin) {
+        return begin instanceof Refused refused ? refused.message() : ((Protected) begin).reason();
+    }
+
     public Begin begin(BlockPos target) {
         return begin(target, Intent.BREAK, true);
     }
@@ -175,12 +179,18 @@ public final class BlockBreaker {
         }
         boolean pickaxeBlock =
                 targetState.requiresCorrectToolForDrops() && targetState.is(BlockTags.MINEABLE_WITH_PICKAXE);
-        if (ToolChoice.refusesHandDig(choice, options, pickaxeBlock, escaping)) {
+        boolean helperWithPickaxe = PickaxeCheck.nearby(spirit, 16.0);
+        ToolChoice.DigMode digMode = !escaping
+                ? ToolChoice.DigMode.NORMAL
+                : helperWithPickaxe ? ToolChoice.DigMode.ESCAPING_WITH_HELPER : ToolChoice.DigMode.ESCAPING;
+        if (ToolChoice.refusesHandDig(choice, options, pickaxeBlock, digMode)) {
             return refusals.refused(
                     target,
                     RefuseReason.NEED_TOOL,
                     "нужна кирка для " + BreakNames.blockId(targetState)
-                            + ": руками без дропа не копаем — кирки нет, дух не замурован");
+                            + (helperWithPickaxe
+                                    ? ": рядом есть дух с киркой — копает он, а не руки"
+                                    : ": руками без дропа не копаем — кирки нет и дух не замурован"));
         }
         tool = choice.slot() == ToolChoice.HAND
                 ? ItemStack.EMPTY

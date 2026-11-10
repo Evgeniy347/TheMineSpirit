@@ -37,6 +37,26 @@ class ToolChoiceHandDigTests {
     }
 
     @Test
+    void refusesHandDig_EscapingWithPickaxeNearby_Refused() {
+        List<ToolOption> options = List.of(BARE_HAND);
+
+        assertTrue(
+                ToolChoice.refusesHandDig(
+                        ToolChoice.best(options), options, true, ToolChoice.DigMode.ESCAPING_WITH_HELPER),
+                "Замурованному без кирки копать руками нельзя, если рядом есть дух с киркой: камень копает он, "
+                        + "а не руки того, кому кирки не хватило");
+    }
+
+    @Test
+    void refusesHandDig_EscapingWithoutPickaxeNearby_Allowed() {
+        List<ToolOption> options = List.of(BARE_HAND);
+
+        assertFalse(
+                ToolChoice.refusesHandDig(ToolChoice.best(options), options, true, ToolChoice.DigMode.ESCAPING),
+                "Если кирки нет ни у кого рядом, замурованный дух копает руками: иначе он не выберется");
+    }
+
+    @Test
     void refusesHandDig_BlockWithoutPickaxeNeed_Allowed() {
         List<ToolOption> options =
                 List.of(new ToolOption(ToolChoice.HAND, ToolChoice.HAND_SPEED, true, 0, 0, false, ""));

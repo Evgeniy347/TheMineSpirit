@@ -63,6 +63,8 @@ public final class DigOutGameTests {
         BoardService board = BoardRegistry.get(helper.getLevel());
         board.board().restore(new BoardState(List.of(), Set.of()));
         List<BlockPos> planks = prepareArena(helper, pockets);
+        helper.setBlock(WATER_POCKET, Blocks.WATER);
+        helper.setBlock(WATER_POCKET.above(), Blocks.STONE);
         List<SpiritEntity> spirits = new ArrayList<>();
         List<String> tickets = new ArrayList<>();
         List<Integer> starts = new ArrayList<>();

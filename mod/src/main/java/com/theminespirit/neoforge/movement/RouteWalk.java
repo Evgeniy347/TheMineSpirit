@@ -113,10 +113,11 @@ public final class RouteWalk {
     }
 
     private Optional<String> walk(BlockCoord cell) {
-        if (EmbeddedSpace.inside(spirit)) {
-            BlockPos feet = spirit.blockPosition();
+        List<BlockPos> blocked = EmbeddedSpace.blocking(spirit);
+        if (!blocked.isEmpty()) {
+            BlockPos stuck = blocked.get(0);
             return Optional.of("дух в блоке "
-                    + spirit.level().getBlockState(feet).getBlock().getDescriptionId() + " у " + feet.toShortString()
+                    + spirit.level().getBlockState(stuck).getBlock().getDescriptionId() + " у " + stuck.toShortString()
                     + ": шаг WALK в " + cell + " не начать, нужен dig_out");
         }
         if (spirit.isInWater()) {

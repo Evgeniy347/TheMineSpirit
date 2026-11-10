@@ -27,6 +27,20 @@ public final class BodyMotion {
         return fits(world, feet) && supported(world, feet);
     }
 
+    public static List<BlockCoord> blocking(RouteWorld world, BlockCoord feet) {
+        Objects.requireNonNull(world, "Мир не может быть null: без него не видно клеток тела");
+        Objects.requireNonNull(feet, "Клетка ног не может быть null: от неё считается тело");
+        List<BlockCoord> blocked = new ArrayList<>(2);
+        if (!passable(world, feet)) {
+            blocked.add(feet);
+        }
+        BlockCoord head = above(feet);
+        if (!passable(world, head)) {
+            blocked.add(head);
+        }
+        return List.copyOf(blocked);
+    }
+
     public static boolean supported(RouteWorld world, BlockCoord feet) {
         return solid(world, below(feet)) || water(world, feet) || water(world, below(feet)) || climbable(world, feet);
     }

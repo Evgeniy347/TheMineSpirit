@@ -21,6 +21,7 @@ class WaterTasksTests {
                 Arguments.of("cross_water", true),
                 Arguments.of("fish", true),
                 Arguments.of("dig_out", true),
+                Arguments.of("walk_careful", true),
                 Arguments.of("goto", false),
                 Arguments.of("craft", false),
                 Arguments.of("chop_tree", false),
