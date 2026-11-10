@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.movement.PitWalkOut;
+import com.theminespirit.core.movement.WalkOutRules;
 import com.theminespirit.neoforge.board.PitWalkOutView;
 import com.theminespirit.neoforge.policy.RescueBreach;
 import net.minecraft.core.BlockPos;
@@ -16,6 +17,7 @@ final class DigOutExit {
 
     static boolean surfaced(Level level, BlockPos feet) {
         return DigOutScript.open(level, feet)
-                && PitWalkOut.exists(new PitWalkOutView(level), feet.getX(), feet.getZ(), feet.getY());
+                && PitWalkOut.exists(
+                        new PitWalkOutView(level), WalkOutRules.current(), feet.getX(), feet.getZ(), feet.getY());
     }
 }

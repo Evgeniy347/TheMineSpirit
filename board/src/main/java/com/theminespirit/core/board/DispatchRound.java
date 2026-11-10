@@ -87,7 +87,7 @@ public final class DispatchRound {
     public static int stageCasesOpen(Board board) {
         Objects.requireNonNull(board, "Доска не может быть null: открытые шаги этапа считают по ней");
         Set<BoardCase> cases = EnumSet.noneOf(BoardCase.class);
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             if (!StageTicket.stage(ticket.id())) {
                 continue;
             }

@@ -127,7 +127,7 @@ final class MoreInputs {
 
     private static int stationWaiters(BoardService service) {
         int waiting = 0;
-        for (BoardTicket ticket : service.board().all()) {
+        for (BoardTicket ticket : service.board().tickets()) {
             if (STATION_CASES.contains(ticket.boardCase()) && open(service, ticket.id())) {
                 waiting++;
             }
@@ -137,7 +137,7 @@ final class MoreInputs {
 
     private static int fenceGaps(BoardService service) {
         int gaps = 0;
-        for (BoardTicket ticket : service.board().all()) {
+        for (BoardTicket ticket : service.board().tickets()) {
             if (ticket.boardCase() == BoardCase.REPAIR_FENCE && open(service, ticket.id())) {
                 gaps++;
             }
@@ -147,7 +147,7 @@ final class MoreInputs {
 
     private static int strategicGoals(BoardService service) {
         int goals = 0;
-        for (BoardTicket ticket : service.board().all()) {
+        for (BoardTicket ticket : service.board().tickets()) {
             boolean goal = ticket.id().startsWith(BOARD_PREFIX)
                     || GOAL_PREFIXES.stream().anyMatch(ticket.cause()::startsWith);
             if (goal && open(service, ticket.id())) {

@@ -20,7 +20,7 @@ public final class AbsentOwners {
         Objects.requireNonNull(live, "Живые духи не могут быть null: пустой набор — пустое множество");
         Set<UUID> absent = new HashSet<>();
         List<BoardTicket> orphaned = new ArrayList<>();
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             BoardStatus status = board.statusOf(ticket.id()).orElse(null);
             if (status != BoardStatus.PENDING && status != BoardStatus.WAITING_RESOURCES) {
                 continue;

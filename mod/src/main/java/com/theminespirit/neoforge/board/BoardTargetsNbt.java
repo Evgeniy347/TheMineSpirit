@@ -34,7 +34,7 @@ final class BoardTargetsNbt {
         sources.restoreGraphFailures(store.failures());
         targets.putAll(store.targets());
         Set<String> alive = new HashSet<>();
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             alive.add(ticket.id());
         }
         targets.keySet().retainAll(alive);

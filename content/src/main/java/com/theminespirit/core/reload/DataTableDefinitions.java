@@ -11,9 +11,19 @@ import com.theminespirit.core.tactics.TacticsConfig;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 final class DataTableDefinitions {
     private DataTableDefinitions() {}
+
+    static <T> TableHolder<T> single(
+            TableRegistry registry,
+            String id,
+            String resourcePath,
+            TableDefinition.SingleParser<T> parser,
+            Supplier<T> seed) {
+        return registry.registerLazy(TableDefinition.single(id, resourcePath, parser), seed);
+    }
 
     static TableHolder<SupplyGraph> supply(TableRegistry registry) {
         vital(registry);

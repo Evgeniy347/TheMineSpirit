@@ -47,7 +47,7 @@ final class BoardHerdDesk {
 
     Set<String> liveDropCauses(ServerLevel level) {
         Set<String> live = new HashSet<>();
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             if (ticket.boardCase() != BoardCase.COLLECT_DROPS || !ticket.cause().startsWith("drop:")) {
                 continue;
             }

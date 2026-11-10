@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SERVER_DIR="${SERVER_DIR:-/opt/minecraft/server}"
-TMUX_SESSION="${TMUX_SESSION:-minecraft}"
+source "$(dirname "$0")/common.sh"
+
 WORLD_BACKUPS="${WORLD_BACKUPS:-/opt/minecraft/backups/world}"
 
 KEEP_ALL_HOURS="${KEEP_ALL_HOURS:-24}"
@@ -31,21 +31,6 @@ esac
 
 label="${1:-}"
 label="$(printf '%s' "$label" | tr ' ' '-' | tr -cd 'A-Za-z0-9._-')"
-
-is_running() { tmux has-session -t "$TMUX_SESSION" 2>/dev/null; }
-send_command() { tmux send-keys -t "$TMUX_SESSION" "$1" Enter; }
-log_size() { stat -c %s "$SERVER_DIR/logs/latest.log" 2>/dev/null || echo 0; }
-
-wait_for_log() {
-    local pattern="$1" offset="$2" timeout="${3:-60}"
-    for _ in $(seq 1 "$timeout"); do
-        if tail -c +"$((offset + 1))" "$SERVER_DIR/logs/latest.log" 2>/dev/null | grep -q "$pattern"; then
-            return 0
-        fi
-        sleep 1
-    done
-    return 1
-}
 
 free_mb() {
     df -Pm "$WORLD_BACKUPS" 2>/dev/null | awk 'NR==2 {print $4}'
@@ -154,7 +139,8 @@ if is_running; then
     save_disabled=true
     send_command "save-all flush"
     if ! wait_for_log 'Saved the game' "$offset" 120; then
-        echo "снимок отменён: сервер не подтвердил сохранение мира" >&2
+        echo "снимок отменён: сервер не подтвердил сохранение мира — save-all flush не выполнен;" \
+            "проверь консоль (scripts/console.sh): жива ли она, иначе нужен перезапуск" >&2
         exit 1
     fi
     echo "мир сброшен на диск, автосохранение приостановлено"

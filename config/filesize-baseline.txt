@@ -37,7 +37,6 @@ core/planner/FallbackPlannerTests.java	325
 core/planner/ResourceResolver.java	305
 core/planner/ResourceResolverTests.java	566
 core/policy/BlockProtectionTests.java	314
-core/reload/DataTables.java	360
 core/rest/BoardRoutesTests.java	364
 core/rest/BoardTaskRequest.java	412
 core/rest/TaskRoutesTests.java	883

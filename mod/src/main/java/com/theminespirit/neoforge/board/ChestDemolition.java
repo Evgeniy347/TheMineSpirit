@@ -156,7 +156,7 @@ final class ChestDemolition {
     }
 
     private static boolean busy(GraphPost post) {
-        return post.service.board().all().stream()
+        return post.service.board().tickets().stream()
                 .filter(ticket -> ticket.id().startsWith(TICKET) || ticket.id().startsWith(CHEST))
                 .anyMatch(ticket -> {
                     BoardStatus status =

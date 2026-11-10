@@ -170,7 +170,7 @@ final class ChestSpaceWatch {
     }
 
     private static boolean open(BoardService service) {
-        return service.board().all().stream()
+        return service.board().tickets().stream()
                 .filter(ticket -> ticket.id().startsWith(PREFIX) || ticket.id().startsWith(WAREHOUSE_PREFIX))
                 .anyMatch(ticket ->
                         OPEN.contains(service.board().statusOf(ticket.id()).orElse(BoardStatus.DONE)));

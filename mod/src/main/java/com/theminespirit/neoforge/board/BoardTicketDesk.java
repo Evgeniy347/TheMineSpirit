@@ -114,7 +114,7 @@ final class BoardTicketDesk {
 
     List<String> resetForNewRules() {
         Map<String, UUID> holders = new HashMap<>();
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             board.holderOf(ticket.id()).ifPresent(holder -> holders.put(ticket.id(), holder));
         }
         List<String> reset = board.resetForNewRules();
@@ -158,7 +158,7 @@ final class BoardTicketDesk {
                 .ifPresent(ticket -> ticket.executors()
                         .forEach(executor -> holders.computeIfAbsent(executor, id -> new HashSet<>())
                                 .add(ticketId)));
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             if (ticket.dependsOn().contains(ticketId)) {
                 collectHolders(ticket.id(), holders, visited);
             }

@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
 
 class BoardTicketViewTests {
@@ -50,6 +53,30 @@ class BoardTicketViewTests {
                 List.of("only"),
                 board.tickets().stream().map(BoardTicket::id).toList(),
                 "Вид доски остаётся прежним после попытки изменить его извне");
+    }
+
+    @Test
+    void iterationViews_UnsortedQueue_DoNotPayForOrder() {
+        AtomicLong clockReads = new AtomicLong();
+        Board board = new Board(clockReads::getAndIncrement);
+        submit(board, "first", 1);
+        submit(board, "second", 50);
+        clockReads.set(0);
+
+        BoardReserve.items(board);
+        BoardStages.held(board);
+        TransferCarriers.carrying(board, "craft", Set.of());
+        TransferCarriers.awaitsDelivery(board, "craft");
+        TransferCarriers.planned(board, "craft");
+        VitalChain.withPath(Map.of("food", "hungry"), board, UUID.randomUUID());
+        DispatchRound.stageCasesOpen(board);
+        new AbsentOwners().sweep(board, Set.of(), 0);
+
+        assertEquals(
+                0,
+                clockReads.get(),
+                "Перебор заданий не сортирует очередь: очередь сортирует только all(), а перебор берёт "
+                        + "tickets() — иначе каждый цикл платит за порядок, который ему не нужен");
     }
 
     private static void submit(Board board, String id, int priority) {

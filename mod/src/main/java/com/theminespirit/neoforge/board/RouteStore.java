@@ -71,15 +71,6 @@ public final class RouteStore extends SavedData {
         }
     }
 
-    public void mark(RouteResource resource, BlockCoord point) {
-        RoutePlan next = plan.mark(resource, point);
-        if (next == plan) {
-            return;
-        }
-        book.retire(resource);
-        apply(next);
-    }
-
     public void mark(QuarrySite site) {
         RoutePlan next = plan.mark(site);
         if (next == plan) {

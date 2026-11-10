@@ -3,7 +3,7 @@
 
 SERVER_DIR="${SERVER_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 MOD_DIR="${MOD_DIR:-/opt/minecraft/the-mine-spirit}"
-TMUX_SESSION="minecraft"
+TMUX_SESSION="${TMUX_SESSION:-minecraft}"
 NEOFORGE_VERSION="21.1.257"
 PUBLISH_SYNC_LOG="${PUBLISH_SYNC_LOG:-/opt/minecraft/logs/publish-sync.log}"
 TMP_DIR="${TMP_DIR:-/opt/minecraft/tmp}"

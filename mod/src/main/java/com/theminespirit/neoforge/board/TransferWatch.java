@@ -179,7 +179,7 @@ public final class TransferWatch {
 
     public static Set<String> liveCauses(BoardService service) {
         Set<String> live = new HashSet<>();
-        for (BoardTicket ticket : service.board().all()) {
+        for (BoardTicket ticket : service.board().tickets()) {
             if (TicketPlans.craftItem(ticket.boardCase()).isEmpty()
                     && !BUILDS.contains(ticket.boardCase())
                     && ticket.boardCase() != BoardCase.GATHER_MATERIALS) {
@@ -204,7 +204,7 @@ public final class TransferWatch {
     }
 
     private static void dropStuckGivers(ServerLevel level, BoardService service, String craftId, long now) {
-        for (BoardTicket ticket : List.copyOf(service.board().all())) {
+        for (BoardTicket ticket : List.copyOf(service.board().tickets())) {
             String from = TransferStockDesk.modifier(ticket, "from=");
             if (ticket.boardCase() != BoardCase.TRANSFER_ITEM
                     || !cause(craftId).equals(ticket.cause())
@@ -223,7 +223,7 @@ public final class TransferWatch {
     }
 
     private static boolean hasActiveTransfer(BoardService service, String craftId) {
-        for (BoardTicket ticket : service.board().all()) {
+        for (BoardTicket ticket : service.board().tickets()) {
             if (ticket.boardCase() == BoardCase.TRANSFER_ITEM
                     && cause(craftId).equals(ticket.cause())
                     && active(service, ticket.id())) {

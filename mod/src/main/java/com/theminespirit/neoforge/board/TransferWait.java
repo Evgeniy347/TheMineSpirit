@@ -61,7 +61,7 @@ final class TransferWait {
 
     void retain(Board board) {
         Set<String> open = new HashSet<>();
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             open.add(ticket.id());
         }
         notes.retain(open);

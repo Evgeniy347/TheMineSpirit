@@ -71,6 +71,7 @@
 | [testing/check-static-analysis-cache.sh](testing/check-static-analysis-cache.sh) | проверка кэша анализаторов | `scripts/testing/check-static-analysis-cache.sh` | ПК, сервер | временные файлы |
 | [testing/check-strategist.sh](testing/check-strategist.sh) | проверка запуска стратега | `scripts/testing/check-strategist.sh` | ПК, сервер | временные файлы |
 | [testing/check-test-runner.sh](testing/check-test-runner.sh) | проверка пределов и замков `test.sh` | `scripts/testing/check-test-runner.sh` | ПК, сервер | временные файлы |
+| [testing/check-world-snapshot.sh](testing/check-world-snapshot.sh) | проверка снимка мира: подтверждение сохранения и снимок остановленного сервера на подделках | `scripts/testing/check-world-snapshot.sh` | ПК, сервер | временные файлы |
 | [testing/fake-codegraph.sh](testing/fake-codegraph.sh) | подделка codegraph для проверок | `scripts/testing/fake-codegraph.sh` | ПК | временные файлы |
 | [testing/fake-opencode.sh](testing/fake-opencode.sh) | подделка OpenCode для проверок | `scripts/testing/fake-opencode.sh` | ПК | временные файлы |
 | [testing/measure-analyzers.sh](testing/measure-analyzers.sh) | замер анализаторов | `scripts/testing/measure-analyzers.sh` | ПК, сервер | временный отчёт |

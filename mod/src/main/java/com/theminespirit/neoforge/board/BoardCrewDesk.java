@@ -43,7 +43,7 @@ final class BoardCrewDesk {
                 live.add(spirit.getUUID());
             }
         }
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             if (ticket.executors().isEmpty() || board.statusOf(ticket.id()).orElse(null) != BoardStatus.ASSIGNED) {
                 continue;
             }
@@ -65,7 +65,7 @@ final class BoardCrewDesk {
         for (SpiritEntity spirit : spirits) {
             live.add(spirit.getUUID());
         }
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             if (board.statusOf(ticket.id()).orElse(null) != BoardStatus.ASSIGNED) {
                 continue;
             }

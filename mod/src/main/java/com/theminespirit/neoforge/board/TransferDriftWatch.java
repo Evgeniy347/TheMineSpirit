@@ -22,7 +22,7 @@ final class TransferDriftWatch {
 
     void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits) {
         long now = level.getGameTime();
-        for (BoardTicket ticket : List.copyOf(service.board().all())) {
+        for (BoardTicket ticket : List.copyOf(service.board().tickets())) {
             if (ticket.boardCase() != BoardCase.TRANSFER_ITEM || !open(service, ticket.id())) {
                 continue;
             }

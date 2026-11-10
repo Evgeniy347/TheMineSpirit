@@ -63,7 +63,7 @@ final class BoardCycle {
         board.prune(now, liveCauses);
         service.meter().pruneEnd();
         Set<String> alive = new HashSet<>();
-        for (BoardTicket ticket : board.all()) {
+        for (BoardTicket ticket : board.tickets()) {
             alive.add(ticket.id());
         }
         targets.keySet().retainAll(alive);
