@@ -24,7 +24,7 @@ public final class TaskRoutes {
     private final TaskRegistry registry;
     private final TaskGateway gateway;
     private final PlanningService planning;
-    private final IdempotencyCache idempotency;
+    private final Idempotency idempotency;
     private final SseSlots slots;
     private final BoardGateway board;
 
@@ -32,7 +32,7 @@ public final class TaskRoutes {
             TaskRegistry registry,
             TaskGateway gateway,
             PlanningService planning,
-            IdempotencyCache idempotency,
+            Idempotency idempotency,
             SseSlots slots,
             BoardGateway board) {
         this.registry = Objects.requireNonNull(registry, "registry не может быть null: задачи живут в реестре");
