@@ -98,6 +98,27 @@ class GraphNeedsTests {
     }
 
     @Test
+    void graphGather_Night_BlocksOnDaylight() {
+        BoardTicket ticket = ticket("graph:chop_jungle_log", BoardCase.GATHER_MATERIALS, List.of());
+
+        GraphBlock.Need need = GraphNeeds.of(
+                new Board(() -> 0L),
+                ticket,
+                TicketTarget.at(SITE).withSupply("jungle_log", 4),
+                HOLDER,
+                List.of(),
+                new StockView(Map.of()),
+                0,
+                FailureFact.NIGHT);
+
+        assertEquals(
+                new GraphBlock.World("time:day"),
+                need,
+                "Ночью дух не выходит за границу поселения: провал рубки ждёт рассвета по ключу time:day, "
+                        + "а не повторяется каждую минуту");
+    }
+
+    @Test
     void graphMake_EmptyStock_NeedsProducedItem() {
         BoardTicket ticket = ticket("graph:make:stick", BoardCase.GATHER_MATERIALS, List.of());
 

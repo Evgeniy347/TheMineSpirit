@@ -86,6 +86,9 @@ final class GraphNeeds {
         if (tool != null && holder != null && !ToolGate.allows(ticket, items)) {
             return new GraphBlock.Tool(tool, 0, holder);
         }
+        if (fact == FailureFact.NIGHT) {
+            return new GraphBlock.World(GraphSurroundings.TIME_DAY);
+        }
         if (fact == FailureFact.NO_TREES) {
             String tag = treeTag(ticket, target);
             if (tag != null) {

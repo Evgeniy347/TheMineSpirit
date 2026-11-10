@@ -270,7 +270,7 @@ public final class ChopTreeScript implements ScriptInstance {
                 ? ""
                 : "; ближайшее дерево к поселению " + far + " блоков при пределе " + search.maxDistance()
                         + " — посадите саженцы и дождитесь их роста";
-        failureFact = unreachable == 0 ? FailureFact.NO_TREES : null;
+        failureFact = spirit.level().isNight() ? FailureFact.NIGHT : unreachable == 0 ? FailureFact.NO_TREES : null;
         return fail("срублено деревьев " + chopped + " из " + params.count() + ": деревья породы "
                 + ChopTreeText.speciesText(params)
                 + " в радиусе " + search.maxDistance() + " от поселения закончились (отвергнуто не-деревьев: "

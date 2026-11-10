@@ -39,6 +39,8 @@ check fix_only_junit 1 "fix: только тест" src/test/java/ATests.java
 check feat_only_gametest 1 "feat: только GameTest" src/main/java/com/theminespirit/gametest/AGameTests.java
 check test_only_junit 0 "test: только тест" src/test/java/ATests.java
 check fix_data_and_test 0 "fix: данные и тест" src/main/resources/data.json src/test/java/ATests.java
+check fix_with_mod_junit 0 "fix: поведение мода с тестом" mod/src/main/java/A.java mod/src/test/java/ATests.java
+check fix_only_mod_junit 1 "fix: только тест мода" mod/src/test/java/ATests.java
 check fix_script_only 0 "fix: скрипт без тестов" scripts/a.sh
 grep -q "это test:" "$work/fix_only_junit.out" && echo "OK fix_only_junit_hint: подсказка «это test:»" \
     || { echo "FAIL fix_only_junit_hint: нет подсказки «это test:»"; failed=1; }
