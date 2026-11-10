@@ -77,7 +77,7 @@ class HazardReflexTests {
                 row("вода по пояс, берег на востоке", S, "WWW/WW./WWW", O, IN_WATER, exitWater(1, 0, 0)),
                 row("вода по шею, берег на востоке", S, "WWW/WW./WWW", "WWW/WW./WWW", IN_WATER, exitWater(1, 0, 0)),
                 row("лужа 1x1 по щиколотку", S, ".../.W./...", O, IN_WATER, exitWater(-1, 0, 0)),
-                row("озеро без берега", S, "WWW/WWW/WWW", O, IN_WATER, stop(PolicyId.WATER)),
+                row("озеро без берега", S, "WWW/WWW/WWW", O, IN_WATER, clear()),
                 row("бассейн с бортом выше: выход прыжком", S, "###/#W#/###", O, IN_WATER, exitWater(-1, 1, 0)),
                 row("лава у берега важнее воды", S, ".../LW./...", O, IN_WATER, flee(1, 0, 0)),
                 row(
@@ -93,9 +93,10 @@ class HazardReflexTests {
     @MethodSource("pictures")
     void evaluate_Picture_GivesExpectedVerdict(
             String name, String floor, String feet, String head, BodyFlags flags, Expected expected) {
-        LocalSurroundings surroundings = Pictures.of(floor, feet, head, flags);
+        Pictures.Picture picture = Pictures.picture(floor, feet, head, flags);
 
-        PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.empty());
+        PolicyVerdict verdict =
+                HazardReflex.evaluate(picture.surroundings(), PolicyExemptions.empty(), picture.world());
 
         if (expected.policy() == null) {
             assertEquals(
@@ -122,6 +123,51 @@ class HazardReflexTests {
         }
     }
 
+    @Test
+    void evaluate_WaterPocketUnderLowCeiling_GivesNoExitReflex() {
+        Pictures.Picture picture =
+                Pictures.pictureWithAbove("###/###/###", "###/#W#/###", "###/#../###", "###/##./###", IN_WATER);
+
+        PolicyVerdict verdict =
+                HazardReflex.evaluate(picture.surroundings(), PolicyExemptions.empty(), picture.world());
+
+        assertEquals(
+                new PolicyVerdict.Clear(),
+                verdict,
+                "Живой случай -99,52,-417: ноги в воде, голова на воздухе, потолок на блоке 54, берег на 53. "
+                        + "Прыжок в потолок невозможен — это не рефлекс выхода, а ловушка: дух обязан получить "
+                        + "спасение (dig_out), а не кружить в воде (260 тысяч попыток)");
+    }
+
+    @Test
+    void evaluate_WaterPocketWithJumpRoom_GivesExitReflex() {
+        Pictures.Picture picture =
+                Pictures.pictureWithAbove("###/###/###", "###/#W#/###", "###/#../###", "###/#../###", IN_WATER);
+
+        PolicyVerdict verdict =
+                HazardReflex.evaluate(picture.surroundings(), PolicyExemptions.empty(), picture.world());
+
+        assertEquals(
+                new PolicyVerdict.Reflex(
+                        PolicyId.WATER, new ReflexAction.ExitWater(Pictures.at(1, 1, 0)), "дух в воде"),
+                verdict,
+                "Тот же карман без потолка: прыжок на берег возможен, и рефлекс обязан вести туда");
+    }
+
+    @Test
+    void evaluate_WaterNoShoreNear_IsClearForRescue() {
+        Pictures.Picture picture = Pictures.picture(S, "WWW/WWW/WWW", O, IN_WATER);
+
+        PolicyVerdict verdict =
+                HazardReflex.evaluate(picture.surroundings(), PolicyExemptions.empty(), picture.world());
+
+        assertEquals(
+                new PolicyVerdict.Clear(),
+                verdict,
+                "Берега рядом нет: рефлекс не может вывести духа, а вечное удержание на поверхности не даёт "
+                        + "выполнить спасение (AIR отдельно следит за воздухом под водой)");
+    }
+
     private static BlockCoord cellOf(ReflexAction action) {
         return switch (action) {
             case ReflexAction.Flee flee -> flee.cell();
@@ -133,9 +179,10 @@ class HazardReflexTests {
     @Test
     void evaluate_BurningWithWaterNearby_FleesToTheWaterCell() {
         BlockCoord water = Pictures.at(3, 0, 0);
-        LocalSurroundings surroundings = Pictures.of(S, O, O, BURNING, Optional.of(water));
+        Pictures.Picture picture = Pictures.picture(S, O, O, BURNING, Optional.of(water));
 
-        PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.empty());
+        PolicyVerdict verdict =
+                HazardReflex.evaluate(picture.surroundings(), PolicyExemptions.empty(), picture.world());
 
         assertEquals(
                 new PolicyVerdict.Reflex(PolicyId.LAVA_FIRE, new ReflexAction.Flee(water), "дух горит: цель — вода"),
@@ -146,9 +193,10 @@ class HazardReflexTests {
     @Test
     void evaluate_BurningWithLavaBesideAndWaterKnown_GoesToTheWater() {
         BlockCoord water = Pictures.at(-3, 0, 0);
-        LocalSurroundings surroundings = Pictures.of(S, ".../..L/...", O, BURNING, Optional.of(water));
+        Pictures.Picture picture = Pictures.picture(S, ".../..L/...", O, BURNING, Optional.of(water));
 
-        PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.empty());
+        PolicyVerdict verdict =
+                HazardReflex.evaluate(picture.surroundings(), PolicyExemptions.empty(), picture.world());
 
         PolicyVerdict.Reflex reflex =
                 assertInstanceOf(PolicyVerdict.Reflex.class, verdict, "Горящий дух обязан получить рефлекс");
@@ -160,9 +208,10 @@ class HazardReflexTests {
 
     @Test
     void evaluate_WaterExemptionWithLavaBeside_StillFlees() {
-        LocalSurroundings surroundings = Pictures.of(S, ".../..L/...", O, IN_WATER);
+        Pictures.Picture picture = Pictures.picture(S, ".../..L/...", O, IN_WATER);
 
-        PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.of(PolicyId.WATER));
+        PolicyVerdict verdict =
+                HazardReflex.evaluate(picture.surroundings(), PolicyExemptions.of(PolicyId.WATER), picture.world());
 
         PolicyVerdict.Reflex reflex = assertInstanceOf(
                 PolicyVerdict.Reflex.class, verdict, "Лава вплотную обязана дать рефлекс даже при исключении WATER");
@@ -174,9 +223,10 @@ class HazardReflexTests {
 
     @Test
     void evaluate_InWaterWithWaterExemption_IsClear() {
-        LocalSurroundings surroundings = Pictures.of(S, ".../.W./...", O, IN_WATER);
+        Pictures.Picture picture = Pictures.picture(S, ".../.W./...", O, IN_WATER);
 
-        PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.of(PolicyId.WATER));
+        PolicyVerdict verdict =
+                HazardReflex.evaluate(picture.surroundings(), PolicyExemptions.of(PolicyId.WATER), picture.world());
 
         assertEquals(
                 new PolicyVerdict.Clear(),

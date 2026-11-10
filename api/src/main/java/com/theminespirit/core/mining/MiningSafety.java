@@ -78,6 +78,14 @@ public final class MiningSafety {
         return floor == Cell.SOLID || floor == Cell.FALLING;
     }
 
+    // lib: подъём на блок выше — прыжок: тело поднимается на два блока, и потолок над головой его не пускает
+    // lib: (10.11: вода -99,52,-417, голова 53, потолок 54 — берег y=53 недостижим, а поиск его предлагал).
+    public static boolean roomToClimb(BlockCoord feet, SafetyView view) {
+        Objects.requireNonNull(feet, "Клетка ног не может быть null: без неё неизвестно, где искать место для прыжка");
+        Objects.requireNonNull(view, "SafetyView не может быть null: по нему проверяется потолок над головой");
+        return view.cellAt(offset(feet, 0, 2, 0)) != Cell.SOLID;
+    }
+
     private static boolean ringSafe(BlockCoord center, SafetyView view) {
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {

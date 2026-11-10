@@ -60,7 +60,7 @@ public final class PillarDownScript implements ScriptInstance {
         int floor = Math.max(level.getMinBuildHeight() + 1, feet.getY() - CatalogLimits.COUNT_MAX);
         for (int y = feet.getY() - 1; y >= floor; y--) {
             BlockPos pos = new BlockPos(feet.getX(), y, feet.getZ());
-            if (data.isSpiritMarked(pos) && !level.getBlockState(pos).isAir()) {
+            if (data.isOwn(pos) && !level.getBlockState(pos).isAir()) {
                 own.add(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
             }
         }
@@ -71,7 +71,7 @@ public final class PillarDownScript implements ScriptInstance {
             return false;
         }
         BlockPos below = spirit.blockPosition().below();
-        return PlacedBlocksData.get(server).isSpiritMarked(below)
+        return PlacedBlocksData.get(server).isOwn(below)
                 && !spirit.level().getBlockState(below).isAir();
     }
 

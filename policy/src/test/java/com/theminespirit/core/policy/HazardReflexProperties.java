@@ -64,7 +64,7 @@ class HazardReflexProperties {
         Random random = new Random(seed);
         LocalSurroundings surroundings = randomSnapshot(seed, WEIGHTED, flags(random));
 
-        PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.empty());
+        PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.empty(), surroundings);
 
         if (verdict instanceof PolicyVerdict.Reflex reflex && reflex.action() instanceof ReflexAction.Flee flee) {
             assertTrue(
@@ -80,7 +80,7 @@ class HazardReflexProperties {
         Random random = new Random(seed);
         LocalSurroundings surroundings = randomSnapshot(seed, WEIGHTED, flags(random));
 
-        PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.empty());
+        PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.empty(), surroundings);
 
         if (verdict instanceof PolicyVerdict.Reflex reflex && reflex.action() instanceof ReflexAction.ExitWater exit) {
             BlockCoord cell = exit.cell();
@@ -120,7 +120,7 @@ class HazardReflexProperties {
         BodyFlags harmless = new BodyFlags(false, false, false, random.nextBoolean());
         LocalSurroundings surroundings = randomSnapshot(seed, HARMLESS, harmless);
 
-        PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.empty());
+        PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.empty(), surroundings);
 
         assertEquals(
                 new PolicyVerdict.Clear(),
@@ -133,7 +133,7 @@ class HazardReflexProperties {
         Random random = new Random(seed);
         LocalSurroundings surroundings = randomSnapshot(seed, WEIGHTED, flags(random));
 
-        PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.of(PolicyId.WATER));
+        PolicyVerdict verdict = HazardReflex.evaluate(surroundings, PolicyExemptions.of(PolicyId.WATER), surroundings);
 
         if (verdict instanceof PolicyVerdict.Reflex reflex) {
             assertFalse(
@@ -150,8 +150,11 @@ class HazardReflexProperties {
         Random random = new Random(seed);
         BodyFlags flags = flags(random);
 
-        PolicyVerdict first = HazardReflex.evaluate(randomSnapshot(seed, WEIGHTED, flags), PolicyExemptions.empty());
-        PolicyVerdict second = HazardReflex.evaluate(randomSnapshot(seed, WEIGHTED, flags), PolicyExemptions.empty());
+        LocalSurroundings firstSnapshot = randomSnapshot(seed, WEIGHTED, flags);
+        LocalSurroundings secondSnapshot = randomSnapshot(seed, WEIGHTED, flags);
+
+        PolicyVerdict first = HazardReflex.evaluate(firstSnapshot, PolicyExemptions.empty(), firstSnapshot);
+        PolicyVerdict second = HazardReflex.evaluate(secondSnapshot, PolicyExemptions.empty(), secondSnapshot);
 
         assertEquals(
                 first,

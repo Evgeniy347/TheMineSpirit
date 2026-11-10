@@ -2,7 +2,7 @@
 
 Разведка 02.11 по решению владельца: изучить Baritone и взять идеи для духов. Код Baritone в мод **не копировался**
 и не собирался. Исходники: `F:/repos/minecraft/tmp-research/baritone`, ветка `1.21.1`, коммит `11ea66c`
-(«deprecate 1.21.1»), `mod_version=1.11.3`, `minecraft_version=1.21`, Java 21.
+(«deprecate 1.21.1»), `mod_version=1.11.3`, `minecraft_version=1.21`, Java 21. Упоминания `RoutePlanner` ниже — исторические замеры удалённого прототипа (debtmisc6).
 ## Лицензия (проверено в репозитории)
 
 - `LICENSE` — **GNU LGPL-3.0**; шапки каждого `.java`: «either version 3 of the License, or (at your option) any
