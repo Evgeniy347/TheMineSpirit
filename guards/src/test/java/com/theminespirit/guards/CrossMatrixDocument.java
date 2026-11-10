@@ -15,6 +15,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("StringConcatToTextBlock")
 final class CrossMatrixDocument {
     static final Path DOC = Path.of("docs/testing/CROSS-MATRIX.md");
     static final Path NO_PAIR = Path.of("docs/testing/CROSS-MATRIX-NO-PAIR.md");
@@ -33,6 +34,7 @@ final class CrossMatrixDocument {
         String matrix = read(DOC);
         List<String> found = new ArrayList<>(violations(matrix, sources));
         found.addAll(CrossMatrixNoPair.issues(matrix, read(NO_PAIR)));
+        found.addAll(CrossMatrixInterrupt.issues(read(CrossMatrixInterrupt.DOC), sources));
         return found;
     }
 
@@ -134,7 +136,7 @@ final class CrossMatrixDocument {
         return found;
     }
 
-    private static String refProblem(String ref, Map<String, String> sources) {
+    static String refProblem(String ref, Map<String, String> sources) {
         String[] parts = ref.split("\\.", 2);
         if (parts.length != 2) {
             return "ожидали Class.method";
