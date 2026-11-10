@@ -1,5 +1,7 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.board.lease.LeaseCell;
+import com.theminespirit.core.board.lease.LeaseKind;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
@@ -70,6 +72,19 @@ public final class PillarDownScript implements ScriptInstance {
         if (!own.isEmpty()) {
             BlockCoord top = own.get(0);
             lease = LeaseRun.ownedAt(spirit, new BlockPos(top.x(), top.y(), top.z()));
+            return;
+        }
+        LeaseRun found = LeaseRun.ownedAt(spirit, feet.below());
+        if (found == null) {
+            return;
+        }
+        lease = found;
+        List<LeaseCell> cells = found.cells();
+        for (int index = cells.size() - 1; index >= 0; index--) {
+            LeaseCell cell = cells.get(index);
+            if (cell.kind() == LeaseKind.PLACED) {
+                own.add(cell.pos());
+            }
         }
     }
 

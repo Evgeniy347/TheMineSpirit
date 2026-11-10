@@ -119,7 +119,7 @@ final class PillarDismantler {
     }
 
     private void forget(BlockPos pos) {
-        if (lease != null) {
+        if (lease != null && lease.contains(pos)) {
             lease.forget(pos);
         }
     }
@@ -133,7 +133,7 @@ final class PillarDismantler {
 
     private boolean isOwnMarked(BlockPos pos) {
         return level instanceof ServerLevel server
-                && PlacedBlocksData.get(server).isOwn(pos);
+                && (PlacedBlocksData.get(server).isOwn(pos) || (lease != null && lease.contains(pos)));
     }
 
     private void unmark(BlockPos pos) {

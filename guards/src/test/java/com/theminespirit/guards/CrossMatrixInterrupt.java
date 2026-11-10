@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 final class CrossMatrixInterrupt {
     static final Path DOC = Path.of("docs/testing/CROSS-MATRIX-INTERRUPT.md");
     static final int MIN = 25;
-    private static final Set<String> MECHANICS = Set.of("столб", "мост", "расчистка", "шахта", "dig_out");
+    private static final Set<String> MECHANICS = Set.of("столб", "мост", "расчистка", "шахта", "dig_out", "маршрут");
     private static final Pattern ROW = Pattern.compile("^\\| (I\\d{2}) \\|");
     private static final Set<String> MARKS = Set.of("ОК", "Н");
 
@@ -33,8 +33,8 @@ final class CrossMatrixInterrupt {
                 found.add("пара " + id + " оси прерывания описана дважды");
             }
             if (!MECHANICS.contains(row.get("mechanic"))) {
-                found.add(
-                        "механика «" + row.get("mechanic") + "» оси прерывания вне столб/мост/расчистка/шахта/dig_out");
+                found.add("механика «" + row.get("mechanic")
+                        + "» оси прерывания вне столб/мост/расчистка/шахта/dig_out/маршрут");
             }
             String mark = row.get("mark");
             if (!MARKS.contains(mark)) {

@@ -174,7 +174,7 @@ class LeaseScenarioTests {
     }
 
     @Test
-    void digOut_SuccessReturnsSpoilAndDropsFloor_InterruptOrphansEverything() {
+    void digOut_SuccessClosesLease_InterruptOrphansEverything() {
         LeaseBook book = new LeaseBook();
         LeaseSession escape = LeaseSession.open(book, DIGGER, null, "dig_out", 100);
         BlockCoord broken = new BlockCoord(50, 50, 0);
@@ -183,10 +183,10 @@ class LeaseScenarioTests {
         escape.placed(floor, "minecraft:dirt");
 
         escape.forget(broken);
-        escape.forget(floor);
         escape.commit();
 
-        assertEquals(LeaseStatus.DONE, escape.status(), "Успешный выход возвращает spoil и снимает свой пол");
+        assertEquals(LeaseStatus.DONE, escape.status(), "Успешный выход возвращает spoil и закрывает аренду");
+        assertFalse(book.isOrphaned(floor), "Пол ступени остаётся частью выхода и не ждёт уборки");
         assertTrue(book.orphanedCells().isEmpty(), "После возврата spoil уборке нечего делать");
 
         LeaseSession interrupted = LeaseSession.open(book, BUILDER, null, "dig_out", 120);

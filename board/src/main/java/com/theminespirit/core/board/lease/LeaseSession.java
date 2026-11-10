@@ -106,6 +106,9 @@ public final class LeaseSession {
         if (contains(cell.pos())) {
             return false;
         }
+        if (book.owner(cell.pos()).isPresent()) {
+            return false;
+        }
         book.record(id, cell);
         return true;
     }

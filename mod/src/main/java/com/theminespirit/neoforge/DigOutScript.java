@@ -63,7 +63,7 @@ public final class DigOutScript implements ScriptInstance {
         this.breaker = BlockBreaker.escaping(spirit, rescue);
         this.placer = new BlockPlacer(spirit, PlotProtection.Ground.TEMPORARY_MOVEMENT);
         this.lease = LeaseRun.open(spirit, "dig_out");
-        this.rollback = new DigOutRollback(spirit, level, lease);
+        this.rollback = new DigOutRollback(lease);
         this.stepFloor = new DigOutFloor(spirit, level, placer, lease);
         this.restore = new DigOutRestore(spirit, level);
         boolean sealedNow = sealed(level, spirit.blockPosition());
@@ -128,7 +128,6 @@ public final class DigOutScript implements ScriptInstance {
         if ((DigOutExit.surfaced(level, feet) && !fromPit && !restore.pendingOver(feet)) || goalReached) {
             backfill.report();
             forgetReturned(restore.returnSpoil());
-            rollbackStep();
             closeLease();
             PlanBreachRestore.restore(spirit, level, placer, feet);
             outcome = ScriptStatus.SUCCEEDED;
@@ -275,6 +274,7 @@ public final class DigOutScript implements ScriptInstance {
             breaking = false;
         }
         spirit.getNavigation().stop();
+        forgetReturned(restore.returnSpoil());
         lease.orphan();
     }
 
@@ -288,10 +288,6 @@ public final class DigOutScript implements ScriptInstance {
 
     private void forgetReturned(List<BlockPos> returned) {
         rollback.forgetReturned(returned);
-    }
-
-    private void rollbackStep() {
-        rollback.rollbackStep();
     }
 
     private void closeLease() {

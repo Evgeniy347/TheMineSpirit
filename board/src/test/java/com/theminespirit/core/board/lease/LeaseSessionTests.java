@@ -34,6 +34,22 @@ class LeaseSessionTests {
     }
 
     @Test
+    void placed_CellOwnedByOrphanedLease_LeftToItsOwner() {
+        LeaseBook book = new LeaseBook();
+        LeaseSession first = LeaseSession.open(book, SPIRIT, null, "dig_out", 10);
+        BlockCoord cell = new BlockCoord(2, 50, 2);
+        first.placed(cell, "minecraft:dirt");
+        first.orphan();
+
+        LeaseSession second = LeaseSession.open(book, SPIRIT, null, "dig_out", 20);
+        assertFalse(
+                second.placed(cell, "minecraft:dirt"),
+                "Клетку брошенной аренды вторая механика не перезаписывает: откат остаётся за первым владельцем");
+        assertEquals(first.id(), book.owner(cell).orElseThrow().id(), "Владелец клетки не сменился");
+        assertTrue(second.cells().isEmpty(), "Вторая аренда не забрала чужую клетку");
+    }
+
+    @Test
     void forget_UnrecordedCell_Rejected() {
         LeaseBook book = new LeaseBook();
         LeaseSession session = LeaseSession.open(book, SPIRIT, null, "route", 10);
