@@ -34,6 +34,8 @@ public final class BoardTuning {
 
     public static final long LOG_SUMMARY_TICKS = 6000;
 
+    public static final long LEASE_SUSPEND_TIMEOUT_TICKS = 6000;
+
     public static final long STUCK_TTL_TICKS = 6000;
 
     public static final int CASE_FAIL_LIMIT = 3;
@@ -68,7 +70,8 @@ public final class BoardTuning {
             "transferRadiusBlocks",
             "transferMaxCount",
             "rebuildPercent",
-            "logSummaryTicks");
+            "logSummaryTicks",
+            "leaseSuspendTimeoutTicks");
 
     private BoardTuning() {}
 
@@ -136,6 +139,10 @@ public final class BoardTuning {
 
     public static long logSummaryTicks() {
         return interval("logSummaryTicks", LOG_SUMMARY_TICKS);
+    }
+
+    public static long leaseSuspendTimeoutTicks() {
+        return interval("leaseSuspendTimeoutTicks", LEASE_SUSPEND_TIMEOUT_TICKS);
     }
 
     public static int ticketFailLimit() {
