@@ -55,7 +55,9 @@ public final class LeaseData extends SavedData {
         Objects.requireNonNull(level, "Уровень не может быть null: книга аренд хранится в мире");
         LeaseData data = level.getDataStorage().computeIfAbsent(FACTORY, NAME);
         if (!data.migrated) {
-            data.migrateLegacy(PlacedBlocksData.get(level).temporaryCells(), level.getGameTime());
+            PlacedBlocksData placed = PlacedBlocksData.get(level);
+            data.migrateLegacy(placed.temporaryCells(), level.getGameTime());
+            placed.clearLegacy();
         }
         return data;
     }

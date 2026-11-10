@@ -14,6 +14,7 @@ final class BrewScriptSpecsRows {
                         Map.of("count", new long[] {1, 256}, "radius", new long[] {1, 32})),
                 new ScriptCatalogTests.ScriptExpectation(
                         "farm_nether_wart", List.of(), Map.of("count", new long[] {1, 256}, "radius", new long[] {1, 16
-                        })));
+                        })),
+                new ScriptCatalogTests.ScriptExpectation("undo_lease", List.of("id"), Map.of()));
     }
 }

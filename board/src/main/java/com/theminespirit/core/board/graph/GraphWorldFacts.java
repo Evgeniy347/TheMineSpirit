@@ -5,12 +5,24 @@ import java.util.Map;
 import java.util.Objects;
 
 public record GraphWorldFacts(
-        List<GraphSiteFacts.Stray> strays, GraphSiteFacts.Terrain terrain, Map<String, GraphFacts.Building> buildings) {
+        List<GraphSiteFacts.Stray> strays,
+        GraphSiteFacts.Terrain terrain,
+        Map<String, GraphFacts.Building> buildings,
+        List<GraphSiteFacts.Lease> leases) {
     public GraphWorldFacts {
         strays = List.copyOf(
                 Objects.requireNonNull(strays, "Лишние постройки не могут быть null: без них — пустой список"));
         Objects.requireNonNull(terrain, "Рельеф не может быть null: ровный задают Terrain.empty()");
         buildings =
                 Map.copyOf(Objects.requireNonNull(buildings, "Постройки не могут быть null: без них — пустая карта"));
+        leases = List.copyOf(
+                Objects.requireNonNull(leases, "Брошенные аренды не могут быть null: без них — пустой список"));
+    }
+
+    public GraphWorldFacts(
+            List<GraphSiteFacts.Stray> strays,
+            GraphSiteFacts.Terrain terrain,
+            Map<String, GraphFacts.Building> buildings) {
+        this(strays, terrain, buildings, List.of());
     }
 }

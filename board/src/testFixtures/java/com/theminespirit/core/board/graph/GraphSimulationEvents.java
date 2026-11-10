@@ -200,6 +200,7 @@ final class GraphSimulationEvents {
                 facts.stageReqs(),
                 facts.feedback(),
                 List.of(),
+                List.of(),
                 List.of());
     }
 
@@ -216,6 +217,7 @@ final class GraphSimulationEvents {
                 facts.stageReqs(),
                 facts.feedback(),
                 List.of(),
+                List.of(),
                 List.of());
     }
 
@@ -231,6 +233,7 @@ final class GraphSimulationEvents {
                 terrain,
                 facts.stageReqs(),
                 facts.feedback(),
+                List.of(),
                 List.of(),
                 List.of());
     }

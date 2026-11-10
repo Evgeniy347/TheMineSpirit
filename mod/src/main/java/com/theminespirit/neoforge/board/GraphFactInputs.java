@@ -55,6 +55,7 @@ public final class GraphFactInputs {
                 stageReqs(service, service.board().ledger().stage()),
                 GraphFeedback.none(),
                 List.of(),
+                List.of(),
                 List.of());
     }
 

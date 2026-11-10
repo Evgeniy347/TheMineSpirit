@@ -102,6 +102,9 @@ class WorldMutationGuardTests {
                 "открытие двери: меняется только OPEN, блок не появляется и не исчезает");
         map.put("neoforge/doors/CloseDoorScript.java", "закрытие двери: меняется только OPEN, блок не исчезает");
         map.put(
+                "neoforge/lease/LeaseStates.java",
+                "откат состояния двери/калитки аренды: меняется только OPEN, блок остаётся на месте");
+        map.put(
                 "neoforge/inventory/ContainerLid.java",
                 "крышка сундука/бочки: визуальное состояние, не добыча и не стройка");
         map.put("neoforge/husbandry/HiveSession.java", "улей и костёр: сбор мёда и поджиг, блок остаётся на месте");

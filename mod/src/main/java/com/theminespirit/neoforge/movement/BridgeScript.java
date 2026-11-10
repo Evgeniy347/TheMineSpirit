@@ -244,7 +244,7 @@ public final class BridgeScript implements ScriptInstance {
         return switch (approach.tick()) {
             case ARRIVED -> {
                 if (lease != null) {
-                    lease.commit();
+                    lease.orphan();
                 }
                 outcome = ScriptStatus.SUCCEEDED;
                 yield outcome;

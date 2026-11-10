@@ -5,6 +5,8 @@ import com.theminespirit.core.movement.GateCrossing;
 import com.theminespirit.core.movement.Passage;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.lease.LeaseRun;
+import com.theminespirit.neoforge.lease.LeaseStates;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +45,7 @@ public final class PassageWalk {
 
     private final SpiritEntity spirit;
     private final Map<BlockCoord, GateCrossing> opened = new HashMap<>();
+    private @Nullable LeaseRun lease;
 
     public PassageWalk(SpiritEntity spirit) {
         this.spirit = spirit;
@@ -74,6 +77,9 @@ public final class PassageWalk {
 
     public void settle() {
         closeAll(coord -> !occupied(coord));
+        if (lease != null) {
+            lease.orphan();
+        }
     }
 
     private Optional<BlockCoord> pathPassage() {
@@ -106,6 +112,11 @@ public final class PassageWalk {
         if (!use(pos, state)) {
             return false;
         }
+        BlockState after = spirit.level().getBlockState(pos);
+        if (lease == null) {
+            lease = LeaseRun.open(spirit, "door");
+        }
+        lease.state(pos, LeaseStates.text(state), LeaseStates.text(after));
         opened.put(coord, new GateCrossing(coord, blockCoord(spirit.blockPosition())));
         LOGGER.info(
                 "[move] {} открыл {} в {}: закрытая преграда на пути",
@@ -147,6 +158,13 @@ public final class PassageWalk {
         }
         if (!use(pos, spirit.level().getBlockState(pos))) {
             return;
+        }
+        if (lease != null && lease.contains(pos)) {
+            lease.forget(pos);
+            if (lease.cells().isEmpty()) {
+                lease.commit();
+                lease = null;
+            }
         }
         LOGGER.info(
                 "[move] {} закрыл {} в {}: прошёл, створка больше не нужна",

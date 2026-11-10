@@ -7,6 +7,8 @@ public final class BuildTuning {
     public static final int MAX_CONSECUTIVE_SKIPS = 16;
     public static final int DEMO_PLATFORM_PADDING = 5;
 
+    public static final long RESERVATION_TICKS = 24000;
+
     private BuildTuning() {}
 
     public static int timeoutTicks(double distanceBlocks) {

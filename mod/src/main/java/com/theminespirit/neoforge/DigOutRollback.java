@@ -1,7 +1,5 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.board.lease.LeaseCell;
-import com.theminespirit.core.board.lease.LeaseKind;
 import com.theminespirit.neoforge.lease.LeaseRun;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -22,17 +20,10 @@ final class DigOutRollback {
     }
 
     void close() {
-        boolean spoilPending = false;
-        for (LeaseCell cell : lease.cells()) {
-            if (cell.kind() == LeaseKind.BROKEN) {
-                spoilPending = true;
-                break;
-            }
-        }
-        if (spoilPending) {
-            lease.orphan();
+        if (lease.cells().isEmpty()) {
+            lease.commit();
             return;
         }
-        lease.commit();
+        lease.orphan();
     }
 }

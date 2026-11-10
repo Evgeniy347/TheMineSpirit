@@ -194,6 +194,24 @@ public final class LeaseBook {
         return count;
     }
 
+    public Lease rollback(String id, BlockCoord cell) {
+        Objects.requireNonNull(cell, "Клетка не может быть null: отмечать откат нечего");
+        Lease lease = require(id);
+        if (lease.status() != LeaseStatus.ORPHANED) {
+            throw new IllegalStateException("Аренда '" + id + "' в статусе " + lease.status()
+                    + ": откатывают только брошенную правку, у действующей клетки ещё в работе");
+        }
+        List<LeaseCell> next = new ArrayList<>(lease.cells());
+        if (!next.removeIf(recorded -> recorded.pos().equals(cell))) {
+            throw new IllegalArgumentException("Клетка " + cell + " не записана в брошенной аренде '" + id
+                    + "': откат не может закрыть чужую правку");
+        }
+        orphanedCells.remove(cell, id);
+        Lease updated = next.isEmpty() ? lease.withCells(next).withStatus(LeaseStatus.DONE) : lease.withCells(next);
+        leases.put(id, updated);
+        return updated;
+    }
+
     public Optional<Lease> owner(BlockCoord pos) {
         Objects.requireNonNull(pos, "Клетка не может быть null: владельца ищут по ней");
         String active = activeCells.get(pos);

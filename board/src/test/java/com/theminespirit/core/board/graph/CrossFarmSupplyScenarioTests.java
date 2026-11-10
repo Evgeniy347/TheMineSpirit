@@ -63,6 +63,7 @@ class CrossFarmSupplyScenarioTests {
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
+                List.of(),
                 List.of());
         GraphPlan plan = plan(world, facts);
 
@@ -220,6 +221,7 @@ class CrossFarmSupplyScenarioTests {
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
+                List.of(),
                 List.of());
         GraphPlan plan = plan(world, facts);
 
@@ -257,7 +259,8 @@ class CrossFarmSupplyScenarioTests {
                 facts.stageReqs(),
                 facts.feedback(),
                 facts.players(),
-                facts.planBreaches());
+                facts.planBreaches(),
+                List.of());
         assertTrue(
                 GraphStageGate.buildingReady(repaired, "hut"),
                 "После аудита 100 % и снятия лишнего этап видит готовую хижину");

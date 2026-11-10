@@ -26,16 +26,16 @@ public final class PlacedBlocksData extends SavedData {
 
     private final PlacedBlockSet set;
     private final PlacedBlockSet spiritSet;
-    private final PlacedBlockSet temporarySet;
+    private final List<BlockCoord> legacy;
 
     public PlacedBlocksData() {
-        this(new PlacedBlockSet(), new PlacedBlockSet(), new PlacedBlockSet());
+        this(new PlacedBlockSet(), new PlacedBlockSet(), List.of());
     }
 
-    private PlacedBlocksData(PlacedBlockSet set, PlacedBlockSet spiritSet, PlacedBlockSet temporarySet) {
+    private PlacedBlocksData(PlacedBlockSet set, PlacedBlockSet spiritSet, List<BlockCoord> legacy) {
         this.set = set;
         this.spiritSet = spiritSet;
-        this.temporarySet = temporarySet;
+        this.legacy = new ArrayList<>(legacy);
     }
 
     public static SavedData.Factory<PlacedBlocksData> factory() {
@@ -47,17 +47,22 @@ public final class PlacedBlocksData extends SavedData {
     }
 
     public static PlacedBlocksData load(CompoundTag tag, HolderLookup.Provider registries) {
+        List<BlockCoord> legacy = new ArrayList<>();
+        for (PlacedBlockCodec.ChunkEntry entry : readEntries(tag, TEMPORARY_CHUNKS)) {
+            for (long packed : entry.positions()) {
+                legacy.add(PlacedBlockSet.unpack(packed));
+            }
+        }
         return new PlacedBlocksData(
                 PlacedBlockCodec.decode(readEntries(tag, CHUNKS)),
                 PlacedBlockCodec.decode(readEntries(tag, SPIRIT_CHUNKS)),
-                PlacedBlockCodec.decode(readEntries(tag, TEMPORARY_CHUNKS)));
+                legacy);
     }
 
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         tag.put(CHUNKS, writeEntries(PlacedBlockCodec.encode(set)));
         tag.put(SPIRIT_CHUNKS, writeEntries(PlacedBlockCodec.encode(spiritSet)));
-        tag.put(TEMPORARY_CHUNKS, writeEntries(PlacedBlockCodec.encode(temporarySet)));
         return tag;
     }
 
@@ -124,26 +129,19 @@ public final class PlacedBlocksData extends SavedData {
         return spiritSet.inChunk(chunkX, chunkZ);
     }
 
-    public void unmarkTemporary(BlockPos pos) {
-        if (temporarySet.remove(toCoord(pos))) {
-            setDirty();
-        }
-    }
-
-    public boolean isTemporary(BlockPos pos) {
-        return temporarySet.contains(toCoord(pos));
-    }
-
     public boolean isOwn(BlockPos pos) {
-        return isSpiritMarked(pos) || isTemporary(pos);
-    }
-
-    public List<BlockCoord> temporaryIn(int chunkX, int chunkZ) {
-        return temporarySet.inChunk(chunkX, chunkZ);
+        return isSpiritMarked(pos);
     }
 
     public List<BlockCoord> temporaryCells() {
-        return temporarySet.cells();
+        return List.copyOf(legacy);
+    }
+
+    public void clearLegacy() {
+        if (!legacy.isEmpty()) {
+            legacy.clear();
+            setDirty();
+        }
     }
 
     public int size() {

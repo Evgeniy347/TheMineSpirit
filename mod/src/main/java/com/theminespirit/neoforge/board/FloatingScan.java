@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.lease.LeaseCell;
 import com.theminespirit.core.forestry.TreeGroup;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.StandSpots;
@@ -115,14 +116,17 @@ public final class FloatingScan {
     }
 
     static List<BlockCoord> placed(ServerLevel level, ColumnMask area) {
-        return marked(level, area, true);
+        return LeaseData.get(level).book().orphanedCells().stream()
+                .map(LeaseCell::pos)
+                .filter(cell -> area.contains(cell.x(), cell.z()))
+                .toList();
     }
 
     static List<BlockCoord> legacy(ServerLevel level, ColumnMask area) {
-        return marked(level, area, false);
+        return marked(level, area);
     }
 
-    private static List<BlockCoord> marked(ServerLevel level, ColumnMask area, boolean temporary) {
+    private static List<BlockCoord> marked(ServerLevel level, ColumnMask area) {
         PlacedBlocksData placed = PlacedBlocksData.get(level);
         List<BlockCoord> cells = new ArrayList<>();
         int x1 = area.minX() >> 4;
@@ -131,11 +135,7 @@ public final class FloatingScan {
         int z2 = (area.minZ() + area.depth() - 1) >> 4;
         for (int cx = x1; cx <= x2; cx++) {
             for (int cz = z1; cz <= z2; cz++) {
-                if (temporary) {
-                    cells.addAll(placed.temporaryIn(cx, cz));
-                } else {
-                    cells.addAll(placed.spiritMarkedIn(cx, cz));
-                }
+                cells.addAll(placed.spiritMarkedIn(cx, cz));
             }
         }
         return cells;
@@ -202,9 +202,8 @@ public final class FloatingScan {
                 return true;
             }
             PlacedBlocksData placed = PlacedBlocksData.get(level);
-            return placed.isTemporary(pos)
-                    || (placed.isSpiritMarked(pos)
-                            && TemporaryBlocks.legacyMovement(BlockStates.idOf(level.getBlockState(pos))));
+            return placed.isSpiritMarked(pos)
+                    && TemporaryBlocks.legacyMovement(BlockStates.idOf(level.getBlockState(pos)));
         }
 
         @Override

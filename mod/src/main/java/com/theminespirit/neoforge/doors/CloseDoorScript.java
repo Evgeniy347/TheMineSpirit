@@ -7,6 +7,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.BlockPointParams;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.lease.LeaseRun;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
@@ -71,6 +72,11 @@ public final class CloseDoorScript implements ScriptInstance {
             return ScriptStatus.RUNNING;
         }
         level.setBlock(toPos(target), state.setValue(BlockStateProperties.OPEN, false), 3);
+        LeaseRun lease = LeaseRun.ownedAt(spirit, toPos(target));
+        if (lease != null && lease.contains(toPos(target))) {
+            lease.forget(toPos(target));
+            lease.commit();
+        }
         DoorWatchService.onClosed(level, toPos(target));
         outcome = ScriptStatus.SUCCEEDED;
         return outcome;

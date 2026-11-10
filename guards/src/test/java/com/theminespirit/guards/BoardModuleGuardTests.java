@@ -21,6 +21,7 @@ class BoardModuleGuardTests {
             "core.building",
             "core.town",
             "core.movement",
+            "core.route",
             "core.inventory",
             "core.crafting",
             "core.alchemy",

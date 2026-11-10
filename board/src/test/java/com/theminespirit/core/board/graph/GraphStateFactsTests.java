@@ -179,6 +179,7 @@ class GraphStateFactsTests {
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
+                List.of(),
                 List.of());
         strays.add(new GraphSiteFacts.Stray("s", "wall", new GraphFacts.Position(0, 0, 0), null));
 
@@ -214,6 +215,7 @@ class GraphStateFactsTests {
                 GraphSiteFacts.Terrain.empty(),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
+                List.of(),
                 List.of(),
                 List.of());
     }

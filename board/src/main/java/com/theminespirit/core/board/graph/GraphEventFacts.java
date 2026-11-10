@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 public final class GraphEventFacts {
     private GraphEventFacts() {}
@@ -55,8 +56,11 @@ public final class GraphEventFacts {
     }
 
     public static Optional<String> owner(GraphState state, GraphEvent.Task task) {
-        if (!"hungriest".equals(task.owner())) {
+        if (task.owner() == null) {
             return Optional.empty();
+        }
+        if (!"hungriest".equals(task.owner())) {
+            return state.facts().spirits().containsKey(task.owner()) ? Optional.of(task.owner()) : Optional.empty();
         }
         return state.facts().spirits().values().stream()
                 .min(Comparator.comparingInt(GraphFacts.Spirit::food).thenComparing(GraphFacts.Spirit::id))
@@ -69,6 +73,12 @@ public final class GraphEventFacts {
         if (!applies(graph, state, task)) {
             return 0;
         }
+        GraphSiteFacts.Lease lease = undoLease(state, task);
+        if (lease != null) {
+            boolean ownerAlive =
+                    lease.owner() != null && state.facts().spirits().containsKey(lease.owner());
+            return graph.costs().undo().weight(lease, ownerAlive, graph.maxPriority());
+        }
         if (task.building() == null) {
             return task.base();
         }
@@ -79,5 +89,18 @@ public final class GraphEventFacts {
         double share = (100 - fact.auditPercent()) / 100.0;
         double importance = state.facts().stageReqs().minimum().containsKey(task.building()) ? 1.5 : 1.0;
         return task.base() + (int) Math.round(task.base() * share * importance);
+    }
+
+    private static GraphSiteFacts.@Nullable Lease undoLease(GraphState state, GraphEvent.Task task) {
+        if (!task.id().startsWith(GraphEvent.UNDO_PREFIX)) {
+            return null;
+        }
+        String id = task.id().substring(GraphEvent.UNDO_PREFIX.length());
+        for (GraphSiteFacts.Lease lease : state.facts().leases()) {
+            if (lease.id().equals(id)) {
+                return lease;
+            }
+        }
+        return null;
     }
 }

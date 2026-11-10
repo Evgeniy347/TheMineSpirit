@@ -92,7 +92,11 @@ final class PillarDismantler {
         }
         outcome = Outcome.DONE;
         if (lease != null) {
-            lease.commit();
+            if (lease.cells().isEmpty()) {
+                lease.commit();
+            } else {
+                lease.orphan();
+            }
         }
         return outcome;
     }
@@ -139,7 +143,6 @@ final class PillarDismantler {
     private void unmark(BlockPos pos) {
         if (level instanceof ServerLevel server) {
             PlacedBlocksData.get(server).unmarkSpirit(pos);
-            PlacedBlocksData.get(server).unmarkTemporary(pos);
         }
     }
 }

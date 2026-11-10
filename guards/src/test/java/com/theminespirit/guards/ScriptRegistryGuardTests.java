@@ -121,6 +121,7 @@ class ScriptRegistryGuardTests {
             "take",
             "till",
             "unload",
+            "undo_lease",
             "use_block",
             "wait",
             "walk_careful",

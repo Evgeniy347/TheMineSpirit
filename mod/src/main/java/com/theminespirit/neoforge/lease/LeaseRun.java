@@ -45,6 +45,14 @@ public final class LeaseRun {
                 .orElse(null);
     }
 
+    public static @Nullable LeaseRun attach(ServerLevel level, String id) {
+        LeaseData data = LeaseData.get(level);
+        return data.book()
+                .find(id)
+                .map(lease -> new LeaseRun(data, LeaseSession.attach(data.book(), lease.id())))
+                .orElse(null);
+    }
+
     public String id() {
         return session.id();
     }
@@ -87,6 +95,17 @@ public final class LeaseRun {
         if (session.broken(coord(pos), before)) {
             data.changed();
         }
+    }
+
+    public void state(BlockPos pos, String before, String after) {
+        if (session.state(coord(pos), before, after)) {
+            data.changed();
+        }
+    }
+
+    public void rolledBack(BlockPos pos) {
+        data.book().rollback(session.id(), coord(pos));
+        data.changed();
     }
 
     public void forget(BlockPos pos) {

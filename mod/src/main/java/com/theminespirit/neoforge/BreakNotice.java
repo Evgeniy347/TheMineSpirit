@@ -23,7 +23,6 @@ final class BreakNotice {
         PlotBreakLog.broken(level, pos, spirit, action, ground);
         PlacedBlocksData placed = PlacedBlocksData.get(level);
         placed.unmarkSpirit(pos);
-        placed.unmarkTemporary(pos);
         if (PlotGround.natural(state)) {
             SpiritDugStore.get(level).remember(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
         }

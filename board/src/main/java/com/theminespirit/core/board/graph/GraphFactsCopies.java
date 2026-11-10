@@ -6,6 +6,23 @@ import java.util.Map;
 final class GraphFactsCopies {
     private GraphFactsCopies() {}
 
+    static GraphFacts empty() {
+        return new GraphFacts(
+                Map.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                Map.of(),
+                Map.of(),
+                List.of(),
+                GraphSiteFacts.Terrain.empty(),
+                new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
+                GraphFeedback.none(),
+                List.of(),
+                List.of(),
+                List.of());
+    }
+
     static GraphFacts chests(GraphFacts base, List<GraphFacts.Chest> known) {
         return new GraphFacts(
                 base.spirits(),
@@ -19,7 +36,8 @@ final class GraphFactsCopies {
                 base.stageReqs(),
                 base.feedback(),
                 base.players(),
-                base.planBreaches());
+                base.planBreaches(),
+                base.leases());
     }
 
     static GraphFacts threats(GraphFacts base, List<GraphFacts.Threat> known) {
@@ -35,7 +53,8 @@ final class GraphFactsCopies {
                 base.stageReqs(),
                 base.feedback(),
                 base.players(),
-                base.planBreaches());
+                base.planBreaches(),
+                base.leases());
     }
 
     static GraphFacts spirits(GraphFacts base, Map<String, GraphFacts.Spirit> known) {
@@ -51,7 +70,8 @@ final class GraphFactsCopies {
                 base.stageReqs(),
                 base.feedback(),
                 base.players(),
-                base.planBreaches());
+                base.planBreaches(),
+                base.leases());
     }
 
     static GraphFacts feedback(GraphFacts base, GraphFeedback known) {
@@ -67,7 +87,8 @@ final class GraphFactsCopies {
                 base.stageReqs(),
                 known,
                 base.players(),
-                base.planBreaches());
+                base.planBreaches(),
+                base.leases());
     }
 
     static GraphFacts world(GraphFacts base, GraphWorldFacts world) {
@@ -83,7 +104,8 @@ final class GraphFactsCopies {
                 base.stageReqs(),
                 base.feedback(),
                 base.players(),
-                base.planBreaches());
+                base.planBreaches(),
+                world.leases());
     }
 
     static GraphFacts players(GraphFacts base, List<GraphFacts.Player> known) {
@@ -99,7 +121,8 @@ final class GraphFactsCopies {
                 base.stageReqs(),
                 base.feedback(),
                 known,
-                base.planBreaches());
+                base.planBreaches(),
+                base.leases());
     }
 
     static GraphFacts planBreaches(GraphFacts base, List<GraphFacts.Position> known) {
@@ -115,6 +138,7 @@ final class GraphFactsCopies {
                 base.stageReqs(),
                 base.feedback(),
                 base.players(),
-                known);
+                known,
+                base.leases());
     }
 }

@@ -140,26 +140,35 @@ class LeaseScenarioTests {
 
         assertOrphaned(book, deck.id(), List.of(first, second), "cancel посреди моста");
 
-        LeaseSession done = LeaseSession.open(book, DIGGER, null, "bridge", 120);
-        BlockCoord crossed = new BlockCoord(20, 64, 0);
-        done.placed(crossed, "minecraft:oak_planks");
-        done.commit();
-        assertEquals(LeaseStatus.DONE, done.status(), "Перейдённый мост закрывает аренду");
-        assertFalse(book.isOrphaned(crossed), "Перейдённый настил не попадает в уборку брошенных правок");
+        LeaseSession crossed = LeaseSession.open(book, DIGGER, null, "bridge", 120);
+        BlockCoord cell = new BlockCoord(20, 64, 0);
+        crossed.placed(cell, "minecraft:oak_planks");
+        crossed.orphan();
+        assertEquals(
+                LeaseStatus.ORPHANED,
+                crossed.status(),
+                "Перейдённый мост не становится постоянным: успешное использование — не план постройки");
+        assertTrue(
+                book.isOrphaned(cell),
+                "Настил после переправы уходит в узел отката: внутри поселения мосты и столбы убираются");
     }
 
     @Test
-    void route_PassCommits_BreakAndCancelOrphans() {
+    void route_PassOrphansCells_BreakAndCancelOrphans() {
         LeaseBook book = new LeaseBook();
         LeaseSession passed = LeaseSession.open(book, WALKER, null, "route", 100);
         BlockCoord placed = new BlockCoord(30, 71, 0);
         BlockCoord broken = new BlockCoord(31, 70, 0);
         passed.placed(placed, "minecraft:dirt");
         passed.broken(broken, "minecraft:stone");
-        passed.commit();
+        passed.orphan();
 
-        assertEquals(LeaseStatus.DONE, passed.status(), "Пройденный маршрут закрывает аренду");
-        assertTrue(book.orphanedCells().isEmpty(), "Клетки пройденного маршрута не ждут уборки");
+        assertEquals(
+                LeaseStatus.ORPHANED,
+                passed.status(),
+                "Пройденный маршрут не становится постоянным: его клетки откатывает узел undo_lease");
+        assertTrue(book.isOrphaned(placed), "Поставленная клетка маршрута ждёт отката");
+        assertTrue(book.isOrphaned(broken), "Сломанная клетка маршрута ждёт возврата before");
 
         LeaseSession abandoned = LeaseSession.open(book, BUILDER, null, "route", 120);
         BlockCoord hole = new BlockCoord(40, 70, 0);
@@ -174,7 +183,7 @@ class LeaseScenarioTests {
     }
 
     @Test
-    void digOut_SuccessClosesLease_InterruptOrphansEverything() {
+    void digOut_SuccessOrphansRemainingCells_InterruptOrphansEverything() {
         LeaseBook book = new LeaseBook();
         LeaseSession escape = LeaseSession.open(book, DIGGER, null, "dig_out", 100);
         BlockCoord broken = new BlockCoord(50, 50, 0);
@@ -183,11 +192,14 @@ class LeaseScenarioTests {
         escape.placed(floor, "minecraft:dirt");
 
         escape.forget(broken);
-        escape.commit();
+        escape.orphan();
 
-        assertEquals(LeaseStatus.DONE, escape.status(), "Успешный выход возвращает spoil и закрывает аренду");
-        assertFalse(book.isOrphaned(floor), "Пол ступени остаётся частью выхода и не ждёт уборки");
-        assertTrue(book.orphanedCells().isEmpty(), "После возврата spoil уборке нечего делать");
+        assertEquals(
+                LeaseStatus.ORPHANED,
+                escape.status(),
+                "Успешный выход убирает spoil, но оставшийся пол ступени — временная правка, а не план");
+        assertTrue(book.isOrphaned(floor), "Пол ступени после выхода ждёт отката, а не остаётся навсегда");
+        assertFalse(book.isOrphaned(broken), "Возвращённый spoil уже не ждёт откат: клетка забыта механикой");
 
         LeaseSession interrupted = LeaseSession.open(book, BUILDER, null, "dig_out", 120);
         BlockCoord hole = new BlockCoord(60, 50, 0);
@@ -199,7 +211,9 @@ class LeaseScenarioTests {
         assertOrphaned(book, interrupted.id(), List.of(hole, step), "cancel посреди dig_out");
         assertEquals(
                 List.of(step, hole),
-                book.orphanedCells().stream().map(LeaseCell::pos).toList(),
+                book.require(interrupted.id()).rollbackOrder().stream()
+                        .map(LeaseCell::pos)
+                        .toList(),
                 "Брошенный dig_out откатывается сверху вниз: сначала свой пол, потом возврат spoil");
     }
 

@@ -42,6 +42,7 @@ class More6InputsTests {
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
+                List.of(),
                 List.of());
 
         assertEquals(
@@ -81,6 +82,7 @@ class More6InputsTests {
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
+                List.of(),
                 List.of());
         GraphState state = state(
                 facts,
@@ -114,6 +116,7 @@ class More6InputsTests {
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
                 List.of(),
+                List.of(),
                 List.of());
         GraphState state =
                 state(facts, Map.of(), Map.of(), Map.of("furnace", Built.BUILT, "crafting_table", Built.PLANNED));
@@ -140,6 +143,7 @@ class More6InputsTests {
                 GraphSiteFacts.Terrain.empty(),
                 new GraphSiteFacts.StageReqs(Map.of(), Map.of()),
                 GraphFeedback.none(),
+                List.of(),
                 List.of(),
                 List.of());
 

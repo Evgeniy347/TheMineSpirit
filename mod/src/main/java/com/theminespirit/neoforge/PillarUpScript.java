@@ -56,6 +56,9 @@ public final class PillarUpScript implements ScriptInstance {
             case RUNNING -> ScriptStatus.RUNNING;
             case BUILT -> {
                 if (!down) {
+                    if (column.lease() != null) {
+                        column.lease().orphan();
+                    }
                     outcome = ScriptStatus.SUCCEEDED;
                     yield outcome;
                 }

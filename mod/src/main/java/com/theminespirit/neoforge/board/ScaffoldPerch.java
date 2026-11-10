@@ -3,7 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.movement.PerchLevel;
 import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
+import com.theminespirit.neoforge.lease.LeaseData;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -21,7 +21,8 @@ final class ScaffoldPerch {
         }
         BlockPos feet = spirit.blockPosition();
         BlockPos below = feet.below();
-        if (server.getBlockState(below).isAir() || !PlacedBlocksData.get(server).isTemporary(below)) {
+        LeaseData leases = LeaseData.get(server);
+        if (server.getBlockState(below).isAir() || !(leases.isActive(below) || leases.isOrphaned(below))) {
             return false;
         }
         List<Integer> heights = new ArrayList<>();

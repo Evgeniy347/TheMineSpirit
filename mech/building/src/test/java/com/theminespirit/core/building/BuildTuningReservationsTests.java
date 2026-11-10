@@ -46,6 +46,27 @@ class BuildTuningReservationsTests {
     }
 
     @Test
+    void reserve_HasFiniteLease_ExpiresAndRefreshesForOwner() {
+        BuildReservations reservations = new BuildReservations();
+        BlockCoord cell = new BlockCoord(0, 64, 0);
+        UUID builder = UUID.randomUUID();
+
+        assertTrue(reservations.reserve(cell, builder, 0), "Бронь встаёт на клетку");
+        assertEquals(0, reservations.expire(BuildTuning.RESERVATION_TICKS - 1), "До срока бронь держится");
+        assertEquals(
+                1,
+                reservations.expire(BuildTuning.RESERVATION_TICKS),
+                "Срок брони конечен: забытая бронь не держит клетку вечно");
+        assertTrue(reservations.reserve(cell, builder, 0), "Освобождённую клетку можно взять снова");
+
+        assertTrue(reservations.reserve(cell, builder, 1000), "Владелец продлевает свою бронь");
+        assertEquals(
+                0,
+                reservations.expire(BuildTuning.RESERVATION_TICKS + 500),
+                "Повторная бронь владельцем продлевает срок: стройка не теряет клетки на середине");
+    }
+
+    @Test
     void reserve_SharedRegistry_ConflictsWithWorkReservation() {
         WorkReservations shared = new WorkReservations();
         BuildReservations reservations = new BuildReservations(shared);

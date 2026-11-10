@@ -98,6 +98,7 @@ final class GraphBaseWorlds {
                         new GraphFeedback.Player(null, true, true, false, false),
                         List.of()),
                 List.of(),
+                List.of(),
                 List.of());
         return world;
     }

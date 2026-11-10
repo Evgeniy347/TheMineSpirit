@@ -36,7 +36,6 @@ public final class PolicyEvents {
             PlotBreakLog.brokenBy(level, event.getPos(), event.getPlayer(), "BREAK", "команда игрока");
             data.unmark(event.getPos());
             data.unmarkSpirit(event.getPos());
-            data.unmarkTemporary(event.getPos());
         }
     }
 
@@ -49,7 +48,6 @@ public final class PolicyEvents {
                 PlotBreakLog.brokenBy(level, pos, null, "EXPLOSION", "взрыв");
                 data.unmark(pos);
                 data.unmarkSpirit(pos);
-                data.unmarkTemporary(pos);
             });
         }
     }

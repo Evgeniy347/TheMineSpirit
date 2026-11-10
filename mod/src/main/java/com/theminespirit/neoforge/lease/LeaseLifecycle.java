@@ -5,9 +5,11 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.lease.Lease;
 import com.theminespirit.core.board.lease.LeaseSupervisor;
+import com.theminespirit.neoforge.BuildReservationHub;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
+import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +46,7 @@ public final class LeaseLifecycle {
             return;
         }
         int count = LeaseData.get(level).orphanSpirit(spirit.getUUID());
+        WorkReserveHub.releaseAll(spirit);
         if (count > 0) {
             LOGGER.info("[lease] дух {} умер: брошено аренд {}", spirit.getUUID(), count);
         }
@@ -71,6 +74,7 @@ public final class LeaseLifecycle {
         long timeout = BoardTuning.leaseSuspendTimeoutTicks();
         for (ServerLevel level : server.getAllLevels()) {
             LeaseData data = LeaseData.get(level);
+            BuildReservationHub.forLevel(level).expire(level.getGameTime());
             if (data.book().active().isEmpty()) {
                 continue;
             }
@@ -78,6 +82,12 @@ public final class LeaseLifecycle {
                     data.book(), spiritStates(level), data.suspendedSince(), level.getGameTime(), timeout);
             for (Lease lease : due) {
                 data.book().orphan(lease.id());
+                if (lease.spirit() != null) {
+                    Entity owner = level.getEntity(lease.spirit());
+                    if (owner instanceof SpiritEntity spirit) {
+                        WorkReserveHub.releaseAll(spirit);
+                    }
+                }
                 LOGGER.info(
                         "[lease] аренда {} ({}) брошена: владелец {} не работает над ней",
                         lease.id(),

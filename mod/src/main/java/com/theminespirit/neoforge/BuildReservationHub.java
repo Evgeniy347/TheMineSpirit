@@ -10,6 +10,6 @@ public final class BuildReservationHub {
 
     public static BuildReservations forLevel(Level level) {
         Objects.requireNonNull(level, "Уровень не может быть null: без него неизвестно, чей реестр брони");
-        return new BuildReservations(WorkReserveHub.leasesFor(level));
+        return new BuildReservations(WorkReserveHub.leasesFor(level), level::getGameTime);
     }
 }

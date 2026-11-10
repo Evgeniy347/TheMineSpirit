@@ -7,6 +7,8 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.script.BlockPointParams;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.lease.LeaseRun;
+import com.theminespirit.neoforge.lease.LeaseStates;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
@@ -27,6 +29,7 @@ public final class OpenScript implements ScriptInstance {
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
     private ScriptResult result;
+    private LeaseRun lease;
 
     public OpenScript(SpiritEntity spirit, BlockPointParams params) {
         this.spirit = spirit;
@@ -69,7 +72,12 @@ public final class OpenScript implements ScriptInstance {
         if (state.getValue(BlockStateProperties.OPEN)) {
             return succeed("уже открыто: " + blockId(state));
         }
-        level.setBlock(pos, state.setValue(BlockStateProperties.OPEN, true), 10);
+        BlockState opened = state.setValue(BlockStateProperties.OPEN, true);
+        level.setBlock(pos, opened, 10);
+        if (lease == null) {
+            lease = LeaseRun.open(spirit, "door");
+        }
+        lease.state(pos, LeaseStates.text(state), LeaseStates.text(opened));
         return succeed("открыто: " + blockId(state));
     }
 

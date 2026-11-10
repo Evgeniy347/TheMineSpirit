@@ -166,8 +166,7 @@ final class WorldAreaScan {
                 return true;
             }
             PlacedBlocksData placed = PlacedBlocksData.get(level);
-            return placed.isTemporary(pos)
-                    || (placed.isSpiritMarked(pos) && TemporaryBlocks.legacyMovement(blockId(x, y, z)));
+            return placed.isSpiritMarked(pos) && TemporaryBlocks.legacyMovement(blockId(x, y, z));
         }
 
         @Override

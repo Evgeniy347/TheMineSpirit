@@ -41,7 +41,11 @@ public final class WorkReservations {
         dropExpired(target, now);
         Lease lease = leases.get(target);
         if (lease != null) {
-            return lease.owner().equals(spirit) ? Outcome.TAKEN_BY_SELF : Outcome.TAKEN_BY_OTHER;
+            if (!lease.owner().equals(spirit)) {
+                return Outcome.TAKEN_BY_OTHER;
+            }
+            leases.put(target, new Lease(spirit, now + leaseTicks));
+            return Outcome.TAKEN_BY_SELF;
         }
         leases.put(target, new Lease(spirit, now + leaseTicks));
         byOwner.computeIfAbsent(spirit, key -> new HashSet<>()).add(target);

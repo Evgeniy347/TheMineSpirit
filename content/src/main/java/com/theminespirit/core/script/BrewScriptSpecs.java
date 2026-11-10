@@ -6,7 +6,7 @@ final class BrewScriptSpecs {
     private BrewScriptSpecs() {}
 
     static List<ScriptSpec> all() {
-        return List.of(GatherScriptSpecs.stripLog(), brew(), farmNetherWart());
+        return List.of(GatherScriptSpecs.stripLog(), brew(), farmNetherWart(), undoLease());
     }
 
     static ScriptSpec brew() {
@@ -40,6 +40,15 @@ final class BrewScriptSpecs {
                                 CatalogLimits.FARM_RADIUS_DEFAULT)),
                 List.of("есть песок душ и адский нарост"),
                 List.of("урожай адского нароста собран"));
+    }
+
+    static ScriptSpec undoLease() {
+        return new ScriptSpec(
+                "undo_lease",
+                "откатить брошенную аренду временной правки",
+                List.of(ParamSpec.text("id", true)),
+                List.of("аренда существует и брошена владельцем"),
+                List.of("клетки аренды откатаны сверху вниз", "аренда закрыта"));
     }
 
     private static ParamSpec stationRadius() {

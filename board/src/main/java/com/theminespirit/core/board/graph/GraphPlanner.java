@@ -267,7 +267,8 @@ public final class GraphPlanner {
             if (event == null) {
                 continue;
             }
-            for (GraphEvent.Task task : event.tasks()) {
+            for (GraphEvent.Task task :
+                    GraphEvent.tasks(name, event, state.facts().leases())) {
                 String key = EVENT + name + ":" + task.id();
                 flow.root(key, GraphEventFacts.weight(graph, state, task));
                 for (Map.Entry<String, Integer> input :
@@ -432,24 +433,22 @@ public final class GraphPlanner {
         }
         if (key.startsWith(EVENT)) {
             String[] parts = key.split(":", 3);
-            GraphEvent.Task event = Objects.requireNonNull(
-                            graph.events().get(parts[1]), "Событие " + parts[1] + " задания не описано в графе")
-                    .tasks()
-                    .stream()
-                    .filter(task -> task.id().equals(parts[2]))
-                    .findFirst()
-                    .orElseThrow();
+            GraphEvent event = Objects.requireNonNull(
+                    graph.events().get(parts[1]), "Событие " + parts[1] + " задания не описано в графе");
+            GraphEvent.Task chosen = Objects.requireNonNull(
+                    GraphEvent.find(event, parts[2]),
+                    "Событие " + parts[1] + " не описывает задание " + parts[2] + ": узел графа обязан помнить кейс");
             return new GraphPlan.Task(
                     key,
-                    event.boardCase(),
-                    event.id(),
-                    GraphEventFacts.owner(state, event),
+                    chosen.boardCase(),
+                    parts[2],
+                    GraphEventFacts.owner(state, chosen),
                     priority,
-                    GraphEventFacts.consumes(state, event),
-                    GraphEventFacts.feasible(graph, state, event),
+                    GraphEventFacts.consumes(state, chosen),
+                    GraphEventFacts.feasible(graph, state, chosen),
                     false,
-                    event.implemented(),
-                    graph.costs().ticks(key, event.boardCase()));
+                    chosen.implemented(),
+                    graph.costs().ticks(key, chosen.boardCase()));
         }
         if (key.startsWith(BUILDING)) {
             String id = key.substring(BUILDING.length());

@@ -142,6 +142,7 @@ class GearFragmentTests {
                 reqs,
                 GraphFeedback.none(),
                 List.of(),
+                List.of(),
                 List.of());
     }
 }

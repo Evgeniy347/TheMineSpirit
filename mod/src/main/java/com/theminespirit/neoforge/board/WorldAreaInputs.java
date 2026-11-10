@@ -87,7 +87,7 @@ final class WorldAreaInputs {
                         floatingCounts(counted),
                         found.natural()),
                 found.unknown() > 0);
-        return new GraphWorldFacts(strays, terrain, PlotLots.ready(buildings, lots));
+        return new GraphWorldFacts(strays, terrain, PlotLots.ready(buildings, lots), LeaseInputs.of(level, site));
     }
 
     static List<GraphSiteFacts.Stray> strays(SettlementScan.Strays found, List<Placed> placed) {

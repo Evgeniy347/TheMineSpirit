@@ -42,5 +42,6 @@ final class SmallMechanicsScriptPack extends SpiritScriptPack {
         put("eat", spirit -> params -> new EatScript(spirit, EatParams.from(params)));
         put("repair_tool", spirit -> params -> new RepairScript(spirit, RepairParams.from(params)));
         put("close_door", spirit -> params -> new CloseDoorScript(spirit, BlockPointParams.from(params)));
+        put("undo_lease", spirit -> params -> new UndoLeaseScript(spirit, params));
     }
 }

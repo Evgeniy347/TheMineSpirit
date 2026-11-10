@@ -254,7 +254,8 @@ class GraphChoiceFeedbackTests {
                 costs.toolDurability(),
                 costs.stationCapacity(),
                 choice,
-                costs.life());
+                costs.life(),
+                costs.undo());
         return new SupplyGraph(
                 GRAPH.decay(),
                 GRAPH.urgentBoost(),
