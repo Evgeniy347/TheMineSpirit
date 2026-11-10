@@ -97,6 +97,10 @@ public final class BoardFailureDesk {
             if (holder == null || !stuck.isStuck(holder, now)) {
                 continue;
             }
+            if (ticket.boardCase() == BoardCase.RESCUE_SPIRIT
+                    && RescuePlans.rescuee(ticket.id()).filter(holder::equals).isPresent()) {
+                continue;
+            }
             if (blocked.release(ticket.id())) {
                 detachments.add(new BoardLogEntry(
                         BoardLog.Event.DETACHED,
