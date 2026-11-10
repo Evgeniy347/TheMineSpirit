@@ -50,6 +50,27 @@ class LeaseSessionTests {
     }
 
     @Test
+    void foreignOwner_OtherLeaseAndOwnCell_Distinguished() {
+        LeaseBook book = new LeaseBook();
+        BlockCoord own = new BlockCoord(4, 60, 4);
+        BlockCoord foreign = new BlockCoord(5, 60, 4);
+        BlockCoord free = new BlockCoord(6, 60, 4);
+        LeaseSession dig = LeaseSession.open(book, SPIRIT, null, "dig_out", 10);
+        dig.broken(own, "minecraft:stone");
+        LeaseSession bridge = LeaseSession.open(book, SPIRIT, null, "bridge", 20);
+        bridge.placed(foreign, "minecraft:oak_planks");
+
+        assertTrue(
+                dig.foreignOwner(own).isEmpty(),
+                "Своя клетка не чужая: повтор шага не диагностируют как конфликт механик");
+        assertEquals(
+                bridge.id(),
+                dig.foreignOwner(foreign).orElseThrow().id(),
+                "Действующая аренда другой механики видна владельцем клетки");
+        assertTrue(dig.foreignOwner(free).isEmpty(), "Свободная клетка ничья: конфликта нет");
+    }
+
+    @Test
     void forget_UnrecordedCell_Rejected() {
         LeaseBook book = new LeaseBook();
         LeaseSession session = LeaseSession.open(book, SPIRIT, null, "route", 10);
