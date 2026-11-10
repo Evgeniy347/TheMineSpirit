@@ -14,8 +14,8 @@ public record GraphUndo(
         int farDistance,
         double farShare,
         double ownerFactor) {
-    public static final int DEFAULT_BASE = 30;
-    public static final GraphUndo DEFAULTS = new GraphUndo(DEFAULT_BASE, 25, 10, 0.5, 10, 2.0, 12, 128, 0.5, 0.7);
+    public static final int DEFAULT_BASE = 120;
+    public static final GraphUndo DEFAULTS = new GraphUndo(DEFAULT_BASE, 120, 20, 1.0, 30, 6.0, 60, 256, 0.8, 0.8);
 
     public GraphUndo {
         if (base < 1) {
@@ -66,6 +66,6 @@ public record GraphUndo(
         if (ownerAlive && lease.owner() != null) {
             weight *= ownerFactor;
         }
-        return Math.max(1, Math.min(maxPriority, (int) Math.round(weight)));
+        return Math.max(1, (int) Math.round(weight));
     }
 }
