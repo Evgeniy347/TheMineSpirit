@@ -16,6 +16,7 @@ import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.InventoryNormTable;
 import com.theminespirit.core.intellect.OutsideRules;
 import com.theminespirit.core.intellect.defense.DefenseProfile;
+import com.theminespirit.core.intellect.defense.DefenseWeights;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.WarehouseCategories;
 import com.theminespirit.core.mining.DescentData;
@@ -70,6 +71,12 @@ final class DataTableBindings {
         InventoryNormTable.useSource(() -> tables.inventoryNorm().current());
         OutsideRules.useSource(() -> tables.outside().current());
         DefenseProfile.useSource(() -> tables.priorities().current());
+        TableHolder<DefenseWeights> defense = tables.registry()
+                .registerLazy(
+                        TableDefinition.single(
+                                "defense", DefenseWeights.RESOURCE, (json, origin) -> DefenseWeights.fromJson(json)),
+                        DefenseWeights::readFromClasspath);
+        DefenseWeights.useSource(defense::current);
         ProcessingRules.useSource(() -> tables.processing().current());
     }
 }

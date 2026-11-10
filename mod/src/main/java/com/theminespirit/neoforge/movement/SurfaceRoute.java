@@ -23,13 +23,17 @@ public final class SurfaceRoute {
     private SurfaceRoute() {}
 
     public static Optional<RouteWalk> plan(SpiritEntity spirit) {
+        return plan(spirit, false);
+    }
+
+    public static Optional<RouteWalk> plan(SpiritEntity spirit, boolean rescue) {
         BlockPos feet = spirit.blockPosition();
         BlockCoord start = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
         Level level = spirit.level();
         long started = System.nanoTime();
         Optional<List<BlockCoord>> found = SurfaceEscape.path(
                 start,
-                new RouteLevelView(spirit),
+                new RouteLevelView(spirit, rescue),
                 cell -> DigOutScript.open(level, new BlockPos(cell.x(), cell.y(), cell.z())),
                 null,
                 cell -> PlanDetour.foreign(spirit, cell));
@@ -37,17 +41,21 @@ public final class SurfaceRoute {
             LOGGER.info("[dig_out] дух {}: пути к небу из {} нет — копаю ступенями", spirit.displayName(), start);
             return Optional.empty();
         }
-        return Optional.of(route(spirit, level, found.orElseThrow(), "к небу", started));
+        return Optional.of(route(spirit, level, found.orElseThrow(), "к небу", started, rescue));
     }
 
     public static Optional<RouteWalk> planDescent(SpiritEntity spirit, BlockCoord target) {
+        return planDescent(spirit, target, false);
+    }
+
+    public static Optional<RouteWalk> planDescent(SpiritEntity spirit, BlockCoord target, boolean rescue) {
         BlockPos feet = spirit.blockPosition();
         BlockCoord start = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
         Level level = spirit.level();
         long started = System.nanoTime();
         Optional<List<BlockCoord>> found = SurfaceEscape.path(
                 start,
-                new RouteLevelView(spirit),
+                new RouteLevelView(spirit, rescue),
                 cell -> Math.abs(cell.x() - target.x()) <= 2
                         && Math.abs(cell.z() - target.z()) <= 2
                         && cell.y() >= target.y() - 2
@@ -72,7 +80,7 @@ public final class SurfaceRoute {
                     end);
             return Optional.empty();
         }
-        return Optional.of(route(spirit, level, cells, "вниз", started));
+        return Optional.of(route(spirit, level, cells, "вниз", started, rescue));
     }
 
     private static boolean water(Level level, BlockCoord cell) {
@@ -82,7 +90,7 @@ public final class SurfaceRoute {
     }
 
     private static RouteWalk route(
-            SpiritEntity spirit, Level level, List<BlockCoord> cells, String what, long started) {
+            SpiritEntity spirit, Level level, List<BlockCoord> cells, String what, long started, boolean rescue) {
         List<RouteStep> steps = new ArrayList<>(cells.size());
         for (BlockCoord cell : cells) {
             boolean water = level.getFluidState(new BlockPos(cell.x(), cell.y(), cell.z()))
@@ -100,6 +108,6 @@ public final class SurfaceRoute {
                 end,
                 SearchMillis.since(started, System.nanoTime()));
         Route route = new Route(Route.Status.FOUND, steps, cells.size() * 10.0, end, cells.size(), 0, 0, List.of());
-        return new RouteWalk(spirit, route, end);
+        return new RouteWalk(spirit, route, end, rescue);
     }
 }
