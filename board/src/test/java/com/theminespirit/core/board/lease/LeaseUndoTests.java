@@ -150,4 +150,18 @@ class LeaseUndoTests {
 
         assertEquals(LeaseStatus.DONE, book.require(door.id()).status(), "Закрытие двери завершает аренду DONE");
     }
+
+    @Test
+    void activeLease_AfterCommit_StopsCleanup() {
+        LeaseBook book = new LeaseBook();
+        BlockCoord cell = new BlockCoord(0, 70, 0);
+        Lease scaffold = book.open(OWNER, "scaffold-1", "scaffold", 100);
+        book.record(scaffold.id(), LeaseCell.placed(cell));
+
+        book.commit(scaffold.id());
+
+        assertFalse(book.isActive(cell), "После успешного спуска столб перестал быть действующей арендой");
+        assertFalse(book.isOrphaned(cell), "Успешно убранная правка не попадает в уборку графа");
+        assertTrue(book.orphanedCells().isEmpty(), "Уборке нечего делать: механика закрыла аренду сама");
+    }
 }

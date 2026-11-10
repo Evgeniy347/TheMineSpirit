@@ -285,18 +285,4 @@ class LeaseScenarioTests {
                 "Уборка видит пролом тоннеля один раз: клетка осталась за брошенной арендой");
         assertTrue(book.activeOwner(deck).isPresent(), "Настил моста остаётся за живым владельцем");
     }
-
-    @Test
-    void activeLease_AfterCommit_StopsCleanup() {
-        LeaseBook book = new LeaseBook();
-        BlockCoord cell = new BlockCoord(0, 70, 0);
-        Lease scaffold = book.open(BUILDER, "scaffold-1", "scaffold", 100);
-        book.record(scaffold.id(), LeaseCell.placed(cell));
-
-        book.commit(scaffold.id());
-
-        assertFalse(book.isActive(cell), "После успешного спуска столб перестал быть действующей арендой");
-        assertFalse(book.isOrphaned(cell), "Успешно убранная правка не попадает в уборку графа");
-        assertTrue(book.orphanedCells().isEmpty(), "Уборке нечего делать: механика закрыла аренду сама");
-    }
 }
