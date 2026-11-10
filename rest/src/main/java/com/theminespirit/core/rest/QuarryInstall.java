@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public record QuarryInstall(RouteResource resource, BlockCoord point, int radius, String biome, String by) {
+    private static final String FIELD = "field";
     private static final JsonMapper MAPPER = JsonMapper.builder()
             .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
             .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
@@ -24,18 +25,18 @@ public record QuarryInstall(RouteResource resource, BlockCoord point, int radius
         Objects.requireNonNull(resource, "Ресурс места не может быть null: место ставится под ресурс");
         Objects.requireNonNull(point, "Точка места не может быть null: без координат место не поставить");
         if (radius < 1 || radius > QuarryArea.MAX_RADIUS) {
-            throw invalid("Радиус " + radius + ": допустимо 1.." + QuarryArea.MAX_RADIUS, Map.of("field", "radius"));
+            throw invalid("Радиус " + radius + ": допустимо 1.." + QuarryArea.MAX_RADIUS, Map.of(FIELD, "radius"));
         }
         if (biome == null) {
-            throw invalid("Биом не может быть null: пусто — пустая строка", Map.of("field", "biome"));
+            throw invalid("Биом не может быть null: пусто — пустая строка", Map.of(FIELD, "biome"));
         }
         if (by == null || by.isBlank()) {
-            throw invalid("Поле 'by' обязательно: strategist или player", Map.of("field", "by"));
+            throw invalid("Поле 'by' обязательно: strategist или player", Map.of(FIELD, "by"));
         }
         if ("graph".equalsIgnoreCase(by.trim())) {
             throw invalid(
                     "Место добычи выбирает стратег или игрок, а не граф: поле 'by' = 'graph' запрещено",
-                    Map.of("field", "by"));
+                    Map.of(FIELD, "by"));
         }
     }
 
@@ -71,8 +72,7 @@ public record QuarryInstall(RouteResource resource, BlockCoord point, int radius
         try {
             return RouteResource.valueOf(raw.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException unknown) {
-            throw invalid(
-                    "Ресурс '" + raw + "' неизвестен: допустимо dirt, sand или snow", Map.of("field", "resource"));
+            throw invalid("Ресурс '" + raw + "' неизвестен: допустимо dirt, sand или snow", Map.of(FIELD, "resource"));
         }
     }
 
@@ -81,7 +81,7 @@ public record QuarryInstall(RouteResource resource, BlockCoord point, int radius
         if (value == null || !value.isIntegralNumber()) {
             throw invalid(
                     "Поле '" + name + "' обязательно и целое: точка места добычи задаётся в блоках",
-                    Map.of("field", name));
+                    Map.of(FIELD, name));
         }
         return value.asInt();
     }
