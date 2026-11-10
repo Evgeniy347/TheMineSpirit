@@ -3,8 +3,6 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardStatus;
-import com.theminespirit.core.board.BoardTicket;
-import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.FillIndex;
 import com.theminespirit.core.board.LevelRepair;
@@ -13,20 +11,16 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.route.RouteRetired;
-import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.town.PitGroups;
 import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.SettlementScan;
-import com.theminespirit.neoforge.policy.PlanBreachData;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import net.minecraft.core.BlockPos;
 
 final class WorldPost {
     static final String REPAIR_NODE = "repair:";
@@ -101,7 +95,7 @@ final class WorldPost {
             case "backfill" -> holes(post, ticket, found, priority);
             case "level_lot" -> lot(post, ticket, found, priority);
             case "restore_trace" -> {
-                boolean plan = breaches(post);
+                boolean plan = PlanBreachPost.post(post, ticket);
                 boolean trace = traces(post, ticket, found, priority);
                 yield plan || trace;
             }
@@ -217,44 +211,6 @@ final class WorldPost {
         return true;
     }
 
-    private static boolean breaches(GraphPost post) {
-        PlanBreachData data = PlanBreachData.get(post.level);
-        boolean posted = false;
-        for (Map.Entry<BlockPos, PlanBreachData.Breach> entry : data.open().entrySet()) {
-            BlockPos pos = entry.getKey();
-            if (!post.level.getBlockState(pos).isAir()) {
-                data.clear(pos);
-                continue;
-            }
-            String id = "world:plan_breach:" + key(new BlockCoord(pos.getX(), pos.getY(), pos.getZ())) + ":"
-                    + entry.getValue().tick();
-            if (post.open(id)) {
-                posted = true;
-                continue;
-            }
-            post.submit(
-                    post.ticket(
-                            id,
-                            BoardCase.REPAIR_BUILDING,
-                            Optional.empty(),
-                            BoardTuning.MAX_PRIORITY,
-                            BoardTicket.ALWAYS_CAUSE,
-                            Map.of()),
-                    TicketTarget.at(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()))
-                            .withPlan(new ScriptCall(
-                                    "place_block",
-                                    Map.of(
-                                            "block",
-                                                    EarthCover.restoreBlock(
-                                                            entry.getValue().blockId()),
-                                            "x", pos.getX(),
-                                            "y", pos.getY(),
-                                            "z", pos.getZ()))));
-            posted = true;
-        }
-        return posted;
-    }
-
     private static boolean traces(
             GraphPost post, GraphTickets.Ticket ticket, SettlementScan.Strays found, int priority) {
         if (found.traces().isEmpty()) {
@@ -289,7 +245,7 @@ final class WorldPost {
         return Math.max(0, batch - open);
     }
 
-    private static String key(BlockCoord at) {
+    static String key(BlockCoord at) {
         return at.x() + "," + at.y() + "," + at.z();
     }
 

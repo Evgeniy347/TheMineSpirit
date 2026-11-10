@@ -166,6 +166,24 @@ class StandSpotsTests {
     }
 
     @Test
+    void of_CeilingOfWaterPocket_IsUnreachable() {
+        CellWorld world = new CellWorld()
+                .set(0, 10, 0, Cell.SOLID)
+                .set(0, 9, 0, Cell.WATER)
+                .set(1, 10, 0, Cell.SOLID)
+                .set(-1, 10, 0, Cell.SOLID)
+                .set(0, 10, 1, Cell.SOLID)
+                .set(0, 10, -1, Cell.SOLID)
+                .set(0, 11, 0, Cell.SOLID);
+
+        assertEquals(
+                List.of(),
+                StandSpots.of(new BlockCoord(0, 10, 0), world, new BlockCoord(0, 5, 0)),
+                "Клетка на потолке водяного кармана не даёт стоянок (живой случай -103,75,-411): вода под ней "
+                        + "не пол, а бока замурованы. Ремонт такой клетки не ставится, а «пути нет» уходит в граф");
+    }
+
+    @Test
     void of_TargetReading_StaysWithinLimit() {
         CellWorld world = new CellWorld()
                 .set(0, 0, 0, Cell.SOLID)

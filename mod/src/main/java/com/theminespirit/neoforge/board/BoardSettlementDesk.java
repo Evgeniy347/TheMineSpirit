@@ -219,7 +219,7 @@ final class BoardSettlementDesk {
         spirit.cancelTask();
         var need = GraphNeeds.of(board, ticket, targets.get(ticket.id()), spirit, host.stock(), board.now());
         host.sources.graphFailure(ticket, targets.get(ticket.id()), need, board.now());
-        board.fail(ticket.id(), host.stock(), reason, need);
+        board.fail(ticket.id(), host.stock(), reason, need, SpiritFacts.noPath(spirit));
     }
 
     private void resume(SpiritEntity spirit, BoardTicket ticket, List<SpiritEntity> spirits) {
@@ -277,7 +277,7 @@ final class BoardSettlementDesk {
                     verdict != null ? verdict : spirit.taskFailureReason().orElse(null);
             var need = GraphNeeds.of(board, ticket, targets.get(ticket.id()), spirit, host.stock(), board.now());
             host.sources.graphFailure(ticket, targets.get(ticket.id()), need, board.now());
-            board.fail(ticket.id(), host.stock(), failure, need);
+            board.fail(ticket.id(), host.stock(), failure, need, SpiritFacts.noPath(spirit));
             incidents.failed(spirit, ticket, targets.get(ticket.id()), why, board.now());
             board.failures().drainDetachments().forEach(host.journal()::recordEntry);
             host.flushBlockNotes((ServerLevel) spirit.level());

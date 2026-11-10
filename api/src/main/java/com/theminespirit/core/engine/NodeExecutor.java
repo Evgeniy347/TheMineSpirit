@@ -15,6 +15,7 @@ abstract class NodeExecutor {
     private ScriptStatus status = ScriptStatus.RUNNING;
     private @Nullable String reason;
     private @Nullable Throwable cause;
+    private Optional<FailureFact> fact = Optional.empty();
 
     static NodeExecutor create(TaskNode node, ScriptRegistry scripts, ConditionRegistry conditions) {
         EngineCounters.executorCreations++;
@@ -68,6 +69,14 @@ abstract class NodeExecutor {
         return Optional.ofNullable(cause);
     }
 
+    final Optional<FailureFact> failureFact() {
+        return fact;
+    }
+
+    final void failureFact(@Nullable FailureFact fact) {
+        this.fact = Optional.ofNullable(fact);
+    }
+
     final void fail(String message) {
         fail(message, null);
     }
@@ -85,6 +94,7 @@ abstract class NodeExecutor {
                     + "провал всегда несёт причину через fail(…), иначе журнал задачи пуст");
         }
         fail(why, child.cause);
+        fact = child.fact;
     }
 
     static String describe(Throwable error) {
