@@ -52,10 +52,6 @@ final class BoardSupplyDesk {
         if (spirits.isEmpty()) {
             return;
         }
-        Optional<BlockCoord> home = HomePoint.of(level, spirits);
-        if (home.isEmpty()) {
-            return;
-        }
         Map<String, Integer> missing = new HashMap<>();
         for (BoardTicket ticket : board.tickets()) {
             BoardStatus status = board.statusOf(ticket.id()).orElse(null);
@@ -75,7 +71,7 @@ final class BoardSupplyDesk {
                 closed,
                 now,
                 BoardTuning.failBackoffTicks());
-        BlockCoord center = home.orElseThrow();
+        BlockCoord center = HomePoint.of(level, spirits).orElse(null);
         for (SupplyGate.Request request : decision.supply()) {
             SupplyTickets.issue(level, service, targets, center, request, BoardCase.SUPPLY_SITE, now);
         }
