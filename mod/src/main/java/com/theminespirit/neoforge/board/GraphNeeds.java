@@ -41,23 +41,26 @@ final class GraphNeeds {
         if (holder != null && board.stuck().isStuck(UUID.fromString(holder), now)) {
             return new GraphBlock.Path(point(target));
         }
-        String made = madeItem(ticket);
-        if (made != null) {
-            int count = target == null ? 1 : Math.max(1, target.supplyCount());
-            return new GraphBlock.Item(made, count);
-        }
         Map<String, Integer> missing = ResourceGate.missing(new StockNeed(ticket.requiredItems()), stock);
         if (!missing.isEmpty()) {
             Map.Entry<String, Integer> first = missing.entrySet().iterator().next();
             return new GraphBlock.Item(first.getKey(), first.getValue());
         }
-        String placed = placedBlock(ticket, target);
-        if (placed != null && stock.available().getOrDefault(placed, 0) < 1) {
-            return new GraphBlock.Item(placed, 1);
-        }
         String tool = ToolGate.required(ticket).orElse(null);
         if (tool != null && holder != null && !ToolGate.allows(ticket, items)) {
             return new GraphBlock.Tool(tool, 0, holder);
+        }
+        if (depositOnly(ticket)) {
+            return null;
+        }
+        String made = madeItem(ticket);
+        if (made != null) {
+            int count = target == null ? 1 : Math.max(1, target.supplyCount());
+            return new GraphBlock.Item(made, count);
+        }
+        String placed = placedBlock(ticket, target);
+        if (placed != null && stock.available().getOrDefault(placed, 0) < 1) {
+            return new GraphBlock.Item(placed, 1);
         }
         if (target != null) {
             return new GraphBlock.Path(point(target));
@@ -65,10 +68,12 @@ final class GraphNeeds {
         return null;
     }
 
-    private static @Nullable String madeItem(BoardTicket ticket) {
-        String prefix = ticket.id().startsWith("graph:make:")
-                ? "graph:make:"
-                : ticket.id().startsWith("supply_gather:") ? "supply_gather:" : null;
+    static boolean depositOnly(BoardTicket ticket) {
+        return ticket.id().startsWith("supply_gather:") || ticket.id().startsWith("supply:");
+    }
+
+    static @Nullable String madeItem(BoardTicket ticket) {
+        String prefix = ticket.id().startsWith("graph:make:") ? "graph:make:" : null;
         if (prefix == null) {
             return null;
         }

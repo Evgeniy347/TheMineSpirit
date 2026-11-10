@@ -152,7 +152,7 @@ public final class MoreActivityPlans {
                 gotoPoint(target.target()),
                 new ScriptCall(
                         "unload",
-                        Map.of(CONTAINER, "auto", RADIUS, CatalogLimits.CONTAINER_RADIUS_DEFAULT, "force", true)));
+                        Map.of(CONTAINER, "warehouse", RADIUS, CatalogLimits.CONTAINER_RADIUS_DEFAULT, "force", true)));
     }
 
     private static String playerSelector(TicketTarget target) {

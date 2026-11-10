@@ -110,10 +110,14 @@ class MorePlansTests {
     }
 
     @Test
-    void unload_ForceTrue_GoesToNearestChest() {
+    void unload_ForceTrue_GoesToWarehouse() {
         ScriptCall unload = script(MorePlans.unload(true), 0);
         assertEquals("unload", unload.script(), "Полные руки освобождают выгрузкой");
-        assertEquals("nearest", unload.params().get("container"), "Сундук ищется рядом, а не по всему миру");
+        assertEquals(
+                "warehouse",
+                unload.params().get("container"),
+                "Сундук берётся из списка склада поселения, а не ищется в радиусе 8 от дома: "
+                        + "живой отказ «рядом нет допустимого контейнера» (10.11)");
         assertTrue((Boolean) unload.params().get("force"), "Выгрузка идёт принудительно: место кончается");
     }
 

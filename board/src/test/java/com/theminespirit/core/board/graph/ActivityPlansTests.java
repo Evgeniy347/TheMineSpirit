@@ -81,9 +81,12 @@ class ActivityPlansTests {
 
     @Test
     void unload_Plan_ForcesDeposit() {
-        ScriptCall unload = calls(ActivityPlans.unload(AT).task()).get(1);
+        List<ScriptCall> calls = calls(ActivityPlans.unload(AT).task());
+        ScriptCall unload = calls.get(0);
 
+        assertEquals(1, calls.size(), "Выгрузка не ходит отдельным goto в занятую клетку сундука: " + calls);
         assertEquals("unload", unload.script(), "Разгрузка идёт скриптом unload");
+        assertEquals("10,64,-5", unload.params().get("container"), "Сундук назван координатами цели");
         assertEquals(true, unload.params().get("force"), "Несмое сдают даже ниже порога");
     }
 

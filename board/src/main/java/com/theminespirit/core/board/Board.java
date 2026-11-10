@@ -100,7 +100,7 @@ public final class Board {
         for (BoardState.Entry entry : state.entries()) {
             BoardTicket ticket = entry.ticket();
             tickets.put(ticket.id(), ticket);
-            statuses.put(ticket.id(), entry.status());
+            statuses.put(ticket.id(), BlockedRestore.status(state, entry));
             if (entry.holder() != null) claimAssignees.put(ticket.id(), entry.holder());
             if (entry.failedAt() != null) failTicks.put(ticket.id(), entry.failedAt());
             if (entry.failures() > 0) ticketFailures.put(ticket.id(), entry.failures());

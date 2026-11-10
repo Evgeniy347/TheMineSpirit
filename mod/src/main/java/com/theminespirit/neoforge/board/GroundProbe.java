@@ -56,6 +56,18 @@ public final class GroundProbe {
         return level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
     }
 
+    public static boolean freeAt(ServerLevel level, BlockCoord feet) {
+        BlockPos pos = new BlockPos(feet.x(), feet.y(), feet.z());
+        return level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()
+                && level.getBlockState(pos.above())
+                        .getCollisionShape(level, pos.above())
+                        .isEmpty()
+                && level.getFluidState(pos).isEmpty()
+                && !level.getBlockState(pos.below())
+                        .getCollisionShape(level, pos.below())
+                        .isEmpty();
+    }
+
     public static TerrainGrid terrain(ServerLevel level, BlockCoord anchor, int radius) {
         int side = 2 * radius + 1;
         int[] feet = new int[side * side];

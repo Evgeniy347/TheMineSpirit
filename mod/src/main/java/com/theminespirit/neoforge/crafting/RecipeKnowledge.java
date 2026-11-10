@@ -10,6 +10,7 @@ import com.theminespirit.core.crafting.RecipeSpec;
 import com.theminespirit.core.crafting.Stations;
 import com.theminespirit.core.mining.DropTable;
 import com.theminespirit.core.mining.GatherPolicy;
+import com.theminespirit.core.planner.GatherSources;
 import com.theminespirit.core.planner.Ingredient;
 import com.theminespirit.core.planner.ResourceKnowledge;
 import java.util.ArrayList;
@@ -83,6 +84,11 @@ public final class RecipeKnowledge implements ResourceKnowledge {
 
     static boolean gatherable(String item) {
         String id = ItemIds.normalize(item);
+        if (GatherSources.sourceBlock(id)
+                .filter(RecipeKnowledge::gatherableBlock)
+                .isPresent()) {
+            return true;
+        }
         if (DropTable.shared()
                 .blocksFor(id)
                 .map(blocks -> blocks.stream().anyMatch(RecipeKnowledge::gatherableBlock))
@@ -102,6 +108,10 @@ public final class RecipeKnowledge implements ResourceKnowledge {
     @Override
     public String gatherBlockFor(String item) {
         String id = ItemIds.normalize(item);
+        Optional<String> natural = GatherSources.sourceBlock(id);
+        if (natural.isPresent()) {
+            return natural.orElseThrow();
+        }
         return DropTable.shared()
                 .blocksFor(id)
                 .flatMap(blocks ->
