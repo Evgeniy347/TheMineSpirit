@@ -48,7 +48,7 @@
 | [git-hooks/commit-msg](git-hooks/commit-msg) | проверяет формат сообщения коммита | `git commit` | ПК, сервер | нет |
 | [git-hooks/pre-rebase](git-hooks/pre-rebase) | запрещает перезапись истории | `git rebase main` | ПК, сервер | нет |
 | [git-hooks/reference-transaction](git-hooks/reference-transaction) | держит «ветка только растёт» | `git update-ref` | ПК, сервер | нет |
-| [lead/chkq.sh](lead/chkq.sh) | приёмка ветки главным агентом | `scripts/lead/chkq.sh ветка` | ПК, сервер | worktree, сборка |
+| [lead/chkq.sh](lead/chkq.sh) | приёмка ветки главным агентом: unit, опыт запуска сервера, GameTest | `scripts/lead/chkq.sh ветка` | ПК, сервер | worktree, сборка |
 | [lead/agent-list.sh](lead/agent-list.sh) | список агентов и их работы | `scripts/lead/agent-list.sh` | ПК | нет |
 | [lead/nice-guard.sh](lead/nice-guard.sh) | понижает приоритет лишних процессов | `scripts/lead/nice-guard.sh` | ПК | приоритет процессов |
 | [lead/oc-watch.sh](lead/oc-watch.sh) | наблюдение за сессией OpenCode | `scripts/lead/oc-watch.sh` | ПК | нет |

@@ -13,6 +13,7 @@ class ServerStartGuardTests {
     private static final Path COMMON = Path.of("server/scripts/common.sh");
     private static final Path START = Path.of("server/scripts/start.sh");
     private static final Path CHECK_START = Path.of("scripts/testing/check-start.sh");
+    private static final Path CHKQ = Path.of("scripts/lead/chkq.sh");
 
     @Test
     void readyWait_LateLogRotation_IsHandled() {
@@ -43,6 +44,15 @@ class ServerStartGuardTests {
                 check.contains("rotate_late") && check.contains("FAKE_ROTATE_DELAY=5"),
                 "Опыт check-start.sh потерял сценарий поздней ротации latest.log: без него гонка проверки "
                         + "готовности снова пройдёт незамеченной");
+    }
+
+    @Test
+    void acceptance_CheckStart_IsRun() {
+        assertTrue(
+                read(CHKQ).contains("scripts/testing/check-start.sh"),
+                "Приёмка scripts/lead/chkq.sh перестала запускать scripts/testing/check-start.sh: опыт поздней "
+                        + "ротации latest.log снова держится только текстовым сторожем, а не настоящим прогоном "
+                        + "на каждой принимаемой ветке (debtmisc21)");
     }
 
     private static String read(Path path) {

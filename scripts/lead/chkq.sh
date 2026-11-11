@@ -12,6 +12,7 @@ for b in "$@"; do
   cd $wt/chk-$n
   git merge -q --no-edit main > $out/$n-merge.log 2>&1 || { echo "$n merge CONFLICT" >> $s; continue; }
   nice -n 19 bash scripts/test.sh unit > $out/$n-unit.log 2>&1; echo "$n unit EXIT=$?" >> $s
+  nice -n 19 bash scripts/testing/check-start.sh > $out/$n-start.log 2>&1; echo "$n start EXIT=$?" >> $s
   THEMINESPIRIT_GAMETEST_WAIT=7200 nice -n 19 bash scripts/test.sh gametest > $out/$n-gt.log 2>&1; echo "$n gametest EXIT=$?" >> $s
 done
 echo DONE >> $s

@@ -12,8 +12,9 @@
   только GameTest), `refactor`, `docs`, `chore` (сборка, скрипты). `feat:`/`fix:` с production-кодом обязан менять и
   тесты. Формат и правило про тест проверяет хук `commit-msg`.
 - Хук `pre-commit` гоняет `scripts/test.sh unit --changed`, если в коммите есть `src/` или сборка;
-  красный — отказ. `--changed` берёт только затронутые модули и `:guards`; полный `unit` и GameTest — приёмка в финале
-  исполнителя и перед слиянием (`scripts/lead/chkq.sh`). SpotBugs и PMD (сотни секунд) — не в хуке.
+  красный — отказ. `--changed` берёт только затронутые модули и `:guards`; полный `unit`, опыт запуска сервера
+  (`scripts/testing/check-start.sh`) и GameTest — приёмка в финале исполнителя и перед слиянием (`scripts/lead/chkq.sh`).
+  SpotBugs и PMD (сотни секунд) — не в хуке.
   Хуки подключает `scripts/install-git-hooks.sh`. `--no-verify` и отключение хуков (`-c core.hooksPath=…`) —
   только по прямому указанию пользователя.
 

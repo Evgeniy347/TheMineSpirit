@@ -16,6 +16,14 @@ cat > scripts/test.sh <<'EOF'
 exit 0
 EOF
 chmod +x scripts/test.sh
+# lib: приёмка обязана прогнать опыт запуска сервера; подделка отмечает вызов в файле, чтобы проверка
+# видела не только код возврата в сводке, но и сам факт прогона (debtmisc21).
+mkdir -p scripts/testing
+cat > scripts/testing/check-start.sh <<'EOF'
+#!/usr/bin/env bash
+: > "$(dirname "$0")/check-start-ran"
+exit 0
+EOF
 echo base > base.txt
 git add -A
 git commit -q -m "main: база"
@@ -58,8 +66,20 @@ expect() {
 expect "conflict merge CONFLICT" "conflict_merge_conflict_is_reported"
 expect "red unit EXIT=1" "red_unit_exit_nonzero_is_in_summary"
 expect "ok unit EXIT=0" "green_unit_exit_zero_is_in_summary"
+expect "ok start EXIT=0" "green_start_check_exit_zero_is_in_summary"
+expect "red start EXIT=0" "red_start_check_runs_too"
 expect "ok gametest EXIT=0" "green_gametest_exit_zero_is_in_summary"
 expect "DONE" "summary_has_done"
+
+# lib: строка сводки не доказывает вызов — подделка check-start.sh отмечает прогон файлом в своём worktree.
+for branch in ok red; do
+    if [ -e "$work/wt/chk-$branch/scripts/testing/check-start-ran" ]; then
+        echo "OK $branch check-start запущен"
+    else
+        echo "FAIL $branch check-start не запущен"
+        failed=1
+    fi
+done
 
 if [ "$(tail -1 "$summary" 2>/dev/null)" = "DONE" ]; then
     echo "OK done_is_last_line"
