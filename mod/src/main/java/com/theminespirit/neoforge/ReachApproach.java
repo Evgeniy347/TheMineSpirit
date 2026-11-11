@@ -44,6 +44,9 @@ public final class ReachApproach {
     private boolean routes;
     private int rejected;
     private int probes;
+    private int walks;
+    private @Nullable BlockCoord walkFrom;
+    private @Nullable Set<BlockCoord> walkable;
     private String rejection;
 
     public ReachApproach(SpiritEntity spirit) {
@@ -75,6 +78,8 @@ public final class ReachApproach {
         tried.clear();
         search = null;
         stand = null;
+        walkFrom = null;
+        walkable = null;
         refusal = null;
         rejected = 0;
         rejection = null;
@@ -135,6 +140,10 @@ public final class ReachApproach {
 
     public int probes() {
         return probes;
+    }
+
+    public int walks() {
+        return walks;
     }
 
     public void cancel() {
@@ -205,13 +214,23 @@ public final class ReachApproach {
 
     private boolean twoWayWalk(BlockCoord stand) {
         BlockCoord from = feet();
+        if (!from.equals(walkFrom) || walkable == null) {
+            walkFrom = from;
+            walkable = walkCells(from);
+            walks++;
+        }
+        return walkable != null && walkable.contains(stand);
+    }
+
+    private @Nullable Set<BlockCoord> walkCells(BlockCoord from) {
         int margin = 8;
-        int minX = Math.min(from.x(), stand.x()) - margin;
-        int maxX = Math.max(from.x(), stand.x()) + margin;
-        int minZ = Math.min(from.z(), stand.z()) - margin;
-        int maxZ = Math.max(from.z(), stand.z()) + margin;
-        int minY = Math.min(from.y(), stand.y()) - margin;
-        int maxY = Math.max(from.y(), stand.y()) + margin;
+        BlockCoord to = target;
+        int minX = Math.min(from.x(), to.x()) - margin;
+        int maxX = Math.max(from.x(), to.x()) + margin;
+        int minZ = Math.min(from.z(), to.z()) - margin;
+        int maxZ = Math.max(from.z(), to.z()) + margin;
+        int minY = Math.min(from.y(), to.y()) - margin;
+        int maxY = Math.max(from.y(), to.y()) + margin;
         return RetreatPath.walkable(
                         from,
                         new NetworkLevelView(spirit.level()),
@@ -221,8 +240,7 @@ public final class ReachApproach {
                                 && cell.z() <= maxZ
                                 && cell.y() >= minY
                                 && cell.y() <= maxY)
-                .map(cells -> cells.contains(stand))
-                .orElse(false);
+                .orElse(null);
     }
 
     private void finish() {

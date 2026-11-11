@@ -89,6 +89,7 @@ public final class LeaseScenesGameTests {
         ReachApproach approach = new ReachApproach(probe);
         approach.begin(helper.absolutePos(new BlockPos(9, 1, 9)));
         int total = 0;
+        int walks = approach.walks();
         for (int tick = 0; tick < 4; tick++) {
             int before = approach.probes();
             Approach.State state = approach.tick();
@@ -103,6 +104,10 @@ public final class LeaseScenesGameTests {
                 break;
             }
         }
+        helper.assertTrue(
+                approach.walks() - walks <= 1,
+                "Обход достижимых клеток считается один раз на подход, а не заново для каждой стоянки: "
+                        + (approach.walks() - walks) + " обходов");
         helper.assertTrue(total > 0, "Предусловие: замурованный дух обязан проверить хотя бы одну стоянку");
         probe.discard();
     }
