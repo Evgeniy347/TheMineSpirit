@@ -364,7 +364,8 @@ public final class GraphPlanner {
             }
             boolean repeat = !made.add(choices.makes(score.getKey()));
             double value = score.getValue() * graph.costs().travelFactor(choices.travelTicks(score.getKey()));
-            double adjusted = choices.value(score.getKey(), value, repeat);
+            double adjusted =
+                    choices.value(score.getKey(), value, repeat) * BuildingShare.of(graph, state, score.getKey());
             GraphPlan.Task task = task(score.getKey(), GraphEvent.priority(state, graph, score.getKey(), adjusted));
             String reason = blockRules.reason(score.getKey());
             if (reason != null) {
@@ -377,10 +378,7 @@ public final class GraphPlanner {
                     .ifPresent(building -> load.merge(building, adjusted, Math::max));
         }
         load.forEach((building, value) -> stationTask(building, value, scores).ifPresent(tasks::add));
-        return new GraphPlan(
-                GraphBuildOrder.buildingsFirst(graph, tasks, id -> GraphLack.ready(graph, state, id)),
-                List.copyOf(notices.values()),
-                advice);
+        return new GraphPlan(tasks, List.copyOf(notices.values()), advice);
     }
 
     private Optional<String> station(String key) {

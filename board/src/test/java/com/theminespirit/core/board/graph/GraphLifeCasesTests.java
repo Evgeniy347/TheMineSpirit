@@ -42,8 +42,6 @@ class GraphLifeCasesTests {
     @Test
     void bands_PriorityOrder_WorkBelowNeedBelowLife() {
         int life = GraphWorld.GRAPH.maxPriority();
-        assertEquals(life - 2, GraphPriorities.work(GraphWorld.GRAPH), "Обычная работа — нижняя полоса");
-        assertEquals(life - 1, GraphPriorities.need(GraphWorld.GRAPH), "Потребность — средняя полоса");
         assertTrue(
                 GraphPriorities.work(GraphWorld.GRAPH) < GraphPriorities.need(GraphWorld.GRAPH)
                         && GraphPriorities.need(GraphWorld.GRAPH) < life,

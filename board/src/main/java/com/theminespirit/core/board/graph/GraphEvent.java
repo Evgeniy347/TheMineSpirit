@@ -10,6 +10,8 @@ import org.jspecify.annotations.Nullable;
 
 public record GraphEvent(
         String name, List<Task> tasks, Map<String, Integer> push, List<String> advice, boolean life, boolean vital) {
+    private static final String RESCUE = "rescue_spirit";
+
     public static final String UNDO_PREFIX = "undo:";
 
     public record Task(
@@ -165,6 +167,9 @@ public record GraphEvent(
     }
 
     static int priority(GraphState state, SupplyGraph graph, String key, double value) {
+        if (key.equals(RESCUE) || key.startsWith(RESCUE + "@")) {
+            return GraphPriorities.work(graph) + 1;
+        }
         if (key.startsWith("event:")) {
             int start = "event:".length();
             int end = key.indexOf(':', start);
@@ -175,12 +180,18 @@ public record GraphEvent(
                 GraphEvent.Task task = find(event, taskId);
                 if (task != null) {
                     if (event.life()) {
-                        return LifeThreats.priority(
+                        int threat = LifeThreats.priority(
                                 state.facts(),
                                 event,
                                 task,
                                 graph.maxPriority(),
                                 graph.costs().life());
+                        int floor = GraphPriorities.life(graph);
+                        return threat <= 0
+                                ? 0
+                                : floor
+                                        + (int) Math.round(
+                                                (double) (graph.maxPriority() - floor) * threat / graph.maxPriority());
                     }
                     if (event.vital()) {
                         int ceiling = GraphEventFacts.needEvent(event)

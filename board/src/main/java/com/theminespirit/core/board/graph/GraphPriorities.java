@@ -1,15 +1,19 @@
 package com.theminespirit.core.board.graph;
 
 public final class GraphPriorities {
+    public static final int LIFE_SPAN = 30;
+
     private GraphPriorities() {}
 
-    public static int work(SupplyGraph graph) {
-        int max = graph.maxPriority();
-        return max > 1 ? max - 2 : max;
+    public static int life(SupplyGraph graph) {
+        return Math.max(2, graph.maxPriority() - LIFE_SPAN);
     }
 
     public static int need(SupplyGraph graph) {
-        int max = graph.maxPriority();
-        return max > 0 ? max - 1 : max;
+        return life(graph) - 1;
+    }
+
+    public static int work(SupplyGraph graph) {
+        return Math.max(1, need(graph) - VitalNeeds.BAND - 1);
     }
 }

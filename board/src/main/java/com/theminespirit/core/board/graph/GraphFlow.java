@@ -9,6 +9,7 @@ import java.util.Objects;
 public final class GraphFlow {
     public static final int MAX_ITERATIONS = 200;
     public static final double EPSILON = 1e-6;
+    public static final double SCORE_SPAN = 1000;
 
     public record Link(String from, String to, double factor) {}
 
@@ -62,11 +63,15 @@ public final class GraphFlow {
             to[link] = node(links.get(link).to());
             factor[link] = links.get(link).factor();
         }
+        boolean[] back = FlowCycles.backLinks(
+                size, from, to, roots.keySet().stream().mapToInt(this::node).toArray());
         double[] value = base.clone();
         for (int iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
             double[] next = base.clone();
             for (int link = 0; link < from.length; link++) {
-                next[to[link]] += factor[link] * value[from[link]];
+                if (!back[link]) {
+                    next[to[link]] += factor[link] * value[from[link]];
+                }
             }
             double delta = 0;
             for (int node = 0; node < size; node++) {
@@ -88,6 +93,6 @@ public final class GraphFlow {
         if (score <= 0 || max <= 0) {
             return 0;
         }
-        return (int) Math.min(max, Math.round(max * (1 - Math.exp(-score / max))));
+        return (int) Math.max(1, Math.min(max, Math.round(max * Math.log1p(score) / Math.log1p(SCORE_SPAN))));
     }
 }

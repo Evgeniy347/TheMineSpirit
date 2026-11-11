@@ -194,8 +194,8 @@ class CrossBattleWorkScenarioTests {
         assertTrue(eat.feasible(), "Еда на складе делает обед выполнимым: " + ids(plan));
         assertTrue(defend.priority() > eat.priority(), "Сначала отбиться, потом есть: " + ids(plan));
         assertTrue(
-                mine.priority() > eat.priority(),
-                "Шахта всё ещё выше еды жизни: голодный дух копает раньше обеда — известный баг 12-14: " + ids(plan));
+                eat.priority() > mine.priority(),
+                "Еда жизни выше шахты: голодный раненый дух ест раньше, чем копает (баг 12-14): " + ids(plan));
         assertEquals(
                 BoardCase.EAT_TO_FULL, eat.boardCase(), "Голод закрывается внешним кейсом EAT_TO_FULL, а не шахтой");
         assertEquals(

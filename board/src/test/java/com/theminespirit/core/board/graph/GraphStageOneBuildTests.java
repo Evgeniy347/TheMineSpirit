@@ -26,15 +26,20 @@ class GraphStageOneBuildTests {
     }
 
     @Test
-    void plan_StageBuildingMissing_OutranksSpiritKit() {
+    void plan_StageBuildingMissing_StaysOnBoardAndPressesSupply() {
         GraphWorld world = GraphWorld.settled().tools("spirit-1", -1);
         GraphPlan plan = world.plan();
 
+        GraphPlan.Task fence = plan.task("building:fence").orElseThrow();
         assertTrue(
-                plan.priority("building:fence") > plan.priority("craft_stone_pickaxe@spirit-1"),
-                "Постройка этапа важнее набора духа: иначе крафт кирки навсегда вытесняет ограду с доски; "
-                        + "ограда " + plan.priority("building:fence") + ", кирка "
-                        + plan.priority("craft_stone_pickaxe@spirit-1"));
+                fence.raised()
+                        && plan.tasks().stream()
+                                .filter(task -> fence.consumes().containsKey(task.makes()) && task.feasible())
+                                .anyMatch(supply -> supply.priority() > fence.priority()),
+                "Ограда этапа не вытесняется набором духа: она на доске, а выполнимая добыча её материала раньше "
+                        + "самой ограды; кирка "
+                        + "духу без инструментов — честный соперник ограде. " + CrossScene.ORDER_HINT + ": "
+                        + plan.tasks());
     }
 
     @Test

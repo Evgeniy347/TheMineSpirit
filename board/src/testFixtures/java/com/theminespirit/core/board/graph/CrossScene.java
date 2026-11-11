@@ -177,17 +177,22 @@ final class CrossScene {
     }
 
     static final String ORDER_HINT = "ПОРЯДОК: решение неадекватно — поправь веса графа; новый порядок разумен "
-            + "(например, после новой механики) — поправь ожидание теста с причиной. Веса под тест не подгонять";
+            + "(например, после новой механики) — поправь ожидание теста с причиной; честная конкуренция (постройки "
+            + "между собой) — объяви соперника аргументом rivals. Веса под тест не подгонять";
 
-    static List<String> ahead(GraphPlan plan, GraphPlan.Task task) {
+    static List<String> ahead(GraphPlan plan, GraphPlan.Task task, String... rivals) {
+        List<String> allowed = List.of(rivals);
         return hinted(plan.tasks().stream()
+                .filter(other -> !allowed.contains(other.id()))
                 .filter(other -> other.priority() > task.priority())
                 .map(other -> other.id() + "=" + other.priority() + " > " + task.id() + "=" + task.priority())
                 .toList());
     }
 
-    static List<String> workNotBehind(GraphPlan plan, GraphPlan.Task task) {
+    static List<String> workNotBehind(GraphPlan plan, GraphPlan.Task task, String... rivals) {
+        List<String> allowed = List.of(rivals);
         return hinted(plan.tasks().stream()
+                .filter(other -> !allowed.contains(other.id()))
                 .filter(other -> other != task && !life(other) && other.priority() >= task.priority())
                 .map(other -> other.id() + "=" + other.priority() + " >= " + task.id() + "=" + task.priority())
                 .toList());

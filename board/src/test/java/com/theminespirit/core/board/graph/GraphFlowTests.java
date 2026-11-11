@@ -20,19 +20,22 @@ class GraphFlowTests {
     }
 
     @Test
-    void solve_Cycle_ConvergesToGeometricSum() {
-        GraphFlow flow = new GraphFlow();
-        flow.root("cobble", 10);
-        flow.link("cobble", "pickaxe", 0.5);
-        flow.link("pickaxe", "cobble", 0.5);
+    void solve_Cycle_PressureDoesNotReturnToSource() {
+        GraphFlow cyclic = new GraphFlow();
+        cyclic.root("cobble", 10);
+        cyclic.link("cobble", "pickaxe", 0.5);
+        cyclic.link("pickaxe", "cobble", 3.0);
+        GraphFlow straight = new GraphFlow();
+        straight.root("cobble", 10);
+        straight.link("cobble", "pickaxe", 0.5);
 
-        Map<String, Double> values = flow.solve();
+        Map<String, Double> values = cyclic.solve();
 
         assertEquals(
-                10 / (1 - 0.25),
-                values.get("cobble"),
-                1e-4,
-                "Цикл булыжник ↔ кирка сходится к сумме геометрического ряда 10 / (1 − 0.25), а не разгоняется");
+                straight.solve(),
+                values,
+                "Цикл булыжник ↔ кирка не разгоняет давление: обратное ребро в узел на текущем пути отбрасывается, "
+                        + "даже с коэффициентом больше единицы");
     }
 
     @Test
@@ -50,12 +53,16 @@ class GraphFlowTests {
     }
 
     @Test
-    void priority_Scale_MonotonicAndBounded() {
-        int ceiling = GraphWorld.GRAPH.maxPriority();
+    void priority_Scale_LogarithmicWithoutSaturation() {
+        int ceiling = GraphPriorities.work(GraphWorld.GRAPH);
+
         assertTrue(
-                GraphFlow.priority(0, ceiling) < GraphFlow.priority(50, ceiling)
-                        && GraphFlow.priority(50, ceiling) < GraphFlow.priority(150, ceiling)
-                        && GraphFlow.priority(10_000, ceiling) == ceiling,
-                "Шкала 100·(1 − e^(−s/100)): ноль — 0, больше вклад — выше приоритет, не больше 100");
+                GraphFlow.priority(0, ceiling) < GraphFlow.priority(1, ceiling)
+                        && GraphFlow.priority(400, ceiling) < GraphFlow.priority(500, ceiling)
+                        && GraphFlow.priority(500, ceiling) < GraphFlow.priority(900, ceiling)
+                        && GraphFlow.priority(900, ceiling) < GraphFlow.priority(GraphFlow.SCORE_SPAN, ceiling)
+                        && GraphFlow.priority(GraphFlow.SCORE_SPAN, ceiling) == ceiling,
+                "Шкала работы логарифмическая до SCORE_SPAN: крупные давления различаются (раньше 400, 500 и "
+                        + "900 сливались у потолка), ничто не поднимается выше потолка работы, ноль не поднят");
     }
 }

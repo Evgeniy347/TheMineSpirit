@@ -157,10 +157,10 @@ class LifeGraphPlannerTests {
         assertTrue(
                 plan.tasks().stream().allMatch(task -> task.priority() <= GraphPriorities.need(GraphWorld.GRAPH)),
                 "Цепочка бревно → доски → палки не выходит за полосу потребности: " + plan.tasks());
-        assertEquals(
-                GraphPriorities.work(GraphWorld.GRAPH),
-                GraphFlow.priority(1_000_000, GraphPriorities.work(GraphWorld.GRAPH)),
-                "Даже бесконечный поток обычной работы упирается в полосу работы, а не в жизнь");
+        assertTrue(
+                GraphFlow.priority(1_000_000, GraphPriorities.work(GraphWorld.GRAPH))
+                        < VitalNeeds.priority(0, List.of(0), GraphPriorities.need(GraphWorld.GRAPH)),
+                "Даже бесконечный поток обычной работы ниже любой жизненной нужды");
     }
 
     @Property(tries = 200)
