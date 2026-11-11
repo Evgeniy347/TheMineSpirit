@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.observation.BlockCoord;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -89,5 +90,26 @@ class MineAimLiveTests {
                 ticket.get("requiredItems").has("cobblestone"),
                 "Спуск в шахту требует булыжник на стенки и пол: без него живой тикет проваливался "
                         + "на «нет булыжника на стенка»");
+    }
+
+    @Test
+    void standSpots_LiveClearPillar_StandThreeBelowFound() throws IOException {
+        Path file = Path.of("src/test/resources/live/clear-no-stand-column.json");
+        JsonNode json = new ObjectMapper().readTree(Files.readString(file, StandardCharsets.UTF_8));
+        CellWorld world = new CellWorld();
+        for (JsonNode block : json.get("blocks")) {
+            world.set(
+                    block.get("x").asInt(),
+                    block.get("y").asInt(),
+                    block.get("z").asInt(),
+                    Cell.SOLID);
+        }
+
+        List<BlockCoord> spots = StandSpots.of(new BlockCoord(-193, 70, -516), world, new BlockCoord(-193, 67, -516));
+
+        assertTrue(
+                spots.contains(new BlockCoord(-193, 67, -515)),
+                "Живой столб из трёх блоков на тропе (clear: «без стоянки» на 70) достаётся с клетки "
+                        + "вплотную на три ниже: без неё clear бросает задачу, хотя стоянка есть. Стоянки: " + spots);
     }
 }

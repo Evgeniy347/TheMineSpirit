@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 public final class MiningPlanner {
-    private static final int STAND_RADIUS = 3;
 
     private MiningPlanner() {}
 
@@ -107,10 +106,10 @@ public final class MiningPlanner {
 
     private static boolean cannotBeat(BlockCoord from, BlockCoord target, long bestStandSquared) {
         long targetSquared = distanceSquared(from, target);
-        if (targetSquared <= (long) STAND_RADIUS * STAND_RADIUS) {
+        if (targetSquared <= StandSpots.MAX_OFFSET_SQUARED) {
             return false;
         }
-        double gap = Math.sqrt((double) targetSquared) - STAND_RADIUS;
+        double gap = Math.sqrt((double) targetSquared) - Math.sqrt(StandSpots.MAX_OFFSET_SQUARED);
         return gap * gap > bestStandSquared;
     }
 

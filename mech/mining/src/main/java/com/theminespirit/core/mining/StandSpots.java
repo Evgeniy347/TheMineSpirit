@@ -12,7 +12,8 @@ import java.util.Optional;
 
 public final class StandSpots {
 
-    private static final int MAX_DEPTH = 2;
+    public static final int MAX_OFFSET_SQUARED = MiningTuning.MAX_STAND_DROP * MiningTuning.MAX_STAND_DROP + 1;
+
     private static final int[][] FACE_OFFSETS = {{0, 1, 0}, {0, -1, 0}, {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}};
     private static final int[][] HORIZONTAL_OFFSETS = {{1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}};
 
@@ -31,8 +32,11 @@ public final class StandSpots {
                 continue;
             }
             exposed = true;
-            for (int depth = 0; depth <= MAX_DEPTH; depth++) {
+            for (int depth = 0; depth <= MiningTuning.MAX_STAND_DROP; depth++) {
                 BlockCoord stand = new BlockCoord(neighbor.x(), neighbor.y() - depth, neighbor.z());
+                if (target.y() - stand.y() > MiningTuning.MAX_STAND_DROP) {
+                    continue;
+                }
                 if (offset(stand, 0, -1, 0).equals(target)) {
                     continue;
                 }
