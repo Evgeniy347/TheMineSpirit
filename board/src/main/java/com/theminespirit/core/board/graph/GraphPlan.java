@@ -47,6 +47,10 @@ public record GraphPlan(List<Task> tasks, List<Notice> notices, List<Advice> adv
                 int ticks) {
             this(id, boardCase, makes, spirit, priority, consumes, feasible, chance, implemented, ticks, "");
         }
+
+        public boolean raised() {
+            return priority > 0;
+        }
     }
 
     public record Notice(String building, String reason) {}
@@ -63,6 +67,10 @@ public record GraphPlan(List<Task> tasks, List<Notice> notices, List<Advice> adv
         return tasks.stream().filter(task -> task.id().equals(id)).findFirst();
     }
 
+    public boolean raised(String id) {
+        return task(id).map(Task::raised).orElse(false);
+    }
+
     public int priority(String id) {
         return task(id).map(Task::priority).orElse(-1);
     }
@@ -75,7 +83,7 @@ public record GraphPlan(List<Task> tasks, List<Notice> notices, List<Advice> adv
             List<Task> tasks, Set<String> live, Function<String, Optional<BoardStatus>> status) {
         List<Task> demands = new ArrayList<>();
         for (Task task : tasks) {
-            if (!task.implemented() || task.priority() <= 0 || !task.feasible()) {
+            if (!task.implemented() || !task.raised() || !task.feasible()) {
                 continue;
             }
             String ticket = GraphTickets.id(task);

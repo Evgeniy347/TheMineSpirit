@@ -141,8 +141,7 @@ class GraphPlannerTests {
         GraphPlan plan = GraphWorld.settled().with("dirt", 1000).plan();
 
         assertTrue(
-                plan.task("dig_dirt").isEmpty()
-                        || plan.task("dig_dirt").orElseThrow().priority() == 0,
+                !plan.raised("dig_dirt"),
                 "Земли больше Xmin·P·S·K — задания «добыть землю» нет: " + plan.task("dig_dirt"));
     }
 

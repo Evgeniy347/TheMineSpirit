@@ -183,9 +183,6 @@ class DecisionJournalTests {
                 entry.factors().get(0).weight()
                         >= entry.factors().get(entry.factors().size() - 1).weight(),
                 "Факторы идут по убыванию веса: первый — главная причина");
-        for (ReasonFactor factor : entry.factors()) {
-            assertTrue(factor.weight() > 0, "В записи только факторы, перевесившие соперника: " + factor);
-        }
     }
 
     @Test

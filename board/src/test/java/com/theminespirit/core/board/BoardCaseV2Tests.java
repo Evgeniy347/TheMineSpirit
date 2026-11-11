@@ -47,11 +47,9 @@ class BoardCaseV2Tests {
     @Test
     void cases_EveryCase_HasPriority() {
         for (BoardCase boardCase : BoardCase.values()) {
-            int priority = BoardRules.priorityOf(boardCase);
-
             assertTrue(
-                    priority >= 0 && priority <= BoardTuning.MAX_PRIORITY,
-                    "Кейс " + boardCase + " обязан иметь базовый приоритет в [0, MAX_PRIORITY]: "
+                    BoardConfig.readFromClasspath().priorities().containsKey(boardCase.name()),
+                    "Кейс " + boardCase + " обязан иметь строку в таблице приоритетов: "
                             + "кейс-сирота роняет сортировку выдачи");
         }
     }

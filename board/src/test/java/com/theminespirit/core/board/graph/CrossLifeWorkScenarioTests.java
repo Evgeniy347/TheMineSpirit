@@ -5,6 +5,7 @@ import static com.theminespirit.core.board.graph.CrossActions.chopTarget;
 import static com.theminespirit.core.board.graph.CrossActions.id;
 import static com.theminespirit.core.board.graph.CrossActions.scripts;
 import static com.theminespirit.core.board.graph.CrossScene.FED;
+import static com.theminespirit.core.board.graph.CrossScene.ahead;
 import static com.theminespirit.core.board.graph.CrossScene.damaged;
 import static com.theminespirit.core.board.graph.CrossScene.facts;
 import static com.theminespirit.core.board.graph.CrossScene.ids;
@@ -51,8 +52,8 @@ class CrossLifeWorkScenarioTests {
         GraphPlan.Task defend = task(plan, "event:life_threat:defend");
         List<String> chops = tasksMaking(plan, "oak_log");
         assertEquals(
-                100,
-                defend.priority(),
+                List.of(),
+                ahead(plan, defend),
                 "Раненый дух под двумя мобами обязан получить защиту жизни на потолке графа: " + ids(plan));
         assertFalse(
                 chops.isEmpty(), "Угроза не отменяет рубку: работа остаётся на доске рядом с защитой: " + ids(plan));
@@ -213,7 +214,8 @@ class CrossLifeWorkScenarioTests {
         GraphPlan.Task sleep = task(plan, "event:life_threat:sleep");
         GraphPlan.Task guard = task(plan, "event:night:more4_guard_settlement");
 
-        assertEquals(100, defend.priority(), "Ночной моб у раненого духа поднимает защиту на потолок: " + ids(plan));
+        assertEquals(
+                List.of(), ahead(plan, defend), "Ночной моб у раненого духа поднимает защиту на потолок: " + ids(plan));
         assertTrue(sleep.priority() < defend.priority(), "Сон не важнее боя с мобом: " + ids(plan));
         assertTrue(guard.priority() < defend.priority(), "Охрана поселения ниже защиты жизни: " + ids(plan));
         assertEquals(

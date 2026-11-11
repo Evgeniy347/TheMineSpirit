@@ -2,6 +2,7 @@ package com.theminespirit.core.board.graph;
 
 import static com.theminespirit.core.board.graph.CrossActions.scripts;
 import static com.theminespirit.core.board.graph.CrossActions.supplyTarget;
+import static com.theminespirit.core.board.graph.CrossScene.ahead;
 import static com.theminespirit.core.board.graph.CrossScene.damaged;
 import static com.theminespirit.core.board.graph.CrossScene.facts;
 import static com.theminespirit.core.board.graph.CrossScene.ids;
@@ -214,7 +215,7 @@ class CrossSettlementScenarioTests {
         GraphPlan.Task repaired = task(second, "event:tool_worn:repair_tool");
 
         assertTrue(repaired.feasible(), "Наковальня и слиток есть — граф ставит ремонт кирки: " + ids(second));
-        assertTrue(repaired.priority() > 0, "Ремонт инструмента имеет свой вес, а не ноль");
+        assertTrue(repaired.raised(), "Ремонт инструмента имеет свой вес, а не ноль");
         assertFalse(
                 scripts(BoardCase.REPAIR_TOOL).isEmpty(),
                 "Ремонт инструмента имеет план действий, а не пустую карточку");
@@ -241,7 +242,7 @@ class CrossSettlementScenarioTests {
         GraphPlan.Task defend = task(plan, "event:life_threat:defend");
         GraphPlan.Task repair = task(plan, "event:repair_fence:repair:fence");
 
-        assertEquals(100, defend.priority(), "Мобы у раненого духа — защита на потолке: " + ids(plan));
+        assertEquals(List.of(), ahead(plan, defend), "Мобы у раненого духа — защита на потолке: " + ids(plan));
         assertTrue(repair.feasible(), "Побитый забор остаётся выполнимым ремонтом: " + ids(plan));
         assertTrue(defend.priority() > repair.priority(), "Сначала бой, потом забор: " + ids(plan));
         assertTrue(

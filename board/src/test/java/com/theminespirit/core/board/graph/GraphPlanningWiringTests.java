@@ -26,7 +26,7 @@ class GraphPlanningWiringTests {
                 "На доску идут только выполнимые и реализованные задания: " + result.post());
         assertTrue(
                 plan.tasks().stream()
-                        .filter(task -> task.implemented() && !task.feasible() && task.priority() > 0)
+                        .filter(task -> task.implemented() && !task.feasible() && task.raised())
                         .filter(task -> !laterStage(world, task))
                         .allMatch(task -> result.live().contains(GraphTickets.id(task))),
                 "Невыполнимое задание своего этапа остаётся живой причиной: поставленный раньше тикет не снимается, "

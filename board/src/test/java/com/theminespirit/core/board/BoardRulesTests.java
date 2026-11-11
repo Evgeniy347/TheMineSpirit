@@ -57,13 +57,9 @@ class BoardRulesTests {
     @Test
     void everyCase_Has_Priority() {
         for (BoardCase boardCase : BoardCase.values()) {
-            int priority = BoardRules.priorityOf(boardCase);
-
             assertTrue(
-                    priority >= 0 && priority <= BoardTuning.MAX_PRIORITY,
-                    "Приоритет кейса " + boardCase + " равен " + priority
-                            + " и выходит за [0, " + BoardTuning.MAX_PRIORITY
-                            + "]: кейс-сирота не получил строку таблицы, а молчаливый "
+                    BoardConfig.readFromClasspath().priorities().containsKey(boardCase.name()),
+                    "Кейс " + boardCase + " без строки в таблице приоритетов: кейс-сирота, а молчаливый "
                             + "пропуск спрятал бы задание в очереди");
         }
     }

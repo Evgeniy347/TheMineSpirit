@@ -7,6 +7,7 @@ import static com.theminespirit.core.board.graph.CrossActions.scripts;
 import static com.theminespirit.core.board.graph.CrossActions.supplyTarget;
 import static com.theminespirit.core.board.graph.CrossScene.FED;
 import static com.theminespirit.core.board.graph.CrossScene.HUNGRY;
+import static com.theminespirit.core.board.graph.CrossScene.ahead;
 import static com.theminespirit.core.board.graph.CrossScene.chest;
 import static com.theminespirit.core.board.graph.CrossScene.damaged;
 import static com.theminespirit.core.board.graph.CrossScene.facts;
@@ -155,7 +156,8 @@ class CrossFarmSupplyScenarioTests {
         GraphPlan.Task repair = task(plan, "event:tool_worn:repair_tool");
         GraphPlan.Task store = task(plan, "store_space");
 
-        assertEquals(100, defend.priority(), "Набег на голодного духа поднимает защиту на потолок: " + ids(plan));
+        assertEquals(
+                List.of(), ahead(plan, defend), "Набег на голодного духа поднимает защиту на потолок: " + ids(plan));
         assertTrue(eat.feasible(), "Еда на складе делает обед выполнимым: " + ids(plan));
         assertTrue(repair.feasible(), "Наковальня и слиток на складе чинят кирку: " + ids(plan));
         assertTrue(store.feasible(), "Переполненный склад ставит задачу места: " + ids(plan));

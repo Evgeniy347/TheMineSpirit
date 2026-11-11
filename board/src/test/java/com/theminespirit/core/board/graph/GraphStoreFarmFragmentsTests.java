@@ -152,7 +152,7 @@ class GraphStoreFarmFragmentsTests {
                 "feed_animals",
                 "lure_animal",
                 "milk_animal")) {
-            assertTrue(GRAPH.way(way).orElseThrow().weight() > 0, "Стартовый вес пути положителен: " + way);
+            assertTrue(GRAPH.way(way).isPresent(), "Путь объявлен в данных, вес проверяет SupplyGraph.Way: " + way);
         }
         for (String building : List.of("storage_space", "wheat_field")) {
             assertTrue(GRAPH.buildings().get(building).base() > 0, "Стартовый вес постройки положителен: " + building);

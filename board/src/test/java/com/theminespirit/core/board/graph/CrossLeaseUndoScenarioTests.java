@@ -28,10 +28,14 @@ class CrossLeaseUndoScenarioTests {
                 inside.priority() > trip.priority(),
                 "Столб внутри поселения и на улице убирается раньше моста далеко в походе: " + inside.priority()
                         + " против " + trip.priority());
+        assertTrue(inside.raised(), "Откат брошенной правки в поселении — поднятая работа: " + plan.tasks());
         assertTrue(
-                inside.priority() >= 25 && inside.priority() < 85,
-                "Откат брошенной правки в поселении — важная работа, но не выше работ этапа: 11.11 при весе 90-94 "
-                        + "пять духов 4 часа висели в откате без подхода, поселение стояло; " + inside.priority());
+                plan.tasks().stream()
+                        .anyMatch(work -> !work.id().startsWith("event:undo_lease")
+                                && !CrossScene.life(work)
+                                && work.priority() >= inside.priority()),
+                "Откат брошенной правки в поселении не выше работ этапа: 11.11 откат впереди всех работ держал пять "
+                        + "духов 4 часа в откате без подхода, поселение стояло; " + plan.tasks());
         assertEquals(
                 "undo:pillar-1#0,78,0:5",
                 inside.makes(),

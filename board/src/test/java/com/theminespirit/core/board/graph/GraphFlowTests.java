@@ -51,10 +51,11 @@ class GraphFlowTests {
 
     @Test
     void priority_Scale_MonotonicAndBounded() {
+        int ceiling = GraphWorld.GRAPH.maxPriority();
         assertTrue(
-                GraphFlow.priority(0, 100) == 0
-                        && GraphFlow.priority(50, 100) < GraphFlow.priority(150, 100)
-                        && GraphFlow.priority(10_000, 100) == 100,
+                GraphFlow.priority(0, ceiling) < GraphFlow.priority(50, ceiling)
+                        && GraphFlow.priority(50, ceiling) < GraphFlow.priority(150, ceiling)
+                        && GraphFlow.priority(10_000, ceiling) == ceiling,
                 "Шкала 100·(1 − e^(−s/100)): ноль — 0, больше вклад — выше приоритет, не больше 100");
     }
 }

@@ -40,7 +40,6 @@ class GraphFragmentsScenarioTests {
             for (WayCase expected : fragment.ways()) {
                 SupplyGraph.Way way = GRAPH.way(expected.id())
                         .orElseThrow(() -> new AssertionError(fragment.area() + ": путь объявлен: " + expected.id()));
-                assertTrue(way.weight() > 0, fragment.area() + ": стартовый вес пути положителен: " + expected.id());
                 assertTrue(way.boardCase() != null, fragment.area() + ": у пути есть вид работы: " + expected.id());
                 assertEquals(
                         expected.implemented(),

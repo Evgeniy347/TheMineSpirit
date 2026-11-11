@@ -114,12 +114,10 @@ class GraphTreeCasesTests {
         assertEquals(BoardCase.BUILD_ORCHARD, replant.boardCase(), "Посадка в сад идёт заданием сада");
         assertTrue(replant.feasible(), "Саженцы в запасе — посадка выполнима: " + replant);
         assertTrue(
-                plan.task("gather_oak_sapling").isEmpty()
-                        || plan.task("gather_oak_sapling").orElseThrow().priority() == 0,
+                !plan.raised("gather_oak_sapling"),
                 "Саженцев хватает — рубка леса ради них не ставится: " + plan.task("gather_oak_sapling"));
         assertTrue(
-                plan.task("chop_oak_log").isEmpty()
-                        || plan.task("chop_oak_log").orElseThrow().priority() == 0,
+                !plan.raised("chop_oak_log"),
                 "Брёвен достаточно — фоновая рубка не мешает посадке сада: " + plan.task("chop_oak_log"));
     }
 
@@ -159,8 +157,7 @@ class GraphTreeCasesTests {
         GraphPlan plan = world.plan();
 
         assertTrue(
-                plan.task("chop_oak_log").isEmpty()
-                        || plan.task("chop_oak_log").orElseThrow().priority() == 0,
+                !plan.raised("chop_oak_log"),
                 "Дубов в округе нет — рубку не ставят: дух не ищет дерево, которого нет. Задания: " + ids(plan));
     }
 

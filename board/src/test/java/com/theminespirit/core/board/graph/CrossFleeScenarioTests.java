@@ -3,6 +3,7 @@ package com.theminespirit.core.board.graph;
 import static com.theminespirit.core.board.graph.CrossActions.boardTicket;
 import static com.theminespirit.core.board.graph.CrossActions.id;
 import static com.theminespirit.core.board.graph.CrossScene.FED;
+import static com.theminespirit.core.board.graph.CrossScene.ahead;
 import static com.theminespirit.core.board.graph.CrossScene.facts;
 import static com.theminespirit.core.board.graph.CrossScene.ids;
 import static com.theminespirit.core.board.graph.CrossScene.named;
@@ -117,7 +118,7 @@ class CrossFleeScenarioTests {
         GraphPlan.Task sleep = task(plan, "event:life_threat:sleep");
         GraphPlan.Task expedition = task(plan, "event:expedition_ready:expedition");
 
-        assertEquals(100, defend.priority(), "Ночные мобы поднимают защиту на потолок: " + ids(plan));
+        assertEquals(List.of(), ahead(plan, defend), "Ночные мобы поднимают защиту на потолок: " + ids(plan));
         assertTrue(defend.priority() > retreat.priority(), "Сначала бой, потом отход: " + ids(plan));
         assertTrue(retreat.priority() > sleep.priority(), "Отход от мобов важнее сна: " + ids(plan));
         assertTrue(retreat.priority() > expedition.priority(), "Отход важнее похода: " + ids(plan));

@@ -219,7 +219,7 @@ class CrossHungerScenarioTests {
 
         assertTrue(eat.feasible(), "Еда в сундуке делает поесть выполнимым: " + ids(plan));
         assertTrue(
-                eat.priority() > 0 && eat.priority() <= need && eat.priority() >= need - VitalNeeds.BAND,
+                eat.raised() && eat.priority() <= need && eat.priority() >= need - VitalNeeds.BAND,
                 "Обед голодного духа идёт в полосе потребности: " + eat.priority());
         assertTrue(
                 plan.task("event:hungry:hunt").isEmpty(),

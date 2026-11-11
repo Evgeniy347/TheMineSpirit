@@ -13,6 +13,7 @@ import com.theminespirit.core.board.MoreActivityPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -79,12 +80,13 @@ class GraphLifeCasesTests {
     void tickets_Hungry_EatStaysWithinVitalBand() {
         GraphWorld world = busySettlement().event("hungry");
         GraphPlan plan = world.plan();
-        int need = GraphPriorities.need(GraphWorld.GRAPH);
 
-        assertTrue(
-                plan.priority(EAT) > 0 && plan.priority(EAT) <= need && plan.priority(EAT) >= need - VitalNeeds.BAND,
-                "Голод — жизненная нужда в полосе потребности, но не выше неё. Еда " + plan.priority(EAT) + ", задания "
-                        + ids(plan));
+        GraphPlan.Task eat = plan.task(EAT).orElseThrow();
+        assertTrue(eat.raised(), "Голод поднимает еду: " + ids(plan));
+        assertEquals(
+                List.of(),
+                CrossScene.workNotBehind(plan, eat),
+                "Голод — жизненная нужда: еда выбирается раньше любой работы поселения. Задания " + plan.tasks());
         assertTrue(
                 tickets(world.state()).post().stream()
                         .anyMatch(ticket -> EAT.equals(ticket.task().id())),
@@ -97,10 +99,13 @@ class GraphLifeCasesTests {
         GraphWorld world = busySettlement().event("more7_evening_return");
         GraphPlan plan = world.plan();
 
+        assertTrue(plan.raised(RETURN), "Вечер вне дома поднимает возврат: " + ids(plan));
+        GraphPlan hungry =
+                busySettlement().event("more7_evening_return").event("hungry").plan();
         assertTrue(
-                plan.priority(RETURN) > 0 && plan.priority(RETURN) <= GraphPriorities.work(GraphWorld.GRAPH),
-                "Возврат домой — обычное событие, не выше потолка 99. Возврат " + plan.priority(RETURN) + ", задания "
-                        + ids(plan));
+                hungry.priority(EAT) > hungry.priority(RETURN),
+                "Возврат домой — обычное событие: жизненная нужда (голод) выбирается раньше него. Задания "
+                        + hungry.tasks());
         assertTrue(
                 tickets(world.state()).post().stream()
                         .anyMatch(ticket -> RETURN.equals(ticket.task().id())),

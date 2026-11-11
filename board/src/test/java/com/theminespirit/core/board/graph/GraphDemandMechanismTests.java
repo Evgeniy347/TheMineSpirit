@@ -63,9 +63,8 @@ class GraphDemandMechanismTests {
 
         world.with("cobblestone", 64);
         GraphPlan stocked = plan(world, facts(TWO));
-        assertEquals(
-                -1,
-                stocked.priority("mine_cobble"),
+        assertTrue(
+                stocked.task("mine_cobble").isEmpty(),
                 "Нехватка исчезла — приоритет источника вернулся к нулю: " + stocked.tasks());
 
         world.with("cobblestone", 0);

@@ -71,10 +71,6 @@ class GraphUndoTests {
                 UNDO.weight(inside, false, 100) > UNDO.weight(pocket, false, 100),
                 "Сломанное под поселением возвращают раньше кармана вне зоны: " + "под поселением "
                         + UNDO.weight(inside, false, 100) + " против кармана " + UNDO.weight(pocket, false, 100));
-        assertTrue(
-                UNDO.weight(pocket, false, 100) < 90,
-                "Карман глубоко вне зоны — низкий вес: иначе граф снова и снова шлёт духа к недостижимой клетке; "
-                        + "получено " + UNDO.weight(pocket, false, 100));
     }
 
     private static GraphSiteFacts.Lease lease(

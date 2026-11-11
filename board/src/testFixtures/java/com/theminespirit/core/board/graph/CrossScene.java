@@ -4,6 +4,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.EatNeed;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -173,6 +174,37 @@ final class CrossScene {
         return plan.task(id)
                 .orElseThrow(() -> new AssertionError("Нет задания " + id + ": "
                         + plan.tasks().stream().map(GraphPlan.Task::id).toList()));
+    }
+
+    static final String ORDER_HINT = "ПОРЯДОК: решение неадекватно — поправь веса графа; новый порядок разумен "
+            + "(например, после новой механики) — поправь ожидание теста с причиной. Веса под тест не подгонять";
+
+    static List<String> ahead(GraphPlan plan, GraphPlan.Task task) {
+        return hinted(plan.tasks().stream()
+                .filter(other -> other.priority() > task.priority())
+                .map(other -> other.id() + "=" + other.priority() + " > " + task.id() + "=" + task.priority())
+                .toList());
+    }
+
+    static List<String> workNotBehind(GraphPlan plan, GraphPlan.Task task) {
+        return hinted(plan.tasks().stream()
+                .filter(other -> other != task && !life(other) && other.priority() >= task.priority())
+                .map(other -> other.id() + "=" + other.priority() + " >= " + task.id() + "=" + task.priority())
+                .toList());
+    }
+
+    private static List<String> hinted(List<String> wrong) {
+        if (wrong.isEmpty()) {
+            return wrong;
+        }
+        List<String> out = new ArrayList<>();
+        out.add(ORDER_HINT);
+        out.addAll(wrong);
+        return out;
+    }
+
+    static boolean life(GraphPlan.Task task) {
+        return "rescue_spirit".equals(task.id()) || task.id().startsWith("event:life_");
     }
 
     static List<String> ids(GraphPlan plan) {

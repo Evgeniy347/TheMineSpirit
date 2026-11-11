@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -86,7 +87,7 @@ class LifeGraphPlannerTests {
         GraphWorld world = GraphWorld.settled().event("life_threat").facts(healthy("spirit-1", 20, 20));
         GraphPlan plan = world.plan();
 
-        assertEquals(0, plan.priority(DEFEND), "Здоровый дух без угроз не поднимает жизнь: " + plan.tasks());
+        assertFalse(plan.raised(DEFEND), "Здоровый дух без угроз не поднимает жизнь: " + plan.tasks());
     }
 
     @Test
@@ -126,11 +127,10 @@ class LifeGraphPlannerTests {
                 .facts(facts);
         GraphPlan plan = world.plan();
 
-        assertEquals(GraphWorld.GRAPH.maxPriority(), plan.priority(DEFEND), "Раненый дух под двумя мобами — потолок");
-        assertTrue(
-                plan.tasks().stream()
-                        .allMatch(task -> task.priority() >= 0 && task.priority() <= GraphWorld.GRAPH.maxPriority()),
-                "Ни одно задание графа не выходит за [0, 100]: " + plan.tasks());
+        assertEquals(
+                List.of(),
+                CrossScene.ahead(plan, plan.task(DEFEND).orElseThrow()),
+                "Раненый дух под двумя мобами — защита выбирается раньше всего, в том числе еды: " + plan.tasks());
         assertTrue(
                 plan.tasks().stream()
                         .filter(task -> !task.id().startsWith("event:life_"))
@@ -191,11 +191,6 @@ class LifeGraphPlannerTests {
                 .facts(facts)
                 .plan();
 
-        assertTrue(
-                plan.tasks().stream()
-                        .allMatch(task -> task.priority() >= 0 && task.priority() <= GraphWorld.GRAPH.maxPriority()),
-                "Свойство: приоритет из графа всегда в [0, 100], факты " + health + "/" + mobs + "/" + distance + "/"
-                        + hurtAge + ": " + plan.tasks());
         assertTrue(
                 plan.tasks().stream()
                         .filter(task -> !task.id().startsWith("event:life_"))

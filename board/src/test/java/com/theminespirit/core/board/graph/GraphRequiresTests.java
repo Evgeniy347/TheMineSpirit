@@ -72,8 +72,7 @@ class GraphRequiresTests {
                 plan.task("mine_cobble").map(GraphPlan.Task::feasible).orElse(true),
                 "Булыжник добывается в шахте: без неё копать камень на участке нельзя (ямы под постройками): "
                         + plan.task("mine_cobble"));
-        assertTrue(
-                plan.priority("building:mine") > 0, "Нет булыжника и шахты — шахта получает давление: " + plan.tasks());
+        assertTrue(plan.raised("building:mine"), "Нет булыжника и шахты — шахта получает давление: " + plan.tasks());
     }
 
     @Test

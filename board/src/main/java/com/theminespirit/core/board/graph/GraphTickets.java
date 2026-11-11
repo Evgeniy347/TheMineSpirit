@@ -58,7 +58,7 @@ public final class GraphTickets {
                 unimplemented.add(task);
                 continue;
             }
-            if (task.priority() <= 0 || early(graph, state, task)) {
+            if (!task.raised() || early(graph, state, task)) {
                 continue;
             }
             live.add(id(task));

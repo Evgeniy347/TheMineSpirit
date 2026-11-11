@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import static com.theminespirit.core.board.graph.CrossActions.scripts;
+import static com.theminespirit.core.board.graph.CrossScene.ahead;
 import static com.theminespirit.core.board.graph.CrossScene.chest;
 import static com.theminespirit.core.board.graph.CrossScene.damaged;
 import static com.theminespirit.core.board.graph.CrossScene.ids;
@@ -80,7 +81,7 @@ class CrossSiegeScenarioTests {
         GraphPlan.Task guard = task(plan, "event:more4_player_near:more4_guard_settlement");
         GraphPlan.Task torch = task(plan, "event:more5_mine_dark:more5_craft_mine_torch");
 
-        assertEquals(100, defend.priority(), "Мобы у раненого духа — защита на потолке: " + ids(plan));
+        assertEquals(List.of(), ahead(plan, defend), "Мобы у раненого духа — защита на потолке: " + ids(plan));
         assertTrue(defend.priority() > mine.priority(), "Бой выше шахты: " + ids(plan));
         assertTrue(defend.priority() > chop.priority(), "Бой выше рубки: " + ids(plan));
         assertTrue(defend.priority() > hut.priority(), "Бой выше стройки: " + ids(plan));

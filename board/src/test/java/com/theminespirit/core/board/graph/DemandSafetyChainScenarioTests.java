@@ -25,8 +25,8 @@ class DemandSafetyChainScenarioTests {
 
         GraphPlan.Task light = task(plan, "building:lighting");
         assertFalse(light.feasible(), "Света нет — постройка света ждёт факелы: " + ids(plan));
-        assertTrue(task(plan, "craft_torch").priority() > 0, "Набег поднимает факелы: " + ids(plan));
-        assertTrue(task(plan, "mine_coal").priority() > 0, "Угля нет — поднимается шахта угля: " + ids(plan));
+        assertTrue(task(plan, "craft_torch").raised(), "Набег поднимает факелы: " + ids(plan));
+        assertTrue(task(plan, "mine_coal").raised(), "Угля нет — поднимается шахта угля: " + ids(plan));
 
         world.built("lighting", Built.BUILT).with("torch", 256).with("coal", 128);
         GraphPlan stocked = plan(world, facts(TWO));
@@ -44,8 +44,8 @@ class DemandSafetyChainScenarioTests {
 
         GraphPlan.Task bridge = task(plan, "bridge");
         assertFalse(bridge.feasible(), "Мост без досок ждёт материал: " + ids(plan));
-        assertTrue(task(plan, "chop_oak_log").priority() > 0, "Досок нет — поднимается рубка леса: " + ids(plan));
-        assertTrue(task(plan, "mine_cobble").priority() > 0, "Булыжника нет — поднимается шахта камня: " + ids(plan));
+        assertTrue(task(plan, "chop_oak_log").raised(), "Досок нет — поднимается рубка леса: " + ids(plan));
+        assertTrue(task(plan, "mine_cobble").raised(), "Булыжника нет — поднимается шахта камня: " + ids(plan));
 
         world.with("oak_log", 160)
                 .with("oak_planks", 128)
@@ -67,8 +67,8 @@ class DemandSafetyChainScenarioTests {
         GraphPlan.Task block = task(plan, "event:more2_hazard_flow:more2_block_flow");
         assertTrue(lava.feasible(), "Лава у шахты — работа убрать её выполнима: " + ids(plan));
         assertFalse(block.feasible(), "Поток без блоков не перекрыть: " + ids(plan));
-        assertTrue(task(plan, "mine_cobble").priority() > 0, "Блоков нет — поднимается камень: " + ids(plan));
-        assertTrue(task(plan, "dig_dirt").priority() > 0, "Земля тоже источник блоков: " + ids(plan));
+        assertTrue(task(plan, "mine_cobble").raised(), "Блоков нет — поднимается камень: " + ids(plan));
+        assertTrue(task(plan, "dig_dirt").raised(), "Земля тоже источник блоков: " + ids(plan));
 
         world.with("cobblestone", 160).with("dirt", 160).with("sand", 128);
         GraphPlan stocked = plan(world, facts(TWO));
@@ -93,16 +93,16 @@ class DemandSafetyChainScenarioTests {
         GraphPlan plan = plan(world, facts(TWO));
 
         assertTrue(
-                task(plan, "event:more2_hazard_flow:more2_block_flow").priority() > 0,
+                task(plan, "event:more2_hazard_flow:more2_block_flow").raised(),
                 "Затопление поднимает перекрытие: " + ids(plan));
         assertTrue(
-                task(plan, "event:more5_mine_dark:more5_light_mine").priority() > 0,
+                task(plan, "event:more5_mine_dark:more5_light_mine").raised(),
                 "Тёмная шахта поднимает свет: " + ids(plan));
         assertTrue(
-                task(plan, "event:more5_route_blocked:more5_bridge_route").priority() > 0,
+                task(plan, "event:more5_route_blocked:more5_bridge_route").raised(),
                 "Обход затопления поднимает мост: " + ids(plan));
-        assertTrue(task(plan, "craft_torch").priority() > 0, "Факелов нет — крафт факелов поднят: " + ids(plan));
-        assertTrue(task(plan, "mine_cobble").priority() > 0, "Блоков нет — камень поднят: " + ids(plan));
+        assertTrue(task(plan, "craft_torch").raised(), "Факелов нет — крафт факелов поднят: " + ids(plan));
+        assertTrue(task(plan, "mine_cobble").raised(), "Блоков нет — камень поднят: " + ids(plan));
 
         world.with("cobblestone", 160)
                 .with("dirt", 160)
@@ -129,8 +129,8 @@ class DemandSafetyChainScenarioTests {
         GraphPlan.Task gravel = task(plan, "event:gravel_collapse:fix_gravel_collapse");
         assertFalse(sand.feasible(), "Песок нужен для опоры — без него не поставить: " + ids(plan));
         assertFalse(gravel.feasible(), "Гравий нужен для опоры — без него не поставить: " + ids(plan));
-        assertTrue(task(plan, "dig_sand").priority() > 0, "Песка нет — поднимается добыча песка: " + ids(plan));
-        assertTrue(task(plan, "dig_gravel").priority() > 0, "Гравия нет — поднимается добыча гравия: " + ids(plan));
+        assertTrue(task(plan, "dig_sand").raised(), "Песка нет — поднимается добыча песка: " + ids(plan));
+        assertTrue(task(plan, "dig_gravel").raised(), "Гравия нет — поднимается добыча гравия: " + ids(plan));
 
         world.with("sand", 64).with("gravel", 64);
         GraphPlan stocked = plan(world, facts(TWO));
@@ -153,9 +153,9 @@ class DemandSafetyChainScenarioTests {
         assertTrue(
                 task(plan, "event:more2_fire_near_building:more2_put_out_fire").feasible(),
                 "Пожар — тушить выполнимо: " + ids(plan));
-        assertTrue(task(plan, "fill_water_bucket").priority() > 0, "Воды нет — поднимается ведро воды: " + ids(plan));
-        assertTrue(task(plan, "craft_bucket").priority() > 0, "Ведра нет — поднимается крафт ведра: " + ids(plan));
-        assertTrue(task(plan, "mine_cobble").priority() > 0, "Блоков нет — поднимается камень: " + ids(plan));
+        assertTrue(task(plan, "fill_water_bucket").raised(), "Воды нет — поднимается ведро воды: " + ids(plan));
+        assertTrue(task(plan, "craft_bucket").raised(), "Ведра нет — поднимается крафт ведра: " + ids(plan));
+        assertTrue(task(plan, "mine_cobble").raised(), "Блоков нет — поднимается камень: " + ids(plan));
 
         world.with("water_bucket", 8).with("bucket", 4).with("cobblestone", 160).with("dirt", 160);
         GraphPlan stocked = plan(world, facts(TWO));
@@ -177,7 +177,7 @@ class DemandSafetyChainScenarioTests {
                 repair.priority() > guard.priority(),
                 "Сломанный забор важнее обычной охраны до ночи: забор " + repair.priority() + ", охрана "
                         + guard.priority());
-        assertTrue(task(plan, "chop_oak_log").priority() > 0, "Брёвен нет — поднимается рубка: " + ids(plan));
+        assertTrue(task(plan, "chop_oak_log").raised(), "Брёвен нет — поднимается рубка: " + ids(plan));
 
         world.with("oak_log", 64);
         GraphPlan stocked = plan(world, facts(TWO));
@@ -195,8 +195,8 @@ class DemandSafetyChainScenarioTests {
 
         GraphPlan.Task light = task(plan, "event:more5_crops_dark:more5_light_crops");
         assertFalse(light.feasible(), "Факелов нет — грядки не осветить: " + ids(plan));
-        assertTrue(task(plan, "craft_torch").priority() > 0, "Темнота у грядок поднимает факелы: " + ids(plan));
-        assertTrue(task(plan, "mine_coal").priority() > 0, "Угля нет — поднимается шахта угля: " + ids(plan));
+        assertTrue(task(plan, "craft_torch").raised(), "Темнота у грядок поднимает факелы: " + ids(plan));
+        assertTrue(task(plan, "mine_coal").raised(), "Угля нет — поднимается шахта угля: " + ids(plan));
 
         world.with("torch", 256).with("coal", 128);
         GraphPlan stocked = plan(world, facts(TWO));
@@ -216,10 +216,9 @@ class DemandSafetyChainScenarioTests {
         GraphPlan.Task fill = task(plan, "fill_water_bucket");
         GraphPlan.Task craft = task(plan, "craft_bucket");
         assertFalse(fill.feasible(), "Ведра нет — набрать воду нечем: " + ids(plan));
-        assertTrue(craft.priority() > 0, "Крафт ведра поднят: " + ids(plan));
+        assertTrue(craft.raised(), "Крафт ведра поднят: " + ids(plan));
         assertTrue(
-                task(plan, "mine_iron").priority() > 0
-                        || task(plan, "smelt_iron").priority() > 0,
+                task(plan, "mine_iron").raised() || task(plan, "smelt_iron").raised(),
                 "Железа нет — поднимается железная цепочка: " + ids(plan));
 
         world.with("bucket", 4).with("iron_ingot", 8).with("raw_iron", 8);

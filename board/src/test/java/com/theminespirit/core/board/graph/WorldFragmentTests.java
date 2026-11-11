@@ -75,8 +75,7 @@ class WorldFragmentTests {
         assertTrue(
                 repair.feasible(), "Аудит мира говорит «повреждена» — ремонт обязан быть выполнимым: " + plan.tasks());
         assertTrue(
-                repair.priority() > 0,
-                "Ремонт повреждённой постройки не нулевой: иначе доска его не выдаст (observe25 B9)");
+                repair.raised(), "Ремонт повреждённой постройки не нулевой: иначе доска его не выдаст (observe25 B9)");
     }
 
     @Test

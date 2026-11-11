@@ -4,6 +4,7 @@ import static com.theminespirit.core.board.graph.CrossActions.boardTicket;
 import static com.theminespirit.core.board.graph.CrossActions.id;
 import static com.theminespirit.core.board.graph.CrossActions.scripts;
 import static com.theminespirit.core.board.graph.CrossScene.FED;
+import static com.theminespirit.core.board.graph.CrossScene.ahead;
 import static com.theminespirit.core.board.graph.CrossScene.chest;
 import static com.theminespirit.core.board.graph.CrossScene.damaged;
 import static com.theminespirit.core.board.graph.CrossScene.facts;
@@ -82,7 +83,7 @@ class CrossBattleWorkScenarioTests {
                 .orElseThrow(() -> new AssertionError("Нет бегства в графе: " + dangerTickets.post()));
         board.submit(boardTicket(retreat));
 
-        assertEquals(100, defend.priority(), "Раненый дух под мобами получает защиту на потолке: " + ids(plan));
+        assertEquals(List.of(), ahead(plan, defend), "Раненый дух под мобами получает защиту на потолке: " + ids(plan));
         assertTrue(
                 plan.task("building:hut").filter(GraphPlan.Task::feasible).isPresent(),
                 "Стройка не исчезает из графа при угрозе: " + ids(plan));
@@ -150,7 +151,7 @@ class CrossBattleWorkScenarioTests {
         GraphPlan.Task rescue = task(plan, "rescue_spirit");
         GraphPlan.Task retreat = task(plan, "event:life_threat:retreat");
 
-        assertEquals(100, defend.priority(), "Мобы у раненого духа поднимают защиту на потолок: " + ids(plan));
+        assertEquals(List.of(), ahead(plan, defend), "Мобы у раненого духа поднимают защиту на потолок: " + ids(plan));
         assertTrue(rescue.feasible(), "Застрявший в яме дух получает спасение: " + ids(plan));
         assertTrue(retreat.feasible(), "Бегство из-под мобов тоже на доске: " + ids(plan));
         assertTrue(defend.priority() > rescue.priority(), "Сначала бой, потом спасение из ямы: " + ids(plan));
@@ -187,7 +188,9 @@ class CrossBattleWorkScenarioTests {
         GraphPlan.Task mine = task(plan, "mine_coal");
 
         assertEquals(
-                100, defend.priority(), "Раненый голодный дух под мобами получает защиту на потолке: " + ids(plan));
+                List.of(),
+                ahead(plan, defend),
+                "Раненый голодный дух под мобами: защита выбирается раньше всего: " + ids(plan));
         assertTrue(eat.feasible(), "Еда на складе делает обед выполнимым: " + ids(plan));
         assertTrue(defend.priority() > eat.priority(), "Сначала отбиться, потом есть: " + ids(plan));
         assertTrue(
@@ -222,7 +225,7 @@ class CrossBattleWorkScenarioTests {
         GraphPlan.Task repair = task(plan, "event:repair_fence:repair:fence");
         GraphPlan.Task guard = task(plan, "event:more4_player_near:more4_guard_settlement");
 
-        assertEquals(100, defend.priority(), "Набег поднимает защиту на потолок: " + ids(plan));
+        assertEquals(List.of(), ahead(plan, defend), "Набег поднимает защиту на потолок: " + ids(plan));
         assertTrue(expedition.feasible(), "Готовый поход не отменяется набегом: " + ids(plan));
         assertTrue(repair.feasible(), "Побитый забор остаётся выполнимым ремонтом: " + ids(plan));
         assertTrue(defend.priority() > expedition.priority(), "Поход ждёт, пока отобьёмся: " + ids(plan));

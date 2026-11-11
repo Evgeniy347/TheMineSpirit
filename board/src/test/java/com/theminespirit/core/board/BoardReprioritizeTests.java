@@ -47,12 +47,13 @@ class BoardReprioritizeTests {
         board.submit(ticket("graph:chop_log", 40));
         board.claim("graph:chop_log", new UUID(0, 1), 0);
         board.complete("graph:chop_log");
+        int closed = board.find("graph:chop_log").orElseThrow().priority();
 
         boolean changed = board.reprioritize("graph:chop_log", 90);
 
         assertFalse(changed, "Сделанное задание не переоценивается: следующий заход граф поставит его заново");
         assertEquals(
-                40,
+                closed,
                 board.find("graph:chop_log").orElseThrow().priority(),
                 "Приоритет закрытого задания остаётся историей, а не текущим давлением графа");
     }

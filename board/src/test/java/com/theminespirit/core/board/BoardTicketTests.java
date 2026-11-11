@@ -19,7 +19,7 @@ import net.jqwik.api.Provide;
 import org.junit.jupiter.api.Test;
 
 class BoardTicketTests {
-
+    private static final int FENCE_PRIORITY = 100;
     private static final UUID SPIRIT = UUID.fromString("11111111-2222-3333-4444-555555555555");
 
     @Test
@@ -28,7 +28,7 @@ class BoardTicketTests {
                 "fence_1",
                 BoardCase.REPAIR_FENCE,
                 Optional.of(SPIRIT),
-                100,
+                FENCE_PRIORITY,
                 500,
                 2,
                 "fence:1:64:2",
@@ -44,7 +44,7 @@ class BoardTicketTests {
                 Optional.of(SPIRIT),
                 ticket.assignee(),
                 "Владелец-дух обязан читаться: доска проверяет занятость владельца");
-        assertEquals(100, ticket.priority(), "Приоритет обязан читаться: им доска сортирует очередь");
+        assertEquals(FENCE_PRIORITY, ticket.priority(), "Приоритет обязан читаться: им доска сортирует очередь");
         assertEquals(500, ticket.createdAt(), "Момент постановки обязан читаться: им доска сортирует очередь");
         assertEquals(
                 2, ticket.level(), "Уровень обязан читаться: по нему доска отличает " + "расширение шахты от её входа");

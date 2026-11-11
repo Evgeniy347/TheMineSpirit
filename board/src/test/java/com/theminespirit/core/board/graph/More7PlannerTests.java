@@ -27,8 +27,7 @@ class More7PlannerTests {
             List<GraphPlan.Task> wired =
                     tasks.stream().filter(GraphPlan.Task::implemented).toList();
             assertFalse(tasks.isEmpty(), "Событие области graphmore7 обязано дать задание: " + event);
-            assertTrue(
-                    tasks.stream().allMatch(task -> task.priority() > 0), "Стартовый приоритет положителен: " + event);
+            assertTrue(tasks.stream().allMatch(task -> task.raised()), "Стартовый приоритет положителен: " + event);
             assertTrue(
                     wired.stream().allMatch(task -> tickets.live().contains(GraphTickets.id(task))),
                     "Связанное действие попадает в живые задания области: " + event);

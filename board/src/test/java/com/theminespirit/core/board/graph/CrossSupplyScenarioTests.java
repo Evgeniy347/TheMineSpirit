@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import static com.theminespirit.core.board.graph.CrossActions.scripts;
+import static com.theminespirit.core.board.graph.CrossScene.ahead;
 import static com.theminespirit.core.board.graph.CrossScene.facts;
 import static com.theminespirit.core.board.graph.CrossScene.ids;
 import static com.theminespirit.core.board.graph.CrossScene.named;
@@ -37,7 +38,7 @@ class CrossSupplyScenarioTests {
         GraphPlan.Task defend = task(plan, "event:life_threat:defend");
         GraphPlan.Task armor = task(plan, "event:gear_craft_armor:craft_armor");
 
-        assertEquals(100, defend.priority(), "Защита жизни на потолке: " + ids(plan));
+        assertEquals(List.of(), ahead(plan, defend), "Защита жизни на потолке: " + ids(plan));
         assertTrue(armor.feasible(), "Броня без надетых слотов ставится в крафт: " + ids(plan));
         assertTrue(
                 defend.priority() > armor.priority(),

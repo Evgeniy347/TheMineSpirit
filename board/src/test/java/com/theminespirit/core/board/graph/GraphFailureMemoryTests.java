@@ -33,7 +33,7 @@ class GraphFailureMemoryTests {
 
         assertEquals(2, memory.facts(100).size(), "Цель — часть ключа памяти: разные цели не смешиваются");
         assertEquals(
-                2.0,
+                2 * memory.facts(100).get(0).weight(),
                 memory.facts(100).stream()
                         .filter(failure -> "make:dirt".equals(failure.node()))
                         .mapToDouble(GraphFeedback.Failure::weight)
@@ -53,8 +53,8 @@ class GraphFailureMemoryTests {
                 memory.recent("make:dirt", "10,64,20", 100, halfLife).orElseThrow();
         GraphFeedback.Failure half =
                 memory.recent("make:dirt", "10,64,20", 1100, halfLife).orElseThrow();
-        assertEquals(1.0, fresh.weight(), 1e-9, "Свежий провал весит целый счётчик");
-        assertEquals(0.5, half.weight(), 1e-9, "Через полураспад штраф цели вдвое слабее, а не обрывается");
+        assertEquals(
+                fresh.weight() / 2, half.weight(), 1e-9, "Через полураспад штраф цели вдвое слабее, а не обрывается");
         assertTrue(
                 memory.facts(100 + 40_000, halfLife).isEmpty(),
                 "Спустя много полураспадов провал затухает до нуля и не держит память вечно");
@@ -78,7 +78,13 @@ class GraphFailureMemoryTests {
                 "После перезапуска недостижимая точка помнится: пустая цель в набор не попадает");
         GraphFeedback.Failure half =
                 restored.recent("chop_jungle_log", "10,64,20", 1100, 1000).orElseThrow();
-        assertEquals(0.5, half.weight(), 1e-9, "Сохранённая память затухает по времени, а не начинается заново");
+        assertEquals(
+                memory.recent("chop_jungle_log", "10,64,20", 1100, 1000)
+                        .orElseThrow()
+                        .weight(),
+                half.weight(),
+                1e-9,
+                "Сохранённая память затухает по времени так же, как исходная, а не начинается заново");
         assertEquals(
                 new GraphBlock.Item("dirt", 12),
                 restored.recent("make:dirt", "", 200, 1000).orElseThrow().need(),

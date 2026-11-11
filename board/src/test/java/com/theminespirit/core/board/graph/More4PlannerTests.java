@@ -20,7 +20,7 @@ class More4PlannerTests {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Чужой игрок обязан дать задание охраны: " + NEAR));
         assertTrue(task.implemented(), "Охрана поселения подключена к действию");
-        assertTrue(task.priority() > 0, "Игрок у поселения — заметный приоритет, а не ноль");
+        assertTrue(task.raised(), "Игрок у поселения — заметный приоритет, а не ноль");
 
         GraphTickets.Result tickets = GraphTickets.of(GRAPH, state, plan);
         assertTrue(

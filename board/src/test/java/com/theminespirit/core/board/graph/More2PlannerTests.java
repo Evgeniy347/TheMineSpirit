@@ -19,7 +19,7 @@ class More2PlannerTests {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Событие огня обязано дать задание в плане: " + FIRE));
         assertTrue(task.implemented(), "Тушение огня связано с исполнением");
-        assertTrue(task.priority() > 0, "Пожар у постройки — заметный приоритет, а не ноль");
+        assertTrue(task.raised(), "Пожар у постройки — заметный приоритет, а не ноль");
 
         GraphTickets.Result tickets = GraphTickets.of(GRAPH, state, plan);
         assertTrue(

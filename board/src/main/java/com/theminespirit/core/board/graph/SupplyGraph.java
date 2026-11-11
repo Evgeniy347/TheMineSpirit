@@ -96,7 +96,7 @@ public record SupplyGraph(
             @Nullable String world,
             Map<String, Integer> needs) {
         public Way {
-            consumes = Map.copyOf(consumes);
+            consumes = WayWeight.checked(id, weight, consumes);
             needs = Map.copyOf(needs);
         }
     }

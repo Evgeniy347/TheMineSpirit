@@ -14,6 +14,7 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -189,9 +190,10 @@ class RescuePlansTests {
 
     @Test
     void priority_RescueSpirit_IsHighest() {
-        assertEquals(
-                100,
-                BoardRules.priorityOf(BoardCase.RESCUE_SPIRIT),
+        assertTrue(
+                Arrays.stream(BoardCase.values())
+                        .allMatch(other ->
+                                BoardRules.priorityOf(BoardCase.RESCUE_SPIRIT) >= BoardRules.priorityOf(other)),
                 "спасение духа — самый высокий приоритет: застрявший дух не работает, пока его не выручат");
     }
 

@@ -18,7 +18,7 @@ class DirtSupplyTests {
         Optional<GraphPlan.Task> dig = plan.task("dig_dirt");
         assertTrue(
                 dig.isPresent()
-                        && dig.orElseThrow().priority() > 0
+                        && dig.orElseThrow().raised()
                         && dig.orElseThrow().feasible(),
                 "При нехватке земли для улиц граф обязан ставить добычу земли, получено " + plan.tasks());
     }
@@ -34,7 +34,7 @@ class DirtSupplyTests {
 
         Optional<GraphPlan.Task> dig = plan.task("dig_dirt");
         assertTrue(
-                dig.isPresent() && dig.orElseThrow().priority() > 0,
+                dig.isPresent() && dig.orElseThrow().raised(),
                 "Карьер в 40 блоках — достижимый источник земли: задание добычи обязано остаться, получено "
                         + plan.tasks());
     }
@@ -49,7 +49,7 @@ class DirtSupplyTests {
 
         Optional<GraphPlan.Task> dig = plan.task("dig_dirt");
         assertFalse(
-                dig.isPresent() && dig.orElseThrow().priority() > 0,
+                dig.isPresent() && dig.orElseThrow().raised(),
                 "Без дёрна вне участка добыча земли невыполнима: задание не ставится, получено " + plan.tasks());
         assertTrue(
                 plan.notices().stream()

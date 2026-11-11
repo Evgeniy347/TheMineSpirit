@@ -74,7 +74,7 @@ class DigGraphPlannerTests {
                 .findFirst()
                 .orElseThrow();
         assertTrue(rescue.feasible(), "Задание спасения выполнимо без материалов: " + rescue);
-        assertTrue(rescue.priority() >= 90, "Жизнь выше обычной работы: приоритет " + rescue.priority());
+        assertEquals(List.of(), CrossScene.workNotBehind(plan, rescue), "Жизнь выше обычной работы: " + plan.tasks());
     }
 
     @Test

@@ -43,7 +43,7 @@ class DemandWorkChainScenarioTests {
         GraphPlan.Task bricks = task(plan, "fire_bricks");
         GraphPlan.Task clay = task(plan, "dig_clay");
         assertFalse(forge.feasible(), "Кирпича нет — кузня ждёт материал: " + ids(plan));
-        assertTrue(bricks.priority() > 0, "Кирпича нет — поднимается обжиг кирпича: " + ids(plan));
+        assertTrue(bricks.raised(), "Кирпича нет — поднимается обжиг кирпича: " + ids(plan));
         assertTrue(clay.feasible(), "Глины нет — поднимается добыча глины: " + ids(plan));
 
         world.with("bricks", 64).with("clay_ball", 64).with("cobblestone", 80).with("iron_ingot", 8);
@@ -61,9 +61,7 @@ class DemandWorkChainScenarioTests {
 
         GraphPlan.Task wool = task(plan, "dye_red_wool");
         assertFalse(wool.feasible(), "Красителя нет — красная шерсть ждёт краситель: " + ids(plan));
-        assertTrue(
-                task(plan, "craft_red_dye").priority() > 0,
-                "Красителя нет — поднимается крафт красителя: " + ids(plan));
+        assertTrue(task(plan, "craft_red_dye").raised(), "Красителя нет — поднимается крафт красителя: " + ids(plan));
 
         world.with("red_dye", 8);
         GraphPlan stocked = ordered(world, facts(TWO), Map.of("red_wool", 3));
@@ -96,8 +94,8 @@ class DemandWorkChainScenarioTests {
 
         GraphPlan.Task deep = task(plan, "building:mine_level_4");
         GraphPlan.Task mine = task(plan, "mine_diamond");
-        assertTrue(deep.priority() > 0, "Алмаза нет — поднимается более глубокая шахта: " + ids(plan));
-        assertTrue(mine.priority() > 0, "Добыча алмаза поднята заказом этапа: " + ids(plan));
+        assertTrue(deep.raised(), "Алмаза нет — поднимается более глубокая шахта: " + ids(plan));
+        assertTrue(mine.raised(), "Добыча алмаза поднята заказом этапа: " + ids(plan));
 
         world.built("mine_level_4", Built.BUILT).with("diamond", 64);
         GraphPlan stocked = plan(world, facts(TWO));
@@ -127,8 +125,7 @@ class DemandWorkChainScenarioTests {
         assertFalse(
                 task(route, "event:more5_route_blocked:more5_bridge_route").feasible(),
                 "Пути нет — мост ждёт доски: " + ids(route));
-        assertTrue(
-                task(route, "craft_oak_planks").priority() > 0, "Досок нет — поднимается крафт досок: " + ids(route));
+        assertTrue(task(route, "craft_oak_planks").raised(), "Досок нет — поднимается крафт досок: " + ids(route));
     }
 
     @Test
@@ -139,8 +136,8 @@ class DemandWorkChainScenarioTests {
 
         GraphPlan.Task trail = task(plan, "event:more2_path_needed:more2_build_trail");
         assertFalse(trail.feasible(), "Блоков нет — тропа ждёт материал: " + ids(plan));
-        assertTrue(task(plan, "mine_cobble").priority() > 0, "Камня нет — поднимается шахта: " + ids(plan));
-        assertTrue(task(plan, "dig_dirt").priority() > 0, "Земли нет — поднимается добыча: " + ids(plan));
+        assertTrue(task(plan, "mine_cobble").raised(), "Камня нет — поднимается шахта: " + ids(plan));
+        assertTrue(task(plan, "dig_dirt").raised(), "Земли нет — поднимается добыча: " + ids(plan));
 
         world.with("cobblestone", 160).with("dirt", 160);
         GraphPlan stocked = plan(world, facts(TWO));
@@ -167,11 +164,8 @@ class DemandWorkChainScenarioTests {
                 .with("coal", 64);
         GraphPlan plan = plan(world, facts(TWO));
 
-        assertTrue(
-                task(plan, "craft_glass_pane").priority() > 0,
-                "Стекла нет — поднимается стеклянная панель: " + ids(plan));
-        assertTrue(
-                task(plan, "smelt_glass").priority() > 0, "Панель требует стекло — поднимается плавка: " + ids(plan));
+        assertTrue(task(plan, "craft_glass_pane").raised(), "Стекла нет — поднимается стеклянная панель: " + ids(plan));
+        assertTrue(task(plan, "smelt_glass").raised(), "Панель требует стекло — поднимается плавка: " + ids(plan));
         assertTrue(task(plan, "dig_sand").feasible(), "Песок — источник стекла, его добыча доступна: " + ids(plan));
 
         world.with("sand", 512).with("glass", 512).with("coal", 512);
@@ -201,7 +195,7 @@ class DemandWorkChainScenarioTests {
                 task(bare, "event:more4_player_hungry:more4_bring_player_food").feasible(),
                 "Еды нет — игроку нечего нести, пока граф не добудет еду: " + ids(bare));
         assertTrue(
-                task(bare, "craft_food").priority() > 0,
+                task(bare, "craft_food").raised(),
                 "Еды нет — поднимается её производство, а не пустая доставка: " + ids(bare));
     }
 
@@ -223,9 +217,9 @@ class DemandWorkChainScenarioTests {
         GraphPlan plan = plan(world, facts(TWO));
 
         GraphPlan.Task shelf = task(plan, "craft_bookshelf");
-        assertTrue(shelf.priority() > 0, "Полок нет — поднимается их крафт: " + ids(plan));
-        assertTrue(task(plan, "craft_book").priority() > 0, "Книг нет — поднимается крафт книги: " + ids(plan));
-        assertTrue(task(plan, "craft_paper").priority() > 0, "Бумаги нет — поднимается крафт бумаги: " + ids(plan));
+        assertTrue(shelf.raised(), "Полок нет — поднимается их крафт: " + ids(plan));
+        assertTrue(task(plan, "craft_book").raised(), "Книг нет — поднимается крафт книги: " + ids(plan));
+        assertTrue(task(plan, "craft_paper").raised(), "Бумаги нет — поднимается крафт бумаги: " + ids(plan));
         assertTrue(task(plan, "skin_cow").feasible(), "Кожи нет — граф поднимает забой коровы: " + ids(plan));
 
         world.with("book", 64).with("leather", 64).with("paper", 64).with("sugar_cane", 64);
@@ -241,7 +235,7 @@ class DemandWorkChainScenarioTests {
 
         GraphPlan.Task station = task(plan, "event:more6_station_broken:more6_place_station");
         assertFalse(station.feasible(), "Досок нет — станок ждёт материал: " + ids(plan));
-        assertTrue(task(plan, "craft_oak_planks").priority() > 0, "Досок нет — поднимается крафт досок: " + ids(plan));
+        assertTrue(task(plan, "craft_oak_planks").raised(), "Досок нет — поднимается крафт досок: " + ids(plan));
 
         world.with("oak_planks", 64).with("oak_log", 64);
         GraphPlan stocked = plan(world, facts(TWO));
@@ -258,8 +252,8 @@ class DemandWorkChainScenarioTests {
 
         assertTrue(ids(plan).contains("pillar"), "Из ямы без ступеней поднимаются столбом: " + ids(plan));
         assertFalse(task(plan, "pillar").feasible(), "Досок нет — столб ждёт материал: " + ids(plan));
-        assertTrue(task(plan, "craft_oak_planks").priority() > 0, "Досок нет — поднимается крафт досок: " + ids(plan));
-        assertTrue(task(plan, "mine_cobble").priority() > 0, "Камня нет — поднимается шахта: " + ids(plan));
+        assertTrue(task(plan, "craft_oak_planks").raised(), "Досок нет — поднимается крафт досок: " + ids(plan));
+        assertTrue(task(plan, "mine_cobble").raised(), "Камня нет — поднимается шахта: " + ids(plan));
 
         world.with("oak_planks", 64).with("cobblestone", 64);
         GraphPlan stocked = plan(world, facts);

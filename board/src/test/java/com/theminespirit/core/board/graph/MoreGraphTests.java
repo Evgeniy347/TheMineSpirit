@@ -36,8 +36,7 @@ class MoreGraphTests {
                 "more_secure_door",
                 "more_secure_hopper",
                 "more_share_reserve")) {
-            SupplyGraph.Way path = GRAPH.way(way).orElseThrow();
-            assertTrue(path.weight() > 0, "Стартовый вес пути положителен: " + way);
+            assertTrue(GRAPH.way(way).isPresent(), "Путь объявлен в данных, вес проверяет SupplyGraph.Way: " + way);
             assertTrue(GRAPH.implemented(way), "Действие связано с исполнением: " + way);
         }
     }

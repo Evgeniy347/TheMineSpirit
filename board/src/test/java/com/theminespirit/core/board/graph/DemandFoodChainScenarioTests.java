@@ -114,7 +114,7 @@ class DemandFoodChainScenarioTests {
         GraphPlan.Task shear = task(grown, "shear");
         assertTrue(shear.feasible(), "Овцы есть — стрижка становится работой: " + ids(grown));
         assertTrue(
-                task(grown, "breed_sheep").priority() > 0,
+                task(grown, "breed_sheep").raised(),
                 "Две овцы — разведение продолжается, шерсть не ждёт: " + ids(grown));
 
         world.with("white_wool", 64);
@@ -151,7 +151,7 @@ class DemandFoodChainScenarioTests {
 
         GraphPlan.Task chest = task(plan, "event:more5_chest_far:more5_place_site_chest");
         GraphPlan.Task planks = task(plan, "craft_oak_planks");
-        assertTrue(planks.feasible() || planks.priority() > 0, "Досок нет — крафт досок поднят: " + ids(plan));
+        assertTrue(planks.feasible() || planks.raised(), "Досок нет — крафт досок поднят: " + ids(plan));
         assertFalse(chest.feasible(), "Без досок буфер у стройки ждёт материал: " + ids(plan));
 
         world.with("oak_planks", 64).with("oak_log", 32);
@@ -170,9 +170,7 @@ class DemandFoodChainScenarioTests {
 
         GraphPlan.Task fill = task(plan, "fill_water_bucket");
         GraphPlan.Task bucket = task(plan, "craft_bucket");
-        assertTrue(
-                fill.priority() > 0 || bucket.priority() > 0,
-                "Воды нет — граф поднимает ведро и его железо: " + ids(plan));
+        assertTrue(fill.raised() || bucket.raised(), "Воды нет — граф поднимает ведро и его железо: " + ids(plan));
         assertTrue(
                 task(plan, "event:more5_crops_dry:more5_water_crops").feasible(),
                 "Полив остаётся работой события: " + ids(plan));
@@ -199,8 +197,8 @@ class DemandFoodChainScenarioTests {
         GraphPlan.Task torch = task(plan, "craft_torch");
         GraphPlan.Task food = task(plan, "craft_food");
         assertTrue(pick.feasible(), "Кирки нет — набор шахты поднимает крафт кирки: " + ids(plan));
-        assertTrue(torch.priority() > 0, "Факелов нет — набор шахты поднимает факелы: " + ids(plan));
-        assertTrue(food.priority() > 0, "Еды нет — шахтёр получает и еду: " + ids(plan));
+        assertTrue(torch.raised(), "Факелов нет — набор шахты поднимает факелы: " + ids(plan));
+        assertTrue(food.raised(), "Еды нет — шахтёр получает и еду: " + ids(plan));
     }
 
     @Test

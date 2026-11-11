@@ -16,15 +16,19 @@ class GatherDemandTests {
 
     @Test
     void merge_ThreeCausesSameLog_OneRequestWithTotal() {
+        GatherDemand.Need top = need("graph:make:jungle_log", "jungle_log", 24, 90);
         List<GatherDemand.Need> merged = GatherDemand.merge(List.of(
                 need("graph:chop_jungle_log", "jungle_log", 24, 80),
-                need("graph:make:jungle_log", "jungle_log", 24, 90),
+                top,
                 need("graph:event:more2_stage_prep:more2_prepare_stage", "jungle_log", 16, 40)));
 
         assertEquals(1, merged.size(), "Три причины одного бревна — одна заявка, а не три: " + merged);
         assertEquals(64, merged.get(0).count(), "Количество заявки — сумма всех причин (24+24+16): " + merged);
         assertEquals("graph:chop_jungle_log", merged.get(0).id(), "Заявка держит графовый путь рубки: " + merged);
-        assertEquals(90, merged.get(0).priority(), "Приоритет общей заявки — самый высокий из причин: " + merged);
+        assertEquals(
+                top.priority(),
+                merged.get(0).priority(),
+                "Приоритет общей заявки — самый высокий из причин: " + merged);
     }
 
     @Test

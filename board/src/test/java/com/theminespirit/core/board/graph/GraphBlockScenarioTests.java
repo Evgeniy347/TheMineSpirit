@@ -100,7 +100,7 @@ class GraphBlockScenarioTests {
                 plan.tasks().stream().anyMatch(task -> task.id().contains("pickaxe@spirit-1")),
                 "Кирка нужна шахте: " + plan.tasks());
         assertTrue(
-                plan.priority("building:mine") > 0 && plan.priority("mine_cobble") > 0,
+                plan.raised("building:mine") && plan.raised("mine_cobble"),
                 "Поток идёт до источников, а не обрывается на печи: " + plan.tasks());
     }
 
@@ -145,7 +145,7 @@ class GraphBlockScenarioTests {
         GraphPlan plan = world.plan();
 
         assertFalse(task(plan, "mine_coal").feasible(), "Задание застрявшего держателя не ставится");
-        assertTrue(plan.priority("rescue_spirit") > 0, "Спасение держателя остаётся главным: " + plan.tasks());
+        assertTrue(plan.raised("rescue_spirit"), "Спасение держателя остаётся главным: " + plan.tasks());
     }
 
     @Test
@@ -160,8 +160,8 @@ class GraphBlockScenarioTests {
 
         assertFalse(task(plan, "mine_coal").feasible(), "Первая цель заблокирована");
         assertFalse(task(plan, "mine_cobble").feasible(), "Вторая цель заблокирована");
-        assertTrue(toolPriority(plan, "spirit-2") > 0, "Ключ первого духа поднят");
-        assertTrue(toolPriority(plan, "spirit-3") > 0, "Ключ второго духа поднят");
+        assertTrue(toolRaised(plan, "spirit-2"), "Ключ первого духа поднят");
+        assertTrue(toolRaised(plan, "spirit-3"), "Ключ второго духа поднят");
         assertEquals(
                 List.of("spirit-1", "spirit-2", "spirit-3"),
                 world.kits.keySet().stream().sorted().toList(),
@@ -200,6 +200,12 @@ class GraphBlockScenarioTests {
                 .mapToInt(GraphPlan.Task::priority)
                 .max()
                 .orElse(-1);
+    }
+
+    private static boolean toolRaised(GraphPlan plan, String spirit) {
+        return plan.tasks().stream()
+                .filter(task -> task.id().contains("pickaxe@") && task.id().endsWith("@" + spirit))
+                .anyMatch(GraphPlan.Task::raised);
     }
 
     private static GraphPlan.Task task(GraphPlan plan, String id) {
