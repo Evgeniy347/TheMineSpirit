@@ -6,13 +6,16 @@ import com.theminespirit.core.board.lease.LeaseStatus;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
+import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.ModEntities;
+import com.theminespirit.neoforge.ReachApproach;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.lease.LeaseData;
 import com.theminespirit.neoforge.lease.LeaseRun;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
@@ -42,6 +45,7 @@ public final class LeaseScenesGameTests {
             abandoned.placed(helper.absolutePos(cell), "minecraft:dirt");
         }
         abandoned.orphan();
+        assertOneProbePerTick(helper);
         SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("undo_lease", Map.of("id", abandoned.id())), 1);
 
         helper.succeedWhen(() -> {
@@ -72,6 +76,35 @@ public final class LeaseScenesGameTests {
             spirit.discard();
             GameTestFixtures.finish(helper, 24);
         });
+    }
+
+    private static void assertOneProbePerTick(GameTestHelper helper) {
+        BlockPos sealed = new BlockPos(2, 1, 2);
+        SpiritEntity probe = helper.spawn(ModEntities.SPIRIT.get(), sealed);
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            helper.setBlock(sealed.relative(direction), Blocks.STONE);
+        }
+        helper.setBlock(sealed.above(), Blocks.STONE);
+        helper.setBlock(sealed.above(2), Blocks.STONE);
+        ReachApproach approach = new ReachApproach(probe);
+        approach.begin(helper.absolutePos(new BlockPos(9, 1, 9)));
+        int total = 0;
+        for (int tick = 0; tick < 4; tick++) {
+            int before = approach.probes();
+            Approach.State state = approach.tick();
+            int delta = approach.probes() - before;
+            helper.assertTrue(
+                    delta <= 1,
+                    "Один тик подхода к блоку проверяет не больше одной стоянки: иначе 8 дорогих поисков пути "
+                            + "встают в тик (сервер 0.1.3614: UndoLeaseScript держал поток 1,5 с), проверено "
+                            + delta);
+            total += delta;
+            if (state == Approach.State.STUCK) {
+                break;
+            }
+        }
+        helper.assertTrue(total > 0, "Предусловие: замурованный дух обязан проверить хотя бы одну стоянку");
+        probe.discard();
     }
 
     @GameTest(template = "big_arena", batch = "scene_lease_dig", timeoutTicks = 400)

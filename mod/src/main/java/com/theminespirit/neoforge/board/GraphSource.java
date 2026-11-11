@@ -102,6 +102,7 @@ public final class GraphSource {
         started = System.nanoTime();
         GraphState state = GraphInputs.state(level, service, spirits, stock, stageScan, graph, around);
         mark("state", started);
+        GraphInputs.lastPhases().forEach((name, millis) -> phases.merge("in." + name, millis, Long::sum));
         boolean deep = lastDeep < 0 || now < lastDeep || now - lastDeep >= DEEP_INTERVAL_TICKS;
         if (deep) {
             lastDeep = now;
