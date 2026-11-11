@@ -70,9 +70,7 @@ final class GraphInputs {
         Map<String, Built> buildings = buildings(level, service, service.board().ledger(), scan, graph);
         mark("buildings", started);
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
-        started = System.nanoTime();
         LifeInputs.Input life = LifeInputs.of(level, spirits, around.events());
-        mark("life", started);
         Set<String> events = new LinkedHashSet<>(life.events());
         if (ExpeditionRule.ready(buildings.get("mine"), ExpeditionGate.ready(stock, level))) {
             events.add("expedition_ready");
@@ -81,23 +79,28 @@ final class GraphInputs {
             events.add(ChestDemolition.EVENT);
         }
         started = System.nanoTime();
-        GraphFacts facts = DigInputs.apply(
-                level,
-                spirits,
-                GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around)
-                        .withThreats(life.threats())
-                        .withPlayers(LifeInputs.players(level))
-                        .withPlanBreaches(GraphFactInputs.planBreaches(level))
-                        .withChests(
-                                GraphFactInputs.chestFacts(StockReader.chests(level), GraphFactInputs.reachAt(level)))
-                        .withFeedback(GraphWorldFeedbackInputs.of(level, spirits, scan.home(), service))
-                        .withWorld(WorldAreaInputs.of(
-                                level,
-                                service,
-                                scan,
-                                town,
-                                BuildingAuditInputs.buildings(level, service, scan, buildings, town))));
-        mark("facts", started);
+        GraphFacts baseFacts = GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around);
+        mark("factBase", started);
+        started = System.nanoTime();
+        GraphFacts listed = baseFacts
+                .withThreats(life.threats())
+                .withPlayers(LifeInputs.players(level))
+                .withPlanBreaches(GraphFactInputs.planBreaches(level));
+        mark("factLists", started);
+        started = System.nanoTime();
+        GraphFacts chests = listed.withChests(
+                GraphFactInputs.chestFacts(StockReader.chests(level), GraphFactInputs.reachAt(level)));
+        mark("factChests", started);
+        started = System.nanoTime();
+        GraphFacts feedback = chests.withFeedback(GraphWorldFeedbackInputs.of(level, spirits, scan.home(), service));
+        mark("factFeedback", started);
+        started = System.nanoTime();
+        GraphFacts world = feedback.withWorld(WorldAreaInputs.of(
+                level, service, scan, town, BuildingAuditInputs.buildings(level, service, scan, buildings, town)));
+        mark("factWorld", started);
+        started = System.nanoTime();
+        GraphFacts facts = DigInputs.apply(level, spirits, world);
+        mark("factDig", started);
         GraphStockNote.log(facts, spirits);
         List<GraphBlock> blocks = new ArrayList<>(service.board().failures().graphBlocks());
         blocks.addAll(service.sources
