@@ -29,8 +29,9 @@ class CrossLeaseUndoScenarioTests {
                 "Столб внутри поселения и на улице убирается раньше моста далеко в походе: " + inside.priority()
                         + " против " + trip.priority());
         assertTrue(
-                inside.priority() >= 85,
-                "Откат брошенной правки в поселении идёт впереди новой работы: " + inside.priority());
+                inside.priority() >= 25 && inside.priority() < 85,
+                "Откат брошенной правки в поселении — важная работа, но не выше работ этапа: 11.11 при весе 90-94 "
+                        + "пять духов 4 часа висели в откате без подхода, поселение стояло; " + inside.priority());
         assertEquals(
                 "undo:pillar-1#0,78,0:5",
                 inside.makes(),

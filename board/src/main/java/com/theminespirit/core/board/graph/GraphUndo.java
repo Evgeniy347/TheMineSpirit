@@ -16,9 +16,9 @@ public record GraphUndo(
         double ownerFactor,
         int buriedDepth,
         double buriedShare) {
-    public static final int DEFAULT_BASE = 120;
+    public static final int DEFAULT_BASE = 30;
     public static final GraphUndo DEFAULTS =
-            new GraphUndo(DEFAULT_BASE, 120, 20, 1.0, 30, 6.0, 60, 256, 0.8, 0.8, 8, 0.6);
+            new GraphUndo(DEFAULT_BASE, 30, 10, 1.0, 30, 1.0, 15, 256, 0.8, 0.8, 8, 0.6);
 
     public GraphUndo {
         if (base < 1) {
