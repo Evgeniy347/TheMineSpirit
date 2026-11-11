@@ -64,7 +64,6 @@ public final class StageSites {
         Objects.requireNonNull(plan, "План не может быть null: этап берёт места из него");
         Objects.requireNonNull(rules, "Правила плана не могут быть null: поле ограды этапа — данные");
         Objects.requireNonNull(orchardScheme, "Схема сада не может быть null: саду нужны места деревьев");
-        WoodSpecies.check(wood);
         Layout layout = layout(plan, stage, rules)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "У этапа " + stage + " нет ни одной площадки под выравнивание: план без построек этапа"));

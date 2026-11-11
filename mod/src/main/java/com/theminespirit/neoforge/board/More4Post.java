@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.FenceStubPlan;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphKits;
@@ -124,7 +125,8 @@ final class More4Post {
                         ticket.task().priority(),
                         ticket.id(),
                         post.items(ticket.task())),
-                TicketTarget.at(origin));
+                TicketTarget.at(origin)
+                        .withPlan(FenceStubPlan.of(origin, post.scan.stage().stage(), post.scan.wood())));
         return true;
     }
 

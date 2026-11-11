@@ -33,9 +33,9 @@ public final class More3Store extends SavedData {
     private static final SavedData.Factory<More3Store> FACTORY =
             new SavedData.Factory<>(More3Store::new, More3Store::load);
 
-    public record Danger(int x, int y, int z, String kind, int hits, int deaths, long lastTick) {
+    public record Danger(int x, int baseY, int z, String kind, int hits, int deaths, long lastTick) {
         public BlockCoord position() {
-            return new BlockCoord(x, y, z);
+            return new BlockCoord(x, baseY, z);
         }
     }
 
@@ -47,10 +47,11 @@ public final class More3Store extends SavedData {
 
     private int stage;
     private long stageStartedAt;
+    private boolean columnsMigrated;
     private final Map<String, Danger> dangers = new LinkedHashMap<>();
     private final List<DeathDrop> drops = new ArrayList<>();
 
-    private More3Store() {}
+    More3Store() {}
 
     public static More3Store get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
@@ -91,25 +92,53 @@ public final class More3Store extends SavedData {
         setDirty();
     }
 
-    public void noteDeath(BlockCoord at, long now) {
-        noteDamage(at, "death", now);
-        String key = key(at);
+    public void noteDeath(BlockCoord danger, BlockCoord drop, long now) {
+        noteDamage(danger, "death", now);
+        String key = key(danger);
         Danger before = dangers.get(key);
         dangers.put(
                 key,
                 new Danger(
-                        at.x(),
-                        at.y(),
-                        at.z(),
+                        danger.x(),
+                        danger.y(),
+                        danger.z(),
                         "death",
                         before == null ? 1 : before.hits(),
                         (before == null ? 0 : before.deaths()) + 1,
                         now));
-        drops.add(new DeathDrop(at.x(), at.y(), at.z(), now + More3Rules.DROP_LIFETIME_TICKS));
+        drops.add(new DeathDrop(drop.x(), drop.y(), drop.z(), now + More3Rules.DROP_LIFETIME_TICKS));
         while (drops.size() > MAX_DROPS) {
             drops.remove(0);
         }
         setDirty();
+    }
+
+    public void migrateColumns(int baseY) {
+        if (columnsMigrated) {
+            return;
+        }
+        columnsMigrated = true;
+        boolean changed = false;
+        for (Map.Entry<String, Danger> entry : List.copyOf(dangers.entrySet())) {
+            Danger danger = entry.getValue();
+            if (danger.baseY() == baseY) {
+                continue;
+            }
+            dangers.put(
+                    entry.getKey(),
+                    new Danger(
+                            danger.x(),
+                            baseY,
+                            danger.z(),
+                            danger.kind(),
+                            danger.hits(),
+                            danger.deaths(),
+                            danger.lastTick()));
+            changed = true;
+        }
+        if (changed) {
+            setDirty();
+        }
     }
 
     public List<Danger> recentDangers(long now) {
@@ -142,7 +171,7 @@ public final class More3Store extends SavedData {
         return at.x() + "," + at.y() + "," + at.z();
     }
 
-    private static More3Store load(CompoundTag tag, HolderLookup.Provider ignored) {
+    static More3Store load(CompoundTag tag, HolderLookup.Provider ignored) {
         More3Store store = new More3Store();
         store.stage = tag.getInt(STAGE);
         store.stageStartedAt = tag.getLong(STAGE_START);
@@ -174,7 +203,7 @@ public final class More3Store extends SavedData {
         for (Danger danger : dangers.values()) {
             CompoundTag entry = new CompoundTag();
             entry.putInt(X, danger.x());
-            entry.putInt(Y, danger.y());
+            entry.putInt(Y, danger.baseY());
             entry.putInt(Z, danger.z());
             entry.putString(KIND, danger.kind());
             entry.putInt(HITS, danger.hits());

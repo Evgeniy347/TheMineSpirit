@@ -9,6 +9,7 @@ import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.More3Rules;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.SiteLevels;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,6 +50,7 @@ final class More3Inputs {
         long now = service.board().now();
         More3Store store = More3Store.get(level);
         store.noteStage(state.stage(), now);
+        store.migrateColumns(SiteLevels.fenceY(scan.stage()));
         More3Rules.Signals signals = signals(level, service, state, graph, around, scan, store);
         return events(state, More3Rules.events(signals));
     }

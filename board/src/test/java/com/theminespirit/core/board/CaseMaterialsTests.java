@@ -111,6 +111,46 @@ class CaseMaterialsTests {
     }
 
     @Test
+    void need_Fill_CountsWholeArea() {
+        TaskNode plan = new ScriptCall(
+                "fill",
+                Map.of(
+                        "block", "minecraft:dirt",
+                        "x1", 0,
+                        "y1", 64,
+                        "z1", 0,
+                        "x2", 2,
+                        "y2", 64,
+                        "z2", 3));
+
+        assertEquals(
+                Map.of("dirt", 12),
+                CaseMaterials.need(plan, FAKE),
+                "Заделка пролома площадью — один fill: материалов нужно по числу клеток области, иначе "
+                        + "граф не поднимет 12 блоков и задание упадёт на нехватке материала");
+    }
+
+    @Test
+    void need_FillBrokenArea_IsReported() {
+        TaskNode plan = new ScriptCall(
+                "fill",
+                Map.of(
+                        "block", "minecraft:dirt",
+                        "x1", 2,
+                        "y1", 64,
+                        "z1", 0,
+                        "x2", 0,
+                        "y2", 64,
+                        "z2", 3));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CaseMaterials.need(plan, FAKE),
+                "Перевёрнутая область fill — ошибка плана, а не ноль материалов: молчаливый 0 снова уронит "
+                        + "ремонт в нехватку блока");
+    }
+
+    @Test
     void need_FallbackAlternatives_RequiresPrimaryOnly() {
         TaskNode fallback = new FallbackNode(List.of(
                 new ScriptCall("acquire", Map.of("item", "coal", "count", 1)),

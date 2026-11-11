@@ -2,7 +2,7 @@
 # Сторож коммита (docs/GIT.md → «Сообщение коммита», docs/TESTING.md). Подключается scripts/install-git-hooks.sh.
 # 1) формат сообщения «<тип>: <описание на русском>»; 2) feat/fix, меняющий production-код, приносит и тест.
 TYPES="feat|fix|test|refactor|docs|chore"
-GAME_TESTS="src/main/java/com/theminespirit/gametest/"
+GAME_TESTS="gametest/src/main/java/com/theminespirit/gametest/"
 subject="$(head -n 1 "$1")"
 
 case "$subject" in

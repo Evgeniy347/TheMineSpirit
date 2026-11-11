@@ -1,6 +1,7 @@
 package com.theminespirit.guards;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -100,6 +101,10 @@ class SettlementLevelGuardTests {
         return text.contains("SiteLevels.fenceOrigin(");
     }
 
+    private static boolean fenceStubCheck(String text) {
+        return text.contains("FenceStubPlan.of(");
+    }
+
     private static String read(Path file) {
         try {
             return Files.readString(file, StandardCharsets.UTF_8);
@@ -157,6 +162,35 @@ class SettlementLevelGuardTests {
                 "Основание забора берётся из SiteLevels.fenceOrigin (уровень ограды поселения), а не из точки "
                         + "опасности/портала: иначе забор встаёт на крышу склада (y=80), дух снизу «в яме», DigOut "
                         + "ищет путь вверх полным перебором. Нарушители");
+    }
+
+    @Test
+    void fenceEvents_UseSmallStageStub_NotWholeRing() {
+        List<String> offenders = new ArrayList<>();
+        for (String file : List.of("neoforge/board/More3Post.java", "neoforge/board/More4Post.java")) {
+            String text = read(SourceFiles.path(file));
+            if (!text.contains("FenceStubPlan.of(")) {
+                offenders.add(file);
+            }
+        }
+
+        assertEquals(
+                List.of(),
+                offenders,
+                "Забор по событию — маленькая заглушка ограды этапа (FenceStubPlan → StageSchemes.fenceStub → "
+                        + "fence_post/wall_3_post), а не кольцо 23×23: на уровне земли кольцо вокруг опасности "
+                        + "перекрывает склад и требует сотен постановок. Кольцо («fence») остаётся для REST/демо "
+                        + "и задания без схемы. Нарушители");
+    }
+
+    @Test
+    void fenceStubPattern_WholeRing_IsReported() {
+        assertFalse(
+                fenceStubCheck("TicketTarget.at(origin)"),
+                "Сторож ослеп: забор по событию без своего малого фрагмента снова станет кольцом 23×23");
+        assertTrue(
+                fenceStubCheck("TicketTarget.at(origin).withPlan(FenceStubPlan.of(origin, stage, wood))"),
+                "Сторож ложно срабатывает: фрагмент ограды этапа в опасной колонке — это правило");
     }
 
     @Test

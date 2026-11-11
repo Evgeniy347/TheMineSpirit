@@ -28,9 +28,16 @@ send_command() {
 wait_for_log() {
     local pattern="$1" offset="$2" timeout="${3:-60}"
     local file="$SERVER_DIR/logs/latest.log"
-    local chunk=""
+    local chunk="" size
     for _ in $(seq 1 "$timeout"); do
         if [ -f "$file" ]; then
+            # lib: игра пересоздаёт latest.log не мгновенно: под лагом ротация случается позже первых секунд
+            # lib: старта. Проверка «размер упал» один раз в начале пропускала новую строку готовности —
+            # lib: старый offset больше нового лога, и ожидание «Done (» истекало при уже живом сервере.
+            size="$(log_size)"
+            if [ "$size" -lt "$offset" ]; then
+                offset=0
+            fi
             chunk="$(tail -c +"$((offset + 1))" "$file" 2>/dev/null || true)"
             case "$chunk" in
                 *"$pattern"*) return 0 ;;

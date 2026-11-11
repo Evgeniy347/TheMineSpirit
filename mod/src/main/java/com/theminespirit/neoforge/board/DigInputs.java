@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.graph.DigFacts;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.neoforge.DigOutScript;
+import com.theminespirit.neoforge.DigOutTrap;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -51,7 +52,7 @@ final class DigInputs {
     }
 
     private static DigFacts.Cause situation(Level level, SpiritEntity spirit, BlockPos feet) {
-        if (DigOutScript.embedded(spirit) || DigOutScript.sealed(level, feet)) {
+        if (DigOutTrap.trapped(level, spirit)) {
             return DigFacts.Cause.SEALED;
         }
         if (PitRescue.trapped(spirit).isPresent()) {

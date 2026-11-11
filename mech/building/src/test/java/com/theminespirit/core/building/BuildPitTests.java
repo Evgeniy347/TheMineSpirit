@@ -46,6 +46,19 @@ class BuildPitTests {
     }
 
     @Test
+    void trapped_SealedOrEmbedded_IsTrue() {
+        assertTrue(
+                BuildPit.trapped(true, false),
+                "Замурованность (sealed) — запертость: дух в замкнутой клетке без выхода");
+        assertTrue(
+                BuildPit.trapped(false, true),
+                "Застрял в блоке (embedded) — тоже запертость: DigOut обязан считать оба признака одинаково");
+        assertFalse(
+                BuildPit.trapped(false, false),
+                "Открытая яма не запертость: её оставляют общему спасению, иначе любая низина снова копает вверх");
+    }
+
+    @Test
     void needsEscape_TrappedSpiritBelowBase_IsTrue() {
         assertTrue(
                 BuildPit.needsEscape(55, 70, () -> true),

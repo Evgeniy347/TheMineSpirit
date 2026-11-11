@@ -2,6 +2,8 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.SiteLevels;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SpiritDamageWatch;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
@@ -12,6 +14,7 @@ import net.minecraft.world.entity.Entity;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import org.jspecify.annotations.Nullable;
 
 public final class More3Events {
     private More3Events() {}
@@ -42,9 +45,17 @@ public final class More3Events {
         BlockPos at = spirit.blockPosition();
         More3Store.get(level)
                 .noteDamage(
-                        new BlockCoord(at.getX(), at.getY(), at.getZ()),
+                        dangerBase(level, new BlockCoord(at.getX(), at.getY(), at.getZ())),
                         event.getSource().getMsgId(),
                         level.getGameTime());
+    }
+
+    static BlockCoord dangerBase(ServerLevel level, BlockCoord feet) {
+        return dangerBase(SettlementPlotStore.liveSite(level).orElse(null), feet);
+    }
+
+    static BlockCoord dangerBase(@Nullable StageSite site, BlockCoord feet) {
+        return site == null ? feet : SiteLevels.fenceOrigin(site, feet);
     }
 
     private static String source(DamageSource source) {
@@ -63,6 +74,7 @@ public final class More3Events {
             return;
         }
         BlockPos at = spirit.blockPosition();
-        More3Store.get(level).noteDeath(new BlockCoord(at.getX(), at.getY(), at.getZ()), level.getGameTime());
+        BlockCoord feet = new BlockCoord(at.getX(), at.getY(), at.getZ());
+        More3Store.get(level).noteDeath(dangerBase(level, feet), feet, level.getGameTime());
     }
 }
