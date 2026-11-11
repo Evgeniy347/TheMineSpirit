@@ -93,8 +93,10 @@ public final class PillarDownScript implements ScriptInstance {
             return false;
         }
         BlockPos below = spirit.blockPosition().below();
-        return PlacedBlocksData.get(server).isOwn(below)
-                && !spirit.level().getBlockState(below).isAir();
+        if (spirit.level().getBlockState(below).isAir()) {
+            return false;
+        }
+        return PlacedBlocksData.get(server).isOwn(below) || LeaseRun.ownedAnywhereAt(spirit, below) != null;
     }
 
     private ScriptStatus fail(String reason) {

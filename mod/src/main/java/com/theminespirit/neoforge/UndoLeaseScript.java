@@ -65,7 +65,7 @@ public final class UndoLeaseScript implements ScriptInstance {
             steps = LeaseUndo.order(lease());
         }
         if (reach.busy()) {
-            LeaseReach.Outcome out = reach.tick(currentCell(), base());
+            LeaseReach.Outcome out = reach.tick(currentCell());
             if (out == LeaseReach.Outcome.FAILED) {
                 return fail(reach.failureReason());
             }
@@ -81,6 +81,11 @@ public final class UndoLeaseScript implements ScriptInstance {
             }
             BlockPos pos = pos(step.pos());
             BlockState state = level.getBlockState(pos);
+            String current = step.kind() == LeaseKind.STATE ? LeaseStates.text(state) : BlockStates.idOf(state);
+            if (LeaseUndo.nothingToDo(step, state.isAir() || state.canBeReplaced(), current)) {
+                complete(step, pos);
+                continue;
+            }
             BlockCoord feet = feet();
             if (step.kind() == LeaseKind.PLACED && !state.isAir() && LeaseUndo.supportsBody(step, feet)) {
                 RouteLevelView view = new RouteLevelView(spirit);
@@ -107,7 +112,7 @@ public final class UndoLeaseScript implements ScriptInstance {
     }
 
     private ScriptStatus approach(LeaseUndo.Step step) {
-        LeaseReach.Outcome out = reach.tick(step.pos(), base());
+        LeaseReach.Outcome out = reach.tick(step.pos());
         if (out == LeaseReach.Outcome.FAILED) {
             return fail(reach.failureReason());
         }
@@ -196,16 +201,6 @@ public final class UndoLeaseScript implements ScriptInstance {
             return steps.get(cursor).pos();
         }
         return feet();
-    }
-
-    private BlockCoord base() {
-        BlockCoord lowest = null;
-        for (LeaseUndo.Step step : steps) {
-            if (lowest == null || step.pos().y() < lowest.y()) {
-                lowest = step.pos();
-            }
-        }
-        return lowest == null ? feet() : lowest;
     }
 
     private boolean inReach(BlockPos pos) {

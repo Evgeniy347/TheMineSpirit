@@ -95,7 +95,7 @@ public final class GraphEventFacts {
         if (!task.id().startsWith(GraphEvent.UNDO_PREFIX)) {
             return null;
         }
-        String id = task.id().substring(GraphEvent.UNDO_PREFIX.length());
+        String id = GraphEvent.leaseId(task.id());
         for (GraphSiteFacts.Lease lease : state.facts().leases()) {
             if (lease.id().equals(id)) {
                 return lease;

@@ -71,7 +71,7 @@ public final class BoardFailureDesk {
         }
         String node = GraphFailureMemory.node(ticket.id(), ticket.cause());
         String address = node == null ? ticket.id() : node;
-        if (need != null && !(need instanceof GraphBlock.Path)) {
+        if (need != null && (!(need instanceof GraphBlock.Path) || retryAfterKeyChange(ticket))) {
             blocked.block(ticket, new GraphBlock(address, "", need), now);
             return;
         }
@@ -86,6 +86,10 @@ public final class BoardFailureDesk {
         int count = ticket.requiredItems().getOrDefault(first.getKey(), first.getValue());
         blocked.note(new BlockedBook.BlockedNote(
                 ticket, failures, missing, stock, now, address, "", new GraphBlock.Item(first.getKey(), count)));
+    }
+
+    private static boolean retryAfterKeyChange(BoardTicket ticket) {
+        return ticket.boardCase() == BoardCase.ACTIVITY_UNDO;
     }
 
     void releaseStuckHolders(long now) {

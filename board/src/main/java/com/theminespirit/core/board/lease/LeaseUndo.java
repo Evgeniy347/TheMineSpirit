@@ -33,6 +33,15 @@ public final class LeaseUndo {
         return List.copyOf(steps);
     }
 
+    public static boolean nothingToDo(Step step, boolean free, String current) {
+        Objects.requireNonNull(step, "Клетка отката не может быть null: сравнивать нечего");
+        Objects.requireNonNull(current, "Текущий блок не может быть null: без него не видно, откатано ли");
+        if (step.kind() == LeaseKind.PLACED) {
+            return free;
+        }
+        return current.equals(step.before());
+    }
+
     public static boolean supportsBody(Step step, BlockCoord feet) {
         Objects.requireNonNull(step, "Клетка отката не может быть null: опору ищут по ней");
         Objects.requireNonNull(feet, "Клетка ног не может быть null: без неё опоры под телом нет");

@@ -10549,13 +10549,13 @@
     }
   },
   "undo": {
-    "base": 120,
-    "inside": 120,
-    "street": 20,
+    "base": 30,
+    "inside": 30,
+    "street": 10,
     "perHeight": 1.0,
     "heightCap": 30,
-    "perCell": 6.0,
-    "cellCap": 60,
+    "perCell": 1.0,
+    "cellCap": 15,
     "farDistance": 256,
     "farShare": 0.8,
     "owner": 0.8,

@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.PillarBase;
 import com.theminespirit.core.movement.CellCentering;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
@@ -25,6 +26,7 @@ final class PillarColumn {
 
     private static final double PILLAR_CLEARANCE = 1.0;
     private static final int MAX_STALL_TICKS = 200;
+    private static final int MAX_BASE_DROP = 4;
 
     private final SpiritEntity spirit;
     private final Level level;
@@ -57,11 +59,17 @@ final class PillarColumn {
         this.level = spirit.level();
         this.blockId = blockId;
         this.state = BlockStates.stateFor(blockId);
-        this.height = height;
         BlockPos feet = base.immutable();
+        int asked = feet.getY();
+        int start = PillarBase.first(
+                asked,
+                level.getMinBuildHeight(),
+                MAX_BASE_DROP,
+                y -> PlaceSupport.hasSupport(level, new BlockPos(feet.getX(), y, feet.getZ()), state));
         this.baseX = feet.getX();
-        this.baseY = feet.getY();
+        this.baseY = start;
         this.baseZ = feet.getZ();
+        this.height = height + (asked - start);
         this.placer = new BlockPlacer(spirit, PlotProtection.Ground.TEMPORARY_MOVEMENT);
     }
 

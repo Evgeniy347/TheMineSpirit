@@ -21,27 +21,44 @@ class CrossLeaseUndoScenarioTests {
 
         GraphPlan plan = PlanCaseFacts.plan(GraphWorld.settled(), facts(List.of(pillar, bridge)));
 
-        GraphPlan.Task inside = PlanCaseFacts.task(plan, "event:undo_lease:undo:pillar-1");
-        GraphPlan.Task trip = PlanCaseFacts.task(plan, "event:undo_lease:undo:bridge-1");
+        GraphPlan.Task inside = PlanCaseFacts.task(plan, taskId(pillar));
+        GraphPlan.Task trip = PlanCaseFacts.task(plan, taskId(bridge));
         assertTrue(inside.feasible(), "Брошенный столб в поселении обязан получить откат: " + plan.tasks());
         assertTrue(
                 inside.priority() > trip.priority(),
                 "Столб внутри поселения и на улице убирается раньше моста далеко в походе: " + inside.priority()
                         + " против " + trip.priority());
         assertTrue(
-                inside.priority() >= 85,
-                "Откат брошенной правки в поселении идёт впереди новой работы: " + inside.priority());
+                inside.priority() >= 25 && inside.priority() < 85,
+                "Откат брошенной правки в поселении — важная работа, но не выше работ этапа: 11.11 при весе 90-94 "
+                        + "пять духов 4 часа висели в откате без подхода, поселение стояло; " + inside.priority());
         assertEquals(
-                "undo:pillar-1",
+                "undo:pillar-1#0,78,0:5",
                 inside.makes(),
-                "Узел отката несёт id аренды: исполнитель иначе не знает, чью правку убирать");
+                "Узел отката несёт id аренды и ключ её состояния: исполнитель берёт id, граф — ключ повтора");
+    }
+
+    @Test
+    void undoTaskId_CarriesLeaseState_SoUnchangedFailureIsNotRetried() {
+        GraphSiteFacts.Lease before = new GraphSiteFacts.Lease(
+                "pillar-1", "scaffold", SPIRIT, new GraphFacts.Position(0, 78, 0), 5, true, true, 5, 4);
+        GraphSiteFacts.Lease same = new GraphSiteFacts.Lease(
+                "pillar-1", "scaffold", SPIRIT, new GraphFacts.Position(0, 78, 0), 5, true, true, 5, 4);
+        GraphSiteFacts.Lease after = new GraphSiteFacts.Lease(
+                "pillar-1", "scaffold", SPIRIT, new GraphFacts.Position(0, 77, 0), 4, true, true, 4, 4);
+
+        assertEquals(GraphEvent.undoTaskId(before), GraphEvent.undoTaskId(same), "Та же аренда — то же задание");
+        assertFalse(
+                GraphEvent.undoTaskId(before).equals(GraphEvent.undoTaskId(after)),
+                "Откатанная клетка меняет ключ задания: только тогда граф вправе повторить откат");
+        assertEquals("pillar-1", GraphEvent.leaseId(GraphEvent.undoTaskId(after)), "Из ключа задания берут id аренды");
     }
 
     @Test
     void undoBlockedWithPath_AfterPathAppears_TaskIsIssuedAgain() {
         GraphSiteFacts.Lease bridge = new GraphSiteFacts.Lease(
                 "bridge-1", "bridge", null, new GraphFacts.Position(300, 64, 0), 0, false, false, 2, 300);
-        String node = "event:undo_lease:undo:bridge-1";
+        String node = taskId(bridge);
         GraphWorld blocked = GraphWorld.settled();
         blocked.blocks.add(new GraphBlock(node, "300,64,0", new GraphBlock.Path("300,64,0")));
 
@@ -72,10 +89,14 @@ class CrossLeaseUndoScenarioTests {
         GraphPlan plan = PlanCaseFacts.plan(GraphWorld.settled(), facts);
 
         assertTrue(
-                PlanCaseFacts.task(plan, "event:undo_lease:undo:pillar-1").priority()
+                PlanCaseFacts.task(plan, taskId(pillar)).priority()
                         > PlanCaseFacts.task(plan, "event:demolish_stray:demolish_stray")
                                 .priority(),
                 "Откат брошенной правки в поселении важнее новой уборки чужого мусора: " + plan.tasks());
+    }
+
+    private static String taskId(GraphSiteFacts.Lease lease) {
+        return "event:" + GraphWorldEvents.UNDO_LEASE + ":" + GraphEvent.undoTaskId(lease);
     }
 
     private static GraphFacts facts(List<GraphSiteFacts.Lease> leases) {

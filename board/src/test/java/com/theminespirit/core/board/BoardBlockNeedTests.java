@@ -27,6 +27,53 @@ class BoardBlockNeedTests {
                 Map.of("dirt", 9));
     }
 
+    @Test
+    void undoFailure_WithPath_BlocksUntilLeaseKeyChanges() {
+        long[] now = {0};
+        Board board = new Board(() -> now[0]);
+        BoardTicket same = undo("graph:event:undo_lease:undo:lease-1#10,70,10:3");
+        board.submit(same);
+        board.claim(same.id(), spirit(1), now[0]);
+        board.fail(same.id(), new StockView(Map.of()), "нет подхода", new GraphBlock.Path("10,70,10"));
+
+        assertEquals(
+                Optional.of(BoardStatus.BLOCKED),
+                board.statusOf(same.id()),
+                "Провал отката по пути — блокировка с ключом, а не FAILED: иначе доска забудет задание и граф "
+                        + "поставит его заново");
+        assertTrue(
+                board.failures().graphBlocks().stream().anyMatch(block -> block.need() instanceof GraphBlock.Path),
+                "Ключ блокировки отката — путь: " + board.failures().graphBlocks());
+        board.prune(now[0] + BoardTuning.failBackoffTicks() * 10);
+        assertEquals(
+                Optional.of(BoardStatus.BLOCKED),
+                board.statusOf(same.id()),
+                "Блокировка по ключу не снимается таймером: повтор только после изменения ключа");
+        assertEquals(
+                BoardOutcome.DUPLICATE,
+                board.submit(same),
+                "Тот же ключ аренды — то же задание: граф не шумит новой выдачей");
+
+        BoardTicket changed = undo("graph:event:undo_lease:undo:lease-1#10,69,10:2");
+        assertEquals(
+                BoardOutcome.ACCEPTED,
+                board.submit(changed),
+                "Откатанная клетка меняет ключ аренды — откат выдаётся снова");
+    }
+
+    private static BoardTicket undo(String id) {
+        return new BoardTicket(
+                id,
+                BoardCase.ACTIVITY_UNDO,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.ACTIVITY_UNDO),
+                0,
+                1,
+                id,
+                List.of(),
+                Map.of());
+    }
+
     private static UUID spirit(int number) {
         return UUID.fromString("00000000-0000-0000-0000-" + String.format("%012d", number));
     }

@@ -54,7 +54,7 @@ public record GraphEvent(
             }
             for (GraphSiteFacts.Lease lease : leases) {
                 tasks.add(new Task(
-                        UNDO_PREFIX + lease.id(),
+                        undoTaskId(lease),
                         task.boardCase(),
                         task.base(),
                         Map.of(),
@@ -66,6 +66,17 @@ public record GraphEvent(
             }
         }
         return List.copyOf(tasks);
+    }
+
+    public static String undoTaskId(GraphSiteFacts.Lease lease) {
+        GraphFacts.Position at = lease.position();
+        return UNDO_PREFIX + lease.id() + "#" + at.x() + "," + at.y() + "," + at.z() + ":" + lease.cells();
+    }
+
+    public static String leaseId(String taskId) {
+        String raw = taskId.startsWith(UNDO_PREFIX) ? taskId.substring(UNDO_PREFIX.length()) : taskId;
+        int key = raw.indexOf('#');
+        return key < 0 ? raw : raw.substring(0, key);
     }
 
     static @Nullable Task find(GraphEvent event, String taskId) {

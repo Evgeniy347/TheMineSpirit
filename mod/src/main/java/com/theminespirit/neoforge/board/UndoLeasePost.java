@@ -20,7 +20,7 @@ final class UndoLeasePost {
     }
 
     static boolean post(GraphPost post, GraphTickets.Ticket ticket) {
-        String id = ticket.node().substring(GraphEvent.UNDO_PREFIX.length());
+        String id = GraphEvent.leaseId(ticket.node());
         Optional<Lease> found = LeaseData.get(post.level).book().find(id);
         if (found.isEmpty() || found.orElseThrow().status() != LeaseStatus.ORPHANED) {
             return true;

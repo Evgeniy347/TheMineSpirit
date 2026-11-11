@@ -172,6 +172,31 @@ class LeaseUndoTests {
     }
 
     @Test
+    void nothingToDo_SameBlockOrGone_SkipsTheCell() {
+        LeaseUndo.Step placed = new LeaseUndo.Step(new BlockCoord(0, 70, 0), LeaseKind.PLACED, null);
+        LeaseUndo.Step broken = new LeaseUndo.Step(new BlockCoord(1, 70, 0), LeaseKind.BROKEN, "minecraft:dirt");
+        LeaseUndo.Step door = new LeaseUndo.Step(
+                new BlockCoord(2, 70, 0), LeaseKind.STATE, "minecraft:oak_door[open=false,half=lower]");
+
+        assertTrue(LeaseUndo.nothingToDo(placed, true, "minecraft:air"), "Своего блока уже нет — ломать нечего");
+        assertFalse(
+                LeaseUndo.nothingToDo(placed, false, "minecraft:dirt"),
+                "Свой блок на месте — его ломают, а не пропускают");
+        assertTrue(
+                LeaseUndo.nothingToDo(broken, false, "minecraft:dirt"),
+                "Сломанный блок уже вернули — второй раз ставить нечего");
+        assertFalse(
+                LeaseUndo.nothingToDo(broken, true, "minecraft:air"),
+                "Сломанную клетку ещё не вернули: воздух не равен прежнему блоку");
+        assertTrue(
+                LeaseUndo.nothingToDo(door, false, "minecraft:oak_door[open=false,half=lower]"),
+                "Дверь уже закрыта — состояние возвращать нечего");
+        assertFalse(
+                LeaseUndo.nothingToDo(door, false, "minecraft:oak_door[open=true,half=lower]"),
+                "Открытую дверь закрывают: другое состояние — не повод пропускать клетку");
+    }
+
+    @Test
     void activeLease_AfterCommit_StopsCleanup() {
         LeaseBook book = new LeaseBook();
         BlockCoord cell = new BlockCoord(0, 70, 0);
