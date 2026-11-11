@@ -17,8 +17,10 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class MechanicsModuleGuardTests {
-    private static final Map<String, List<String>> MODULE_DEPENDENCIES =
-            Map.of(":mech:town", List.of("core.building"), ":mech:small", List.of("core.inventory"));
+    private static final Map<String, List<String>> MODULE_DEPENDENCIES = Map.of(
+            ":mech:town", List.of("core.building"),
+            ":mech:small", List.of("core.inventory"),
+            ":mech:mining", List.of("core.building"));
 
     @Test
     void moduleSources_LiveInTheirOwnSourceSet_NotInRoot() {

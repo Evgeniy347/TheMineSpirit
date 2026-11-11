@@ -3,6 +3,7 @@ package com.theminespirit.core.mining;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Optional;
@@ -176,8 +177,9 @@ class StandSpotsTests {
                 .set(0, -4, 0, Cell.SOLID)
                 .set(1, -4, 0, Cell.SOLID);
         BlockCoord target = new BlockCoord(0, 0, 0);
+        SpiritReach reach = new SpiritReach(3, 15, 3);
 
-        List<BlockCoord> spots = StandSpots.of(target, world, new BlockCoord(0, 0, 0));
+        List<BlockCoord> spots = StandSpots.of(target, world, new BlockCoord(0, 0, 0), reach);
 
         assertTrue(
                 spots.contains(new BlockCoord(0, -3, 0)) && spots.contains(new BlockCoord(1, -3, 0)),
@@ -190,9 +192,9 @@ class StandSpotsTests {
                 .max()
                 .orElseThrow();
         assertEquals(
-                StandSpots.MAX_OFFSET_SQUARED,
+                StandSpots.maxOffsetSquared(reach),
                 maxOffset,
-                "Наибольшее смещение стоянки обязано равняться " + StandSpots.MAX_OFFSET_SQUARED
+                "Наибольшее смещение стоянки обязано равняться " + StandSpots.maxOffsetSquared(reach)
                         + " = 3² + 1² (сбоку на три ниже): по нему планировщик считает ранний выход, иначе "
                         + "пропускает ближнюю цель со стоянкой. Стоянок: " + spots.size());
     }

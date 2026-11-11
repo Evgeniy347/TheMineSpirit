@@ -106,10 +106,11 @@ public final class MiningPlanner {
 
     private static boolean cannotBeat(BlockCoord from, BlockCoord target, long bestStandSquared) {
         long targetSquared = distanceSquared(from, target);
-        if (targetSquared <= StandSpots.MAX_OFFSET_SQUARED) {
+        int maxOffsetSquared = StandSpots.maxOffsetSquared();
+        if (targetSquared <= maxOffsetSquared) {
             return false;
         }
-        double gap = Math.sqrt((double) targetSquared) - Math.sqrt(StandSpots.MAX_OFFSET_SQUARED);
+        double gap = Math.sqrt((double) targetSquared) - Math.sqrt(maxOffsetSquared);
         return gap * gap > bestStandSquared;
     }
 
