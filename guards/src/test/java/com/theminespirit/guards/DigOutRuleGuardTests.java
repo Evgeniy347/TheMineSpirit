@@ -23,7 +23,7 @@ class DigOutRuleGuardTests {
     private static final String PLACE = "placer.begin(";
     private static final String BUILD_PIT_WATCH = "neoforge/BuildPitWatch.java";
     private static final String DIG_INPUTS = "neoforge/board/DigInputs.java";
-    private static final String TRAPPED = "DigOutScript.trapped(";
+    private static final String TRAPPED = "DigOutTrap.trapped(";
 
     @Test
     void digOutTarget_HomePointChosen_NoHeightmapLift() {
@@ -120,7 +120,7 @@ class DigOutRuleGuardTests {
     void buildPit_TrappedSpirit_UsesSharedCheck() {
         assertTrue(
                 read(SourceFiles.path(BUILD_PIT_WATCH)).contains(TRAPPED),
-                "Запертость стройки считается общим признаком DigOutScript.trapped (sealed или embedded), а не "
+                "Запертость стройки считается общим признаком DigOutTrap.trapped (sealed или embedded), а не "
                         + "своей копией: иначе правка признака в одном месте оставляет второе с прежним правилом, "
                         + "и любая низина снова становится ямой и копает вверх");
         assertTrue(
@@ -133,9 +133,9 @@ class DigOutRuleGuardTests {
     void buildPit_DuplicateTrappedCheck_IsReported() {
         assertFalse(
                 trappedCheck("DigOutScript.sealed(level, spirit.blockPosition()) || DigOutScript.embedded(spirit)"),
-                "Сторож ослеп: своя копия «sealed или embedded» мимо DigOutScript.trapped обязана ловиться");
+                "Сторож ослеп: своя копия «sealed или embedded» мимо DigOutTrap.trapped обязана ловиться");
         assertTrue(
-                trappedCheck("return DigOutScript.trapped(level, spirit);"),
+                trappedCheck("return DigOutTrap.trapped(level, spirit);"),
                 "Сторож ложно срабатывает: общий признак запертости — это правило");
     }
 
