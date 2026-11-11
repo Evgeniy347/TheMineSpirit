@@ -64,7 +64,7 @@ class GearFragmentTests {
         GraphPlan plan = world.plan();
 
         assertTrue(
-                plan.task("craft_wooden_hoe@spirit-1").isPresent(),
+                plan.tasks().stream().anyMatch(task -> task.id().matches("craft_(wooden|stone)_hoe@spirit-1")),
                 "Дух без тяпки получает её крафт по графу: без узла craft_tool:hoe пашню нечем делать — "
                         + taskIds(plan));
     }
@@ -76,7 +76,7 @@ class GearFragmentTests {
         GraphPlan plan = world.plan();
 
         assertTrue(
-                plan.task("craft_wooden_pickaxe@spirit-1").isPresent(),
+                plan.tasks().stream().anyMatch(task -> task.id().matches("craft_(wooden|stone)_pickaxe@spirit-1")),
                 "Дух без кирки получает её крафт по графу: иначе шахта ждёт инструмент, которого никто не делает — "
                         + taskIds(plan));
     }

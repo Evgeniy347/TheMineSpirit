@@ -143,14 +143,11 @@ public final class GraphPlanner {
             String kind = node.substring(TOOL.length(), node.indexOf(AT));
             String spirit = node.substring(node.indexOf(AT) + 1);
             if (ChestTools.covered(graph, state).contains(kind + AT + spirit)) return;
-            for (String tier : graph.tiers()) {
-                if (graph.rank(tier) <= state.tier(spirit, kind)) {
-                    continue;
-                }
+            for (String tier : ToolTiers.wanted(graph, state, reach, kind, state.tier(spirit, kind))) {
                 boolean aboveKit = graph.rank(tier) > graph.rank(graph.kit().tier(kind, state.stage()));
                 for (SupplyGraph.Way way : reach.producers(tier + "_" + kind)) {
                     String key = way.id() + AT + spirit;
-                    flow.link(node, key, way.weight());
+                    flow.link(node, key, way.weight() * BuildingShare.luck(graph, state, aboveKit, way));
                     if (aboveKit) {
                         chances.add(key);
                     } else {

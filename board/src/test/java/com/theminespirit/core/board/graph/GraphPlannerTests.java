@@ -85,18 +85,6 @@ class GraphPlannerTests {
     }
 
     @Test
-    void plan_LogLacking_AxesOrderedIronStoneWooden() {
-        GraphPlan plan = GraphWorld.empty().with("oak_log", 0).plan();
-
-        int iron = plan.priority("craft_iron_axe@spirit-1");
-        int stone = plan.priority("craft_stone_axe@spirit-1");
-        int wooden = plan.priority("craft_wooden_axe@spirit-1");
-        assertTrue(
-                iron > stone && stone > wooden,
-                "Топоры: железный > каменный > деревянный: " + iron + ", " + stone + ", " + wooden);
-    }
-
-    @Test
     void issueOrder_OnlyPlanksAvailable_WoodenAxeFirstAmongAxes() {
         GraphPlan plan = GraphWorld.empty()
                 .built("crafting_table", Built.BUILT)

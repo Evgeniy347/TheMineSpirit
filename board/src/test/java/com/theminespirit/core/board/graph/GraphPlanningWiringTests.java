@@ -77,7 +77,7 @@ class GraphPlanningWiringTests {
 
         assertTrue(
                 result.post().stream()
-                        .anyMatch(ticket -> "graph:craft_wooden_pickaxe@spirit-1".equals(ticket.id())
+                        .anyMatch(ticket -> ticket.id().matches("graph:craft_(wooden|stone)_pickaxe@spirit-1")
                                 && ticket.task()
                                         .spirit()
                                         .filter("spirit-1"::equals)

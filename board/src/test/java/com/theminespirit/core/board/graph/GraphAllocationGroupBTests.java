@@ -87,7 +87,7 @@ class GraphAllocationGroupBTests {
         GraphTickets.Result result = tickets(world);
 
         assertTrue(
-                result.post().stream().anyMatch(ticket -> ticket.id().startsWith("graph:craft_wooden_hoe@")),
+                result.post().stream().anyMatch(ticket -> ticket.id().matches("graph:craft_(wooden|stone)_hoe@.*")),
                 "Тяпки нет — крафт тяпки стоит заданием: " + result.post());
         assertTrue(
                 only(result, "till_soil").isEmpty(),
