@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,8 @@ class RollbackReachLiveTests {
         BlockCoord target = new BlockCoord(-181, 97, -521);
         BlockCoord leaseBottom = new BlockCoord(-172, 69, -516);
 
-        Optional<BlockCoord> stand = RollbackReach.climbStand(target, world, 3);
+        Optional<BlockCoord> stand =
+                RollbackReach.climbStands(target, world, 3).stream().findFirst();
 
         assertTrue(stand.isPresent(), "У клетки y=97 есть земля под столб: стоянка обязана найтись");
         BlockCoord found = stand.orElseThrow();
@@ -40,11 +42,32 @@ class RollbackReachLiveTests {
     }
 
     @Test
+    void climbStands_FlatGround_ListsSeveralStandsBesideTheCell() {
+        BlockCoord target = new BlockCoord(0, 80, 0);
+
+        List<BlockCoord> stands = RollbackReach.climbStands(target, (x, z) -> 64, 3);
+
+        assertTrue(
+                stands.size() > 1,
+                "Первая стоянка может быть без пути: у клетки обязано быть несколько запасных, найдено " + stands);
+        BlockCoord first = stands.get(0);
+        assertTrue(
+                first.x() != target.x() || first.z() != target.z(),
+                "Ближнюю стоянку берут сбоку от клетки, а не в её колонке: " + first);
+        assertEquals(
+                1,
+                Math.abs(first.x() - target.x()) + Math.abs(first.z() - target.z()),
+                "Ближнюю боковую стоянку пробуют первой: " + first);
+        assertTrue(stands.stream().allMatch(stand -> stand.y() < target.y()), "Столб строят снизу вверх: " + stands);
+    }
+
+    @Test
     void climbStand_BrokenCellOneAboveGround_StandsBesideOnSupportedGround() throws IOException {
         World world = World.load("src/test/resources/live/undo-base-172-69-516.json");
         BlockCoord target = new BlockCoord(-172, 69, -516);
 
-        Optional<BlockCoord> stand = RollbackReach.climbStand(target, world, 3);
+        Optional<BlockCoord> stand =
+                RollbackReach.climbStands(target, world, 3).stream().findFirst();
 
         assertTrue(stand.isPresent(), "Под сломанной клеткой y=69 есть земля: стоянка обязана найтись");
         BlockCoord found = stand.orElseThrow();
@@ -59,7 +82,9 @@ class RollbackReachLiveTests {
     void climbStand_NoGroundAround_IsEmpty() {
         BlockCoord target = new BlockCoord(0, 70, 0);
 
-        Optional<BlockCoord> stand = RollbackReach.climbStand(target, (x, z) -> RollbackReach.Ground.NO_GROUND, 3);
+        Optional<BlockCoord> stand =
+                RollbackReach.climbStands(target, (x, z) -> RollbackReach.Ground.NO_GROUND, 3).stream()
+                        .findFirst();
 
         assertTrue(stand.isEmpty(), "Без земли вокруг столб не поставить: пустая стоянка честнее падения");
     }

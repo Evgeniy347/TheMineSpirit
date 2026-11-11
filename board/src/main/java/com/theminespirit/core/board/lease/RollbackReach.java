@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 public final class RollbackReach {
     public enum Action {
@@ -42,7 +41,7 @@ public final class RollbackReach {
         return new Step(onOwnScaffold ? Action.STEP_DOWN : Action.DIG, 0);
     }
 
-    public static Optional<BlockCoord> climbStand(BlockCoord target, Ground ground, int radius) {
+    public static List<BlockCoord> climbStands(BlockCoord target, Ground ground, int radius) {
         Objects.requireNonNull(target, "Клетка отката не может быть null: некуда строить подмости");
         Objects.requireNonNull(ground, "Рельеф не может быть null: без него не найти стоянку");
         if (radius < 1) {
@@ -63,7 +62,7 @@ public final class RollbackReach {
         stands.sort(Comparator.comparingInt((BlockCoord stand) -> beside(stand, target) ? 0 : 1)
                 .thenComparingInt(stand -> square(stand.x() - target.x()) + square(stand.z() - target.z()))
                 .thenComparing(Comparator.comparingInt(BlockCoord::y).reversed()));
-        return stands.stream().findFirst();
+        return List.copyOf(stands);
     }
 
     private static boolean beside(BlockCoord stand, BlockCoord target) {

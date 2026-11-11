@@ -3,7 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.board.lease.RollbackReach;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.observation.BlockCoord;
-import java.util.Optional;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import org.jspecify.annotations.Nullable;
 
@@ -119,12 +119,12 @@ final class LeaseReach {
             return failed("к клетке " + cell + " столб уже строили, а она не в досягаемости: откат ждёт пути");
         }
         if (!beside(cell)) {
-            Optional<BlockCoord> stand = stands.stand(cell);
+            List<BlockCoord> stand = stands.stands(cell);
             if (stand.isEmpty()) {
                 return failed("к клетке " + cell + " нет стоянки сбоку для столба: откат ждёт пути");
             }
             climbCell = cell;
-            stands.begin(stand.orElseThrow());
+            stands.begin(stand);
             return Outcome.RUNNING;
         }
         walkRefusedFor = null;
