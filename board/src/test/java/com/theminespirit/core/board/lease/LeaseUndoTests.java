@@ -50,6 +50,39 @@ class LeaseUndoTests {
     }
 
     @Test
+    void key_SameTopAndCountDifferentCells_Differs() {
+        LeaseBook book = new LeaseBook();
+        Lease first = book.open(OWNER, null, "scaffold", 10);
+        Lease second = book.open(OWNER, null, "scaffold", 10);
+        BlockCoord top = new BlockCoord(0, 74, 0);
+        BlockCoord otherTop = new BlockCoord(4, 74, 4);
+        book.record(first.id(), List.of(LeaseCell.placed(new BlockCoord(0, 70, 0)), LeaseCell.placed(top)));
+        book.record(second.id(), List.of(LeaseCell.placed(new BlockCoord(4, 70, 4)), LeaseCell.placed(otherTop)));
+
+        assertFalse(
+                LeaseUndo.key(book.require(first.id())).equals(LeaseUndo.key(book.require(second.id()))),
+                "Тот же верх и число клеток, но разный порядок отката — разные ключи: иначе редкое совпадение "
+                        + "заперло бы повтор отката");
+    }
+
+    @Test
+    void key_SameCells_Stable() {
+        BlockCoord low = new BlockCoord(0, 70, 0);
+        BlockCoord high = new BlockCoord(0, 74, 0);
+        LeaseBook firstBook = new LeaseBook();
+        Lease one = firstBook.open(OWNER, null, "scaffold", 10);
+        firstBook.record(one.id(), List.of(LeaseCell.placed(low), LeaseCell.placed(high)));
+        LeaseBook secondBook = new LeaseBook();
+        Lease two = secondBook.open(OWNER, null, "scaffold", 10);
+        secondBook.record(two.id(), List.of(LeaseCell.placed(low), LeaseCell.placed(high)));
+
+        assertEquals(
+                LeaseUndo.key(firstBook.require(one.id())),
+                LeaseUndo.key(secondBook.require(two.id())),
+                "Одинаковый порядок отката даёт один ключ: неизменная аренда не выдаётся заново");
+    }
+
+    @Test
     void supportsBody_PlacedCellDirectlyBelow_IsBodySupport() {
         BlockCoord feet = new BlockCoord(0, 70, 0);
         LeaseUndo.Step support = new LeaseUndo.Step(new BlockCoord(0, 69, 0), LeaseKind.PLACED, null);

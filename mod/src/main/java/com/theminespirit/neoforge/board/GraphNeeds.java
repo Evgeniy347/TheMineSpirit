@@ -26,6 +26,8 @@ import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;
 
 final class GraphNeeds {
+    private static final String SCAFFOLD_MATERIAL = "minecraft:dirt";
+
     private GraphNeeds() {}
 
     static GraphBlock.@Nullable Need of(
@@ -85,6 +87,13 @@ final class GraphNeeds {
         String tool = ToolGate.required(ticket).orElse(null);
         if (tool != null && holder != null && !ToolGate.allows(ticket, items)) {
             return new GraphBlock.Tool(tool, 0, holder);
+        }
+        if (fact == FailureFact.NO_MATERIAL) {
+            return new GraphBlock.Item(SCAFFOLD_MATERIAL, 1);
+        }
+        if (fact == FailureFact.NO_TOOL) {
+            String missingTool = tool != null ? tool : ToolGate.PICKAXE;
+            return new GraphBlock.Tool(missingTool, 0, holder == null ? "" : holder);
         }
         if (fact == FailureFact.NIGHT) {
             return new GraphBlock.World(GraphSurroundings.TIME_DAY);

@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.MineTunnel;
 import com.theminespirit.core.mining.MiningSafety;
@@ -56,6 +57,7 @@ final class TunnelReach {
     private BlockCoord retractTo;
     private boolean arrived;
     private String failureReason;
+    private @Nullable FailureFact failureFact;
     private State outcome = State.RUNNING;
 
     private TunnelReach(
@@ -157,6 +159,11 @@ final class TunnelReach {
         return failureReason == null ? "" : failureReason;
     }
 
+    @Nullable
+    FailureFact failureFact() {
+        return failureFact;
+    }
+
     private void beginStep() {
         MineTunnel.Step step = steps.get(index);
         List<BlockCoord> cells = new ArrayList<>(step.dig());
@@ -196,6 +203,7 @@ final class TunnelReach {
                 return;
             }
             BlockBreaker.Refused refused = (BlockBreaker.Refused) begin;
+            failureFact = refused.reason() == BlockBreaker.RefuseReason.NEED_TOOL ? FailureFact.NO_TOOL : null;
             fail("не пробить " + cell + " на подходе к откату: " + refused.message());
             return;
         }

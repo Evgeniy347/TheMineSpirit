@@ -6,6 +6,7 @@ import com.theminespirit.core.board.lease.LeaseKind;
 import com.theminespirit.core.board.lease.LeaseStatus;
 import com.theminespirit.core.board.lease.LeaseUndo;
 import com.theminespirit.core.building.SpiritReach;
+import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
@@ -43,6 +44,7 @@ public final class UndoLeaseScript implements ScriptInstance {
     private boolean scaffoldDescendStarted;
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
+    private @Nullable FailureFact failureFact;
     private String result;
 
     public UndoLeaseScript(SpiritEntity spirit, Map<String, Object> params) {
@@ -76,7 +78,7 @@ public final class UndoLeaseScript implements ScriptInstance {
         if (reach.busy()) {
             LeaseReach.Outcome out = reach.tick(currentCell());
             if (out == LeaseReach.Outcome.FAILED) {
-                return fail(reach.failureReason());
+                return fail(reach.failureReason(), reach.failureFact());
             }
             if (out == LeaseReach.Outcome.RUNNING) {
                 return ScriptStatus.RUNNING;
@@ -123,7 +125,7 @@ public final class UndoLeaseScript implements ScriptInstance {
     private ScriptStatus approach(LeaseUndo.Step step) {
         LeaseReach.Outcome out = reach.tick(step.pos());
         if (out == LeaseReach.Outcome.FAILED) {
-            return fail(reach.failureReason());
+            return fail(reach.failureReason(), reach.failureFact());
         }
         return ScriptStatus.RUNNING;
     }
@@ -187,7 +189,7 @@ public final class UndoLeaseScript implements ScriptInstance {
             scaffoldDescendStarted = true;
             ScaffoldReach.Result down = scaffold.descend();
             if (down == ScaffoldReach.Result.FAILED) {
-                return fail(scaffold.failureReason());
+                return fail(scaffold.failureReason(), scaffold.failureFact());
             }
             if (down == ScaffoldReach.Result.RUNNING) {
                 return ScriptStatus.RUNNING;
@@ -226,7 +228,12 @@ public final class UndoLeaseScript implements ScriptInstance {
     }
 
     private ScriptStatus fail(String reason) {
+        return fail(reason, null);
+    }
+
+    private ScriptStatus fail(String reason, @Nullable FailureFact fact) {
         failureReason = reason;
+        failureFact = fact;
         outcome = ScriptStatus.FAILED;
         reach.cancel();
         return outcome;
@@ -273,6 +280,11 @@ public final class UndoLeaseScript implements ScriptInstance {
     @Override
     public String failureReason() {
         return failureReason;
+    }
+
+    @Override
+    public Optional<FailureFact> failureFact() {
+        return Optional.ofNullable(failureFact);
     }
 
     @Override

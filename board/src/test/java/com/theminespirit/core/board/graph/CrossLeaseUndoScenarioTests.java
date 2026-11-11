@@ -55,6 +55,24 @@ class CrossLeaseUndoScenarioTests {
     }
 
     @Test
+    void undoTaskId_UsesLeaseKey_SoOnlyRollbackChangeRetries() {
+        GraphSiteFacts.Lease one = new GraphSiteFacts.Lease(
+                "pillar-1", "scaffold", SPIRIT, new GraphFacts.Position(0, 78, 0), 5, true, true, 5, 4, 0, "aaa");
+        GraphSiteFacts.Lease two = new GraphSiteFacts.Lease(
+                "pillar-1", "scaffold", SPIRIT, new GraphFacts.Position(0, 78, 0), 5, true, true, 5, 4, 0, "bbb");
+
+        assertFalse(
+                GraphEvent.undoTaskId(one).equals(GraphEvent.undoTaskId(two)),
+                "Ключ отката — отдельное поле аренды: тот же верх и число клеток при другом порядке обязаны "
+                        + "различаться");
+        assertEquals(
+                "undo:pillar-1#aaa",
+                GraphEvent.undoTaskId(one),
+                "Билет несёт короткий id аренды и ключ, а не координаты с числом клеток");
+        assertEquals("pillar-1", GraphEvent.leaseId(GraphEvent.undoTaskId(one)), "id аренды читается из билета");
+    }
+
+    @Test
     void undoBlockedWithPath_AfterPathAppears_TaskIsIssuedAgain() {
         GraphSiteFacts.Lease bridge = new GraphSiteFacts.Lease(
                 "bridge-1", "bridge", null, new GraphFacts.Position(300, 64, 0), 0, false, false, 2, 300);

@@ -15,16 +15,43 @@ public interface GraphSiteFacts {
             boolean street,
             int cells,
             int distance,
-            int depth) {
+            int depth,
+            String key) {
         public Lease {
             Objects.requireNonNull(id, "id аренды не может быть null: по нему граф ставит откат");
             Objects.requireNonNull(purpose, "Назначение аренды не может быть null: по нему понятно, что убираем");
             Objects.requireNonNull(position, "Позиция аренды не может быть null: без неё не дойти до правки");
+            Objects.requireNonNull(key, "Ключ отката не может быть null: по нему билет видит смену аренды");
             if (height < 0 || cells < 1 || distance < 0 || depth < 0) {
                 throw new IllegalArgumentException("Аренда " + id + " с высотой " + height + ", клеток " + cells
                         + ", расстоянием " + distance + ", глубиной " + depth
                         + ": высота, расстояние и глубина не отрицательны, клетка одна и больше");
             }
+        }
+
+        public Lease(
+                String id,
+                String purpose,
+                @Nullable String owner,
+                GraphFacts.Position position,
+                int height,
+                boolean inside,
+                boolean street,
+                int cells,
+                int distance,
+                int depth) {
+            this(
+                    id,
+                    purpose,
+                    owner,
+                    position,
+                    height,
+                    inside,
+                    street,
+                    cells,
+                    distance,
+                    depth,
+                    position.x() + "," + position.y() + "," + position.z() + ":" + cells);
         }
 
         public Lease(

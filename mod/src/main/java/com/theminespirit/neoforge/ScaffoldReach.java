@@ -1,13 +1,12 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ConditionRegistry;
+import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.TaskRunner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.lease.LeaseRun;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
@@ -28,7 +27,7 @@ final class ScaffoldReach {
     private int acquireRise;
     private @Nullable ScaffoldClimb climb;
     private @Nullable LeaseRun lease;
-    private List<BlockCoord> scaffold = List.of();
+    private final ScaffoldTrail scaffold = new ScaffoldTrail();
     private boolean climbed;
     private @Nullable PillarDismantler step;
     private @Nullable BlockCoord stepCell;
@@ -36,6 +35,7 @@ final class ScaffoldReach {
     private @Nullable PillarDismantler descend;
     private boolean descended;
     private String failureReason;
+    private @Nullable FailureFact failureFact;
 
     ScaffoldReach(SpiritEntity spirit, String what) {
         this.spirit = spirit;
@@ -83,9 +83,7 @@ final class ScaffoldReach {
             lease.commit();
             return Result.DONE;
         }
-        List<BlockCoord> order = new ArrayList<>(scaffold);
-        Collections.reverse(order);
-        descend = new PillarDismantler(spirit, order, lease);
+        descend = new PillarDismantler(spirit, scaffold.topDown(), lease);
         return tickDescend();
     }
 
@@ -103,11 +101,16 @@ final class ScaffoldReach {
     }
 
     List<BlockCoord> cells() {
-        return List.copyOf(scaffold);
+        return scaffold.cells();
     }
 
     String failureReason() {
         return failureReason == null ? "" : failureReason;
+    }
+
+    @Nullable
+    FailureFact failureFact() {
+        return failureFact;
     }
 
     Result tick() {
@@ -144,9 +147,9 @@ final class ScaffoldReach {
 
     private Result raise(int rise) {
         if (PillarColumn.cheapBlock(spirit) == null) {
-            return failed("нет материала для подмостей — нужны земля или булыжник");
+            return failed("нет материала для подмостей — нужны земля или булыжник", FailureFact.NO_MATERIAL);
         }
-        climb = new ScaffoldClimb(spirit, rise);
+        climb = new ScaffoldClimb(spirit, rise, lease);
         return Result.RUNNING;
     }
 
@@ -163,8 +166,10 @@ final class ScaffoldReach {
         }
         acquire = null;
         if (runner.status() != RunStatus.SUCCEEDED) {
-            return failed("материал для подмостей не собран — "
-                    + runner.failureReason().orElse("причина неизвестна"));
+            return failed(
+                    "материал для подмостей не собран — "
+                            + runner.failureReason().orElse("причина неизвестна"),
+                    runner.failureFact().orElse(FailureFact.NO_MATERIAL));
         }
         return raise(acquireRise);
     }
@@ -177,13 +182,16 @@ final class ScaffoldReach {
         return switch (runner.tick()) {
             case RUNNING -> Result.RUNNING;
             case BUILT -> {
-                lease = runner.lease();
-                scaffold = runner.cells();
+                LeaseRun built = runner.lease();
+                if (built != null) {
+                    lease = built;
+                }
+                scaffold.add(runner.cells());
                 climbed = true;
                 climb = null;
                 yield Result.DONE;
             }
-            case FAILED -> failed("столб не построен — " + runner.failureReason());
+            case FAILED -> failed("столб не построен — " + runner.failureReason(), runner.failureFact());
         };
     }
 
@@ -238,7 +246,12 @@ final class ScaffoldReach {
     }
 
     private Result failed(String reason) {
+        return failed(reason, null);
+    }
+
+    private Result failed(String reason, @Nullable FailureFact fact) {
         failureReason = what + ": " + reason;
+        failureFact = fact;
         cancel();
         return Result.FAILED;
     }

@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.PillarBase;
+import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.movement.CellCentering;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
@@ -43,6 +44,7 @@ final class PillarColumn {
     private int stallTicks;
     private Outcome outcome = Outcome.RUNNING;
     private String failureReason;
+    private @Nullable FailureFact failureFact;
     private @Nullable LeaseRun lease;
 
     private boolean waterOk;
@@ -52,6 +54,10 @@ final class PillarColumn {
     }
 
     PillarColumn(SpiritEntity spirit, String blockId, int height, BlockPos base) {
+        this(spirit, blockId, height, base, null);
+    }
+
+    PillarColumn(SpiritEntity spirit, String blockId, int height, BlockPos base, @Nullable LeaseRun lease) {
         if (height < 1) {
             throw new IllegalArgumentException("Высота столба " + height + " меньше 1: строить нечего");
         }
@@ -70,6 +76,7 @@ final class PillarColumn {
         this.baseY = start;
         this.baseZ = feet.getZ();
         this.height = height + (asked - start);
+        this.lease = lease;
         this.placer = new BlockPlacer(spirit, PlotProtection.Ground.TEMPORARY_MOVEMENT);
     }
 
@@ -170,6 +177,11 @@ final class PillarColumn {
         return failureReason;
     }
 
+    @Nullable
+    FailureFact failureFact() {
+        return failureFact;
+    }
+
     private String danger(BlockPos target) {
         if (target.getY() > CatalogLimits.WORLD_Y_MAX) {
             return "достигнут потолок мира на y=" + target.getY() + ": столб дальше не строится";
@@ -206,7 +218,9 @@ final class PillarColumn {
 
     private Outcome place(BlockPos target) {
         if (count(spirit, blockId) < 1) {
-            return fail("нет материала '" + blockId + "': нужно " + height + ", а закончился на " + built + "-м блоке");
+            return fail(
+                    "нет материала '" + blockId + "': нужно " + height + ", а закончился на " + built + "-м блоке",
+                    FailureFact.NO_MATERIAL);
         }
         BlockPlacer.Begin begin = placer.begin(target, state, blockId);
         if (begin instanceof BlockPlacer.Started) {
@@ -221,7 +235,7 @@ final class PillarColumn {
         }
         BlockPlacer.Refused refused = (BlockPlacer.Refused) begin;
         return switch (refused.reason()) {
-            case NO_MATERIAL -> fail("нет материала '" + blockId + "': нужно 1, есть 0");
+            case NO_MATERIAL -> fail("нет материала '" + blockId + "': нужно 1, есть 0", FailureFact.NO_MATERIAL);
             case OCCUPIED -> fail("клетка " + target.toShortString() + " занята: потолок или помеха");
             case NO_SUPPORT -> fail("под клеткой " + target.toShortString() + " нет опоры");
             case OUT_OF_REACH -> fail("клетка " + target.toShortString() + " вне досягаемости");
@@ -230,7 +244,12 @@ final class PillarColumn {
     }
 
     private Outcome fail(String reason) {
+        return fail(reason, null);
+    }
+
+    private Outcome fail(String reason, @Nullable FailureFact fact) {
         failureReason = reason;
+        failureFact = fact;
         outcome = Outcome.FAILED;
         return outcome;
     }
