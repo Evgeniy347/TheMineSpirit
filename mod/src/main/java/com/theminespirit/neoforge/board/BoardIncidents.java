@@ -50,6 +50,21 @@ final class BoardIncidents {
         });
     }
 
+    void orphaned(SpiritEntity spirit, String reason, long now) {
+        String key = "orphan:" + spirit.getUUID();
+        failures.note(key, reason, now).ifPresent(note -> {
+            if (note.changed()) {
+                LOGGER.warn(
+                        "[incident] дух {} выполняет задачу без билета доски: {}; задача отменена, доска и граф "
+                                + "поставят работу заново",
+                        spirit.displayName(),
+                        reason);
+                return;
+            }
+            repeat("дух " + spirit.displayName() + " без билета доски", note);
+        });
+    }
+
     void failed(SpiritEntity spirit, BoardTicket ticket, @Nullable TicketTarget target, String why, long now) {
         if (ticket.boardCase() == BoardCase.RESCUE_SPIRIT) {
             SpiritWorldLog.stuck(

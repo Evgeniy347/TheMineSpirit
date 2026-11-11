@@ -14,6 +14,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class DigOutRestore {
@@ -41,6 +42,11 @@ final class DigOutRestore {
 
     boolean pending(BlockPos cell) {
         return broken.containsKey(cell);
+    }
+
+    @Nullable
+    BlockState pendingState(BlockCoord cell) {
+        return broken.get(new BlockPos(cell.x(), cell.y(), cell.z()));
     }
 
     List<BlockPos> returnSpoil() {

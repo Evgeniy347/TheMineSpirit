@@ -131,7 +131,7 @@ public final class DigOutScript implements ScriptInstance {
         BlockPos feet = spirit.blockPosition();
         boolean goalReached =
                 DigOutEnd.reached(level, feet, new BlockCoord(target.x(), target.y(), target.z()), descending);
-        if ((DigOutExit.surfaced(level, feet) && !restore.pendingOver(feet)) || goalReached) {
+        if (DigOutExit.surfaced(level, feet, restore) || goalReached) {
             DigOutEnd.finish(spirit, level, feet, backfill, restore, rollback, placer);
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;

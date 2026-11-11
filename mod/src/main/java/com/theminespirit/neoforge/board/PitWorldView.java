@@ -10,7 +10,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
-final class PitWorldView implements PitExitPlanner.World {
+public final class PitWorldView implements PitExitPlanner.World {
     private static final Set<String> SOFT = Set.of(
             "dirt",
             "grass_block",
@@ -44,7 +44,7 @@ final class PitWorldView implements PitExitPlanner.World {
 
     private final Level level;
 
-    PitWorldView(Level level) {
+    public PitWorldView(Level level) {
         this.level = level;
     }
 
@@ -54,7 +54,10 @@ final class PitWorldView implements PitExitPlanner.World {
         if (!level.isLoaded(pos)) {
             return BlockKind.HARD;
         }
-        BlockState state = level.getBlockState(pos);
+        return kind(level, pos, level.getBlockState(pos));
+    }
+
+    public static BlockKind kind(Level level, BlockPos pos, BlockState state) {
         if (state.getFluidState().is(FluidTags.LAVA)) {
             return BlockKind.LAVA;
         }

@@ -15,9 +15,14 @@ final class DigOutExit {
         return !DigOutBackfill.passable(level, ceiling) && !RescueBreach.breakable(level.getBlockState(ceiling));
     }
 
-    static boolean surfaced(Level level, BlockPos feet) {
+    static boolean surfaced(Level level, BlockPos feet, DigOutRestore restore) {
         return DigOutScript.open(level, feet)
+                && !restore.pendingOver(feet)
                 && PitWalkOut.exists(
-                        new PitWalkOutView(level), WalkOutRules.current(), feet.getX(), feet.getZ(), feet.getY());
+                        new PitWalkOutView(level, new DigOutPendingView(level, restore)),
+                        WalkOutRules.current(),
+                        feet.getX(),
+                        feet.getZ(),
+                        feet.getY());
     }
 }

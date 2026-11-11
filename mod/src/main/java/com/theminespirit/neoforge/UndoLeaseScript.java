@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.lease.Lease;
 import com.theminespirit.core.board.lease.LeaseKind;
 import com.theminespirit.core.board.lease.LeaseStatus;
@@ -8,6 +9,7 @@ import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
+import com.theminespirit.core.mining.ProgressWatchdog;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.adapter.Visibility;
 import com.theminespirit.core.town.PlotProtection;
@@ -23,6 +25,7 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
 
 public final class UndoLeaseScript implements ScriptInstance {
     private final SpiritEntity spirit;
@@ -30,10 +33,13 @@ public final class UndoLeaseScript implements ScriptInstance {
     private final String leaseId;
     private final Set<BlockCoord> rolledBack = new HashSet<>();
     private final LeaseReach reach;
+    private final ProgressWatchdog watchdog = new ProgressWatchdog(BoardTuning.undoNoProgressTicks());
 
     private LeaseRun run;
     private List<LeaseUndo.Step> steps;
     private int cursor;
+    private @Nullable BlockCoord lastFeet;
+    private int lastCursor = -1;
     private boolean scaffoldDescendStarted;
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
@@ -63,6 +69,9 @@ public final class UndoLeaseScript implements ScriptInstance {
         }
         if (steps == null) {
             steps = LeaseUndo.order(lease());
+        }
+        if (stalled()) {
+            return fail(stallReason());
         }
         if (reach.busy()) {
             LeaseReach.Outcome out = reach.tick(currentCell());
@@ -221,6 +230,39 @@ public final class UndoLeaseScript implements ScriptInstance {
         outcome = ScriptStatus.FAILED;
         reach.cancel();
         return outcome;
+    }
+
+    private boolean stalled() {
+        watchdog.tick();
+        BlockCoord feet = feet();
+        boolean moved = lastFeet == null || !lastFeet.equals(feet);
+        boolean advanced = cursor != lastCursor;
+        lastFeet = feet;
+        lastCursor = cursor;
+        if (moved || advanced) {
+            watchdog.progress();
+        }
+        return watchdog.stalled();
+    }
+
+    private String stallReason() {
+        BlockCoord cell = currentCell();
+        String detail = "клетка не поддалась";
+        if (steps != null && cursor < steps.size()) {
+            LeaseUndo.Step step = steps.get(cursor);
+            BlockPos pos = pos(step.pos());
+            if (!inReach(pos)) {
+                detail = "клетка " + step.pos() + " не достигнута";
+            } else if (step.kind() == LeaseKind.PLACED && BreakSight.visible(spirit, pos, false) != Visibility.CLEAR) {
+                detail = "клетка " + step.pos() + " в досягаемости, но не видна из глаз духа: подход к ней уже "
+                        + "не двигает духа";
+            } else {
+                detail = "клетка " + step.pos() + " не поддалась";
+            }
+        }
+        String reachWhy = reach.failureReason();
+        return "откат аренды '" + leaseId + "' стоит " + watchdog.limitTicks() + " тиков без продвижения у клетки "
+                + cell + ": " + detail + (reachWhy.isBlank() ? "" : " (" + reachWhy + ")");
     }
 
     @Override

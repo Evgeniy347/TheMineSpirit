@@ -41,6 +41,7 @@ final class BoardDispatchDesk {
     private final BoardSettlementDesk settlement;
     private final CrafterMemory crafters = new CrafterMemory();
     private final TransferWait transferWait = new TransferWait();
+    private final OrphanTaskWatch orphans = new OrphanTaskWatch();
     private boolean freshTickets;
     private long lastDispatch;
     private int claims;
@@ -81,6 +82,7 @@ final class BoardDispatchDesk {
 
     void settleOwners(List<SpiritEntity> spirits) {
         settlement.settleOwners(spirits);
+        orphans.watch(board, spirits);
     }
 
     void releaseDeadHolders(ServerLevel level, List<SpiritEntity> spirits, long now) {

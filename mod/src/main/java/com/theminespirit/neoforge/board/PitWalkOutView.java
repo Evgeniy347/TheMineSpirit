@@ -19,6 +19,11 @@ public final class PitWalkOutView implements PitWalkOut.World {
         this.cells = new PitWorldView(level);
     }
 
+    public PitWalkOutView(Level level, PitExitPlanner.World cells) {
+        this.level = Objects.requireNonNull(level, "Мир не может быть null: по нему ищется пеший выход");
+        this.cells = Objects.requireNonNull(cells, "Клетки мира не могут быть null: без них не видно прохода");
+    }
+
     @Override
     public OptionalInt groundY(int x, int z, int from) {
         return PitExitPlanner.groundY(x, z, from, cells);

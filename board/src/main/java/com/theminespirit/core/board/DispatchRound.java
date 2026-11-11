@@ -69,15 +69,27 @@ public final class DispatchRound {
 
     private final Board board;
     private final long now;
+    private final int maxUndoSpirits;
     private final Map<UUID, Integer> held;
     private final Map<UUID, String> awaiting = new HashMap<>();
     private final Map<UUID, Map<String, String>> vitalPaths = new HashMap<>();
     private final LifePreemption preemption = new LifePreemption();
+    private int undoSpirits;
 
     public DispatchRound(Board board, long now) {
+        this(board, now, BoardTuning.maxUndoSpirits());
+    }
+
+    DispatchRound(Board board, long now, int maxUndoSpirits) {
         this.board = Objects.requireNonNull(board, "Доска раунда выдачи не может быть null: задания берутся с неё");
+        if (maxUndoSpirits < 1) {
+            throw new IllegalArgumentException("Предел духов на откатах " + maxUndoSpirits
+                    + ": откат отдают хотя бы одному духу, иначе брошенные аренды никто не уберёт");
+        }
         this.now = now;
+        this.maxUndoSpirits = maxUndoSpirits;
         this.held = new HashMap<>(board.assignedCounts());
+        this.undoSpirits = assignedUndo();
     }
 
     public static boolean tooLowForCleanup(BoardCase boardCase, int spiritY, int targetY) {
@@ -138,6 +150,10 @@ public final class DispatchRound {
         Optional<String> vital = VitalGate.refusal(ticket, vitalPath(spirit), VitalNeeds.needs());
         if (vital.isPresent()) {
             return vital;
+        }
+        if (ticket.boardCase() == BoardCase.ACTIVITY_UNDO && undoSpirits >= maxUndoSpirits) {
+            return Optional.of("откатов уже " + undoSpirits + " из " + maxUndoSpirits
+                    + ": брошенные аренды ждут, духи нужны работам этапа");
         }
         if (spirit.busyWith() != null && !preemption.freed(spirit.id())) {
             return Optional.of("занят: " + spirit.busyWith());
@@ -238,6 +254,7 @@ public final class DispatchRound {
 
     public void take(UUID spirit) {
         held.merge(spirit, 1, Integer::sum);
+        undoSpirits = assignedUndo();
     }
 
     public void await(UUID spirit, String why) {
@@ -266,5 +283,16 @@ public final class DispatchRound {
             ids.add(ticket.id());
         }
         return ids.isEmpty() ? "задание этого раунда" : String.join(", ", ids);
+    }
+
+    private int assignedUndo() {
+        int count = 0;
+        for (BoardTicket ticket : board.tickets()) {
+            if (ticket.boardCase() == BoardCase.ACTIVITY_UNDO
+                    && board.statusOf(ticket.id()).orElse(null) == BoardStatus.ASSIGNED) {
+                count++;
+            }
+        }
+        return count;
     }
 }

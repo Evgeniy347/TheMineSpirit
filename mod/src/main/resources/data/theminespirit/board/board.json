@@ -103,6 +103,8 @@
     "chopRadius": 100,
     "maxPending": 64,
     "maxActivePerSpirit": 1,
+    "maxUndoSpirits": 2,
+    "undoNoProgressTicks": 1200,
     "stockReadBudget": 8,
     "stockBlockBudget": 4096,
     "failBackoffTicks": 200,
