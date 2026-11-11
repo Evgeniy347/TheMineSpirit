@@ -26,9 +26,10 @@ tmux new-session -d -s "$TMUX_SESSION" -c "$SERVER_DIR" "./run.sh nogui"
 # При старте latest.log пересоздаётся, поэтому смещение сбрасываем.
 sleep 3
 [ "$(log_size)" -lt "$offset" ] && offset=0
-if wait_for_log 'Done (' "$offset" 300; then
+READY_TIMEOUT="${START_READY_TIMEOUT:-300}"
+if wait_for_log 'Done (' "$offset" "$READY_TIMEOUT"; then
     echo "Сервер запущен. Консоль: scripts/console.sh"
 else
-    echo "Сервер не сообщил о готовности за 5 минут, проверь logs/latest.log" >&2
+    echo "Сервер не сообщил о готовности за ${READY_TIMEOUT} с, проверь logs/latest.log" >&2
     exit 1
 fi

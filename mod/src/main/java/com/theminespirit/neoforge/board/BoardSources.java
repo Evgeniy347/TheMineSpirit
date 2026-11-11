@@ -45,6 +45,14 @@ public final class BoardSources {
         return guard.failedRound();
     }
 
+    public Map<String, Long> sourceMillis() {
+        return guard.sourceMillis();
+    }
+
+    public Map<String, Long> graphPhases() {
+        return graph.lastPhases();
+    }
+
     public GraphDecisions graphDecisions() {
         return graph.decisionLog.decisions();
     }

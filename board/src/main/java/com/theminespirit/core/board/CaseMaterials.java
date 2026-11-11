@@ -100,6 +100,7 @@ public final class CaseMaterials {
             }
             case "build_schematic" -> addSchematic(taken.placed(), call, source);
             case "place_block" -> merge(taken.placed(), normalize(withoutState(text(call, "block"))), 1);
+            case "fill" -> merge(taken.placed(), normalize(withoutState(text(call, "block"))), volume(call));
             case "acquire" -> merge(taken.acquired(), normalize(text(call, ITEM)), integer(call, "count"));
             default -> {}
         }
@@ -172,6 +173,17 @@ public final class CaseMaterials {
                     + "': по плану не посчитать материалы — исправьте план кейса");
         }
         return number;
+    }
+
+    private static int volume(ScriptCall call) {
+        int width = integer(call, "x2") - integer(call, "x1") + 1;
+        int height = integer(call, "y2") - integer(call, "y1") + 1;
+        int depth = integer(call, "z2") - integer(call, "z1") + 1;
+        if (width < 1 || height < 1 || depth < 1) {
+            throw new IllegalArgumentException(
+                    "Шаг 'fill' с перевёрнутой областью: материалы не посчитать — " + "исправьте план кейса");
+        }
+        return width * height * depth;
     }
 
     private static String withoutState(String block) {

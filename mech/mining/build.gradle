@@ -1,3 +1,8 @@
 plugins {
     id 'theminespirit.module'
 }
+
+dependencies {
+    // lib: досягаемость духа — одна таблица build.json; своя копия глубины стоянки расходится с ней молча.
+    implementation project(':mech:building')
+}

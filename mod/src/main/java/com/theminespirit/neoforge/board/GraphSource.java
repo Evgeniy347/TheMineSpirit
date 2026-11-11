@@ -19,6 +19,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,6 +41,7 @@ public final class GraphSource {
 
     private long lastDeep = -1;
     private Set<String> lastLive = Set.of();
+    private final Map<String, Long> phases = new LinkedHashMap<>();
 
     record Half(
             ServerLevel level,
@@ -65,37 +67,66 @@ public final class GraphSource {
             StockView stock,
             Set<String> events,
             long now) {
+        phases.clear();
         if (pending != null) {
-            return finish(pending);
+            long started = System.nanoTime();
+            Set<String> done = finish(pending);
+            mark("finish", started);
+            return done;
         }
+        long started = System.nanoTime();
         Set<String> signals = new HashSet<>(GraphSignals.of(events, spirits, service, now));
         signals.add(service.sources.rescueReach().readyEvent());
+        mark("signals", started);
         if (!cadence.due(now, signals)) {
             return lastLive;
         }
         SupplyGraph graph = DataTables.INSTANCE.graph().current();
+        started = System.nanoTime();
         Optional<FirstStepsRunner.StageScan> scan = FirstStepsRunner.tick(level, service, spirits, stock, now);
+        mark("stage", started);
         if (scan.isEmpty()) {
             lastLive = Set.of();
             return lastLive;
         }
         FirstStepsRunner.StageScan stageScan = scan.orElseThrow();
+        started = System.nanoTime();
         QuarryWatch.Result quarries = this.quarries.tick(level, stageScan.home(), now);
+        mark("quarry", started);
+        started = System.nanoTime();
         GraphSurroundings.Around around = GraphSurroundings.of(
                         level, service, stageScan.home(), quarries.nearest(), quarries.distances())
                 .with(events)
                 .withRoutes(quarries.events(), quarries.world());
+        mark("around", started);
+        started = System.nanoTime();
         GraphState state = GraphInputs.state(level, service, spirits, stock, stageScan, graph, around);
+        mark("state", started);
+        GraphInputs.lastPhases().forEach((name, millis) -> phases.merge("in." + name, millis, Long::sum));
         boolean deep = lastDeep < 0 || now < lastDeep || now - lastDeep >= DEEP_INTERVAL_TICKS;
         if (deep) {
             lastDeep = now;
+            started = System.nanoTime();
             settleBuilt(level, service, stock, stageScan, graph, state);
+            mark("built", started);
         }
+        started = System.nanoTime();
         GraphPlan plan = GraphPlanner.plan(graph, state);
+        mark("plan", started);
+        started = System.nanoTime();
         GraphTickets.Result result = GraphTickets.of(graph, state, plan);
+        mark("tickets", started);
         pending = new Half(
                 level, service, spirits, stock, stageScan, around, state, plan, graph, result, now, deep, signals);
         return lastLive;
+    }
+
+    public Map<String, Long> lastPhases() {
+        return Map.copyOf(phases);
+    }
+
+    private void mark(String name, long started) {
+        phases.merge(name, (System.nanoTime() - started) / 1_000_000, Long::sum);
     }
 
     private Set<String> finish(Half half) {

@@ -189,6 +189,72 @@ class BoardRescueTests {
         assertFalse(why.contains(AT.toString()), "Старые координаты в причине ожидания не показываются: " + why);
     }
 
+    @Test
+    void claimable_OwnRescueOfStuckSpirit_StaysAssignedToIt() {
+        long[] now = {1000};
+        Board board = new Board(() -> now[0]);
+        stuck(board, RESCUEE, "провал движения");
+        BoardTicket rescue = rescue(RESCUEE, "graph:rescue_spirit@1000");
+        board.submit(rescue);
+        assertEquals(BoardOutcome.CLAIMED, board.claim(rescue.id(), RESCUEE, now[0]), "Дух берёт своё спасение");
+
+        board.claimable(new StockView(Map.of()), now[0] + 1);
+
+        assertEquals(
+                Optional.of(BoardStatus.ASSIGNED),
+                board.statusOf(rescue.id()),
+                "Своё спасение нельзя отбирать у застрявшего: claimable снимал задание с него каждый тик и тут же "
+                        + "выдавал обратно — dig_out перезапускался 20 раз в секунду и каждый раз искал путь заново "
+                        + "(сервер 0.1.3595, тик 3,4 с; rescue:f58b83b6 ASSIGNED 100 раз за 25 с)");
+        assertTrue(
+                board.assignedTo(RESCUEE).contains(rescue),
+                "Задание спасения остаётся за спасённым: снятие возвращает его тому же духу и крутит пересборку");
+    }
+
+    @Test
+    void claimable_RescueHeldByStuckHelper_ReleasedToFreeSpirit() {
+        long[] now = {1000};
+        Board board = new Board(() -> now[0]);
+        stuck(board, RESCUEE, "провал движения");
+        stuck(board, HELPER, "провал движения");
+        BoardTicket rescue = rescue(RESCUEE, "graph:rescue_spirit@1000");
+        board.submit(rescue);
+        board.claim(rescue.id(), HELPER, now[0]);
+
+        board.claimable(new StockView(Map.of()), now[0] + 1);
+
+        assertEquals(
+                Optional.of(BoardStatus.PENDING),
+                board.statusOf(rescue.id()),
+                "Застрявшего помощника спасение не держит: задание возвращается доске и достаётся свободному духу");
+    }
+
+    @Test
+    void claimable_NormalTicketOfStuckSpirit_ReleasedToFreeSpirit() {
+        long[] now = {1000};
+        Board board = new Board(() -> now[0]);
+        stuck(board, RESCUEE, "провал движения");
+        BoardTicket gather = new BoardTicket(
+                "graph:make:jungle_log",
+                BoardCase.GATHER_MATERIALS,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.GATHER_MATERIALS),
+                now[0],
+                1,
+                "graph:make:jungle_log",
+                List.of(),
+                Map.of());
+        board.submit(gather);
+        board.claim(gather.id(), RESCUEE, now[0]);
+
+        board.claimable(new StockView(Map.of()), now[0] + 1);
+
+        assertEquals(
+                Optional.of(BoardStatus.PENDING),
+                board.statusOf(gather.id()),
+                "Обычная работа застрявшего возвращается доске: иначе она ждёт духа, который не двигается");
+    }
+
     private static BoardTicket rescue(UUID spirit, String cause) {
         return new BoardTicket(
                 "rescue:" + spirit,

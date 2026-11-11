@@ -3,6 +3,7 @@ package com.theminespirit.core.mining;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Optional;
@@ -170,17 +171,20 @@ class StandSpotsTests {
     }
 
     @Test
-    void of_DeepestStandBelowTarget_MaxOffsetIsNine() {
-        CellWorld world = new CellWorld().set(0, 0, 0, Cell.SOLID).set(0, -4, 0, Cell.SOLID);
+    void of_DeepestStandBelowTarget_MaxOffsetIsSquaredBound() {
+        CellWorld world = new CellWorld()
+                .set(0, 0, 0, Cell.SOLID)
+                .set(0, -4, 0, Cell.SOLID)
+                .set(1, -4, 0, Cell.SOLID);
         BlockCoord target = new BlockCoord(0, 0, 0);
+        SpiritReach reach = new SpiritReach(3, 15, 3);
 
-        List<BlockCoord> spots = StandSpots.of(target, world, new BlockCoord(0, 0, 0));
+        List<BlockCoord> spots = StandSpots.of(target, world, new BlockCoord(0, 0, 0), reach);
 
-        assertEquals(
-                List.of(new BlockCoord(0, -3, 0)),
-                spots,
-                "Самая глубокая стоянка обязана быть на 3 ниже цели: соседи дают не дальше (1,-2,0)=√5, "
-                        + "низ даёт (0,-3,0)=3; иначе ранний выход планировщика вычитает неверный радиус");
+        assertTrue(
+                spots.contains(new BlockCoord(0, -3, 0)) && spots.contains(new BlockCoord(1, -3, 0)),
+                "Самая глубокая стоянка обязана быть на 3 ниже цели и снизу, и сбоку: соседи дают (1,-3,0)=√10, "
+                        + "низ даёт (0,-3,0)=3; иначе верхушка столба остаётся без стоянки. Стоянки: " + spots);
         long maxOffset = spots.stream()
                 .mapToLong(stand -> (long) (stand.x() - target.x()) * (stand.x() - target.x())
                         + (long) (stand.y() - target.y()) * (stand.y() - target.y())
@@ -188,10 +192,11 @@ class StandSpotsTests {
                 .max()
                 .orElseThrow();
         assertEquals(
-                9,
+                StandSpots.maxOffsetSquared(reach),
                 maxOffset,
-                "Наибольшее смещение стоянки обязано равняться 9 = 3² (столб под целью): по нему планировщик "
-                        + "вычитает 3 в раннем выходе. Стоянок: " + spots.size());
+                "Наибольшее смещение стоянки обязано равняться " + StandSpots.maxOffsetSquared(reach)
+                        + " = 3² + 1² (сбоку на три ниже): по нему планировщик считает ранний выход, иначе "
+                        + "пропускает ближнюю цель со стоянкой. Стоянок: " + spots.size());
     }
 
     @Test
@@ -226,5 +231,47 @@ class StandSpotsTests {
         StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0));
 
         assertTrue(world.reads() <= 440, "Поиск стоянок читает не более " + 440 + " клеток. Чтений: " + world.reads());
+    }
+
+    @Test
+    void of_TargetThreeHighAboveStand_FindsStandThreeBelow() {
+        CellWorld world = new CellWorld()
+                .set(0, 3, 0, Cell.SOLID)
+                .set(0, 2, 0, Cell.SOLID)
+                .set(0, 1, 0, Cell.SOLID)
+                .set(0, 0, 0, Cell.SOLID)
+                .set(0, -1, 0, Cell.SOLID)
+                .set(1, 3, 0, Cell.PASSABLE)
+                .set(1, 2, 0, Cell.PASSABLE)
+                .set(1, 1, 0, Cell.PASSABLE)
+                .set(1, 0, 0, Cell.PASSABLE)
+                .set(1, -1, 0, Cell.SOLID);
+
+        List<BlockCoord> spots = StandSpots.of(new BlockCoord(0, 3, 0), world, new BlockCoord(0, 0, 0));
+
+        assertTrue(
+                spots.contains(new BlockCoord(1, 0, 0)),
+                "Цель на третьем блоке столба достаётся со стоянки на три ниже: без неё верхушка столба "
+                        + "навсегда остаётся «без стоянки», хотя дух дотягивается на 3 вниз. Стоянки: " + spots);
+    }
+
+    @Test
+    void of_StandFourBelowTarget_IsRejected() {
+        CellWorld world = new CellWorld()
+                .set(0, 0, 0, Cell.SOLID)
+                .set(1, 0, 0, Cell.PASSABLE)
+                .set(1, -1, 0, Cell.PASSABLE)
+                .set(1, -2, 0, Cell.PASSABLE)
+                .set(1, -3, 0, Cell.PASSABLE)
+                .set(1, -4, 0, Cell.PASSABLE)
+                .set(1, -5, 0, Cell.SOLID);
+
+        List<BlockCoord> spots = StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0));
+
+        assertEquals(
+                List.of(),
+                spots,
+                "Стоянка на четыре ниже цели вне досягаемости (вниз 3): её нельзя предлагать, иначе дух "
+                        + "выберет клетку, с которой не достанет блок. Стоянки: " + spots);
     }
 }

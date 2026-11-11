@@ -23,6 +23,7 @@ final class DigOutRoute {
     private final boolean rescue;
     private @Nullable RouteWalk route;
     private @Nullable Pending pending;
+    private SurfaceRoute.@Nullable Pending surface;
     private int retries;
     private boolean routeFailed;
 
@@ -35,18 +36,20 @@ final class DigOutRoute {
     }
 
     State tick() {
-        if (route == null && pending == null && retries < RETRIES && !routeFailed) {
-            if (descending) {
-                route = SurfaceRoute.planDescent(spirit, target, rescue).orElse(null);
-            } else {
-                route = SurfaceRoute.planToHome(spirit, target, rescue)
-                        .or(() -> SurfaceRoute.plan(spirit, rescue))
-                        .orElse(null);
+        if (route == null && pending == null && surface == null && retries < RETRIES && !routeFailed) {
+            surface = SurfaceRoute.begin(spirit, target, descending, rescue);
+            retries++;
+        }
+        if (surface != null) {
+            SurfaceRoute.advance(spirit, surface, SurfaceRoute.SLICE_MILLIS);
+            if (!surface.done()) {
+                return State.RUNNING;
             }
+            route = surface.walk();
+            surface = null;
             if (route == null) {
                 pending = RouteDetour.begin(spirit, target, radius, "dig_out");
             }
-            retries++;
         }
         if (pending != null) {
             RouteDetour.advance(spirit, pending, RouteDetour.SLICE_MILLIS);
@@ -77,6 +80,7 @@ final class DigOutRoute {
     }
 
     void cancel() {
+        surface = null;
         pending = null;
         if (route != null) {
             route.cancel();

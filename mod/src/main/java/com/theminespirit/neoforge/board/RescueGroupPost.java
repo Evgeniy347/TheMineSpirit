@@ -141,6 +141,11 @@ final class RescueGroupPost {
             Map<UUID, StuckSpirits.Stuck> marks,
             Map<UUID, SpiritEntity> entities,
             GraphPlan.Task task) {
+        for (RescueGroups.Member member : group.members()) {
+            if (post.open(GraphRescuePost.RESCUE + member.id())) {
+                return true;
+            }
+        }
         RescueTicket.Escape chosen = null;
         RescueGroups.Member leader = group.members().get(0);
         for (RescueGroups.Member member : group.members()) {

@@ -79,6 +79,8 @@ public final class DigOutGameTests {
         }
         PillarScene pillar = spawnOnOwnPillar(helper, board);
         assertBreachStore(helper);
+        DigOutBudget budget = DigOutBudget.start(board);
+        helper.onEachTick(budget::sample);
         helper.succeedWhen(() -> {
             for (int index = 0; index < spirits.size(); index++) {
                 SpiritEntity spirit = spirits.get(index);
@@ -95,7 +97,7 @@ public final class DigOutGameTests {
                 helper.assertTrue(
                         board.board().statusOf(ticket).orElse(null) == BoardStatus.DONE,
                         "выход закрывается заданием доски, статус "
-                                + board.board().statusOf(ticket).orElse(null));
+                                + board.board().statusOf(ticket).orElse(null) + " у задания " + ticket);
                 helper.assertFalse(
                         board.board()
                                 .stuck()
@@ -138,6 +140,7 @@ public final class DigOutGameTests {
                             .isStuck(pillar.spirit().getUUID(), board.board().now()),
                     "выполненный спуск со столба снимает метку «не двигается» по факту, а не по тайм-ауту: "
                             + "иначе дух навсегда выпадает из раздачи");
+            DigOutBudget.assertWithin(helper, budget.maxMillis());
             SpiritEntity walker = spirits.get(0);
             walker.getNavigation().moveTo(walker.getX() + 1, walker.getY(), walker.getZ(), 1.0);
             helper.assertFalse(

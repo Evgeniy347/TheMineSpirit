@@ -32,6 +32,10 @@ public final class PlotBreakSeen extends SavedData {
         return keys.recently(key, now, dedupeTicks);
     }
 
+    public int size() {
+        return keys.snapshot().size();
+    }
+
     public void remember(String key, long now) {
         keys.remember(key, now, MAX_KEYS);
         setDirty();

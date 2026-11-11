@@ -2,7 +2,6 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.forestry.ChopPlan;
-import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.forestry.TreeView;
@@ -19,48 +18,43 @@ final class TreeChop {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private enum Phase {
-        APPROACH,
-        CLIMB,
-        CLEAR,
+        ASCENT,
         CHOP,
-        DESCEND,
-        COLLECT
+        RETURN
     }
 
     private final SpiritEntity spirit;
-    private final Approach approach;
-    private final LeafClearing clearing;
     private final BlockBreaker breaker;
+    private final ChopScaffold scaffold;
+    private final ChopAscent ascent;
+    private final ChopPass pass;
+    private final ChopReturn chopReturn;
     private Tree tree;
     private TreeSpecies species;
     private Phase phase;
     private int standingLogs;
-    private final ChopScaffold scaffold;
-    private final ChopPass pass;
-    private final ChopHarvest harvest;
-    private final ChopPursuit pursuit;
     private @Nullable ChopOutcome refusal;
 
     TreeChop(SpiritEntity spirit, IdFilter logFilter, boolean replant, boolean orchard, TreeView view) {
         this.spirit = spirit;
-        this.approach = new Approach(spirit);
-        this.clearing = new LeafClearing(spirit, view);
         this.breaker = new BlockBreaker(spirit);
         this.scaffold = new ChopScaffold(spirit);
         this.pass = new ChopPass(spirit, view, orchard, breaker);
-        this.harvest = new ChopHarvest(spirit, logFilter, replant, orchard, view);
-        this.pursuit = new ChopPursuit(spirit);
+        this.ascent = new ChopAscent(spirit, view, pass, scaffold);
+        this.chopReturn = new ChopReturn(spirit, scaffold, new ChopHarvest(spirit, logFilter, replant, orchard, view));
     }
 
     void begin(Tree target) {
         tree = target;
         species = ChopSpecies.of(spirit.level(), target);
         standingLogs = 0;
-        pursuit.begin(target);
-        scaffold.reset();
-        clearing.begin(target, new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ()));
-        refusal = startApproach();
-        BlockPos stand = pursuit.stand();
+        ChopAscent.Step step =
+                ascent.begin(target, new BlockCoord(spirit.getBlockX(), spirit.getBlockY(), spirit.getBlockZ()));
+        if (step == ChopAscent.Step.NO_STAND) {
+            refusal = ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
+        }
+        phase = step == ChopAscent.Step.READY ? Phase.CHOP : Phase.ASCENT;
+        BlockPos stand = ascent.stand();
         if (stand != null) {
             BlockCoord base = tree.base();
             double trunk = Math.sqrt(spirit.position().distanceToSqr(Vec3.atBottomCenterOf(toPos(base))));
@@ -73,35 +67,6 @@ final class TreeChop {
         }
     }
 
-    private @Nullable ChopOutcome startApproach() {
-        ChopStand.Placement picked = pursuit.first();
-        if (picked == null && clearing.active()) {
-            phase = Phase.CLEAR;
-            return null;
-        }
-        if (picked == null) {
-            LOGGER.warn(
-                    "[chop] {}: у дерева {} нет стоянки вплотную к стволу на достижимой высоте — рубка брошена",
-                    spirit.getName().getString(),
-                    tree.base());
-            return ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
-        }
-        pass.begin(tree, toCoord(picked.feet()));
-        startApproachTo(picked);
-        return null;
-    }
-
-    private void startApproachTo(ChopStand.Placement picked) {
-        BlockCoord base = picked.climbFrom();
-        if (base == null) {
-            phase = Phase.APPROACH;
-            approach.begin(Vec3.atBottomCenterOf(picked.feet()), ChopTuning.CHOP_ARRIVAL);
-            return;
-        }
-        phase = Phase.CLIMB;
-        approach.begin(Vec3.atBottomCenterOf(toPos(base)), ChopTuning.CHOP_ARRIVAL);
-    }
-
     ChopOutcome tick() {
         if (refusal != null) {
             ChopOutcome outcome = refusal;
@@ -109,122 +74,52 @@ final class TreeChop {
             return outcome;
         }
         return switch (phase) {
-            case APPROACH -> approach();
-            case CLIMB -> climb();
-            case CLEAR -> clear();
+            case ASCENT -> ascent();
             case CHOP -> chop();
-            case DESCEND -> descend();
-            case COLLECT -> collect();
+            case RETURN -> returning();
         };
     }
 
     void cancel() {
         breaker.cancel();
-        approach.cancel();
-        clearing.cancel();
-        scaffold.cancel();
-        harvest.cancel();
+        ascent.cancel();
+        chopReturn.cancel();
     }
 
     void suspend() {
-        approach.suspend();
-        clearing.suspend();
+        ascent.suspend();
         pass.suspend();
-        harvest.suspend();
+        chopReturn.suspend();
     }
 
-    private ChopOutcome approach() {
-        return switch (approach.tick()) {
-            case MOVING -> ChopOutcome.running();
-            case ARRIVED -> resumeChop();
-            case STUCK, TIMEOUT -> retryStand();
-        };
-    }
-
-    private ChopOutcome climb() {
-        if (!scaffold.climbing()) {
-            return switch (approach.tick()) {
-                case MOVING -> ChopOutcome.running();
-                case ARRIVED -> startScaffold();
-                case STUCK, TIMEOUT -> retryStand();
-            };
-        }
-        return switch (scaffold.tickClimb()) {
+    private ChopOutcome ascent() {
+        return switch (ascent.tick()) {
             case RUNNING -> ChopOutcome.running();
-            case BUILT -> resumeChop();
-            case FAILED -> {
-                LOGGER.warn(
-                        "[chop] {} у дерева {}: подмости к стоянке {} не построены — {}",
-                        spirit.getName().getString(),
-                        tree.base(),
-                        pursuit.stand(),
-                        scaffold.failureReason());
-                yield retryStand();
-            }
+            case READY -> resumeChop();
+            case RETRY -> retryStand();
+            case GIVE_UP -> giveUp();
+            case NO_STAND -> ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
         };
-    }
-
-    private ChopOutcome startScaffold() {
-        BlockCoord base = pursuit.climbFrom();
-        BlockPos feet = pursuit.stand();
-        if (base == null || feet == null) {
-            return retryStand();
-        }
-        if (!scaffold.begin(base, feet.getY())) {
-            LOGGER.warn(
-                    "[chop] {} у дерева {}: до стоянки {} не подняться — {}",
-                    spirit.getName().getString(),
-                    tree.base(),
-                    feet.toShortString(),
-                    scaffold.failureReason());
-            return giveUp();
-        }
-        return scaffold.climbing() ? ChopOutcome.running() : resumeChop();
     }
 
     private ChopOutcome retryStand() {
-        BlockPos feet = pursuit.stand();
+        BlockPos feet = ascent.stand();
         List<BlockCoord> rest =
                 pass.rest(feet == null ? tree.base() : toCoord(feet)).order();
         if (rest.isEmpty()) {
-            return startDescent();
+            return startReturn();
         }
-        ChopStand.Placement picked = pursuit.next(rest);
-        if (picked == null) {
-            return giveUp();
+        if (ascent.pursue(rest) != null) {
+            return ChopOutcome.running();
         }
-        startApproachTo(picked);
-        return ChopOutcome.running();
+        return giveUp();
     }
 
     private ChopOutcome giveUp() {
         if (pass.remaining() == 0) {
-            return startDescent();
+            return startReturn();
         }
-        return pursuit.tried() > 1 ? leftStanding() : ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
-    }
-
-    private ChopOutcome descend() {
-        return switch (scaffold.tickDescent()) {
-            case RUNNING -> ChopOutcome.running();
-            case DONE -> startCollect();
-            case FAILED -> {
-                LOGGER.warn(
-                        "[chop] {} у дерева {}: подмости не разобраны — {}",
-                        spirit.getName().getString(),
-                        tree.base(),
-                        scaffold.failureReason());
-                yield startCollect();
-            }
-        };
-    }
-
-    private ChopOutcome clear() {
-        if (clearing.tick()) {
-            return ChopOutcome.running();
-        }
-        ChopOutcome outcome = startApproach();
-        return outcome == null ? ChopOutcome.running() : outcome;
+        return ascent.tried() > 1 ? leftStanding() : ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
     }
 
     private ChopOutcome resumeChop() {
@@ -241,13 +136,13 @@ final class TreeChop {
     }
 
     private ChopOutcome afterPass() {
-        BlockPos stand = pursuit.stand();
+        BlockPos stand = ascent.stand();
         ChopPlan rest = pass.rest(stand == null ? tree.base() : toCoord(stand));
         pass.continueWith(rest);
         if (rest.order().isEmpty()) {
-            return startDescent();
+            return startReturn();
         }
-        ChopStand.Placement picked = pursuit.next(rest.order());
+        BlockPos picked = ascent.pursue(rest.order());
         if (picked == null) {
             return leftStanding();
         }
@@ -256,18 +151,9 @@ final class TreeChop {
                 spirit.getName().getString(),
                 tree.base(),
                 rest.order().size(),
-                picked.feet().toShortString(),
-                pursuit.tried());
-        startApproachTo(picked);
-        return ChopOutcome.running();
-    }
-
-    private ChopOutcome startDescent() {
-        if (!scaffold.hasScaffold()) {
-            return startCollect();
-        }
-        scaffold.startDescent();
-        phase = Phase.DESCEND;
+                picked.toShortString(),
+                ascent.tried());
+        phase = Phase.ASCENT;
         return ChopOutcome.running();
     }
 
@@ -279,28 +165,21 @@ final class TreeChop {
                 tree.base(),
                 standingLogs,
                 pass.order());
-        return startDescent();
+        return startReturn();
     }
 
-    private ChopOutcome startCollect() {
-        harvest.begin(tree, species);
-        phase = Phase.COLLECT;
+    private ChopOutcome startReturn() {
+        chopReturn.begin(tree, species, standingLogs);
+        phase = Phase.RETURN;
         return ChopOutcome.running();
     }
 
-    private ChopOutcome collect() {
-        return switch (harvest.tick()) {
-            case RUNNING -> ChopOutcome.running();
-            case DONE -> finish();
-            case FAILED -> {
-                cancel();
-                yield ChopOutcome.failed("подбор дропа после рубки: " + harvest.failureReason());
-            }
-        };
-    }
-
-    private ChopOutcome finish() {
-        return ChopOutcome.done(standingLogs, harvest.planted(), harvest.skipped(), harvest.lacked());
+    private ChopOutcome returning() {
+        ChopOutcome outcome = chopReturn.tick();
+        if (outcome.state() == ChopOutcome.State.FAILED) {
+            cancel();
+        }
+        return outcome;
     }
 
     private static BlockPos toPos(BlockCoord coord) {

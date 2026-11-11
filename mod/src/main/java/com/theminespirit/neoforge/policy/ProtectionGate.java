@@ -36,11 +36,17 @@ public final class ProtectionGate {
     private static final String AIR_ID = "minecraft:air";
 
     private final SpiritEntity spirit;
+    private final boolean journal;
     private final ProtectionNeighbours neighbours = new ProtectionNeighbours();
     private int checks;
 
     public ProtectionGate(SpiritEntity spirit) {
+        this(spirit, true);
+    }
+
+    public ProtectionGate(SpiritEntity spirit, boolean journal) {
         this.spirit = spirit;
+        this.journal = journal;
     }
 
     public BlockProtection.Decision checkBreak(BlockPos pos, BlockState state) {
@@ -160,7 +166,7 @@ public final class ProtectionGate {
         boolean structure = level instanceof ServerLevel server && PlotCellStructure.isStructure(server, pos);
         PlotProtection.Decision plot = PlotProtection.check(site, coord, action, effective, ownBuilding, structure);
         if (plot instanceof PlotProtection.Refused refused) {
-            if (level instanceof ServerLevel server) {
+            if (journal && level instanceof ServerLevel server) {
                 PlotBreakLog.refused(server, pos, spirit, action.name(), effective, refused.reason());
             }
             return new BlockProtection.Refused(PolicyId.PROTECTED_BLOCKS, refused.reason());

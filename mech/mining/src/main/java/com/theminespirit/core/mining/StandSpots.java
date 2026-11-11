@@ -1,6 +1,7 @@
 package com.theminespirit.core.mining;
 
 import com.theminespirit.core.building.BlockSight;
+import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.adapter.Visibility;
 import java.util.ArrayList;
@@ -12,16 +13,22 @@ import java.util.Optional;
 
 public final class StandSpots {
 
-    private static final int MAX_DEPTH = 2;
+    private static final int UP_SIDE_STAND_OFFSET_SQUARED = 2;
     private static final int[][] FACE_OFFSETS = {{0, 1, 0}, {0, -1, 0}, {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}};
     private static final int[][] HORIZONTAL_OFFSETS = {{1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}};
 
     private StandSpots() {}
 
     public static List<BlockCoord> of(BlockCoord target, SafetyView view, BlockCoord from) {
+        return of(target, view, from, SpiritReach.current());
+    }
+
+    static List<BlockCoord> of(BlockCoord target, SafetyView view, BlockCoord from, SpiritReach reach) {
         Objects.requireNonNull(target, "Цель не может быть null: без неё неизвестно, где искать стоянку");
         Objects.requireNonNull(view, "SafetyView не может быть null: по нему проверяется стоянка");
         Objects.requireNonNull(from, "Точка отсчёта не может быть null: по ней сортируются стоянки");
+        Objects.requireNonNull(reach, "Досягаемость не может быть null: по ней ограничена глубина стоянки");
+        int maxDrop = reach.down();
         List<BlockCoord> candidates = new ArrayList<>();
         boolean exposed = false;
         boolean fallingAbove = view.cellAt(offset(target, 0, 1, 0)) == Cell.FALLING;
@@ -31,8 +38,11 @@ public final class StandSpots {
                 continue;
             }
             exposed = true;
-            for (int depth = 0; depth <= MAX_DEPTH; depth++) {
+            for (int depth = 0; depth <= maxDrop; depth++) {
                 BlockCoord stand = new BlockCoord(neighbor.x(), neighbor.y() - depth, neighbor.z());
+                if (target.y() - stand.y() > maxDrop) {
+                    continue;
+                }
                 if (offset(stand, 0, -1, 0).equals(target)) {
                     continue;
                 }
@@ -59,6 +69,16 @@ public final class StandSpots {
         Comparator<BlockCoord> byDistance = Comparator.comparingLong(coord -> distanceSquared(from, coord));
         unique.sort(byDistance.thenComparing(Comparator.naturalOrder()));
         return List.copyOf(unique);
+    }
+
+    public static int maxOffsetSquared() {
+        return maxOffsetSquared(SpiritReach.current());
+    }
+
+    static int maxOffsetSquared(SpiritReach reach) {
+        Objects.requireNonNull(reach, "Досягаемость не может быть null: по ней считается предел смещения стоянки");
+        int down = reach.down();
+        return Math.max(UP_SIDE_STAND_OFFSET_SQUARED, down * down + 1);
     }
 
     public static Optional<BlockCoord> above(BlockCoord target, SafetyView view) {
