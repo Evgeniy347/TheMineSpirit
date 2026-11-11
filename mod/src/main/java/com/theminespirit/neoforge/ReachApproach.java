@@ -17,6 +17,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 public final class ReachApproach {
@@ -24,22 +25,45 @@ public final class ReachApproach {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final double STAND_ARRIVAL = 0.8;
 
+    private enum Probe {
+        ACCEPTED,
+        SKIPPED,
+        EXHAUSTED
+    }
+
     private final SpiritEntity spirit;
     private final Approach approach;
     private final LevelSafetyView safety;
+    private final ReachPlanner.World world;
     private final Set<BlockCoord> tried = new HashSet<>();
+    private ReachStands.@Nullable Search search;
     private BlockCoord target;
     private BlockCoord stand;
     private boolean active;
     private String refusal;
     private boolean routes;
     private int rejected;
+    private int probes;
+    private int walks;
+    private @Nullable BlockCoord walkFrom;
+    private @Nullable Set<BlockCoord> walkable;
     private String rejection;
 
     public ReachApproach(SpiritEntity spirit) {
         this.spirit = spirit;
         this.approach = new Approach(spirit);
         this.safety = new LevelSafetyView(spirit.level());
+        this.world = new ReachPlanner.World() {
+            @Override
+            public boolean ready(BlockCoord cell) {
+                return true;
+            }
+
+            @Override
+            public boolean standable(BlockCoord feet) {
+                return MiningSafety.canStand(feet, safety);
+            }
+        };
     }
 
     public static ReachApproach withRoutes(SpiritEntity spirit) {
@@ -52,7 +76,10 @@ public final class ReachApproach {
         approach.cancel();
         target = new BlockCoord(block.getX(), block.getY(), block.getZ());
         tried.clear();
+        search = null;
         stand = null;
+        walkFrom = null;
+        walkable = null;
         refusal = null;
         rejected = 0;
         rejection = null;
@@ -70,19 +97,18 @@ public final class ReachApproach {
         if (!approach.isActive()) {
             if (stand != null) {
                 tried.add(stand);
+                stand = null;
+                search = null;
             }
-            if (tried.size() >= MAX_STANDS || !nextStand()) {
-                refusal = "ни одной достижимой стоянки у " + target + " ("
-                        + SpiritReach.current().describe() + "), проверены стоянки " + tried
-                        + (refusal == null ? "" : "; " + refusal);
-                LOGGER.info(
-                        "[move] {}: цель {} — перебрано стоянок {}, ни одна не достижима ({})",
-                        spirit.displayName(),
-                        target,
-                        rejected,
-                        rejection == null ? "подходящих стоянок нет" : rejection);
-                finish();
-                return Approach.State.STUCK;
+            if (tried.size() >= MAX_STANDS) {
+                return refuse();
+            }
+            Probe probe = probeStand();
+            if (probe == Probe.SKIPPED) {
+                return Approach.State.MOVING;
+            }
+            if (probe == Probe.EXHAUSTED) {
+                return refuse();
             }
         }
         Approach.State state = approach.tick();
@@ -112,6 +138,14 @@ public final class ReachApproach {
         return refusal;
     }
 
+    public int probes() {
+        return probes;
+    }
+
+    public int walks() {
+        return walks;
+    }
+
     public void cancel() {
         approach.cancel();
         active = false;
@@ -121,34 +155,46 @@ public final class ReachApproach {
         approach.suspend();
     }
 
-    private boolean nextStand() {
-        ReachPlanner.World world = new ReachPlanner.World() {
-            @Override
-            public boolean ready(BlockCoord cell) {
-                return true;
-            }
-
-            @Override
-            public boolean standable(BlockCoord feet) {
-                return MiningSafety.canStand(feet, safety);
-            }
-        };
-        Optional<BlockCoord> next = ReachStands.next(
-                SpiritReach.current(), feet(), List.of(target), world, tried, this::standReachable, MAX_STANDS);
-        if (next.isEmpty()) {
-            return false;
+    private Probe probeStand() {
+        if (search == null) {
+            search = ReachStands.search(SpiritReach.current(), feet(), List.of(target), world, tried);
         }
-        stand = next.get();
+        Optional<BlockCoord> next = search.nextCandidate();
+        if (next.isEmpty()) {
+            return Probe.EXHAUSTED;
+        }
+        BlockCoord candidate = next.get();
+        if (!standReachable(candidate)) {
+            search.skip(candidate);
+            return Probe.SKIPPED;
+        }
+        stand = candidate;
+        search = null;
         Vec3 point = new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5);
         if (routes && !DigOutScript.open(spirit.level(), spirit.blockPosition())) {
             approach.beginWithRoutes(point, STAND_ARRIVAL);
         } else {
             approach.begin(point, STAND_ARRIVAL);
         }
-        return true;
+        return Probe.ACCEPTED;
+    }
+
+    private Approach.State refuse() {
+        refusal = "ни одной достижимой стоянки у " + target + " ("
+                + SpiritReach.current().describe() + "), проверены стоянки " + tried
+                + (refusal == null ? "" : "; " + refusal);
+        LOGGER.info(
+                "[move] {}: цель {} — перебрано стоянок {}, ни одна не достижима ({})",
+                spirit.displayName(),
+                target,
+                rejected,
+                rejection == null ? "подходящих стоянок нет" : rejection);
+        finish();
+        return Approach.State.STUCK;
     }
 
     private boolean standReachable(BlockCoord feet) {
+        probes++;
         boolean reachable = routes
                 && spirit.level() instanceof ServerLevel level
                 && PathNetworkService.route(level, feet(), feet).isPresent();
@@ -168,13 +214,23 @@ public final class ReachApproach {
 
     private boolean twoWayWalk(BlockCoord stand) {
         BlockCoord from = feet();
+        if (!from.equals(walkFrom) || walkable == null) {
+            walkFrom = from;
+            walkable = walkCells(from);
+            walks++;
+        }
+        return walkable != null && walkable.contains(stand);
+    }
+
+    private @Nullable Set<BlockCoord> walkCells(BlockCoord from) {
         int margin = 8;
-        int minX = Math.min(from.x(), stand.x()) - margin;
-        int maxX = Math.max(from.x(), stand.x()) + margin;
-        int minZ = Math.min(from.z(), stand.z()) - margin;
-        int maxZ = Math.max(from.z(), stand.z()) + margin;
-        int minY = Math.min(from.y(), stand.y()) - margin;
-        int maxY = Math.max(from.y(), stand.y()) + margin;
+        BlockCoord to = target;
+        int minX = Math.min(from.x(), to.x()) - margin;
+        int maxX = Math.max(from.x(), to.x()) + margin;
+        int minZ = Math.min(from.z(), to.z()) - margin;
+        int maxZ = Math.max(from.z(), to.z()) + margin;
+        int minY = Math.min(from.y(), to.y()) - margin;
+        int maxY = Math.max(from.y(), to.y()) + margin;
         return RetreatPath.walkable(
                         from,
                         new NetworkLevelView(spirit.level()),
@@ -184,8 +240,7 @@ public final class ReachApproach {
                                 && cell.z() <= maxZ
                                 && cell.y() >= minY
                                 && cell.y() <= maxY)
-                .map(cells -> cells.contains(stand))
-                .orElse(false);
+                .orElse(null);
     }
 
     private void finish() {

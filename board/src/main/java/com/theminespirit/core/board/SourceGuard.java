@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -13,6 +14,7 @@ public final class SourceGuard {
 
     private final Report report;
     private final Map<String, String> lastErrors = new HashMap<>();
+    private final Map<String, Long> millis = new LinkedHashMap<>();
     private boolean failedRound;
 
     public SourceGuard(Report report) {
@@ -21,10 +23,15 @@ public final class SourceGuard {
 
     public void startRound() {
         failedRound = false;
+        millis.clear();
     }
 
     public boolean failedRound() {
         return failedRound;
+    }
+
+    public Map<String, Long> sourceMillis() {
+        return Map.copyOf(millis);
     }
 
     public void run(String source, Runnable work) {
@@ -38,6 +45,7 @@ public final class SourceGuard {
     }
 
     public <T> T call(String source, Supplier<T> work, T fallback) {
+        long started = System.nanoTime();
         try {
             T result = work.get();
             lastErrors.remove(source);
@@ -48,6 +56,8 @@ public final class SourceGuard {
             boolean repeated = message.equals(lastErrors.put(source, message));
             report.failed(source, error, repeated);
             return fallback;
+        } finally {
+            millis.merge(source, (System.nanoTime() - started) / 1_000_000, Long::sum);
         }
     }
 }

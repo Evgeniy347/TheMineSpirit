@@ -33,6 +33,7 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.terminal.CraftOrders;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +44,17 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 
 final class GraphInputs {
+    private static final Map<String, Long> PHASES = new LinkedHashMap<>();
+
     private GraphInputs() {}
+
+    static Map<String, Long> lastPhases() {
+        return Map.copyOf(PHASES);
+    }
+
+    private static void mark(String name, long started) {
+        PHASES.merge(name, (System.nanoTime() - started) / 1_000_000, Long::sum);
+    }
 
     static GraphState state(
             ServerLevel level,
@@ -53,8 +64,11 @@ final class GraphInputs {
             FirstStepsRunner.StageScan scan,
             SupplyGraph graph,
             GraphSurroundings.Around around) {
+        PHASES.clear();
         int stage = service.board().ledger().stage();
+        long started = System.nanoTime();
         Map<String, Built> buildings = buildings(level, service, service.board().ledger(), scan, graph);
+        mark("buildings", started);
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
         LifeInputs.Input life = LifeInputs.of(level, spirits, around.events());
         Set<String> events = new LinkedHashSet<>(life.events());
@@ -64,28 +78,36 @@ final class GraphInputs {
         if (ChestDemolition.pending(level, service)) {
             events.add(ChestDemolition.EVENT);
         }
-        GraphFacts facts = DigInputs.apply(
-                level,
-                spirits,
-                GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around)
-                        .withThreats(life.threats())
-                        .withPlayers(LifeInputs.players(level))
-                        .withPlanBreaches(GraphFactInputs.planBreaches(level))
-                        .withChests(
-                                GraphFactInputs.chestFacts(StockReader.chests(level), GraphFactInputs.reachAt(level)))
-                        .withFeedback(GraphWorldFeedbackInputs.of(level, spirits, scan.home(), service))
-                        .withWorld(WorldAreaInputs.of(
-                                level,
-                                service,
-                                scan,
-                                town,
-                                BuildingAuditInputs.buildings(level, service, scan, buildings, town))));
+        started = System.nanoTime();
+        GraphFacts baseFacts = GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around);
+        mark("factBase", started);
+        started = System.nanoTime();
+        GraphFacts listed = baseFacts
+                .withThreats(life.threats())
+                .withPlayers(LifeInputs.players(level))
+                .withPlanBreaches(GraphFactInputs.planBreaches(level));
+        mark("factLists", started);
+        started = System.nanoTime();
+        GraphFacts chests = listed.withChests(
+                GraphFactInputs.chestFacts(StockReader.chests(level), GraphFactInputs.reachAt(level)));
+        mark("factChests", started);
+        started = System.nanoTime();
+        GraphFacts feedback = chests.withFeedback(GraphWorldFeedbackInputs.of(level, spirits, scan.home(), service));
+        mark("factFeedback", started);
+        started = System.nanoTime();
+        GraphFacts world = feedback.withWorld(WorldAreaInputs.of(
+                level, service, scan, town, BuildingAuditInputs.buildings(level, service, scan, buildings, town)));
+        mark("factWorld", started);
+        started = System.nanoTime();
+        GraphFacts facts = DigInputs.apply(level, spirits, world);
+        mark("factDig", started);
         GraphStockNote.log(facts, spirits);
         List<GraphBlock> blocks = new ArrayList<>(service.board().failures().graphBlocks());
         blocks.addAll(service.sources
                 .graphFailures()
                 .pathBlocks(service.board().now(), graph.costs().choice().failureHalfLife(), (int)
                         Math.ceil(graph.costs().choice().failureTargets())));
+        started = System.nanoTime();
         GraphState state = new GraphState(
                         GraphNames.stock(
                                 ChestReach.reachableStock(stock.available(), facts.chests()),
@@ -102,6 +124,8 @@ final class GraphInputs {
                 .withOrders(GraphNames.need(CraftOrders.shortage(level)))
                 .withFacts(
                         GraphStoreInputs.of(facts, level, graph), graph.costs().life());
+        mark("base", started);
+        started = System.nanoTime();
         GraphState more3 = More3Inputs.apply(
                 More2Inputs.apply(
                         MoreInputs.apply(
@@ -118,10 +142,20 @@ final class GraphInputs {
                 graph,
                 around,
                 scan);
+        mark("more3", started);
+        started = System.nanoTime();
         GraphState more4 = More4Inputs.apply(more3, level, spirits, scan, graph);
+        mark("more4", started);
+        started = System.nanoTime();
         GraphState more5 = More5World.apply(more4, level, graph, scan, around);
+        mark("more5", started);
+        started = System.nanoTime();
         GraphState more7 = More7Inputs.apply(more5, level, graph, scan);
-        return More6Inputs.apply(more7, level, around, scan).withBlocks(blocks);
+        mark("more7", started);
+        started = System.nanoTime();
+        GraphState done = More6Inputs.apply(more7, level, around, scan).withBlocks(blocks);
+        mark("more6", started);
+        return done;
     }
 
     static Map<String, Map<String, Integer>> kits(List<SpiritEntity> spirits, SupplyGraph graph) {

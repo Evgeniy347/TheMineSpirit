@@ -238,11 +238,11 @@ class DigOutRuleGuardTests {
         String surface = read(SourceFiles.path("neoforge/movement/SurfaceRoute.java"));
 
         assertTrue(
-                route.contains("SurfaceRoute.planToHome("),
+                route.contains("SurfaceRoute.begin("),
                 "Маршрут dig_out ищет поверхность у дома, а не любое небо: иначе дух после выхода из кармана "
                         + "идёт к краю площадки и падает в пустоту (падающий шаг DigOutGameTests)");
         assertTrue(
-                surface.contains("SurfaceGoal.home("),
+                surface.contains("SurfaceEscape.toHome(") && surface.contains("SurfaceGoal.home("),
                 "Признак поверхности у дома живёт в SurfaceGoal.home: любой getHeight/open без x/z снова "
                         + "уведёт маршрут на чужое небо");
     }

@@ -13,10 +13,12 @@ import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.TownStreets;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.PlotBreakSeen;
 import com.theminespirit.neoforge.board.PlotPlanBlocks;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.movement.RouteLevelView;
 import com.theminespirit.neoforge.policy.PlanBreachData;
+import com.theminespirit.neoforge.policy.ProtectionGate;
 import java.util.BitSet;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -106,12 +108,23 @@ public final class SettlementLevelScenesGameTests {
                 "Пролом запоминает тот же блок и духа: заделка возвращает именно его, а не дешёвую замену");
         PlanBreachData.get(helper.getLevel()).clear(pos);
         helper.assertTrue(
-                spirit.protectionGate().checkEscape(pos, state, true) instanceof BlockProtection.Allowed,
+                new ProtectionGate(spirit, false).checkEscape(pos, state, true) instanceof BlockProtection.Allowed,
                 "Расчёт пути при спасении считает клетку плана проходимой: иначе маршрут обходит дом и дух копает вслепую");
         helper.assertTrue(
                 PlanBreachData.get(helper.getLevel()).breach(pos) == null,
                 "Поиск пути не записывает пролом: учёт ведёт только настоящее действие, иначе доска «ремонтирует» "
                         + "клетки, которых никто не ломал");
+        int logged = PlotBreakSeen.get(helper.getLevel()).size();
+        RouteCell.kind(new RouteLevelView(spirit).cell(cell.x(), cell.y(), cell.z()));
+        RouteCell.kind(new RouteLevelView(spirit, true).cell(cell.x(), cell.y(), cell.z()));
+        BlockCoord spare = PlotPlanBlocks.of(site).blocks().keySet().stream()
+                .filter(at -> site.protectionCell(at.x(), at.y(), at.z()) && !at.equals(cell))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("В плане этапа нет второй клетки для проверки журнала"));
+        helper.getLevel()
+                .setBlockAndUpdate(
+                        new BlockPos(spare.x(), spare.y(), spare.z()), Blocks.JUNGLE_PLANKS.defaultBlockState());
+        RouteCell.kind(new RouteLevelView(spirit).cell(spare.x(), spare.y(), spare.z()));
         helper.assertTrue(
                 RouteCell.kind(new RouteLevelView(spirit).cell(cell.x(), cell.y(), cell.z())) == RouteCell.BLOCKED,
                 "Обычный проход не прокапывает клетку плана: обход дома остаётся запретом");
@@ -120,6 +133,11 @@ public final class SettlementLevelScenesGameTests {
                         != RouteCell.BLOCKED,
                 "Маршрут спасения видит ту же ломку, что разрешает ProtectionGate: иначе клетка плана навсегда "
                         + "закрывает путь наружу");
+        helper.assertTrue(
+                PlotBreakSeen.get(helper.getLevel()).size() == logged,
+                "Поиск пути не пишет журнал отказов: оценка клетки — не ломка, иначе сервер 0.1.3595 забивал "
+                        + "журнал тысячами строк на каждый маршрут (board_ms 1514, тик 3,4 с). Оценено клеток: "
+                        + (PlotBreakSeen.get(helper.getLevel()).size() - logged));
         spirit.discard();
         store.clear();
         GameTestFixtures.finish(helper);

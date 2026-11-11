@@ -42,6 +42,12 @@ public final class ClearScaffoldScenesGameTests {
         SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), SPIRIT);
         spirit.getInventory().addItem(new ItemStack(Items.IRON_SHOVEL));
         spirit.getInventory().addItem(new ItemStack(Items.DIRT, TALL + 4));
+        BlockPos lowPillar = new BlockPos(2, 1, 2);
+        for (int dy = 0; dy < 4; dy++) {
+            helper.setBlock(lowPillar.above(dy), Blocks.DIRT);
+        }
+        SpiritEntity lower = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(7, 1, 2));
+        lower.getInventory().addItem(new ItemStack(Items.IRON_SHOVEL));
         LeaseRun owned = LeaseRun.open(spirit, "scaffold");
         PlacedBlocksData placed = PlacedBlocksData.get(helper.getLevel());
         for (int dy = 0; dy < OWNED_HEIGHT; dy++) {
@@ -63,8 +69,23 @@ public final class ClearScaffoldScenesGameTests {
                         "y2", high.getY(),
                         "z2", high.getZ()));
         SpiritRun run = SpiritRun.launch(helper, spirit, clear, 1);
+        SpiritRun lowerRun =
+                SpiritRun.launch(helper, lower, clearCall(helper, lowPillar.above(3), lowPillar.above(3)), 1);
         helper.succeedWhen(() -> {
             CraftTestSupport.assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            CraftTestSupport.assertFinished(helper, lower, lowerRun, RunStatus.SUCCEEDED);
+            helper.assertTrue(
+                    helper.getBlockState(lowPillar.above(3)).isAir(),
+                    "Верхушка трёхблочного столба на высоте подъёма расчищается со стоянки на три ниже: в "
+                            + lowPillar.above(3) + " остался " + helper.getBlockState(lowPillar.above(3))
+                            + ", дух на " + lower.blockPosition());
+            List<Lease> lowerScaffolds = LeaseData.get(helper.getLevel()).book().all().stream()
+                    .filter(lease -> "scaffold".equals(lease.purpose()) && lease.ownedBy(lower.getUUID()))
+                    .toList();
+            helper.assertTrue(
+                    lowerScaffolds.isEmpty(),
+                    "Подъём не нужен: стоянка на три ниже в досягаемости, подмости не строятся. Аренды: "
+                            + lowerScaffolds);
             for (int dy = 0; dy < TALL; dy++) {
                 helper.assertTrue(
                         helper.getBlockState(COLUMN.above(dy)).isAir(),
@@ -116,6 +137,7 @@ public final class ClearScaffoldScenesGameTests {
                 }
             }
             spirit.discard();
+            lower.discard();
             GameTestFixtures.finish(helper, 16);
         });
     }

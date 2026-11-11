@@ -12,10 +12,13 @@ import static com.theminespirit.gametest.ChopTestSupport.countBlocksInWorld;
 import static com.theminespirit.gametest.ChopTestSupport.spawnChopper;
 
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.board.lease.Lease;
+import com.theminespirit.core.board.lease.LeaseStatus;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.lease.LeaseData;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -34,10 +37,31 @@ final class ChopBigTreesGameTests {
     // [флак] замер 885 тиков: 80 брёвен 2×2 высотой 20 рубятся с одной стоянки; потолок 1800 ≈ 2× замера
     @SceneStep(template = "mine_arena", timeoutTicks = 1800)
     public static void chopTree_GiantSpruceTwoByTwoHeightTwenty_ChoppedFromOneStand(GameTestHelper helper) {
+        GameTestFixtures.sweepEntities(helper);
         clearField(helper, 22);
         for (int x = 0; x < PLATFORM; x++) {
             for (int z = 0; z < PLATFORM; z++) {
                 helper.setBlock(x, 0, z, Blocks.DIRT);
+            }
+        }
+        BlockPos hanging = new BlockPos(3, 1, 1);
+        helper.setBlock(hanging.getX(), 4, hanging.getZ(), Blocks.DIRT);
+        for (int y = 5; y <= 20; y++) {
+            helper.setBlock(hanging.getX(), y, hanging.getZ(), Blocks.JUNGLE_LOG);
+        }
+        ChopSceneSupport.addLeavesCrown(helper, hanging.getX(), hanging.getZ(), 20, Blocks.JUNGLE_LEAVES);
+        helper.setBlock(hanging.getX() + 1, 20, hanging.getZ(), Blocks.JUNGLE_LOG);
+        helper.setBlock(hanging.getX() + 2, 20, hanging.getZ(), Blocks.JUNGLE_LOG);
+        helper.setBlock(hanging.getX() + 3, 20, hanging.getZ(), Blocks.JUNGLE_LOG);
+        var branchLeaves = Blocks.JUNGLE_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, false);
+        helper.setBlock(hanging.getX() + 2, 21, hanging.getZ(), branchLeaves);
+        helper.setBlock(hanging.getX() + 3, 21, hanging.getZ(), branchLeaves);
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                for (int y = -4; y <= 3; y++) {
+                    helper.setBlock(hanging.getX() + dx, y, hanging.getZ() + dz, Blocks.AIR);
+                }
+                helper.setBlock(hanging.getX() + dx, -4, hanging.getZ() + dz, Blocks.WATER);
             }
         }
         buildSquaredTree(helper, 4, 4, 20, 20, Blocks.SPRUCE_LOG, Blocks.SPRUCE_LEAVES);
@@ -58,6 +82,14 @@ final class ChopBigTreesGameTests {
         }
         BrokenAxes broken = brokenAxes(helper);
         SpiritEntity spirit = spawnChopper(helper);
+        SpiritEntity climber = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(8, 1, 1));
+        climber.getInventory().setItem(0, new ItemStack(Items.IRON_AXE));
+        climber.getInventory().addItem(new ItemStack(Items.DIRT, 32));
+        SpiritRun climbRun = SpiritRun.launch(helper, climber, chopCall("jungle", 1), SETTLE_TICKS);
+        int groundY = helper.absolutePos(BlockPos.ZERO).getY();
+        int[] climbTop = {Integer.MIN_VALUE};
+        helper.onEachTick(() ->
+                climbTop[0] = Math.max(climbTop[0], climber.blockPosition().getY() - groundY));
 
         BlockPos[] standAt = {null};
         double[] maxShift = {0};
@@ -102,6 +134,21 @@ final class ChopBigTreesGameTests {
                     "дуб с боковой веткой обязан срубиться целиком: пня и висящей верхушки не остаётся, " + "а в мире "
                             + oakLogs);
             broken.assertDone(helper);
+            climbRun.assertStarted();
+            helper.assertTrue(
+                    countBlocksInWorld(helper, Blocks.JUNGLE_LOG) == 0,
+                    "все брёвна ствола над ямой срублены без ходимых стоянок: осталось "
+                            + countBlocksInWorld(helper, Blocks.JUNGLE_LOG));
+            helper.assertTrue(
+                    climbTop[0] >= 20,
+                    "без подъёма верх ветки над ямой не срубить: дух поднимался только до " + climbTop[0]
+                            + " (нужна стоянка на 20)");
+            List<Lease> scaffolds = LeaseData.get(helper.getLevel()).book().all().stream()
+                    .filter(lease -> "scaffold".equals(lease.purpose()) && lease.ownedBy(climber.getUUID()))
+                    .toList();
+            helper.assertTrue(
+                    !scaffolds.isEmpty() && scaffolds.stream().allMatch(lease -> lease.status() == LeaseStatus.DONE),
+                    "подъём к стволу идёт на аренде подмостей и закрывается DONE после спуска: " + scaffolds);
             helper.assertTrue(
                     standAt[0] != null, "рубка обязана начаться: верхнее бревно срублено, стоянка зафиксирована");
             helper.assertTrue(

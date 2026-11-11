@@ -42,6 +42,7 @@ public final class DigOutScript implements ScriptInstance {
     private String failureReason;
     private @Nullable DigOutRoute routeFollow;
     private boolean routeFallback;
+    private boolean routeDescending;
     private final DigOutRestore restore;
     private final LeaseRun lease;
     private final DigOutRollback rollback;
@@ -57,6 +58,7 @@ public final class DigOutScript implements ScriptInstance {
         this.target = target;
         this.rescue = rescue;
         this.descending = target.y() < spirit.blockPosition().getY();
+        this.routeDescending = descending;
         this.breaker = BlockBreaker.escaping(spirit, rescue);
         this.placer = new BlockPlacer(spirit, PlotProtection.Ground.TEMPORARY_MOVEMENT);
         this.lease = LeaseRun.open(spirit, "dig_out");
@@ -173,14 +175,19 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     private boolean followRoute() {
-        if (routeFallback) {
-            return false;
+        boolean descentNow = target.y() < spirit.blockPosition().getY();
+        if (descentNow != routeDescending) {
+            routeDescending = descentNow;
+            if (routeFollow != null) routeFollow.cancel();
+            routeFollow = null;
+            routeFallback = false;
         }
+        if (routeFallback) return false;
         if (routeFollow == null) {
             routeFollow = new DigOutRoute(
                     spirit,
                     new BlockCoord(target.x(), target.y(), target.z()),
-                    descending,
+                    descentNow,
                     DigOutGoal.HOME_RADIUS,
                     rescue);
         }

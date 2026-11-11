@@ -6,6 +6,7 @@ import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.route.RouteCell;
 import com.theminespirit.core.route.RouteWorld;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.policy.ProtectionGate;
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
@@ -34,6 +35,7 @@ public final class RouteLevelView implements RouteWorld {
     private final SpiritEntity spirit;
     private final Level level;
     private final boolean rescue;
+    private final ProtectionGate protection;
     private final BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
     private final Map<BlockState, Integer> breakTicks = new HashMap<>();
     private final Map<Long, Integer> cells = new HashMap<>();
@@ -47,6 +49,7 @@ public final class RouteLevelView implements RouteWorld {
         this.spirit = spirit;
         this.level = spirit.level();
         this.rescue = rescue;
+        this.protection = new ProtectionGate(spirit, false);
     }
 
     public static int blocks(SpiritEntity spirit) {
@@ -114,8 +117,8 @@ public final class RouteLevelView implements RouteWorld {
             return -1;
         }
         BlockProtection.Decision decision = rescue
-                ? spirit.protectionGate().checkEscape(cursor.immutable(), state, true)
-                : spirit.protectionGate().checkBreak(cursor.immutable(), state);
+                ? protection.checkEscape(cursor.immutable(), state, true)
+                : protection.checkBreak(cursor.immutable(), state);
         if (decision instanceof BlockProtection.Refused) {
             return -1;
         }
