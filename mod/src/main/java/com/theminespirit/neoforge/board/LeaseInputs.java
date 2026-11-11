@@ -4,6 +4,7 @@ import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.board.lease.Lease;
 import com.theminespirit.core.board.lease.LeaseCell;
+import com.theminespirit.core.board.lease.LeaseUndo;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.lease.LeaseData;
@@ -48,7 +49,8 @@ final class LeaseInputs {
                     street,
                     lease.cells().size(),
                     (int) Math.round(Math.sqrt((double) dx * dx + (double) dz * dz)),
-                    depth));
+                    depth,
+                    LeaseUndo.key(lease)));
         }
         return List.copyOf(facts);
     }

@@ -20,7 +20,41 @@ public final class LeaseUndo {
         }
     }
 
+    private static final long FNV_OFFSET = 0xcbf29ce484222325L;
+    private static final long FNV_PRIME = 0x100000001b3L;
+
     private LeaseUndo() {}
+
+    public static String key(Lease lease) {
+        Objects.requireNonNull(lease, "Аренда не может быть null: без неё ключ отката не построить");
+        long hash = FNV_OFFSET;
+        for (Step step : order(lease)) {
+            hash = mix(hash, step.pos().x());
+            hash = mix(hash, step.pos().y());
+            hash = mix(hash, step.pos().z());
+            hash = mixText(hash, step.kind().name());
+            hash = mixText(hash, step.before());
+        }
+        return Long.toHexString(hash);
+    }
+
+    private static long mix(long hash, int value) {
+        for (int shift = 0; shift < 32; shift += 8) {
+            hash ^= (value >>> shift) & 0xffL;
+            hash *= FNV_PRIME;
+        }
+        return hash;
+    }
+
+    private static long mixText(long hash, @Nullable String text) {
+        if (text == null) {
+            return mix(hash, -1);
+        }
+        for (int at = 0; at < text.length(); at++) {
+            hash = mix(hash, text.charAt(at));
+        }
+        return mix(hash, -2);
+    }
 
     public static List<Step> order(Lease lease) {
         Objects.requireNonNull(lease, "Аренда не может быть null: откатывать нечего");

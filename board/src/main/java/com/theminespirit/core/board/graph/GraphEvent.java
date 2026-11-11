@@ -69,8 +69,7 @@ public record GraphEvent(
     }
 
     public static String undoTaskId(GraphSiteFacts.Lease lease) {
-        GraphFacts.Position at = lease.position();
-        return UNDO_PREFIX + lease.id() + "#" + at.x() + "," + at.y() + "," + at.z() + ":" + lease.cells();
+        return UNDO_PREFIX + lease.id() + "#" + lease.key();
     }
 
     public static String leaseId(String taskId) {

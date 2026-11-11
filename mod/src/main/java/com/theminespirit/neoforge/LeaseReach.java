@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.board.lease.RollbackReach;
 import com.theminespirit.core.building.SpiritReach;
+import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -32,6 +33,7 @@ final class LeaseReach {
     private @Nullable BlockCoord tunnelAt;
     private boolean retractReady;
     private String failureReason;
+    private @Nullable FailureFact failureFact;
 
     LeaseReach(SpiritEntity spirit, LevelSafetyView safety) {
         this.spirit = spirit;
@@ -66,7 +68,7 @@ final class LeaseReach {
         if (scaffold.busy()) {
             ScaffoldReach.Result result = scaffold.tick();
             if (result == ScaffoldReach.Result.FAILED) {
-                return failed(scaffold.failureReason());
+                return failed(scaffold.failureReason(), scaffold.failureFact());
             }
             return result == ScaffoldReach.Result.RUNNING ? Outcome.RUNNING : Outcome.READY;
         }
@@ -91,6 +93,11 @@ final class LeaseReach {
 
     String failureReason() {
         return failureReason == null ? "" : failureReason;
+    }
+
+    @Nullable
+    FailureFact failureFact() {
+        return failureFact;
     }
 
     void cancel() {
@@ -143,7 +150,7 @@ final class LeaseReach {
 
     private Outcome scaffoldOutcome(ScaffoldReach.Result started) {
         if (started == ScaffoldReach.Result.FAILED) {
-            return failed(scaffold.failureReason());
+            return failed(scaffold.failureReason(), scaffold.failureFact());
         }
         return Outcome.RUNNING;
     }
@@ -170,7 +177,7 @@ final class LeaseReach {
         }
         TunnelReach.State state = current.tick();
         if (state == TunnelReach.State.FAILED) {
-            return failed("подход копкой к " + tunnelAt + ": " + current.failureReason());
+            return failed("подход копкой к " + tunnelAt + ": " + current.failureReason(), current.failureFact());
         }
         if (state != TunnelReach.State.ARRIVED) {
             return Outcome.RUNNING;
@@ -187,7 +194,7 @@ final class LeaseReach {
         }
         TunnelReach.State state = current.retract();
         if (state == TunnelReach.State.FAILED) {
-            return failed("разбор прохода к " + tunnelAt + ": " + current.failureReason());
+            return failed("разбор прохода к " + tunnelAt + ": " + current.failureReason(), current.failureFact());
         }
         if (state == TunnelReach.State.RUNNING) {
             return Outcome.RUNNING;
@@ -257,7 +264,12 @@ final class LeaseReach {
     }
 
     private Outcome failed(String reason) {
+        return failed(reason, null);
+    }
+
+    private Outcome failed(String reason, @Nullable FailureFact fact) {
         failureReason = reason;
+        failureFact = fact;
         return Outcome.FAILED;
     }
 

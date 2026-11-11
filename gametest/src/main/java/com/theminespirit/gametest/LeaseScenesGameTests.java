@@ -5,6 +5,7 @@ import com.theminespirit.core.board.lease.Lease;
 import com.theminespirit.core.board.lease.LeaseStatus;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.ReachApproach;
@@ -46,9 +47,30 @@ public final class LeaseScenesGameTests {
         abandoned.orphan();
         assertOneProbePerTick(helper);
         SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("undo_lease", Map.of("id", abandoned.id())), 1);
+        SpiritEntity pillar = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 12));
+        pillar.getInventory().addItem(new ItemStack(Items.DIRT, 8));
+        ScriptCall up = new ScriptCall("pillar_up", Map.of("height", 5, "block", "minecraft:dirt", "down", false));
+        ScriptCall down = new ScriptCall("pillar_down", Map.of());
+        SpiritRun pillarRun = SpiritRun.launch(helper, pillar, new SequenceNode(List.of(up, down)), 1);
 
         helper.succeedWhen(() -> {
             CraftTestSupport.assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            CraftTestSupport.assertFinished(helper, pillar, pillarRun, RunStatus.SUCCEEDED);
+            for (int dy = 0; dy < 5; dy++) {
+                BlockPos cell = new BlockPos(1, 1 + dy, 12);
+                helper.assertTrue(
+                        helper.getBlockState(cell).isAir(),
+                        "разбор своего столба убирает его клетки: в " + cell + " остался "
+                                + helper.getBlockState(cell));
+            }
+            List<Lease> ownPillars = LeaseData.get(helper.getLevel()).book().all().stream()
+                    .filter(lease -> "scaffold".equals(lease.purpose()) && lease.ownedBy(pillar.getUUID()))
+                    .toList();
+            helper.assertTrue(
+                    ownPillars.stream().allMatch(lease -> lease.status() == LeaseStatus.DONE),
+                    "разобранный своими руками столб не остаётся брошенной арендой: " + ownPillars);
+            helper.assertTrue(
+                    pillar.getY() <= 2.5, "после разбора своего столба дух стоит на земле: " + pillar.blockPosition());
             for (int dy = 0; dy < height; dy++) {
                 helper.assertTrue(
                         helper.getBlockState(base.above(dy)).isAir(),
@@ -73,6 +95,7 @@ public final class LeaseScenesGameTests {
                     spirit.getY() <= 2.5,
                     "дух обязан спуститься по своим подмостям на землю: стоит на " + spirit.blockPosition());
             spirit.discard();
+            pillar.discard();
             GameTestFixtures.finish(helper, 24);
         });
     }
@@ -139,6 +162,7 @@ public final class LeaseScenesGameTests {
                     helper.getBlockState(phantom).isAir(),
                     "Клетка, которой уже нет, не повод строить столб к воздуху: в " + phantom + " сейчас "
                             + helper.getBlockState(phantom) + ", дух на " + spirit.blockPosition());
+
             helper.assertTrue(
                     helper.getBlockState(low).is(Blocks.DIRT),
                     "Сломанная клетка внизу возвращается на место: в " + low + " сейчас " + helper.getBlockState(low));
