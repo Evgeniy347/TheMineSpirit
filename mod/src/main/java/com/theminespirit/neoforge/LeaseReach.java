@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.board.lease.RollbackReach;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import org.jspecify.annotations.Nullable;
 
@@ -18,22 +19,25 @@ final class LeaseReach {
     private final SpiritEntity spirit;
     private final LevelSafetyView safety;
     private final ScaffoldReach scaffold;
+    private final StandWalk stands;
 
     private @Nullable ReachApproach walk;
     private @Nullable BlockCoord walkingTo;
     private @Nullable BlockCoord walkRefusedFor;
     private String walkRefusal;
+    private @Nullable BlockCoord climbCell;
+    private @Nullable BlockCoord climbedFor;
     private @Nullable TunnelReach tunnel;
     private @Nullable BlockCoord tunnelFor;
     private @Nullable BlockCoord tunnelAt;
     private boolean retractReady;
-    private int climbAfterWalk = -1;
     private String failureReason;
 
     LeaseReach(SpiritEntity spirit, LevelSafetyView safety) {
         this.spirit = spirit;
         this.safety = safety;
         this.scaffold = new ScaffoldReach(spirit, "откат аренды");
+        this.stands = new StandWalk(spirit);
     }
 
     ScaffoldReach scaffold() {
@@ -41,12 +45,19 @@ final class LeaseReach {
     }
 
     boolean busy() {
-        return retractReady || walkingTo != null || scaffold.busy() || (tunnel != null && tunnelFor != null);
+        return retractReady
+                || walkingTo != null
+                || stands.busy()
+                || scaffold.busy()
+                || (tunnel != null && tunnelFor != null);
     }
 
-    Outcome tick(BlockCoord cell, BlockCoord base) {
+    Outcome tick(BlockCoord cell) {
         if (retractReady) {
             return retractTick();
+        }
+        if (stands.busy()) {
+            return tickStand();
         }
         if (walkingTo != null) {
             Outcome outcome = tickWalk();
@@ -62,8 +73,11 @@ final class LeaseReach {
         if (tunnel != null && tunnelFor != null) {
             return forwardTunnel(cell);
         }
+        if (cell.y() <= feet().y() && PillarDownScript.ownBelow(spirit)) {
+            return scaffoldOutcome(scaffold.stepDown());
+        }
         if (cell.equals(walkRefusedFor) && walkRefusal != null) {
-            return fallback(cell, base);
+            return fallback(cell);
         }
         startWalk(cell);
         return Outcome.RUNNING;
@@ -83,29 +97,43 @@ final class LeaseReach {
         if (walk != null) {
             walk.cancel();
         }
+        stands.cancel();
         scaffold.cancel();
         if (tunnel != null) {
             tunnel.cancel();
         }
     }
 
-    private Outcome fallback(BlockCoord cell, BlockCoord base) {
+    private Outcome fallback(BlockCoord cell) {
         int rise = cell.y() - feet().y();
         RollbackReach.Step action = RollbackReach.next(rise, PillarDownScript.ownBelow(spirit));
         return switch (action.action()) {
-            case CLIMB -> climb(rise, base);
+            case CLIMB -> climb(cell);
             case STEP_DOWN -> stepDown();
             case DIG -> dig(cell);
         };
     }
 
-    private Outcome climb(int rise, BlockCoord base) {
-        if (!near(base) && !base.equals(walkRefusedFor)) {
-            startWalk(base);
-            climbAfterWalk = rise;
+    private Outcome climb(BlockCoord cell) {
+        if (cell.equals(climbedFor)) {
+            return failed("к клетке " + cell + " столб уже строили, а она не в досягаемости: откат ждёт пути");
+        }
+        if (!beside(cell)) {
+            Optional<BlockCoord> stand = stands.stand(cell);
+            if (stand.isEmpty()) {
+                return failed("к клетке " + cell + " нет стоянки сбоку для столба: откат ждёт пути");
+            }
+            climbCell = cell;
+            stands.begin(stand.orElseThrow());
             return Outcome.RUNNING;
         }
+        walkRefusedFor = null;
         walkRefusal = null;
+        int rise = cell.y() - feet().y();
+        if (rise < 1) {
+            return failed("к клетке " + cell + " не подняться со стоянки " + feet() + ": столб не нужен");
+        }
+        climbedFor = cell;
         return scaffoldOutcome(scaffold.climb(rise));
     }
 
@@ -180,7 +208,6 @@ final class LeaseReach {
         walkingTo = cell;
         walkRefusedFor = null;
         walkRefusal = null;
-        climbAfterWalk = -1;
     }
 
     private Outcome tickWalk() {
@@ -194,21 +221,39 @@ final class LeaseReach {
             return Outcome.RUNNING;
         }
         if (state == Approach.State.STUCK || state == Approach.State.TIMEOUT) {
-            walkRefusedFor = walkingTo;
+            BlockCoord failedTo = walkingTo;
             walkRefusal = current.refusal() == null ? "путь не найден" : current.refusal();
             walkingTo = null;
             current.cancel();
+            walkRefusedFor = failedTo;
             return Outcome.READY;
         }
         walkingTo = null;
         walkRefusedFor = null;
         walkRefusal = null;
-        if (climbAfterWalk > 0) {
-            int rise = climbAfterWalk;
-            climbAfterWalk = -1;
-            return scaffoldOutcome(scaffold.climb(rise));
-        }
         return Outcome.READY;
+    }
+
+    private Outcome tickStand() {
+        Approach.State state = stands.tick();
+        if (state == Approach.State.MOVING) {
+            return Outcome.RUNNING;
+        }
+        BlockCoord target = climbCell;
+        climbCell = null;
+        if (state == Approach.State.STUCK || state == Approach.State.TIMEOUT) {
+            String where = target == null ? "" : " у клетки " + target;
+            return failed("к стоянке" + where + " не подойти: " + stands.refusal());
+        }
+        if (target == null) {
+            return Outcome.READY;
+        }
+        int rise = target.y() - feet().y();
+        if (rise < 1) {
+            return failed("к клетке " + target + " не подняться со стоянки " + feet() + ": столб не нужен");
+        }
+        climbedFor = target;
+        return scaffoldOutcome(scaffold.climb(rise));
     }
 
     private Outcome failed(String reason) {
@@ -216,11 +261,11 @@ final class LeaseReach {
         return Outcome.FAILED;
     }
 
-    private boolean near(BlockCoord cell) {
-        BlockPos feet = spirit.blockPosition();
-        return Math.abs(feet.getX() - cell.x()) <= 2
-                && Math.abs(feet.getZ() - cell.z()) <= 2
-                && Math.abs(feet.getY() - cell.y()) <= 2;
+    private boolean beside(BlockCoord cell) {
+        int dx = Math.abs(spirit.blockPosition().getX() - cell.x());
+        int dz = Math.abs(spirit.blockPosition().getZ() - cell.z());
+        int reach = SpiritReach.current().horizontal();
+        return (dx > 0 || dz > 0) && dx <= reach && dz <= reach;
     }
 
     private BlockCoord feet() {

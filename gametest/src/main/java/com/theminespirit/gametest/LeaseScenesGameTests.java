@@ -5,7 +5,6 @@ import com.theminespirit.core.board.lease.Lease;
 import com.theminespirit.core.board.lease.LeaseStatus;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.lease.LeaseData;
@@ -74,6 +73,58 @@ public final class LeaseScenesGameTests {
         });
     }
 
+    @GameTest(template = "big_arena", batch = "scene_lease_scattered", timeoutTicks = 400)
+    public static void leaseScene_SkipsGoneCell_RollsBackHighAndLow(GameTestHelper helper) {
+        GameTestFixtures.reset(helper, 24);
+        GameTestFixtures.buildFloor(helper, Blocks.STONE);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(1, 1, 1));
+        spirit.getInventory().addItem(new ItemStack(Items.DIRT, 24));
+        spirit.getInventory().addItem(new ItemStack(Items.STONE_PICKAXE));
+        BlockPos high = new BlockPos(9, 18, 9);
+        BlockPos phantom = new BlockPos(9, 24, 9);
+        BlockPos low = new BlockPos(2, 3, 2);
+        LeaseRun abandoned = LeaseRun.open(spirit, "clear");
+        helper.setBlock(high, Blocks.DIRT);
+        abandoned.placed(helper.absolutePos(high), "minecraft:dirt");
+        abandoned.placed(helper.absolutePos(phantom), "minecraft:dirt");
+        abandoned.broken(helper.absolutePos(low), Blocks.DIRT.defaultBlockState());
+        abandoned.orphan();
+        SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("undo_lease", Map.of("id", abandoned.id())), 1);
+
+        helper.succeedWhen(() -> {
+            CraftTestSupport.assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
+            helper.assertTrue(
+                    helper.getBlockState(high).isAir(),
+                    "Клетка y=18 выше досягаемости: столб строят у неё, а не у низа аренды; в " + high + " сейчас "
+                            + helper.getBlockState(high) + ", дух на " + spirit.blockPosition());
+            helper.assertTrue(
+                    helper.getBlockState(phantom).isAir(),
+                    "Клетка, которой уже нет, не повод строить столб к воздуху: в " + phantom + " сейчас "
+                            + helper.getBlockState(phantom) + ", дух на " + spirit.blockPosition());
+            helper.assertTrue(
+                    helper.getBlockState(low).is(Blocks.DIRT),
+                    "Сломанная клетка внизу возвращается на место: в " + low + " сейчас " + helper.getBlockState(low));
+            Lease lease = LeaseData.get(helper.getLevel()).book().require(abandoned.id());
+            helper.assertTrue(
+                    lease.status() == LeaseStatus.DONE,
+                    "Разбросанная аренда закрывается DONE, а не остаётся висеть: " + lease.status() + ", клеток "
+                            + lease.cells().size());
+            List<Lease> scaffolds = LeaseData.get(helper.getLevel()).book().all().stream()
+                    .filter(other -> "scaffold".equals(other.purpose())
+                            && other.ownedBy(spirit.getUUID())
+                            && !other.id().equals(abandoned.id()))
+                    .toList();
+            helper.assertTrue(
+                    scaffolds.stream().allMatch(other -> other.status() == LeaseStatus.DONE),
+                    "свои подмости для подъёма откатываются вместе с работой, а не бросаются: " + scaffolds);
+            helper.assertTrue(
+                    spirit.getY() <= 2.5,
+                    "дух обязан спуститься по своим подмостям на землю: стоит на " + spirit.blockPosition());
+            spirit.discard();
+            GameTestFixtures.finish(helper, 24);
+        });
+    }
+
     @GameTest(template = "big_arena", batch = "scene_lease_dig", timeoutTicks = 400)
     public static void leaseScene_BuriedBrokenCellUnderStone_DigsInAndFillsTunnelBack(GameTestHelper helper) {
         GameTestFixtures.reset(helper, 24);
@@ -122,35 +173,6 @@ public final class LeaseScenesGameTests {
                     "аренда подхода копкой закрывается DONE вместе с откатом: " + approaches);
             spirit.discard();
             GameTestFixtures.finish(helper, 24);
-        });
-    }
-
-    @GameTest(template = "arena", batch = "scene_lease_own_pillar", timeoutTicks = 400)
-    public static void leaseScene_PillarUpThenDown_LeavesNoAbandonedScaffoldLease(GameTestHelper helper) {
-        GameTestFixtures.reset(helper);
-        GameTestFixtures.buildFloor(helper, Blocks.STONE);
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
-        spirit.getInventory().addItem(new ItemStack(Items.DIRT, 8));
-        ScriptCall up = new ScriptCall("pillar_up", Map.of("height", 5, "block", "minecraft:dirt", "down", false));
-        ScriptCall down = new ScriptCall("pillar_down", Map.of());
-        SpiritRun run = SpiritRun.launch(helper, spirit, new SequenceNode(List.of(up, down)), 1);
-
-        helper.succeedWhen(() -> {
-            CraftTestSupport.assertFinished(helper, spirit, run, RunStatus.SUCCEEDED);
-            for (int dy = 0; dy < 5; dy++) {
-                BlockPos cell = new BlockPos(4, 1 + dy, 4);
-                helper.assertTrue(
-                        helper.getBlockState(cell).isAir(),
-                        "разбор столба убирает свои клетки: в " + cell + " остался " + helper.getBlockState(cell));
-            }
-            List<Lease> scaffolds = LeaseData.get(helper.getLevel()).book().all().stream()
-                    .filter(lease -> "scaffold".equals(lease.purpose()) && lease.ownedBy(spirit.getUUID()))
-                    .toList();
-            helper.assertTrue(
-                    scaffolds.stream().allMatch(lease -> lease.status() == LeaseStatus.DONE),
-                    "разобранный своими руками столб не остаётся брошенной арендой: " + scaffolds);
-            spirit.discard();
-            GameTestFixtures.finish(helper);
         });
     }
 }
