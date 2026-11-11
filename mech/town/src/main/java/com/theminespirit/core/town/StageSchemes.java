@@ -31,4 +31,8 @@ public final class StageSchemes {
         atomic.add("fence_gate");
         return List.copyOf(atomic);
     }
+
+    public static String fenceStub(int stage) {
+        return stage >= 2 ? "wall_3_post" : "fence_post";
+    }
 }

@@ -5,8 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BreachAreas;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -89,6 +91,31 @@ class BreachPostTests {
                 WorldPost.OPEN_PREFIXES.contains(PlanBreachPost.PREFIX),
                 "Префикс проломов обязан считаться в OpenPrefixes: без него openCount всегда 0, порция не "
                         + "кончается и сотни ремонтов снова забивают доску");
+    }
+
+    @Test
+    void target_Area_IsOneFillOfWholeBox() {
+        BreachAreas.Area area = new BreachAreas.Area("dirt", 1, 64, 2, 3, 64, 4);
+
+        TicketTarget target = PlanBreachPost.target(area);
+        ScriptCall plan = (ScriptCall) target.plan();
+
+        assertEquals("fill", plan.script(), "Группа клеток заделывается одним fill, а не поштучными place_block");
+        assertEquals(
+                Map.of(
+                        "block", "dirt",
+                        "x1", 1,
+                        "y1", 64,
+                        "z1", 2,
+                        "x2", 3,
+                        "y2", 64,
+                        "z2", 4),
+                plan.params(),
+                "Границы fill совпадают с площадью пролома клетка в клетку: лишняя клетка засыпала бы воздух");
+        assertEquals(
+                new BlockCoord(1, 64, 2),
+                target.target(),
+                "Точка задания — меньшая клетка площади: по ней стабилен id и работает память недостижимости");
     }
 
     private static PlanBreachPost.Repair repair(String id) {

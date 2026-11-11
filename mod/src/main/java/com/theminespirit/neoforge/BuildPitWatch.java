@@ -82,7 +82,7 @@ final class BuildPitWatch {
     }
 
     boolean trapped() {
-        return DigOutScript.sealed(level, spirit.blockPosition()) || DigOutScript.embedded(spirit);
+        return DigOutScript.trapped(level, spirit);
     }
 
     void cancelEscape() {

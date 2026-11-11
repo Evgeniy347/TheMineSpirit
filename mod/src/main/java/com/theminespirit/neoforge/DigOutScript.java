@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.BuildPit;
 import com.theminespirit.core.engine.ScriptFactory;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
@@ -81,6 +82,10 @@ public final class DigOutScript implements ScriptInstance {
 
     public static boolean embedded(SpiritEntity spirit) {
         return DigOutSpace.embedded(spirit);
+    }
+
+    public static boolean trapped(Level level, SpiritEntity spirit) {
+        return BuildPit.trapped(sealed(level, spirit.blockPosition()), embedded(spirit));
     }
 
     public static boolean open(Level level, BlockPos cell) {

@@ -21,6 +21,9 @@ class DigOutRuleGuardTests {
     private static final List<String> HEIGHT_LIFTS = List.of("SurfacePoint", "getHeight(", "Heightmap.");
     private static final String SUPPORT = "PlaceSupport.hasSupport(";
     private static final String PLACE = "placer.begin(";
+    private static final String BUILD_PIT_WATCH = "neoforge/BuildPitWatch.java";
+    private static final String DIG_INPUTS = "neoforge/board/DigInputs.java";
+    private static final String TRAPPED = "DigOutScript.trapped(";
 
     @Test
     void digOutTarget_HomePointChosen_NoHeightmapLift() {
@@ -114,13 +117,26 @@ class DigOutRuleGuardTests {
     }
 
     @Test
-    void buildPit_TrappedSpirit_IsSealedOrEmbedded() {
-        String text = read(SourceFiles.path("neoforge/BuildPitWatch.java"));
-
+    void buildPit_TrappedSpirit_UsesSharedCheck() {
         assertTrue(
-                text.contains("DigOutScript.sealed(") && text.contains("DigOutScript.embedded("),
-                "Запертость для DigOut считается тем же признаком, что у DigOutAction: sealed или embedded. "
-                        + "Иначе любая низина снова становится ямой и копает вверх");
+                read(SourceFiles.path(BUILD_PIT_WATCH)).contains(TRAPPED),
+                "Запертость стройки считается общим признаком DigOutScript.trapped (sealed или embedded), а не "
+                        + "своей копией: иначе правка признака в одном месте оставляет второе с прежним правилом, "
+                        + "и любая низина снова становится ямой и копает вверх");
+        assertTrue(
+                read(SourceFiles.path(DIG_INPUTS)).contains(TRAPPED),
+                "Вход графа dig_out обязан спрашивать тот же общий признак запертости: две копии «sealed или "
+                        + "embedded» расходятся молча");
+    }
+
+    @Test
+    void buildPit_DuplicateTrappedCheck_IsReported() {
+        assertFalse(
+                trappedCheck("DigOutScript.sealed(level, spirit.blockPosition()) || DigOutScript.embedded(spirit)"),
+                "Сторож ослеп: своя копия «sealed или embedded» мимо DigOutScript.trapped обязана ловиться");
+        assertTrue(
+                trappedCheck("return DigOutScript.trapped(level, spirit);"),
+                "Сторож ложно срабатывает: общий признак запертости — это правило");
     }
 
     @Test
@@ -247,6 +263,10 @@ class DigOutRuleGuardTests {
         int support = text.indexOf(SUPPORT);
         int place = text.indexOf(PLACE);
         return support >= 0 && place > support;
+    }
+
+    private static boolean trappedCheck(String text) {
+        return text.contains(TRAPPED);
     }
 
     private static boolean escapeAfterTrapped(String text) {

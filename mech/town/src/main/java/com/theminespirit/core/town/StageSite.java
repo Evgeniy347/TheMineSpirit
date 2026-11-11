@@ -40,28 +40,28 @@ public record StageSite(
     public static final int MINE_SHALLOW = 12;
 
     public StageSite {
-        Objects.requireNonNull(anchor, "Якорь этапа не может быть null: от него высота площадок");
-        Objects.requireNonNull(hut, "Место хижины не может быть null: этап 1 без хижины не собрать");
-        Objects.requireNonNull(yard, "Место двора не может быть null");
-        Objects.requireNonNull(mine, "Место спуска в шахту не может быть null");
-        Objects.requireNonNull(
+        StageSiteChecks.check(
+                anchor,
+                hut,
+                yard,
+                mine,
                 minePlot,
-                "Прямоугольник шахты не может быть null: обе вкладки карты и стройка "
-                        + "берут спуск из плана участка");
-        Objects.requireNonNull(orchard, "Место сада не может быть null");
-        orchardSaplings = List.copyOf(Objects.requireNonNull(
-                orchardSaplings, "Места деревьев сада не могут быть null: пусто — пустой список"));
-        extraOrchards = List.copyOf(
-                Objects.requireNonNull(extraOrchards, "Дополнительные сады не могут быть null: пусто — пустой список"));
-        fields = List.copyOf(Objects.requireNonNull(fields, "Поля этапа не могут быть null"));
-        placements = List.copyOf(
-                Objects.requireNonNull(placements, "Постройки этапа не могут быть null: пусто — пустой список"));
-        Objects.requireNonNull(level, "Площадки выравнивания не могут быть null");
-        Objects.requireNonNull(zone, "Зона поселения не может быть null: по ней идут аудит, выравнивание и защита");
-        Objects.requireNonNull(streets, "Улицы плана не могут быть null: по ним дух не берёт материалы плана");
-        Objects.requireNonNull(enclosure, "Огороженная область не может быть null");
-        Objects.requireNonNull(fenceStrip, "Полоса ограды не может быть null: по ней сносится старая ограда");
-        Objects.requireNonNull(ring, "Ограда этапа не может быть null");
+                orchard,
+                wood,
+                orchardSaplings,
+                extraOrchards,
+                fields,
+                placements,
+                level,
+                zone,
+                streets,
+                enclosure,
+                fenceStrip,
+                ring);
+        orchardSaplings = List.copyOf(orchardSaplings);
+        extraOrchards = List.copyOf(extraOrchards);
+        fields = List.copyOf(fields);
+        placements = List.copyOf(placements);
     }
 
     public BlockCoord houseOrigin() {
