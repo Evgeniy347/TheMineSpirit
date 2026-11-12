@@ -1255,6 +1255,9 @@ class Planner:
     def store_roots(self):
         graph = self.graph
         state = self.state
+        exchange = graph.buildings.get("exchange_chest")
+        if state.storage_free_percent < graph.storage_min_free and exchange is not None                 and state.built(graph.storage_building) != BUILT and state.built("chests") != BUILT:
+            self.push(None, BUILDING + "exchange_chest", exchange.base)
         if STORE_MINIMUM not in graph.items:
             return
         for item, have in self.store_shortages().items():

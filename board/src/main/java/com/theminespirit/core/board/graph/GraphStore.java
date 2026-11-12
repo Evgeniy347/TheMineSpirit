@@ -10,6 +10,7 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 final class GraphStore {
+    private static final String EXCHANGE = "exchange_chest";
     static final String MINIMUM = "store:minimum";
     static final String TRANSFER = "store:transfer";
     static final String SMELT = "store:smelt";
@@ -34,6 +35,15 @@ final class GraphStore {
     private GraphStore() {}
 
     static void roots(SupplyGraph graph, GraphState state, Push push) {
+        if (state.storageFreePercent() < graph.storage().minFreePercent()
+                && state.built(graph.storage().building()) != GraphState.Built.BUILT
+                && state.built("chests") != GraphState.Built.BUILT
+                && graph.buildings().containsKey(EXCHANGE)) {
+            push.push(
+                    null,
+                    "building:" + EXCHANGE,
+                    graph.buildings().get(EXCHANGE).base());
+        }
         if (!enabled(graph, MINIMUM)) {
             return;
         }

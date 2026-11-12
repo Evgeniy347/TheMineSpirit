@@ -31,4 +31,18 @@ class GraphExchangeChestTests {
                         .orElse(false),
                 "Без верстака сундук у верстака не ставится: " + CrossScene.ranked(plan));
     }
+
+    @Test
+    void plan_ExchangeChestFullNoYard_AnotherChestAtTable() {
+        GraphWorld world = GraphWorld.empty()
+                .built("crafting_table", Built.BUILT)
+                .built("exchange_chest", Built.BUILT)
+                .with("oak_planks", 16);
+        world.storageFree = 5;
+
+        assertTrue(
+                world.plan().raised("building:exchange_chest"),
+                "Сундук у верстака полон, сундуков двора и склада ещё нет (расчистка) — ещё один сундук у верстака: "
+                        + CrossScene.ranked(world.plan()));
+    }
 }
