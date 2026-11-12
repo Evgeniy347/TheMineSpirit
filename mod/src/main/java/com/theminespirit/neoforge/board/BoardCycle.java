@@ -35,6 +35,9 @@ final class BoardCycle {
     private long lastRebuild = -1;
     private long lastActivity;
     private long slowLoggedAt = -SLOW_BOARD_LOG_TICKS;
+    private long worstMillis;
+    private String worstBreakdown = "";
+    private final SlowSplit split = new SlowSplit();
 
     BoardCycle(BoardService service) {
         this.service = service;
@@ -50,7 +53,9 @@ final class BoardCycle {
     }
 
     void tick(ServerLevel level, long now) {
+        long started = System.nanoTime();
         journal.flush(JournalService.FLUSH_BUDGET);
+        split.mark("journal", started);
         long since = now - lastRebuild;
         if (since >= BoardTuning.boardIntervalTicks()) {
             rebuild(level, now);
@@ -58,9 +63,14 @@ final class BoardCycle {
         }
         if (ActivityCadence.due(lastActivity, now)) {
             lastActivity = now;
+            started = System.nanoTime();
             dispatch.reconcile(SpiritCensus.all(level), false);
+            split.mark("reconcile", started);
         }
+        started = System.nanoTime();
         dispatch.tick(level, now);
+        split.mark("dispatch", started);
+        split.report(now, LOGGER);
     }
 
     void rebuild(ServerLevel level, long now) {
@@ -72,15 +82,24 @@ final class BoardCycle {
             rebuildBoard(level, now);
         } finally {
             service.meter().rebuildEnd();
+            long persist = System.nanoTime();
             service.endPersistBatch();
+            split.mark("persist", persist);
         }
-        if (service.meter().rebuildMillis() >= SLOW_BOARD_MILLIS && now - slowLoggedAt >= SLOW_BOARD_LOG_TICKS) {
+        split.report(now, LOGGER);
+        if (service.meter().rebuildMillis() > worstMillis) {
+            worstMillis = service.meter().rebuildMillis();
+            worstBreakdown = service.meter().breakdown();
+        }
+        if (worstMillis >= SLOW_BOARD_MILLIS && now - slowLoggedAt >= SLOW_BOARD_LOG_TICKS) {
             slowLoggedAt = now;
             LOGGER.warn(
-                    "[board] пересборка {} мс: {} (строка одна на {} тиков)",
-                    service.meter().rebuildMillis(),
-                    service.meter().breakdown(),
-                    SLOW_BOARD_LOG_TICKS);
+                    "[board] худшая пересборка за {} тиков: {} мс: {}",
+                    SLOW_BOARD_LOG_TICKS,
+                    worstMillis,
+                    worstBreakdown);
+            worstMillis = 0;
+            worstBreakdown = "";
         }
     }
 
