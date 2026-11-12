@@ -17,10 +17,8 @@ import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
-import com.theminespirit.neoforge.inventory.SpiritSupplies;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -45,6 +43,7 @@ final class BoardDispatchDesk {
     private boolean freshTickets;
     private long lastDispatch;
     private int claims;
+    private final IssueSteps timer = new IssueSteps();
 
     BoardDispatchDesk(BoardService host, Board board, Map<String, TicketTarget> targets) {
         this.host = Objects.requireNonNull(host, "host не может быть null: занятие запускает доска");
@@ -120,6 +119,12 @@ final class BoardDispatchDesk {
     }
 
     void issue(ServerLevel level, List<SpiritEntity> spirits, long now) {
+        timer.begin();
+        issueAll(level, spirits, now);
+        timer.end(now, LOGGER);
+    }
+
+    private void issueAll(ServerLevel level, List<SpiritEntity> spirits, long now) {
         StockView stock = host.stock();
         List<BoardTicket> claimable = DispatchRound.order(board.claimable(stock, now));
         transferWait.retain(board);
@@ -129,7 +134,9 @@ final class BoardDispatchDesk {
         DispatchPick pick = new DispatchPick(round, spirits, stock);
         Optional<BlockCoord> settlementHome = HomePoint.of(level, spirits);
         for (BoardTicket ticket : claimable) {
+            long chooseStarted = System.nanoTime();
             SpiritEntity spirit = pick.choose(ticket, targets.get(ticket.id()), crafters);
+            timer.add("choose", chooseStarted);
             if (spirit == null) {
                 String why = pick.why(ticket, targets.get(ticket.id()));
                 board.noteWait(ticket.id(), why);
@@ -148,18 +155,23 @@ final class BoardDispatchDesk {
                 base = TicketTarget.at(settlementHome.orElseThrow());
             }
             board.noteWait(ticket.id(), null);
-            TicketTarget target = gatherOnTop(ticket, TransferTicket.restore(ticket, base), spirit);
-            Optional<TicketTarget> fitted = fitTransfer(ticket, target, spirit);
+            TicketTarget target = IssueSteps.gatherOnTop(ticket, TransferTicket.restore(ticket, base), spirit);
+            Optional<TicketTarget> fitted = IssueSteps.fitTransfer(ticket, target, spirit);
             if (fitted.isEmpty()) {
                 dropEmptyTransfer(ticket, target, spirit);
                 continue;
             }
             target = fitted.orElseThrow();
-            if (TransferWatch.ensureTransfers(level, host, spirits, stock, ticket, spirit, now)) {
+            long transferStarted = System.nanoTime();
+            boolean awaits = TransferWatch.ensureTransfers(level, host, spirits, stock, ticket, spirit, now);
+            timer.add("transfers", transferStarted);
+            if (awaits) {
                 transferWait.await(board, crafters, ticket, spirit, spirits, round);
                 continue;
             }
+            long planStarted = System.nanoTime();
             Optional<TaskNode> planned = planTicket(ticket, target, round);
+            timer.add("plan", planStarted);
             if (planned.isEmpty()) {
                 continue;
             }
@@ -172,7 +184,9 @@ final class BoardDispatchDesk {
                         spirit.displayName());
             }
             try {
+                long startStarted = System.nanoTime();
                 JobLaunch.start(spirit, ticket.id(), plan);
+                timer.add("start", startStarted);
             } catch (RuntimeException failure) {
                 LOGGER.error(
                         "Задание {}: дух {} не принял задание: {}",
@@ -221,20 +235,6 @@ final class BoardDispatchDesk {
         }
     }
 
-    private static TicketTarget gatherOnTop(BoardTicket ticket, TicketTarget target, SpiritEntity spirit) {
-        String item = target.supplyItem();
-        if (ticket.boardCase() != BoardCase.GATHER_MATERIALS
-                || item == null
-                || "coal".equals(item)
-                || "cobblestone".equals(item)) {
-            return target;
-        }
-        int held = new SpiritSupplies(spirit, CatalogLimits.CONTAINER_RADIUS_DEFAULT).inInventory(item);
-        return held <= 0
-                ? target
-                : target.withSupply(item, Math.min(CatalogLimits.COUNT_MAX, held + target.supplyCount()));
-    }
-
     private Optional<TaskNode> planTicket(BoardTicket ticket, TicketTarget target, DispatchRound round) {
         try {
             return Optional.of(JobLaunch.plan(ticket, target));
@@ -278,22 +278,5 @@ final class BoardDispatchDesk {
         host.persistBoard();
         LOGGER.info(
                 "Передача {} снята: у духа {} не осталось {}", ticket.id(), spirit.displayName(), target.supplyItem());
-    }
-
-    private static Optional<TicketTarget> fitTransfer(BoardTicket ticket, TicketTarget target, SpiritEntity spirit) {
-        if (ticket.boardCase() != BoardCase.TRANSFER_ITEM
-                || target.transferFrom() == null
-                || !target.transferFrom().equals(spirit.getUUID())
-                || target.supplyItem() == null) {
-            return Optional.of(target);
-        }
-        int held = new SpiritSupplies(spirit, CatalogLimits.CONTAINER_RADIUS_DEFAULT).inInventory(target.supplyItem());
-        if (held <= 0) {
-            return Optional.empty();
-        }
-        return Optional.of(
-                held >= target.supplyCount()
-                        ? target
-                        : target.withTransfer(target.transferFrom(), target.transferTo(), target.supplyItem(), held));
     }
 }
