@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.EarthCover;
+import com.theminespirit.neoforge.board.PlotCellStructure;
 import com.theminespirit.neoforge.policy.PlanBreachData;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
@@ -28,7 +29,7 @@ public final class PlanBreachRestore {
                 continue;
             }
             BlockPos cell = entry.getKey();
-            if (!level.getBlockState(cell).isAir()) {
+            if (!level.getBlockState(cell).isAir() || !PlotCellStructure.isStructure(server, cell)) {
                 data.clear(cell);
                 continue;
             }

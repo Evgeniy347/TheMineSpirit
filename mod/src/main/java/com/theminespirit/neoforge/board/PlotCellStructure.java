@@ -29,15 +29,22 @@ public final class PlotCellStructure {
             return false;
         }
         PlacedBlocksData placed = PlacedBlocksData.get(level);
-        if (placed.isSpiritMarked(pos) || placed.isMarked(pos)) {
-            return true;
-        }
         BlockCoord cell = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-        if (plan(site).blocks().containsKey(cell)) {
-            return true;
-        }
-        return site.protectionBuilding(cell.x(), cell.y(), cell.z()) == PlanBuilding.MINE
-                && mineFloors(site).contains(cell);
+        Mark mark = placed.isSpiritMarked(pos) ? Mark.SPIRIT : placed.isMarked(pos) ? Mark.MARKED : Mark.NONE;
+        boolean planned = plan(site).blocks().containsKey(cell)
+                || (site.protectionBuilding(cell.x(), cell.y(), cell.z()) == PlanBuilding.MINE
+                        && mineFloors(site).contains(cell));
+        return structure(planned, mark);
+    }
+
+    enum Mark {
+        NONE,
+        SPIRIT,
+        MARKED
+    }
+
+    static boolean structure(boolean planned, Mark mark) {
+        return planned || mark == Mark.MARKED;
     }
 
     private static @Nullable StageSite site(ServerLevel level) {

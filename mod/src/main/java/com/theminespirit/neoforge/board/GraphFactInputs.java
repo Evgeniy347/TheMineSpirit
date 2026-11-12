@@ -60,7 +60,12 @@ public final class GraphFactInputs {
     }
 
     static List<GraphFacts.Position> planBreaches(ServerLevel level) {
-        return PlanBreachData.get(level).open().keySet().stream()
+        PlanBreachData data = PlanBreachData.get(level);
+        List<BlockPos> stale = data.open().keySet().stream()
+                .filter(pos -> !PlotCellStructure.isStructure(level, pos))
+                .toList();
+        stale.forEach(data::clear);
+        return data.open().keySet().stream()
                 .map(pos -> new GraphFacts.Position(pos.getX(), pos.getY(), pos.getZ()))
                 .toList();
     }

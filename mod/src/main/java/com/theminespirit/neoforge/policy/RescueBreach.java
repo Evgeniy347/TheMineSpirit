@@ -4,6 +4,7 @@ import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.PlotCellStructure;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -40,7 +41,9 @@ public final class RescueBreach {
 
     static BlockProtection.Decision allow(SpiritEntity spirit, BlockPos pos, BlockState state) {
         BlockProtection.Decision decision = permit(spirit, pos, state);
-        if (decision instanceof BlockProtection.Allowed && spirit.level() instanceof ServerLevel server) {
+        if (decision instanceof BlockProtection.Allowed
+                && spirit.level() instanceof ServerLevel server
+                && PlotCellStructure.isStructure(server, pos)) {
             PlanBreachData.get(server)
                     .record(
                             pos,
