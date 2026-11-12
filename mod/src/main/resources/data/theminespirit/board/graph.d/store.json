@@ -115,6 +115,20 @@
     }
   ],
   "events": {
+    "inventory_overloaded": {
+      "vital": true,
+      "tasks": [
+        {
+          "id": "unload_overloaded",
+          "case": "ACTIVITY_UNLOAD",
+          "base": 85,
+          "consumes": {}
+        }
+      ],
+      "advice": [
+        "unload_surplus_to_nearest_reachable_chest"
+      ]
+    },
     "demolish_chest": {
       "tasks": [
         {

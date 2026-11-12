@@ -6,7 +6,9 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.SpiritSupplies;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -15,6 +17,10 @@ final class IssueSteps {
     static final long SLOW_MILLIS = 200;
     static final long LOG_TICKS = 1200;
 
+    static final int HEAD = 80;
+    static final int TAIL = 40;
+
+    private int tailCursor;
     private final Map<String, Long> current = new LinkedHashMap<>();
     private Map<String, Long> worst = Map.of();
     private long worstTotal;
@@ -28,6 +34,24 @@ final class IssueSteps {
 
     void add(String step, long startedNanos) {
         current.merge(step, System.nanoTime() - startedNanos, Long::sum);
+    }
+
+    <T> List<T> window(List<T> ordered) {
+        List<T> picked = window(ordered, tailCursor);
+        tailCursor += TAIL;
+        return picked;
+    }
+
+    static <T> List<T> window(List<T> ordered, int cursor) {
+        if (ordered.size() <= HEAD + TAIL) {
+            return ordered;
+        }
+        List<T> picked = new ArrayList<>(ordered.subList(0, HEAD));
+        int rest = ordered.size() - HEAD;
+        for (int i = 0; i < TAIL; i++) {
+            picked.add(ordered.get(HEAD + Math.floorMod(cursor + i, rest)));
+        }
+        return picked;
     }
 
     long lap(String step, long startedNanos) {

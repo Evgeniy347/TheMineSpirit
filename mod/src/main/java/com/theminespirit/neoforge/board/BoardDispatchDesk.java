@@ -139,7 +139,7 @@ final class BoardDispatchDesk {
         Optional<BlockCoord> settlementHome = HomePoint.of(level, spirits);
         timer.lap("home", step);
         int explained = 0;
-        for (BoardTicket ticket : claimable) {
+        for (BoardTicket ticket : timer.window(claimable)) {
             long chooseStarted = System.nanoTime();
             SpiritEntity spirit = pick.choose(ticket, targets.get(ticket.id()), crafters);
             timer.add("choose", chooseStarted);

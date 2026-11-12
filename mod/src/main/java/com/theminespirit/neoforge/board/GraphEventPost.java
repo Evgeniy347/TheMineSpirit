@@ -68,6 +68,9 @@ final class GraphEventPost {
             CraftOrders.refresh(post.level);
             return true;
         }
+        if (OverloadPost.handles(ticket.node())) {
+            return OverloadPost.post(post);
+        }
         if (AccessPost.handles(ticket.node())) {
             return AccessPost.post(post, ticket);
         }

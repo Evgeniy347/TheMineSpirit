@@ -43,6 +43,7 @@ public final class DropCollector {
     int delayWaited;
     final DropPursuit pursuit;
     final DropPickup pickup;
+    private boolean full;
     private final IdFilter items;
     private final AABB area;
     private final long startTick;
@@ -181,6 +182,7 @@ public final class DropCollector {
             }
         }
         if (unfit != null) {
+            full = true;
             return fail("инвентарь полон: не помещается " + unfit.item());
         }
         if (unreachable > 0) {
@@ -235,6 +237,10 @@ public final class DropCollector {
         double dy = ref.y() - spirit.getY();
         double dz = ref.z() - spirit.getZ();
         return dx * dx + dy * dy + dz * dz;
+    }
+
+    boolean full() {
+        return full;
     }
 
     State fail(String reason) {

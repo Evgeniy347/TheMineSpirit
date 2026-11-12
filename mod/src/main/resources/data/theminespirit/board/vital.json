@@ -79,6 +79,14 @@
       "reason": "нет прохода",
       "blocked": "нет прохода к сундукам, станциям и дверям: проём не срезать",
       "allow": ["graph:event:access_blocked:", "world:access:"]
+    },
+    {
+      "id": "overload",
+      "event": "inventory_overloaded",
+      "gate": false,
+      "reason": "инвентарь полон",
+      "blocked": "некуда выгрузить: нет сундука со свободным местом и проходом",
+      "allow": ["graph:event:inventory_overloaded:"]
     }
   ]
 }

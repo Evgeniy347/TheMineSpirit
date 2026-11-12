@@ -189,8 +189,9 @@ public class ClearAreaSession {
         if (collected == DropCollector.State.RUNNING) {
             return;
         }
+        DropCollector done = collector;
         collector = null;
-        if (collected == DropCollector.State.FAILED) {
+        if (collected == DropCollector.State.FAILED && !ClearDrops.continues(done.full())) {
             fail("не удалось подобрать дроп у " + currentTarget + ": расчистка остановлена");
             return;
         }

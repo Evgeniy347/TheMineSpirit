@@ -10,6 +10,9 @@ final class SettlementEvents {
         if (ChestDemolition.pending(level, service)) {
             events.add(ChestDemolition.EVENT);
         }
+        if (OverloadPost.pending(SpiritCensus.all(level))) {
+            events.add(OverloadPost.EVENT);
+        }
         if (AccessScan.blocked(level, service, scan.stage(), scan.home())) {
             events.add(AccessScan.EVENT);
         }
