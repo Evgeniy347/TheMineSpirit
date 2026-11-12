@@ -2,6 +2,7 @@ package com.theminespirit.core.mining;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -62,6 +63,29 @@ public final class ClearScaffold {
             return Decision.of(Action.DESCEND);
         }
         return Decision.of(Action.WORK);
+    }
+
+    public static Decision step(
+            BlockCoord feet, List<BlockCoord> tops, int maxStandRise, boolean onOwnScaffold, int reach) {
+        Objects.requireNonNull(feet, "Клетка ног не может быть null: от неё считается ступень");
+        Objects.requireNonNull(tops, "Верхушки колонок не могут быть null: пустые задают пустым списком");
+        List<BlockCoord> near = tops.stream()
+                .filter(top -> Math.max(Math.abs(top.x() - feet.x()), Math.abs(top.z() - feet.z())) <= reach)
+                .toList();
+        if (near.isEmpty()) {
+            return tops.isEmpty() ? Decision.of(Action.DONE) : Decision.of(Action.WORK);
+        }
+        boolean reachable = near.stream().anyMatch(top -> top.y() - feet.y() <= maxStandRise && top.y() >= feet.y());
+        if (reachable) {
+            return Decision.of(Action.WORK);
+        }
+        Optional<BlockCoord> next = near.stream()
+                .filter(top -> top.y() - feet.y() > maxStandRise)
+                .min(Comparator.comparingInt(BlockCoord::y));
+        if (next.isPresent()) {
+            return new Decision(Action.CLIMB, next.orElseThrow().y() - feet.y() - maxStandRise);
+        }
+        return onOwnScaffold ? Decision.of(Action.DESCEND) : Decision.of(Action.WORK);
     }
 
     public static Optional<BlockCoord> pillarSpot(

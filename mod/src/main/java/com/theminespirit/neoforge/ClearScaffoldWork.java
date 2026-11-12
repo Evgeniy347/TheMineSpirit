@@ -1,9 +1,11 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.mining.ClearOrder;
 import com.theminespirit.core.mining.ClearScaffold;
 import com.theminespirit.core.mining.MiningTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.board.PlanWalkways;
+import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -72,16 +74,13 @@ final class ClearScaffoldWork {
 
     private ClearScaffold.Decision decide() {
         BlockPos feet = spirit.blockPosition();
-        ClearScaffold.Decision decision = ClearScaffold.decide(
+        List<BlockCoord> work = session.targets.work(session.remaining);
+        return ClearScaffold.step(
                 new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
-                session.targets.highestWork(session.remaining),
+                ClearOrder.topmost(work, cell -> true),
                 MiningTuning.MAX_STAND_RISE,
                 PillarDownScript.ownBelow(spirit),
                 COLUMN_REACH);
-        if (decision.action() == ClearScaffold.Action.CLIMB && reach.climbed()) {
-            return new ClearScaffold.Decision(ClearScaffold.Action.WORK, 0);
-        }
-        return decision;
     }
 
     private Result climb(int rise) {
