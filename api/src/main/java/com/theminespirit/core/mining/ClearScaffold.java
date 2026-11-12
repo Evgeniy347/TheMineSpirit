@@ -56,7 +56,7 @@ public final class ClearScaffold {
         }
         int rise = highest.y() - feet.y();
         if (rise > maxStandRise) {
-            return new Decision(Action.CLIMB, rise);
+            return new Decision(Action.CLIMB, rise - maxStandRise);
         }
         if (highest.y() < feet.y() && onOwnScaffold) {
             return Decision.of(Action.DESCEND);

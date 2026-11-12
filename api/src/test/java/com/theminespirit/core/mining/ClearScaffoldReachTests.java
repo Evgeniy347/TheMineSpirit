@@ -25,7 +25,10 @@ class ClearScaffoldReachTests {
         ClearScaffold.Decision decision = ClearScaffold.decide(new BlockCoord(-176, 68, -517), TOP, 3, false, 2);
 
         assertEquals(ClearScaffold.Action.CLIMB, decision.action(), "Колонка рядом — подъём к верхней клетке");
-        assertEquals(29, decision.height(), "Подъём от ног до верхней клетки");
+        assertEquals(
+                26,
+                decision.height(),
+                "Подъём только до досягаемости верхней клетки (рост стоянки 3), а не на её уровень");
     }
 
     @Test
