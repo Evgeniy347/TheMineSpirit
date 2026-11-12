@@ -41,6 +41,8 @@ public final class GraphSurroundings {
     private static final int BELOW = 4;
     private static final int ABOVE = 12;
     private static final int DROP_RADIUS = 24;
+    private static final long SCAN_TTL_TICKS = 600;
+    private static final TickCache<Scan> SCANS = new TickCache<>(SCAN_TTL_TICKS);
 
     private GraphSurroundings() {}
 
@@ -112,7 +114,7 @@ public final class GraphSurroundings {
             BlockCoord home,
             Map<String, BlockCoord> sites,
             Map<String, Integer> siteDistances) {
-        Scan scan = blocks(level, home);
+        Scan scan = SCANS.get(List.of(level.dimension(), home), level.getGameTime(), () -> blocks(level, home));
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
         AABB box = new AABB(center).inflate(RADIUS);
         Set<String> creatures = new HashSet<>();
