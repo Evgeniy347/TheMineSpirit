@@ -99,4 +99,21 @@ class AccessPathTests {
                 plan.clear() && world.reads < 40L * AccessPath.MAX_NODES,
                 "Ничего не срезается, обход ограничен пределом узлов: " + plan + ", чтений " + world.reads);
     }
+
+    @Test
+    void plan_LotGroundBelowWay_NeverCutsPlotFloor() {
+        SettlementScanTests.Fake world = withChest();
+        for (int x = -2; x <= 8; x++) {
+            for (int z = -3; z <= 3; z++) {
+                world.lot(x, z);
+            }
+        }
+        ring(world, 2, 6, 0);
+
+        AccessPath.Plan plan = AccessPath.plan(world, KEEP, HOME, List.of(CHEST_AT));
+
+        assertTrue(
+                plan.cut().stream().allMatch(cell -> cell.y() >= LEVEL),
+                "Пол участка (ниже уровня) не срезается: защита плана его не даст, проход идёт по полу: " + plan);
+    }
 }

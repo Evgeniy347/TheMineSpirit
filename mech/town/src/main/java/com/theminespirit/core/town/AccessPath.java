@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -145,7 +146,9 @@ public final class AccessPath {
     }
 
     private static boolean diggable(SettlementScan.World world, Predicate<String> keep, int x, int y, int z) {
-        return !world.planned(x, y, z)
+        OptionalInt lot = world.lotLevel(x, z);
+        return (lot.isEmpty() || y >= lot.getAsInt())
+                && !world.planned(x, y, z)
                 && !world.registered(x, y, z)
                 && !world.playerPlaced(x, y, z)
                 && !keep.test(world.blockId(x, y, z));
