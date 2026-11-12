@@ -4,6 +4,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 
@@ -61,6 +62,32 @@ public final class ClearScaffold {
             return Decision.of(Action.DESCEND);
         }
         return Decision.of(Action.WORK);
+    }
+
+    public static Optional<BlockCoord> pillarSpot(
+            BlockCoord feet,
+            BlockCoord highest,
+            Predicate<BlockCoord> walkway,
+            Predicate<BlockCoord> standable,
+            int reach) {
+        Objects.requireNonNull(feet, "Клетка ног не может быть null: от неё ищется место столба");
+        Objects.requireNonNull(highest, "Верхняя цель не может быть null: столб ставят у её колонки");
+        if (!walkway.test(feet)) {
+            return Optional.empty();
+        }
+        BlockCoord best = null;
+        int bestDistance = Integer.MAX_VALUE;
+        for (int dx = -reach; dx <= reach; dx++) {
+            for (int dz = -reach; dz <= reach; dz++) {
+                BlockCoord spot = new BlockCoord(highest.x() + dx, feet.y(), highest.z() + dz);
+                int distance = Math.abs(spot.x() - feet.x()) + Math.abs(spot.z() - feet.z());
+                if ((dx != 0 || dz != 0) && distance < bestDistance && !walkway.test(spot) && standable.test(spot)) {
+                    best = spot;
+                    bestDistance = distance;
+                }
+            }
+        }
+        return Optional.ofNullable(best);
     }
 
     public static @Nullable BlockCoord highest(List<BlockCoord> cells) {

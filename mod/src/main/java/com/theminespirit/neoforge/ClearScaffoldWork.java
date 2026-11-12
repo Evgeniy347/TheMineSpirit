@@ -3,7 +3,12 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.mining.ClearScaffold;
 import com.theminespirit.core.mining.MiningTuning;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.board.PlanWalkways;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.Vec3;
 
 final class ClearScaffoldWork {
     enum Result {
@@ -14,10 +19,13 @@ final class ClearScaffoldWork {
     }
 
     private static final int COLUMN_REACH = 2;
+    private static final double SPOT_ARRIVAL = 0.6;
     private final SpiritEntity spirit;
     private final ClearAreaSession session;
     private final ScaffoldReach reach;
     private boolean descendTried;
+    private boolean relocated;
+    private boolean moving;
 
     ClearScaffoldWork(SpiritEntity spirit, ClearAreaSession session) {
         this.spirit = spirit;
@@ -26,6 +34,12 @@ final class ClearScaffoldWork {
     }
 
     Result tick() {
+        if (moving) {
+            if (session.approach.tick() == Approach.State.MOVING) {
+                return Result.RUNNING;
+            }
+            moving = false;
+        }
         ScaffoldReach.Result work = reach.tick();
         if (work == ScaffoldReach.Result.RUNNING) {
             return Result.RUNNING;
@@ -71,12 +85,43 @@ final class ClearScaffoldWork {
     }
 
     private Result climb(int rise) {
+        if (!relocated && relocate()) {
+            return Result.RUNNING;
+        }
         ScaffoldReach.Result started = reach.climb(rise);
         if (started == ScaffoldReach.Result.FAILED) {
             session.fail(reach.failureReason());
             return Result.FAILED;
         }
         return Result.RUNNING;
+    }
+
+    private boolean relocate() {
+        relocated = true;
+        BlockCoord top = session.targets.highestWork(session.remaining);
+        if (top == null || !(spirit.level() instanceof ServerLevel level)) {
+            return false;
+        }
+        BlockPos feet = spirit.blockPosition();
+        Optional<BlockCoord> spot = ClearScaffold.pillarSpot(
+                new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
+                top,
+                cell -> PlanWalkways.on(level, cell.x(), cell.z()),
+                cell -> standable(level, new BlockPos(cell.x(), cell.y(), cell.z())),
+                COLUMN_REACH);
+        if (spot.isEmpty()) {
+            return false;
+        }
+        BlockCoord at = spot.orElseThrow();
+        session.approach.beginWithRoutes(new Vec3(at.x() + 0.5, at.y(), at.z() + 0.5), SPOT_ARRIVAL);
+        moving = true;
+        return true;
+    }
+
+    private static boolean standable(ServerLevel level, BlockPos at) {
+        return level.getBlockState(at).isAir()
+                && level.getBlockState(at.above()).isAir()
+                && level.getBlockState(at.below()).isFaceSturdy(level, at.below(), Direction.UP);
     }
 
     private Result stepDown() {
