@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.town.StageSite;
+import com.theminespirit.neoforge.board.PlotCellStructure;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import net.minecraft.core.BlockPos;
@@ -20,7 +21,7 @@ final class PlanCells {
             return false;
         }
         return SettlementPlotStore.liveSite(server)
-                        .filter(site -> site.planCell(pos.getX(), pos.getY(), pos.getZ())
+                        .filter(site -> PlotCellStructure.isStructure(server, pos)
                                 && !oldFill(level, site, pos)
                                 && (site.ringPost(pos.getX(), pos.getZ()) || !debris(level, pos)))
                         .isPresent()

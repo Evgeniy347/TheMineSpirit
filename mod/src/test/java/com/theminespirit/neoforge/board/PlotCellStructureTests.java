@@ -15,6 +15,14 @@ class PlotCellStructureTests {
     }
 
     @Test
+    void spiritPillar_InBuildingVolumeOffSchematic_IsDismantlable() {
+        assertFalse(
+                PlotCellStructure.structure(false, PlotCellStructure.Mark.SPIRIT),
+                "столб духа в объёме постройки, но не в блоке схемы, откат разбирает (сервер 12.11: «блок столба"
+                        + " принадлежит плану постройки этапа» — столбы оставались в деревьях и во дворе)");
+    }
+
+    @Test
     void spiritBlock_InPlan_IsStructure() {
         assertTrue(PlotCellStructure.structure(true, PlotCellStructure.Mark.SPIRIT), "блок схемы остаётся планом");
     }
