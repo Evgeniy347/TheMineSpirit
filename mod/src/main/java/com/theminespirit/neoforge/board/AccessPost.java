@@ -10,9 +10,7 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CatalogLimits;
-import com.theminespirit.core.town.AccessPath;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -20,6 +18,7 @@ import java.util.Optional;
 final class AccessPost {
     static final String NODE = "clear_access";
     private static final String PREFIX = "world:access:";
+    private static final int BATCH = 16;
 
     private AccessPost() {}
 
@@ -31,55 +30,48 @@ final class AccessPost {
         if (post.openCount(PREFIX) > 0) {
             return true;
         }
-        AccessPath.Plan plan = AccessScan.plan(post.level, post.scan.stage(), post.scan.home());
-        if (plan.clear()) {
+        List<BlockCoord> cut = AccessScan.cut(post.level, post.service, post.scan.stage(), post.scan.home());
+        if (cut.isEmpty()) {
             return false;
         }
-        BlockCoord first =
-                plan.cut().isEmpty() ? plan.fill().get(0) : plan.cut().get(0);
-        String id = PREFIX + first.x() + "," + first.y() + "," + first.z();
+        List<BlockCoord> batch = cut.subList(0, Math.min(BATCH, cut.size()));
+        BlockCoord first = batch.get(0);
         post.submit(
                 post.ticket(
-                        id,
+                        PREFIX + first.x() + "," + first.y() + "," + first.z(),
                         BoardCase.REPAIR_BUILDING,
                         Optional.empty(),
                         ticket.task().priority(),
                         ticket.id(),
                         post.items(ticket.task())),
                 TicketTarget.at(first)
-                        .withLeveling(LevelRepair.leveling(plan.fill(), plan.cut()))
-                        .withPlan(steps(plan, first)));
+                        .withLeveling(LevelRepair.leveling(List.of(), batch))
+                        .withPlan(steps(batch)));
         return true;
     }
 
-    static TaskNode steps(AccessPath.Plan plan, BlockCoord first) {
+    static TaskNode steps(List<BlockCoord> cut) {
         List<TaskNode> steps = new ArrayList<>();
-        plan.cut().stream()
-                .sorted(Comparator.comparingInt(BlockCoord::y).reversed())
-                .forEach(cell -> steps.add(retried(new ScriptCall(
-                        "clear_area",
-                        Map.of(
-                                "x1",
-                                cell.x(),
-                                "y1",
-                                cell.y(),
-                                "z1",
-                                cell.z(),
-                                "x2",
-                                cell.x(),
-                                "y2",
-                                cell.y(),
-                                "z2",
-                                cell.z(),
-                                "demolish",
-                                true)))));
-        if (!plan.cut().isEmpty()) {
-            steps.add(retried(new ScriptCall("collect_drops", Map.of("radius", CatalogLimits.DROP_RADIUS_MAX))));
+        for (BlockCoord cell : cut) {
+            steps.add(retried(new ScriptCall(
+                    "clear_area",
+                    Map.of(
+                            "x1",
+                            cell.x(),
+                            "y1",
+                            cell.y(),
+                            "z1",
+                            cell.z(),
+                            "x2",
+                            cell.x(),
+                            "y2",
+                            cell.y(),
+                            "z2",
+                            cell.z(),
+                            "demolish",
+                            true))));
         }
-        if (!plan.fill().isEmpty()) {
-            steps.add(LevelRepair.plan(
-                    TicketTarget.at(first).withLeveling(LevelRepair.leveling(plan.fill(), List.of()))));
-        }
+        steps.add(retried(new ScriptCall("collect_drops", Map.of("radius", CatalogLimits.DROP_RADIUS_MAX))));
         return new SequenceNode(steps);
     }
 

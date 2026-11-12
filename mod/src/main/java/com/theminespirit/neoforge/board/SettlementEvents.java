@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.board;
 
-import java.util.Optional;
 import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
 
@@ -11,7 +10,7 @@ final class SettlementEvents {
         if (ChestDemolition.pending(level, service)) {
             events.add(ChestDemolition.EVENT);
         }
-        if (AccessScan.blocked(level, scan.stage(), Optional.of(scan.home()))) {
+        if (AccessScan.blocked(level, service, scan.stage(), scan.home())) {
             events.add(AccessScan.EVENT);
         }
     }
