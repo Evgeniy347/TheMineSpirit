@@ -142,6 +142,10 @@ public final class ProtectionGate {
         if (outside instanceof BlockProtection.Refused) {
             return outside;
         }
+        Optional<String> carried = OtherSpiritSupport.carried(spirit, pos);
+        if (carried.isPresent()) {
+            return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, carried.orElseThrow());
+        }
         Level level = spirit.level();
         if (!tended && OrchardTrees.treePart(state) && OrchardTrees.planned(level, coord)) {
             return new BlockProtection.Refused(

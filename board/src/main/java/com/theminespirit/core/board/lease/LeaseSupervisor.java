@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.lease;
 
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,9 +11,16 @@ import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 public final class LeaseSupervisor {
-    public record SpiritState(boolean suspended, @Nullable Set<String> tickets) {
+    public record SpiritState(
+            boolean suspended,
+            @Nullable Set<String> tickets,
+            @Nullable BlockCoord support) {
         public SpiritState {
             tickets = tickets == null ? null : Set.copyOf(tickets);
+        }
+
+        public SpiritState(boolean suspended, @Nullable Set<String> tickets) {
+            this(suspended, tickets, null);
         }
     }
 
@@ -44,6 +52,10 @@ public final class LeaseSupervisor {
             }
             boolean lost = false;
             SpiritState state = spirits.get(owner);
+            if (state != null && standsOnOwn(book, lease, state.support())) {
+                suspendedSince.remove(lease.id());
+                continue;
+            }
             if (state == null) {
                 lost = true;
             } else {
@@ -68,6 +80,13 @@ public final class LeaseSupervisor {
                         .filter(lease -> lease.status() == LeaseStatus.ACTIVE)
                         .isEmpty());
         return List.copyOf(due);
+    }
+
+    private static boolean standsOnOwn(LeaseBook book, Lease lease, @Nullable BlockCoord support) {
+        return support != null
+                && book.owner(support)
+                        .filter(found -> found.id().equals(lease.id()))
+                        .isPresent();
     }
 
     private static Map<String, UUID> ticketOwners(Map<UUID, SpiritState> spirits) {

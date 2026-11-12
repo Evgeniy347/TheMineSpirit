@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.lease.Lease;
 import com.theminespirit.core.board.lease.LeaseSupervisor;
+import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.BuildReservationHub;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
@@ -17,6 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -114,7 +116,11 @@ public final class LeaseLifecycle {
                     : service.board().assignedTo(spirit.getUUID()).stream()
                             .map(BoardTicket::id)
                             .collect(Collectors.toUnmodifiableSet());
-            states.put(spirit.getUUID(), new LeaseSupervisor.SpiritState(suspended, tickets));
+            BlockPos on = spirit.getOnPos();
+            states.put(
+                    spirit.getUUID(),
+                    new LeaseSupervisor.SpiritState(
+                            suspended, tickets, new BlockCoord(on.getX(), on.getY(), on.getZ())));
         }
         return states;
     }
