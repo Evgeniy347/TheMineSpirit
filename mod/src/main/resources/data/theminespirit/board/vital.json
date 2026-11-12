@@ -71,6 +71,14 @@
       "reason": "инструмент",
       "blocked": "сломанный инструмент: нет пути починки",
       "allow": ["graph:event:tool_worn:", "graph:event:gear_", "graph:tool:"]
+    },
+    {
+      "id": "access",
+      "event": "access_blocked",
+      "gate": false,
+      "reason": "нет прохода",
+      "blocked": "нет прохода к сундукам, станциям и дверям: проём не срезать",
+      "allow": ["graph:event:access_blocked:", "world:access:"]
     }
   ]
 }

@@ -68,6 +68,9 @@ final class GraphEventPost {
             CraftOrders.refresh(post.level);
             return true;
         }
+        if (AccessPost.handles(ticket.node())) {
+            return AccessPost.post(post, ticket);
+        }
         if (ChestDemolition.EVENT.equals(ticket.node())) {
             return ChestDemolition.tick(post, ticket);
         }

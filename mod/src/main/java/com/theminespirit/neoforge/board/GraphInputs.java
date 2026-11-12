@@ -75,9 +75,7 @@ final class GraphInputs {
         if (ExpeditionRule.ready(buildings.get("mine"), ExpeditionGate.ready(stock, level))) {
             events.add("expedition_ready");
         }
-        if (ChestDemolition.pending(level, service)) {
-            events.add(ChestDemolition.EVENT);
-        }
+        SettlementEvents.add(events, level, service, scan);
         started = System.nanoTime();
         GraphFacts baseFacts = GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around);
         mark("factBase", started);

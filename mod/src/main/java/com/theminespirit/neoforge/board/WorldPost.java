@@ -193,7 +193,7 @@ final class WorldPost {
             return false;
         }
         List<BlockCoord> extras =
-                found.mounds().stream().sorted(ORDER).limit(BATCH).toList();
+                found.mounds().stream().sorted(ORDER.reversed()).limit(BATCH).toList();
         BlockCoord first = extras.get(0);
         String id = "world:level_lot:" + key(first);
         if (post.done(id) || post.open(id)) {

@@ -222,6 +222,20 @@
         "remove_floating_tree_and_crown"
       ]
     },
+    "access_blocked": {
+      "vital": true,
+      "tasks": [
+        {
+          "id": "clear_access",
+          "case": "REPAIR_BUILDING",
+          "base": 90,
+          "consumes": {}
+        }
+      ],
+      "advice": [
+        "clear_walkway_to_chests_stations_and_doors"
+      ]
+    },
     "level_lot": {
       "tasks": [
         {

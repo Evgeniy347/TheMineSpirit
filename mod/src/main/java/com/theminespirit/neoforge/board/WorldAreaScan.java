@@ -60,6 +60,14 @@ final class WorldAreaScan {
         return found;
     }
 
+    static SettlementScan.World view(ServerLevel level, StageSite site) {
+        int levelY = SettlementPlotStore.get(level)
+                .plot()
+                .map(plot -> plot.anchor().y())
+                .orElse(site.anchor().y());
+        return new Live(level, site, SettlementPlotStore.get(level).town(), levelY);
+    }
+
     static Optional<SettlementScan.Strays> last(ServerLevel level) {
         return Optional.ofNullable(LAST.get(key(level))).map(Cached::found);
     }
