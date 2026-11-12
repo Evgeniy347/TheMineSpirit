@@ -7,6 +7,7 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.BuildGap;
+import com.theminespirit.core.board.GroundsAudit;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StageAudit;
@@ -44,6 +45,7 @@ final class StageStepOpener {
         FirstStepsRunner.OpenStep step = new FirstStepsRunner.OpenStep(caseValue, target, Map.of(), wood);
         Map<String, Integer> need = StageMaterialDesk.need(level, post.stock, step, blocked);
         if (StageSettle.AUDIT_STEPS.contains(caseValue)
+                && !GroundsAudit.uneven(caseValue, target.leveling())
                 && reopenDone(
                         level,
                         post.service,

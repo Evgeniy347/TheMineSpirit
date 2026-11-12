@@ -244,7 +244,7 @@ public final class GraphPlanner {
                                             : "")));
             return;
         }
-        if (StageCatalog.watcherOwned(building.boardCase()) || GraphAudit.settles(state, id)) return;
+        if (StageCatalog.watcherOwned(building.boardCase()) || GraphAudit.settles(state, building)) return;
         push(from, BUILDING + id, amount);
     }
 
