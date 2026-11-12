@@ -56,7 +56,7 @@ public final class DigOutScript implements ScriptInstance {
         this.level = spirit.level();
         this.target = target;
         this.rescue = rescue;
-        this.descending = target.y() < spirit.blockPosition().getY();
+        this.descending = target.y() < spirit.getBlockY();
         this.routeDescending = descending;
         this.breaker = BlockBreaker.escaping(spirit, rescue);
         this.placer = new BlockPlacer(spirit, PlotProtection.Ground.TEMPORARY_MOVEMENT);
@@ -170,7 +170,7 @@ public final class DigOutScript implements ScriptInstance {
     }
 
     private boolean followRoute() {
-        boolean descentNow = target.y() < spirit.blockPosition().getY();
+        boolean descentNow = DigOutRoute.mode(target.y(), spirit.getBlockY(), routeDescending, routeFollow != null);
         if (descentNow != routeDescending) {
             routeDescending = descentNow;
             if (routeFollow != null) routeFollow.cancel();

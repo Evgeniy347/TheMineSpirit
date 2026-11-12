@@ -35,6 +35,10 @@ final class DigOutRoute {
         this.rescue = rescue;
     }
 
+    static boolean mode(int targetY, int feetY, boolean current, boolean following) {
+        return following ? current : targetY < feetY;
+    }
+
     State tick() {
         if (route == null && pending == null && surface == null && retries < RETRIES && !routeFailed) {
             surface = SurfaceRoute.begin(spirit, target, descending, rescue);
