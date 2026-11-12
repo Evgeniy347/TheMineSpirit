@@ -41,6 +41,26 @@ final class PlanSteps {
                 new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
+    static TaskNode clearRun(DemolishRuns.Run run) {
+        return new ScriptCall(
+                "clear_area",
+                Map.of(
+                        "x1",
+                        run.x(),
+                        "y1",
+                        run.bottom(),
+                        "z1",
+                        run.z(),
+                        "x2",
+                        run.x(),
+                        "y2",
+                        run.top(),
+                        "z2",
+                        run.z(),
+                        "demolish",
+                        true));
+    }
+
     static TaskNode clearStrict(BlockCoord at) {
         return new ScriptCall("clear_area", clearParams(at, true));
     }

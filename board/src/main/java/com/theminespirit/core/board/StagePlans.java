@@ -181,10 +181,14 @@ public final class StagePlans {
         }
         List<TaskNode> steps = new ArrayList<>();
         blocks.stream()
-                .sorted(Comparator.comparingInt((PlannedBlock block) -> SchematicBlocks.isBed(block.block()) ? 0 : 1)
-                        .thenComparingInt((PlannedBlock block) -> block.at().y())
-                        .thenComparing(PlannedBlock::at))
+                .filter(block -> SchematicBlocks.isBed(block.block()))
+                .sorted(Comparator.comparing(PlannedBlock::at))
                 .forEach(block -> steps.add(PlanSteps.clearStrict(block.at())));
+        List<BlockCoord> rest = blocks.stream()
+                .filter(block -> !SchematicBlocks.isBed(block.block()))
+                .map(PlannedBlock::at)
+                .toList();
+        DemolishRuns.runs(rest).forEach(run -> steps.add(PlanSteps.clearRun(run)));
         return new SequenceNode(steps);
     }
 
