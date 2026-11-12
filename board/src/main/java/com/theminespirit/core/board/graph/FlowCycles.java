@@ -2,8 +2,10 @@ package com.theminespirit.core.board.graph;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
+import java.util.stream.IntStream;
 
 final class FlowCycles {
     private static final int FRESH = 0;
@@ -12,7 +14,7 @@ final class FlowCycles {
 
     private FlowCycles() {}
 
-    static boolean[] backLinks(int size, int[] from, int[] to, int[] roots) {
+    static boolean[] backLinks(int size, int[] from, int[] to, int[] roots, int[] rank) {
         List<List<Integer>> out = new ArrayList<>();
         for (int node = 0; node < size; node++) {
             out.add(new ArrayList<>());
@@ -20,12 +22,23 @@ final class FlowCycles {
         for (int link = 0; link < from.length; link++) {
             out.get(from[link]).add(link);
         }
+        for (List<Integer> links : out) {
+            links.sort(Comparator.comparingInt(link -> rank[to[link]]));
+        }
         boolean[] back = new boolean[from.length];
         int[] state = new int[size];
-        for (int root : roots) {
+        for (int root : IntStream.of(roots)
+                .boxed()
+                .sorted(Comparator.comparingInt(node -> rank[node]))
+                .mapToInt(Integer::intValue)
+                .toArray()) {
             walk(root, out, to, state, back);
         }
-        for (int node = 0; node < size; node++) {
+        for (int node : IntStream.range(0, size)
+                .boxed()
+                .sorted(Comparator.comparingInt(node -> rank[node]))
+                .mapToInt(Integer::intValue)
+                .toArray()) {
             walk(node, out, to, state, back);
         }
         return back;

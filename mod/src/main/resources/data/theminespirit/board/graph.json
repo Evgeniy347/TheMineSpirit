@@ -9730,12 +9730,12 @@
     {
       "lack": "torch",
       "way": "mine_coal",
-      "weight": 10
+      "weight": 5
     },
     {
       "lack": "torch",
       "way": "smelt_charcoal",
-      "weight": 10
+      "weight": 5
     },
     {
       "lack": "iron_pickaxe",

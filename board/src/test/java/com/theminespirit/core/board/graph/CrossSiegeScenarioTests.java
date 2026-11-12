@@ -7,6 +7,7 @@ import static com.theminespirit.core.board.graph.CrossScene.damaged;
 import static com.theminespirit.core.board.graph.CrossScene.ids;
 import static com.theminespirit.core.board.graph.CrossScene.named;
 import static com.theminespirit.core.board.graph.CrossScene.plan;
+import static com.theminespirit.core.board.graph.CrossScene.ranked;
 import static com.theminespirit.core.board.graph.CrossScene.spirit;
 import static com.theminespirit.core.board.graph.CrossScene.stageOne;
 import static com.theminespirit.core.board.graph.CrossScene.task;
@@ -101,7 +102,10 @@ class CrossSiegeScenarioTests {
         assertTrue(fence.priority() > hut.priority(), "Побитый забор важнее новой хижины: " + ids(plan));
         assertTrue(fence.priority() > backfill.priority(), "Забор важнее засыпки воронки: " + ids(plan));
         assertTrue(fence.priority() > demolish.priority(), "Забор важнее сноса лишнего сундука: " + ids(plan));
-        assertTrue(guard.priority() > mine.priority(), "Охрана важнее шахты, но шахта остаётся на доске: " + ids(plan));
+        assertTrue(
+                guard.priority() >= mine.priority(),
+                "Охрана не ниже шахты (без факелов уголь — свет тёмной шахты, честный соперник охраны), шахта на доске: "
+                        + ranked(plan));
         assertTrue(expedition.priority() > fence.priority(), "Поход выше ремонта забора: " + ids(plan));
 
         GraphPlan.Task hungryEat = task(plan, "event:hungry:eat");

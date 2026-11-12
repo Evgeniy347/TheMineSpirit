@@ -216,6 +216,12 @@ final class CrossScene {
         return plan.tasks().stream().map(GraphPlan.Task::id).toList();
     }
 
+    static List<String> ranked(GraphPlan plan) {
+        return plan.tasks().stream()
+                .map(task -> task.id() + "=" + task.priority())
+                .toList();
+    }
+
     static List<String> tasksMaking(GraphPlan plan, String item) {
         return plan.tasks().stream()
                 .filter(task -> item.equals(task.makes()))

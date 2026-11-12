@@ -258,6 +258,14 @@ final class GraphWorld {
                 .withBlocks(blocks);
     }
 
+    static int best(GraphPlan plan, String prefix) {
+        return plan.tasks().stream()
+                .filter(task -> task.id().startsWith(prefix))
+                .mapToInt(GraphPlan.Task::priority)
+                .max()
+                .orElse(-1);
+    }
+
     static List<GraphPlan.Task> issueOrder(GraphPlan plan) {
         return plan.tasks().stream()
                 .filter(GraphPlan.Task::feasible)

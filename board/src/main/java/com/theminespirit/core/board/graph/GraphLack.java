@@ -6,6 +6,12 @@ import java.util.Map;
 public final class GraphLack {
     private GraphLack() {}
 
+    static double base(SupplyGraph graph, GraphState state, SupplyGraph.Building building) {
+        boolean needed = graph.ways().stream()
+                .anyMatch(way -> building.id().equals(way.building()) && lacking(graph, state, way.makes()));
+        return needed ? building.base() / graph.decay() : building.base();
+    }
+
     public static int threshold(SupplyGraph.Item item, GraphState state) {
         int stage = item.perSpirit() ? 1 : state.stage();
         return (int) Math.ceil(item.xmin() * state.spirits() * stage * item.k());

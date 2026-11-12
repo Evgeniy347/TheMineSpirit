@@ -63,8 +63,14 @@ public final class GraphFlow {
             to[link] = node(links.get(link).to());
             factor[link] = links.get(link).factor();
         }
+        int[] rank = new int[size];
+        List<String> sorted = new ArrayList<>(index.keySet());
+        sorted.sort(null);
+        for (int place = 0; place < sorted.size(); place++) {
+            rank[node(sorted.get(place))] = place;
+        }
         boolean[] back = FlowCycles.backLinks(
-                size, from, to, roots.keySet().stream().mapToInt(this::node).toArray());
+                size, from, to, roots.keySet().stream().mapToInt(this::node).toArray(), rank);
         double[] value = base.clone();
         for (int iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
             double[] next = base.clone();
@@ -87,6 +93,14 @@ public final class GraphFlow {
             result.put(entry.getKey(), value[entry.getValue()] + locals.getOrDefault(entry.getKey(), 0.0));
         }
         return result;
+    }
+
+    public static double shift(double score, double steps, int max) {
+        if (max <= 0) {
+            return 0;
+        }
+        double target = (1 + score) * Math.pow(1 + SCORE_SPAN, steps / max) - 1;
+        return target - score;
     }
 
     public static int priority(double score, int max) {

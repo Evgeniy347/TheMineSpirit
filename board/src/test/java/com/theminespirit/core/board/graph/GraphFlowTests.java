@@ -20,6 +20,26 @@ class GraphFlowTests {
     }
 
     @Test
+    void solve_CycleBuiltInOtherOrder_SameValues() {
+        GraphFlow one = new GraphFlow();
+        one.root("torch", 30);
+        one.root("coal", 20);
+        one.link("torch", "coal", 0.5);
+        one.link("coal", "torch", 0.5);
+        GraphFlow two = new GraphFlow();
+        two.root("coal", 20);
+        two.root("torch", 30);
+        two.link("coal", "torch", 0.5);
+        two.link("torch", "coal", 0.5);
+
+        assertEquals(
+                one.solve(),
+                two.solve(),
+                "Порядок вставки узлов и рёбер (обход Map.copyOf меняется от запуска JVM) не меняет поток: "
+                        + "обратные рёбра выбираются в каноническом порядке ключей");
+    }
+
+    @Test
     void solve_Cycle_PressureDoesNotReturnToSource() {
         GraphFlow cyclic = new GraphFlow();
         cyclic.root("cobble", 10);

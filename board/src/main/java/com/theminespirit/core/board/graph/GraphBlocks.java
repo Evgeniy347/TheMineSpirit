@@ -57,7 +57,7 @@ final class GraphBlocks {
             pushNeed(
                     block.node(),
                     block.need(),
-                    Math.max(1.0, scores.getOrDefault(block.node(), declared(block.node()))));
+                    Math.max(1.0, scores.getOrDefault(block.node(), declared(block.node()))) * graph.decay());
         }
     }
 
@@ -113,33 +113,33 @@ final class GraphBlocks {
     private void pushNeed(String from, GraphBlock.Need need, double amount) {
         if (need instanceof GraphBlock.Item item) {
             if (!item.item().equals(from)) {
-                sink.push(from, item.item(), amount);
+                sink.push(null, item.item(), amount);
             }
             return;
         }
         if (need instanceof GraphBlock.Tool tool) {
             if (tool.spirit().isEmpty()) {
-                pushTool(from, tool.kind(), amount);
+                pushTool(tool.kind(), amount);
             } else {
-                sink.push(from, TOOL + tool.kind() + AT + tool.spirit(), amount);
+                sink.push(null, TOOL + tool.kind() + AT + tool.spirit(), amount);
             }
             return;
         }
         if (need instanceof GraphBlock.Building building) {
             String node = BUILDING + building.id();
             if (!node.equals(from)) {
-                sink.push(from, node, amount);
+                sink.push(null, node, amount);
             }
             return;
         }
         if (need instanceof GraphBlock.Holder holder && holder.stuck()) {
-            sink.push(from, DigOperations.RESCUE, amount);
+            sink.push(null, DigOperations.RESCUE, amount);
         }
     }
 
-    private void pushTool(String from, String kind, double amount) {
+    private void pushTool(String kind, double amount) {
         for (String spirit : state.kits().keySet()) {
-            sink.push(from, TOOL + kind + AT + spirit, amount / Math.max(1, state.spirits()));
+            sink.push(null, TOOL + kind + AT + spirit, amount / Math.max(1, state.spirits()));
         }
     }
 

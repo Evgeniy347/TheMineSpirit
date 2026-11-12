@@ -78,10 +78,10 @@ class GraphPlannerTests {
                 .plan();
 
         assertTrue(
-                lacks.priority("chop_oak_log") > has.priority("chop_oak_log")
+                GraphWorld.best(lacks, "chop_") > GraphWorld.best(has, "chop_")
                         && lacks.priority("craft_stick") > has.priority("craft_stick"),
-                "Нет деревянной кирки и топора — дерево и палки важнее: " + lacks.priority("chop_oak_log") + " против "
-                        + has.priority("chop_oak_log"));
+                "Нет деревянной кирки и топора — рубка (любой породы, граф выбирает породу сам) и палки важнее: "
+                        + GraphWorld.best(lacks, "chop_") + " против " + GraphWorld.best(has, "chop_"));
     }
 
     @Test

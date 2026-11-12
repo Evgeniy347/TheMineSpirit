@@ -103,7 +103,7 @@ public final class GraphPlanner {
         for (SupplyGraph.Trigger trigger : graph.triggers()) {
             SupplyGraph.Building wanted = graph.buildings().get(trigger.build());
             if (wanted != null && count(trigger.have()) > 0 && state.built(trigger.build()) != Built.BUILT) {
-                requireBuilding(null, trigger.build(), wanted.base(), "есть " + trigger.have());
+                requireBuilding(null, trigger.build(), GraphLack.base(graph, state, wanted), "есть " + trigger.have());
             }
         }
         if (state.storageFreePercent() < graph.storage().minFreePercent()
@@ -326,7 +326,7 @@ public final class GraphPlanner {
             boolean active = false;
             for (String key : List.copyOf(scores.keySet())) {
                 if ((key.equals(edge.way()) || key.startsWith(edge.way() + AT)) && scores.getOrDefault(key, 0.0) > 0) {
-                    flow.local(key, edge.weight());
+                    flow.local(key, GraphPriorities.edge(graph, scores.getOrDefault(key, 0.0), edge.weight()));
                     active = true;
                 }
             }
