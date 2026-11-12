@@ -52,7 +52,7 @@ final class GraphInputs {
         return Map.copyOf(PHASES);
     }
 
-    private static void mark(String name, long started) {
+    static void mark(String name, long started) {
         PHASES.merge(name, (System.nanoTime() - started) / 1_000_000, Long::sum);
     }
 

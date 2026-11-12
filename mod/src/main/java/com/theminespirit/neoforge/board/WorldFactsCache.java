@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.board.graph.GraphWorldFacts;
 import com.theminespirit.core.town.TownPlan;
@@ -23,16 +24,16 @@ final class WorldFactsCache {
             FirstStepsRunner.StageScan scan,
             Optional<TownPlan> town,
             Map<String, Built> buildings) {
-        return get(
-                level,
-                scan.stage(),
-                buildings,
-                () -> WorldAreaInputs.of(
-                        level,
-                        service,
-                        scan,
-                        town,
-                        BuildingAuditInputs.buildings(level, service, scan, buildings, town)));
+        return get(level, scan.stage(), buildings, () -> {
+            long audit = System.nanoTime();
+            Map<String, GraphFacts.Building> audited =
+                    BuildingAuditInputs.buildings(level, service, scan, buildings, town);
+            GraphInputs.mark("world.audit", audit);
+            long area = System.nanoTime();
+            GraphWorldFacts facts = WorldAreaInputs.of(level, service, scan, town, audited);
+            GraphInputs.mark("world.area", area);
+            return facts;
+        });
     }
 
     static GraphWorldFacts get(
