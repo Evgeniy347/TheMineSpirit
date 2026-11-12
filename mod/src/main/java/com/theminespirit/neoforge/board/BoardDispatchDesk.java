@@ -138,14 +138,17 @@ final class BoardDispatchDesk {
         step = timer.lap("candidates", step);
         Optional<BlockCoord> settlementHome = HomePoint.of(level, spirits);
         timer.lap("home", step);
+        int explained = 0;
         for (BoardTicket ticket : claimable) {
             long chooseStarted = System.nanoTime();
             SpiritEntity spirit = pick.choose(ticket, targets.get(ticket.id()), crafters);
             timer.add("choose", chooseStarted);
             if (spirit == null) {
-                String why = pick.why(ticket, targets.get(ticket.id()));
-                board.noteWait(ticket.id(), why);
-                LOGGER.debug("Задание {} ждёт свободного духа: {}", ticket.id(), why);
+                if (explained++ < WaitRefresh.BATCH) {
+                    long whyStarted = System.nanoTime();
+                    board.noteWait(ticket.id(), pick.why(ticket, targets.get(ticket.id())));
+                    timer.add("why", whyStarted);
+                }
                 continue;
             }
             for (BoardTicket displaced : round.drainDisplaced(spirit.getUUID())) {
