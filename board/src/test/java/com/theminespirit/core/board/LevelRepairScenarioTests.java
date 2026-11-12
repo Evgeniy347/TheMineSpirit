@@ -20,6 +20,19 @@ class LevelRepairScenarioTests {
     private static final BlockCoord ANCHOR = new BlockCoord(0, 64, 0);
 
     @Test
+    void withinShift_PillarAboveFloorPlusTen_TopIsLeftOut() {
+        List<BlockCoord> column = new ArrayList<>();
+        for (int y = 64; y <= 80; y++) {
+            column.add(new BlockCoord(0, y, 0));
+        }
+        List<BlockCoord> kept = LevelRepair.withinShift(column);
+        assertEquals(
+                PlotLeveling.MAX_SHIFT,
+                kept.size(),
+                "выравнивание берёт не выше пола + MAX_SHIFT (сервер 12.11: дух поднимался к верхушке столба y≈97)");
+    }
+
+    @Test
     void plan_HoleAndExtra_CutThenBatchedLayersBottomUp() {
         PlotLeveling leveling = LevelRepair.leveling(
                 List.of(new BlockCoord(2, 63, 2), new BlockCoord(2, 62, 2)), List.of(new BlockCoord(-3, 64, 1)));

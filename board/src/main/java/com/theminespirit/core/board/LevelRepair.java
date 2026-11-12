@@ -11,6 +11,7 @@ import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.town.PlotLeveling;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -21,6 +22,14 @@ import java.util.function.Predicate;
 
 public final class LevelRepair {
     private LevelRepair() {}
+
+    public static List<BlockCoord> withinShift(List<BlockCoord> raised) {
+        Map<String, Integer> bottoms = new HashMap<>();
+        raised.forEach(at -> bottoms.merge(at.x() + "," + at.z(), at.y(), Math::min));
+        return raised.stream()
+                .filter(at -> at.y() < bottoms.getOrDefault(at.x() + "," + at.z(), at.y()) + PlotLeveling.MAX_SHIFT)
+                .toList();
+    }
 
     public static PlotLeveling leveling(List<BlockCoord> holes, List<BlockCoord> extras) {
         Objects.requireNonNull(holes, "Дыры участка не могут быть null: нет дыр — пустой список");
