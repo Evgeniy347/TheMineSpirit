@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.LevelRepair;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.reload.DataTables;
@@ -87,7 +86,7 @@ final class WorldAreaScan {
         List<BlockCoord> cells = new ArrayList<>(found.mounds());
         cells.addAll(found.pillars());
         found.strays().forEach(stray -> cells.add(stray.at()));
-        return LevelRepair.withinShift(cells);
+        return cells;
     }
 
     static List<BlockCoord> holes(SettlementScan.Strays found) {
