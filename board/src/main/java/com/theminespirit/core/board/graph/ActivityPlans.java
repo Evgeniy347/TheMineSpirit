@@ -62,13 +62,17 @@ public final class ActivityPlans {
     }
 
     public static Plan harvestCrop(BlockCoord at) {
+        return harvestCrop(at, "any");
+    }
+
+    public static Plan harvestCrop(BlockCoord at, String crop) {
         return new Plan(
                 "harvest_crop",
                 sequence(
                         gotoPoint(at),
                         new ScriptCall(
                                 "harvest_crop",
-                                Map.of(CROP, "any", RADIUS, CatalogLimits.FARM_RADIUS_DEFAULT, "replant", true))));
+                                Map.of(CROP, crop, RADIUS, CatalogLimits.FARM_RADIUS_DEFAULT, "replant", true))));
     }
 
     public static Plan milk(BlockCoord at, int count) {

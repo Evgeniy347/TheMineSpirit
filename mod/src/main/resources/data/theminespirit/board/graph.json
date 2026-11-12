@@ -2582,6 +2582,12 @@
       "base": 11,
       "stage": 3,
       "perSpirit": true
+    },
+    "beetroot_seeds": {
+      "xmin": 8,
+      "k": 1,
+      "base": 7,
+      "stage": 2
     }
   },
   "buildings": {
@@ -2895,7 +2901,8 @@
       "materials": {
         "carrot": 8,
         "dirt": 16
-      }
+      },
+      "optional": true
     },
     "field_potato": {
       "case": "BUILD_HOUSE",
@@ -2904,16 +2911,18 @@
       "materials": {
         "potato": 8,
         "dirt": 16
-      }
+      },
+      "optional": true
     },
     "field_beetroot": {
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 74,
       "materials": {
-        "beetroot": 8,
+        "beetroot_seeds": 8,
         "dirt": 16
-      }
+      },
+      "optional": true
     },
     "sugar_cane_bed": {
       "case": "BUILD_HOUSE",
@@ -4601,25 +4610,44 @@
       "building": "field_beetroot"
     },
     {
+      "id": "harvest_beetroot_seeds",
+      "case": "GATHER_MATERIALS",
+      "makes": "beetroot_seeds",
+      "yield": 4,
+      "weight": 1.792561001,
+      "building": "field_beetroot"
+    },
+    {
       "id": "forage_carrot",
       "case": "GATHER_MATERIALS",
       "makes": "carrot",
       "yield": 1,
-      "weight": 0.5377683
+      "weight": 0.5377683,
+      "world": "crop:carrot"
     },
     {
       "id": "forage_potato",
       "case": "GATHER_MATERIALS",
       "makes": "potato",
       "yield": 1,
-      "weight": 0.5377683
+      "weight": 0.5377683,
+      "world": "crop:potato"
     },
     {
       "id": "forage_beetroot",
       "case": "GATHER_MATERIALS",
       "makes": "beetroot",
       "yield": 1,
-      "weight": 0.5377683
+      "weight": 0.5377683,
+      "world": "crop:beetroot"
+    },
+    {
+      "id": "forage_beetroot_seeds",
+      "case": "GATHER_MATERIALS",
+      "makes": "beetroot_seeds",
+      "yield": 1,
+      "weight": 0.5377683,
+      "world": "crop:beetroot"
     },
     {
       "id": "forage_cane",
@@ -10489,6 +10517,18 @@
     {
       "have": "mangrove_sapling",
       "build": "orchard_mangrove"
+    },
+    {
+      "have": "carrot",
+      "build": "field_carrot"
+    },
+    {
+      "have": "potato",
+      "build": "field_potato"
+    },
+    {
+      "have": "beetroot_seeds",
+      "build": "field_beetroot"
     }
   ],
   "herdCaps": {

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 class HerdCapPlannerTests {
     @Test
-    void plan_PerSpiritHerdCap_CullRaisedBySpiritCountNotFixedNumber() {
+    void plan_PerSpiritHerdCap_CaptureStopsAtSpiritShare() {
         GraphWorld crowded = GraphWorld.settled()
                 .built("pen_cow", Built.BUILT)
                 .built("pen_sheep", Built.BUILT)
@@ -21,12 +21,12 @@ class HerdCapPlannerTests {
         crowded.kits.put("spirit-2", Map.of());
         crowded.kits.put("spirit-3", Map.of());
         GraphPlan low = crowded.with("herd_cow", 0).with("beef", 64).plan();
-        GraphPlan high = crowded.with("herd_cow", 2).with("beef", 64).plan();
+        GraphPlan full = crowded.with("herd_cow", 1).with("beef", 64).plan();
 
         assertTrue(
-                high.priority("cull_cow") > low.priority("cull_cow"),
-                "Лимит «половина духов»: три духа держат одну корову, две головы — перебор и забой важнее: "
-                        + high.priority("cull_cow") + " против " + low.priority("cull_cow"));
+                low.raised("capture_cow") && !full.raised("capture_cow") && !full.raised("breed_cow"),
+                "Лимит «половина духов»: три духа держат одну корову — без коровы ловим, с одной больше не ловим "
+                        + "и не разводим: " + CrossScene.ranked(low) + " / " + CrossScene.ranked(full));
     }
 
     private static SupplyGraph perSpiritCows(double share) {

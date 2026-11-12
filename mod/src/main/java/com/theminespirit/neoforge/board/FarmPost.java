@@ -114,7 +114,7 @@ final class FarmPost {
                 Species species = FarmHerd.wildSpecies(post.level, post.scan.home());
                 yield species != null && FarmHerd.capture(post, ticket, species);
             }
-            default -> false;
+            default -> CropPost.way(post, ticket);
         };
     }
 

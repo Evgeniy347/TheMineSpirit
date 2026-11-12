@@ -26,7 +26,6 @@ BUILT = "BUILT"
 PLANNED = "PLANNED"
 ABSENT = "ABSENT"
 
-HERD_CULL_BOOST = 70
 EXPLORE_TICKS = 2400
 
 
@@ -1147,6 +1146,9 @@ class Planner:
         state = self.state
         if way.world is not None and way.world not in state.world:
             return False
+        cap = self.graph.herd_caps.get(way.makes)
+        if cap is not None and self.count(way.makes) >= max(1, cap.limit(state.spirits())):
+            return False
         if self.far_at_night(way):
             return False
         for item_id in way.consumes:
@@ -1418,12 +1420,6 @@ class Planner:
             if building.stage <= state.stage and state.built(building.id) != BUILT \
                     and (not building.optional or state.built(building.id) == PLANNED):
                 self.require_building(None, building.id, building.base, "постройка этапа " + str(building.stage))
-        for herd, cap in graph.herd_caps.items():
-            if self.count(herd) > cap.limit(state.spirits()):
-                for way in graph.ways:
-                    if herd in way.consumes and self.available(way):
-                        self.flow.local(way.id, HERD_CULL_BOOST)
-                        self.expand_way(way.id, way)
         for trigger in graph.triggers:
             wanted = graph.buildings.get(trigger.get("build"))
             if wanted is not None and self.count(trigger.get("have")) > 0 and state.built(trigger["build"]) != BUILT:

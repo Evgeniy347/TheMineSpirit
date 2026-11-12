@@ -40,7 +40,6 @@ public record SupplyGraph(
     private static final String STAGE = "stage";
     private static final String KIT = "kit";
     private static final String WAYS = "ways";
-    private static final int HERD_CULL_BOOST = 70;
 
     public record Item(String id, int xmin, double k, int base, int stage, boolean perSpirit) {}
 
@@ -288,10 +287,6 @@ public record SupplyGraph(
 
     public List<String> members(String node) {
         return groups.getOrDefault(node, List.of());
-    }
-
-    public int herdCullBoost() {
-        return HERD_CULL_BOOST;
     }
 
     public boolean isGroup(String node) {

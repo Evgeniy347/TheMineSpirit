@@ -151,7 +151,7 @@
 | 11-14 | `CrossSettlementScenarioTests.husbandry_StarvingAnimalsNoCrops_SeedsOutrankFeedingAndSowing` | feed_animals невыполним без урожая | кормление ждёт еду, голод не растёт молча | ОК | полный |
 | 11-16 | `CrossFarmSupplyScenarioTests.husbandry_ShearingAndWornShears_RepairAndFenceStayPosted` | ремонт ножниц и стрижка | `repair_tool` чинит, `shear` стрижёт овец | ОК | полный |
 | 11-17 | `CrossFarmSupplyScenarioTests.husbandry_ShearingAndWornShears_RepairAndFenceStayPosted` | ремонт забора и стрижка овец | забор строится схемой, стадо не ждёт | ОК | полный |
-| 11-20 | `HerdCapPlannerTests.plan_PerSpiritHerdCap_CullRaisedBySpiritCountNotFixedNumber` | потолок стада растёт от числа духов | граф ставит забой лишних | ОК | слабо |
+| 11-20 | `HerdCapPlannerTests.plan_PerSpiritHerdCap_CaptureStopsAtSpiritShare` | потолок стада растёт от числа духов, сверх него не ловят и не разводят | граф не ловит и не разводит сверх потолка, забоя лишних нет | ОК | слабо |
 | 12-14 | `LifeGraphPlannerTests.plan_ManySpiritsAndMobs_LifeAtCeilingOnlyForAggroTargets` | голод и мобы → приоритеты жизни | еда и защита не выходят за потолок | ОК | слабо |
 | 12-15 | `CrossLifeWorkScenarioTests.night_ThreatAtWounded_DefendAboveSleepAndGuard` | defend 100 > sleep 84 > guard 55 | ночью бой выше сна и охраны | ОК | полный |
 | 12-16 | `CrossSupplyScenarioTests.combat_WoundedWithoutArmor_FightsBeforeCraftingArmor` | defend 100 выше craft_armor 39 | раненый сначала отбивается | ОК | полный |

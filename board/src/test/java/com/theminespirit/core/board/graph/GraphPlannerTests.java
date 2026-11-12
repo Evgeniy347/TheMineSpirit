@@ -748,14 +748,13 @@ class GraphPlannerTests {
     }
 
     @Test
-    void plan_HerdOverPenCapacity_CullRaised() {
-        GraphPlan calm = farm().with("herd_cow", 6).with("beef", 64).plan();
+    void plan_HerdOverPenCapacity_NoCullNoCapture() {
         GraphPlan crowded = farm().with("herd_cow", 14).with("beef", 64).plan();
 
         assertTrue(
-                crowded.priority("cull_cow") > calm.priority("cull_cow"),
-                "Коров больше вместимости загона — забой лишних важнее: " + crowded.priority("cull_cow") + " против "
-                        + calm.priority("cull_cow"));
+                !crowded.raised("cull_cow") && !crowded.raised("capture_cow") && !crowded.raised("breed_cow"),
+                "Коров больше лимита, мяса вдоволь — сверх лимита не ловим, не разводим и не забиваем (решение "
+                        + "владельца 12.11): " + CrossScene.ranked(crowded));
     }
 
     @Test

@@ -103,6 +103,9 @@ public final class GraphNames {
         tag(tags, "clay", "clay");
         tag(tags, "lava", "lava");
         tag(tags, "cactus", "cactus");
+        tag(tags, "carrots", "crop:carrot");
+        tag(tags, "potatoes", "crop:potato");
+        tag(tags, "beetroots", "crop:beetroot");
         tag(tags, "poppy", "flower:poppy");
         tag(tags, "dandelion", "flower:dandelion");
         tag(tags, "cornflower", "flower:cornflower");

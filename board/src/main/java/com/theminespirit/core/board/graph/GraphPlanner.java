@@ -90,16 +90,6 @@ public final class GraphPlanner {
                 requireBuilding(null, building.id(), building.base(), "постройка этапа " + building.stage());
             }
         }
-        graph.herdCaps().forEach((herd, herdCap) -> {
-            if (count(herd) > herdCap.limit(state.spirits())) {
-                for (SupplyGraph.Way way : graph.ways()) {
-                    if (way.consumes().containsKey(herd) && reach.available(way)) {
-                        flow.local(way.id(), graph.herdCullBoost());
-                        expandWay(way.id(), way);
-                    }
-                }
-            }
-        });
         for (SupplyGraph.Trigger trigger : graph.triggers()) {
             SupplyGraph.Building wanted = graph.buildings().get(trigger.build());
             if (wanted != null && count(trigger.have()) > 0 && state.built(trigger.build()) != Built.BUILT) {

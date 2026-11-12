@@ -823,8 +823,8 @@ def test_block_feedback():
 def test_baseline_trail():
     graph = Graph.load_merged(os.path.join(EXPORT, "graph.json"), RECIPES, FRAGMENTS)
     outcome = sim_gpu.run(sim_gpu.baselines(graph)[0], limit=4000)
-    assert outcome["steps"] == 2063 and outcome["ticks"] == 364640, \
-        "Пустой мир обязан повторить Java (2063 шага, 364 640 тиков), а не решение линейной системы: " \
+    assert outcome["steps"] == 1847 and outcome["ticks"] == 316440, \
+        "Пустой мир обязан повторить Java (1847 шагов, 316 440 тиков), а не решение линейной системы: " \
         + str((outcome["steps"], outcome["ticks"]))
     print("OK: пустой мир совпадает с Java (расходящийся поток решается итерациями)")
 

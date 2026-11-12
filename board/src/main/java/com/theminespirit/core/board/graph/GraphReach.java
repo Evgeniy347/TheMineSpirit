@@ -34,6 +34,10 @@ final class GraphReach {
         if (way.world() != null && !state.world().contains(way.world())) {
             return false;
         }
+        HerdCap cap = graph.herdCaps().get(way.makes());
+        if (cap != null && GraphLack.count(graph, state, way.makes()) >= Math.max(1, cap.limit(state.spirits()))) {
+            return false;
+        }
         if (farAtNight(way)) {
             return false;
         }
