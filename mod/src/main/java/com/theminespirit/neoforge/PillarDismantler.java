@@ -30,6 +30,8 @@ final class PillarDismantler {
     private final List<BlockCoord> pending;
     private final @Nullable LeaseRun lease;
     private final boolean keepLease;
+    static final int BREAK_INTERVAL_TICKS = 20;
+    private int sinceBreak = BREAK_INTERVAL_TICKS;
     private int cursor;
     private int returned;
     private int dropped;
@@ -59,6 +61,7 @@ final class PillarDismantler {
         if (spirit.isRemoved()) {
             return failed("дух исчез во время разбора столба");
         }
+        sinceBreak++;
         while (cursor < pending.size()) {
             BlockCoord cell = pending.get(cursor++);
             BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
@@ -74,6 +77,10 @@ final class PillarDismantler {
                 unmark(pos);
                 forget(pos);
                 continue;
+            }
+            if (underFeet(pos) && !ready(sinceBreak, spirit.onGround())) {
+                cursor--;
+                return Outcome.RUNNING;
             }
             if (BreakSight.visible(spirit, pos, false) != Visibility.CLEAR) {
                 return failed("блок столба " + cell + " не виден из глаз духа: разбор остановлен");
@@ -94,6 +101,7 @@ final class PillarDismantler {
                 }
             }
             returned++;
+            sinceBreak = 0;
             return Outcome.RUNNING;
         }
         outcome = Outcome.DONE;
@@ -107,6 +115,15 @@ final class PillarDismantler {
             }
         }
         return outcome;
+    }
+
+    private boolean underFeet(BlockPos pos) {
+        BlockPos feet = spirit.blockPosition();
+        return pos.getX() == feet.getX() && pos.getZ() == feet.getZ() && pos.getY() < feet.getY();
+    }
+
+    static boolean ready(int ticksSinceBreak, boolean onGround) {
+        return onGround && ticksSinceBreak >= BREAK_INTERVAL_TICKS;
     }
 
     int returned() {
