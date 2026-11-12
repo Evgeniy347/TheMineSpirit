@@ -103,6 +103,7 @@ final class GraphInputs {
         mark("factDig", started);
         GraphStockNote.log(facts, spirits);
         List<GraphBlock> blocks = new ArrayList<>(service.board().failures().graphBlocks());
+        blocks.addAll(service.supply().shortages());
         blocks.addAll(service.sources
                 .graphFailures()
                 .pathBlocks(service.board().now(), graph.costs().choice().failureHalfLife(), (int)

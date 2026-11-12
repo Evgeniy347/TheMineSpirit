@@ -48,7 +48,7 @@ public final class BoardScenesGameTests {
         abandoned.orphan();
         withUndoNoProgress(20);
         SpiritRun run = SpiritRun.launch(helper, spirit, new ScriptCall("undo_lease", Map.of("id", abandoned.id())), 1);
-        restoreUndoNoProgressWhenStarted(helper, run);
+        restoreUndoNoProgressWhenFinished(helper, run);
 
         helper.succeedWhen(() -> {
             CraftTestSupport.assertFinished(helper, spirit, run, RunStatus.FAILED);
@@ -128,10 +128,12 @@ public final class BoardScenesGameTests {
                 base.hive()));
     }
 
-    private static void restoreUndoNoProgressWhenStarted(GameTestHelper helper, SpiritRun run) {
+    private static void restoreUndoNoProgressWhenFinished(GameTestHelper helper, SpiritRun run) {
         AtomicBoolean restored = new AtomicBoolean();
         helper.onEachTick(() -> {
-            if (run.started() && restored.compareAndSet(false, true)) {
+            if (run.started()
+                    && run.spirit().taskStatus().orElse(null) != RunStatus.RUNNING
+                    && restored.compareAndSet(false, true)) {
                 BoardConfig.useSource(BoardConfig::readFromClasspath);
             }
         });

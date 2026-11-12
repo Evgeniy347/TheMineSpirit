@@ -33,6 +33,10 @@ final class SpiritRun {
         return run;
     }
 
+    SpiritEntity spirit() {
+        return spirit;
+    }
+
     boolean started() {
         return startTickCount >= 0;
     }

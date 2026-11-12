@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.mining.LeftOreRules;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,21 @@ public final class SupplyGate {
         }
     }
 
+    public static final String SHORTAGE = "shortage:";
+
     private SupplyGate() {}
+
+    public static List<GraphBlock> shortages(Decision decision) {
+        Objects.requireNonNull(decision, "Решение снабжения не может быть null: нехватка читается из него");
+        List<GraphBlock> blocks = new ArrayList<>();
+        for (Request request : decision.gather()) {
+            blocks.add(new GraphBlock(
+                    SHORTAGE + request.item(),
+                    "",
+                    new GraphBlock.Item(GraphNames.graphItem(request.item()), request.count())));
+        }
+        return List.copyOf(blocks);
+    }
 
     public static boolean retains(BoardTicket ticket, Set<String> liveCauses) {
         Objects.requireNonNull(ticket, "Задание не может быть null: удержание считается по причине и id");

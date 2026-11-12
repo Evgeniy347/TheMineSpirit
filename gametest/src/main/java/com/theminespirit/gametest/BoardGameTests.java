@@ -33,6 +33,7 @@ import net.minecraft.world.entity.monster.Husk;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -40,10 +41,9 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class BoardGameTests {
     private static final String BUILD_ID = "build_house";
-    private static final String SUPPLY_ID = "supply_gather:oak_log";
     private static final String PICKAXE_ID = "test:craft_stone_pickaxe";
     private static final int GATE_LOGS = 1;
-    private static final int SUPPLY_WAIT_LIMIT = 200;
+    private static final int SUPPLY_WAIT_TICKS = 60;
 
     private BoardGameTests() {}
 
@@ -107,7 +107,7 @@ public final class BoardGameTests {
     // [флак] добыча одного бревна вручную, путь к сундуку и ожидание пересборки: под нагрузкой
     // машины не укладывается в 400 тиков, запас двойной.
     @SceneStep(template = "arena", timeoutTicks = 800, board = true, calmMobs = true)
-    public static void supply_BuildNeedsWood_WaitsThenIssuesAfterGather(GameTestHelper helper) {
+    public static void supply_BuildNeedsWood_WaitsThenIssuesAfterStock(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         GameTestFixtures.buildFloor(helper, Blocks.STONE);
         BoardService board = BoardRegistry.get(helper.getLevel());
@@ -143,16 +143,17 @@ public final class BoardGameTests {
                         "Без дерева в запасах стройка обязана висеть в WAITING_RESOURCES, статус "
                                 + board.board().statusOf(BUILD_ID).orElse(null) + ": стройка, стартовавшая "
                                 + "без ресурсов, ломает гейт доски");
-                BoardStatus supply = board.board().statusOf(SUPPLY_ID).orElse(null);
-                if (supply == BoardStatus.ASSIGNED) {
+                helper.assertTrue(
+                        board.board().all().stream()
+                                .noneMatch(ticket -> ticket.id().startsWith("supply_gather:")),
+                        "Нехватка стройки уходит в граф блокировкой, а не задачей «добыть» мимо графа: "
+                                + board.board().all().stream()
+                                        .map(BoardTicket::id)
+                                        .toList());
+                if (supplyWaited.incrementAndGet() > SUPPLY_WAIT_TICKS
+                        && helper.getBlockEntity(new BlockPos(2, 1, 3)) instanceof ChestBlockEntity chest) {
+                    chest.setItem(0, new ItemStack(Items.OAK_LOG, GATE_LOGS));
                     phase.set(1);
-                } else if (supply == BoardStatus.FAILED) {
-                    helper.fail("Добыча провалилась: задание " + SUPPLY_ID + " закрыто с провалом, "
-                            + "стройка не может выдаться после неудачной добычи");
-                } else if (supplyWaited.incrementAndGet() > SUPPLY_WAIT_LIMIT) {
-                    helper.fail("При нехватке доска не выдала задание добычи GATHER_MATERIALS за "
-                            + supplyWaited.get() + " тиков, статус " + supply + ": без добычи стройка "
-                            + "зависнет навсегда");
                 }
             } else if (phase.get() == 1) {
                 helper.assertTrue(
@@ -164,7 +165,7 @@ public final class BoardGameTests {
             } else if (phase.get() == 2) {
                 helper.assertTrue(
                         board.board().statusOf(BUILD_ID).orElse(null) == BoardStatus.ASSIGNED,
-                        "После добычи стройка обязана выдаться сама, статус "
+                        "После пополнения стройка обязана выдаться сама, статус "
                                 + board.board().statusOf(BUILD_ID).orElse(null) + ": ждущее задание, не "
                                 + "выданное после пополнения, — доска не будит свою очередь");
                 helper.assertTrue(
@@ -207,7 +208,9 @@ public final class BoardGameTests {
                         "Вытеснение работы обязано отдать духу именно бегство: статус бегства "
                                 + board.board().statusOf("test:preempt_retreat").orElse(null));
                 board.board().cancel(BUILD_ID);
-                board.board().cancel(SUPPLY_ID);
+                board.board().all().stream()
+                        .filter(ticket -> ticket.id().contains("oak_log"))
+                        .forEach(ticket -> board.board().cancel(ticket.id()));
                 board.board().cancel("test:preempt_retreat");
                 helper.succeed();
                 GameTestFixtures.finish(helper);

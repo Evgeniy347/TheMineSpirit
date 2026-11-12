@@ -5,6 +5,7 @@ import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockParts;
@@ -27,6 +28,7 @@ final class BoardSupplyDesk {
     private final Map<String, TicketTarget> targets;
     private final Map<String, Long> closed = new HashMap<>();
     private StockView stock = new StockView(Map.of());
+    private List<GraphBlock> shortages = List.of();
 
     BoardSupplyDesk(Board board, StockReader reader, Map<String, TicketTarget> targets) {
         this.board = board;
@@ -75,9 +77,7 @@ final class BoardSupplyDesk {
         for (SupplyGate.Request request : decision.supply()) {
             SupplyTickets.issue(level, service, targets, center, request, BoardCase.SUPPLY_SITE, now);
         }
-        for (SupplyGate.Request request : decision.gather()) {
-            SupplyTickets.issue(level, service, targets, center, request, BoardCase.GATHER_MATERIALS, now);
-        }
+        shortages = SupplyGate.shortages(decision);
     }
 
     private List<BlockCoord> gateCenters(ServerLevel level, List<SpiritEntity> spirits) {
@@ -105,5 +105,9 @@ final class BoardSupplyDesk {
 
     private boolean hasActiveSupply(String item) {
         return SupplyGate.hasActiveSupply(board, targets, item);
+    }
+
+    List<GraphBlock> shortages() {
+        return shortages;
     }
 }
