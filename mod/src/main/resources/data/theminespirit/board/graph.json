@@ -2619,6 +2619,17 @@
         "temp_chest_for_dump"
       ]
     },
+    "exchange_chest": {
+      "case": "STOCK_CHESTS",
+      "stage": 1,
+      "base": 90,
+      "materials": {
+        "#planks": 8
+      },
+      "requires": [
+        "crafting_table"
+      ]
+    },
     "chests": {
       "case": "STOCK_CHESTS",
       "stage": 1,

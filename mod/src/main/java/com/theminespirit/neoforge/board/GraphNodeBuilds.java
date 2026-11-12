@@ -13,6 +13,9 @@ final class GraphNodeBuilds {
         if (WarehouseWatch.handles(ticket.node())) {
             return WarehouseWatch.post(post, ticket);
         }
+        if (ExchangeChestPost.NODE.equals(ticket.node())) {
+            return ExchangeChestPost.building(post, ticket);
+        }
         SupplyGraph.Building building = post.graph.buildings().get(ticket.node());
         if (building == null) {
             return false;
