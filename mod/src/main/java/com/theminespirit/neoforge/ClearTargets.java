@@ -6,6 +6,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.lease.LeaseData;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -16,12 +17,10 @@ import org.jspecify.annotations.Nullable;
 final class ClearTargets {
     private final Level level;
     private final @Nullable LeaseBook leases;
-    private final UUID owner;
     private final boolean keepGround;
 
     ClearTargets(Level level, UUID owner, boolean keepGround) {
         this.level = level;
-        this.owner = owner;
         this.keepGround = keepGround;
         this.leases =
                 level instanceof ServerLevel server ? LeaseData.get(server).book() : null;
@@ -36,7 +35,11 @@ final class ClearTargets {
         if (leases == null) {
             return false;
         }
-        return leases.owner(cell).filter(lease -> lease.ownedBy(owner)).isPresent();
+        return offLimits(leases.owner(cell));
+    }
+
+    static boolean offLimits(Optional<?> leaseOwner) {
+        return leaseOwner.isPresent();
     }
 
     void dropLeased(List<BlockCoord> remaining) {
