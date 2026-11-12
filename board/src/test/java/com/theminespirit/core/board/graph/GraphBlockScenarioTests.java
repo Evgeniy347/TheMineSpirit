@@ -33,6 +33,23 @@ class GraphBlockScenarioTests {
     }
 
     @Test
+    void item_Blocked_KeyTakesBlockedPlace() {
+        GraphWorld calm = GraphWorld.settled().with("stick", 0).with("torch", 0);
+        int torch = calm.plan().priority("craft_torch");
+
+        GraphPlan plan = GraphWorld.settled()
+                .with("stick", 0)
+                .with("torch", 0)
+                .blocks(new GraphBlock("craft_torch", "", new GraphBlock.Item("stick", 1)))
+                .plan();
+
+        assertTrue(
+                plan.priority("craft_stick") > torch,
+                "Ключ блокировки (палки) занимает место заблокированного факела: " + plan.priority("craft_stick")
+                        + " против " + torch);
+    }
+
+    @Test
     void item_Satisfied_BlockClearedAndTaskReturns() {
         GraphWorld world = mining().blocks(new GraphBlock("mine_coal", "", new GraphBlock.Item("torch", 1)))
                 .with("torch", 1);

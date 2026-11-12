@@ -296,14 +296,60 @@ class Flow:
     def keys(self):
         return list(self.index.keys())
 
+    def back_links(self):
+        """FlowCycles.backLinks: обратные рёбра обхода в глубину в каноническом порядке ключей."""
+        size = len(self.index)
+        rank = [0] * size
+        for place, key in enumerate(sorted(self.index)):
+            rank[self.index[key]] = place
+        out = [[] for _ in range(size)]
+        for link, (a, _b, _f) in enumerate(self.links):
+            out[self.index[a]].append(link)
+        for links in out:
+            links.sort(key=lambda link: rank[self.index[self.links[link][1]]])
+        back = [False] * len(self.links)
+        state = [0] * size
+
+        def walk(start):
+            if state[start] != 0:
+                return
+            state[start] = 1
+            stack = [[start, 0]]
+            while stack:
+                frame = stack[-1]
+                links = out[frame[0]]
+                if frame[1] == len(links):
+                    state[frame[0]] = 2
+                    stack.pop()
+                    continue
+                link = links[frame[1]]
+                frame[1] += 1
+                nxt = self.index[self.links[link][1]]
+                if state[nxt] == 1:
+                    back[link] = True
+                elif state[nxt] == 0:
+                    state[nxt] = 1
+                    stack.append([nxt, 0])
+
+        for root in sorted((self.index[key] for key in self.roots), key=lambda node: rank[node]):
+            walk(root)
+        for node in sorted(range(size), key=lambda node: rank[node]):
+            walk(node)
+        return back
+
+    def active_links(self):
+        back = self.back_links()
+        return [link for index, link in enumerate(self.links) if not back[index]]
+
     def solve(self):
         size = len(self.index)
         base = [0.0] * size
         for key, value in self.roots.items():
             base[self.index[key]] += value
-        sources = [self.index[a] for a, _b, _f in self.links]
-        targets = [self.index[b] for _a, b, _f in self.links]
-        factors = [f for _a, _b, f in self.links]
+        links = self.active_links()
+        sources = [self.index[a] for a, _b, _f in links]
+        targets = [self.index[b] for _a, b, _f in links]
+        factors = [f for _a, _b, f in links]
         value = list(base)
         for _ in range(MAX_ITERATIONS):
             nxt = list(base)
@@ -320,10 +366,23 @@ class Flow:
         return {key: value[idx] + self.locals.get(key, 0.0) for key, idx in self.index.items()}
 
 
+SCORE_SPAN = 1000.0
+UNDO_LEASE = "undo_lease"
+LIFE_SPAN = 30
+
+
 def priority(score, maximum):
+    """GraphFlow.priority: логарифмическая шкала счёта в [1, maximum]."""
     if score <= 0 or maximum <= 0:
         return 0
-    return int(min(maximum, math.floor(maximum * (1.0 - math.exp(-score / maximum)) + 0.5)))
+    return int(max(1, min(maximum, math.floor(maximum * math.log1p(score) / math.log1p(SCORE_SPAN) + 0.5))))
+
+
+def shift(score, steps, maximum):
+    """GraphFlow.shift: прибавка к счёту, сдвигающая приоритет на steps шагов шкалы."""
+    if maximum <= 0:
+        return 0.0
+    return (1 + score) * math.pow(1 + SCORE_SPAN, steps / maximum) - 1 - score
 
 
 DAMAGE_WINDOW_TICKS = 200
@@ -713,8 +772,9 @@ class Graph:
         self.build_ready_boost = int(data.get("buildReadyBoost", 0))
         self.build_start_share = float(data.get("buildStartShare", 1.0))
         self.max_priority = int(data.get("maxPriority", 100))
-        self.work_priority = self.max_priority - 2 if self.max_priority > 1 else self.max_priority
-        self.need_priority = self.max_priority - 1 if self.max_priority > 0 else self.max_priority
+        self.life_priority = max(2, self.max_priority - LIFE_SPAN)
+        self.need_priority = self.life_priority - 1
+        self.work_priority = max(1, self.need_priority - VITAL_BAND - 1)
         self.tiers = list(data.get("tiers") or [])
         kit = data.get("kit") or {}
         self.kit_tiers = dict(kit.get("tiers") or {})
@@ -1288,6 +1348,29 @@ class Planner:
             self.flow.link(source, node, amount)
         self.expand(node)
 
+    def wanted_tiers(self, kind, current):
+        """ToolTiers.wanted: с запасами на более высокий уровень нижние уровни не давят."""
+        graph = self.graph
+        above = [tier for tier in graph.tiers if graph.rank(tier) > current]
+        ready = max((graph.rank(tier) for tier in above
+                     if any(way.consumes
+                            and (way.building is None or self.state.built(way.building) == BUILT)
+                            and self.stocked(way.consumes)
+                            for way in graph.producers(tier + "_" + kind))), default=current)
+        return [tier for tier in above if graph.rank(tier) >= ready]
+
+    def building_share(self, key):
+        """BuildingShare.of: постройка мала, пока нет материалов, инструмента или обязательных построек."""
+        if not key.startswith(BUILDING):
+            return 1.0
+        building_id = key[len(BUILDING):]
+        building = self.graph.buildings.get(building_id)
+        tooled = building is None or building.tool is None or self.state.best_tier(building.tool) >= 0
+        grounded = building is None or all(self.state.built(required) == BUILT for required in building.requires)
+        if tooled and grounded and self.stocked(self.materials(building_id)):
+            return 1.0
+        return self.graph.decay ** 3
+
     def push_tool(self, source, kind, amount):
         spirits = self.state.spirits()
         for spirit in self.state.kits:
@@ -1332,7 +1415,8 @@ class Planner:
                     base = graph.kit_secondary_base if state.best_tier(kind) >= target else graph.kit_base
                     self.push(None, TOOL + kind + AT + spirit, base + (graph.urgent_boost if tier < 0 else 0))
         for building in graph.buildings.values():
-            if not building.optional and building.stage <= state.stage and state.built(building.id) != BUILT:
+            if building.stage <= state.stage and state.built(building.id) != BUILT \
+                    and (not building.optional or state.built(building.id) == PLANNED):
                 self.require_building(None, building.id, building.base, "постройка этапа " + str(building.stage))
         for herd, cap in graph.herd_caps.items():
             if self.count(herd) > cap.limit(state.spirits()):
@@ -1343,7 +1427,9 @@ class Planner:
         for trigger in graph.triggers:
             wanted = graph.buildings.get(trigger.get("build"))
             if wanted is not None and self.count(trigger.get("have")) > 0 and state.built(trigger["build"]) != BUILT:
-                self.require_building(None, trigger["build"], wanted.base, "есть " + str(trigger.get("have")))
+                needed = any(way.building == wanted.id and self.lacking(way.makes) for way in graph.ways)
+                base = wanted.base / graph.decay if needed else wanted.base
+                self.require_building(None, trigger["build"], base, "есть " + str(trigger.get("have")))
         if state.storage_free_percent < graph.storage_min_free:
             if state.built(graph.storage_building) == BUILT:
                 self.notices.setdefault(graph.storage_building, {
@@ -1371,13 +1457,12 @@ class Planner:
             at = node.find(AT)
             kind = node[len(TOOL):at]
             spirit = node[at + 1:]
-            for tier in graph.tiers:
-                if graph.rank(tier) <= state.tier(spirit, kind):
-                    continue
+            for tier in self.wanted_tiers(kind, state.tier(spirit, kind)):
                 above_kit = graph.rank(tier) > graph.rank(graph.kit_tier(kind, state.stage))
                 for way in graph.producers(tier + "_" + kind):
                     key = way.id + AT + spirit
-                    self.flow.link(node, key, way.weight)
+                    luck = 1.0 if not above_kit or self.stocked(way.consumes) else decay ** 3
+                    self.flow.link(node, key, way.weight * luck)
                     if above_kit:
                         self.chances.add(key)
                     else:
@@ -1503,6 +1588,8 @@ class Planner:
             if event is None:
                 continue
             for task in event["tasks"]:
+                if name == UNDO_LEASE and task.get("id") == UNDO_LEASE:
+                    continue
                 key = EVENT + name + ":" + task.get("id", "")
                 self.flow.root(key, self.event_weight(task))
                 for item, value in self.event_consumes(task).items():
@@ -1559,7 +1646,7 @@ class Planner:
                     "building": block.get("node"), "reason": "невозможно: " + missing})
                 continue
             node = block.get("node")
-            self.push_need(node, need, max(1.0, scores.get(node, self.declared(node))))
+            self.push_need(node, need, max(1.0, scores.get(node, self.declared(node))) * self.graph.decay)
 
     def satisfied(self, need):
         kind = need.get("kind")
@@ -1583,19 +1670,19 @@ class Planner:
         kind = need.get("kind")
         if kind == "item":
             if need.get("item") != source:
-                self.push(source, need.get("item"), amount)
+                self.push(None, need.get("item"), amount)
         elif kind == "tool":
             spirit = need.get("spirit") or ""
             if not spirit:
-                self.push_tool(source, need.get("tool"), amount)
+                self.push_tool(None, need.get("tool"), amount)
             else:
-                self.push(source, TOOL + need.get("tool") + AT + spirit, amount)
+                self.push(None, TOOL + need.get("tool") + AT + spirit, amount)
         elif kind == "building":
             node = BUILDING + need.get("building")
             if node != source:
-                self.push(source, node, amount)
+                self.push(None, node, amount)
         elif kind == "holder" and need.get("stuck", False):
-            self.push(source, "rescue", amount)
+            self.push(None, "rescue", amount)
 
     def declared(self, node):
         if node.startswith(BUILDING):
@@ -1637,7 +1724,7 @@ class Planner:
             active = False
             for key in list(scores.keys()):
                 if (key == way_id or key.startswith(way_id + AT)) and scores.get(key, 0.0) > 0:
-                    self.flow.local(key, edge.get("weight", 0))
+                    self.flow.local(key, shift(scores.get(key, 0.0), edge.get("weight", 0), self.graph.work_priority))
                     active = True
             way = self.graph.way(way_id)
             if not active and edge.get("weight", 0) > 0 and way is not None \
@@ -1659,7 +1746,7 @@ class Planner:
             repeat = self.makes(key) in made
             made.add(self.makes(key))
             value = raw * self.graph.costs.travel_factor(self.travel_ticks(key))
-            value = self.choice(key, value, repeat)
+            value = self.choice(key, value, repeat) * self.building_share(key)
             task = self.task(key, value)
             reason = self.blocked_reason(key)
             if reason is not None:
@@ -1672,7 +1759,7 @@ class Planner:
             extra = self.station_task(building, value, scores)
             if extra is not None:
                 tasks.append(extra)
-        return {"tasks": buildings_first(self.graph, tasks, self.ready),
+        return {"tasks": tasks,
                 "notices": list(self.notices.values()), "advice": list(self.advice)}
 
     def makes(self, key):
@@ -1845,6 +1932,8 @@ class Planner:
         graph = self.graph
         state = self.state
         prio = priority(value, graph.work_priority)
+        if key == "rescue_spirit" or key.startswith("rescue_spirit" + AT):
+            prio = graph.work_priority + 1
         if key.startswith(EXPLORE):
             return {"id": key, "makes": key[len(EXPLORE):], "spirit": None, "priority": prio,
                     "consumes": {}, "feasible": True, "chance": False, "implemented": False,
@@ -1856,7 +1945,10 @@ class Planner:
             if task is None:
                 raise KeyError("Событие " + parts[1] + " задания не описано в графе")
             if event.get("life", False):
-                prio = life_priority(state, parts[1], event["tasks"], task, graph.max_priority)
+                threat = life_priority(state, parts[1], event["tasks"], task, graph.max_priority)
+                floor = graph.life_priority
+                prio = 0 if threat <= 0 else floor + int(math.floor(
+                    (graph.max_priority - floor) * threat / graph.max_priority + 0.5))
             elif event.get("vital", False):
                 ceiling = graph.need_priority \
                     if any(item.get("onlyWhenEmpty") is not None for item in event["tasks"]) \

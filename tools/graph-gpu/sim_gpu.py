@@ -286,7 +286,7 @@ def baselines(graph):
 
 def failure_worlds(graph):
     no_stick = World.settled(graph)
-    no_stick.failures["craft_torch"] = {"kind": "item", "item": "stick", "count": 1}
+    no_stick.failures["craft_torch"] = {"kind": "item", "item": "stick", "count": 16}
     no_iron = World.settled(graph)
     no_iron.failures["mine_iron"] = {"kind": "item", "item": "iron_ingot", "count": 1}
     no_path = World.settled(graph)
@@ -842,7 +842,8 @@ def _solve_flows(flows, device, direct=True):
     if direct:
         return _solve_direct(flows, device)
     size = max(len(flow.index) for flow in flows)
-    edges = max(1, max(len(flow.links) for flow in flows))
+    active = [flow.active_links() for flow in flows]
+    edges = max(1, max(len(links) for links in active))
     count = len(flows)
     base = torch.zeros((count, size), dtype=torch.float64, device=device)
     source = torch.zeros((count, edges), dtype=torch.long, device=device)
@@ -851,7 +852,7 @@ def _solve_flows(flows, device, direct=True):
     for row, flow in enumerate(flows):
         for key, value in flow.roots.items():
             base[row, flow.index[key]] += value
-        for column, (a, b, f) in enumerate(flow.links):
+        for column, (a, b, f) in enumerate(active[row]):
             source[row, column] = flow.index[a]
             target[row, column] = flow.index[b]
             factor[row, column] = f
@@ -890,11 +891,12 @@ def _solve_direct(flows, device):
     targets = []
     factors = []
     for row, flow in enumerate(flows):
+        links = flow.active_links()
         for key, value in flow.roots.items():
             base_rows.append(row)
             base_cols.append(flow.index[key])
             base_vals.append(value)
-        for a, b, f in flow.links:
+        for a, b, f in links:
             rows.append(row)
             sources.append(flow.index[a])
             targets.append(flow.index[b])
