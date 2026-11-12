@@ -30,6 +30,11 @@ final class IssueSteps {
         current.merge(step, System.nanoTime() - startedNanos, Long::sum);
     }
 
+    long lap(String step, long startedNanos) {
+        add(step, startedNanos);
+        return System.nanoTime();
+    }
+
     void end(long now, Logger logger) {
         long total = (System.nanoTime() - started) / 1_000_000;
         if (total > worstTotal) {

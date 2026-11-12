@@ -125,14 +125,19 @@ final class BoardDispatchDesk {
     }
 
     private void issueAll(ServerLevel level, List<SpiritEntity> spirits, long now) {
+        long step = System.nanoTime();
         StockView stock = host.stock();
         List<BoardTicket> claimable = DispatchRound.order(board.claimable(stock, now));
+        step = timer.lap("claimable", step);
         transferWait.retain(board);
         crafters.retain(id -> board.statusOf(id).filter(TransferWatch::open).isPresent());
         withdrawForVitals(spirits, claimable);
+        step = timer.lap("vitals", step);
         DispatchRound round = new DispatchRound(board, now);
         DispatchPick pick = new DispatchPick(round, spirits, stock);
+        step = timer.lap("candidates", step);
         Optional<BlockCoord> settlementHome = HomePoint.of(level, spirits);
+        timer.lap("home", step);
         for (BoardTicket ticket : claimable) {
             long chooseStarted = System.nanoTime();
             SpiritEntity spirit = pick.choose(ticket, targets.get(ticket.id()), crafters);

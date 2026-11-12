@@ -11,7 +11,7 @@ import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;
 
 final class WorldFactsCache {
-    static final long TTL_TICKS = 200;
+    static final long TTL_TICKS = 600;
 
     private static @Nullable Entry cached;
 
