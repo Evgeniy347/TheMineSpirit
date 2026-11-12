@@ -173,6 +173,18 @@ public final class LeaseBook {
         return orphaned;
     }
 
+    public Lease abandon(String id) {
+        Lease lease = require(id);
+        if (lease.status() != LeaseStatus.ORPHANED) {
+            throw new IllegalStateException("Аренда '" + id + "' в статусе " + lease.status()
+                    + ": снимают только брошенную аренду, которую откат не смог закрыть");
+        }
+        release(lease, orphanedCells);
+        Lease done = lease.withStatus(LeaseStatus.DONE);
+        leases.put(id, done);
+        return done;
+    }
+
     public int orphanSpirit(UUID spirit) {
         Objects.requireNonNull(spirit, "Дух аренды не может быть null: бросать нечего");
         int count = 0;

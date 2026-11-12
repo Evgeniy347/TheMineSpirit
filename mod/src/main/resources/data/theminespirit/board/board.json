@@ -105,6 +105,7 @@
     "maxActivePerSpirit": 1,
     "maxUndoSpirits": 2,
     "undoNoProgressTicks": 1200,
+    "undoMaxFailures": 3,
     "stockReadBudget": 8,
     "stockBlockBudget": 4096,
     "failBackoffTicks": 200,

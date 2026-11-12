@@ -40,6 +40,7 @@ public final class BoardTuning {
 
     public static final int MAX_UNDO_SPIRITS = 2;
     public static final int UNDO_NO_PROGRESS_TICKS = 1200;
+    public static final int UNDO_MAX_FAILURES = 3;
 
     public static final int CASE_FAIL_LIMIT = 3;
 
@@ -63,6 +64,7 @@ public final class BoardTuning {
             "maxActivePerSpirit",
             "maxUndoSpirits",
             "undoNoProgressTicks",
+            "undoMaxFailures",
             "stockReadBudget",
             "stockBlockBudget",
             "failBackoffTicks",
@@ -110,6 +112,10 @@ public final class BoardTuning {
 
     public static int maxUndoSpirits() {
         return (int) Math.max(1, interval("maxUndoSpirits", MAX_UNDO_SPIRITS));
+    }
+
+    public static int undoMaxFailures() {
+        return (int) Math.max(1, interval("undoMaxFailures", UNDO_MAX_FAILURES));
     }
 
     public static int undoNoProgressTicks() {

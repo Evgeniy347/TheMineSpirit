@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.lease.Lease;
 import com.theminespirit.core.board.lease.LeaseKind;
 import com.theminespirit.core.board.lease.LeaseStatus;
@@ -228,6 +229,7 @@ public final class UndoLeaseScript implements ScriptInstance {
     }
 
     private ScriptStatus fail(String reason, @Nullable FailureFact fact) {
+        LeaseData.get(level).undoFailed(leaseId, BoardTuning.undoMaxFailures(), reason);
         failureReason = reason;
         failureFact = fact;
         outcome = ScriptStatus.FAILED;
