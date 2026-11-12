@@ -12,8 +12,9 @@
 - [ ] Техдолг perf (12.11, играть тяжело): BoardService держит тик. Замер — строки журнала «худшая пересборка»,
   «худшая раздача», «медленный тик вне пересборки». Остаток: `DispatchPick.choose` до 1 с (≈600 заявок ×
   отказ по 10 духам; окно голова 80 + хвост 40 по кругу — `IssueSteps.window`, проверить вживую); промах кэша
-  `WorldFactsCache` 330–740 мс (аудит построек целиком — сделать по постройкам с пересчётом по журналу блоков);
-  graph.stage ≈250, graph.around ≈150, graph.plan ≈180 мс; одно удержание 8,3 с не разобрано.
+  `WorldFactsCache` 330–740 мс — почти всё аудит построек (`world.audit`; участок `world.area` ≈80 мс): делать по
+  постройкам с пересчётом по журналу блоков; graph.stage ≈250, graph.plan ≈150 мс (graph.around закэширован
+  017c4e28b — проверить замером); одно удержание 8,3 с не разобрано.
 - [ ] Техдолг testaudit: разнести `neoforge`-сессии длиннее 300 строк — `FarmSession`, `HarvestSession`,
       `ClearAreaSession`, `SafeMineSession`, `DescentSession`, `HerdSession`, `HiveSession`, `DemoSession`:
       общий каркас шага, отмены и подвешивания вместо копий; после — убрать записи из `config/filesize-baseline.txt`.
