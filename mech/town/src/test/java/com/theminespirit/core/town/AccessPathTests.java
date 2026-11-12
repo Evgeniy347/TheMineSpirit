@@ -79,4 +79,24 @@ class AccessPathTests {
         assertEquals(1, plan.fill().size(), "Траншея поперёк пути — подсыпается одна клетка пола: " + plan);
         assertEquals(3, plan.fill().get(0).x(), "Подсыпка — в траншее: " + plan);
     }
+
+    @Test
+    void plan_ChestWalledByKeptBlocks_UnreachableNothingCut() {
+        SettlementScanTests.Fake world = withChest();
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                if (dx != 0 || dz != 0) {
+                    world.put(CHEST_AT.x() + dx, LEVEL, CHEST_AT.z() + dz, CHEST);
+                    world.put(CHEST_AT.x() + dx, LEVEL + 1, CHEST_AT.z() + dz, CHEST);
+                }
+            }
+        }
+
+        AccessPath.Plan plan = AccessPath.plan(world, KEEP, HOME, List.of(CHEST_AT));
+
+        assertEquals(List.of(CHEST_AT), plan.unreachable(), "Сундук за неприкосновенными блоками недостижим: " + plan);
+        assertTrue(
+                plan.clear() && world.reads < 40L * AccessPath.MAX_NODES,
+                "Ничего не срезается, обход ограничен пределом узлов: " + plan + ", чтений " + world.reads);
+    }
 }

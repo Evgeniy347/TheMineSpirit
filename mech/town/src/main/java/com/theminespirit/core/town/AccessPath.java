@@ -14,6 +14,7 @@ import org.jspecify.annotations.Nullable;
 
 public final class AccessPath {
     public static final int RADIUS = 48;
+    public static final int MAX_NODES = 20_000;
     private static final int MARGIN = 4;
     private static final int WALK = 1;
     private static final int DIG = 10;
@@ -55,7 +56,7 @@ public final class AccessPath {
         cost.put(origin, 0);
         PriorityQueue<Object[]> queue = new PriorityQueue<>((a, b) -> Integer.compare((int) a[0], (int) b[0]));
         queue.add(new Object[] {0, origin});
-        while (!queue.isEmpty() && !waiting.isEmpty()) {
+        while (!queue.isEmpty() && !waiting.isEmpty() && cost.size() < MAX_NODES) {
             Object[] head = queue.poll();
             int here = (int) head[0];
             Node node = (Node) head[1];

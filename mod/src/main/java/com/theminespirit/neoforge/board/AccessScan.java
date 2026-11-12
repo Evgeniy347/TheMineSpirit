@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 final class AccessScan {
     static final String EVENT = "access_blocked";
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int CACHE_TICKS = 200;
+    private static final int CACHE_TICKS = 600;
     private static final int STATION_RADIUS = 16;
     private static final int STATION_BELOW = 1;
     private static final int STATION_ABOVE = 1;
@@ -55,15 +55,19 @@ final class AccessScan {
     private static AccessPath.Plan planLocked(ServerLevel level, StageSite site, BlockCoord home) {
         long bucket = level.getGameTime() / CACHE_TICKS;
         Cached before = LAST.get(level);
-        if (before != null && before.bucket() == bucket && before.home().equals(home)) {
+        if (before != null && before.bucket() == bucket) {
             return before.plan();
         }
+        long started = System.nanoTime();
         SettlementScan.World world = WorldAreaScan.view(level, site);
         AccessPath.Plan plan = AccessPath.plan(world, KEPT, home, targets(level, home));
+        long millis = (System.nanoTime() - started) / 1_000_000L;
         if (!plan.clear() || !plan.unreachable().isEmpty()) {
             LOGGER.info(
-                    "[access] от дома {}: срезать {}, подсыпать {}, недостижимо {} — проход к сундукам, станциям и дверям",
+                    "[access] от дома {} за {} мс: срезать {}, подсыпать {}, недостижимо {} — проход к сундукам, "
+                            + "станциям и дверям",
                     home,
+                    millis,
                     plan.cut().size(),
                     plan.fill().size(),
                     plan.unreachable());
