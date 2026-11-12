@@ -136,6 +136,35 @@ class GraphPlanningWiringTests {
     }
 
     @Test
+    void stageBuilt_ClearingDoneInJournalButPlotUneven_ClearingPlanned() {
+        SettlementFacts facts = new SettlementFacts(
+                true,
+                true,
+                false,
+                0,
+                false,
+                true,
+                Set.of(),
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                Set.of(BoardCase.CLEAR_GROUNDS),
+                Set.of());
+
+        assertEquals(
+                Built.PLANNED,
+                StageBuilt.of(facts).get("clearing"),
+                "Расчистка в журнале выполнена, а участок не ровный — готовность по аудиту мира, а не по журналу: "
+                        + "иначе сверка ставит только ремонт, а выравнивание этапа не переиздаётся");
+    }
+
+    @Test
     void stageBuilt_OldChestsNearHome_DamagedYardStillPlanned() {
         SettlementFacts facts = new SettlementFacts(
                 true,

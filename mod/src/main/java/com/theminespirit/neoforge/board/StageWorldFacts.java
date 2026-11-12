@@ -48,7 +48,6 @@ final class StageWorldFacts {
             FirstStepsRunner.PlanWorld world) {
         StageSite stage = site.stage();
         BlockCoord home = site.home();
-        boolean groundsDone = service.board().ledger().has(BoardCase.CLEAR_GROUNDS, 1);
         boolean hasHome = true;
         boolean groundsCleared = true;
         int chests = 0;
@@ -71,7 +70,7 @@ final class StageWorldFacts {
                         }
                         var state = level.getBlockState(check);
                         boolean onPad = stage.zone().contains(check.getX(), check.getZ());
-                        if (!groundsDone && onPad && (state.is(BlockTags.LOGS) || state.is(BlockTags.LEAVES))) {
+                        if (onPad && (state.is(BlockTags.LOGS) || state.is(BlockTags.LEAVES))) {
                             groundsCleared = false;
                         }
                         if (state.is(Blocks.CHEST)) {

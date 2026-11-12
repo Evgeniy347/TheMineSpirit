@@ -13,6 +13,7 @@ final class ClearScaffoldWork {
         DONE
     }
 
+    private static final int COLUMN_REACH = 2;
     private final SpiritEntity spirit;
     private final ClearAreaSession session;
     private final ScaffoldReach reach;
@@ -61,7 +62,8 @@ final class ClearScaffoldWork {
                 new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
                 session.targets.highestWork(session.remaining),
                 MiningTuning.MAX_STAND_RISE,
-                PillarDownScript.ownBelow(spirit));
+                PillarDownScript.ownBelow(spirit),
+                COLUMN_REACH);
         if (decision.action() == ClearScaffold.Action.CLIMB && reach.climbed()) {
             return new ClearScaffold.Decision(ClearScaffold.Action.WORK, 0);
         }

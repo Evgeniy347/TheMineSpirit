@@ -35,6 +35,16 @@ public final class ClearScaffold {
     private ClearScaffold() {}
 
     public static Decision decide(
+            BlockCoord feet, @Nullable BlockCoord highest, int maxStandRise, boolean onOwnScaffold, int reach) {
+        if (highest != null
+                && !onOwnScaffold
+                && Math.max(Math.abs(highest.x() - feet.x()), Math.abs(highest.z() - feet.z())) > reach) {
+            return Decision.of(Action.WORK);
+        }
+        return decide(feet, highest, maxStandRise, onOwnScaffold);
+    }
+
+    public static Decision decide(
             BlockCoord feet, @Nullable BlockCoord highest, int maxStandRise, boolean onOwnScaffold) {
         Objects.requireNonNull(feet, "Клетка ног не может быть null: от неё считается подъём и спуск");
         if (maxStandRise < 0) {
