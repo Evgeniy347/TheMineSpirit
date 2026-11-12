@@ -93,8 +93,7 @@ final class GraphInputs {
         GraphFacts feedback = chests.withFeedback(GraphWorldFeedbackInputs.of(level, spirits, scan.home(), service));
         mark("factFeedback", started);
         started = System.nanoTime();
-        GraphFacts world = feedback.withWorld(WorldAreaInputs.of(
-                level, service, scan, town, BuildingAuditInputs.buildings(level, service, scan, buildings, town)));
+        GraphFacts world = feedback.withWorld(WorldFactsCache.facts(level, service, scan, town, buildings));
         mark("factWorld", started);
         started = System.nanoTime();
         GraphFacts facts = DigInputs.apply(level, spirits, world);
