@@ -1,8 +1,11 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -86,6 +89,39 @@ class WorkStandTests {
                 return !occupied.contains(at);
             }
         };
+    }
+
+    @Test
+    void near_OccupiedNearestStand_NextFreeStand() {
+        BlockCoord first = new BlockCoord(9, -52, 20);
+        WorkStand.Ground flat = ground(-52, Set.of());
+
+        Optional<BlockCoord> stand = WorkStand.near(new BlockCoord(10, -52, 20), flat, feet -> true, Set.of(first));
+
+        assertNotEquals(
+                Optional.of(first),
+                stand,
+                "Ближайшая стоянка занята другим духом — выбор уходит на следующую свободную: двое в одной "
+                        + "клетке у сундука двора запирают друг друга, второй трётся без пути до stuck-провала "
+                        + "(живой сервер 14.11: spirit-2 и spirit-4 оба на -181,69,-518)");
+    }
+
+    @Test
+    void near_AllStandsOccupied_SharedSingleStand() {
+        WorkStand.Ground flat = ground(-52, Set.of());
+        Set<BlockCoord> all = new HashSet<>();
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) {
+                all.add(new BlockCoord(10 + dx, -52, 20 + dz));
+            }
+        }
+
+        Optional<BlockCoord> stand = WorkStand.near(new BlockCoord(10, -52, 20), flat, feet -> true, all);
+
+        assertTrue(
+                stand.isPresent(),
+                "Свободных стоянок нет — духи встают в одну клетку (решение владельца 14.11): задание не "
+                        + "проваливается и не ждёт, работа продолжается вплотную");
     }
 
     @Test

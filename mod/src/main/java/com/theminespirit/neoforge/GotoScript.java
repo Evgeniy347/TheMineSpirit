@@ -14,6 +14,7 @@ import com.theminespirit.neoforge.board.GroundProbe;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.movement.NetworkLevelView;
 import com.theminespirit.neoforge.movement.TravelCheck;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
@@ -21,6 +22,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 public final class GotoScript implements ScriptInstance {
@@ -60,6 +62,32 @@ public final class GotoScript implements ScriptInstance {
 
     private record Resolved(BlockPos point, String refusal) {}
 
+    private static Set<BlockCoord> occupiedByOtherSpirits(SpiritEntity spirit, BlockCoord around) {
+        Set<BlockCoord> occupied = new HashSet<>();
+        if (!(spirit.level() instanceof ServerLevel level)) {
+            return occupied;
+        }
+        for (Object found : level.getEntitiesOfClass(
+                SpiritEntity.class,
+                new AABB(
+                        around.x() - WorkStand.RADIUS,
+                        around.y() - 4,
+                        around.z() - WorkStand.RADIUS,
+                        around.x() + WorkStand.RADIUS,
+                        around.y() + 4,
+                        around.z() + WorkStand.RADIUS))) {
+            SpiritEntity other = (SpiritEntity) found;
+            if (other.getUUID().equals(spirit.getUUID())) {
+                continue;
+            }
+            occupied.add(new BlockCoord(
+                    other.blockPosition().getX(),
+                    other.blockPosition().getY(),
+                    other.blockPosition().getZ()));
+        }
+        return occupied;
+    }
+
     private static Resolved resolve(SpiritEntity spirit, BlockPos point) {
         if (!(spirit.level() instanceof ServerLevel level)) {
             return new Resolved(point, null);
@@ -91,9 +119,12 @@ public final class GotoScript implements ScriptInstance {
         if (walkable.isEmpty()) {
             return new Resolved(point, null);
         }
-        Optional<BlockCoord> stand = WalkableStand.near(p, walkable.orElseThrow());
+        Set<BlockCoord> occupied = occupiedByOtherSpirits(spirit, p);
+        Optional<BlockCoord> stand = WalkableStand.near(p, walkable.orElseThrow())
+                .filter(cell -> !occupied.contains(cell))
+                .or(() -> WalkableStand.near(p, walkable.orElseThrow()));
         if (stand.isEmpty()) {
-            stand = WorkStand.near(p, ground(level), walkable.orElseThrow()::contains);
+            stand = WorkStand.near(p, ground(level), walkable.orElseThrow()::contains, occupied);
         }
         if (stand.isEmpty()) {
             return new Resolved(

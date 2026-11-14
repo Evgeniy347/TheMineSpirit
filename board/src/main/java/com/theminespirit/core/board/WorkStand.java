@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public final class WorkStand {
@@ -25,6 +26,19 @@ public final class WorkStand {
     }
 
     public static Optional<BlockCoord> near(BlockCoord point, Ground ground, Predicate<BlockCoord> reachable) {
+        return near(point, ground, reachable, Set.of());
+    }
+
+    public static Optional<BlockCoord> near(
+            BlockCoord point, Ground ground, Predicate<BlockCoord> reachable, Set<BlockCoord> occupied) {
+        List<BlockCoord> stands = stands(point, ground, reachable);
+        return stands.stream()
+                .filter(stand -> !occupied.contains(stand))
+                .findFirst()
+                .or(() -> stands.stream().findFirst());
+    }
+
+    private static List<BlockCoord> stands(BlockCoord point, Ground ground, Predicate<BlockCoord> reachable) {
         Objects.requireNonNull(point, "Точка работы не может быть null: стоянку ищут возле неё");
         Objects.requireNonNull(ground, "Рельеф не может быть null: высоту стоянки берут по текущему миру");
         Objects.requireNonNull(reachable, "Проверка пути не может быть null: иначе стоянка снова будет за преградой");
@@ -37,18 +51,30 @@ public final class WorkStand {
         offsets.sort(Comparator.comparingInt((int[] offset) -> offset[0] * offset[0] + offset[1] * offset[1])
                 .thenComparingInt(offset -> offset[0])
                 .thenComparingInt(offset -> offset[1]));
-        List<BlockCoord> free = new ArrayList<>();
+        List<BlockCoord> level = new ArrayList<>();
+        List<BlockCoord> reachableStands = new ArrayList<>();
         for (int[] offset : offsets) {
             int x = point.x() + offset[0];
             int z = point.z() + offset[1];
             BlockCoord feet = new BlockCoord(x, ground.feet(x, z), z);
-            if (ground.free(feet) && reachable.test(feet)) {
-                free.add(feet);
+            if (!ground.free(feet)) {
+                continue;
+            }
+            if (Math.abs(feet.y() - point.y()) <= STEP) {
+                level.add(feet);
+            }
+            if (reachable.test(feet)) {
+                reachableStands.add(feet);
             }
         }
-        return free.stream()
-                .filter(feet -> Math.abs(feet.y() - point.y()) <= STEP)
-                .findFirst()
-                .or(() -> free.stream().findFirst());
+        if (reachableStands.isEmpty()) {
+            return List.of();
+        }
+        List<BlockCoord> ordered =
+                new ArrayList<>(level.stream().filter(reachableStands::contains).toList());
+        ordered.addAll(reachableStands.stream()
+                .filter(stand -> !ordered.contains(stand))
+                .toList());
+        return ordered;
     }
 }
