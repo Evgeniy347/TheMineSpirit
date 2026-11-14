@@ -7,7 +7,6 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
-import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -15,7 +14,6 @@ import net.minecraft.server.level.ServerLevel;
 
 final class ExchangeChestPost {
     static final String NODE = "exchange_chest";
-    private static final int REACH = 2;
 
     private ExchangeChestPost() {}
 
@@ -26,7 +24,7 @@ final class ExchangeChestPost {
         if (post.open(ticket.id())) {
             return true;
         }
-        Optional<BlockCoord> cell = cell(post.level, post.craftPoint());
+        Optional<BlockCoord> cell = cell(post.level, WarehouseLocations.yardCells(post.level));
         if (cell.isEmpty()) {
             return false;
         }
@@ -43,16 +41,13 @@ final class ExchangeChestPost {
         return true;
     }
 
-    static Optional<BlockCoord> cell(ServerLevel level, BlockCoord table) {
-        BlockPos centre = new BlockPos(table.x(), table.y(), table.z());
-        for (int distance = 1; distance <= REACH; distance++) {
-            for (Direction side : List.of(Direction.EAST, Direction.WEST, Direction.SOUTH, Direction.NORTH)) {
-                BlockPos at = centre.relative(side, distance);
-                if (level.getBlockState(at).isAir()
-                        && level.getBlockState(at.above()).isAir()
-                        && level.getBlockState(at.below()).isFaceSturdy(level, at.below(), Direction.UP)) {
-                    return Optional.of(new BlockCoord(at.getX(), at.getY(), at.getZ()));
-                }
+    static Optional<BlockCoord> cell(ServerLevel level, Iterable<BlockCoord> yard) {
+        for (BlockCoord cell : yard) {
+            BlockPos at = new BlockPos(cell.x(), cell.y(), cell.z());
+            if (level.getBlockState(at).isAir()
+                    && level.getBlockState(at.above()).isAir()
+                    && level.getBlockState(at.below()).isFaceSturdy(level, at.below(), Direction.UP)) {
+                return Optional.of(cell);
             }
         }
         return Optional.empty();

@@ -42,7 +42,7 @@ final class ChestDemolition {
 
     static boolean pending(ServerLevel level, BoardService service) {
         BoardLedger ledger = service.board().ledger();
-        Set<BlockCoord> cells = WarehouseLocations.cells(level, ledger);
+        Set<BlockCoord> cells = WarehouseLocations.storeCells(level, ledger);
         if (cells.isEmpty()) {
             return false;
         }
@@ -62,7 +62,7 @@ final class ChestDemolition {
             return false;
         }
         BoardLedger ledger = post.service.board().ledger();
-        Set<BlockCoord> cells = WarehouseLocations.cells(post.level, ledger);
+        Set<BlockCoord> cells = WarehouseLocations.storeCells(post.level, ledger);
         if (cells.isEmpty()) {
             return true;
         }

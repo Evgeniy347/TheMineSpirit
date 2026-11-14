@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.WorkStand;
 import com.theminespirit.core.board.graph.FailureTargets;
@@ -16,12 +15,11 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.CraftingTableBlock;
 
 public final class GraphTargets {
     private static final int STATION_RADIUS = 12;
-    private static final int STATION_HEIGHT = 4;
+    private static final int STATION_HEIGHT = 1;
     private static final int NO_GROUND = Integer.MIN_VALUE;
 
     private GraphTargets() {}
@@ -100,13 +98,8 @@ public final class GraphTargets {
         Set<String> unreachable = service.sources.graphUnreachablePoints(now, halfLife);
         double radius = graph.costs().choice().failureTargetRadius();
         List<BlockCoord> centers = new ArrayList<>();
-        if (scan.facts().done().contains(BoardCase.STOCK_CHESTS)) {
-            centers.add(scan.stage().workYard());
-            centers.add(scan.stage().anchor());
-        } else {
-            centers.add(scan.stage().anchor());
-            centers.add(scan.stage().workYard());
-        }
+        centers.add(scan.stage().workYard());
+        centers.add(scan.stage().anchor());
         List<BlockCoord> stands = new ArrayList<>();
         for (BlockCoord center : centers) {
             BlockCoord stand = craft(level, center);
@@ -126,9 +119,7 @@ public final class GraphTargets {
     }
 
     static BlockCoord craft(ServerLevel level, BlockCoord center) {
-        BlockCoord station = find(level, center, CraftingTableBlock.class)
-                .or(() -> find(level, center, ChestBlock.class))
-                .orElse(center);
+        BlockCoord station = find(level, center, CraftingTableBlock.class).orElse(center);
         return stand(level, station);
     }
 

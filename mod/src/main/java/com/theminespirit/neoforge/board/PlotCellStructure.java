@@ -37,6 +37,15 @@ public final class PlotCellStructure {
         return structure(planned, mark);
     }
 
+    static boolean plannedChest(ServerLevel level, BlockCoord cell) {
+        StageSite site = site(level);
+        if (site == null) {
+            return false;
+        }
+        String block = plan(site).blocks().get(cell);
+        return block != null && block.endsWith("chest");
+    }
+
     enum Mark {
         NONE,
         SPIRIT,
