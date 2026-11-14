@@ -11,6 +11,7 @@ import com.theminespirit.core.engine.SnapshotRestorer;
 import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
 import com.theminespirit.core.inventory.KitFor;
+import com.theminespirit.core.log.Perf;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.observation.WorldObservation;
@@ -141,15 +142,16 @@ public final class SpiritEntity extends PathfinderMob {
     @Override
     protected void customServerAiStep() {
         super.customServerAiStep();
+        MoveTrace.record(this, String.valueOf(policies.owner()), level().getGameTime());
         applyPendingRestore();
-        WallEscape.tick(this);
-        chunkLoader.tick();
-        armorEquip.tick();
-        hunger.tick();
+        Perf.time("spirit.wall_escape", () -> WallEscape.tick(this));
+        Perf.time("spirit.chunk_loader", () -> chunkLoader.tick());
+        Perf.time("spirit.armor", () -> armorEquip.tick());
+        Perf.time("spirit.hunger", () -> hunger.tick());
         NightLeashGate.arm(this);
-        magnet.tick();
-        policies.tick();
-        reflexes.tick();
+        Perf.time("spirit.magnet", () -> magnet.tick());
+        Perf.time("spirit.policies", () -> policies.tick());
+        Perf.time("spirit.reflexes", () -> reflexes.tick());
         if (demo) {
             tactics.pause();
             if (spiritBrain != null) {
@@ -161,9 +163,9 @@ public final class SpiritEntity extends PathfinderMob {
             tactics.pause();
             return;
         }
-        tactics.tick();
+        Perf.time("spirit.tactics", () -> tactics.tick());
         if (spiritBrain != null && (!strategyOwned() || spiritBrain.observesWhileTacticsOwns())) {
-            spiritBrain.tick();
+            Perf.time("spirit.brain", () -> spiritBrain.tick());
         }
     }
 
@@ -429,13 +431,9 @@ public final class SpiritEntity extends PathfinderMob {
     }
 
     private String taskJsonForSave() {
-        if (spiritBrain != null) {
-            String json = spiritBrain.snapshot().map(this::encodeForSave).orElse(null);
-            if (json != null) {
-                return json;
-            }
-        }
-        return pendingTaskJson;
+        return spiritBrain == null
+                ? pendingTaskJson
+                : spiritBrain.snapshot().map(this::encodeForSave).orElse(pendingTaskJson);
     }
 
     private String encodeForSave(TaskSnapshot snapshot) {

@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.log.Perf;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.SpiritSupplies;
@@ -33,7 +34,9 @@ final class IssueSteps {
     }
 
     void add(String step, long startedNanos) {
-        current.merge(step, System.nanoTime() - startedNanos, Long::sum);
+        long elapsed = System.nanoTime() - startedNanos;
+        Perf.record("board.issue." + step, elapsed);
+        current.merge(step, elapsed, Long::sum);
     }
 
     <T> List<T> window(List<T> ordered) {

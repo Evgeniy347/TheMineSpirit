@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.log.Perf;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -12,7 +13,9 @@ final class SlowSplit {
     private long loggedAt = -LOG_TICKS;
 
     void mark(String phase, long startedNanos) {
-        long millis = (System.nanoTime() - startedNanos) / 1_000_000;
+        long elapsed = System.nanoTime() - startedNanos;
+        Perf.record("board." + phase, elapsed);
+        long millis = elapsed / 1_000_000;
         if (millis >= SLOW_MILLIS) {
             worst.merge(phase, millis, Math::max);
         }

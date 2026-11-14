@@ -14,6 +14,7 @@ import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
+import com.theminespirit.core.log.Perf;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.terminal.CraftOrders;
@@ -126,7 +127,9 @@ public final class GraphSource {
     }
 
     private void mark(String name, long started) {
-        phases.merge(name, (System.nanoTime() - started) / 1_000_000, Long::sum);
+        long elapsed = System.nanoTime() - started;
+        Perf.record("graph.src." + name, elapsed);
+        phases.merge(name, elapsed / 1_000_000, Long::sum);
     }
 
     private Set<String> finish(Half half) {

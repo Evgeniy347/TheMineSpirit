@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.log.Perf;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -44,7 +45,9 @@ public final class BoardBuildMeter {
     public void phaseEnd(String name) {
         Long started = phaseStarted.remove(name);
         if (started != null) {
-            phaseNanos.merge(name, System.nanoTime() - started, Long::sum);
+            long elapsed = System.nanoTime() - started;
+            Perf.record("board.build." + name, elapsed);
+            phaseNanos.merge(name, elapsed, Long::sum);
         }
     }
 

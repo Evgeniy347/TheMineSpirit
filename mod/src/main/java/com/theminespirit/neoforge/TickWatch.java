@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.RepeatLog;
+import com.theminespirit.core.log.Perf;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -23,6 +24,7 @@ public final class TickWatch {
 
     public static void done(String operation, long startedNanos) {
         long now = System.nanoTime();
+        Perf.record(operation, now - startedNanos);
         DEFAULT.observe(operation, now - startedNanos, now)
                 .ifPresent(report -> LogUtils.getLogger().warn(report));
     }

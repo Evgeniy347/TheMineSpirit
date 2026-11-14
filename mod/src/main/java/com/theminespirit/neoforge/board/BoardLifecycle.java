@@ -41,6 +41,7 @@ public final class BoardLifecycle {
                 TickWatch.done("BoardService", watch);
             }
         }
+        PerfReport.tick(event.getServer().getTickCount());
     }
 
     private static void onServerStopping() {
