@@ -142,6 +142,31 @@ class PlotProtectionTests {
     }
 
     @Test
+    void check_DirtAboveHutFootprintNotInScheme_NotNamedHouse() {
+        Placement hut = SITE.hut();
+        BlockCoord mud = new BlockCoord(hut.x() + hut.width() / 2, SITE.anchor().y() + 4, hut.z() + 1);
+
+        PlotProtection.Decision notStructure = PlotProtection.check(
+                SITE, mud, PlotProtection.Action.BREAK, PlotProtection.Ground.PLAN_DEMOLISH, PlanBuilding.NONE, false);
+
+        assertInstanceOf(
+                PlotProtection.Allowed.class,
+                notStructure,
+                "Глина над footprint'ом дома — не блок схемы дома: расчистка сносит её без своей постройки. "
+                        + "Живой сервер 14.11: 102 отказа «дом» у -177,-509 — дух 20 минут не мог срезать "
+                        + "бугор кучки, защита называла «домом» землю и джунгловые брёвна вне схемы");
+
+        PlotProtection.Decision structure = PlotProtection.check(
+                SITE, mud, PlotProtection.Action.BREAK, PlotProtection.Ground.PLAN_DEMOLISH, PlanBuilding.NONE, true);
+
+        assertInstanceOf(
+                PlotProtection.Refused.class,
+                structure,
+                "Если клетка всё же отмечена как блок схемы — снос без своей постройки по-прежнему запрещён: "
+                        + "пометка структура/не-структура решает, а не footprint");
+    }
+
+    @Test
     void check_DemolishForeignFence_Refused() {
         ColumnMask.Cell post = SITE.ring().posts().iterator().next();
         BlockCoord cell = new BlockCoord(post.x(), SITE.anchor().y(), post.z());

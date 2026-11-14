@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 class LeaseScenarioTests {
@@ -105,14 +106,16 @@ class LeaseScenarioTests {
 
         LeaseSession restart = LeaseSession.open(book, WALKER, null, "scaffold", 120);
         restart.placed(new BlockCoord(4, 70, 0), "minecraft:dirt");
-        assertEquals(
-                LeaseStatus.ACTIVE,
-                book.require(restart.id()).status(),
-                "Рестарт сервера (публикация) не бросает аренду: духи и аренды сохраняются, владелец вернётся "
-                        + "к работе. Брошенной аренду делает только Supervisor по таймауту простоя или смерть "
-                        + "владельца — иначе каждая публикация порождает undo-шторм: духи откатывают живую "
-                        + "правку, а стройка по плану тут же ставит блок обратно (живой сервер 14.11: ломает "
-                        + "блок земли и тут же ставит, 3 духа одновременно в undo)");
+        LeaseSession displaced = LeaseSession.open(book, WALKER, null, "pillar_up", 130);
+        displaced.placed(new BlockCoord(6, 70, 0), "minecraft:dirt");
+        book.orphanSpirit(WALKER);
+        Set<String> orphanedIds = book.orphaned().stream().map(Lease::id).collect(Collectors.toSet());
+        assertTrue(
+                orphanedIds.containsAll(Set.of(restart.id(), displaced.id())),
+                "Рестарт сервера (публикация) не бросает аренды — бросает их вытеснение/смерть владельца: "
+                        + "orphanSpirit берёт обе аренды WALKER, включая столб pillar_up, который без задачи "
+                        + "обязан уйти в разбор (живой сервер 14.11: undo-шторм «ломает и тут же ставит» и "
+                        + "вечный столб spirit-5 у бугра)");
     }
 
     @Test

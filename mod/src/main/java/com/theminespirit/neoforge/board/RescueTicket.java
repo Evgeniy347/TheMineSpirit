@@ -50,7 +50,7 @@ final class RescueTicket {
         }
         BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
         PillarDescent.@Nullable Plan descent = ownPillar(level, spirit, at);
-        boolean descend = descent != null && noPath;
+        boolean descend = descent != null && at.y() > home.y() + 1;
         if (pit.isPresent() && !descend) {
             PitExitPlanner.Plan exit = pit.orElseThrow();
             return new Escape(false, null, "яма без выхода: " + exit.why());

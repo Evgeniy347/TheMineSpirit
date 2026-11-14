@@ -248,26 +248,12 @@ public record StageSite(
         if (!protectionCell(x, y, z)) {
             return PlanBuilding.NONE;
         }
-        if (minePlan(x, z)) {
-            return PlanBuilding.MINE;
+        PlanBuilding planned = planBuilding(x, y, z);
+        if (planned != PlanBuilding.NONE) {
+            return planned;
         }
-        if (hut.covers(x, z)) {
-            return PlanBuilding.HOUSE;
-        }
-        if (yard.covers(x, z)) {
-            return PlanBuilding.YARD;
-        }
-        if (orchard.covers(x, z) || extraOrchardCell(x, z) || orchardTree(x, y, z)) {
+        if (orchardTree(x, y, z)) {
             return PlanBuilding.ORCHARD;
-        }
-        if (fieldColumn(x, z)) {
-            return PlanBuilding.FIELD;
-        }
-        if (ringPost(x, z) || fenceStrip.contains(x, z)) {
-            return PlanBuilding.FENCE;
-        }
-        if (streetColumn(x, z)) {
-            return PlanBuilding.STREET;
         }
         return PlanBuilding.NONE;
     }

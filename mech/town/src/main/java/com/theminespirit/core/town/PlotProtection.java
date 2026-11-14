@@ -119,7 +119,7 @@ public final class PlotProtection {
             Ground ground,
             PlanBuilding ownBuilding,
             boolean structureBlock) {
-        if (ownBuilding == PlanBuilding.NONE) {
+        if (structureBlock && ownBuilding == PlanBuilding.NONE) {
             return new Refused(
                     building,
                     area,
