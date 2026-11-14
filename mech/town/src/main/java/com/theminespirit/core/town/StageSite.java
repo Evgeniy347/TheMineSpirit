@@ -28,6 +28,7 @@ public record StageSite(
         FenceLine ring) {
     public static final int BUILDING_HEIGHT = 7;
     public static final int CAVE_DEPTH = 3;
+    public static final int STREET_DEPTH = 3;
     public static final int CAVE_MARGIN = 12;
     public static final int HOUSE_WIDTH = 5;
     public static final int HOUSE_DEPTH = 6;
@@ -213,7 +214,7 @@ public record StageSite(
         if (insideHeight && fenceStrip.contains(x, z)) {
             return PlanBuilding.FENCE;
         }
-        if (streets.contains(x, z)) {
+        if (streets.contains(x, z) && y >= anchor.y() - STREET_DEPTH) {
             return PlanBuilding.STREET;
         }
         return PlanBuilding.NONE;
@@ -241,7 +242,10 @@ public record StageSite(
         if (planCell(x, y, z) || orchardTree(x, y, z)) {
             return true;
         }
-        return zone.contains(x, z) || streetColumn(x, z) || fenceStrip.contains(x, z);
+        if (streetColumn(x, z)) {
+            return y >= anchor.y() - STREET_DEPTH;
+        }
+        return zone.contains(x, z) || fenceStrip.contains(x, z);
     }
 
     public PlanBuilding protectionBuilding(int x, int y, int z) {

@@ -64,6 +64,25 @@ class PlotProtectionTests {
     }
 
     @Test
+    void check_StreetColumnBelowRoad_DeepCellsNotStreet() {
+        ColumnMask.Cell street = SITE.streets().cells().iterator().next();
+        int deepY = SITE.anchor().y() - StageSite.STREET_DEPTH - 1;
+        BlockCoord deepCell = new BlockCoord(street.x(), deepY, street.z());
+
+        assertEquals(
+                PlanBuilding.NONE,
+                SITE.protectionBuilding(deepCell.x(), deepCell.y(), deepCell.z()),
+                "Колонна улицы ниже полотна дороги (" + StageSite.STREET_DEPTH + " блоков от уровня) — обычный "
+                        + "камень: шахта по плану копает под улицей, иначе спуск «Спуск в шахту» получает отказ "
+                        + "«STREET» на глубине и стоит (живой сервер 14.11: 81 отказ на z=-527, y62-66 у "
+                        + "входа шахты)");
+        assertTrue(
+                SITE.protectionCell(street.x(), SITE.anchor().y(), street.z()),
+                "Полотно дороги сверху защищено как раньше: улицу не раскапывают, правило копаем-только-в-шахте "
+                        + "на поверхности действует");
+    }
+
+    @Test
     void check_FencePost_OrdinaryBreakRefused() {
         ColumnMask.Cell post = SITE.ring().posts().iterator().next();
         BlockCoord cell = new BlockCoord(post.x(), SITE.anchor().y(), post.z());
