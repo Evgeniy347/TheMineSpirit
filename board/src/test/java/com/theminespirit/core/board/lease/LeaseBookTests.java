@@ -125,21 +125,6 @@ class LeaseBookTests {
     }
 
     @Test
-    void orphanAllActive_Restart_OrphansEveryActiveLease() {
-        LeaseBook book = new LeaseBook();
-        book.open(SPIRIT, "t1", "scaffold", 10);
-        book.open(OTHER, "t2", "bridge", 11);
-        Lease done = book.open(OTHER, "t3", "route", 12);
-        book.commit(done.id());
-
-        int broken = book.orphanAllActive();
-
-        assertEquals(2, broken, "Рестарт бросает все действующие аренды: скрипты его не пережили");
-        assertEquals(2, book.orphaned().size(), "Обе действующие аренды попали в уборку");
-        assertEquals(LeaseStatus.DONE, book.require(done.id()).status(), "Уже закрытая аренда остаётся закрытой");
-    }
-
-    @Test
     void rollbackOrder_AfterRecording_ReversesRecordOrder() {
         LeaseBook book = new LeaseBook();
         Lease lease = book.open(SPIRIT, "t1", "scaffold", 10);

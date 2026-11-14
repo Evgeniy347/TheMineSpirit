@@ -121,14 +121,6 @@ public final class LeaseData extends SavedData {
         return count;
     }
 
-    public int orphanAllActive() {
-        int count = book.orphanAllActive();
-        if (count > 0) {
-            setDirty();
-        }
-        return count;
-    }
-
     public boolean isActive(BlockPos pos) {
         return isActive(toCoord(pos));
     }

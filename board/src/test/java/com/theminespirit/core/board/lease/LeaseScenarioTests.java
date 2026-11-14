@@ -105,8 +105,14 @@ class LeaseScenarioTests {
 
         LeaseSession restart = LeaseSession.open(book, WALKER, null, "scaffold", 120);
         restart.placed(new BlockCoord(4, 70, 0), "minecraft:dirt");
-        book.orphanAllActive();
-        assertOrphaned(book, restart.id(), List.of(new BlockCoord(4, 70, 0)), "рестарт сервера");
+        assertEquals(
+                LeaseStatus.ACTIVE,
+                book.require(restart.id()).status(),
+                "Рестарт сервера (публикация) не бросает аренду: духи и аренды сохраняются, владелец вернётся "
+                        + "к работе. Брошенной аренду делает только Supervisor по таймауту простоя или смерть "
+                        + "владельца — иначе каждая публикация порождает undo-шторм: духи откатывают живую "
+                        + "правку, а стройка по плану тут же ставит блок обратно (живой сервер 14.11: ломает "
+                        + "блок земли и тут же ставит, 3 духа одновременно в undo)");
     }
 
     @Test

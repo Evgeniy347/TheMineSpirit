@@ -197,15 +197,6 @@ public final class LeaseBook {
         return count;
     }
 
-    public int orphanAllActive() {
-        int count = 0;
-        for (Lease lease : active()) {
-            orphan(lease.id());
-            count++;
-        }
-        return count;
-    }
-
     public Lease rollback(String id, BlockCoord cell) {
         Objects.requireNonNull(cell, "Клетка не может быть null: отмечать откат нечего");
         Lease lease = require(id);
