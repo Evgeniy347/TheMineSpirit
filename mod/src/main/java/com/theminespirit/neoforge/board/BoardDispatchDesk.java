@@ -215,6 +215,7 @@ final class BoardDispatchDesk {
             } else {
                 JobLaunch.dropUnclaimed(spirit, ticket.id(), outcome);
             }
+            pick.refresh(spirit);
         }
     }
 

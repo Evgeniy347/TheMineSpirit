@@ -25,7 +25,6 @@ final class DispatchPick {
     private final Map<UUID, SpiritEntity> entities = new LinkedHashMap<>();
     private final Map<UUID, DispatchRound.Candidate> candidates = new LinkedHashMap<>();
     private final List<String> stockTools;
-    private boolean stale;
 
     DispatchPick(DispatchRound round, List<SpiritEntity> spirits, StockView stock) {
         this.round = round;
@@ -55,12 +54,11 @@ final class DispatchPick {
 
     @Nullable
     SpiritEntity choose(BoardTicket ticket, @Nullable TicketTarget target, CrafterMemory crafters) {
-        refresh();
-        SpiritEntity chosen = pick(ticket, target, crafters);
-        if (chosen != null) {
-            stale = true;
-        }
-        return chosen;
+        return pick(ticket, target, crafters);
+    }
+
+    void refresh(SpiritEntity spirit) {
+        candidates.put(spirit.getUUID(), candidate(spirit, stockTools));
     }
 
     @Nullable
@@ -113,16 +111,6 @@ final class DispatchPick {
     String why(BoardTicket ticket, @Nullable TicketTarget target) {
         String supply = target == null ? null : target.supplyItem();
         return round.why(ticket, new ArrayList<>(candidates.values()), supply);
-    }
-
-    private void refresh() {
-        if (!stale) {
-            return;
-        }
-        stale = false;
-        for (SpiritEntity spirit : entities.values()) {
-            candidates.put(spirit.getUUID(), candidate(spirit, stockTools));
-        }
     }
 
     private static double distance(@Nullable SpiritEntity spirit, @Nullable TicketTarget target) {
