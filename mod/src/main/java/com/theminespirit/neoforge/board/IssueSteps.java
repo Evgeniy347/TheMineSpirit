@@ -18,8 +18,9 @@ final class IssueSteps {
     static final long SLOW_MILLIS = 200;
     static final long LOG_TICKS = 1200;
 
-    static final int HEAD = 80;
-    static final int TAIL = 40;
+    static final int HEAD = 40;
+    static final int TAIL = 20;
+    static final int WHY_BATCH = 12;
 
     private int tailCursor;
     private final Map<String, Long> current = new LinkedHashMap<>();

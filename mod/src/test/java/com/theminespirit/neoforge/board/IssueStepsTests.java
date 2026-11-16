@@ -35,7 +35,8 @@ class IssueStepsTests {
     void window_BigBoard_HeadPlusRotatingTail() {
         List<Integer> board = IntStream.range(0, 600).boxed().toList();
         List<Integer> first = IssueSteps.window(board, 0);
-        List<Integer> wrapped = IssueSteps.window(board, 519);
+        int wrappedCursor = board.size() - IssueSteps.HEAD - 1;
+        List<Integer> wrapped = IssueSteps.window(board, wrappedCursor);
 
         assertEquals(
                 IssueSteps.HEAD + IssueSteps.TAIL,
@@ -44,12 +45,12 @@ class IssueStepsTests {
                         + " choose держал тик до 1064 мс). Сломается: тик снова встанет на секунду при большой доске."
                         + " Проверить при смене: порядок DispatchRound.order (голова — самые важные)");
         assertEquals(
-                List.of(80, 119),
+                List.of(IssueSteps.HEAD, IssueSteps.HEAD + IssueSteps.TAIL - 1),
                 List.of(first.get(IssueSteps.HEAD), first.get(first.size() - 1)),
                 "хвост начинается сразу за головой: заявка не должна попасть в окно дважды — двойной выбор духа"
                         + " удваивает стоимость. Проверить при смене: смещение HEAD в IssueSteps.window");
         assertEquals(
-                List.of(599, 80),
+                List.of(board.size() - 1, IssueSteps.HEAD),
                 List.of(wrapped.get(IssueSteps.HEAD), wrapped.get(IssueSteps.HEAD + 1)),
                 "окно хвоста идёт по кругу: каждая низкоприоритетная заявка рано или поздно рассматривается."
                         + " Сломается: дешёвые заявки в конце доски не получат духа никогда (голодание)");

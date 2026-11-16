@@ -144,7 +144,7 @@ final class BoardDispatchDesk {
             SpiritEntity spirit = pick.choose(ticket, targets.get(ticket.id()), crafters);
             timer.add("choose", chooseStarted);
             if (spirit == null) {
-                if (explained++ < WaitRefresh.BATCH) {
+                if (explained++ < IssueSteps.WHY_BATCH) {
                     long whyStarted = System.nanoTime();
                     board.noteWait(ticket.id(), pick.why(ticket, targets.get(ticket.id())));
                     timer.add("why", whyStarted);
