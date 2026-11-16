@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -14,6 +15,15 @@ class WaitRefreshTests {
                 "причина ожидания пересчитывается порцией по кругу, а не для всех ~600 заявок за такт (сервер 12.11:"
                         + " reconcile держал тик 810 мс). Сломается: без переноса через конец хвост списка никогда не"
                         + " обновит waitReason в /v1/board. Проверить при смене: порядок DispatchRound.order и курсор");
+    }
+
+    @Test
+    void batch_Cost_StaysBelowLiveBudget() {
+        assertTrue(
+                WaitRefresh.BATCH <= 12,
+                "порция объяснений ожидания — не больше 12 заявок за проход: живой замер 16.11 при 40 заявках "
+                        + "держал reconcile 1,2–4 с за окно (choose и why по всем духам на каждую заявку). "
+                        + "Сломается: reconcile снова станет главным расходом доски");
     }
 
     @Test

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 final class WaitRefresh {
-    static final int BATCH = 40;
+    static final int BATCH = 12;
 
     private static int cursor;
 
