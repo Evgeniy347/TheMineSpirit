@@ -6,6 +6,8 @@ import java.util.Set;
 public final class BoardTuning {
     public static final long BOARD_INTERVAL_TICKS = 100;
 
+    public static final long DISPATCH_RETRY_TICKS = 20;
+
     public static final int MAX_ACTIVE_PER_SPIRIT = 1;
 
     public static final int MAX_PENDING = 64;
@@ -56,6 +58,7 @@ public final class BoardTuning {
 
     public static final Set<String> INTERVAL_KEYS = Set.of(
             "boardIntervalTicks",
+            "dispatchRetryTicks",
             "herdScanIntervalTicks",
             "craterTerritoryRadius",
             "chopRadius",
@@ -84,6 +87,10 @@ public final class BoardTuning {
 
     public static long boardIntervalTicks() {
         return interval("boardIntervalTicks", BOARD_INTERVAL_TICKS);
+    }
+
+    public static long dispatchRetryTicks() {
+        return interval("dispatchRetryTicks", DISPATCH_RETRY_TICKS);
     }
 
     public static int chopRadius() {

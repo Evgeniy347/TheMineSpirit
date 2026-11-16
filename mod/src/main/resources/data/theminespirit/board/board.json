@@ -98,6 +98,7 @@
   },
   "intervals": {
     "boardIntervalTicks": 100,
+    "dispatchRetryTicks": 20,
     "herdScanIntervalTicks": 200,
     "craterTerritoryRadius": 64,
     "chopRadius": 100,

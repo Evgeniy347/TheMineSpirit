@@ -5,6 +5,7 @@ import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.StockView;
@@ -29,7 +30,6 @@ import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
 final class BoardDispatchDesk {
-    private static final long EARLY_DISPATCH_TICKS = 1;
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private final BoardService host;
@@ -66,7 +66,7 @@ final class BoardDispatchDesk {
     }
 
     void tick(ServerLevel level, long now) {
-        if (now - lastDispatch >= EARLY_DISPATCH_TICKS && (freshTickets || holderFreed(level))) {
+        if (now - lastDispatch >= BoardTuning.dispatchRetryTicks() && (freshTickets || holderFreed(level))) {
             lastDispatch = now;
             freshTickets = false;
             issue(level, SpiritCensus.all(level), now);
