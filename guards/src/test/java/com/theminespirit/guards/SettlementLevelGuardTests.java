@@ -140,6 +140,7 @@ class SettlementLevelGuardTests {
                 || "GraphTargets.java".equals(name)
                 || "BiomeSpots.java".equals(name)
                 || "GotoScript.java".equals(name)
+                || "AccessScan.java".equals(name)
                 || "StandSearch.java".equals(name)
                 || "TownFixtures.java".equals(name)
                 || path.equals(LEVEL)

@@ -25,7 +25,8 @@ import java.util.Optional;
 final class WorldPost {
     static final String REPAIR_NODE = "repair:";
     static final String BACKFILL_PREFIX = "world:backfill:";
-    static final List<String> OPEN_PREFIXES = List.of(BACKFILL_PREFIX, "world:trace:", PlanBreachPost.PREFIX);
+    static final List<String> OPEN_PREFIXES =
+            List.of(BACKFILL_PREFIX, "world:trace:", PlanBreachPost.PREFIX, AccessPost.PREFIX, AccessPost.CHEST_PREFIX);
     private static final String REPAIR = REPAIR_NODE;
     private static final Comparator<BlockCoord> ORDER = Comparator.comparingInt(BlockCoord::y)
             .thenComparingInt(BlockCoord::x)

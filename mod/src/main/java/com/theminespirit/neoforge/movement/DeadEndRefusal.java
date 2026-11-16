@@ -5,9 +5,11 @@ import com.theminespirit.core.movement.LineObstacle;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.LevelSafetyView;
+import com.theminespirit.neoforge.PathBlocked;
 import com.theminespirit.neoforge.PathMode;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -44,11 +46,17 @@ public final class DeadEndRefusal {
                 (int) Math.floor(spirit.getX()), (int) Math.floor(spirit.getY()), (int) Math.floor(spirit.getZ()));
         BlockCoord to =
                 new BlockCoord((int) Math.floor(target.x), (int) Math.floor(target.y), (int) Math.floor(target.z));
-        return LineObstacle.first(from, to, new LevelSafetyView(spirit.level()))
-                .map(cell -> "; преграда "
-                        + BlockStates.idOf(spirit.level().getBlockState(new BlockPos(cell.x(), cell.y(), cell.z())))
-                        + " в " + cell)
-                .orElse("");
+        BlockCoord first = LineObstacle.first(from, to, new LevelSafetyView(spirit.level()))
+                .orElse(null);
+        if (first == null) {
+            return "";
+        }
+        if (spirit.level() instanceof ServerLevel level) {
+            PathBlocked.note(level, first);
+        }
+        return "; преграда "
+                + BlockStates.idOf(spirit.level().getBlockState(new BlockPos(first.x(), first.y(), first.z())))
+                + " в " + first;
     }
 
     private static String at(Vec3 point) {

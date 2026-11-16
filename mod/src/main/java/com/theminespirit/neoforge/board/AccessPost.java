@@ -1,6 +1,8 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BlockedCells;
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.LevelRepair;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphTickets;
@@ -17,7 +19,9 @@ import java.util.Optional;
 
 final class AccessPost {
     static final String NODE = "clear_access";
-    private static final String PREFIX = "world:access:";
+    static final String PREFIX = "world:access:";
+    static final String CHEST_PREFIX = "world:chestspace:";
+    private static final int CHEST_BOOST = 5;
     private static final int BATCH = 16;
 
     private AccessPost() {}
@@ -27,26 +31,47 @@ final class AccessPost {
     }
 
     static boolean post(GraphPost post, GraphTickets.Ticket ticket) {
+        AccessScan.Cut cut = AccessScan.cut(post.level, post.service, post.scan.stage(), post.scan.home());
+        if (cut.cells().isEmpty()) {
+            return false;
+        }
+        if (cut.chestBlocked()) {
+            if (post.openCount(CHEST_PREFIX) > 0) {
+                return true;
+            }
+            return submit(
+                    post,
+                    ticket,
+                    CHEST_PREFIX,
+                    cut.chest(),
+                    Math.min(100, BoardRules.priorityOf(BoardCase.REPAIR_BUILDING) + CHEST_BOOST));
+        }
         if (post.openCount(PREFIX) > 0) {
             return true;
         }
-        List<BlockCoord> cut = AccessScan.cut(post.level, post.service, post.scan.stage(), post.scan.home());
-        if (cut.isEmpty()) {
-            return false;
+        return submit(post, ticket, PREFIX, cut.path(), ticket.task().priority());
+    }
+
+    private static boolean submit(
+            GraphPost post, GraphTickets.Ticket ticket, String prefix, List<BlockedCells.Mark> marks, int priority) {
+        List<BlockedCells.Mark> batch = marks.subList(0, Math.min(BATCH, marks.size()));
+        List<BlockCoord> cells = new ArrayList<>(batch.size());
+        for (BlockedCells.Mark mark : batch) {
+            cells.add(mark.cell());
         }
-        List<BlockCoord> batch = cut.subList(0, Math.min(BATCH, cut.size()));
-        BlockCoord first = batch.get(0);
+        BlockCoord first = cells.get(0);
+        BlockedCells.Mark head = batch.get(0);
         post.submit(
                 post.ticket(
-                        PREFIX + first.x() + "," + first.y() + "," + first.z(),
+                        prefix + first.x() + "," + first.y() + "," + first.z() + ":" + head.since(),
                         BoardCase.REPAIR_BUILDING,
                         Optional.empty(),
-                        ticket.task().priority(),
+                        priority,
                         ticket.id(),
                         post.items(ticket.task())),
                 TicketTarget.at(first)
-                        .withLeveling(LevelRepair.leveling(List.of(), batch))
-                        .withPlan(steps(batch)));
+                        .withLeveling(LevelRepair.leveling(List.of(), cells))
+                        .withPlan(steps(cells)));
         return true;
     }
 
