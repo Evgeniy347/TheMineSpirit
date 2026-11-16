@@ -230,6 +230,28 @@ class LeaseUndoTests {
     }
 
     @Test
+    void blocked_CellHoldsForeignBlock_SkipsInsteadOfFailingUndo() {
+        LeaseUndo.Step broken = new LeaseUndo.Step(new BlockCoord(-167, 73, -492), LeaseKind.BROKEN, "minecraft:dirt");
+        assertTrue(
+                LeaseUndo.blocked(broken, false, "minecraft:grass_block"),
+                "Клетку брошенной аренды занял чужой блок (живой сервер 16.11: grass_block на месте отката): "
+                        + "вернуть прежний блок некуда — клетку закрывают, а не роняют весь откат, иначе граф "
+                        + "ставит undo_lease снова и снова и духи вечно откатывают чужую работу");
+        assertFalse(
+                LeaseUndo.blocked(
+                        new LeaseUndo.Step(new BlockCoord(0, 70, 0), LeaseKind.BROKEN, "minecraft:dirt"),
+                        true,
+                        "minecraft:air"),
+                "Пустая клетка не чужая: прежний блок ставят обратно");
+        assertFalse(
+                LeaseUndo.blocked(
+                        new LeaseUndo.Step(new BlockCoord(0, 70, 0), LeaseKind.PLACED, "minecraft:air"),
+                        false,
+                        "minecraft:cobblestone"),
+                "Свою поставленную клетку откат ломает: чужой её не называют, даже если состояние не совпало");
+    }
+
+    @Test
     void activeLease_AfterCommit_StopsCleanup() {
         LeaseBook book = new LeaseBook();
         BlockCoord cell = new BlockCoord(0, 70, 0);

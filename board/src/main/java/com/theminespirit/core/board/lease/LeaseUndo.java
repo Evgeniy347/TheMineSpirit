@@ -76,6 +76,15 @@ public final class LeaseUndo {
         return current.equals(step.before());
     }
 
+    public static boolean blocked(Step step, boolean free, String current) {
+        Objects.requireNonNull(step, "Клетка отката не может быть null: чужой блок ищут по ней");
+        Objects.requireNonNull(current, "Текущий блок не может быть null: без него не видно, чей он");
+        if (step.kind() == LeaseKind.PLACED) {
+            return false;
+        }
+        return !free && !current.equals(step.before());
+    }
+
     public static boolean supportsBody(Step step, BlockCoord feet) {
         Objects.requireNonNull(step, "Клетка отката не может быть null: опору ищут по ней");
         Objects.requireNonNull(feet, "Клетка ног не может быть null: без неё опоры под телом нет");

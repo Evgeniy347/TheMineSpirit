@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.lease.Lease;
 import com.theminespirit.core.board.lease.LeaseKind;
@@ -12,7 +13,6 @@ import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.adapter.Visibility;
-import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.lease.LeaseData;
 import com.theminespirit.neoforge.lease.LeaseRun;
 import com.theminespirit.neoforge.lease.LeaseStates;
@@ -26,13 +26,17 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 public final class UndoLeaseScript implements ScriptInstance {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private final SpiritEntity spirit;
     private final ServerLevel level;
     private final String leaseId;
     private final Set<BlockCoord> rolledBack = new HashSet<>();
     private final LeaseReach reach;
+    private final UndoCells cells;
     private final UndoStallWatch stall = new UndoStallWatch();
 
     private LeaseRun run;
@@ -53,6 +57,7 @@ public final class UndoLeaseScript implements ScriptInstance {
             throw new IllegalArgumentException("Откат аренды без id: граф не сказал, чью правку убирать");
         }
         this.leaseId = text;
+        this.cells = new UndoCells(level, spirit, leaseId);
     }
 
     @Override
@@ -75,7 +80,7 @@ public final class UndoLeaseScript implements ScriptInstance {
         if (reach.busy()) {
             LeaseReach.Outcome out = reach.tick(currentCell());
             if (out == LeaseReach.Outcome.FAILED) {
-                return fail(reach.failureReason(), reach.failureFact());
+                return skipUnreachable(reach.failureReason());
             }
             if (out == LeaseReach.Outcome.RUNNING) {
                 return ScriptStatus.RUNNING;
@@ -105,16 +110,16 @@ public final class UndoLeaseScript implements ScriptInstance {
             if (!inReach(pos)) {
                 return approach(step);
             }
+            if (step.kind() == LeaseKind.PLACED && BreakSight.visible(spirit, pos, false) != Visibility.CLEAR) {
+                return approach(step);
+            }
             if (step.kind() == LeaseKind.PLACED) {
-                if (BreakSight.visible(spirit, pos, false) != Visibility.CLEAR) {
-                    return approach(step);
-                }
-                return breakPlaced(step, pos, state);
+                cells.breakPlaced(pos, state);
+            } else {
+                cells.restore(step, pos, state);
             }
-            if (step.kind() == LeaseKind.BROKEN) {
-                return restoreBroken(step, pos, state);
-            }
-            return restoreState(step, pos);
+            complete(step, pos);
+            return ScriptStatus.RUNNING;
         }
         return finishTick();
     }
@@ -122,8 +127,19 @@ public final class UndoLeaseScript implements ScriptInstance {
     private ScriptStatus approach(LeaseUndo.Step step) {
         LeaseReach.Outcome out = reach.tick(step.pos());
         if (out == LeaseReach.Outcome.FAILED) {
-            return fail(reach.failureReason(), reach.failureFact());
+            return skipUnreachable(reach.failureReason());
         }
+        return ScriptStatus.RUNNING;
+    }
+
+    private ScriptStatus skipUnreachable(String reason) {
+        BlockCoord cell = currentCell();
+        reach.cancel();
+        if (steps == null || cursor >= steps.size()) {
+            return ScriptStatus.RUNNING;
+        }
+        LOGGER.info("[lease] откат {} пропустил клетку {}: {}", leaseId, cell, reason);
+        complete(steps.get(cursor), pos(cell));
         return ScriptStatus.RUNNING;
     }
 
@@ -147,30 +163,6 @@ public final class UndoLeaseScript implements ScriptInstance {
 
     private Lease lease() {
         return LeaseData.get(level).book().require(leaseId);
-    }
-
-    private ScriptStatus breakPlaced(LeaseUndo.Step step, BlockPos pos, BlockState state) {
-        BreakNotice.broken(level, pos, state, spirit, "UNDO_LEASE", PlotProtection.Ground.NONE);
-        SpiritBlocks.destroy(level, pos, true, spirit, "UNDO_LEASE");
-        SpiritGesture.workOn(spirit, pos);
-        complete(step, pos);
-        return ScriptStatus.RUNNING;
-    }
-
-    private ScriptStatus restoreBroken(LeaseUndo.Step step, BlockPos pos, BlockState state) {
-        if (!state.isAir() && !state.canBeReplaced() && !BlockStates.idOf(state).equals(step.before())) {
-            return fail("клетка " + step.pos() + " занята блоком " + BlockStates.idOf(state) + ": вернуть "
-                    + step.before() + " некуда");
-        }
-        SpiritBlocks.restore(level, pos, BlockStates.stateFor(step.before()), spirit, "UNDO_LEASE");
-        complete(step, pos);
-        return ScriptStatus.RUNNING;
-    }
-
-    private ScriptStatus restoreState(LeaseUndo.Step step, BlockPos pos) {
-        LeaseStates.apply(level, pos, step.before());
-        complete(step, pos);
-        return ScriptStatus.RUNNING;
     }
 
     private void complete(LeaseUndo.Step step, BlockPos pos) {
