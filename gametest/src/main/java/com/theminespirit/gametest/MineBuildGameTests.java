@@ -6,6 +6,7 @@ import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.minecraft.core.BlockPos;
@@ -125,6 +126,9 @@ public final class MineBuildGameTests {
     @SceneStep(template = "mine_arena", timeoutTicks = 1600)
     public static void mineDescent_WaterBehindWall_PlugsAndSpiritNeverUnderWater(GameTestHelper helper) {
         rock(helper);
+        BlockPos ownFill = step(0, 1);
+        helper.setBlock(ownFill, Blocks.GRASS_BLOCK);
+        PlacedBlocksData.get(helper.getLevel()).markSpirit(helper.absolutePos(ownFill));
         BlockPos wallWater = step(3, 1).south();
         BlockPos ceilingWater = step(5, 4);
         helper.setBlock(wallWater, Blocks.WATER);
@@ -142,6 +146,9 @@ public final class MineBuildGameTests {
             run.assertStarted();
             Map<String, Object> data = data(helper, spirit);
             assertPassageOpen(helper);
+            helper.assertTrue(
+                    helper.getBlockState(ownFill).isAir(),
+                    "своя заливка духа в проходе " + ownFill + " убрана: шахта не встаёт из-за метки «уже облицована»");
             helper.assertTrue(
                     helper.getBlockState(wallWater).is(Blocks.COBBLESTONE)
                             && helper.getBlockState(ceilingWater).is(Blocks.COBBLESTONE),
