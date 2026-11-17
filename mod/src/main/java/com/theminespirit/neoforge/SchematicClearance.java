@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.BlockMatch;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
@@ -57,6 +58,7 @@ final class SchematicClearance {
             if (current.isAir()
                     || current.canBeReplaced()
                     || current.is(site.wanted(entry).getBlock())
+                    || BlockMatch.matches(BlockStates.idOf(current), entry.block())
                     || (SchematicBlocks.isFloor(entry.block())
                             && SchematicBlocks.isFloorClass(BlockStates.idOf(current)))) {
                 continue;

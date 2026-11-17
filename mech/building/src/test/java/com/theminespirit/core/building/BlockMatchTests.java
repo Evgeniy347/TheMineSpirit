@@ -45,4 +45,14 @@ class BlockMatchTests {
                 BlockMatch.matches("minecraft:chest[facing=east,type=right]", "minecraft:chest"),
                 "направление и двойная половина сундука не влияют на готовность склада");
     }
+
+    @Test
+    void matches_GrassOnDirtTile_Accepted() {
+        assertTrue(
+                BlockMatch.matches("minecraft:grass_block", "minecraft:dirt"),
+                "дёрн на месте плитки из земли — тот же грунт: расчистка схемы не сносит траву ради земли");
+        assertFalse(
+                BlockMatch.matches("minecraft:stone", "minecraft:dirt"),
+                "камень на земляной клетке — помеха: его снос нужен");
+    }
 }
