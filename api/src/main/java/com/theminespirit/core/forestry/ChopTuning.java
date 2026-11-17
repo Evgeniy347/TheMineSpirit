@@ -38,10 +38,10 @@ public final class ChopTuning {
             throw new IllegalArgumentException("radius=" + requestedRadius
                     + ": предел поиска деревьев меньше единицы, дерево не нашлось бы никогда");
         }
-        if (nearestFar < requestedRadius) {
-            return requestedRadius;
+        if (nearestFar > requestedRadius) {
+            return Math.min(nearestFar, MAX_SEARCH_RADIUS);
         }
-        return Math.min(nearestFar, MAX_SEARCH_RADIUS);
+        return Math.min(requestedRadius * 2, MAX_SEARCH_RADIUS);
     }
 
     public static int scanRadius(int requestedRadius, int maxDistance) {

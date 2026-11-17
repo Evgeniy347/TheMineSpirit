@@ -57,6 +57,34 @@ class ChopTuningTests {
     }
 
     @Test
+    void extendTo_NoKnownTree_WidensSearchAnyway() {
+        int widened = ChopTuning.extendTo(ChopTuning.GATHER_RADIUS_MAX, -1);
+
+        assertEquals(
+                64,
+                widened,
+                "Деревьев в радиусе 32 не видно — известного дальнего дерева нет, и поиск обязан расшириться: "
+                        + "иначе extendTo возвращает 32 и рубка навсегда падает «деревья породы oak в радиусе 32 "
+                        + "закончились» (355 провалов GATHER_MATERIALS за 30 дней)");
+    }
+
+    @Test
+    void extendTo_TreeExactlyAtLimit_WidensSearch() {
+        assertEquals(
+                64,
+                ChopTuning.extendTo(32, 32),
+                "Дерево ровно на пределе 32 не найдено прежним сканом — расширение обязано дойти до 64");
+    }
+
+    @Test
+    void extendTo_NoRoomToWiden_StaysAtMaximum() {
+        assertEquals(
+                ChopTuning.MAX_SEARCH_RADIUS,
+                ChopTuning.extendTo(ChopTuning.MAX_SEARCH_RADIUS, -1),
+                "На пределе поиска расширяться некуда: скан не уходит дальше MAX_SEARCH_RADIUS");
+    }
+
+    @Test
     void scanRadius_ExtendedDistance_WidensTheScannedArea() {
         assertEquals(
                 35,
