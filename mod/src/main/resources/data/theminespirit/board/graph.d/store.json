@@ -47,7 +47,7 @@
     },
     "store:chests": {
       "xmin": 0,
-      "base": 14,
+      "base": 56,
       "stage": 1
     },
     "store:sorted": {
