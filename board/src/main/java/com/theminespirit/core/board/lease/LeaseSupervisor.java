@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.lease;
 
+import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -80,6 +81,14 @@ public final class LeaseSupervisor {
                         .filter(lease -> lease.status() == LeaseStatus.ACTIVE)
                         .isEmpty());
         return List.copyOf(due);
+    }
+
+    // lib: участники (executors) берут тикет вместе с ведущим; владелец аренды — только ведущий,
+    // lib: иначе перенос закреплён «за двумя духами» и сервер падает на проверке аренд.
+    public static boolean leads(BoardTicket ticket, UUID spirit) {
+        Objects.requireNonNull(ticket, "Тикет не может быть null: без него не определить ведущего");
+        Objects.requireNonNull(spirit, "Дух не может быть null: без него не определить ведущего");
+        return ticket.assignee().filter(spirit::equals).isPresent();
     }
 
     private static boolean standsOnOwn(LeaseBook book, Lease lease, @Nullable BlockCoord support) {

@@ -97,6 +97,7 @@ public final class LeaseLifecycle {
             Set<String> tickets = service == null
                     ? null
                     : service.board().assignedTo(spirit.getUUID()).stream()
+                            .filter(ticket -> LeaseSupervisor.leads(ticket, spirit.getUUID()))
                             .map(BoardTicket::id)
                             .collect(Collectors.toUnmodifiableSet());
             BlockPos on = spirit.getOnPos();
