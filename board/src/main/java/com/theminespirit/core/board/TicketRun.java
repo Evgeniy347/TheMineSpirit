@@ -39,6 +39,9 @@ public enum TicketRun {
         if (!known && status == RunStatus.RUNNING && !externalControl) {
             return targetKnown ? RESUME : RUNNING;
         }
+        if (!known && targetKnown && (status == RunStatus.SUCCEEDED || status == RunStatus.FAILED)) {
+            return RESUME;
+        }
         if (status == RunStatus.SUCCEEDED) {
             return SUCCEEDED;
         }

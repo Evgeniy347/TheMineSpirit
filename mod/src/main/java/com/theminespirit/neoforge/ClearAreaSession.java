@@ -223,6 +223,10 @@ public class ClearAreaSession {
             fail(ClearSummary.of(this) + "; не убран ни один блок");
             return;
         }
+        if (demolish && removed == 0 && skippedTotal() > 0) {
+            fail(ClearSummary.of(this) + "; разбор не убрал ни одного блока: остатки нечем снять или они защищены");
+            return;
+        }
         if (removed == 0 && skippedTotal() == 0) {
             ClearReport.clean(LOGGER, spirit, box);
         }

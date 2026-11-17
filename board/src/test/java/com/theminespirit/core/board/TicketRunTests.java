@@ -53,8 +53,23 @@ class TicketRunTests {
     void decide_UnknownGeneration_SettlesByStatus() {
         long unknown = SpiritReading.UNKNOWN_GENERATION;
 
-        assertEquals(TicketRun.FAILED, TicketRun.decide(unknown, 6, RunStatus.FAILED, false), "После рестарта");
         assertEquals(TicketRun.RUNNING, TicketRun.decide(unknown, 6, RunStatus.CANCELLED, false), "Без поколения");
+    }
+
+    @Test
+    void decide_UnknownGenerationForeignFinish_ResumeOwnPlan() {
+        long unknown = SpiritReading.UNKNOWN_GENERATION;
+
+        assertEquals(
+                TicketRun.RESUME,
+                TicketRun.decide(unknown, 6, RunStatus.SUCCEEDED, false),
+                "После рестарта поколение задания неизвестно: успех чужого скрипта не закрывает задание без "
+                        + "факта мира, дух заново стартует план этого задания (живой разбор блоков закрывался "
+                        + "успехом, когда дух рубил деревья в стороне)");
+        assertEquals(
+                TicketRun.RESUME,
+                TicketRun.decide(unknown, 6, RunStatus.FAILED, false),
+                "Провал чужого скрипта после рестарта тоже не записывается в задание: сначала свой план");
     }
 
     @Test
