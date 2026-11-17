@@ -38,7 +38,8 @@
 ## Правила
 
 - **Мир в git не коммитится.** Снимок — `scripts/world-snapshot.sh [метка]`, откат — `scripts/world-restore.sh`.
-  Cron снимает архив каждые 10 минут в `/opt/minecraft/backups/world/`; архивы с меткой ротация не удаляет.
+  Cron снимает архив каждые 10 минут в `/opt/minecraft/backups/world/`; метки хранятся 7 дней, три последних
+  `publish-*` ротация не удаляет.
 - Cron раз в минуту зовёт `scripts/hang-watch.sh` (строку ставит `publish.sh`): зависший тик снимается дампом
   в `/opt/minecraft/logs/hang-*.txt` и перезапуском, отметка — `/opt/minecraft/logs/hang.log`.
 - Скрипты и конфиги правятся в репозитории мода (`server/`), на сервер их кладёт `scripts/publish.sh`.

@@ -73,6 +73,17 @@ case "$mode" in
 esac
 exit 0
 FAKE
+cat >"$work/bin/df" <<'FAKE'
+#!/usr/bin/env bash
+if [ -z "${FAKE_FREE_FILE:-}" ]; then
+    exec /usr/bin/df "$@"
+fi
+free=$(cat "$FAKE_FREE_FILE" 2>/dev/null || echo 0)
+echo $((free + 1000)) >"$FAKE_FREE_FILE"
+echo "Filesystem 1M-blocks Used Available Capacity Mounted"
+echo "/dev/fake 1000000 900000 $free 90% /"
+exit 0
+FAKE
 chmod 755 "$work/bin"/*
 
 prepare() {
@@ -90,7 +101,7 @@ run_snapshot() {
         SERVER_DIR="$server" \
         WORLD_BACKUPS="$backups" \
         TMUX_SESSION=check \
-        MIN_FREE_MB=1 \
+        MIN_FREE_MB="${MIN_FREE_MB:-1}" \
         SAVE_ACK_TIMEOUT=2 \
         SAVE_TIMEOUT=2 \
         SNAPSHOT_LOCK_WAIT="${SNAPSHOT_LOCK_WAIT:-0}" \
@@ -184,5 +195,47 @@ code=$?
 [ "$code" -eq 75 ] && echo "$out" | grep -q "замок .* занят" \
     && ok "занятый замок: снимок не притворяется успешным, код 75 и кто держит" \
     || fail "занятый замок: ждали код 75 и «замок … занят», код $code: $out"
+
+# lib: ротация: старые безымянные и метки старше 7 дней удаляются, свежие метки живут, из publish живут три
+# lib: последних; имя архива (дата) важнее mtime файла.
+server="$work/prune/server"
+backups="$work/prune/backups"
+mkdir -p "$backups"
+prepare "$server"
+t10="$(date -d '10 days ago' +%Y-%m-%d_%H-%M-%S)"
+d2="$(date -d '2 days ago' +%Y-%m-%d)"
+h2="$(date -d '2 days ago' +%H)"
+for f in "world-$t10.tar.zst" "world-$t10.tar.zst.sha256" "world-$t10-before-x.tar.zst" \
+    "world-${d2}_${h2}-05-00.tar.zst" "world-${d2}_${h2}-35-00.tar.zst" "world-$t10-publish-1.tar.zst" \
+    "world-$t10-publish-2.tar.zst" "world-$t10-publish-3.tar.zst" "world-$t10-publish-4.tar.zst" \
+    "world-${d2}_${h2}-40-00-before-y.tar.zst"; do
+    echo x >"$backups/$f"
+done
+out=$(KEEP_ALL_HOURS=1 KEEP_HOURLY_DAYS=3 KEEP_DAILY_DAYS=7 KEEP_LABELED_DAYS=7 KEEP_PUBLISH=3 \
+    run_snapshot "$server" "$backups" prune)
+code=$?
+[ "$code" = 0 ] && [ ! -e "$backups/world-$t10.tar.zst" ] && [ ! -e "$backups/world-$t10.tar.zst.sha256" ] \
+    && [ ! -e "$backups/world-$t10-before-x.tar.zst" ] && [ ! -e "$backups/world-$t10-publish-1.tar.zst" ] \
+    && [ -e "$backups/world-$t10-publish-4.tar.zst" ] && [ -e "$backups/world-${d2}_${h2}-35-00.tar.zst" ] \
+    && [ ! -e "$backups/world-${d2}_${h2}-05-00.tar.zst" ] && [ -e "$backups/world-${d2}_${h2}-40-00-before-y.tar.zst" ] \
+    && ok "ротация: старое удалено, свежая метка жива, три последних publish живы, в часе оставлен новый" \
+    || fail "ротация: код=$code, состав: $(ls -1 "$backups" | tr '\n' ' ')"
+
+# lib: мало места: удаляются самые старые архивы, а не самые свежие (до 17.11 удалялся новый).
+server="$work/free/server"
+backups="$work/free/backups"
+mkdir -p "$backups"
+prepare "$server"
+a=()
+for i in 1 2 3 4; do
+    a+=("$(date -d "@$(( $(date +%s) - i * 3600 ))" +%Y-%m-%d_%H-%M-%S)")
+    echo x >"$backups/world-${a[$((i - 1))]}.tar.zst"
+done
+echo 2000 >"$work/free.mb"
+out=$(FAKE_FREE_FILE="$work/free.mb" MIN_FREE_MB=5000 run_snapshot "$server" "$backups" free)
+code=$?
+[ "$code" = 0 ] && [ -e "$backups/world-${a[0]}.tar.zst" ] && [ ! -e "$backups/world-${a[3]}.tar.zst" ] \
+    && ok "мало места: удалён самый старый архив, свежий цел" \
+    || fail "мало места: код=$code, состав: $(ls -1 "$backups" | tr '\n' ' '): $out"
 
 exit "$failed"

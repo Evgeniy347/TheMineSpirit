@@ -5,9 +5,11 @@ source "$(dirname "$0")/common.sh"
 
 WORLD_BACKUPS="${WORLD_BACKUPS:-/opt/minecraft/backups/world}"
 
-KEEP_ALL_HOURS="${KEEP_ALL_HOURS:-24}"
-KEEP_HOURLY_DAYS="${KEEP_HOURLY_DAYS:-7}"
-KEEP_DAILY_DAYS="${KEEP_DAILY_DAYS:-30}"
+KEEP_ALL_HOURS="${KEEP_ALL_HOURS:-6}"
+KEEP_HOURLY_DAYS="${KEEP_HOURLY_DAYS:-3}"
+KEEP_DAILY_DAYS="${KEEP_DAILY_DAYS:-7}"
+KEEP_LABELED_DAYS="${KEEP_LABELED_DAYS:-7}"
+KEEP_PUBLISH="${KEEP_PUBLISH:-3}"
 MIN_FREE_MB="${MIN_FREE_MB:-10240}"
 
 usage() {
@@ -18,10 +20,11 @@ usage() {
   save-off → save-all flush → tar --zstd → save-on.
 
   метка   необязательный суффикс имени: world-<дата_время>-<метка>.tar.zst;
-          архивы с меткой ротация не удаляет (ручной снимок «до эксперимента»).
+          метка хранится 7 дней, три последних publish-* не удаляются никогда.
 
 Переменные окружения: SERVER_DIR, TMUX_SESSION, WORLD_BACKUPS, MIN_FREE_MB,
-KEEP_ALL_HOURS (24), KEEP_HOURLY_DAYS (7), KEEP_DAILY_DAYS (30),
+KEEP_ALL_HOURS (6), KEEP_HOURLY_DAYS (3), KEEP_DAILY_DAYS (7), KEEP_LABELED_DAYS (7),
+KEEP_PUBLISH (3 — последние publish-архивы не удаляются никогда),
 SNAPSHOT_LOCK_WAIT (0 — пропустить, если идёт другой снимок; публикация ждёт 900 с),
 SAVE_ACK_TIMEOUT (20), SAVE_TIMEOUT (120).
 EOF
@@ -96,15 +99,20 @@ delete_archive() {
 
 prune_archives() {
     local now base path age stamp hour day
-    local -A keep_hour=() keep_day=()
+    local -A keep_hour=() keep_day=() keep_publish=()
     now="$(date +%s)"
     while IFS= read -r path; do
+        keep_publish["$(basename "$path")"]=1
+    done < <(ls -1 "$WORLD_BACKUPS"/world-*-publish-*.tar.zst 2>/dev/null | tail -n "$KEEP_PUBLISH")
+    while IFS= read -r path; do
         base="$(basename "$path")"
-        is_labeled "$base" && continue
         stamp="$(archive_time "$base")"
         [ -n "$stamp" ] || continue
         age=$(( now - stamp ))
-        if [ "$age" -le $(( KEEP_ALL_HOURS * 3600 )) ]; then
+        if is_labeled "$base"; then
+            [ -n "${keep_publish[$base]:-}" ] && continue
+            [ "$age" -le $(( KEEP_LABELED_DAYS * 86400 )) ] && continue
+        elif [ "$age" -le $(( KEEP_ALL_HOURS * 3600 )) ]; then
             continue
         elif [ "$age" -le $(( KEEP_HOURLY_DAYS * 86400 )) ]; then
             hour="${base:6:13}"
@@ -127,7 +135,7 @@ enforce_free_space() {
     local free path
     free="$(free_mb)"
     while [ -n "$free" ] && [ "$free" -lt "$MIN_FREE_MB" ]; do
-        path="$(ls -1r "$WORLD_BACKUPS"/world-*.tar.zst 2>/dev/null | head -n 1)"
+        path="$(ls -1 "$WORLD_BACKUPS"/world-*.tar.zst 2>/dev/null | head -n 1)"
         if [ -z "$path" ]; then
             echo "мало места: свободно ${free} МБ, архивов больше нет (нужно ${MIN_FREE_MB} МБ)" >&2
             return 1

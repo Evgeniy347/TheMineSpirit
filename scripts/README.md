@@ -72,7 +72,7 @@
 | [testing/check-mod-version.sh](testing/check-mod-version.sh) | проверка `mod-version.sh` на живых строках NeoForge и дереве | `scripts/testing/check-mod-version.sh` | ПК, сервер | временные файлы |
 | [testing/check-publish.sh](testing/check-publish.sh) | проверка публикации на подделке | `scripts/testing/check-publish.sh` | ПК, сервер | временные файлы |
 | [testing/check-start.sh](testing/check-start.sh) | проверка запуска сервера: готовность после поздней ротации лога и честный отказ | `scripts/testing/check-start.sh` | ПК, сервер | временные файлы |
-| [testing/check-world-snapshot.sh](testing/check-world-snapshot.sh) | проверка снимка мира на подделках: подтверждения save-*, возврат save-on, занятый замок, остановленный сервер | `scripts/testing/check-world-snapshot.sh` | ПК, сервер | временные файлы |
+| [testing/check-world-snapshot.sh](testing/check-world-snapshot.sh) | проверка снимка мира на подделках: подтверждения save-*, возврат save-on, занятый замок, остановленный сервер, ротация, мало места | `scripts/testing/check-world-snapshot.sh` | ПК, сервер | временные файлы |
 | [testing/check-static-analysis-cache.sh](testing/check-static-analysis-cache.sh) | проверка кэша анализаторов | `scripts/testing/check-static-analysis-cache.sh` | ПК, сервер | временные файлы |
 | [testing/check-strategist.sh](testing/check-strategist.sh) | проверка запуска стратега | `scripts/testing/check-strategist.sh` | ПК, сервер | временные файлы |
 | [testing/check-test-runner.sh](testing/check-test-runner.sh) | проверка пределов и замков `test.sh` | `scripts/testing/check-test-runner.sh` | ПК, сервер | временные файлы |
