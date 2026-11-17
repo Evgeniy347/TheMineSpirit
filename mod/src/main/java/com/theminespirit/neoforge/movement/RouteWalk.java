@@ -139,6 +139,9 @@ public final class RouteWalk {
         spirit.getNavigation().stop();
         boolean fall = command.step() == WalkAscent.Step.MOVE || command.step() == WalkAscent.Step.DIVE;
         if (fall && command.y() < spirit.getY() - 0.5 && !spirit.isInWater()) {
+            if (!stand(cell)) {
+                return Optional.of("спуск к " + cell + " без опоры: под клеткой пустота, дух разобьётся");
+            }
             pushOff(command);
             if (command.step() == WalkAscent.Step.DIVE) {
                 Vec3 motion = spirit.getDeltaMovement();
@@ -196,6 +199,19 @@ public final class RouteWalk {
             edge = Math.min(edge, Math.abs(z - (dz > 0 ? Math.floor(z) + 1 : Math.floor(z))));
         }
         return edge < 0.3;
+    }
+
+    private boolean stand(BlockCoord cell) {
+        BlockPos target = pos(cell);
+        if (spirit.level().getFluidState(target).is(FluidTags.WATER)
+                || spirit.level().getFluidState(target.below()).is(FluidTags.WATER)) {
+            return true;
+        }
+        BlockPos floor = target.below();
+        return !spirit.level()
+                .getBlockState(floor)
+                .getCollisionShape(spirit.level(), floor)
+                .isEmpty();
     }
 
     private void pushOff(WalkAscent.Command command) {

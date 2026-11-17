@@ -9,6 +9,7 @@ import com.theminespirit.core.navigation.NavSegmentedSession;
 import com.theminespirit.core.navigation.NavSettings;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.route.Route;
+import com.theminespirit.core.route.RouteStep;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.movement.LevelNavWorld;
@@ -25,6 +26,9 @@ final class RouteGapScene {
 
     private final GameTestHelper helper;
     private final List<Crossing> crossings = new ArrayList<>();
+    private SpiritEntity voidSpirit;
+    private RouteWalk voidWalk;
+    private BlockPos voidStart;
     private int ticks;
 
     RouteGapScene(GameTestHelper helper) {
@@ -40,6 +44,7 @@ final class RouteGapScene {
         add(new BlockPos(6, 6, 7), new BlockPos(4, 6, 7));
         add(new BlockPos(3, 6, 4), new BlockPos(3, 6, 6));
         add(new BlockPos(7, 6, 6), new BlockPos(7, 6, 4));
+        addVoid();
         helper.onEachTick(this::tick);
     }
 
@@ -73,9 +78,30 @@ final class RouteGapScene {
         crossings.add(new Crossing(spirit, new RouteWalk(spirit, route, target), spirit.getHealth(), target));
     }
 
+    private void addVoid() {
+        BlockPos start = new BlockPos(4, 6, 2);
+        voidStart = helper.absolutePos(start);
+        voidSpirit = helper.spawn(ModEntities.SPIRIT.get(), start);
+        voidSpirit.setDemo(true);
+        BlockCoord cell = MovementScene.coord(helper, new BlockPos(5, 5, 2));
+        RouteStep step = new RouteStep(RouteStep.Action.WALK, cell);
+        Route route = new Route(Route.Status.FOUND, List.of(step), 1, cell, 1, 0, 0, List.of());
+        voidWalk = new RouteWalk(voidSpirit, route, cell);
+    }
+
     private void tick() {
         if (++ticks <= MovementScene.SETTLE_TICKS) {
             return;
+        }
+        if (ticks == MovementScene.SETTLE_TICKS + 1) {
+            helper.assertTrue(
+                    voidWalk.tick() == RouteWalk.State.FAILED,
+                    "Шаг спуска в пустоту отклоняется до прыжка: дух не срывается в яму наудачу, итог "
+                            + voidWalk.failure());
+            helper.assertTrue(
+                    voidSpirit.getHealth() == voidSpirit.getMaxHealth() && voidSpirit.getY() >= voidStart.getY() - 0.1,
+                    "Дух остался на опоре у края, а не упал в яму: " + voidSpirit.position() + ", здоровье "
+                            + voidSpirit.getHealth());
         }
         for (Crossing crossing : crossings) {
             SpiritEntity spirit = crossing.spirit();
@@ -104,5 +130,6 @@ final class RouteGapScene {
                             + spirit.position() + " к " + target);
         }
         crossings.forEach(crossing -> crossing.spirit().discard());
+        voidSpirit.discard();
     }
 }
