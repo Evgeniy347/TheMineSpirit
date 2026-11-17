@@ -3,13 +3,14 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.movement.DropProfile;
+import com.theminespirit.core.movement.WallEscapeRules;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import org.slf4j.Logger;
 
 final class WallEscape {
@@ -23,32 +24,48 @@ final class WallEscape {
             return;
         }
         BlockPos feet = spirit.blockPosition();
-        Optional<BlockPos> free = nearestFree(spirit.level(), feet);
+        BlockCoord from = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
+        Optional<BlockCoord> free = WallEscapeRules.nearestFree(from, around(feet), cell -> usable(spirit, cell));
         if (free.isEmpty()) {
             return;
         }
-        BlockPos cell = free.get();
+        BlockCoord picked = free.get();
         spirit.getNavigation().stop();
-        spirit.getNavigation().moveTo(cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5, 1.0);
+        spirit.getNavigation().moveTo(picked.x() + 0.5, picked.y(), picked.z() + 0.5, 1.0);
         LOGGER.info(
                 "[wall] {} в стене у {}: шаг в свободную клетку {}",
                 spirit.getName().getString(),
                 feet.toShortString(),
-                cell.toShortString());
+                new BlockPos(picked.x(), picked.y(), picked.z()).toShortString());
     }
 
-    static Optional<BlockPos> nearestFree(Level level, BlockPos feet) {
-        List<BlockPos> cells = new ArrayList<>();
+    private static List<BlockCoord> around(BlockPos feet) {
+        List<BlockCoord> cells = new ArrayList<>();
         for (int dy = -1; dy <= RADIUS; dy++) {
             for (int dx = -RADIUS; dx <= RADIUS; dx++) {
                 for (int dz = -RADIUS; dz <= RADIUS; dz++) {
-                    cells.add(feet.offset(dx, dy, dz));
+                    cells.add(new BlockCoord(feet.getX() + dx, feet.getY() + dy, feet.getZ() + dz));
                 }
             }
         }
-        cells.sort(Comparator.comparingDouble((BlockPos cell) -> cell.distSqr(feet))
-                .thenComparing(Comparator.naturalOrder()));
-        return cells.stream().filter(cell -> standable(level, cell)).findFirst();
+        return cells;
+    }
+
+    private static boolean usable(SpiritEntity spirit, BlockCoord cell) {
+        BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+        return standable(spirit.level(), pos) && bodyFree(spirit, pos);
+    }
+
+    private static boolean bodyFree(SpiritEntity spirit, BlockPos cell) {
+        double half = spirit.getBbWidth() / 2.0;
+        AABB box = new AABB(
+                cell.getX() + 0.5 - half,
+                cell.getY(),
+                cell.getZ() + 0.5 - half,
+                cell.getX() + 0.5 + half,
+                cell.getY() + spirit.getBbHeight(),
+                cell.getZ() + 0.5 + half);
+        return !spirit.level().getBlockCollisions(spirit, box).iterator().hasNext();
     }
 
     private static boolean standable(Level level, BlockPos cell) {
