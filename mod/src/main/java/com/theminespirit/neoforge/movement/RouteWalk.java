@@ -70,10 +70,11 @@ public final class RouteWalk {
             return fail("дух сошёл с маршрута: шаг " + step.cell() + " дальше соседней клетки");
         }
         if (step.action() == RouteStep.Action.WALK || step.action() == RouteStep.Action.JUMP) {
-            int feetY = spirit.blockPosition().getY();
-            if (DropProfile.routeDropTooDeep(feetY, step.cell().y()) && !water(step.cell())) {
-                return fail("шаг " + step.action() + " в " + step.cell() + " ниже на "
-                        + (feetY - step.cell().y()) + " блоков: это падение, а не спуск — маршрут устарел");
+            int drop = spirit.blockPosition().getY() - step.cell().y();
+            if (!water(step.cell()) && DropProfile.lethalDrop(drop, spirit.getHealth())) {
+                return fail("шаг " + step.action() + " в " + step.cell() + " ниже на " + drop
+                        + " блоков: падение на " + DropProfile.fallDamage(drop) + " урона при здоровье "
+                        + spirit.getHealth() + " — это смерть, нужен обход");
             }
         }
         if (recorded != next) {

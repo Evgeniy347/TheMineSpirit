@@ -11,8 +11,12 @@ public final class DropProfile {
 
     private DropProfile() {}
 
-    public static boolean routeDropTooDeep(int fromY, int toY) {
-        return fromY - toY > MAX_STEP_DROP;
+    public static int fallDamage(int dropBlocks) {
+        return Math.max(0, dropBlocks - MAX_STEP_DROP);
+    }
+
+    public static boolean lethalDrop(int dropBlocks, float health) {
+        return fallDamage(dropBlocks) >= health;
     }
 
     public static boolean blocksCarefulStep(List<Integer> floorHeights) {
