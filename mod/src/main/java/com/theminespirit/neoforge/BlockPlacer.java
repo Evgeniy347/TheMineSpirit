@@ -17,8 +17,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
@@ -142,6 +144,12 @@ public final class BlockPlacer {
     }
 
     private static Begin farmland(SpiritEntity spirit, Level level, BlockPos target) {
+        if (level.getBlockState(target).isAir()) {
+            Begin laid = laySoil(spirit, level, target);
+            if (laid != null) {
+                return laid;
+            }
+        }
         if (new FarmActions(spirit).till(target)) {
             if (level instanceof ServerLevel server) {
                 PlacedBlocksData.get(server).markSpirit(target);
@@ -153,6 +161,34 @@ public final class BlockPlacer {
                 "тяпкой по " + target.toShortString() + " пашня не вышла: нужна земля или трава и пустая "
                         + "клетка сверху (в клетке " + BlockStates.idOf(level.getBlockState(target))
                         + ", сверху " + BlockStates.idOf(level.getBlockState(target.above())) + ")");
+    }
+
+    private static @Nullable Begin laySoil(SpiritEntity spirit, Level level, BlockPos target) {
+        Item soil = spirit.getInventory().countItem(Items.DIRT) > 0
+                ? Items.DIRT
+                : spirit.getInventory().countItem(Items.GRASS_BLOCK) > 0 ? Items.GRASS_BLOCK : null;
+        if (soil == null) {
+            return new Refused(
+                    RefuseReason.NO_MATERIAL,
+                    "тяпкой по " + target.toShortString() + " пашня не вышла: в клетке воздух, а земли "
+                            + "(dirt или grass_block) нет — пашню не из чего лепить");
+        }
+        BlockState soilState =
+                Items.DIRT.equals(soil) ? Blocks.DIRT.defaultBlockState() : Blocks.GRASS_BLOCK.defaultBlockState();
+        spirit.getInventory().removeItemType(soil, 1);
+        SpiritBlocks.place(
+                (ServerLevel) level,
+                target,
+                soilState,
+                spirit,
+                BuiltInRegistries.BLOCK.getKey(soilState.getBlock()).toString());
+        if (level.getBlockState(target).is(soilState.getBlock())) {
+            return null;
+        }
+        spirit.getInventory().addItem(new ItemStack(soil));
+        return new Refused(
+                RefuseReason.NO_SUPPORT,
+                "тяпкой по " + target.toShortString() + " пашня не вышла: подложенная земля не удержалась");
     }
 
     private @Nullable Begin placementGuard(Level level, BlockPos target, BlockState state, boolean supportRequired) {

@@ -35,6 +35,45 @@ public final class BuildScenesGameTests {
     }
 
     @GameTest(template = "arena", batch = "scene_build_mound", timeoutTicks = 400)
+    public static void buildScene_FarmlandOnAir_LaysSoilAndTills(GameTestHelper helper) {
+        GameTestFixtures.reset(helper);
+        for (int x = 0; x <= 10; x++) {
+            for (int z = 0; z <= 10; z++) {
+                helper.setBlock(x, 0, z, Blocks.STONE);
+            }
+        }
+        BlockPos target = new BlockPos(5, 1, 5);
+        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(4, 1, 4));
+        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_HOE));
+        spirit.getInventory().setItem(1, new ItemStack(Items.DIRT, 3));
+        BlockPos absolute = helper.absolutePos(target);
+        SpiritRun run = SpiritRun.launch(
+                helper,
+                spirit,
+                new ScriptCall(
+                        "place_block",
+                        Map.of(
+                                "block", "minecraft:farmland",
+                                "x", absolute.getX(),
+                                "y", absolute.getY(),
+                                "z", absolute.getZ())),
+                SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            run.assertStarted();
+            helper.assertTrue(
+                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "пашня над пустой клеткой обязана встать: сначала кладётся земля, затем тяпка, статус "
+                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + spirit.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    helper.getLevel().getBlockState(absolute).is(Blocks.FARMLAND),
+                    "в клетке обязана быть пашня, а не воздух: живой отказ «пашня не вышла (в клетке air)»");
+            GameTestFixtures.finish(helper);
+        });
+    }
+
+    @GameTest(template = "arena", batch = "scene_build_mound", timeoutTicks = 400)
     public static void buildScene_SealedMound_ClearsAndPlaces(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         for (int x = 0; x <= 10; x++) {
