@@ -7,6 +7,7 @@ import com.theminespirit.core.board.WarehouseChests;
 import com.theminespirit.core.board.WarehouseOrder;
 import com.theminespirit.core.board.WarehouseRules;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.YardScheme;
@@ -76,9 +77,50 @@ final class WarehouseLocations {
             return List.of();
         }
         return ChestSnapshots.positions(level).stream()
-                .filter(pos -> !cells.contains(pos))
-                .filter(pos -> !PlotCellStructure.plannedChest(level, pos))
+                .filter(pos -> ChestDemolition.removable(level, pos))
                 .toList();
+    }
+
+    static boolean planned(ServerLevel level, BoardLedger ledger, BlockCoord cell) {
+        if (yardCells(level).contains(cell)
+                || cells(level, ledger).contains(cell)
+                || PlotCellStructure.plannedChest(level, cell)) {
+            return true;
+        }
+        WarehouseOrder order = WarehouseOrderStore.get(level).order();
+        if (order != null && WarehouseChests.cells(order.site(), order.level()).contains(cell)) {
+            return true;
+        }
+        Optional<TownPlan> town = SettlementPlotStore.get(level).town();
+        Optional<StageSite> site = SettlementPlotStore.liveSite(level);
+        if (town.isEmpty() || site.isEmpty()) {
+            return false;
+        }
+        for (var place : town.orElseThrow().placements()) {
+            if (!place.mask().contains(cell.x(), cell.z())) {
+                continue;
+            }
+            Optional<StageCatalog.Entry> entry = StageCatalog.entry(place.id());
+            if (entry.isEmpty()) {
+                continue;
+            }
+            BlockCoord origin = StageCatalog.origin(
+                            place.id(),
+                            town.orElseThrow(),
+                            site.orElseThrow().anchor().y())
+                    .orElseThrow();
+            var schematic = DataTables.INSTANCE
+                    .presets()
+                    .current()
+                    .byId(entry.orElseThrow().scheme())
+                    .orElseThrow()
+                    .schematic();
+            if (schematic.entries(origin).stream()
+                    .anyMatch(block -> block.pos().equals(cell) && block.block().endsWith("chest"))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     static @Nullable TownPlan town(ServerLevel level) {

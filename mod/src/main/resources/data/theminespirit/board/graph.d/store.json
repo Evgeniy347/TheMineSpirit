@@ -134,7 +134,7 @@
         {
           "id": "demolish_chest",
           "case": "DISMANTLE_SHELTER",
-          "base": 62,
+          "base": 82,
           "consumes": {},
           "implemented": true
         }

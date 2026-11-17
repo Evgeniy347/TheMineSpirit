@@ -117,7 +117,22 @@ final class ClearBlocked {
         return new Sweep(leftover, unsafe, noStand, unreachable, 0, 0);
     }
 
-    Sweep approachFailure(BlockCoord target, BlockCoord stand, String refusal) {
+    void approachFailure(ClearAreaSession session) {
+        boolean exhausted = session.approachFailures.recordFailure(session.currentStand, session.currentTarget);
+        boolean retry =
+                !exhausted || (session.scaffold != null && session.scaffold.request(List.of(session.currentTarget)));
+        if (retry) {
+            BlockCoord target = session.currentTarget;
+            session.releaseCurrent();
+            session.remaining.add(0, target);
+        } else {
+            session.apply(approachFailure(session.currentTarget, session.currentStand, session.approach.refusal()));
+            session.releaseCurrent();
+        }
+        session.state = ClearAreaSession.State.PICK;
+    }
+
+    private Sweep approachFailure(BlockCoord target, BlockCoord stand, String refusal) {
         String reason = "срыв подхода к стоянке " + stand + ":" + (refusal == null ? " без причины" : " " + refusal);
         ClearSummary.Leftover step =
                 new ClearSummary.Leftover(target, blockAt(target), reason, cells.noteFailure(target));

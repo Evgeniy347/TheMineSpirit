@@ -25,6 +25,7 @@ final class ScaffoldReach {
     private final String what;
     private @Nullable TaskRunner acquire;
     private int acquireRise;
+    private boolean prepareOnly;
     private @Nullable ScaffoldClimb climb;
     private @Nullable LeaseRun lease;
     private final ScaffoldTrail scaffold = new ScaffoldTrail();
@@ -42,13 +43,23 @@ final class ScaffoldReach {
         this.what = what;
     }
 
+    Result prepare(int rise) {
+        prepareOnly = true;
+        return acquire(rise);
+    }
+
     Result climb(int rise) {
+        prepareOnly = false;
+        return acquire(rise);
+    }
+
+    private Result acquire(int rise) {
         if (rise < 1) {
             return failed("подъём высотой " + rise + ": столб строят хотя бы на один блок");
         }
         acquireRise = rise;
         if (PillarColumn.count(spirit, DIRT) >= rise) {
-            return raise(rise);
+            return prepareOnly ? Result.DONE : raise(rise);
         }
         acquire = TaskRunner.start(
                 new ScriptCall("acquire", Map.of("item", DIRT, "count", rise)),
@@ -129,6 +140,23 @@ final class ScaffoldReach {
         return Result.DONE;
     }
 
+    Result settle() {
+        if (spirit.onGround()) {
+            landingTicks = 0;
+            return Result.DONE;
+        }
+        if (++landingTicks > LANDING_TICKS) {
+            return failed("дух не приземлился после работы с подмостями за " + LANDING_TICKS + " тиков");
+        }
+        return Result.RUNNING;
+    }
+
+    void suspend() {
+        if (acquire != null) {
+            acquire.suspend();
+        }
+    }
+
     void cancel() {
         if (acquire != null) {
             acquire.cancel();
@@ -171,7 +199,7 @@ final class ScaffoldReach {
                             + runner.failureReason().orElse("причина неизвестна"),
                     runner.failureFact().orElse(FailureFact.NO_MATERIAL));
         }
-        return raise(acquireRise);
+        return prepareOnly ? Result.DONE : raise(acquireRise);
     }
 
     private Result tickClimb() {

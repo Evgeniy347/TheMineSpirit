@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLedger;
+import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.CaseMaterials;
@@ -17,6 +18,9 @@ import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.StageWork;
 import com.theminespirit.neoforge.SettlementChestStore;
+import com.theminespirit.neoforge.inventory.ContainerAccess;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
+import com.theminespirit.neoforge.policy.PolicyConfig;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +34,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import org.slf4j.Logger;
 
-final class ChestDemolition {
+public final class ChestDemolition {
     static final String EVENT = "demolish_chest";
     private static final String TICKET = "demolish_chest:";
     private static final String CHEST = "warehouse_chest:";
@@ -39,6 +43,24 @@ final class ChestDemolition {
     private static final StateChangeLog CHANGES = new StateChangeLog();
 
     private ChestDemolition() {}
+
+    public static boolean removable(ServerLevel level, BlockCoord at) {
+        BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
+        if (!(ContainerAccess.inspect(level, pos) instanceof ContainerAccess.Opened)) {
+            return false;
+        }
+        BoardLedger ledger = BoardRegistry.get(level).board().ledger();
+        for (BlockCoord cell : chestCells(level, at)) {
+            BlockPos block = new BlockPos(cell.x(), cell.y(), cell.z());
+            if (WarehouseLocations.planned(level, ledger, cell)
+                    || PlacedBlocksData.get(level).isMarked(block)
+                    || PolicyConfig.zones()
+                            .contains(level.dimension().location().toString(), cell)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     static boolean pending(ServerLevel level, BoardService service) {
         BoardLedger ledger = service.board().ledger();
@@ -66,7 +88,7 @@ final class ChestDemolition {
         if (cells.isEmpty()) {
             return true;
         }
-        if (busy(post)) {
+        if (busy(post, TICKET)) {
             return true;
         }
         List<BlockCoord> extras = new ArrayList<>(WarehouseLocations.extras(post.level, ledger));
@@ -75,8 +97,9 @@ final class ChestDemolition {
         List<ContainerSnapshot> warehouse = ChestSnapshots.read(post.level, List.copyOf(cells));
         List<BlockCoord> emptyCells = emptyCells(post.level, cells);
         int planks = planks(post);
+        boolean expand = false;
         for (BlockCoord at : extras) {
-            Optional<ContainerSnapshot> snapshot = Optional.ofNullable(ChestSnapshots.snapshot(post.level, at));
+            Optional<ContainerSnapshot> snapshot = Optional.ofNullable(ChestSnapshots.forDemolition(post.level, at));
             if (snapshot.isEmpty()) {
                 continue;
             }
@@ -87,17 +110,20 @@ final class ChestDemolition {
                     continue;
                 }
                 case REMOVE -> {
-                    submit(post, ticket, at, ChestPlans.breakOnly(chestCells(post.level, at)), chest, decision);
-                    return true;
+                    if (submit(post, ticket, at, ChestPlans.breakOnly(chestCells(post.level, at)), chest, decision)) {
+                        return true;
+                    }
                 }
                 case DRAIN -> {
-                    submit(post, ticket, at, ChestPlans.demolish(chest, chestCells(post.level, at)), chest, decision);
-                    return true;
+                    BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
+                    TaskNode plan = ContainerAccess.open(post.level, pos) instanceof ContainerAccess.Opened
+                            ? ChestPlans.demolish(chest, chestCells(post.level, at))
+                            : ChestPlans.breakOnly(chestCells(post.level, at));
+                    if (submit(post, ticket, at, plan, chest, decision)) {
+                        return true;
+                    }
                 }
-                case ADD_CHEST -> {
-                    placeChest(post, ticket, emptyCells.get(0));
-                    return true;
-                }
+                case ADD_CHEST -> expand = true;
                 case WAIT -> {
                     if (CHANGES.changed("chest-wait:" + at, decision.reason())) {
                         LOGGER.info("[warehouse] сундук {} ждёт: {}", at, decision.reason());
@@ -105,10 +131,13 @@ final class ChestDemolition {
                 }
             }
         }
+        if (expand && !busy(post, CHEST)) {
+            placeChest(post, ticket, emptyCells.get(0));
+        }
         return true;
     }
 
-    private static void submit(
+    private static boolean submit(
             GraphPost post,
             GraphTickets.Ticket ticket,
             BlockCoord at,
@@ -121,22 +150,28 @@ final class ChestDemolition {
                         .map(cell -> new PlannedBlock(cell, "minecraft:air"))
                         .toList());
         String id = TICKET + at.x() + "," + at.y() + "," + at.z();
-        post.submit(
+        BoardOutcome outcome = post.submit(
                 post.ticket(
                         id,
                         BoardCase.DISMANTLE_SHELTER,
                         Optional.empty(),
-                        BoardRules.priorityOf(BoardCase.DISMANTLE_SHELTER),
+                        ticket.task().priority(),
                         ticket.id(),
                         Map.of()),
                 TicketTarget.at(at).withPlan(plan).withWork(work));
+        if (outcome != BoardOutcome.ACCEPTED) {
+            return false;
+        }
         LOGGER.info(
                 "[warehouse] сундук {}: {} (вещей {}, слотов нужно {} из {})",
                 at,
-                decision.reason(),
+                ContainerAccess.open(post.level, new BlockPos(at.x(), at.y(), at.z())) instanceof ContainerAccess.Opened
+                        ? decision.reason()
+                        : "крышка закрыта — сломать и сразу подобрать содержимое с разгрузкой на склад",
                 ChestClearance.moves(chest).size(),
                 decision.neededSlots(),
                 decision.freeSlots());
+        return true;
     }
 
     private static void placeChest(GraphPost post, GraphTickets.Ticket ticket, BlockCoord cell) {
@@ -155,9 +190,9 @@ final class ChestDemolition {
         LOGGER.info("[warehouse] склад полон: новый сундук ставится в клетку склада {}", cell);
     }
 
-    private static boolean busy(GraphPost post) {
+    private static boolean busy(GraphPost post, String prefix) {
         return post.service.board().tickets().stream()
-                .filter(ticket -> ticket.id().startsWith(TICKET) || ticket.id().startsWith(CHEST))
+                .filter(ticket -> ticket.id().startsWith(prefix))
                 .anyMatch(ticket -> {
                     BoardStatus status =
                             post.service.board().statusOf(ticket.id()).orElse(BoardStatus.DONE);

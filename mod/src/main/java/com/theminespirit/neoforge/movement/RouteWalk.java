@@ -62,7 +62,9 @@ public final class RouteWalk {
         if (passages.openToward(step.cell())) {
             return State.RUNNING;
         }
-        if ((step.action() == RouteStep.Action.WALK || step.action() == RouteStep.Action.SWIM)
+        if ((step.action() == RouteStep.Action.WALK
+                        || step.action() == RouteStep.Action.JUMP
+                        || step.action() == RouteStep.Action.SWIM)
                 && SwimStep.far(spirit, step.cell())) {
             return fail("дух сошёл с маршрута: шаг " + step.cell() + " дальше соседней клетки");
         }
@@ -80,6 +82,7 @@ public final class RouteWalk {
         Optional<String> refusal = switch (step.action()) {
             case SWIM -> swimmer.tick(step.cell()) ? advance() : Optional.<String>empty();
             case WALK -> walk(step.cell());
+            case JUMP -> jump(step.cell());
             case BREAK -> mutations.breakCell(pos(step.cell()));
             case PLACE -> mutations.placeCell(pos(step.cell()));
             case PILLAR -> mutations.pillar(step.cell());
@@ -166,6 +169,33 @@ public final class RouteWalk {
             spirit.setDeltaMovement(motion);
         }
         return Optional.empty();
+    }
+
+    private Optional<String> jump(BlockCoord cell) {
+        if (WalkAscent.next(cell, pose(), body(cell)).step() == WalkAscent.Step.ARRIVED) {
+            return advance();
+        }
+        spirit.getNavigation().stop();
+        spirit.getMoveControl().setWantedPosition(cell.x() + 0.5, cell.y(), cell.z() + 0.5, SPEED);
+        if (spirit.onGround() && atEdge(cell)) {
+            spirit.getJumpControl().jump();
+        }
+        return Optional.empty();
+    }
+
+    private boolean atEdge(BlockCoord cell) {
+        double edge = Double.MAX_VALUE;
+        int dx = Integer.signum(cell.x() - spirit.blockPosition().getX());
+        int dz = Integer.signum(cell.z() - spirit.blockPosition().getZ());
+        if (dx != 0) {
+            double x = spirit.getX();
+            edge = Math.min(edge, Math.abs(x - (dx > 0 ? Math.floor(x) + 1 : Math.floor(x))));
+        }
+        if (dz != 0) {
+            double z = spirit.getZ();
+            edge = Math.min(edge, Math.abs(z - (dz > 0 ? Math.floor(z) + 1 : Math.floor(z))));
+        }
+        return edge < 0.3;
     }
 
     private void pushOff(WalkAscent.Command command) {

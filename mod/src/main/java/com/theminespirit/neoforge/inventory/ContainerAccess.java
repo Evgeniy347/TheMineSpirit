@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.ChestType;
 
 public final class ContainerAccess {
     private static final IdFilter ALLOWED = IdFilter.of(
@@ -32,6 +33,17 @@ public final class ContainerAccess {
     }
 
     public static Open open(Level level, BlockPos pos) {
+        return read(level, pos, false);
+    }
+
+    public static Open inspect(Level level, BlockPos pos) {
+        return read(level, pos, true);
+    }
+
+    private static Open read(Level level, BlockPos pos, boolean ignoreLid) {
+        if (!level.isLoaded(pos)) {
+            return new Refused("контейнер в " + pos.toShortString() + " не загружен: содержимое неизвестно");
+        }
         BlockState state = level.getBlockState(pos);
         String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
         if (!ALLOWED.matches(id)) {
@@ -46,7 +58,25 @@ public final class ContainerAccess {
                     + "иначе дух забрал бы чужую добычу");
         }
         if (state.getBlock() instanceof ChestBlock chest) {
-            Container both = ChestBlock.getContainer(chest, state, level, pos, false);
+            if (state.getValue(ChestBlock.TYPE) != ChestType.SINGLE) {
+                BlockPos partner = pos.relative(ChestBlock.getConnectedDirection(state));
+                if (!level.isLoaded(partner)) {
+                    return new Refused("вторая половина сундука в " + partner.toShortString() + " не загружена");
+                }
+                BlockState other = level.getBlockState(partner);
+                if (!other.is(chest)
+                        || other.getValue(ChestBlock.TYPE) == ChestType.SINGLE
+                        || other.getValue(ChestBlock.TYPE) == state.getValue(ChestBlock.TYPE)
+                        || other.getValue(ChestBlock.FACING) != state.getValue(ChestBlock.FACING)) {
+                    return new Refused("вторая половина сундука в " + partner.toShortString() + " не образует пару");
+                }
+                if (!(level.getBlockEntity(partner) instanceof RandomizableContainerBlockEntity paired)
+                        || paired.getLootTable() != null) {
+                    return new Refused("вторая половина сундука в " + partner.toShortString()
+                            + " недоступна или хранит нераскрытую добычу структуры");
+                }
+            }
+            Container both = ChestBlock.getContainer(chest, state, level, pos, ignoreLid);
             if (both == null) {
                 return new Refused("сундук в " + pos.toShortString()
                         + " недоступен: нет блочной сущности сундука, проверьте, что блок стоит целиком");

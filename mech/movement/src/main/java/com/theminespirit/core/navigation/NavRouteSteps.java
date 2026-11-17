@@ -20,7 +20,7 @@ public final class NavRouteSteps {
         List<BlockCoord> positions = segmented.positions();
         List<RouteStep> steps = new ArrayList<>();
         for (int i = 1; i < positions.size(); i++) {
-            if (!append(world, steps, positions.get(i))) {
+            if (!append(world, steps, positions.get(i - 1), positions.get(i))) {
                 return new Route(
                         Route.Status.NONE,
                         List.of(),
@@ -48,7 +48,7 @@ public final class NavRouteSteps {
                 List.of());
     }
 
-    private static boolean append(NavWorld world, List<RouteStep> steps, BlockCoord next) {
+    private static boolean append(NavWorld world, List<RouteStep> steps, BlockCoord from, BlockCoord next) {
         boolean water = world.water(next.x(), next.y(), next.z()) || world.water(next.x(), next.y() + 1, next.z());
         if (!water) {
             BlockCoord head = new BlockCoord(next.x(), next.y() + 1, next.z());
@@ -61,7 +61,9 @@ public final class NavRouteSteps {
                 steps.add(new RouteStep(RouteStep.Action.BREAK, head));
             }
         }
-        steps.add(new RouteStep(water ? RouteStep.Action.SWIM : RouteStep.Action.WALK, next));
+        boolean jump = Math.abs(next.x() - from.x()) > 1 || Math.abs(next.z() - from.z()) > 1;
+        RouteStep.Action action = water ? RouteStep.Action.SWIM : jump ? RouteStep.Action.JUMP : RouteStep.Action.WALK;
+        steps.add(new RouteStep(action, next));
         return true;
     }
 

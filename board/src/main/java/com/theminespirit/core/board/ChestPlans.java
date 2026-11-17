@@ -96,19 +96,25 @@ public final class ChestPlans {
             }
         }
         for (BlockCoord cell : cells) {
+            steps.add(new ScriptCall("unload", Map.of(CONTAINER, target, "force", false)));
             steps.add(PlanSteps.clearStrict(cell));
+            steps.add(new ScriptCall(
+                    "collect_drops", Map.of(RADIUS, CatalogLimits.DROP_RADIUS_DEFAULT, "overflow", "return_to_base")));
         }
         return new SequenceNode(steps);
     }
 
     public static TaskNode breakOnly(List<BlockCoord> cells) {
-        Objects.requireNonNull(cells, "Клетки пустого сундука не могут быть null: ломать нечего");
+        Objects.requireNonNull(cells, "Клетки сундука не могут быть null: ломать нечего");
         if (cells.isEmpty()) {
-            throw new IllegalArgumentException("У пустого сундука нет ни одной клетки: ломать нечего");
+            throw new IllegalArgumentException("У сундука нет ни одной клетки: ломать нечего");
         }
         List<TaskNode> steps = new ArrayList<>(cells.size());
         for (BlockCoord cell : cells) {
+            steps.add(MorePlans.unload(false));
             steps.add(PlanSteps.clearStrict(cell));
+            steps.add(new ScriptCall(
+                    "collect_drops", Map.of(RADIUS, CatalogLimits.DROP_RADIUS_DEFAULT, "overflow", "return_to_base")));
         }
         return new SequenceNode(steps);
     }

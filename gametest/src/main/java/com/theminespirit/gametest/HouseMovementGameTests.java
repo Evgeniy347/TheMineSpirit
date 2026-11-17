@@ -116,6 +116,7 @@ public final class HouseMovementGameTests {
                                 8)),
                 SETTLE_TICKS);
 
+        RouteGapScene[] gaps = new RouteGapScene[1];
         helper.succeedWhen(() -> {
             run.assertStarted();
             helper.assertTrue(
@@ -127,10 +128,8 @@ public final class HouseMovementGameTests {
                                     .subtract(helper.absolutePos(BlockPos.ZERO))
                                     .toShortString()
                             + "; " + broken);
-            if (helper.getBlockEntity(supply.base()) instanceof Container container) {
-                container.clearContent();
-            }
-            DemoAuditGameTests.clearArea(helper, floorSize, clearHeight);
+            gaps[0] = gaps[0] != null ? gaps[0] : RouteGapScene.start(helper, supply.base(), floorSize, clearHeight);
+            gaps[0].assertDone();
             GameTestFixtures.finish(helper, clearHeight);
         });
     }

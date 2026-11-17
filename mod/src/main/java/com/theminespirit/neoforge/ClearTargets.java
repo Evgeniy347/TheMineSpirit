@@ -48,11 +48,6 @@ final class ClearTargets {
         remaining.addAll(left);
     }
 
-    @Nullable
-    BlockCoord highestWork(List<BlockCoord> remaining) {
-        return ClearScaffold.highest(work(remaining));
-    }
-
     List<BlockCoord> work(List<BlockCoord> remaining) {
         List<BlockCoord> work = new ArrayList<>(remaining.size());
         for (BlockCoord cell : remaining) {

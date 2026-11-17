@@ -25,7 +25,7 @@ class ChestPlansTests {
 
         List<String> scripts = calls.stream().map(ScriptCall::script).toList();
         assertEquals(
-                List.of("withdraw", "withdraw", "deposit", "deposit", "clear_area"),
+                List.of("withdraw", "withdraw", "deposit", "deposit", "unload", "clear_area", "collect_drops"),
                 scripts,
                 "Непустой сундук: все предметы вынесены в склад одним заходом, и только потом сломан: " + scripts);
         assertTrue(
@@ -55,9 +55,9 @@ class ChestPlansTests {
         assertEquals("withdraw", scripts.get(19), "Все 20 заборов идут подряд, до первого похода на склад: " + scripts);
         assertEquals("deposit", scripts.get(20), "После забора — перенос на склад: " + scripts);
         assertEquals(
-                41,
+                43,
                 scripts.size(),
-                "На 20 типов — 20 заборов, 20 переносов и один слом, а не поход на каждый тип: " + scripts);
+                "На 20 типов — 20 заборов, 20 переносов, подготовка инвентаря, слом и подбор сундука: " + scripts);
     }
 
     @Test
@@ -73,7 +73,7 @@ class ChestPlansTests {
 
         List<String> scripts = calls.stream().map(ScriptCall::script).toList();
         assertEquals(
-                List.of("withdraw", "withdraw", "deposit", "deposit", "clear_area"),
+                List.of("withdraw", "withdraw", "deposit", "deposit", "unload", "clear_area", "collect_drops"),
                 scripts,
                 "300 грязи не влезают в предел скрипта 256: два забора и два переноса, фазы не перемешиваются: "
                         + scripts);
@@ -84,7 +84,23 @@ class ChestPlansTests {
         List<ScriptCall> calls = calls(ChestPlans.demolish(snapshot(), List.of(CHEST)));
 
         assertEquals(
-                List.of("clear_area"), calls.stream().map(ScriptCall::script).toList(), "Пустой сундук ломают");
+                List.of("unload", "clear_area", "collect_drops"),
+                calls.stream().map(ScriptCall::script).toList(),
+                "До слома освобождают переполненный инвентарь, затем ломают сундук и сразу подбирают его предмет");
+    }
+
+    @Test
+    void demolish_ExplicitDestination_PreparesInventoryAtSameChest() {
+        BlockCoord destination = new BlockCoord(20, 64, 20);
+
+        List<ScriptCall> calls = calls(ChestPlans.demolish(snapshot(), List.of(CHEST), destination));
+
+        assertEquals("unload", calls.get(0).script(), "Разгрузка предшествует слому");
+        assertEquals(
+                "20,64,20",
+                calls.get(0).params().get("container"),
+                "Явно заданный склад используется и для подготовки инвентаря");
+        assertEquals(false, calls.get(0).params().get("force"), "Свободный инвентарь не требует разгрузки");
     }
 
     @Test
@@ -130,8 +146,23 @@ class ChestPlansTests {
 
         List<ScriptCall> calls = calls(ChestPlans.breakOnly(List.of(CHEST, partner)));
 
-        assertEquals(2, calls.size(), "Двойной сундук ломается обеими клетками: иначе осталась бы половина");
-        assertTrue(calls.stream().allMatch(call -> "clear_area".equals(call.script())), "Ломают, а не выносят");
+        assertEquals(
+                List.of("unload", "clear_area", "collect_drops", "unload", "clear_area", "collect_drops"),
+                calls.stream().map(ScriptCall::script).toList(),
+                "Перед каждой половиной готовят инвентарь, после неё сразу подбирают содержимое");
+        for (int index : List.of(0, 3)) {
+            assertEquals("warehouse", calls.get(index).params().get("container"), "Излишек сдаётся на склад");
+            assertEquals(false, calls.get(index).params().get("force"), "Свободный инвентарь не требует разгрузки");
+        }
+        for (int index : List.of(2, 5)) {
+            assertEquals(
+                    "return_to_base",
+                    calls.get(index).params().get("overflow"),
+                    "При переполнении вещи относят на склад, а не выбрасывают ради более дорогих");
+            assertTrue(
+                    ((Number) calls.get(index).params().get("radius")).intValue() >= 5,
+                    "Подбор охватывает сундук, сломанный с расстояния рук, и разлёт содержимого");
+        }
     }
 
     private static ContainerSnapshot snapshot(Stack... stacks) {

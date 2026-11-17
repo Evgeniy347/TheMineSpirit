@@ -5,6 +5,7 @@ import com.theminespirit.core.board.lease.Lease;
 import com.theminespirit.core.board.lease.LeaseStatus;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.neoforge.ModEntities;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.lease.LeaseData;
@@ -152,18 +153,25 @@ public final class ClearScaffoldScenesGameTests {
             helper.setBlock(firstColumn.above(dy), Blocks.DIRT);
             helper.setBlock(secondColumn.above(dy), Blocks.DIRT);
         }
-        SpiritEntity first = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(3, 1, 3));
+        SpiritEntity first = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(7, 1, 2));
         SpiritEntity second = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(7, 1, 6));
         first.getInventory().addItem(new ItemStack(Items.IRON_SHOVEL));
         first.getInventory().addItem(new ItemStack(Items.DIRT, TALL + 4));
         second.getInventory().addItem(new ItemStack(Items.IRON_SHOVEL));
         second.getInventory().addItem(new ItemStack(Items.DIRT, TALL + 4));
         SpiritRun firstRun = SpiritRun.launch(
-                helper, first, clearCall(helper, new BlockPos(1, 1, 2), new BlockPos(3, TALL + 1, 4)), 1);
+                helper,
+                first,
+                new SequenceNode(List.of(
+                        clearCall(helper, firstColumn.above(TALL - 1), firstColumn.above(TALL - 1)),
+                        clearCall(helper, new BlockPos(1, 1, 2), new BlockPos(3, TALL + 1, 4)))),
+                1);
         SpiritRun secondRun = SpiritRun.launch(
                 helper, second, clearCall(helper, new BlockPos(5, 1, 5), new BlockPos(7, TALL + 1, 7)), 1);
 
+        boolean[] usedThirdBlock = {false};
         helper.succeedWhen(() -> {
+            usedThirdBlock[0] |= helper.getBlockState(new BlockPos(5, 1, 3)).is(Blocks.DIRT);
             CraftTestSupport.assertFinished(helper, first, firstRun, RunStatus.SUCCEEDED);
             CraftTestSupport.assertFinished(helper, second, secondRun, RunStatus.SUCCEEDED);
             for (int dy = 0; dy < TALL; dy++) {
@@ -178,8 +186,8 @@ public final class ClearScaffoldScenesGameTests {
                         "второй высокий столб разобран сверху вниз: в " + two + " остался "
                                 + helper.getBlockState(two));
             }
-            assertNoScaffold(helper, new BlockPos(1, 1, 2), new BlockPos(3, TALL + 1, 4));
-            assertNoScaffold(helper, new BlockPos(5, 1, 5), new BlockPos(7, TALL + 1, 7));
+            helper.assertTrue(usedThirdBlock[0], "Для далёкой верхушки использовано основание в трёх блоках от цели");
+            assertNoScaffold(helper, new BlockPos(0, 1, 0), new BlockPos(8, TALL + 1, 8));
             for (SpiritEntity spirit : List.of(first, second)) {
                 List<Lease> scaffolds = LeaseData.get(helper.getLevel()).book().all().stream()
                         .filter(lease -> "scaffold".equals(lease.purpose()) && lease.ownedBy(spirit.getUUID()))
@@ -191,7 +199,9 @@ public final class ClearScaffoldScenesGameTests {
                         scaffolds.stream().allMatch(lease -> lease.status() == LeaseStatus.DONE),
                         "каждая подмость закрыта DONE на земле, а не осталась ACTIV/ORPHANED: " + scaffolds);
                 helper.assertTrue(
-                        spirit.getY() <= 1.5,
+                        spirit.onGround()
+                                && spirit.getY()
+                                        <= helper.absolutePos(firstColumn).getY() + 0.5,
                         "дух спустился по своим подмостям на землю: стоит на " + spirit.blockPosition());
             }
             first.discard();
@@ -206,9 +216,9 @@ public final class ClearScaffoldScenesGameTests {
                 for (int z = low.getZ(); z <= high.getZ(); z++) {
                     BlockPos cell = new BlockPos(x, y, z);
                     helper.assertTrue(
-                            helper.getLevel().getBlockState(cell).isAir(),
+                            helper.getBlockState(cell).isAir(),
                             "после расчистки в ящике не остаётся подмостей-столбов: в " + cell + " стоит "
-                                    + helper.getLevel().getBlockState(cell));
+                                    + helper.getBlockState(cell));
                 }
             }
         }

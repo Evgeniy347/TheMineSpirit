@@ -80,14 +80,23 @@ public final class WarehouseGameTests {
         SpiritRun[] drain = new SpiritRun[1];
         BlockPos[] sourcePos = new BlockPos[1];
         BlockPos[] warehousePos = new BlockPos[1];
+        ChestSalvageScene[] salvage = new ChestSalvageScene[1];
+        boolean[] drained = {false};
 
         helper.succeedWhen(() -> {
-            run.assertStarted();
-            assertWarehouseBuilt(helper, spirit, schematic, anchor);
             if (drain[0] == null) {
+                run.assertStarted();
+                assertWarehouseBuilt(helper, spirit, schematic, anchor);
                 drainChest(helper, spirit, drain, sourcePos, warehousePos);
             }
-            assertDrainDone(helper, spirit, drain[0], sourcePos[0], warehousePos[0]);
+            if (!drained[0]) {
+                assertDrainDone(helper, spirit, drain[0], sourcePos[0], warehousePos[0]);
+                drained[0] = true;
+            }
+            if (salvage[0] == null) {
+                salvage[0] = new ChestSalvageScene(helper, spirit);
+            }
+            salvage[0].assertDone();
             GameTestFixtures.finish(helper);
         });
     }

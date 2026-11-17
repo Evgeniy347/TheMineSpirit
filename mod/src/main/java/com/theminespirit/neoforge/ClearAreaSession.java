@@ -70,6 +70,7 @@ public class ClearAreaSession {
     final TreeFelling felling;
     private final Map<State, Integer> phaseTicks = new EnumMap<>(State.class);
     private ClearAreaRun run;
+    ClearScaffoldWork scaffold;
 
     public ClearAreaSession(SpiritEntity spirit, BuildBox box) {
         this(spirit, box, false);

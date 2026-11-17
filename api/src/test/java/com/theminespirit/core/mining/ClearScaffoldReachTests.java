@@ -1,9 +1,11 @@
 package com.theminespirit.core.mining;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
-import java.util.Optional;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class ClearScaffoldReachTests {
@@ -32,27 +34,26 @@ class ClearScaffoldReachTests {
     }
 
     @Test
-    void pillarSpot_StandingOnWalkway_MovesBesideIt() {
-        BlockCoord feet = new BlockCoord(-176, 68, -517);
-        Optional<BlockCoord> spot = ClearScaffold.pillarSpot(feet, TOP, cell -> cell.x() == -176, cell -> true, 2);
-
+    void bases_ThirdBlockAndDiagonal_StaysWithinCircularReach() {
+        BlockCoord feet = new BlockCoord(-10, 64, 0);
+        BlockCoord target = new BlockCoord(0, 70, 0);
+        List<BlockCoord> bases = ClearScaffold.bases(feet, target, 3);
+        assertTrue(
+                bases.contains(new BlockCoord(-3, 64, 0)),
+                "Основание в трёх блоках от цели допускается к проверке пути и видимости: прежний радиус два терял безопасные площадки");
+        assertFalse(
+                bases.contains(new BlockCoord(3, 64, 3)),
+                "Диагональ 3×3 вне радиуса три: квадратный поиск давал подмости, с которых дух не дотягивается");
+        assertTrue(
+                bases.stream().noneMatch(cell -> cell.x() == target.x() && cell.z() == target.z()),
+                "Столб нельзя строить в колонке цели: иначе потолок перекроет прыжок и дух застрянет");
         assertEquals(
-                Optional.of(new BlockCoord(-177, 68, -517)),
-                spot,
-                "Дух на тропе плана — столб ставится рядом, не на проходе: стоянка на тропе дороже");
-    }
-
-    @Test
-    void pillarSpot_OffWalkwayOrNoSpot_StaysPut() {
-        BlockCoord feet = new BlockCoord(-176, 68, -517);
-
+                new BlockCoord(-3, 64, 0),
+                bases.get(0),
+                "Ближайшее основание проверяется первым, а не дальняя сторона цели; порядок влияет на лишние обходы");
         assertEquals(
-                Optional.empty(),
-                ClearScaffold.pillarSpot(feet, TOP, cell -> false, cell -> true, 2),
-                "Дух не на тропе — столб там, где стоит");
-        assertEquals(
-                Optional.empty(),
-                ClearScaffold.pillarSpot(feet, TOP, cell -> true, cell -> true, 2),
-                "Вокруг одна тропа — столб на тропе допускается (дороже, но иначе цель не достать)");
+                196,
+                bases.size(),
+                "Радиус три даёт 28 колонок на семи уровнях: ограничение удерживает стоимость поиска и не расширяется до всего мира");
     }
 }

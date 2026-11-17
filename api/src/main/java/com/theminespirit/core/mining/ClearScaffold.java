@@ -88,30 +88,26 @@ public final class ClearScaffold {
         return onOwnScaffold ? Decision.of(Action.DESCEND) : Decision.of(Action.WORK);
     }
 
-    public static Optional<BlockCoord> pillarSpot(
-            BlockCoord feet,
-            BlockCoord highest,
-            Predicate<BlockCoord> walkway,
-            Predicate<BlockCoord> standable,
-            int reach) {
-        Objects.requireNonNull(feet, "Клетка ног не может быть null: от неё ищется место столба");
-        Objects.requireNonNull(highest, "Верхняя цель не может быть null: столб ставят у её колонки");
-        if (!walkway.test(feet)) {
-            return Optional.empty();
-        }
-        BlockCoord best = null;
-        int bestDistance = Integer.MAX_VALUE;
-        for (int dx = -reach; dx <= reach; dx++) {
-            for (int dz = -reach; dz <= reach; dz++) {
-                BlockCoord spot = new BlockCoord(highest.x() + dx, feet.y(), highest.z() + dz);
-                int distance = Math.abs(spot.x() - feet.x()) + Math.abs(spot.z() - feet.z());
-                if ((dx != 0 || dz != 0) && distance < bestDistance && !walkway.test(spot) && standable.test(spot)) {
-                    best = spot;
-                    bestDistance = distance;
+    public static List<BlockCoord> bases(BlockCoord feet, BlockCoord target, int radius) {
+        List<BlockCoord> bases = new ArrayList<>();
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                if (dx * dx + dz * dz > radius * radius || (dx == 0 && dz == 0)) {
+                    continue;
+                }
+                for (int y = feet.y() - radius; y <= Math.min(feet.y() + radius, target.y() - 1); y++) {
+                    bases.add(new BlockCoord(target.x() + dx, y, target.z() + dz));
                 }
             }
         }
-        return Optional.ofNullable(best);
+        bases.sort(Comparator.comparingLong((BlockCoord cell) -> {
+                    long dx = (long) cell.x() - feet.x();
+                    long dy = (long) cell.y() - feet.y();
+                    long dz = (long) cell.z() - feet.z();
+                    return dx * dx + dy * dy + dz * dz;
+                })
+                .thenComparing(Comparator.naturalOrder()));
+        return List.copyOf(bases);
     }
 
     public static @Nullable BlockCoord highest(List<BlockCoord> cells) {

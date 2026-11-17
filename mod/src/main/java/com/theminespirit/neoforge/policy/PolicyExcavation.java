@@ -10,11 +10,13 @@ import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.BuildPlanOwner;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.board.ChestDemolition;
 import com.theminespirit.neoforge.board.PlotBreakLog;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
@@ -46,6 +48,25 @@ final class PolicyExcavation {
 
     static BlockProtection.Decision demolish(ProtectionGate gate, SpiritEntity spirit, BlockPos pos, BlockState state) {
         PlanBuilding ownBuilding = BuildPlanOwner.of(spirit);
+        if (state.getBlock() instanceof ChestBlock && spirit.level() instanceof ServerLevel server) {
+            BlockCoord cell = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+            if (!ChestDemolition.removable(server, cell)) {
+                return new BlockProtection.Refused(
+                        PolicyId.PROTECTED_BLOCKS,
+                        "сундук или его вторая половина входит в план, защищён игроком либо содержимое неизвестно");
+            }
+            PlanBuilding building = planBuilding(server, cell);
+            if (building != PlanBuilding.NONE) {
+                return gate.decide(
+                        pos,
+                        state,
+                        false,
+                        true,
+                        building,
+                        PlotProtection.Action.BREAK,
+                        PlotProtection.Ground.PLAN_DEMOLISH);
+            }
+        }
         if (spirit.level() instanceof ServerLevel server
                 && PlacedBlocksData.get(server).isSpiritMarked(pos)
                 && !foreignPlan(server, pos, ownBuilding)) {

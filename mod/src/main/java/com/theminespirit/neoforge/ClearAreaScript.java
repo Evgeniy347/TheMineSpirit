@@ -38,6 +38,7 @@ final class ClearAreaScript implements ScriptInstance {
                 params.demolish(),
                 params.keepGround());
         this.scaffold = new ClearScaffoldWork(spirit, session);
+        this.session.scaffold = scaffold;
     }
 
     @Override
@@ -149,6 +150,7 @@ final class ClearAreaScript implements ScriptInstance {
         if (restock != null) {
             restock.suspend();
         }
+        scaffold.suspend();
         session.suspend();
     }
 

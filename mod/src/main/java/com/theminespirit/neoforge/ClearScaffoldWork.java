@@ -1,16 +1,11 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.mining.ClearOrder;
-import com.theminespirit.core.mining.ClearScaffold;
-import com.theminespirit.core.mining.MiningTuning;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.neoforge.board.PlanWalkways;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
+import java.util.Set;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 final class ClearScaffoldWork {
     enum Result {
@@ -20,13 +15,14 @@ final class ClearScaffoldWork {
         DONE
     }
 
-    private static final int COLUMN_REACH = 2;
-    private static final double SPOT_ARRIVAL = 0.6;
+    private static final double SPOT_ARRIVAL = 0.25;
     private final SpiritEntity spirit;
     private final ClearAreaSession session;
-    private final ScaffoldReach reach;
+    private ScaffoldReach reach;
+    private final Set<ScaffoldAccess.Plan> tried = new HashSet<>();
+    private ScaffoldAccess.@Nullable Plan pending;
     private boolean descendTried;
-    private boolean relocated;
+    private boolean preparing;
     private boolean moving;
 
     ClearScaffoldWork(SpiritEntity spirit, ClearAreaSession session) {
@@ -36,91 +32,123 @@ final class ClearScaffoldWork {
     }
 
     Result tick() {
+        if (session.outcome() == ClearAreaSession.Outcome.FAILED) {
+            cancel();
+            return Result.FAILED;
+        }
         if (moving) {
-            if (session.approach.tick() == Approach.State.MOVING) {
-                return Result.RUNNING;
-            }
-            moving = false;
+            return approach();
         }
         ScaffoldReach.Result work = reach.tick();
+        if (work == ScaffoldReach.Result.DONE && reach.climbed()) {
+            work = reach.settle();
+        }
         if (work == ScaffoldReach.Result.RUNNING) {
             return Result.RUNNING;
         }
         if (work == ScaffoldReach.Result.FAILED) {
+            cancel();
             session.fail(reach.failureReason());
             return Result.FAILED;
         }
-        if (session.outcome() == ClearAreaSession.Outcome.FAILED) {
-            reach.cancel();
-            return Result.FAILED;
+        ScaffoldAccess.Plan plan = pending;
+        if (preparing && plan != null) {
+            preparing = false;
+            BlockCoord at = plan.base();
+            session.approach.beginWithRoutes(new Vec3(at.x() + 0.5, at.y(), at.z() + 0.5), SPOT_ARRIVAL);
+            moving = true;
+            return Result.RUNNING;
         }
+        releaseBase();
         if (session.outcome() == ClearAreaSession.Outcome.SUCCEEDED) {
             return finish();
         }
-        if (!session.picking()) {
-            return Result.IDLE;
+        if (session.picking() && PillarDownScript.ownBelow(spirit)) {
+            List<BlockCoord> cells = session.targets.work(session.remaining);
+            if (!cells.isEmpty() && cells.stream().allMatch(cell -> cell.y() < spirit.getBlockY())) {
+                return stepDown();
+            }
         }
-        ClearScaffold.Decision decision = decide();
-        return switch (decision.action()) {
-            case CLIMB -> climb(decision.height());
-            case DESCEND -> stepDown();
-            default -> Result.IDLE;
-        };
+        return Result.IDLE;
+    }
+
+    boolean request(List<BlockCoord> cells) {
+        ScaffoldAccess.Plan plan = ScaffoldAccess.find(session, session.targets.work(cells), tried);
+        if (plan == null) {
+            return false;
+        }
+        if (reach.climbed()
+                && PillarDownScript.ownBelow(spirit)
+                && !spirit.blockPosition().equals(ClearAreaSession.toPos(plan.base()))) {
+            descendTried = true;
+            if (reach.descend() == ScaffoldReach.Result.FAILED) {
+                session.fail(reach.failureReason());
+            }
+            return true;
+        }
+        if (reach.climbed() && !PillarDownScript.ownBelow(spirit)) {
+            reach.cancel();
+            reach = new ScaffoldReach(spirit, "высокая клетка");
+            descendTried = false;
+        }
+        tried.add(plan);
+        pending = plan;
+        session.reservations.reserve(plan.base(), spirit.getUUID());
+        preparing = true;
+        if (reach.prepare(plan.height()) == ScaffoldReach.Result.FAILED) {
+            session.fail(reach.failureReason());
+        }
+        return true;
+    }
+
+    void suspend() {
+        reach.suspend();
     }
 
     void cancel() {
         reach.cancel();
+        session.approach.cancel();
+        releaseBase();
+        moving = false;
+        preparing = false;
     }
 
-    private ClearScaffold.Decision decide() {
-        BlockPos feet = spirit.blockPosition();
-        List<BlockCoord> work = session.targets.work(session.remaining);
-        return ClearScaffold.step(
-                new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
-                ClearOrder.topmost(work, cell -> true),
-                MiningTuning.MAX_STAND_RISE,
-                PillarDownScript.ownBelow(spirit),
-                COLUMN_REACH);
-    }
-
-    private Result climb(int rise) {
-        if (!relocated && relocate()) {
+    private Result approach() {
+        Approach.State state = session.approach.tick();
+        if (state == Approach.State.MOVING) {
             return Result.RUNNING;
         }
-        ScaffoldReach.Result started = reach.climb(rise);
-        if (started == ScaffoldReach.Result.FAILED) {
+        moving = false;
+        ScaffoldAccess.Plan plan = pending;
+        if (state != Approach.State.ARRIVED
+                || plan == null
+                || !spirit.blockPosition().equals(ClearAreaSession.toPos(plan.base()))
+                || !spirit.onGround()
+                || !ScaffoldAccess.safe(session, plan)) {
+            session.approach.cancel();
+            releaseBase();
+            return Result.IDLE;
+        }
+        if (PillarColumn.count(spirit, "minecraft:dirt") < plan.height()) {
+            preparing = true;
+            if (reach.prepare(plan.height()) == ScaffoldReach.Result.FAILED) {
+                session.fail(reach.failureReason());
+                return Result.FAILED;
+            }
+            return Result.RUNNING;
+        }
+        if (reach.climb(plan.height()) == ScaffoldReach.Result.FAILED) {
             session.fail(reach.failureReason());
             return Result.FAILED;
         }
         return Result.RUNNING;
     }
 
-    private boolean relocate() {
-        relocated = true;
-        BlockCoord top = session.targets.highestWork(session.remaining);
-        if (top == null || !(spirit.level() instanceof ServerLevel level)) {
-            return false;
+    private void releaseBase() {
+        if (pending != null) {
+            session.reservations.release(pending.base(), spirit.getUUID());
+            pending = null;
         }
-        BlockPos feet = spirit.blockPosition();
-        Optional<BlockCoord> spot = ClearScaffold.pillarSpot(
-                new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
-                top,
-                cell -> PlanWalkways.on(level, cell.x(), cell.z()),
-                cell -> standable(level, new BlockPos(cell.x(), cell.y(), cell.z())),
-                COLUMN_REACH);
-        if (spot.isEmpty()) {
-            return false;
-        }
-        BlockCoord at = spot.orElseThrow();
-        session.approach.beginWithRoutes(new Vec3(at.x() + 0.5, at.y(), at.z() + 0.5), SPOT_ARRIVAL);
-        moving = true;
-        return true;
-    }
-
-    private static boolean standable(ServerLevel level, BlockPos at) {
-        return level.getBlockState(at).isAir()
-                && level.getBlockState(at.above()).isAir()
-                && level.getBlockState(at.below()).isFaceSturdy(level, at.below(), Direction.UP);
     }
 
     private Result stepDown() {

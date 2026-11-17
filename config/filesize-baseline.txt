@@ -48,7 +48,7 @@ core/task/TaskRegistryTests.java	312
 gametest/DemoAuditGameTests.java	1101
 gametest/GameTestFilter.java	305
 gametest/GameTestFixtures.java	354
-gametest/HouseMovementGameTests.java	365
+gametest/HouseMovementGameTests.java	364
 gametest/RestFixture.java	308
 guards/DependencyVersionGuardTests.java	399
 guards/GameTestIsolationGuardTests.java	352

@@ -74,7 +74,8 @@ class CrossSettlementScenarioTests {
 
     @Test
     void demolish_NonEmptyStrayChest_DrainsToWarehouseBeforeBreaking() {
-        GraphWorld world = stageOne();
+        GraphWorld world =
+                stageOne().event("demolish_chest").event("drops_nearby").event("inventory_overloaded");
         GraphFacts facts = new GraphFacts(
                 named(spirit("spirit-1")),
                 List.of(),
@@ -98,6 +99,17 @@ class CrossSettlementScenarioTests {
 
         GraphPlan.Task demolition = task(plan, "event:demolish_stray:demolish_stray");
         assertTrue(demolition.feasible(), "Лишний сундук получает задание сноса: " + ids(plan));
+        GraphPlan.Task salvage = task(plan, "event:demolish_chest:demolish_chest");
+        assertTrue(salvage.feasible(), "Разбор сундука с подбором выполним через штатное событие графа");
+        assertTrue(
+                salvage.priority()
+                        > task(plan, "event:drops_nearby:collect_drops").priority(),
+                "Содержимое разбираемого сундука важнее обычного фонового подбора");
+        assertTrue(
+                salvage.priority()
+                        < task(plan, "event:inventory_overloaded:unload_overloaded")
+                                .priority(),
+                "Высокий приоритет разбора не должен мешать необходимой разгрузке");
 
         List<Stack> slots = new ArrayList<>(List.of(new Stack("minecraft:bread", 0, 32, 64)));
         ContainerSnapshot chest = new ContainerSnapshot(new BlockCoord(1, 64, 1), slots);

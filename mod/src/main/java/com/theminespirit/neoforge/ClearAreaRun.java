@@ -99,6 +99,9 @@ final class ClearAreaRun {
                     session.spirit, from, solid, session.safety, session.approachFailures.excludedStands());
         }
         if (result instanceof MiningPlanner.Exhausted) {
+            if (session.scaffold != null && session.scaffold.request(session.remaining)) {
+                return;
+            }
             session.apply(session.blocked.exhausted(
                     session.remaining.stream()
                             .filter(cell -> !session.targets.clear(cell))
@@ -164,16 +167,7 @@ final class ClearAreaRun {
                             at.toShortString(),
                             session.approach.refusal() == null ? "без причины" : session.approach.refusal());
                 }
-                if (session.approachFailures.recordFailure(session.currentStand, session.currentTarget)) {
-                    session.apply(session.blocked.approachFailure(
-                            session.currentTarget, session.currentStand, session.approach.refusal()));
-                    session.releaseCurrent();
-                } else {
-                    BlockCoord retry = session.currentTarget;
-                    session.releaseCurrent();
-                    session.remaining.add(0, retry);
-                }
-                session.state = ClearAreaSession.State.PICK;
+                session.blocked.approachFailure(session);
             }
         }
     }

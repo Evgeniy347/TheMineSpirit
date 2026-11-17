@@ -23,6 +23,42 @@ class NavRouteStepsTests {
     }
 
     @Test
+    void toRoute_AStarGap_PreservesJumpInEveryDirection() {
+        int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        for (int[] direction : directions) {
+            BlockCoord from = cell(-164, 75, -487);
+            BlockCoord target = cell(from.x() + 2 * direction[0], from.y(), from.z() + 2 * direction[1]);
+            NavTestWorld world = NavTestWorld.flat(69)
+                    .solid(from.x(), from.y() - 1, from.z())
+                    .solid(target.x(), target.y() - 1, target.z());
+            NavSettings settings = new NavSettings(2000, 2000, 200_000, 50, 3, 12, 2, 20, 2, true, false);
+            NavSegmentedSession session = new NavSegmentedSession(
+                    new NavContext(world, settings, 0),
+                    from,
+                    new NavGoalBlock(target.x(), target.y(), target.z()),
+                    32,
+                    6,
+                    0.5);
+            NavSegmentedRoute planned = session.step(Long.MAX_VALUE);
+            assertEquals(
+                    NavSearchStatus.FOUND,
+                    planned.status(),
+                    "Щель над ямой глубиной пять блоков пересекается прыжком без опор");
+            Route route = NavRouteSteps.toRoute(planned, world, target);
+            assertEquals(
+                    1, route.steps().size(), "Две соседние опоры разделены одной щелью: промежуточной стоянки нет");
+            assertEquals(
+                    "JUMP",
+                    route.steps().get(0).action().name(),
+                    "Прыжок A* не превращается в ходьбу: иначе дух падает в яму, как на живом сервере 17.11");
+            assertEquals(
+                    target,
+                    route.steps().get(0).cell(),
+                    "Прыжок адресован противоположной опоре во всех четырёх направлениях");
+        }
+    }
+
+    @Test
     void toRoute_Water_Swims() {
         Route route = convert(NavTestWorld.flat(0).wet(1, 1, 0), NavSearchStatus.FOUND, cell(0, 1, 0), cell(1, 1, 0));
 

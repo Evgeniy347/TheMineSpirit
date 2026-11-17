@@ -87,6 +87,16 @@ final class ChestSnapshots {
         return new ContainerSnapshot(pos, new StackMapper().map(container));
     }
 
+    static @Nullable ContainerSnapshot forDemolition(ServerLevel level, BlockCoord pos) {
+        if (!countable(level, pos)) {
+            return null;
+        }
+        ContainerAccess.Open inspected = ContainerAccess.inspect(level, new BlockPos(pos.x(), pos.y(), pos.z()));
+        return inspected instanceof ContainerAccess.Opened opened
+                ? new ContainerSnapshot(pos, new StackMapper().map(opened.container()))
+                : null;
+    }
+
     private static @Nullable Container ownIfPartnerUnloaded(ServerLevel level, BlockPos at, BlockState state) {
         if (!(state.getBlock() instanceof ChestBlock) || state.getValue(ChestBlock.TYPE) == ChestType.SINGLE) {
             return null;
