@@ -7,6 +7,7 @@ import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.MiningTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.board.PlanWalkways;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -35,7 +36,9 @@ final class ScaffoldAccess {
                 .sorted(Comparator.comparingDouble(cell -> feet.distSqr(ClearAreaSession.toPos(cell))))
                 .toList();
         for (BlockCoord target : targets) {
-            List<BlockCoord> bases = ClearScaffold.bases(from, target, radius).stream()
+            List<BlockCoord> nearby = new ArrayList<>(ClearScaffold.bases(from, target, radius));
+            nearby.addAll(ClearScaffold.surfaceBases(from, target, radius, base -> standable(session, base)));
+            List<BlockCoord> bases = nearby.stream()
                     .sorted(Comparator.comparing(base ->
                             session.level instanceof ServerLevel level && PlanWalkways.on(level, base.x(), base.z())))
                     .toList();
@@ -57,6 +60,13 @@ final class ScaffoldAccess {
         return null;
     }
 
+    private static boolean standable(ClearAreaSession session, BlockCoord base) {
+        BlockPos at = ClearAreaSession.toPos(base);
+        BlockPos floor = at.below();
+        return MiningSafety.canStand(base, session.safety)
+                && session.level.getBlockState(floor).isFaceSturdy(session.level, floor, Direction.UP);
+    }
+
     static boolean safe(ClearAreaSession session, Plan plan) {
         BlockCoord target = plan.target();
         BlockPos at = ClearAreaSession.toPos(plan.base());
@@ -65,8 +75,7 @@ final class ScaffoldAccess {
                 || session.targets.leased(target)
                 || session.reservations.foreign(target, session.spirit.getUUID())
                 || !(MiningSafety.canBreak(target, session.safety) instanceof BreakSafety.Safe)
-                || !MiningSafety.canStand(plan.base(), session.safety)
-                || !session.level.getBlockState(floor).isFaceSturdy(session.level, floor, Direction.UP)) {
+                || !standable(session, plan.base())) {
             return false;
         }
         BlockCoord under = new BlockCoord(floor.getX(), floor.getY(), floor.getZ());

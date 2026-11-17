@@ -56,4 +56,29 @@ class ClearScaffoldReachTests {
                 bases.size(),
                 "Радиус три даёт 28 колонок на семи уровнях: ограничение удерживает стоимость поиска и не расширяется до всего мира");
     }
+
+    @Test
+    void surfaceBases_HillAboveSpiritLevel_ReachesTargetSurface() {
+        BlockCoord feet = new BlockCoord(-10, 64, 0);
+        BlockCoord target = new BlockCoord(0, 76, 0);
+        BlockCoord hill = new BlockCoord(-2, 70, 0);
+        assertTrue(
+                ClearScaffold.bases(feet, target, 3).stream().allMatch(cell -> cell.y() <= 67),
+                "Прежний поиск держится за уровень ног духа: поверхность у цели выше полосы «ноги ± радиус» в него "
+                        + "не попадает. Живой случай: столб -175,92..95,-517 оставался «на 24 выше духа»");
+        int[] checks = {0};
+        List<BlockCoord> bases = ClearScaffold.surfaceBases(feet, target, 3, cell -> {
+            checks[0]++;
+            return cell.equals(hill);
+        });
+        assertEquals(
+                List.of(hill),
+                bases,
+                "Основание подмостей — верхняя стоянка столбца у цели, даже если она выше духа: с неё дух ставит "
+                        + "короткий столб и достаёт клетку");
+        assertTrue(
+                checks[0] <= 28 * (target.y() - feet.y()),
+                "Поиск поверхности читает не больше одной стоянки на уровень каждого из 28 столбцов. Чтений: "
+                        + checks[0]);
+    }
 }
