@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 
 public final class GearRules {
@@ -22,6 +23,43 @@ public final class GearRules {
     }
 
     private GearRules() {}
+
+    public record Equip(GraphFacts.Spirit spirit, Upgrade upgrade) {
+        public Equip {
+            Objects.requireNonNull(spirit, "Дух не может быть null: вещь надевают ему");
+            Objects.requireNonNull(upgrade, "Обновка не может быть null: без неё нечего надевать");
+        }
+    }
+
+    public static Optional<Equip> equipTarget(
+            List<GraphFacts.Spirit> spirits,
+            Predicate<String> busy,
+            List<GraphFacts.Chest> chests,
+            GearInputs.Settings settings) {
+        Objects.requireNonNull(spirits, "Духи не могут быть null: пустой список — никого нет");
+        Objects.requireNonNull(busy, "Признак занятости не может быть null: занятого не отвлекают");
+        for (GraphFacts.Spirit spirit : spirits) {
+            if (busy.test(spirit.id())) {
+                continue;
+            }
+            Optional<Upgrade> upgrade = equipUpgrade(spirit, chests, settings);
+            if (upgrade.isPresent()) {
+                return Optional.of(new Equip(spirit, upgrade.orElseThrow()));
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static boolean anyUpgrade(
+            List<GraphFacts.Spirit> spirits, List<GraphFacts.Chest> chests, GearInputs.Settings settings) {
+        Objects.requireNonNull(spirits, "Духи не могут быть null: пустой список — никого нет");
+        for (GraphFacts.Spirit spirit : spirits) {
+            if (equipUpgrade(spirit, chests, settings).isPresent()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static Optional<Upgrade> equipUpgrade(
             GraphFacts.Spirit spirit, List<GraphFacts.Chest> chests, GearInputs.Settings settings) {

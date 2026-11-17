@@ -157,6 +157,25 @@ class GearInputsTests {
     }
 
     @Test
+    void equipTarget_FirstSpiritBusy_FreeSpiritTakesTool() {
+        GraphFacts.Spirit busy = spiritWithId("spirit-1", List.of());
+        GraphFacts.Spirit free = spiritWithId("spirit-2", List.of());
+
+        GearRules.Equip target = GearRules.equipTarget(
+                        List.of(busy, free),
+                        id -> "spirit-1".equals(id),
+                        List.of(chest(Map.of("minecraft:stone_pickaxe", 1))),
+                        GearInputs.settings())
+                .orElseThrow();
+
+        assertEquals(
+                "spirit-2",
+                target.spirit().id(),
+                "Занятый первый дух не забирает обновку у свободного: иначе кирка из сундука лежит без дела, "
+                        + "а снос и шахта падают с «нужна кирка»");
+    }
+
+    @Test
     void missingArmor_StageOne_LeatherHelmet() {
         GraphFacts.Spirit spirit = spirit(null, List.of(), List.of());
 
@@ -229,6 +248,26 @@ class GearInputsTests {
                 armor,
                 tools,
                 null);
+    }
+
+    private static GraphFacts.Spirit spiritWithId(String id, List<GraphFacts.Tool> tools) {
+        GraphFacts.Spirit base = spirit(null, tools, List.of());
+        return new GraphFacts.Spirit(
+                id,
+                base.position(),
+                base.health(),
+                base.maxHealth(),
+                base.recentHurt(),
+                base.food(),
+                base.air(),
+                base.inWater(),
+                base.trapped(),
+                base.stuck(),
+                base.activity(),
+                base.inventory(),
+                base.armor(),
+                base.tools(),
+                base.trap());
     }
 
     private static GraphFacts.Chest chest(Map<String, Integer> contents) {

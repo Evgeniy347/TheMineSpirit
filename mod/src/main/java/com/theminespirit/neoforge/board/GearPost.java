@@ -11,6 +11,9 @@ import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -40,25 +43,38 @@ final class GearPost {
 
     private static boolean equip(GraphPost post, GraphTickets.Ticket ticket) {
         GearInputs.Settings settings = GearInputs.settings();
+        List<GraphFacts.Spirit> facts = new ArrayList<>();
+        Map<String, SpiritEntity> byId = new LinkedHashMap<>();
         for (SpiritEntity spirit : post.spirits) {
             GraphFacts.Spirit fact = post.facts.spirits().get(spirit.getUUID().toString());
-            if (fact == null) {
-                continue;
+            if (fact != null) {
+                facts.add(fact);
+                byId.put(fact.id(), spirit);
             }
-            Optional<GearRules.Upgrade> upgrade = GearRules.equipUpgrade(fact, post.facts.chests(), settings);
-            if (upgrade.isEmpty()) {
-                continue;
-            }
-            if (busy(post, spirit)) {
-                post.waiting().add(ticket.id());
-                return false;
-            }
-            GearRules.Upgrade known = upgrade.orElseThrow();
-            BlockCoord chest = StorePost.at(known.chest());
-            ActivityPlans.Plan plan = ActivityPlans.equip(chest, post.craftPoint(), known.item());
-            return GraphActivityPost.launch(post, spirit, BoardCase.ACTIVITY_ARM, plan);
         }
-        return false;
+        Optional<GearRules.Equip> found = GearRules.equipTarget(
+                facts,
+                id -> {
+                    SpiritEntity spirit = byId.get(id);
+                    return spirit == null || busy(post, spirit);
+                },
+                post.facts.chests(),
+                settings);
+        if (found.isEmpty()) {
+            if (GearRules.anyUpgrade(facts, post.facts.chests(), settings)) {
+                post.waiting().add(ticket.id());
+            }
+            return false;
+        }
+        GearRules.Equip chosen = found.orElseThrow();
+        SpiritEntity spirit = byId.get(chosen.spirit().id());
+        if (spirit == null) {
+            return false;
+        }
+        BlockCoord chest = StorePost.at(chosen.upgrade().chest());
+        ActivityPlans.Plan plan =
+                ActivityPlans.equip(chest, post.craftPoint(), chosen.upgrade().item());
+        return GraphActivityPost.launch(post, spirit, BoardCase.ACTIVITY_ARM, plan);
     }
 
     private static boolean craftArmor(GraphPost post, GraphTickets.Ticket ticket) {
