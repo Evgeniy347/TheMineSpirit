@@ -28,8 +28,6 @@ public final class SchematicActions {
     private static final String DIRT_PATH = "dirt_path";
     private static final String FARMLAND = "farmland";
     private static final String WATER = "water";
-    private static final String DIRT = "dirt";
-    private static final String GRASS = "grass_block";
     private static final String PODZOL = "podzol";
     private static final String COARSE_DIRT = "coarse_dirt";
     private static final String ROOTED_DIRT = "rooted_dirt";
@@ -93,8 +91,8 @@ public final class SchematicActions {
     public static boolean isTrampleGround(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестна почва под тропинку");
         String path = SchematicBlocks.path(blockId);
-        return DIRT.equals(path)
-                || GRASS.equals(path)
+        return EarthCover.DIRT.equals(path)
+                || EarthCover.GRASS.equals(path)
                 || PODZOL.equals(path)
                 || COARSE_DIRT.equals(path)
                 || ROOTED_DIRT.equals(path)

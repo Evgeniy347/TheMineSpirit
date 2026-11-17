@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.lease;
 
+import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.movement.BodyMotion;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.route.RouteCell;
@@ -73,13 +74,14 @@ public final class LeaseUndo {
         if (step.kind() == LeaseKind.PLACED) {
             return free;
         }
-        return current.equals(step.before());
+        String before = step.before();
+        return before != null && (current.equals(before) || EarthCover.covers(current, before));
     }
 
     public static boolean blocked(Step step, boolean free, String current) {
         Objects.requireNonNull(step, "Клетка отката не может быть null: чужой блок ищут по ней");
         Objects.requireNonNull(current, "Текущий блок не может быть null: без него не видно, чей он");
-        if (step.kind() == LeaseKind.PLACED) {
+        if (step.kind() != LeaseKind.BROKEN) {
             return false;
         }
         return !free && !current.equals(step.before());

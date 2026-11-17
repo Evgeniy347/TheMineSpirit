@@ -5,8 +5,8 @@ import java.util.Set;
 
 public final class SchematicGround {
     private static final Set<String> SOIL = Set.of(
-            "dirt",
-            "grass_block",
+            EarthCover.DIRT,
+            EarthCover.GRASS,
             "podzol",
             "coarse_dirt",
             "rooted_dirt",

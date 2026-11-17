@@ -1,6 +1,5 @@
 package com.theminespirit.core.building;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -22,10 +21,19 @@ class EarthCoverTests {
     }
 
     @Test
-    void restoreBlock_Grass_ReplacedByDirt() {
-        assertEquals(
-                "dirt", EarthCover.restoreBlock("minecraft:grass_block"), "травяной покров восстанавливают землёй");
-        assertEquals("minecraft:stone", EarthCover.restoreBlock("minecraft:stone"), "камень не подменяется");
+    void earth_GrassAndDirt_Recognized() {
+        assertTrue(EarthCover.earth("minecraft:grass_block"), "дёрн — земля: верхний слой участка");
+        assertTrue(EarthCover.earth("dirt"), "земля без пространства имён — та же земля");
+        assertFalse(EarthCover.earth("minecraft:stone"), "камень не земля");
+        assertFalse(EarthCover.earth("minecraft:dirt_path"), "тропа — отдельный блок, не земля");
+    }
+
+    @Test
+    void covers_NamesWithAndWithoutNamespace_SameEarth() {
+        assertTrue(
+                EarthCover.covers("grass_block", "minecraft:dirt"),
+                "одно правило земли для планов без пространства имён: дёрн на месте земли не перекрывают");
+        assertFalse(EarthCover.covers("stone", "minecraft:dirt"), "камень землёй не становится");
     }
 
     @Test

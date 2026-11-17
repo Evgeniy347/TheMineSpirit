@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.movement.EscapeRestore;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
@@ -64,7 +65,9 @@ final class DigOutRestore {
                     || spirit.getBoundingBox().intersects(new AABB(cell))) {
                 continue;
             }
-            if (level.getBlockState(cell).equals(entry.getValue())) {
+            BlockState current = level.getBlockState(cell);
+            if (current.equals(entry.getValue())
+                    || EarthCover.covers(BlockStates.idOf(current), BlockStates.idOf(entry.getValue()))) {
                 iterator.remove();
                 continue;
             }

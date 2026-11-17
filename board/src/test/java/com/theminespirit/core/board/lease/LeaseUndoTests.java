@@ -218,6 +218,11 @@ class LeaseUndoTests {
         assertTrue(
                 LeaseUndo.nothingToDo(broken, false, "minecraft:dirt"),
                 "Сломанный блок уже вернули — второй раз ставить нечего");
+        assertTrue(
+                LeaseUndo.nothingToDo(broken, false, "minecraft:grass_block"),
+                "Дёрн на месте прежней земли — та же земля: откат не заменяет траву землёй");
+        assertFalse(
+                LeaseUndo.nothingToDo(broken, false, "minecraft:stone"), "Камень — не земля: чужой блок не пропускают");
         assertFalse(
                 LeaseUndo.nothingToDo(broken, true, "minecraft:air"),
                 "Сломанную клетку ещё не вернули: воздух не равен прежнему блоку");
@@ -249,6 +254,14 @@ class LeaseUndoTests {
                         false,
                         "minecraft:cobblestone"),
                 "Свою поставленную клетку откат ломает: чужой её не называют, даже если состояние не совпало");
+        assertFalse(
+                LeaseUndo.blocked(
+                        new LeaseUndo.Step(
+                                new BlockCoord(0, 70, 0), LeaseKind.STATE, "minecraft:oak_door[open=false,half=lower]"),
+                        false,
+                        "minecraft:oak_door[open=true,half=lower]"),
+                "Клетку STATE занял собственный след аренды: откат обязан вернуть прежнее состояние, "
+                        + "а не пропустить её как чужую — брошенная аренда иначе закрывается неоткаченной");
     }
 
     @Test

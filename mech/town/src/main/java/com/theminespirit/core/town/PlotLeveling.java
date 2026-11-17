@@ -1,5 +1,6 @@
 package com.theminespirit.core.town;
 
+import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.building.FillArea;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
@@ -12,7 +13,7 @@ import org.jspecify.annotations.Nullable;
 
 public record PlotLeveling(List<Box> cut, List<Box> fill, String block, List<Box> voids) {
     public static final int MAX_SHIFT = 10;
-    public static final String DEFAULT_BLOCK = "dirt";
+    public static final String DEFAULT_BLOCK = EarthCover.DIRT;
     public static final int TOLERANCE = 1;
     public static final PlotLeveling FLAT = new PlotLeveling(List.of(), List.of(), DEFAULT_BLOCK);
 

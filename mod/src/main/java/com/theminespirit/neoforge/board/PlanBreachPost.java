@@ -8,7 +8,6 @@ import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphFailureMemory;
 import com.theminespirit.core.board.graph.GraphTickets;
-import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.policy.PlanBreachData;
@@ -53,8 +52,7 @@ final class PlanBreachPost {
         List<BreachAreas.Area> areas = BreachAreas.group(
                 reachable.entrySet().stream()
                         .map(entry -> new BreachAreas.Cell(
-                                entry.getKey(),
-                                EarthCover.restoreBlock(entry.getValue().blockId())))
+                                entry.getKey(), entry.getValue().blockId()))
                         .toList(),
                 AREA_LIMIT);
         List<Repair> ready = new ArrayList<>(areas.size());
@@ -87,7 +85,7 @@ final class PlanBreachPost {
 
     private static void rememberUnreachable(
             GraphPost post, GraphTickets.Ticket owner, BlockCoord at, PlanBreachData.Breach breach, String id) {
-        String block = EarthCover.restoreBlock(breach.blockId());
+        String block = breach.blockId();
         BoardTicket repair = post.ticket(
                 id,
                 BoardCase.REPAIR_BUILDING,
