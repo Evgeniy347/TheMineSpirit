@@ -6,9 +6,14 @@ import org.jspecify.annotations.Nullable;
 
 public final class DropProfile {
     public static final int MAX_SAFE_DROP = 2;
+    public static final int MAX_STEP_DROP = 3;
     public static final int LOOKAHEAD_CELLS = 8;
 
     private DropProfile() {}
+
+    public static boolean routeDropTooDeep(int fromY, int toY) {
+        return fromY - toY > MAX_STEP_DROP;
+    }
 
     public static boolean blocksCarefulStep(List<Integer> floorHeights) {
         Objects.requireNonNull(

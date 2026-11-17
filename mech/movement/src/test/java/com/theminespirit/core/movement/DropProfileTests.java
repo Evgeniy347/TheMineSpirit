@@ -1,6 +1,7 @@
 package com.theminespirit.core.movement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -101,6 +102,24 @@ class DropProfileTests {
                 DropProfile.carefulRefusal(true, true, heights),
                 "Обрыв дальше " + DropProfile.LOOKAHEAD_CELLS + " клеток осторожный шаг пока не проверяет: "
                         + "он увидит его при следующем перестроении пути");
+    }
+
+    @Test
+    void routeStepDrop_Limits_MatchPlayerSafeFall() {
+        assertEquals(
+                3,
+                DropProfile.MAX_STEP_DROP,
+                "Шаг маршрута вниз — не больше 3 блоков: глубже это уже падение, а планировщик "
+                        + "маршрута больший спуск за шаг не строит");
+        assertFalse(
+                DropProfile.routeDropTooDeep(73, 70),
+                "Спуск на 3 блока (предел планировщика) шаг маршрута обязан пропускать");
+        assertFalse(
+                DropProfile.routeDropTooDeep(68, 79),
+                "Подъём шаг маршрута не ограничивает: этим занимаются прыжок и подъём");
+        assertTrue(
+                DropProfile.routeDropTooDeep(79, 68),
+                "Шаг вниз на 11 блоков обязан считаться падением, а не спуском: дух разобьётся");
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.movement;
 
+import com.theminespirit.core.movement.DropProfile;
 import com.theminespirit.core.movement.WalkAscent;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.RemovalLog;
@@ -67,6 +68,13 @@ public final class RouteWalk {
                         || step.action() == RouteStep.Action.SWIM)
                 && SwimStep.far(spirit, step.cell())) {
             return fail("дух сошёл с маршрута: шаг " + step.cell() + " дальше соседней клетки");
+        }
+        if (step.action() == RouteStep.Action.WALK || step.action() == RouteStep.Action.JUMP) {
+            int feetY = spirit.blockPosition().getY();
+            if (DropProfile.routeDropTooDeep(feetY, step.cell().y()) && !water(step.cell())) {
+                return fail("шаг " + step.action() + " в " + step.cell() + " ниже на "
+                        + (feetY - step.cell().y()) + " блоков: это падение, а не спуск — маршрут устарел");
+            }
         }
         if (recorded != next) {
             RouteHistory.record(spirit, step);
@@ -202,16 +210,20 @@ public final class RouteWalk {
     }
 
     private boolean stand(BlockCoord cell) {
-        BlockPos target = pos(cell);
-        if (spirit.level().getFluidState(target).is(FluidTags.WATER)
-                || spirit.level().getFluidState(target.below()).is(FluidTags.WATER)) {
+        if (water(cell)) {
             return true;
         }
-        BlockPos floor = target.below();
+        BlockPos floor = pos(cell).below();
         return !spirit.level()
                 .getBlockState(floor)
                 .getCollisionShape(spirit.level(), floor)
                 .isEmpty();
+    }
+
+    private boolean water(BlockCoord cell) {
+        BlockPos pos = pos(cell);
+        return spirit.level().getFluidState(pos).is(FluidTags.WATER)
+                || spirit.level().getFluidState(pos.below()).is(FluidTags.WATER);
     }
 
     private void pushOff(WalkAscent.Command command) {
