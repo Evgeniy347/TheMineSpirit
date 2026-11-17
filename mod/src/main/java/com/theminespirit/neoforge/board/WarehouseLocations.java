@@ -15,6 +15,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;
 
@@ -65,17 +66,35 @@ final class WarehouseLocations {
         if (site.isEmpty()) {
             return Set.of();
         }
+        StageSite place = site.orElseThrow();
         Set<BlockCoord> cells = new LinkedHashSet<>();
-        YardScheme.slots(site.orElseThrow()).forEach(cells::addAll);
-        YardScheme.overflowSlots(site.orElseThrow()).forEach(cells::addAll);
+        for (List<BlockCoord> pair : YardScheme.slots(place)) {
+            if (supported(level, place, pair)) {
+                cells.addAll(pair);
+            }
+        }
+        for (List<BlockCoord> pair : YardScheme.overflowSlots(place)) {
+            if (supported(level, place, pair)) {
+                cells.addAll(pair);
+            }
+        }
         return cells;
     }
 
+    static boolean onSettlementFloor(ServerLevel level, StageSite site, BlockCoord cell) {
+        return cell.y() == site.anchor().y() && aboveGround(level, cell);
+    }
+
+    static boolean aboveGround(ServerLevel level, BlockCoord cell) {
+        return !level.getBlockState(new BlockPos(cell.x(), cell.y() - 1, cell.z()))
+                .isAir();
+    }
+
+    private static boolean supported(ServerLevel level, StageSite site, List<BlockCoord> pair) {
+        return pair.stream().allMatch(cell -> onSettlementFloor(level, site, cell));
+    }
+
     static List<BlockCoord> extras(ServerLevel level, BoardLedger ledger) {
-        Set<BlockCoord> cells = storeCells(level, ledger);
-        if (cells.isEmpty()) {
-            return List.of();
-        }
         return ChestSnapshots.positions(level).stream()
                 .filter(pos -> ChestDemolition.removable(level, pos))
                 .toList();

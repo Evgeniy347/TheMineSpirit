@@ -50,10 +50,14 @@ public final class ChestDemolition {
             return false;
         }
         BoardLedger ledger = BoardRegistry.get(level).board().ledger();
+        var site = SettlementPlotStore.liveSite(level);
         for (BlockCoord cell : chestCells(level, at)) {
             BlockPos block = new BlockPos(cell.x(), cell.y(), cell.z());
+            boolean marked = PlacedBlocksData.get(level).isMarked(block)
+                    && site.map(place -> WarehouseLocations.onSettlementFloor(level, place, cell))
+                            .orElse(true);
             if (WarehouseLocations.planned(level, ledger, cell)
-                    || PlacedBlocksData.get(level).isMarked(block)
+                    || marked
                     || PolicyConfig.zones()
                             .contains(level.dimension().location().toString(), cell)) {
                 return false;
@@ -64,8 +68,7 @@ public final class ChestDemolition {
 
     static boolean pending(ServerLevel level, BoardService service) {
         BoardLedger ledger = service.board().ledger();
-        Set<BlockCoord> cells = WarehouseLocations.storeCells(level, ledger);
-        if (cells.isEmpty()) {
+        if (ChestSnapshots.area(level).isEmpty()) {
             return false;
         }
         List<BlockCoord> extras = WarehouseLocations.extras(level, ledger);
@@ -85,7 +88,7 @@ public final class ChestDemolition {
         }
         BoardLedger ledger = post.service.board().ledger();
         Set<BlockCoord> cells = WarehouseLocations.storeCells(post.level, ledger);
-        if (cells.isEmpty()) {
+        if (cells.isEmpty() && SettlementPlotStore.liveSite(post.level).isEmpty()) {
             return true;
         }
         if (busy(post, TICKET)) {
@@ -131,7 +134,7 @@ public final class ChestDemolition {
                 }
             }
         }
-        if (expand && !busy(post, CHEST)) {
+        if (expand && !busy(post, CHEST) && !emptyCells.isEmpty()) {
             placeChest(post, ticket, emptyCells.get(0));
         }
         return true;

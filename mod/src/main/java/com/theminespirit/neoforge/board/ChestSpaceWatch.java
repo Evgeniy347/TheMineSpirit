@@ -85,14 +85,13 @@ final class ChestSpaceWatch {
     private static boolean postWarehouse(GraphPost post, ServerLevel level, BoardService service) {
         List<BlockCoord> free = new ArrayList<>();
         for (BlockCoord cell : WarehouseLocations.cells(level, service.board().ledger())) {
-            if (level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z())).isAir()) {
+            if (level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z())).isAir()
+                    && WarehouseLocations.aboveGround(level, cell)) {
                 free.add(cell);
             }
         }
         if (free.isEmpty()) {
-            LOGGER.info("[chests] склад заполнен: новых клеток для сундуков нет — нужен следующий уровень по "
-                    + "решению стратега");
-            return true;
+            return postYardChest(post, level, post.scan.stage());
         }
         BlockCoord cell = free.get(0);
         String id = WAREHOUSE_PREFIX + cell.x() + "," + cell.y() + "," + cell.z();
@@ -108,6 +107,20 @@ final class ChestSpaceWatch {
                 TicketTarget.at(cell).withPlan(plan));
         if (outcome == BoardOutcome.ACCEPTED) {
             LOGGER.info("[chests] {}: новый сундук ставится в клетку склада {}", id, cell);
+        }
+        return true;
+    }
+
+    private static boolean postYardChest(GraphPost post, ServerLevel level, StageSite site) {
+        Optional<Integer> next = nextSlot(level, site);
+        if (next.isEmpty()) {
+            LOGGER.info("[chests] склад и двор заполнены: новых клеток на высоте поселения +1 нет — нужен "
+                    + "следующий уровень по решению стратега");
+            return true;
+        }
+        int slot = next.orElseThrow();
+        if (submit(post, level, site, slot) == BoardOutcome.ACCEPTED) {
+            LOGGER.info("[chests] склад заполнен: временный двойной сундук ставится в место {} двора", slot);
         }
         return true;
     }
@@ -147,20 +160,25 @@ final class ChestSpaceWatch {
     private static Optional<Integer> nextSlot(ServerLevel level, StageSite site) {
         List<List<BlockCoord>> slots = YardScheme.slots(site);
         for (int index = 0; index < slots.size(); index++) {
-            if (!occupied(level, slots.get(index))) {
+            if (usable(level, site, slots.get(index)) && !occupied(level, slots.get(index))) {
                 return Optional.of(index + 1);
             }
         }
         List<List<BlockCoord>> overflow = YardScheme.overflowSlots(site);
         for (int index = 0; index < overflow.size(); index++) {
             List<BlockCoord> pair = overflow.get(index);
-            if (pair.stream()
-                    .allMatch(cell -> level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()))
-                            .isAir())) {
+            if (usable(level, site, pair)
+                    && pair.stream()
+                            .allMatch(cell -> level.getBlockState(new BlockPos(cell.x(), cell.y(), cell.z()))
+                                    .isAir())) {
                 return Optional.of(slots.size() + index + 1);
             }
         }
         return Optional.empty();
+    }
+
+    private static boolean usable(ServerLevel level, StageSite site, List<BlockCoord> pair) {
+        return pair.stream().allMatch(cell -> WarehouseLocations.onSettlementFloor(level, site, cell));
     }
 
     private static boolean occupied(ServerLevel level, List<BlockCoord> pair) {

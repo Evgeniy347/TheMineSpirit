@@ -10,7 +10,9 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
+import com.theminespirit.neoforge.board.ChestDemolition;
 import com.theminespirit.neoforge.board.GraphSource;
+import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,6 +31,7 @@ final class ChestGraphScene {
 
     static void check(GameTestHelper helper, SpiritEntity spirit, BlockPos empty) {
         ServerLevel level = helper.getLevel();
+        checkSurfaceLevel(helper, level, empty.getX() - 5, empty.getY() + 1, empty.getZ() - 5);
         var service = BoardRegistry.get(level);
         Set<String> before = service.board().all().stream().map(BoardTicket::id).collect(Collectors.toSet());
         Optional<BlockCoord> home = spirit.home();
@@ -106,6 +109,30 @@ final class ChestGraphScene {
             ((ChestBlockEntity) level.getBlockEntity(full)).clearContent();
             level.setBlockAndUpdate(full, original);
             level.setBlockAndUpdate(independentChest, independentOriginal);
+        }
+    }
+
+    private static void checkSurfaceLevel(GameTestHelper helper, ServerLevel level, int x, int y, int z) {
+        PlacedBlocksData placed = PlacedBlocksData.get(level);
+        level.setBlockAndUpdate(new BlockPos(x, y - 1, z), Blocks.STONE.defaultBlockState());
+        level.setBlockAndUpdate(new BlockPos(x, y, z), Blocks.CHEST.defaultBlockState());
+        placed.mark(new BlockPos(x, y, z));
+        helper.assertTrue(
+                !ChestDemolition.removable(level, new BlockCoord(x, y, z)),
+                "Сундук духа на высоте поселения +1 стоит на земле: разбирать его нельзя");
+        level.setBlockAndUpdate(new BlockPos(x, y + 2, z), Blocks.CHEST.defaultBlockState());
+        placed.mark(new BlockPos(x, y + 2, z));
+        helper.assertTrue(
+                ChestDemolition.removable(level, new BlockCoord(x, y + 2, z)),
+                "Сундук в воздухе выше высоты поселения +1 под снос, даже если его поставил дух");
+        level.setBlockAndUpdate(new BlockPos(x, y - 1, z), Blocks.CHEST.defaultBlockState());
+        placed.mark(new BlockPos(x, y - 1, z));
+        helper.assertTrue(
+                ChestDemolition.removable(level, new BlockCoord(x, y - 1, z)),
+                "Сундук ниже поверхности поселения под снос, даже если его поставил дух");
+        for (int dy : new int[] {-1, 0, 2}) {
+            placed.unmark(new BlockPos(x, y + dy, z));
+            level.setBlockAndUpdate(new BlockPos(x, y + dy, z), Blocks.AIR.defaultBlockState());
         }
     }
 
