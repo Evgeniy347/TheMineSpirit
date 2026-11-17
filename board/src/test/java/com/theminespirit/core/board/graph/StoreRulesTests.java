@@ -3,6 +3,7 @@ package com.theminespirit.core.board.graph;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -96,6 +97,31 @@ class StoreRulesTests {
                         GraphFacts.Reach.UNKNOWN));
 
         assertEquals(1, StoreRules.mixedChests(chests, 4), "Смешанным считается сундук, где типов не меньше порога");
+    }
+
+    @Test
+    void sortTarget_ExtraChestFirst_TakesPlannedChest() {
+        GraphFacts.Chest extra = new GraphFacts.Chest(
+                new GraphFacts.Position(-177, 69, -477), Map.of("dirt", 3), 20, 27, GraphFacts.Reach.PATH);
+        GraphFacts.Chest planned = new GraphFacts.Chest(
+                new GraphFacts.Position(-178, 68, -518), Map.of("dirt", 3), 20, 27, GraphFacts.Reach.PATH);
+
+        assertEquals(
+                planned,
+                StoreRules.sortTarget(List.of(extra, planned), Set.of(new BlockCoord(-178, 68, -518)))
+                        .orElseThrow(),
+                "Сундук вне плана не сортируют: его разбирают и увозят вещи, а сортировка — только у склада поселения");
+    }
+
+    @Test
+    void sortTarget_PlannedChestUnreachable_SkipsIt() {
+        GraphFacts.Chest walled = new GraphFacts.Chest(
+                new GraphFacts.Position(-178, 68, -518), Map.of("dirt", 3), 20, 27, GraphFacts.Reach.NO_PATH);
+
+        assertTrue(
+                StoreRules.sortTarget(List.of(walled), Set.of(new BlockCoord(-178, 68, -518)))
+                        .isEmpty(),
+                "К плановому сундуку без пути не посылают: дух застревает на подходе и проваливает задание");
     }
 
     @Test

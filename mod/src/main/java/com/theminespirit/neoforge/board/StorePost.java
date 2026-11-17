@@ -99,7 +99,9 @@ final class StorePost {
     }
 
     private static boolean sort(GraphPost post, GraphTickets.Ticket ticket) {
-        Optional<GraphFacts.Chest> chest = post.facts.chests().stream().findFirst();
+        Optional<GraphFacts.Chest> chest = StoreRules.sortTarget(
+                post.facts.chests(),
+                WarehouseLocations.storeCells(post.level, post.service.board().ledger()));
         if (chest.isEmpty()) {
             return false;
         }

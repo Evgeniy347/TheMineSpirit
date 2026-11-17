@@ -2,11 +2,13 @@ package com.theminespirit.core.board.graph;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public final class StoreRules {
@@ -97,6 +99,16 @@ public final class StoreRules {
             boolean carried,
             boolean furnaceReady,
             boolean furnaceNeedsFuel) {}
+
+    public static Optional<GraphFacts.Chest> sortTarget(List<GraphFacts.Chest> chests, Set<BlockCoord> planned) {
+        return chests.stream()
+                .filter(chest -> chest.reach() != GraphFacts.Reach.NO_PATH)
+                .filter(chest -> planned.contains(new BlockCoord(
+                        chest.position().x(),
+                        chest.position().y(),
+                        chest.position().z())))
+                .findFirst();
+    }
 
     public static Set<String> events(Set<String> base, Signals signals) {
         Set<String> events = new LinkedHashSet<>(base);
