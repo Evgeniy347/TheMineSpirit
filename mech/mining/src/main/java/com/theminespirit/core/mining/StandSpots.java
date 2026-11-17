@@ -43,7 +43,7 @@ public final class StandSpots {
                 if (target.y() - stand.y() > maxDrop) {
                     continue;
                 }
-                if (offset(stand, 0, -1, 0).equals(target)) {
+                if (offset(stand, 0, -1, 0).equals(target) && !onTargetSafe(target, view)) {
                     continue;
                 }
                 if (fallingAbove && stand.x() == target.x() && stand.z() == target.z() && stand.y() < target.y()) {
@@ -99,6 +99,13 @@ public final class StandSpots {
         Objects.requireNonNull(stand, "Стоянка не может быть null: без неё непонятно, что проверять на подъём");
         Objects.requireNonNull(from, "Точка духа не может быть null: по ней считается высота подъёма");
         return stand.y() - from.y() <= MiningTuning.MAX_STAND_RISE;
+    }
+
+    // lib: стоя на цели дух после ломки падает на один блок — это безопасно, только если под целью
+    // lib: есть твёрдая опора. Живой случай: трава над сундуком (-167,73,-486) в одиночном колодце
+    // lib: оставалась «без стоянки», и сундук было не открыть.
+    private static boolean onTargetSafe(BlockCoord target, SafetyView view) {
+        return MiningSafety.canStandOn(view.cellAt(offset(target, 0, -1, 0)));
     }
 
     private static boolean visible(BlockCoord stand, BlockCoord target, SafetyView view) {

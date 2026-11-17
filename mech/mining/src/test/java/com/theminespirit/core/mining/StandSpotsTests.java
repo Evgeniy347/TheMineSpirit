@@ -68,6 +68,24 @@ class StandSpotsTests {
     }
 
     @Test
+    void of_TopOpenOverSolidFloor_StandDirectlyAboveAllowed() {
+        CellWorld world = new CellWorld()
+                .fill(-1, -2, -2, 2, 2, Cell.SOLID)
+                .fill(0, -1, -1, 1, 1, Cell.SOLID)
+                .fill(1, -1, -1, 1, 1, Cell.SOLID)
+                .set(0, 1, 0, Cell.PASSABLE);
+
+        List<BlockCoord> spots = StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0));
+
+        assertEquals(
+                List.of(new BlockCoord(0, 1, 0)),
+                spots,
+                "Блок в одиночном колодце под насыпью достаётся со стоянки прямо над ним: пол под целью твёрдый, "
+                        + "падение после ломки — один блок. Живой случай: трава над сундуком (-167,73,-486) "
+                        + "навсегда оставалась «без стоянки», а сундук — закрытым");
+    }
+
+    @Test
     void of_StandAtCliffWithoutFloor_IsRejected() {
         CellWorld world = new CellWorld()
                 .set(0, 0, 0, Cell.SOLID)
