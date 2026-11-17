@@ -207,6 +207,9 @@ public final class GearInputs {
         Map<String, Integer> tools = bestTools(spirit);
         Map<String, Integer> armor = armorRanks(spirit, settings);
         for (GraphFacts.Chest chest : chests) {
+            if (chest.reach() == GraphFacts.Reach.NO_PATH) {
+                continue;
+            }
             for (String item : chest.contents().keySet()) {
                 String name = shortId(item);
                 String kind = toolKind(name);
