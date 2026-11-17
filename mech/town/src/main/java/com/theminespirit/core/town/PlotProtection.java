@@ -136,6 +136,11 @@ public final class PlotProtection {
         return new Allowed(ground, building, area);
     }
 
+    public static boolean demolishersMayBreak(@Nullable StageSite site, BlockCoord cell, boolean structureBlock) {
+        return check(site, cell, Action.BREAK, Ground.PLAN_DEMOLISH, PlanBuilding.NONE, structureBlock)
+                instanceof Allowed;
+    }
+
     public static String basisText(Ground ground) {
         return switch (ground) {
             case NONE -> "без основания";

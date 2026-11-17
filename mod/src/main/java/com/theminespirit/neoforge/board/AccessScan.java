@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BlockedCells;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.core.town.Walkways;
@@ -102,16 +103,18 @@ final class AccessScan {
         long started = System.nanoTime();
         List<BlockedCells.Mark> chest = new ArrayList<>();
         for (BlockedCells.Mark mark : ChestOpenScan.marks(level)) {
-            if (!kept(level, mark.cell())) {
+            if (!kept(level, mark.cell()) && demolishersMayBreak(level, site, mark.cell())) {
                 chest.add(mark);
             }
         }
         List<BlockedCells.Mark> path = new ArrayList<>();
         for (BlockCoord cell : clearance(level, service, site, town.orElseThrow(), home)) {
-            path.add(new BlockedCells.Mark(cell, 0));
+            if (demolishersMayBreak(level, site, cell)) {
+                path.add(new BlockedCells.Mark(cell, 0));
+            }
         }
         for (BlockedCells.Mark mark : PathBlocked.marks(level)) {
-            if (soft(level, mark.cell())) {
+            if (soft(level, mark.cell()) && demolishersMayBreak(level, site, mark.cell())) {
                 path.add(mark);
             }
         }
@@ -155,6 +158,11 @@ final class AccessScan {
             }
         }
         return List.copyOf(kept);
+    }
+
+    private static boolean demolishersMayBreak(ServerLevel level, StageSite site, BlockCoord cell) {
+        BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+        return PlotProtection.demolishersMayBreak(site, cell, PlotCellStructure.isStructure(level, pos));
     }
 
     private static boolean kept(ServerLevel level, BlockCoord cell) {
