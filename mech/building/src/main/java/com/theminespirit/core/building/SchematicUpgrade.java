@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public final class SchematicUpgrade {
     private SchematicUpgrade() {}
@@ -40,5 +41,30 @@ public final class SchematicUpgrade {
         }
         extra.sort(Comparator.comparingInt(BlockCoord::y).reversed().thenComparing(Comparator.naturalOrder()));
         return List.copyOf(extra);
+    }
+
+    public static List<BlockCoord> extraPositionsToClear(
+            Schematic previous,
+            Schematic next,
+            BlockCoord origin,
+            BuildRotation rotation,
+            Predicate<BlockCoord> aired) {
+        return extraPositionsToClear(extraPositions(previous, next, origin, rotation), next, origin, rotation, aired);
+    }
+
+    public static List<BlockCoord> extraPositionsToClear(
+            Collection<BlockCoord> previous,
+            Schematic next,
+            BlockCoord origin,
+            BuildRotation rotation,
+            Predicate<BlockCoord> aired) {
+        Objects.requireNonNull(aired, "Проверка «уже воздух» не может быть null: по ней видно, что снято");
+        List<BlockCoord> clear = new ArrayList<>();
+        for (BlockCoord cell : extraPositions(previous, next, origin, rotation)) {
+            if (!aired.test(cell)) {
+                clear.add(cell);
+            }
+        }
+        return List.copyOf(clear);
     }
 }

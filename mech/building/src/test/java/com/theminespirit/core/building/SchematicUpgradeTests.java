@@ -51,6 +51,21 @@ class SchematicUpgradeTests {
                         + "а не эвристикой по меткам духа");
     }
 
+    @Test
+    void extrasToClear_AlreadyAirCell_Skipped() {
+        List<BlockCoord> previous = List.of(ORIGIN, new BlockCoord(11, 70, -5), new BlockCoord(10, 70, -4));
+        Schematic next = schematic(new Schematic.Entry(0, 0, 0, "minecraft:stone_bricks"));
+
+        List<BlockCoord> clear = SchematicUpgrade.extraPositionsToClear(
+                previous, next, ORIGIN, BuildRotation.NONE, new BlockCoord(11, 70, -5)::equals);
+
+        assertEquals(
+                List.of(new BlockCoord(10, 70, -4)),
+                clear,
+                "Снятая клетка старой схемы уже воздух: снос не просит её снова, иначе дух ищет к воздуху стоянку "
+                        + "до провала «не очищено 1: воздух@…» (живой сервер 17.11: repair:build_streets)");
+    }
+
     private static Schematic schematic(Schematic.Entry... entries) {
         return new Schematic(2, 2, 2, List.of(entries));
     }

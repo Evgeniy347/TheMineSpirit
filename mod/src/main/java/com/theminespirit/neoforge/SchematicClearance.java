@@ -70,7 +70,8 @@ final class SchematicClearance {
 
     private void addOldSchemeExtras(List<BlockCoord> cells) {
         if (site.previous != null) {
-            cells.addAll(SchematicUpgrade.extraPositions(site.previous, site.schematic, site.origin, site.rotation));
+            cells.addAll(SchematicUpgrade.extraPositionsToClear(
+                    site.previous, site.schematic, site.origin, site.rotation, this::aired));
             return;
         }
         if (!(site.level instanceof ServerLevel server)) {
@@ -100,6 +101,11 @@ final class SchematicClearance {
                 }
             }
         }
-        cells.addAll(SchematicUpgrade.extraPositions(previous, site.schematic, site.origin, BuildRotation.NONE));
+        cells.addAll(SchematicUpgrade.extraPositionsToClear(
+                previous, site.schematic, site.origin, BuildRotation.NONE, this::aired));
+    }
+
+    private boolean aired(BlockCoord cell) {
+        return site.level.getBlockState(SchematicSite.toPos(cell)).isAir();
     }
 }
