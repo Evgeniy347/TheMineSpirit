@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
@@ -61,13 +62,22 @@ public final class GraphForageGameTests {
         helper.spawn(EntityType.GLOW_SQUID, new BlockPos(5, 2, 6));
         helper.spawn(EntityType.ARMADILLO, new BlockPos(6, 2, 6));
         BlockPos home = helper.absolutePos(new BlockPos(7, 2, 5));
+        helper.setBlock(41, 1, 5, Blocks.DIRT);
+        helper.setBlock(41, 2, 5, Blocks.JUNGLE_LOG);
+        helper.setBlock(41, 3, 5, Blocks.JUNGLE_LOG);
+        helper.setBlock(41, 4, 5, Blocks.JUNGLE_LOG);
+        helper.setBlock(41, 5, 5, Blocks.JUNGLE_LEAVES);
+        helper.setBlock(40, 5, 5, Blocks.JUNGLE_LEAVES);
+        helper.setBlock(42, 5, 5, Blocks.JUNGLE_LEAVES);
+        BlockPos gardenTree = helper.absolutePos(new BlockPos(41, 2, 5));
 
         GraphSurroundings.Around around = GraphSurroundings.of(
                 helper.getLevel(),
                 isolatedBoard(helper.getLevel(), "gametest-graph-forage.jsonl"),
                 new BlockCoord(home.getX(), home.getY(), home.getZ()),
                 Map.of(),
-                Map.of());
+                Map.of(),
+                List.of());
 
         helper.assertTrue(
                 around.world().containsAll(EXPECTED),
@@ -81,6 +91,17 @@ public final class GraphForageGameTests {
                 around.resource("flower:blue_orchid").isPresent()
                         && around.resource("mangrove_swamp").isPresent(),
                 "У метки мира есть ближайшая точка: без неё дух не знает, куда идти за ресурсом");
+        GraphSurroundings.Around garden = GraphSurroundings.of(
+                helper.getLevel(),
+                isolatedBoard(helper.getLevel(), "gametest-graph-orchard.jsonl"),
+                new BlockCoord(home.getX(), home.getY(), home.getZ()),
+                Map.of(),
+                Map.of(),
+                List.of(new BlockCoord(gardenTree.getX(), gardenTree.getY(), gardenTree.getZ())));
+        helper.assertTrue(
+                garden.resource("tree:jungle").isPresent(),
+                "Дерево сада за пределом 32 блоков от дома обязано находиться по точке сада: без этого граф "
+                        + "говорит «нет тропического дерева», хотя оно стоит в саду, и не просит ни брёвен, ни саженцев");
     }
 
     static SpiritRun startBrush(GameTestHelper helper, SpiritEntity spirit) {

@@ -113,8 +113,12 @@ public final class GraphSurroundings {
             BoardService service,
             BlockCoord home,
             Map<String, BlockCoord> sites,
-            Map<String, Integer> siteDistances) {
-        Scan scan = SCANS.get(List.of(level.dimension(), home), level.getGameTime(), () -> blocks(level, home));
+            Map<String, Integer> siteDistances,
+            List<BlockCoord> treeCenters) {
+        Scan scan = SCANS.get(
+                List.of(level.dimension(), home, treeCenters),
+                level.getGameTime(),
+                () -> blocks(level, home, treeCenters));
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
         AABB box = new AABB(center).inflate(RADIUS);
         Set<String> creatures = new HashSet<>();
@@ -215,7 +219,7 @@ public final class GraphSurroundings {
         return Map.copyOf(found);
     }
 
-    private static Scan blocks(ServerLevel level, BlockCoord home) {
+    private static Scan blocks(ServerLevel level, BlockCoord home, List<BlockCoord> treeCenters) {
         Set<String> blocks = new HashSet<>();
         BlockCoord decay = null;
         Map<String, BlockCoord> nearest = new HashMap<>();
@@ -254,6 +258,11 @@ public final class GraphSurroundings {
                 }
             }
         }
+        for (BlockCoord center : treeCenters) {
+            if (!covered(home, center)) {
+                TreeCenterLogs.collect(level, center, logs);
+            }
+        }
         Map<String, Integer> distances = new HashMap<>();
         squared.forEach((tag, value) -> distances.put(tag, (int) Math.round(Math.sqrt(value))));
         return new Scan(
@@ -263,6 +272,13 @@ public final class GraphSurroundings {
                 Map.copyOf(distances),
                 Map.copyOf(SurroundingTargets.of(candidates)),
                 Map.copyOf(logs));
+    }
+
+    private static boolean covered(BlockCoord home, BlockCoord center) {
+        int dx = center.x() - home.x();
+        int dy = center.y() - home.y();
+        int dz = center.z() - home.z();
+        return Math.abs(dx) <= RADIUS && Math.abs(dz) <= RADIUS && dy >= -BELOW && dy <= ABOVE;
     }
 
     private static boolean decaying(BlockState state) {

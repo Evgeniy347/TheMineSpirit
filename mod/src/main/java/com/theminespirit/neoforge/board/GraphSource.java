@@ -96,7 +96,12 @@ public final class GraphSource {
         mark("quarry", started);
         started = System.nanoTime();
         GraphSurroundings.Around around = GraphSurroundings.of(
-                        level, service, stageScan.home(), quarries.nearest(), quarries.distances())
+                        level,
+                        service,
+                        stageScan.home(),
+                        quarries.nearest(),
+                        quarries.distances(),
+                        TreeCenterLogs.centers(stageScan.stage()))
                 .with(events)
                 .withRoutes(quarries.events(), quarries.world());
         mark("around", started);

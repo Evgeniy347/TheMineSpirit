@@ -1,0 +1,56 @@
+package com.theminespirit.neoforge.board;
+
+import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.OrchardPlot;
+import com.theminespirit.core.town.StageSite;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
+
+final class TreeCenterLogs {
+    private static final String NAMESPACE = "minecraft:";
+    private static final int RADIUS = 16;
+    private static final int BELOW = 4;
+    private static final int ABOVE = 16;
+
+    private TreeCenterLogs() {}
+
+    static List<BlockCoord> centers(StageSite site) {
+        List<BlockCoord> centers = new ArrayList<>(site.orchardSaplings());
+        for (OrchardPlot plot : site.extraOrchards()) {
+            centers.addAll(plot.saplings());
+        }
+        return List.copyOf(centers);
+    }
+
+    static void collect(ServerLevel level, BlockCoord center, Map<String, List<BlockCoord>> logs) {
+        for (int dx = -RADIUS; dx <= RADIUS; dx++) {
+            for (int dz = -RADIUS; dz <= RADIUS; dz++) {
+                for (int dy = -BELOW; dy <= ABOVE; dy++) {
+                    BlockPos pos = new BlockPos(center.x() + dx, center.y() + dy, center.z() + dz);
+                    if (!level.isLoaded(pos)) {
+                        continue;
+                    }
+                    String id = BuiltInRegistries.BLOCK
+                            .getKey(level.getBlockState(pos).getBlock())
+                            .getPath();
+                    Optional<TreeSpecies> species = TreeSpecies.ofLog(NAMESPACE + id);
+                    if (species.isEmpty()) {
+                        continue;
+                    }
+                    List<BlockCoord> cells =
+                            logs.computeIfAbsent(species.orElseThrow().id(), key -> new ArrayList<>());
+                    BlockCoord at = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+                    if (!cells.contains(at)) {
+                        cells.add(at);
+                    }
+                }
+            }
+        }
+    }
+}
