@@ -95,9 +95,9 @@ class RescuePlansTests {
 
         PlanValidator.validate(plan, CoreScripts.defaultCatalog(), ConditionCatalog.empty());
         assertEquals(
-                List.of("pillar_up", "goto"),
+                List.of("acquire", "pillar_up", "goto"),
                 scripts(plan),
-                "самоспасение из ямы — сначала ступени, потом шаг на край");
+                "самоспасение из ямы — сначала земля на столб, потом ступени, потом шаг на край");
     }
 
     @Test

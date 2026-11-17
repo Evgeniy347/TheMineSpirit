@@ -60,6 +60,20 @@ class RescueHelperPlanTests {
                 scripts(plan).contains("pillar_up"),
                 "Из узкой ямы после вскрытия верх остаётся недоступным — помощник ставит столб (debtnav, п.3): "
                         + scripts(plan));
+        List<String> order = scripts(plan);
+        int acquire = order.indexOf("acquire");
+        assertTrue(
+                acquire >= 0 && acquire < order.indexOf("pillar_up"),
+                "Помощник идёт с пустыми руками: землю на столб он обязан взять до pillar_up, иначе спасение "
+                        + "падает «нет материала для столба» (observe17): " + order);
+        List<ScriptCall> calls = new ArrayList<>();
+        collectCalls(plan, calls);
+        ScriptCall taken = calls.stream()
+                .filter(call -> "acquire".equals(call.script()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals("minecraft:dirt", taken.params().get("item"), "Столб ставится из земли: " + taken.params());
+        assertEquals(3, taken.params().get("count"), "Земли берётся на весь столб высотой 3: " + taken.params());
     }
 
     private static List<String> scripts(TaskNode plan) {
@@ -75,6 +89,16 @@ class RescueHelperPlanTests {
             sequence.steps().forEach(step -> collect(step, names));
         } else if (plan instanceof FallbackNode fallback) {
             fallback.steps().forEach(step -> collect(step, names));
+        }
+    }
+
+    private static void collectCalls(TaskNode plan, List<ScriptCall> calls) {
+        if (plan instanceof ScriptCall call) {
+            calls.add(call);
+        } else if (plan instanceof SequenceNode sequence) {
+            sequence.steps().forEach(step -> collectCalls(step, calls));
+        } else if (plan instanceof FallbackNode fallback) {
+            fallback.steps().forEach(step -> collectCalls(step, calls));
         }
     }
 }

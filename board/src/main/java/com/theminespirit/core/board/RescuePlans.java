@@ -228,6 +228,7 @@ public final class RescuePlans {
         }
         switch (escape.method()) {
             case PILLAR -> {
+                steps.add(acquireDirt(escape.rise()));
                 steps.add(new ScriptCall("pillar_up", Map.of("height", escape.rise())));
                 steps.add(gotoPoint(escape.exit()));
             }
@@ -258,8 +259,10 @@ public final class RescuePlans {
             return gotoPoint(rescue.target());
         }
         if (rescue.method() == SelfEscape.Method.STEP) {
-            return new SequenceNode(
-                    List.of(new ScriptCall("pillar_up", Map.of("height", rescue.rise())), gotoPoint(rescue.target())));
+            return new SequenceNode(List.of(
+                    acquireDirt(rescue.rise()),
+                    new ScriptCall("pillar_up", Map.of("height", rescue.rise())),
+                    gotoPoint(rescue.target())));
         }
         if (rescue.rise() > 0) {
             return new ScriptCall(
@@ -276,6 +279,10 @@ public final class RescuePlans {
         }
         steps.add(gotoPoint(rescue.target()));
         return new SequenceNode(steps);
+    }
+
+    private static ScriptCall acquireDirt(int count) {
+        return new ScriptCall("acquire", Map.of("item", "minecraft:dirt", "count", Math.max(1, count)));
     }
 
     private static ScriptCall gotoPoint(BlockCoord point) {
