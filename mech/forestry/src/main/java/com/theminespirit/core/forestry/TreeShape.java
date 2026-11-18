@@ -68,8 +68,10 @@ public final class TreeShape {
         }
         if (leaves.size() < ChopTuning.MIN_NATURAL_LEAVES && orchardCare) {
             leaves.addAll(bandLeaves(logs, view));
+            // lib: в саду ствол на месте саженца опознан местом, а не кроной: прошлая рубка могла снять
+            // листву и оставить столб — такой ствол всё равно рубится, иначе сад зарастает обрубками.
         }
-        if (leaves.size() < ChopTuning.MIN_NATURAL_LEAVES) {
+        if (leaves.size() < ChopTuning.MIN_NATURAL_LEAVES && !orchardCare) {
             return new NotATree(NotATree.Reason.NO_LEAVES, Set.copyOf(logs));
         }
         if (logs.size() < ChopTuning.MIN_TRUNK_LOGS) {

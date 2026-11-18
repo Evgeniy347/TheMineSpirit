@@ -81,6 +81,26 @@ class OrchardTreeSightTests {
                 7, tree.logs().size(), "Ствол сада — семь брёвен; бревно кроны выше разрыва не сосед: " + tree.logs());
     }
 
+    @Test
+    void treeShape_OrchardBareTrunk_AcceptedWithoutLeaves() {
+        Map<BlockCoord, String> blocks = new HashMap<>();
+        for (int y = 68; y <= 74; y++) {
+            blocks.put(new BlockCoord(BASE.x(), y, BASE.z()), "minecraft:jungle_log");
+        }
+        blocks.put(new BlockCoord(BASE.x(), BASE.y() - 1, BASE.z()), "minecraft:dirt");
+        ForestryScenarioTests.SnapshotView view = new ForestryScenarioTests.SnapshotView(blocks, "jungle");
+
+        Tree tree = assertInstanceOf(
+                Tree.class,
+                TreeShape.detect(BASE, view, false, true),
+                "Голый ствол сада без листвы — дерево: прошлая рубка сняла крону, столб обязан дочиститься");
+        assertEquals(7, tree.logs().size(), "Ствол сада — семь брёвен и без кроны: " + tree.logs());
+        assertInstanceOf(
+                NotATree.class,
+                TreeShape.detect(BASE, view, false, false),
+                "Вне сада тот же голый ствол отвергается: послабление листвы — только для территории сада");
+    }
+
     private static Map<BlockCoord, String> orchardBlocks() {
         Map<BlockCoord, String> blocks = new HashMap<>();
         for (int y = 68; y <= 74; y++) {
