@@ -96,4 +96,34 @@ class BoardMaterialsTests {
                         .isEmpty(),
                 "Не всякий supplyItem — то, что дух добывает: иконку рисуют только для добычи и снабжения");
     }
+
+    @Test
+    void of_RepairBuilding_ShowsNeedThenMissing() {
+        BoardTile repair = new BoardTile(
+                "repair:hut",
+                "REPAIR_BUILDING",
+                1,
+                90,
+                null,
+                "PENDING",
+                BoardTileGroup.AVAILABLE,
+                Map.of("minecraft:cobblestone", 3),
+                List.of(),
+                0,
+                0,
+                0,
+                0,
+                null,
+                0,
+                List.of("building=Хижина"),
+                Map.of("minecraft:dirt", 5, "minecraft:cobblestone", 8));
+
+        assertEquals(
+                List.of(
+                        new BoardMaterials.Material(BoardMaterials.Kind.NEED, "minecraft:cobblestone", 8),
+                        new BoardMaterials.Material(BoardMaterials.Kind.NEED, "minecraft:dirt", 5),
+                        new BoardMaterials.Material(BoardMaterials.Kind.MISSING, "minecraft:cobblestone", 3)),
+                BoardMaterials.of(repair),
+                "Карточка ремонта обязана показать весь список «Нужно», а следом — только нехватку склада");
+    }
 }

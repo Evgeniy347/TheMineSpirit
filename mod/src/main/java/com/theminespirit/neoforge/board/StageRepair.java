@@ -62,7 +62,7 @@ final class StageRepair {
             }
             service.reopen(id);
         }
-        BoardOutcome outcome = post.submit(ticket, target.withWork(work.repairing(step.name())));
+        BoardOutcome outcome = post.submit(ticket, labelled(target, step).withWork(work.repairing(step.name())));
         if (outcome == BoardOutcome.ACCEPTED) {
             String name = label(step);
             LOGGER.info(
@@ -101,6 +101,19 @@ final class StageRepair {
             }
         }
         return false;
+    }
+
+    private static TicketTarget labelled(TicketTarget target, BoardCase step) {
+        return target.building() == null ? target.withBuilding(label(step)) : target;
+    }
+
+    static String buildingLabel(String id, BoardCase step) {
+        return DataTables.INSTANCE
+                .town()
+                .current()
+                .entry(id)
+                .map(TownEntry::name)
+                .orElse(label(step));
     }
 
     static String label(BoardCase step) {

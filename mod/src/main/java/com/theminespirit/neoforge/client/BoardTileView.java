@@ -1,12 +1,10 @@
 package com.theminespirit.neoforge.client;
 
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.ui.BoardClock;
 import com.theminespirit.core.ui.BoardLayout;
 import com.theminespirit.core.ui.BoardMaterials;
 import com.theminespirit.core.ui.BoardTile;
 import com.theminespirit.core.ui.BoardTileGroup;
-import com.theminespirit.core.ui.BoardTimeView;
 import com.theminespirit.core.ui.BoardWaitReasons;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +14,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -73,7 +70,9 @@ final class BoardTileView {
         List<BoardMaterials.Material> allIcons = new ArrayList<>();
         List<BoardMaterials.Material> texts = new ArrayList<>();
         for (BoardMaterials.Material material : BoardMaterials.of(tile)) {
-            if (stack(material.item()) == null) {
+            if (material.kind() == BoardMaterials.Kind.NEED
+                    || material.kind() == BoardMaterials.Kind.MISSING
+                    || stack(material.item()) == null) {
                 texts.add(material);
             } else {
                 allIcons.add(material);
@@ -86,20 +85,24 @@ final class BoardTileView {
         int lineStep = BoardLayout.TILE_LINE_STEP;
         int lineY = y + BoardLayout.TILE_TEXT_TOP;
         graphics.drawString(
-                font, font.plainSubstrByWidth(taskText(tile).getString(), textWidth), x + TEXT_PAD, lineY, TEXT_COLOR);
+                font,
+                font.plainSubstrByWidth(BoardTileTexts.taskText(tile).getString(), textWidth),
+                x + TEXT_PAD,
+                lineY,
+                TEXT_COLOR);
         lineY += lineStep;
         graphics.drawString(
                 font,
-                font.plainSubstrByWidth(detailsText(tile).getString(), width - 2 * TEXT_PAD),
+                font.plainSubstrByWidth(BoardTileTexts.detailsText(tile).getString(), width - 2 * TEXT_PAD),
                 x + TEXT_PAD,
                 lineY,
                 MUTED_COLOR);
         lineY += lineStep;
-        Component time = timeText(tile);
+        Component time = BoardTileTexts.timeText(tile);
         if (time != null) {
             lineY = drawLine(graphics, font, time, x, lineY, width, MUTED_COLOR);
         }
-        Component spent = spentText(tile);
+        Component spent = BoardTileTexts.spentText(tile);
         if (spent != null) {
             lineY = drawLine(graphics, font, spent, x, lineY, width, MUTED_COLOR);
         }
@@ -107,10 +110,10 @@ final class BoardTileView {
         int thirdColor = UNRESOLVED_COLOR;
         List<BoardWaitReasons.Wait> waits = context.waitReasons().get(tile.id());
         if (tile.unfinished()) {
-            third = Component.translatable(KEY + "unfinished").getString();
+            third = BoardTileTexts.unfinished().getString();
             thirdColor = FAILED_COLOR;
         } else if (waits != null && !waits.isEmpty()) {
-            third = waitText(waits.get(0), context.byId()).getString();
+            third = BoardTileTexts.waitText(waits.get(0), context.byId()).getString();
         }
         if (third != null) {
             lineY = drawLine(graphics, font, Component.literal(third), x, lineY, width, thirdColor);
@@ -122,7 +125,7 @@ final class BoardTileView {
             if (lineY + BoardLayout.TILE_LINE_STEP > y + BoardLayout.TILE_HEIGHT) {
                 break;
             }
-            lineY = drawLine(graphics, font, materialText(material), x, lineY, width, UNRESOLVED_COLOR);
+            lineY = drawLine(graphics, font, BoardTileTexts.materialText(material), x, lineY, width, UNRESOLVED_COLOR);
         }
         return renderIcons(graphics, font, icons, rect, cursor, tile);
     }
@@ -145,7 +148,7 @@ final class BoardTileView {
             }
             int iconX = startX + i * (ICON + ICON_GAP);
             graphics.renderItem(stack, iconX, iconY);
-            graphics.renderItemDecorations(font, stack, iconX, iconY, countText(material.count()));
+            graphics.renderItemDecorations(font, stack, iconX, iconY, BoardTileTexts.countText(material.count()));
             if (cursor.x() >= iconX && cursor.x() < iconX + ICON && cursor.y() >= iconY && cursor.y() < iconY + ICON) {
                 hovered = material;
             }
@@ -156,35 +159,35 @@ final class BoardTileView {
     static List<Component> tooltip(
             BoardTile tile, Map<String, List<BoardWaitReasons.Wait>> waitReasons, Map<String, BoardTile> byId) {
         List<Component> lines = new ArrayList<>();
-        lines.add(taskText(tile));
+        lines.add(BoardTileTexts.taskText(tile));
         lines.add(Component.translatable(KEY + "group." + tile.group().name().toLowerCase(Locale.ROOT)));
         if (tile.unfinished()) {
-            lines.add(Component.translatable(KEY + "unfinished"));
+            lines.add(BoardTileTexts.unfinished());
         }
         lines.add(Component.translatableWithFallback(
                 KEY + "status." + tile.status().toLowerCase(Locale.ROOT), tile.status()));
-        lines.add(detailsText(tile));
-        Component time = timeText(tile);
+        lines.add(BoardTileTexts.detailsText(tile));
+        Component time = BoardTileTexts.timeText(tile);
         if (time != null) {
             lines.add(time);
         }
-        Component spent = spentText(tile);
+        Component spent = BoardTileTexts.spentText(tile);
         if (spent != null) {
             lines.add(spent);
         }
         for (BoardMaterials.Material material : BoardMaterials.of(tile)) {
-            lines.add(materialText(material));
+            lines.add(BoardTileTexts.materialText(material));
         }
         for (BoardWaitReasons.Wait wait : waitReasons.getOrDefault(tile.id(), List.of())) {
-            lines.add(waitText(wait, byId));
+            lines.add(BoardTileTexts.waitText(wait, byId));
         }
         return lines;
     }
 
     static List<Component> materialTooltip(BoardMaterials.Material material) {
         List<Component> lines = new ArrayList<>();
-        lines.add(itemName(material.item()));
-        lines.add(materialText(material));
+        lines.add(BoardTileTexts.itemName(material.item()));
+        lines.add(BoardTileTexts.materialText(material));
         return lines;
     }
 
@@ -200,97 +203,5 @@ final class BoardTileView {
         }
         Item item = BuiltInRegistries.ITEM.get(key);
         return new ItemStack(item);
-    }
-
-    static Component materialText(BoardMaterials.Material material) {
-        String key = switch (material.kind()) {
-            case GATHER -> KEY + "material.gather";
-            case SUPPLY -> KEY + "material.supply";
-            case MISSING -> KEY + "material.missing";
-        };
-        return Component.translatable(key, itemName(material.item()), Component.literal(countText(material.count())));
-    }
-
-    private static String countText(int count) {
-        return Integer.toString(count);
-    }
-
-    private static @Nullable Component timeText(BoardTile tile) {
-        BoardTimeView time = BoardTimeView.of(tile);
-        if (!time.showsMoment()) {
-            return null;
-        }
-        MutableComponent started = Component.translatable(KEY + "time.started", momentText(time.startedAt()));
-        if (time.showsFinish()) {
-            started.append(" · ").append(Component.translatable(KEY + "time.finished", momentText(time.finishedAt())));
-        }
-        return started;
-    }
-
-    private static @Nullable Component spentText(BoardTile tile) {
-        BoardTimeView time = BoardTimeView.of(tile);
-        if (!time.showsSpent()) {
-            return null;
-        }
-        return Component.translatable(KEY + (time.running() ? "time.running" : "time.spent"), time.minutes());
-    }
-
-    private static Component momentText(long tick) {
-        BoardClock.Moment moment = BoardClock.moment(tick);
-        return Component.translatable(
-                KEY + "time.moment",
-                moment.day(),
-                BoardClock.twoDigits(moment.hour()),
-                BoardClock.twoDigits(moment.minute()));
-    }
-
-    private static MutableComponent taskText(BoardTile tile) {
-        String name = tile.boardCase().toLowerCase(Locale.ROOT);
-        MutableComponent text = Component.translatableWithFallback(KEY + "case." + name, tile.boardCase());
-        if (tile.level() > 1) {
-            text.append(" ").append(Component.translatable(KEY + "level", tile.level()));
-        }
-        return text;
-    }
-
-    private static Component detailsText(BoardTile tile) {
-        Component spirit = tile.spirit() == null ? Component.literal("…") : Component.literal(tile.spirit());
-        MutableComponent text = Component.translatable(KEY + "details", tile.priority(), spirit);
-        for (String detail : tile.details()) {
-            text.append(" · ").append(Component.literal(detail));
-        }
-        return text;
-    }
-
-    private static Component waitText(BoardWaitReasons.Wait wait, Map<String, BoardTile> byId) {
-        return switch (wait.kind()) {
-            case FREE_SPIRIT -> Component.translatable(KEY + "wait.free_spirit");
-            case SPIRIT -> Component.translatable(KEY + "wait.spirit", Component.literal(wait.subject()));
-            case RESOURCE ->
-                Component.translatable(
-                        KEY + "wait.resource",
-                        itemName(wait.subject()),
-                        Component.literal(String.valueOf(wait.count())));
-            case TOOL ->
-                Component.translatable(
-                        KEY + "wait.tool", itemName(wait.subject()), Component.literal(String.valueOf(wait.count())));
-            case DEPENDENCY -> Component.translatable(KEY + "wait.dependency", dependencyText(wait.subject(), byId));
-            case BLOCKED -> Component.translatable(KEY + "wait.blocked");
-            case FAILED -> Component.translatable(KEY + "wait.failed");
-            case CANCELLED -> Component.translatable(KEY + "wait.cancelled");
-        };
-    }
-
-    private static Component dependencyText(String id, Map<String, BoardTile> byId) {
-        BoardTile dependency = byId.get(id);
-        return dependency == null ? Component.literal(id) : taskText(dependency);
-    }
-
-    static Component itemName(String id) {
-        ResourceLocation key = ResourceLocation.tryParse(id);
-        if (key == null || !BuiltInRegistries.ITEM.containsKey(key)) {
-            return Component.literal(id);
-        }
-        return BuiltInRegistries.ITEM.get(key).getDescription();
     }
 }

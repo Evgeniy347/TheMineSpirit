@@ -37,6 +37,7 @@
   "theminespirit.board.missing": "Missing:",
   "theminespirit.board.material.gather": "Gather: %s ×%s",
   "theminespirit.board.material.supply": "Deliver: %s ×%s",
+  "theminespirit.board.material.need": "Need: %s ×%s",
   "theminespirit.board.material.missing": "Missing: %s ×%s",
   "theminespirit.board.unfinished": "failed to complete",
   "theminespirit.board.filter.all": "all",

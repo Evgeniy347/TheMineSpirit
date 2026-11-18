@@ -1,7 +1,6 @@
 package com.theminespirit.core.ui;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -14,6 +13,7 @@ public final class BoardMaterials {
     public enum Kind {
         GATHER,
         SUPPLY,
+        NEED,
         MISSING
     }
 
@@ -34,14 +34,24 @@ public final class BoardMaterials {
     public static List<Material> of(BoardTile tile) {
         Objects.requireNonNull(tile, "Плитка не может быть null: материалы берут из задания");
         Kind supplyKind = supplyKind(tile.boardCase());
-        Map<String, Material> materials = new LinkedHashMap<>();
+        List<Material> materials = new ArrayList<>();
+        String supplyItem = null;
         if (supplyKind != null && tile.supplyItem() != null && tile.supplyCount() > 0) {
-            materials.put(tile.supplyItem(), new Material(supplyKind, tile.supplyItem(), tile.supplyCount()));
+            supplyItem = tile.supplyItem();
+            materials.add(new Material(supplyKind, supplyItem, tile.supplyCount()));
+        }
+        if ("REPAIR_BUILDING".equals(tile.boardCase())) {
+            for (Map.Entry<String, Integer> entry : new TreeMap<>(tile.requiredItems()).entrySet()) {
+                materials.add(new Material(Kind.NEED, entry.getKey(), entry.getValue()));
+            }
         }
         for (Map.Entry<String, Integer> entry : new TreeMap<>(tile.missing()).entrySet()) {
-            materials.putIfAbsent(entry.getKey(), new Material(Kind.MISSING, entry.getKey(), entry.getValue()));
+            if (entry.getKey().equals(supplyItem)) {
+                continue;
+            }
+            materials.add(new Material(Kind.MISSING, entry.getKey(), entry.getValue()));
         }
-        return List.copyOf(new ArrayList<>(materials.values()));
+        return List.copyOf(materials);
     }
 
     public static @Nullable Kind supplyKind(String boardCase) {

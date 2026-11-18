@@ -50,7 +50,7 @@ public final class BoardViewChannel {
     public static final CustomPacketPayload.Type<Reply> REPLY = new CustomPacketPayload.Type<>(
             ResourceLocation.fromNamespaceAndPath(ModIdentity.MOD_ID, "board_view_reply"));
 
-    private static final String PROTOCOL_VERSION = "5";
+    private static final String PROTOCOL_VERSION = "6";
     private static final List<BoardTileGroup> GROUPS = List.of(BoardTileGroup.values());
     private static final List<BoardFilter.Spirit> SPIRITS = List.of(BoardFilter.Spirit.values());
     private static volatile Consumer<Reply> clientReceiver = reply -> {};

@@ -49,6 +49,11 @@ final class BoardTileCodec {
             for (String detail : tile.details()) {
                 buf.writeUtf(detail);
             }
+            buf.writeVarInt(tile.requiredItems().size());
+            for (Map.Entry<String, Integer> item : tile.requiredItems().entrySet()) {
+                buf.writeUtf(item.getKey());
+                buf.writeVarInt(item.getValue());
+            }
         }
     }
 
@@ -94,6 +99,11 @@ final class BoardTileCodec {
         for (int j = 0; j < detailCount; j++) {
             details.add(buf.readUtf());
         }
+        int requiredCount = buf.readVarInt();
+        Map<String, Integer> requiredItems = new LinkedHashMap<>();
+        for (int j = 0; j < requiredCount; j++) {
+            requiredItems.put(buf.readUtf(), buf.readVarInt());
+        }
         return new BoardTile(
                 id,
                 boardCase,
@@ -110,6 +120,7 @@ final class BoardTileCodec {
                 durationTicks,
                 supplyItem,
                 supplyCount,
-                details);
+                details,
+                requiredItems);
     }
 }

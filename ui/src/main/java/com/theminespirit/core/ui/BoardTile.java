@@ -22,7 +22,45 @@ public record BoardTile(
         long durationTicks,
         @Nullable String supplyItem,
         int supplyCount,
-        List<String> details) {
+        List<String> details,
+        Map<String, Integer> requiredItems) {
+    public BoardTile(
+            String id,
+            String boardCase,
+            int level,
+            int priority,
+            @Nullable String spirit,
+            String status,
+            BoardTileGroup group,
+            Map<String, Integer> missing,
+            List<String> dependsOn,
+            long doneAt,
+            long startedAt,
+            long finishedAt,
+            long durationTicks,
+            @Nullable String supplyItem,
+            int supplyCount,
+            List<String> details) {
+        this(
+                id,
+                boardCase,
+                level,
+                priority,
+                spirit,
+                status,
+                group,
+                missing,
+                dependsOn,
+                doneAt,
+                startedAt,
+                finishedAt,
+                durationTicks,
+                supplyItem,
+                supplyCount,
+                details,
+                Map.of());
+    }
+
     public BoardTile(
             String id,
             String boardCase,
@@ -87,7 +125,8 @@ public record BoardTile(
                 finishedAt,
                 durationTicks,
                 null,
-                0);
+                0,
+                List.of());
     }
 
     public BoardTile {
@@ -117,6 +156,8 @@ public record BoardTile(
         }
         details = List.copyOf(Objects.requireNonNull(
                 details, "details не может быть null: задание без подробностей задают пустым списком"));
+        requiredItems = Map.copyOf(Objects.requireNonNull(
+                requiredItems, "requiredItems не может быть null: задание без нужды задают пустой картой"));
     }
 
     public boolean completed() {
