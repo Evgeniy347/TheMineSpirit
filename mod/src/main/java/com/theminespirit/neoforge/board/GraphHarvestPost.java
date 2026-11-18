@@ -98,8 +98,13 @@ final class GraphHarvestPost {
             }
             grown = true;
             String id = OrchardPlans.id(spot);
-            if (post.done(id) || post.open(id)) {
+            if (post.open(id)) {
                 continue;
+            }
+            if (post.done(id)) {
+                // lib: id места постоянный, а дерево на нём вырастает снова — выполненное задание возвращаем,
+                // иначе после первой рубки сад зарастает и больше не рубится.
+                post.service.board().reopen(id);
             }
             post.submit(
                     post.ticket(

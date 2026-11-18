@@ -50,6 +50,34 @@ class BoardProgressTests {
     }
 
     @Test
+    void reopen_OrchardSpotGrownAgain_TakesSameId() {
+        Board board = new Board(() -> 10);
+        BoardTicket harvest = new BoardTicket(
+                "orchard:-165,-438",
+                BoardCase.HARVEST_ORCHARD,
+                Optional.empty(),
+                BoardRules.priorityOf(BoardCase.HARVEST_ORCHARD),
+                0,
+                1,
+                BoardTicket.ALWAYS_CAUSE,
+                List.of(),
+                Map.of());
+        board.submit(harvest);
+        board.claim(harvest.id(), SPIRIT, 0);
+        board.complete(harvest.id());
+
+        assertTrue(
+                board.reopen(harvest.id()),
+                "Клетка сада снова с деревом возвращает выполненную рубку: иначе сад зарастает навсегда");
+        board.submit(harvest);
+
+        assertEquals(
+                BoardStatus.PENDING,
+                board.statusOf(harvest.id()).orElse(null),
+                "Заявка на ту же клетку сада после переоткрытия снова в доске: id места постоянный");
+    }
+
+    @Test
     void complete_AfterReopen_GrowsDoneTotalAgain() {
         Board board = new Board(() -> 10);
         finish(board, "repair:build_house");
