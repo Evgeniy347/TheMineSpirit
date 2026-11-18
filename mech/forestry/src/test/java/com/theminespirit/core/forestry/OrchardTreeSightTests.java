@@ -1,6 +1,7 @@
 package com.theminespirit.core.forestry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
@@ -64,6 +65,20 @@ class OrchardTreeSightTests {
                 found.isEmpty(),
                 "Одиночное бревно в кроне сада остаётся обломком и деревом не становится даже с послаблением: "
                         + "дух обязан рубить ствол, а не висеть на кроне. Найдено: " + found);
+    }
+
+    @Test
+    void treeShape_OrchardTrunkWithSoil_AcceptedWithoutNoSoilFlag() {
+        Map<BlockCoord, String> blocks = orchardBlocks();
+        ForestryScenarioTests.SnapshotView view = new ForestryScenarioTests.SnapshotView(blocks, "jungle");
+
+        Tree tree = assertInstanceOf(
+                Tree.class,
+                TreeShape.detect(BASE, view, false, true),
+                "Точная рубка сада зовёт детектор без послабления почвы: ствол сада на земле обязан разобраться "
+                        + "как дерево, иначе chop_target harvest_orchard падает «не дерево» на здоровом стволе");
+        assertEquals(
+                7, tree.logs().size(), "Ствол сада — семь брёвен; бревно кроны выше разрыва не сосед: " + tree.logs());
     }
 
     private static Map<BlockCoord, String> orchardBlocks() {

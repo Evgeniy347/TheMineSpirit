@@ -64,7 +64,7 @@ class OrchardTreeTests {
     }
 
     @Test
-    void orchardTerritory_SaplingsAndOutsideCells() {
+    void orchardTerritory_SaplingsAndOutside_MatchesPlot() {
         BlockCoord spot = SITE.orchardSaplings().get(0);
         BlockCoord origin = SITE.orchardOrigin();
 

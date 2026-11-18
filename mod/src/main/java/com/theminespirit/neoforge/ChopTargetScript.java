@@ -94,7 +94,8 @@ public final class ChopTargetScript implements ScriptInstance {
             return fail("нет дерева по координате " + target.toShortString() + ": там не бревно. Укажите координату "
                     + "ствола настоящего дерева");
         }
-        TreeDetection detection = TreeShape.detect(new BlockCoord(params.x(), params.y(), params.z()), treeView);
+        TreeDetection detection =
+                TreeShape.detect(new BlockCoord(params.x(), params.y(), params.z()), treeView, false, params.orchard());
         if (detection instanceof NotATree notATree) {
             return fail("по координате " + target.toShortString() + " не дерево (" + reasonText(notATree.reason())
                     + "): укажите координату ствола настоящего дерева");
