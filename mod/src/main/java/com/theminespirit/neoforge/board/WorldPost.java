@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardStatus;
@@ -16,11 +17,16 @@ import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.town.PitGroups;
 import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.SettlementScan;
+import com.theminespirit.core.town.StageSite;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
+import org.slf4j.Logger;
 
 final class WorldPost {
     static final String REPAIR_NODE = "repair:";
@@ -32,8 +38,22 @@ final class WorldPost {
             .thenComparingInt(BlockCoord::x)
             .thenComparingInt(BlockCoord::z);
     static final int BATCH = 8;
+    private static final Set<BlockCoord> PLANNED_SKIPPED = ConcurrentHashMap.newKeySet();
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private WorldPost() {}
+
+    private static Predicate<BlockCoord> skipPlanned(StageSite site) {
+        return at -> {
+            if (!site.planCell(at.x(), at.y(), at.z())) {
+                return false;
+            }
+            if (PLANNED_SKIPPED.add(at)) {
+                LOGGER.info("[plot] расчистка не трогает {}: там блок постройки плана поселения", at);
+            }
+            return true;
+        };
+    }
 
     static boolean handles(String node) {
         return switch (node) {
@@ -74,7 +94,11 @@ final class WorldPost {
             if (extras.isEmpty() && holes.isEmpty()) {
                 return false;
             }
-            target = target.withLeveling(LevelRepair.leveling(holes, extras));
+            PlotLeveling leveling = LevelRepair.leveling(holes, extras, skipPlanned(post.scan.stage()));
+            if (leveling.cut().isEmpty() && leveling.fill().isEmpty()) {
+                return false;
+            }
+            target = target.withLeveling(leveling);
         }
         target = StageSettle.repairTarget(step, target, gap);
         BoardOutcome outcome = StageRepair.post(

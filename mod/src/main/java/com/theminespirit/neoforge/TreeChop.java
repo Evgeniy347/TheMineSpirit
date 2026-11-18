@@ -6,7 +6,6 @@ import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.forestry.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.observation.IdFilter;
 import java.util.List;
 import java.util.Locale;
 import net.minecraft.core.BlockPos;
@@ -20,6 +19,7 @@ final class TreeChop {
     private enum Phase {
         ASCENT,
         CHOP,
+        CANOPY,
         RETURN
     }
 
@@ -28,6 +28,7 @@ final class TreeChop {
     private final ChopScaffold scaffold;
     private final ChopAscent ascent;
     private final ChopPass pass;
+    private final ChopCanopy canopy;
     private final ChopReturn chopReturn;
     private Tree tree;
     private TreeSpecies species;
@@ -35,13 +36,14 @@ final class TreeChop {
     private int standingLogs;
     private @Nullable ChopOutcome refusal;
 
-    TreeChop(SpiritEntity spirit, IdFilter logFilter, boolean replant, boolean orchard, TreeView view) {
+    TreeChop(SpiritEntity spirit, boolean replant, boolean orchard, TreeView view) {
         this.spirit = spirit;
         this.breaker = new BlockBreaker(spirit);
         this.scaffold = new ChopScaffold(spirit);
         this.pass = new ChopPass(spirit, view, orchard, breaker);
         this.ascent = new ChopAscent(spirit, view, pass, scaffold);
-        this.chopReturn = new ChopReturn(spirit, scaffold, new ChopHarvest(spirit, logFilter, replant, orchard, view));
+        this.canopy = new ChopCanopy(spirit, view);
+        this.chopReturn = new ChopReturn(spirit, scaffold, new ChopHarvest(spirit, replant, orchard, view));
     }
 
     void begin(Tree target) {
@@ -76,6 +78,7 @@ final class TreeChop {
         return switch (phase) {
             case ASCENT -> ascent();
             case CHOP -> chop();
+            case CANOPY -> canopy();
             case RETURN -> returning();
         };
     }
@@ -83,12 +86,14 @@ final class TreeChop {
     void cancel() {
         breaker.cancel();
         ascent.cancel();
+        canopy.cancel();
         chopReturn.cancel();
     }
 
     void suspend() {
         ascent.suspend();
         pass.suspend();
+        canopy.suspend();
         chopReturn.suspend();
     }
 
@@ -107,7 +112,7 @@ final class TreeChop {
         List<BlockCoord> rest =
                 pass.rest(feet == null ? tree.base() : toCoord(feet)).order();
         if (rest.isEmpty()) {
-            return startReturn();
+            return startCanopy();
         }
         if (ascent.pursue(rest) != null) {
             return ChopOutcome.running();
@@ -117,7 +122,7 @@ final class TreeChop {
 
     private ChopOutcome giveUp() {
         if (pass.remaining() == 0) {
-            return startReturn();
+            return startCanopy();
         }
         return ascent.tried() > 1 ? leftStanding() : ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
     }
@@ -140,7 +145,7 @@ final class TreeChop {
         ChopPlan rest = pass.rest(stand == null ? tree.base() : toCoord(stand));
         pass.continueWith(rest);
         if (rest.order().isEmpty()) {
-            return startReturn();
+            return startCanopy();
         }
         BlockPos picked = ascent.pursue(rest.order());
         if (picked == null) {
@@ -168,8 +173,21 @@ final class TreeChop {
         return startReturn();
     }
 
+    private ChopOutcome startCanopy() {
+        canopy.begin(tree);
+        phase = Phase.CANOPY;
+        return ChopOutcome.running();
+    }
+
+    private ChopOutcome canopy() {
+        if (canopy.tick()) {
+            return ChopOutcome.running();
+        }
+        return startReturn();
+    }
+
     private ChopOutcome startReturn() {
-        chopReturn.begin(tree, species, standingLogs);
+        chopReturn.begin(tree, species, standingLogs, canopy.removed());
         phase = Phase.RETURN;
         return ChopOutcome.running();
     }

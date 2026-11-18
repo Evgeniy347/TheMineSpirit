@@ -4,9 +4,9 @@ import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.forestry.TreeView;
-import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 final class ChopHarvest {
@@ -17,7 +17,6 @@ final class ChopHarvest {
     }
 
     private final SpiritEntity spirit;
-    private final IdFilter logFilter;
     private final boolean replant;
     private final boolean orchard;
     private final TreeView view;
@@ -30,9 +29,8 @@ final class ChopHarvest {
     private boolean lacked;
     private String failureReason = "";
 
-    ChopHarvest(SpiritEntity spirit, IdFilter logFilter, boolean replant, boolean orchard, TreeView view) {
+    ChopHarvest(SpiritEntity spirit, boolean replant, boolean orchard, TreeView view) {
         this.spirit = spirit;
-        this.logFilter = logFilter;
         this.replant = replant;
         this.orchard = orchard;
         this.view = view;
@@ -43,7 +41,7 @@ final class ChopHarvest {
         species = harvested;
         collector = new DropCollector(
                 spirit,
-                logFilter,
+                TreeBlocks.dropFilter(List.of(harvested)),
                 target.base(),
                 ChopTuning.COLLECT_RADIUS,
                 PickupTuning.DEFAULT,
@@ -91,6 +89,10 @@ final class ChopHarvest {
             skipped = replanted.skipped();
             lacked = replanted.lackedSaplings();
             planting = null;
+        }
+        if (replant && !orchard && planted == 0 && lacked) {
+            failureReason = "нет саженцев: крона дерева не дала саженец, посадить нечего";
+            return State.FAILED;
         }
         return State.DONE;
     }

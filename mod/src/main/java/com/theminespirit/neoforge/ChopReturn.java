@@ -19,6 +19,7 @@ final class ChopReturn {
     private Tree tree;
     private TreeSpecies species;
     private int standingLogs;
+    private int leavesRemoved;
     private Stage stage;
 
     ChopReturn(SpiritEntity spirit, ChopScaffold scaffold, ChopHarvest harvest) {
@@ -27,10 +28,11 @@ final class ChopReturn {
         this.harvest = harvest;
     }
 
-    void begin(Tree target, TreeSpecies harvested, int logs) {
+    void begin(Tree target, TreeSpecies harvested, int logs, int leaves) {
         tree = target;
         species = harvested;
         standingLogs = logs;
+        leavesRemoved = leaves;
         if (scaffold.hasScaffold()) {
             scaffold.startDescent();
             stage = Stage.DESCENT;
@@ -78,7 +80,11 @@ final class ChopReturn {
     private ChopOutcome collect() {
         return switch (harvest.tick()) {
             case RUNNING -> ChopOutcome.running();
-            case DONE -> ChopOutcome.done(standingLogs, harvest.planted(), harvest.skipped(), harvest.lacked());
+            case DONE ->
+                standingLogs > 0
+                        ? ChopOutcome.leftStanding(standingLogs, harvest.planted(), harvest.skipped(), harvest.lacked())
+                        : ChopOutcome.done(
+                                standingLogs, harvest.planted(), harvest.skipped(), harvest.lacked(), leavesRemoved);
             case FAILED -> ChopOutcome.failed("подбор дропа после рубки: " + harvest.failureReason());
         };
     }

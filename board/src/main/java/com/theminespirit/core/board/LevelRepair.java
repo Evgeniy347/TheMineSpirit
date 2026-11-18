@@ -23,9 +23,20 @@ public final class LevelRepair {
     private LevelRepair() {}
 
     public static PlotLeveling leveling(List<BlockCoord> holes, List<BlockCoord> extras) {
+        return leveling(holes, extras, at -> false);
+    }
+
+    public static PlotLeveling leveling(
+            List<BlockCoord> holes, List<BlockCoord> extras, Predicate<BlockCoord> planned) {
         Objects.requireNonNull(holes, "Дыры участка не могут быть null: нет дыр — пустой список");
         Objects.requireNonNull(extras, "Лишние блоки не могут быть null: нет лишних — пустой список");
-        return new PlotLeveling(columns(extras, true), columns(holes, false), PlotLeveling.DEFAULT_BLOCK);
+        Objects.requireNonNull(planned, "Признак плана не может быть null: без него расчистка срежет постройку");
+        return new PlotLeveling(
+                columns(kept(extras, planned), true), columns(kept(holes, planned), false), PlotLeveling.DEFAULT_BLOCK);
+    }
+
+    private static List<BlockCoord> kept(List<BlockCoord> cells, Predicate<BlockCoord> planned) {
+        return cells.stream().filter(at -> !planned.test(at)).toList();
     }
 
     private static List<PlotLeveling.Box> splitColumns(List<PlotLeveling.Box> boxes) {

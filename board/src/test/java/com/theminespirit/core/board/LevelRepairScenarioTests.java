@@ -163,6 +163,26 @@ class LevelRepairScenarioTests {
                 "У ремонта выравнивания есть работа — «стройка закрыта без работы» больше не срабатывает");
     }
 
+    @Test
+    void leveling_PlannedCells_ExcludedFromCutAndFill() {
+        BlockCoord house = new BlockCoord(-180, 71, -505);
+        BlockCoord mound = new BlockCoord(4, 70, 4);
+        BlockCoord hole = new BlockCoord(7, 69, 7);
+
+        PlotLeveling leveling =
+                LevelRepair.leveling(List.of(hole, house), List.of(house, mound), at -> house.equals(at));
+
+        assertEquals(
+                List.of(new PlotLeveling.Box(4, 70, 4, 4, 70, 4)),
+                leveling.cut(),
+                "Срезка выравнивания не берёт клетку дома: защита участка откажет в ломке (160 отказов "
+                        + "repair:clear_grounds у дома 18.11), а задание повторяется каждые 10 секунд");
+        assertEquals(
+                List.of(new PlotLeveling.Box(7, 69, 7, 7, 69, 7)),
+                leveling.fill(),
+                "Подсыпка в клетку дома тоже не планируется: план постройки ставит свои блоки сам");
+    }
+
     private static void collect(TaskNode node, List<ScriptCall> out) {
         switch (node) {
             case ScriptCall call -> out.add(call);

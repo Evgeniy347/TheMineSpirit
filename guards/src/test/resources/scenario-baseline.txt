@@ -153,3 +153,4 @@ mech/building/com/theminespirit/core/building/SchematicUpgradeTests.java # сн�
 mech/building/com/theminespirit/core/building/BuildPitTests.java # правило «копать вверх только запертому»: чистая граница BuildPit, сюита засыпки её не проверяет
 mech/forestry/com/theminespirit/core/forestry/LiveJungleStandTests.java # живая фикстура 2×2 jungle: сюита рубки уже на пределе 300 строк
 mech/mining/com/theminespirit/core/mining/StandSpotsReachTests.java # досягаемость стоянки из SpiritReach: границы глубины и предел смещения, отдельно от StandSpotsTests (300 строк)
+mech/forestry/com/theminespirit/core/forestry/TreeCanopyTests.java # план кроны: геометрия своей и соседней листвы, сюита рубки ForestryScenarioTests уже 297 строк (предел 300)

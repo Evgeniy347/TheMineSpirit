@@ -108,6 +108,15 @@ final class ChopReplantGameTests {
                     "рубка висящей верхушки, склона, веток и двух деревьев рядом обязана завершиться, статус "
                             + shapeStatus[0] + ", причина: " + shapes.failureReason());
             helper.assertTrue(
+                    countBlocksInWorld(helper, Blocks.OAK_LOG) == 0
+                            && countBlocksInWorld(helper, Blocks.OAK_LEAVES) == 0,
+                    "дуб срублен целиком: ствола и кроны над пнём не осталось, а в мире брёвен "
+                            + countBlocksInWorld(helper, Blocks.OAK_LOG) + ", листвы "
+                            + countBlocksInWorld(helper, Blocks.OAK_LEAVES));
+            helper.assertTrue(
+                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG) >= 5,
+                    "дроп дуба собран в инвентарь, а не брошен у пня; в инвентаре " + spirit.getInventory());
+            helper.assertTrue(
                     countBlocksInWorld(helper, Blocks.BIRCH_LOG) == 0,
                     "все формы срублены целиком: висящая верхушка, склон у воды, ветки и два дерева рядом — "
                             + "брёвен не осталось");

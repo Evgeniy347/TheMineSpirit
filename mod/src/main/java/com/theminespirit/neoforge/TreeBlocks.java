@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.IdFilter;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,7 +25,13 @@ public final class TreeBlocks {
         return blocks;
     }
 
-    static IdFilter filter(List<TreeSpecies> species) {
-        return IdFilter.of(species.stream().map(TreeSpecies::logId).toList());
+    static IdFilter dropFilter(List<TreeSpecies> species) {
+        List<String> drops = new ArrayList<>();
+        for (TreeSpecies entry : species) {
+            drops.add(entry.logId());
+            drops.add(entry.saplingId());
+        }
+        drops.add("minecraft:stick");
+        return IdFilter.of(drops);
     }
 }

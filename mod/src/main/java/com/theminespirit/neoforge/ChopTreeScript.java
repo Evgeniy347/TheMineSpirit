@@ -12,7 +12,6 @@ import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeDetection;
 import com.theminespirit.core.forestry.TreeShape;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
@@ -29,18 +28,12 @@ public final class ChopTreeScript implements ScriptInstance {
 
     private final SpiritEntity spirit;
     private final ChopTreeParams params;
-    private final IdFilter logFilter;
     private final LevelTreeView treeView;
     private final TreeChop chop;
     private final ChopSearch search;
+    private final ChopTally tally = new ChopTally();
     private Tree tree;
     private boolean chopping;
-    private int standingLogs;
-    private int protectedLogs;
-    private int plantedSaplings;
-    private int skippedCells;
-    private boolean lackedSaplings;
-    private int chopped;
     private int rejected;
     private int unreachable;
     private String failureReason;
@@ -52,10 +45,9 @@ public final class ChopTreeScript implements ScriptInstance {
         this.spirit = spirit;
         this.params = params;
         Set<Block> logBlocks = TreeBlocks.logs(params.species());
-        this.logFilter = TreeBlocks.filter(params.species());
         this.treeView = new LevelTreeView(spirit.level(), logBlocks);
         this.search = new ChopSearch(spirit, params, logBlocks);
-        this.chop = new TreeChop(spirit, logFilter, params.replant(), false, treeView);
+        this.chop = new TreeChop(spirit, params.replant(), false, treeView);
     }
 
     @Override
@@ -68,7 +60,7 @@ public final class ChopTreeScript implements ScriptInstance {
 
     @Override
     public Optional<Progress> progress() {
-        return Optional.of(new Progress(Math.min(chopped, params.count()), params.count()));
+        return Optional.of(new Progress(Math.min(tally.chopped(), params.count()), params.count()));
     }
 
     @Override
@@ -94,28 +86,16 @@ public final class ChopTreeScript implements ScriptInstance {
 
     @Override
     public Map<String, Object> saveState() {
-        return ChopTreeSaved.save(new ChopTreeSaved.Values(
-                chopped, standingLogs, protectedLogs, plantedSaplings, skippedCells, lackedSaplings));
+        return tally.save();
     }
 
     @Override
     public void restoreState(Map<String, Object> state) {
-        ChopTreeSaved.Values saved = ChopTreeSaved.restore(
-                state,
-                params.count(),
-                new ChopTreeSaved.Values(
-                        chopped, standingLogs, protectedLogs, plantedSaplings, skippedCells, lackedSaplings));
-        chopped = saved.chopped();
-        standingLogs = saved.standingLogs();
-        protectedLogs = saved.protectedLogs();
-        plantedSaplings = saved.plantedSaplings();
-        skippedCells = saved.skippedCells();
-        lackedSaplings = saved.lackedSaplings();
+        tally.restore(state, params.count());
     }
 
     public String summary() {
-        return ChopTreeText.summary(
-                params, chopped, standingLogs, protectedLogs, plantedSaplings, skippedCells, lackedSaplings);
+        return tally.summary(params);
     }
 
     @Override
@@ -124,7 +104,7 @@ public final class ChopTreeScript implements ScriptInstance {
     }
 
     private ScriptStatus find() {
-        if (chopped >= params.count()) {
+        if (tally.chopped() >= params.count()) {
             return ScriptStatus.SUCCEEDED;
         }
         Optional<BlockCoord> start = search.next();
@@ -228,33 +208,40 @@ public final class ChopTreeScript implements ScriptInstance {
     private ScriptStatus advance(ChopOutcome outcome) {
         return switch (outcome.state()) {
             case RUNNING -> ScriptStatus.RUNNING;
-            case DONE -> finishTree(outcome);
+            case DONE -> outcome.standingLogs() > 0 ? chopFailed(outcome) : finishTree(outcome);
             case PROTECTED -> protectedTree();
             case UNREACHABLE -> unreachableTree();
-            case FAILED -> fail(outcome.reason());
+            case FAILED -> chopFailed(outcome);
         };
     }
 
     private ScriptStatus finishTree(ChopOutcome outcome) {
         releaseReserved();
-        chopped++;
-        standingLogs += outcome.standingLogs();
-        plantedSaplings += outcome.plantedSaplings();
-        skippedCells += outcome.skippedCells();
-        lackedSaplings |= outcome.lackedSaplings();
+        tally.choppedTree(outcome);
         search.markKnown(tree.logs());
         tree = null;
         chopping = false;
-        if (chopped >= params.count()) {
+        if (tally.chopped() >= params.count()) {
             LOGGER.info("[wood] дух {} завершил chop_tree: {}", spirit.getUUID(), summary());
             return ScriptStatus.SUCCEEDED;
         }
         return ScriptStatus.RUNNING;
     }
 
+    private ScriptStatus chopFailed(ChopOutcome outcome) {
+        if (tally.failed(outcome)) {
+            failureFact = FailureFact.NO_PATH;
+        }
+        search.markKnown(tree.logs());
+        releaseReserved();
+        tree = null;
+        chopping = false;
+        return fail(outcome.reason());
+    }
+
     private ScriptStatus protectedTree() {
         releaseReserved();
-        protectedLogs++;
+        tally.protectedTree();
         search.markKnown(tree.logs());
         tree = null;
         chopping = false;
@@ -282,11 +269,11 @@ public final class ChopTreeScript implements ScriptInstance {
                 : "; ближайшее дерево к поселению " + far + " блоков при пределе " + search.maxDistance()
                         + " — посадите саженцы и дождитесь их роста";
         failureFact = spirit.level().isNight() ? FailureFact.NIGHT : unreachable == 0 ? FailureFact.NO_TREES : null;
-        return fail("срублено деревьев " + chopped + " из " + params.count() + ": деревья породы "
+        return fail("срублено деревьев " + tally.chopped() + " из " + params.count() + ": деревья породы "
                 + ChopTreeText.speciesText(params)
                 + " в радиусе " + search.maxDistance() + " от поселения закончились (отвергнуто не-деревьев: "
-                + rejected + ", недоступных: " + unreachable + ", пропущено защищённых: " + protectedLogs + ")"
-                + beyond);
+                + rejected + ", недоступных: " + unreachable + ", пропущено защищённых: " + tally.protectedLogs()
+                + ")" + beyond);
     }
 
     private ScriptStatus fail(String reason) {

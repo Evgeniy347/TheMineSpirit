@@ -114,19 +114,33 @@ final class ChopAscent {
         BlockCoord base = picked.climbFrom();
         if (base == null) {
             stage = Stage.APPROACH;
-            approach.begin(Vec3.atBottomCenterOf(picked.feet()), ChopTuning.CHOP_ARRIVAL);
+            approach.beginWithRoutes(Vec3.atBottomCenterOf(picked.feet()), ChopTuning.CHOP_ARRIVAL);
             return;
         }
         stage = Stage.CLIMB;
-        approach.begin(Vec3.atBottomCenterOf(toPos(base)), ChopTuning.CHOP_ARRIVAL);
+        approach.beginWithRoutes(Vec3.atBottomCenterOf(toPos(base)), ChopTuning.CHOP_ARRIVAL);
     }
 
     private Step approach() {
         return switch (approach.tick()) {
             case MOVING -> Step.RUNNING;
             case ARRIVED -> Step.READY;
-            case STUCK, TIMEOUT -> Step.RETRY;
+            case STUCK, TIMEOUT -> {
+                logApproachFailure("подход к стоянке сорван");
+                yield Step.RETRY;
+            }
         };
+    }
+
+    private void logApproachFailure(String what) {
+        LOGGER.warn(
+                "[chop] {} у дерева {}: {} — стоянка {}; причина: {}; {}",
+                spirit.getName().getString(),
+                tree.base(),
+                what,
+                pursuit.stand(),
+                approach.refusal() == null ? "не названа" : approach.refusal(),
+                approach.networkNote());
     }
 
     private Step climb() {
@@ -134,7 +148,10 @@ final class ChopAscent {
             return switch (approach.tick()) {
                 case MOVING -> Step.RUNNING;
                 case ARRIVED -> startScaffold();
-                case STUCK, TIMEOUT -> Step.RETRY;
+                case STUCK, TIMEOUT -> {
+                    logApproachFailure("подход к опоре подмостей сорван");
+                    yield Step.RETRY;
+                }
             };
         }
         return switch (scaffold.tickClimb()) {

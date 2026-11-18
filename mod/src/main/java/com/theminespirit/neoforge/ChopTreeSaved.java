@@ -9,6 +9,7 @@ final class ChopTreeSaved {
     private static final String PLANTED_KEY = "plantedSaplings";
     private static final String SKIPPED_KEY = "skippedCells";
     private static final String LACKED_KEY = "lackedSaplings";
+    private static final String LEAVES_KEY = "leavesRemoved";
 
     record Values(
             int chopped,
@@ -16,7 +17,8 @@ final class ChopTreeSaved {
             int protectedLogs,
             int plantedSaplings,
             int skippedCells,
-            boolean lackedSaplings) {}
+            boolean lackedSaplings,
+            int leavesRemoved) {}
 
     private ChopTreeSaved() {}
 
@@ -33,7 +35,9 @@ final class ChopTreeSaved {
                 SKIPPED_KEY,
                 values.skippedCells(),
                 LACKED_KEY,
-                values.lackedSaplings());
+                values.lackedSaplings(),
+                LEAVES_KEY,
+                values.leavesRemoved());
     }
 
     static Values restore(Map<String, Object> state, int countBound, Values previous) {
@@ -52,7 +56,9 @@ final class ChopTreeSaved {
             }
             lackedSaplings = flag;
         }
-        return new Values(chopped, standingLogs, protectedLogs, plantedSaplings, skippedCells, lackedSaplings);
+        int leavesRemoved = readCount(state, LEAVES_KEY, Integer.MAX_VALUE, previous.leavesRemoved());
+        return new Values(
+                chopped, standingLogs, protectedLogs, plantedSaplings, skippedCells, lackedSaplings, leavesRemoved);
     }
 
     private static int readCount(Map<String, Object> state, String key, int bound, int previous) {

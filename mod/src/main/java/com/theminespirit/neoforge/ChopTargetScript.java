@@ -10,7 +10,6 @@ import com.theminespirit.core.forestry.TreeDetection;
 import com.theminespirit.core.forestry.TreeShape;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.script.ChopTargetParams;
 import java.util.Optional;
 import java.util.Set;
@@ -24,7 +23,6 @@ public final class ChopTargetScript implements ScriptInstance {
     private final SpiritEntity spirit;
     private final ChopTargetParams params;
     private final Set<Block> logBlocks;
-    private final IdFilter logFilter;
     private final LevelTreeView treeView;
     private final TreeChop chop;
     private boolean started;
@@ -39,9 +37,8 @@ public final class ChopTargetScript implements ScriptInstance {
         this.spirit = spirit;
         this.params = params;
         this.logBlocks = TreeBlocks.logs(TreeSpecies.ALL);
-        this.logFilter = TreeBlocks.filter(TreeSpecies.ALL);
         this.treeView = new LevelTreeView(spirit.level(), logBlocks);
-        this.chop = new TreeChop(spirit, logFilter, params.replant(), params.orchard(), treeView);
+        this.chop = new TreeChop(spirit, params.replant(), params.orchard(), treeView);
     }
 
     @Override

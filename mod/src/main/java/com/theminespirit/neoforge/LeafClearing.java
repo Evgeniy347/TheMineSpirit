@@ -92,9 +92,11 @@ final class LeafClearing {
         rounds++;
         if (rounds > MAX_ROUNDS) {
             LOGGER.warn(
-                    "[chop] {} у дерева {}: листва у стоянки так и осталась вне досягаемости — подхожу к стволу как есть",
+                    "[chop] {} у дерева {}: листва у стоянки так и осталась вне досягаемости — подхожу к стволу как есть; причина подхода: {}; {}",
                     spirit.getName().getString(),
-                    tree.base());
+                    tree.base(),
+                    approach.refusal() == null ? "не названа" : approach.refusal(),
+                    approach.networkNote());
             return finish();
         }
         walkToTree();
@@ -107,7 +109,7 @@ final class LeafClearing {
     }
 
     private void walkToTree() {
-        approach.begin(Vec3.atCenterOf(toPos(tree.base())), ChopTuning.STAND_DISTANCE);
+        approach.beginWithRoutes(Vec3.atCenterOf(toPos(tree.base())), ChopTuning.STAND_DISTANCE);
     }
 
     private Step step() {

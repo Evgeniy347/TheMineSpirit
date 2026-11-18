@@ -13,13 +13,17 @@ final class ChopTreeText {
             int protectedLogs,
             int plantedSaplings,
             int skippedCells,
-            boolean lackedSaplings) {
+            boolean lackedSaplings,
+            int leavesRemoved) {
         StringBuilder text = new StringBuilder("срублено деревьев ")
                 .append(chopped)
                 .append(" из ")
                 .append(params.count());
         if (standingLogs > 0) {
             text.append("; оставлено брёвен: ").append(standingLogs);
+        }
+        if (leavesRemoved > 0) {
+            text.append("; снято листвы: ").append(leavesRemoved);
         }
         if (protectedLogs > 0) {
             text.append("; пропущено защищённых: ").append(protectedLogs);
