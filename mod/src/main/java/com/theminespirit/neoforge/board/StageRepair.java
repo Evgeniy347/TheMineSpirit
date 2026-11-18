@@ -107,15 +107,6 @@ final class StageRepair {
         return target.building() == null ? target.withBuilding(label(step)) : target;
     }
 
-    static String buildingLabel(String id, BoardCase step) {
-        return DataTables.INSTANCE
-                .town()
-                .current()
-                .entry(id)
-                .map(TownEntry::name)
-                .orElse(label(step));
-    }
-
     static String label(BoardCase step) {
         String id = switch (step) {
             case BUILD_HOUSE -> StageSites.HUT;

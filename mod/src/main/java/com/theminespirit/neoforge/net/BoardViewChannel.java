@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.net;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.Board;
+import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTiming;
@@ -19,6 +20,7 @@ import com.theminespirit.core.ui.BoardVersion;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
+import com.theminespirit.neoforge.board.RepairTitle;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -116,7 +118,7 @@ public final class BoardViewChannel {
         Map<String, List<String>> targetDetails = new LinkedHashMap<>();
         for (BoardTicket ticket : board.all()) {
             Optional<TicketTarget> target = found.targetOf(ticket.id(), level, List.of());
-            targetDetails.put(ticket.id(), target.map(TicketTarget::details).orElse(List.of()));
+            targetDetails.put(ticket.id(), details(ticket, target));
             tasks.add(BoardTasks.of(
                     board,
                     ticket,
@@ -128,6 +130,18 @@ public final class BoardViewChannel {
         Function<String, @Nullable String> names = spiritNames(level.getServer());
         return BoardPaging.pageRows(
                 BoardSnapshot.rows(tasks), query, names, targetDetails, BoardVersion.ofTasks(tasks));
+    }
+
+    private static List<String> details(BoardTicket ticket, Optional<TicketTarget> target) {
+        List<String> details = target.map(TicketTarget::details).orElse(List.of());
+        if (ticket.boardCase() != BoardCase.REPAIR_BUILDING
+                || !ticket.id().startsWith(RepairTitle.PREFIX)
+                || details.stream().anyMatch(detail -> detail.startsWith("building="))) {
+            return details;
+        }
+        List<String> named = new ArrayList<>(details);
+        named.add("building=" + RepairTitle.of(ticket.id().substring(RepairTitle.PREFIX.length()), ticket.boardCase()));
+        return named;
     }
 
     private static void registerPayloads(RegisterPayloadHandlersEvent event) {

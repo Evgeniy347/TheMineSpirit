@@ -100,7 +100,7 @@ final class WorldPost {
             }
             target = target.withLeveling(leveling);
         }
-        target = StageSettle.repairTarget(step, target, gap).withBuilding(StageRepair.buildingLabel(id, step));
+        target = StageSettle.repairTarget(step, target, gap).withBuilding(RepairTitle.of(id, step));
         BoardOutcome outcome = StageRepair.post(
                 post,
                 step,
