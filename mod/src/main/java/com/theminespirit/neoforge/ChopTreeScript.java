@@ -14,11 +14,13 @@ import com.theminespirit.core.forestry.TreeShape;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.script.ChopTreeParams;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import org.slf4j.Logger;
 
@@ -139,7 +141,7 @@ public final class ChopTreeScript implements ScriptInstance {
             search.markKnown(List.of(start.get()));
             return ScriptStatus.RUNNING;
         }
-        TreeDetection detection = TreeShape.detect(start.get(), treeView, true);
+        TreeDetection detection = TreeShape.detect(start.get(), treeView, true, orchardCare(start.get()));
         if (detection instanceof NotATree notATree) {
             return reject(notATree);
         }
@@ -206,12 +208,21 @@ public final class ChopTreeScript implements ScriptInstance {
             search.markKnown(found.logs());
             return Optional.empty();
         }
-        TreeDetection detection = TreeShape.detect(surviving.get(), treeView, true);
+        TreeDetection detection = TreeShape.detect(surviving.get(), treeView, true, orchardCare(surviving.get()));
         if (detection instanceof Tree tree) {
             return Optional.of(tree);
         }
         search.markKnown(found.logs());
         return Optional.empty();
+    }
+
+    private boolean orchardCare(BlockCoord cell) {
+        if (!(spirit.level() instanceof ServerLevel server)) {
+            return false;
+        }
+        return SettlementPlotStore.liveSite(server)
+                .map(site -> site.orchardTerritory(cell.x(), cell.z()))
+                .orElse(false);
     }
 
     private ScriptStatus advance(ChopOutcome outcome) {

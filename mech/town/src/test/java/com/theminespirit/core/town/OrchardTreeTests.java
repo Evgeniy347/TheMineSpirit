@@ -62,4 +62,20 @@ class OrchardTreeTests {
                 SITE.planCell(spot.x(), spot.y(), spot.z()),
                 "Клетка дерева сада входит в план этапа: иначе аудит и защита не отличили бы её от дикого леса");
     }
+
+    @Test
+    void orchardTerritory_SaplingsAndOutsideCells() {
+        BlockCoord spot = SITE.orchardSaplings().get(0);
+        BlockCoord origin = SITE.orchardOrigin();
+
+        assertTrue(
+                SITE.orchardTerritory(spot.x(), spot.z()),
+                "Колонка саженца сада — территория сада: по ней детектор послабляет крону через разрыв");
+        assertTrue(
+                SITE.orchardTerritory(origin.x(), origin.z()),
+                "Угол площадки сада тоже на территории сада: иначе крайние стволы остались бы без послабления");
+        assertTrue(
+                !SITE.orchardTerritory(origin.x() + 50, origin.z() + 50),
+                "За границей площадки послабления нет: дикий лес рубится по общим правилам");
+    }
 }
