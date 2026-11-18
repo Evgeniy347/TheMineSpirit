@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public final class TreeSight {
     public record Stand(String species, BlockCoord base) {
@@ -22,8 +23,17 @@ public final class TreeSight {
 
     public static List<Stand> detect(
             Map<String, ? extends Collection<BlockCoord>> logCells, Function<String, TreeView> views) {
+        return detect(logCells, views, cell -> false);
+    }
+
+    public static List<Stand> detect(
+            Map<String, ? extends Collection<BlockCoord>> logCells,
+            Function<String, TreeView> views,
+            Predicate<BlockCoord> orchardCare) {
         Objects.requireNonNull(logCells, "Клетки брёвен не могут быть null: без них нечего разбирать");
         Objects.requireNonNull(views, "Взгляд по породе не может быть null: без него дерево не отличить от постройки");
+        Objects.requireNonNull(
+                orchardCare, "Признак сада не может быть null: без него не ясно, где крона через разрыв");
         List<Stand> found = new ArrayList<>();
         Set<BlockCoord> known = new HashSet<>();
         for (Map.Entry<String, ? extends Collection<BlockCoord>> entry : logCells.entrySet()) {
@@ -33,7 +43,7 @@ public final class TreeSight {
                     known.add(cell);
                     continue;
                 }
-                TreeDetection detection = TreeShape.detect(cell, view, true);
+                TreeDetection detection = TreeShape.detect(cell, view, true, orchardCare.test(cell));
                 if (detection instanceof Tree tree) {
                     found.add(new Stand(entry.getKey(), tree.base()));
                     known.addAll(tree.logs());

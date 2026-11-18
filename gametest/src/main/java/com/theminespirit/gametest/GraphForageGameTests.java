@@ -77,7 +77,8 @@ public final class GraphForageGameTests {
                 new BlockCoord(home.getX(), home.getY(), home.getZ()),
                 Map.of(),
                 Map.of(),
-                List.of());
+                List.of(),
+                cell -> false);
 
         helper.assertTrue(
                 around.world().containsAll(EXPECTED),
@@ -97,7 +98,8 @@ public final class GraphForageGameTests {
                 new BlockCoord(home.getX(), home.getY(), home.getZ()),
                 Map.of(),
                 Map.of(),
-                List.of(new BlockCoord(gardenTree.getX(), gardenTree.getY(), gardenTree.getZ())));
+                List.of(new BlockCoord(gardenTree.getX(), gardenTree.getY(), gardenTree.getZ())),
+                cell -> false);
         helper.assertTrue(
                 garden.resource("tree:jungle").isPresent(),
                 "Дерево сада за пределом 32 блоков от дома обязано находиться по точке сада: без этого граф "

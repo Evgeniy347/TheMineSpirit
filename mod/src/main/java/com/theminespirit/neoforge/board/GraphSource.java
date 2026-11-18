@@ -101,7 +101,8 @@ public final class GraphSource {
                         stageScan.home(),
                         quarries.nearest(),
                         quarries.distances(),
-                        TreeCenterLogs.centers(stageScan.stage()))
+                        TreeCenterLogs.centers(stageScan.stage()),
+                        cell -> stageScan.stage().orchardTerritory(cell.x(), cell.z()))
                 .with(events)
                 .withRoutes(quarries.events(), quarries.world());
         mark("around", started);

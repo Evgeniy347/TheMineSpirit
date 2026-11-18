@@ -18,6 +18,10 @@ public final class TreeShape {
     }
 
     public static TreeDetection detect(BlockCoord start, TreeView view, boolean allowNoSoil) {
+        return detect(start, view, allowNoSoil, false);
+    }
+
+    public static TreeDetection detect(BlockCoord start, TreeView view, boolean allowNoSoil, boolean orchardCare) {
         if (!view.isLog(start)) {
             throw new IllegalArgumentException("Разбор дерева начинается с бревна, а " + start
                     + " бревном не является: поиск обязан подать координату из найденных брёвен");
@@ -61,6 +65,9 @@ public final class TreeShape {
         BlockCoord base = base(logs);
         if (!allowNoSoil && !view.isSoil(new BlockCoord(base.x(), base.y() - 1, base.z()))) {
             return new NotATree(NotATree.Reason.NO_SOIL, Set.copyOf(logs));
+        }
+        if (leaves.size() < ChopTuning.MIN_NATURAL_LEAVES && orchardCare) {
+            leaves.addAll(bandLeaves(logs, view));
         }
         if (leaves.size() < ChopTuning.MIN_NATURAL_LEAVES) {
             return new NotATree(NotATree.Reason.NO_LEAVES, Set.copyOf(logs));
@@ -112,6 +119,36 @@ public final class TreeShape {
         return count <= ChopTuning.TRUNK_BASE_MAX_LOGS
                 && maxX - minX <= ChopTuning.TRUNK_BASE_SPREAD
                 && maxZ - minZ <= ChopTuning.TRUNK_BASE_SPREAD;
+    }
+
+    private static Set<BlockCoord> bandLeaves(Set<BlockCoord> logs, TreeView view) {
+        int minX = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int minY = Integer.MAX_VALUE;
+        int maxY = Integer.MIN_VALUE;
+        int minZ = Integer.MAX_VALUE;
+        int maxZ = Integer.MIN_VALUE;
+        for (BlockCoord log : logs) {
+            minX = Math.min(minX, log.x());
+            maxX = Math.max(maxX, log.x());
+            minY = Math.min(minY, log.y());
+            maxY = Math.max(maxY, log.y());
+            minZ = Math.min(minZ, log.z());
+            maxZ = Math.max(maxZ, log.z());
+        }
+        Set<BlockCoord> found = new HashSet<>();
+        int reach = ChopTuning.ORCHARD_LEAF_REACH;
+        for (int x = minX - reach; x <= maxX + reach; x++) {
+            for (int y = minY - reach; y <= maxY + reach; y++) {
+                for (int z = minZ - reach; z <= maxZ + reach; z++) {
+                    BlockCoord cell = new BlockCoord(x, y, z);
+                    if (!logs.contains(cell) && view.isNaturalLeaves(cell)) {
+                        found.add(cell);
+                    }
+                }
+            }
+        }
+        return found;
     }
 
     private static List<BlockCoord> neighbours(BlockCoord coord) {

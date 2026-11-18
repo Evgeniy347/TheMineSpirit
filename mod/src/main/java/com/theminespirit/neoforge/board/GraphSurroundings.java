@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
@@ -114,7 +115,8 @@ public final class GraphSurroundings {
             BlockCoord home,
             Map<String, BlockCoord> sites,
             Map<String, Integer> siteDistances,
-            List<BlockCoord> treeCenters) {
+            List<BlockCoord> treeCenters,
+            Predicate<BlockCoord> orchardCare) {
         Scan scan = SCANS.get(
                 List.of(level.dimension(), home, treeCenters),
                 level.getGameTime(),
@@ -147,7 +149,7 @@ public final class GraphSurroundings {
         distances.keySet().removeIf(tag -> tag.startsWith(TREE_PREFIX));
         Map<String, List<BlockCoord>> targets = new HashMap<>(scan.targets());
         targets.keySet().removeIf(tag -> tag.startsWith(TREE_PREFIX));
-        TreeSurroundings.Found trees = TreeSurroundings.scan(level, scan.logs(), home);
+        TreeSurroundings.Found trees = TreeSurroundings.scan(level, scan.logs(), home, orchardCare);
         world.addAll(trees.nearest().keySet());
         nearest.putAll(trees.nearest());
         distances.putAll(trees.distances());

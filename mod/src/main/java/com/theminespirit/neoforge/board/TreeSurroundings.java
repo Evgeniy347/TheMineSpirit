@@ -10,6 +10,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import net.minecraft.server.level.ServerLevel;
 
 final class TreeSurroundings {
@@ -23,12 +24,17 @@ final class TreeSurroundings {
     private TreeSurroundings() {}
 
     static Found scan(ServerLevel level, Map<String, List<BlockCoord>> logs, BlockCoord home) {
+        return scan(level, logs, home, cell -> false);
+    }
+
+    static Found scan(
+            ServerLevel level, Map<String, List<BlockCoord>> logs, BlockCoord home, Predicate<BlockCoord> orchardCare) {
         if (logs.isEmpty()) {
             return new Found(Map.of(), Map.of(), Map.of());
         }
         Map<String, List<TreeSight.Stand>> found = new HashMap<>();
         for (TreeSight.Stand stand : TreeSight.detect(
-                logs, species -> new LevelTreeView(level, TreeBlocks.logs(TreeSpecies.parse(species))))) {
+                logs, species -> new LevelTreeView(level, TreeBlocks.logs(TreeSpecies.parse(species))), orchardCare)) {
             found.computeIfAbsent(stand.species(), key -> new ArrayList<>()).add(stand);
         }
         Map<String, BlockCoord> nearest = new HashMap<>();

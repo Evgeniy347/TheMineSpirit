@@ -123,6 +123,10 @@ public record StageSite(
         return List.copyOf(spots);
     }
 
+    public boolean orchardTerritory(int x, int z) {
+        return orchard.covers(x, z) || extraOrchardCell(x, z);
+    }
+
     public boolean orchardTree(int x, int y, int z) {
         if (y < anchor.y() - 1 || y > anchor.y() + ORCHARD_TREE_HEIGHT) {
             return false;

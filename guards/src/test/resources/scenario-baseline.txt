@@ -77,6 +77,7 @@ mech/forestry/com/theminespirit/core/forestry/LeafObstaclesTests.java
 mech/forestry/com/theminespirit/core/forestry/LiveJungleVineTests.java
 mech/forestry/com/theminespirit/core/forestry/LiveOakStumpTests.java
 mech/forestry/com/theminespirit/core/forestry/LiveOrchardIncidentTests.java
+mech/forestry/com/theminespirit/core/forestry/OrchardTreeSightTests.java
 mech/forestry/com/theminespirit/core/forestry/ReplantDataTests.java
 mech/forestry/com/theminespirit/core/forestry/ReplantPlanProperties.java
 mech/forestry/com/theminespirit/core/forestry/ReplantPlanTests.java
