@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
@@ -77,5 +78,25 @@ class TicketTargetsTests {
                 Optional.of(BoardStatus.CANCELLED),
                 board.statusOf(BROKEN),
                 "Задание без читаемой цели снимается: иначе оно исполнялось бы у дома или висело навсегда");
+    }
+
+    @Test
+    void fillsBuilding_KnownTargetWithoutBuilding_IsRefreshed() {
+        TicketTarget known = TicketTarget.at(new BlockCoord(1, 2, 3));
+        TicketTarget incoming = known.withBuilding("Хижина");
+
+        assertTrue(
+                TicketTarget.fillsBuilding(known, incoming),
+                "Открытая задача без подписи объекта обязана получить её при повторной постановке: "
+                        + "иначе старая цель висит до переоткрытия");
+    }
+
+    @Test
+    void fillsBuilding_KnownTargetWithBuilding_IsNotReplaced() {
+        TicketTarget known = TicketTarget.at(new BlockCoord(1, 2, 3)).withBuilding("Хижина");
+
+        assertFalse(
+                TicketTarget.fillsBuilding(known, known.withBuilding("Сад")),
+                "Цель с подписью объекта не перезаписывается: после переименования задачу переоткрывают, а не подменяют");
     }
 }

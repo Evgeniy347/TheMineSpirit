@@ -153,6 +153,10 @@ public record TicketTarget(
         return builder.build();
     }
 
+    public static boolean fillsBuilding(@Nullable TicketTarget known, TicketTarget incoming) {
+        return (known == null || known.building() == null) && incoming.building() != null;
+    }
+
     public TicketTarget withLeveling(PlotLeveling plan) {
         Builder builder = new Builder(this);
         builder.leveling = Objects.requireNonNull(

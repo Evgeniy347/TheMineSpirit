@@ -176,7 +176,11 @@ public final class BoardService {
             journal.record(BoardLog.Event.POSTED, ticket, null, board.now());
             persistBoard();
         } else if (outcome == BoardOutcome.DUPLICATE) {
-            if (SupplyGate.isSupply(ticket.id()) && targets.containsKey(ticket.id())) {
+            TicketTarget known = targets.get(ticket.id());
+            if (TicketTarget.fillsBuilding(known, target)) {
+                targets.put(ticket.id(), target);
+                persistBoard();
+            } else if (SupplyGate.isSupply(ticket.id()) && targets.containsKey(ticket.id())) {
                 TicketTarget merged = SupplyGate.merge(targets.get(ticket.id()), target);
                 if (!merged.equals(targets.get(ticket.id()))) {
                     targets.put(ticket.id(), merged);
