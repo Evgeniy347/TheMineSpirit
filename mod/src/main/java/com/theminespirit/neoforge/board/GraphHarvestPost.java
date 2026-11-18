@@ -10,11 +10,17 @@ import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.mining.LeftOreRules;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.OrchardPlot;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.MineOreLedger;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 
 final class GraphHarvestPost {
     private final GraphPost post;
@@ -84,13 +90,13 @@ final class GraphHarvestPost {
     }
 
     boolean orchard(GraphTickets.Ticket ticket, GraphPlan.Task task) {
-        boolean mature = false;
+        boolean grown = false;
         for (BlockCoord spot : post.scan.stage().allOrchardSaplings()) {
-            Optional<BlockCoord> base = OrchardHarvest.matureBase(post.level, post.scan.stage(), spot);
+            Optional<BlockCoord> base = OrchardHarvest.grownBase(post.level, spot);
             if (base.isEmpty()) {
                 continue;
             }
-            mature = true;
+            grown = true;
             String id = OrchardPlans.id(spot);
             if (post.done(id) || post.open(id)) {
                 continue;
@@ -100,14 +106,36 @@ final class GraphHarvestPost {
                             id, BoardCase.HARVEST_ORCHARD, Optional.empty(), task.priority(), ticket.id(), Map.of()),
                     TicketTarget.at(base.orElseThrow()));
         }
-        return mature;
+        return grown;
     }
 
     boolean replantOrchard(GraphTickets.Ticket ticket, GraphPlan.Task task) {
-        String sapling = sapling(task);
-        for (BlockCoord spot : post.scan.stage().allOrchardSaplings()) {
+        StageSite stage = post.scan.stage();
+        Map<String, Integer> stock = post.service.stock().available();
+        if (plant(ticket, task, stage.orchardSaplings(), stage.wood(), stock)) {
+            return true;
+        }
+        for (OrchardPlot plot : stage.extraOrchards()) {
+            if (plant(ticket, task, plot.saplings(), plot.wood(), stock)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean plant(
+            GraphTickets.Ticket ticket,
+            GraphPlan.Task task,
+            List<BlockCoord> spots,
+            String wood,
+            Map<String, Integer> stock) {
+        String sapling = wood + "_sapling";
+        if (stock.getOrDefault(sapling, 0) < 1) {
+            return false;
+        }
+        for (BlockCoord spot : spots) {
             BlockPos pos = new BlockPos(spot.x(), spot.y(), spot.z());
-            if (!post.level.isLoaded(pos) || !post.level.getBlockState(pos).isAir()) {
+            if (!post.level.isLoaded(pos) || !post.level.getBlockState(pos).isAir() || !survives(sapling, pos)) {
                 continue;
             }
             post.submit(
@@ -124,17 +152,10 @@ final class GraphHarvestPost {
         return false;
     }
 
-    private String sapling(GraphPlan.Task task) {
-        String wood = post.scan.wood();
-        String preferred = wood + "_sapling";
-        if (post.graph.isGroup("#saplings") && post.graph.members("#saplings").contains(preferred)) {
-            return GraphNames.item(post.graph, preferred, wood);
-        }
-        return task.consumes().keySet().stream()
-                .sorted()
-                .findFirst()
-                .map(item -> GraphNames.item(post.graph, item, wood))
-                .orElse(GraphNames.item(post.graph, preferred, wood));
+    private boolean survives(String item, BlockPos pos) {
+        Block block = Block.byItem(BuiltInRegistries.ITEM.get(ResourceLocation.parse(item)));
+        BlockState state = block.defaultBlockState();
+        return !state.isAir() && state.canSurvive(post.level, pos);
     }
 
     boolean leftOre(GraphTickets.Ticket ticket, GraphPlan.Task task) {

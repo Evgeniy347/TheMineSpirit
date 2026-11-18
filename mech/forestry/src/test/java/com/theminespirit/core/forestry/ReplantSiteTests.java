@@ -44,6 +44,17 @@ class ReplantSiteTests {
     }
 
     @Test
+    void allowed_InExtraOrchard_Allows() {
+        List<ReplantSite.Plot> plots =
+                List.of(new ReplantSite.Plot("hut", 5, 5, 7, 9), new ReplantSite.Plot("orchard_jungle", 20, 20, 9, 9));
+        ReplantSite.Plan plan = new ReplantSite.Plan(plots, (x, z) -> false);
+
+        assertTrue(
+                ReplantSite.allowed(plan, new BlockCoord(22, 70, 22)),
+                "В дополнительном саду породы (orchard_jungle) сажать можно: клетка сада — место дерева");
+    }
+
+    @Test
     void allowed_OnStreet_Denies() {
         assertFalse(
                 ReplantSite.allowed(town(), new BlockCoord(5, 70, 0)),

@@ -5252,7 +5252,7 @@
       "makes": "oak_log",
       "yield": 16,
       "weight": 0.178050172,
-      "building": "orchard_oak"
+      "world": "orchard:oak"
     },
     {
       "id": "craft_oak_planks",
@@ -5286,7 +5286,7 @@
       "makes": "birch_log",
       "yield": 16,
       "weight": 0.178050172,
-      "building": "orchard_birch"
+      "world": "orchard:birch"
     },
     {
       "id": "craft_birch_planks",
@@ -5320,7 +5320,7 @@
       "makes": "spruce_log",
       "yield": 16,
       "weight": 0.178050172,
-      "building": "orchard_spruce"
+      "world": "orchard:spruce"
     },
     {
       "id": "craft_spruce_planks",
@@ -5354,7 +5354,7 @@
       "makes": "jungle_log",
       "yield": 16,
       "weight": 0.178050172,
-      "building": "orchard_jungle"
+      "world": "orchard:jungle"
     },
     {
       "id": "craft_jungle_planks",
@@ -5388,7 +5388,7 @@
       "makes": "acacia_log",
       "yield": 16,
       "weight": 0.178050172,
-      "building": "orchard_acacia"
+      "world": "orchard:acacia"
     },
     {
       "id": "craft_acacia_planks",
@@ -5422,7 +5422,7 @@
       "makes": "dark_oak_log",
       "yield": 16,
       "weight": 0.178050172,
-      "building": "orchard_dark_oak"
+      "world": "orchard:dark_oak"
     },
     {
       "id": "craft_dark_oak_planks",
@@ -5456,7 +5456,7 @@
       "makes": "cherry_log",
       "yield": 16,
       "weight": 0.178050172,
-      "building": "orchard_cherry"
+      "world": "orchard:cherry"
     },
     {
       "id": "craft_cherry_planks",
@@ -5490,7 +5490,7 @@
       "makes": "mangrove_log",
       "yield": 16,
       "weight": 0.178050172,
-      "building": "orchard_mangrove"
+      "world": "orchard:mangrove"
     },
     {
       "id": "craft_mangrove_planks",

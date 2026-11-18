@@ -66,18 +66,29 @@ class GraphTreeCasesTests {
     }
 
     @Test
-    void plan_OrchardBuilt_OwnHarvestWayCutsGardenTrees() {
-        GraphWorld world = GraphWorld.settled().with("oak_log", 0).built(ORCHARD, Built.BUILT);
+    void plan_OrchardTreeGrown_OwnHarvestWayCutsGardenTree() {
+        GraphWorld world = GraphWorld.settled().with("oak_log", 0).world("orchard:oak");
         GraphPlan plan = world.plan();
 
         GraphPlan.Task harvest = plan.task("harvest_orchard_oak")
                 .orElseThrow(() -> new AssertionError(
-                        "Сад построен, брёвен нет — урожай сада обязан быть на доске: " + ids(plan)));
+                        "В саду выросло дерево, брёвен нет — урожай сада обязан быть на доске: " + ids(plan)));
         assertEquals(
                 BoardCase.HARVEST_ORCHARD,
                 harvest.boardCase(),
                 "Деревья сада снимаются заданием сада (с посадкой на место), а не общим сбором материалов");
         assertTrue(harvest.feasible(), "Сад созрел — сбор урожая выполним: " + harvest);
+    }
+
+    @Test
+    void plan_OrchardBuiltWithoutGrownTree_NoHarvestWay() {
+        GraphWorld world = GraphWorld.settled().with("oak_log", 0).built(ORCHARD, Built.BUILT);
+        GraphPlan plan = world.plan();
+
+        assertTrue(
+                !plan.raised("harvest_orchard_oak"),
+                "Построенный сад без выросшего дерева не рубится: метку мира orchard:oak даёт только ствол "
+                        + "на месте саженца. Задания: " + ids(plan));
     }
 
     @Test
@@ -100,12 +111,9 @@ class GraphTreeCasesTests {
     }
 
     @Test
-    void plan_OrchardEmptyWithSaplings_ReplantsInsteadOfFelling() {
-        GraphWorld world = GraphWorld.settled()
-                .with("oak_log", 64)
-                .with("oak_sapling", 4)
-                .built(ORCHARD, Built.BUILT)
-                .event("orchard_empty");
+    void plan_OrchardEmptyWithSaplings_ReplantsWithoutWaitingBuild() {
+        GraphWorld world =
+                GraphWorld.settled().with("oak_log", 64).with("oak_sapling", 4).event("orchard_empty");
         GraphPlan plan = world.plan();
 
         GraphPlan.Task replant = plan.task("event:orchard_empty:replant_orchard")

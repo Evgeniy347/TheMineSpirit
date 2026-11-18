@@ -44,9 +44,13 @@ public final class ReplantSite {
         }
         for (Plot plot : plan.plots()) {
             if (plot.covers(cell.x(), cell.z())) {
-                return GREEN_PLOTS.contains(plot.id());
+                return green(plot.id());
             }
         }
         return !plan.streets().contains(cell.x(), cell.z());
+    }
+
+    private static boolean green(String plot) {
+        return GREEN_PLOTS.contains(plot) || plot.startsWith("orchard_");
     }
 }

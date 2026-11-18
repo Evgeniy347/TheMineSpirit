@@ -5,11 +5,16 @@ import com.theminespirit.core.board.graph.GraphEvents;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.OrchardPlot;
+import com.theminespirit.core.town.StageSite;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.Chicken;
 import net.minecraft.world.entity.animal.Cow;
@@ -37,10 +42,18 @@ final class FarmInputs {
         herds.forEach((herd, count) -> stock.merge(herd, count, Math::max));
         FarmRules.Crops crops = crops(level, scan.home());
         int seeds = sum(graph, stock, "#seeds");
-        int saplings = sum(graph, stock, "#saplings");
-        boolean orchardEmpty = scan.stage().orchardSaplings().stream()
-                .anyMatch(position -> level.isLoaded(pos(position))
-                        && level.getBlockState(pos(position)).isAir());
+        StageSite site = scan.stage();
+        boolean orchardEmpty = siteEmpty(level, site.orchardSaplings(), site.wood(), stock);
+        boolean orchardSapling = siteStocked(site.wood(), stock);
+        for (OrchardPlot plot : site.extraOrchards()) {
+            orchardEmpty |= siteEmpty(level, plot.saplings(), plot.wood(), stock);
+            orchardSapling |= siteStocked(plot.wood(), stock);
+        }
+        Set<String> world = new HashSet<>(state.world());
+        orchardGrown(world, level, site.orchardSaplings(), site.wood());
+        for (OrchardPlot plot : site.extraOrchards()) {
+            orchardGrown(world, level, plot.saplings(), plot.wood());
+        }
         boolean hasFeed = sum(graph, stock, "#crops") > 0;
         Set<String> events = GraphEvents.merge(
                 state.events(),
@@ -51,7 +64,7 @@ final class FarmInputs {
                         state.spirits(),
                         crops,
                         seeds,
-                        new FarmRules.Signals(orchardEmpty, saplings > 0, hasFeed)));
+                        new FarmRules.Signals(orchardEmpty, orchardSapling, hasFeed)));
         return new GraphState(
                 stock,
                 state.stage(),
@@ -60,11 +73,34 @@ final class FarmInputs {
                 state.materials(),
                 state.storageFreePercent(),
                 events,
-                state.world(),
+                Set.copyOf(world),
                 state.distances(),
                 state.stations(),
                 state.orders(),
                 state.facts());
+    }
+
+    private static void orchardGrown(Set<String> world, ServerLevel level, List<BlockCoord> spots, String wood) {
+        if (spots.stream().anyMatch(spot -> grown(level, spot))) {
+            world.add("orchard:" + wood);
+        }
+    }
+
+    private static boolean siteEmpty(
+            ServerLevel level, List<BlockCoord> spots, String wood, Map<String, Integer> stock) {
+        return siteStocked(wood, stock)
+                && spots.stream()
+                        .anyMatch(spot -> level.isLoaded(pos(spot))
+                                && level.getBlockState(pos(spot)).isAir());
+    }
+
+    private static boolean siteStocked(String wood, Map<String, Integer> stock) {
+        return stock.getOrDefault(wood + "_sapling", 0) > 0;
+    }
+
+    private static boolean grown(ServerLevel level, BlockCoord spot) {
+        BlockPos at = pos(spot);
+        return level.isLoaded(at) && level.getBlockState(at).is(BlockTags.LOGS);
     }
 
     private static Map<String, Integer> animals(ServerLevel level, BlockCoord home, boolean adultOnly) {

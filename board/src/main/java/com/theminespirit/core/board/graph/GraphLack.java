@@ -4,12 +4,23 @@ import java.util.List;
 import java.util.Map;
 
 public final class GraphLack {
+    private static final String ORCHARD = "orchard_";
+
     private GraphLack() {}
 
     static double base(SupplyGraph graph, GraphState state, SupplyGraph.Building building) {
         boolean needed = graph.ways().stream()
-                .anyMatch(way -> building.id().equals(way.building()) && lacking(graph, state, way.makes()));
+                        .anyMatch(way -> building.id().equals(way.building()) && lacking(graph, state, way.makes()))
+                || orchardLogLacking(graph, state, building.id());
         return needed ? building.base() / graph.decay() : building.base();
+    }
+
+    private static boolean orchardLogLacking(SupplyGraph graph, GraphState state, String building) {
+        if (!building.startsWith(ORCHARD)) {
+            return false;
+        }
+        String log = building.substring(ORCHARD.length()) + "_log";
+        return graph.items().containsKey(log) && lacking(graph, state, log);
     }
 
     public static int threshold(SupplyGraph.Item item, GraphState state) {

@@ -13,7 +13,7 @@ public final class OrchardPlans {
     private OrchardPlans() {}
 
     public static TaskNode harvest(TicketTarget target) {
-        Objects.requireNonNull(target, "Цель рубки сада не может быть null: в ней ствол зрелого дерева");
+        Objects.requireNonNull(target, "Цель рубки сада не может быть null: в ней ствол выросшего дерева");
         BlockCoord trunk = target.target();
         return new ScriptCall(
                 "chop_target",
@@ -33,9 +33,5 @@ public final class OrchardPlans {
     public static String id(BlockCoord spot) {
         Objects.requireNonNull(spot, "Место дерева сада не может быть null: задание сада — на место из плана");
         return PREFIX + spot.x() + "," + spot.z();
-    }
-
-    public static boolean mature(int trunkLogs, WoodRules rules) {
-        return trunkLogs >= rules.orchardMatureLogs();
     }
 }

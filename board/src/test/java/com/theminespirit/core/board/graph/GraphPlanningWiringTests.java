@@ -234,7 +234,7 @@ class GraphPlanningWiringTests {
 
     @Test
     void plan_OrchardAndLeftOre_UseTheirOwnNodes() {
-        GraphWorld world = GraphWorld.settled().with("oak_log", 0).built("orchard_oak", Built.BUILT);
+        GraphWorld world = GraphWorld.settled().with("oak_log", 0).world("orchard:oak");
 
         GraphPlan plan = world.plan();
 

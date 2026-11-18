@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -137,7 +138,9 @@ class GraphStoreFarmFragmentsTests {
         }
         GraphEvent orchard = GRAPH.events().get("orchard_empty");
         assertEquals("replant_orchard", orchard.tasks().get(0).id(), "После рубки в саду — отдельная посадка");
-        assertEquals("orchard_oak", orchard.tasks().get(0).building(), "Посадка идёт в сад");
+        assertNull(
+                orchard.tasks().get(0).building(),
+                "Посадка не ждёт готовой постройки сада: клетка сада свободна — саженец ставится сразу");
     }
 
     @Test

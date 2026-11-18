@@ -271,11 +271,7 @@
         {
           "id": "replant_orchard",
           "case": "BUILD_ORCHARD",
-          "base": 40,
-          "consumes": {
-            "oak_sapling": 1
-          },
-          "building": "orchard_oak"
+          "base": 40
         }
       ],
       "push": {
