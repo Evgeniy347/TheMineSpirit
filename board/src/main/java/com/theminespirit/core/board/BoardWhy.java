@@ -65,7 +65,7 @@ public final class BoardWhy {
     static String shortage(Map<String, Integer> need, Map<String, Integer> missing, StockView stock) {
         List<String> parts = new ArrayList<>();
         for (String item : new TreeSet<>(missing.keySet())) {
-            int have = stock.available().getOrDefault(item, 0);
+            int have = stock.count(item);
             parts.add(item + "×" + need.getOrDefault(item, 0) + " (в сундуках двора и у духов " + have
                     + ", добыть или сделать ещё " + missing.get(item) + ")");
         }

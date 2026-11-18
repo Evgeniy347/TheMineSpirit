@@ -62,7 +62,7 @@ final class BlockedBook {
         Map<String, Integer> have = new LinkedHashMap<>();
         ticket.requiredItems()
                 .keySet()
-                .forEach(item -> have.put(item, note.stock().available().getOrDefault(item, 0)));
+                .forEach(item -> have.put(item, note.stock().count(item)));
         available.put(ticket.id(), Map.copyOf(have));
         since.putIfAbsent(ticket.id(), now);
         notes.add(new BoardLogEntry(

@@ -20,7 +20,7 @@ public final class ResourceGate {
             if (SchematicActions.isActionPlaced(entry.getKey())) {
                 continue;
             }
-            int shortage = entry.getValue() - stock.available().getOrDefault(entry.getKey(), 0);
+            int shortage = entry.getValue() - stock.count(entry.getKey());
             if (shortage > 0) {
                 missing.put(entry.getKey(), shortage);
             }

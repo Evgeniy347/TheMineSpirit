@@ -8,6 +8,8 @@ import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphFailureMemory;
 import com.theminespirit.core.board.graph.GraphTickets;
+import com.theminespirit.core.building.EarthCover;
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.policy.PlanBreachData;
@@ -59,6 +61,7 @@ final class PlanBreachPost {
         for (BreachAreas.Area area : areas) {
             PlanBreachData.Breach breach = reachable.get(area.min());
             String id = PREFIX + WorldPost.key(area.min()) + ":" + breach.tick();
+            String block = EarthCover.restored(area.blockId());
             ready.add(new Repair(
                     post.ticket(
                             id,
@@ -66,7 +69,7 @@ final class PlanBreachPost {
                             Optional.empty(),
                             BoardTuning.MAX_PRIORITY,
                             owner.id(),
-                            Map.of(area.blockId(), area.cells())),
+                            Map.of(SchematicBlocks.path(block), area.cells())),
                     target(area)));
         }
         for (Repair repair : batch(ready, room)) {
@@ -85,24 +88,28 @@ final class PlanBreachPost {
 
     private static void rememberUnreachable(
             GraphPost post, GraphTickets.Ticket owner, BlockCoord at, PlanBreachData.Breach breach, String id) {
-        String block = breach.blockId();
+        String block = EarthCover.restored(breach.blockId());
         BoardTicket repair = post.ticket(
                 id,
                 BoardCase.REPAIR_BUILDING,
                 Optional.empty(),
                 BoardTuning.MAX_PRIORITY,
                 owner.id(),
-                Map.of(block, 1));
+                Map.of(SchematicBlocks.path(block), 1));
         TicketTarget target = TicketTarget.at(at).withPlan(place(block, at));
         post.service.sources.graphFailure(repair, target, new GraphBlock.Path(GraphNeeds.point(target)), post.now);
     }
 
     static TicketTarget target(BreachAreas.Area area) {
+        return target(area, EarthCover.restored(area.blockId()));
+    }
+
+    private static TicketTarget target(BreachAreas.Area area, String block) {
         return TicketTarget.at(area.min())
                 .withPlan(new ScriptCall(
                         FILL,
                         Map.of(
-                                "block", area.blockId(),
+                                "block", block,
                                 "x1", area.x1(),
                                 "y1", area.y1(),
                                 "z1", area.z1(),

@@ -1,5 +1,6 @@
 package com.theminespirit.core.building;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -42,5 +43,25 @@ class EarthCoverTests {
         assertFalse(
                 EarthCover.covers("minecraft:grass_block", "minecraft:dirt_path"),
                 "тропа этапов 2–3 дёрном не заменяется");
+    }
+
+    @Test
+    void restored_Grass_GetsDirt() {
+        assertEquals(
+                "minecraft:dirt",
+                EarthCover.restored("minecraft:grass_block"),
+                "пролом травяной клетки заделывается землёй: дёрн лопатой не добыть, а грунт тот же");
+        assertEquals(
+                "dirt",
+                EarthCover.restored("dirt"),
+                "пролом земляной клетки заделывается той же землёй в том же коротком имени");
+    }
+
+    @Test
+    void restored_OtherBlock_Kept() {
+        assertEquals(
+                "minecraft:jungle_planks",
+                EarthCover.restored("minecraft:jungle_planks"),
+                "не грунт — заделка тем же блоком: дешёвая замена ломала бы постройку");
     }
 }

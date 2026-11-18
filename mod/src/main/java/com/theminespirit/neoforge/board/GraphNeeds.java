@@ -11,6 +11,7 @@ import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolGate;
+import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.plan.ScriptCall;
@@ -183,7 +184,7 @@ final class GraphNeeds {
         if (plan instanceof ScriptCall call
                 && "place_block".equals(call.script())
                 && call.params().get("block") instanceof String block) {
-            String placed = withoutState(block);
+            String placed = SchematicBlocks.path(withoutState(block));
             return stock.available().getOrDefault(placed, 0) < 1 ? new GraphBlock.Item(placed, 1) : null;
         }
         MaterialSource source = level == null ? null : FirstStepsRunner.materialSource(level);

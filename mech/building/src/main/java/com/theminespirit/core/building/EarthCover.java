@@ -19,4 +19,12 @@ public final class EarthCover {
         Objects.requireNonNull(wanted, "Блок схемы не может быть null: сверяется клетка схемы");
         return earth(actual) && earth(wanted) && !SchematicBlocks.path(actual).equals(SchematicBlocks.path(wanted));
     }
+
+    public static String restored(String block) {
+        Objects.requireNonNull(block, "Блок пролома не может быть null: без него неизвестно, что вернуть");
+        if (!earth(block) || DIRT.equals(SchematicBlocks.path(block))) {
+            return block;
+        }
+        return "minecraft:" + DIRT;
+    }
 }

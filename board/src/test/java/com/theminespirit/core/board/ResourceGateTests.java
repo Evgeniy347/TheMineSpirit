@@ -187,6 +187,34 @@ class ResourceGateTests {
     }
 
     @Test
+    void gate_QualifiedNeed_SeesPlainStock() {
+        StockNeed need = new StockNeed(Map.of("minecraft:grass_block", 1));
+        StockView stock = new StockView(Map.of("grass_block", 128));
+
+        assertEquals(
+                Map.of(),
+                ResourceGate.missing(need, stock),
+                "Пролом просит блок с пространством имён, склад хранит короткое имя: без общей сверки задание "
+                        + "висело «ждёт ресурс: дёрн», хотя дёрн лежал у духа");
+        assertEquals(
+                GateOutcome.READY,
+                ResourceGate.gate(need, stock),
+                "Гейт обязан пускать задание, когда запас того же предмета записан коротким именем");
+    }
+
+    @Test
+    void missing_QualifiedNeed_KeepsItsName() {
+        StockNeed need = new StockNeed(Map.of("minecraft:jungle_log", 4));
+        StockView stock = new StockView(Map.of("jungle_log", 1));
+
+        assertEquals(
+                Map.of("minecraft:jungle_log", 3),
+                ResourceGate.missing(need, stock),
+                "Отчёт нехватки называет предмет так же, как его просит задание: иначе наблюдатель не сопоставит "
+                        + "нехватку с заданием");
+    }
+
+    @Test
     void missing_ActionPlacedDirtPath_DoesNotWaitForStock() {
         StockNeed need = new StockNeed(Map.of("dirt_path", 20, "torch", 4));
         StockView stock = new StockView(Map.of());

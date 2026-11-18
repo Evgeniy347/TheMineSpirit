@@ -118,6 +118,18 @@ class BreachPostTests {
                 "Точка задания — меньшая клетка площади: по ней стабилен id и работает память недостижимости");
     }
 
+    @Test
+    void target_GrassArea_RefilledWithDirt() {
+        BreachAreas.Area area = new BreachAreas.Area("minecraft:grass_block", 1, 64, 2, 1, 64, 2);
+
+        ScriptCall plan = (ScriptCall) PlanBreachPost.target(area).plan();
+
+        assertEquals(
+                "minecraft:dirt",
+                plan.params().get("block"),
+                "Пролом дёрна заделывается землёй: дёрн лопатой не добыть, а схемы принимают землю за тот же грунт");
+    }
+
     private static PlanBreachPost.Repair repair(String id) {
         return new PlanBreachPost.Repair(
                 new BoardTicket(
