@@ -5,6 +5,7 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class BoardRules {
     private static final Set<BoardCase> BUILDS = EnumSet.of(
@@ -21,6 +22,21 @@ public final class BoardRules {
     private static final Map<BoardCase, Integer> PRIORITIES = buildPriorities();
 
     private BoardRules() {}
+
+    static boolean changed(@Nullable BoardStatus current, BoardTicket ticket, BoardTicket existing, boolean stage) {
+        return (current == BoardStatus.BLOCKED && !ticket.sameDetails(existing))
+                || (current == BoardStatus.DONE && ticket.replacesDone(existing, stage))
+                || (retriedFromWorld(ticket.boardCase())
+                        && (current == BoardStatus.PENDING || current == BoardStatus.WAITING_RESOURCES)
+                        && !ticket.sameDetails(existing));
+    }
+
+    static boolean retriedFromWorld(BoardCase boardCase) {
+        return boardCase == BoardCase.RESCUE_SPIRIT
+                || boardCase == BoardCase.FILL_CRATER
+                || boardCase == BoardCase.DISMANTLE_SHELTER
+                || boardCase == BoardCase.REPAIR_FENCE;
+    }
 
     public static int priorityOf(BoardCase boardCase) {
         if (boardCase == null) {

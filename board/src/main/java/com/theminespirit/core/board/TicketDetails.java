@@ -23,7 +23,9 @@ final class TicketDetails {
         if (target.wood() != null) {
             details.add("wood=" + target.wood());
         }
-        if (target.fenceBlock() != null) {
+        if (!target.fenceCells().isEmpty()) {
+            details.add("cells=" + target.fenceCells().size());
+        } else if (target.fenceBlock() != null) {
             details.add("fence=" + target.fenceBlock());
         }
         if (target.lureItem() != null) {

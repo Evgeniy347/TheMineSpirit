@@ -1,12 +1,11 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardTuning;
-import com.theminespirit.core.board.FenceBreaks;
+import com.theminespirit.core.board.FenceRepairs;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.FenceLedger;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -50,9 +49,7 @@ public final class FenceWatch {
     }
 
     static Set<String> liveCauses(ServerLevel level) {
-        Set<String> live = new LinkedHashSet<>();
-        liveBreaks(level).keySet().forEach(at -> live.add(FenceBreaks.cause(at)));
-        return live;
+        return liveBreaks(level).isEmpty() ? Set.of() : Set.of(FenceRepairs.CAUSE);
     }
 
     static Map<BlockCoord, String> liveBreaks(ServerLevel level) {
@@ -62,20 +59,12 @@ public final class FenceWatch {
         });
     }
 
-    static String fenceCause(BlockPos pos) {
-        return "fence:" + pos.getX() + ":" + pos.getY() + ":" + pos.getZ();
-    }
-
     static boolean isFence(BlockState state) {
         Block block = state.getBlock();
         return block instanceof FenceBlock
                 || block instanceof WallBlock
                 || block instanceof FenceGateBlock
                 || block instanceof IronBarsBlock;
-    }
-
-    static String fenceId(BlockPos pos) {
-        return "repair_fence:" + pos.getX() + "," + pos.getY() + "," + pos.getZ();
     }
 
     static BlockPos pos(BlockCoord at) {

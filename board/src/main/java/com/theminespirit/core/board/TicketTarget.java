@@ -36,12 +36,22 @@ public record TicketTarget(
         @Nullable StageWork work,
         SelfEscape.@Nullable Plan rescue,
         @Nullable BlockCoord deposit,
-        @Nullable TaskNode plan) {
+        @Nullable TaskNode plan,
+        List<BlockCoord> fenceCells,
+        List<String> fenceCellBlocks) {
 
     public TicketTarget {
         dropItems = List.copyOf(Objects.requireNonNull(
                 dropItems,
                 "Список выкинутых предметов не может быть null: задание без предметов задают пустым списком"));
+        fenceCells = List.copyOf(Objects.requireNonNull(
+                fenceCells, "Клетки ограды не могут быть null: без проломов задают пустым списком"));
+        fenceCellBlocks = List.copyOf(Objects.requireNonNull(
+                fenceCellBlocks, "Блоки клеток ограды не могут быть null: без проломов задают пустым списком"));
+        if (fenceCells.size() != fenceCellBlocks.size()) {
+            throw new IllegalArgumentException("Клеток ограды " + fenceCells.size() + ", блоков "
+                    + fenceCellBlocks.size() + ": каждому пролому нужен свой блок, проверьте цель задания");
+        }
     }
 
     public static TicketTarget at(BlockCoord target) {
@@ -55,12 +65,6 @@ public record TicketTarget(
     public TicketTarget withScheme(String scheme) {
         Builder builder = new Builder(this);
         builder.schemeFile = scheme;
-        return builder.build();
-    }
-
-    public TicketTarget withFenceBlock(String fence) {
-        Builder builder = new Builder(this);
-        builder.fenceBlock = fence;
         return builder.build();
     }
 
@@ -168,6 +172,13 @@ public record TicketTarget(
         return builder.build();
     }
 
+    public TicketTarget withFenceCells(List<BlockCoord> cells, List<String> blocks) {
+        Builder builder = new Builder(this);
+        builder.fenceCells = cells;
+        builder.fenceCellBlocks = blocks;
+        return builder.build();
+    }
+
     public TicketTarget withPlan(TaskNode explicit) {
         Builder builder = new Builder(this);
         builder.plan =
@@ -200,6 +211,8 @@ public record TicketTarget(
         private SelfEscape.@Nullable Plan rescue;
         private @Nullable BlockCoord deposit;
         private @Nullable TaskNode plan;
+        private List<BlockCoord> fenceCells = List.of();
+        private List<String> fenceCellBlocks = List.of();
 
         Builder(BlockCoord target) {
             this.target = Objects.requireNonNull(target, "Цель задания не может быть null: от неё строится план");
@@ -230,6 +243,8 @@ public record TicketTarget(
             rescue = source.rescue;
             deposit = source.deposit;
             plan = source.plan;
+            fenceCells = source.fenceCells;
+            fenceCellBlocks = source.fenceCellBlocks;
         }
 
         TicketTarget build() {
@@ -257,7 +272,9 @@ public record TicketTarget(
                     work,
                     rescue,
                     deposit,
-                    plan);
+                    plan,
+                    fenceCells,
+                    fenceCellBlocks);
         }
     }
 }

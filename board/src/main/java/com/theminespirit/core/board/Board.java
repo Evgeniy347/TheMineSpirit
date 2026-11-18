@@ -117,11 +117,10 @@ public final class Board {
         if (existing != null) {
             BoardStatus current = statuses.get(ticket.id());
             boolean stage = StageTicket.stage(ticket.id());
-            boolean changed = (current == BoardStatus.BLOCKED && !ticket.sameDetails(existing))
-                    || (current == BoardStatus.DONE && ticket.replacesDone(existing, stage));
+            boolean changed = BoardRules.changed(current, ticket, existing, stage);
             boolean retry = current == BoardStatus.FAILED
                     && !recentlyFailed(ticket.id(), now)
-                    && (stage || retriedFromWorld(ticket.boardCase()));
+                    && (stage || BoardRules.retriedFromWorld(ticket.boardCase()));
             if (current == BoardStatus.BLOCKED) {
                 if (changed) {
                     tickets.put(ticket.id(), ticket);
@@ -150,13 +149,6 @@ public final class Board {
         statuses.put(ticket.id(), BoardStatus.PENDING);
         events.transition(BoardLog.Event.SUBMITTED, ticket, null, now);
         return BoardOutcome.ACCEPTED;
-    }
-
-    private static boolean retriedFromWorld(BoardCase boardCase) {
-        return boardCase == BoardCase.RESCUE_SPIRIT
-                || boardCase == BoardCase.FILL_CRATER
-                || boardCase == BoardCase.DISMANTLE_SHELTER
-                || boardCase == BoardCase.REPAIR_FENCE;
     }
 
     public boolean recentlyFailed(String ticketId, long now) {

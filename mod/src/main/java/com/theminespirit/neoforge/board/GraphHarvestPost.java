@@ -1,6 +1,8 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.FenceRepairs;
 import com.theminespirit.core.board.OrchardPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphNames;
@@ -52,22 +54,32 @@ final class GraphHarvestPost {
         if (breaks.isEmpty()) {
             return false;
         }
-        for (Map.Entry<BlockCoord, String> broken : breaks.entrySet()) {
-            BlockPos pos = FenceWatch.pos(broken.getKey());
-            String id = FenceWatch.fenceId(pos);
-            if (post.done(id) || post.open(id)) {
-                continue;
-            }
-            post.submit(
-                    post.ticket(
-                            id,
-                            BoardCase.REPAIR_FENCE,
-                            Optional.empty(),
-                            ticket.task().priority(),
-                            FenceWatch.fenceCause(pos),
-                            post.items(ticket.task())),
-                    TicketTarget.at(broken.getKey()).withFenceBlock(broken.getValue()));
+        String id = FenceRepairs.TICKET_ID;
+        BoardStatus status = post.service.board().statusOf(id).orElse(null);
+        if (status == BoardStatus.ASSIGNED) {
+            return true;
         }
+        if (status == BoardStatus.DONE
+                && post.service
+                        .targetOf(id)
+                        .filter(target -> FenceRepairs.coveredBy(target, breaks))
+                        .isPresent()) {
+            return true;
+        }
+        if (status == BoardStatus.DONE) {
+            post.service.board().reopen(id);
+        }
+        FenceRepairs.Batch batch = FenceRepairs.of(breaks);
+        post.submit(
+                post.ticket(
+                        id,
+                        BoardCase.REPAIR_FENCE,
+                        Optional.empty(),
+                        ticket.task().priority(),
+                        FenceRepairs.CAUSE,
+                        FenceRepairs.scale(
+                                post.items(ticket.task()), batch.cells().size())),
+                TicketTarget.at(batch.first()).withFenceCells(batch.cells(), batch.blocks()));
         return true;
     }
 

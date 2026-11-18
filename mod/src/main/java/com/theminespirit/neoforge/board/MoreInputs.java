@@ -89,7 +89,7 @@ final class MoreInputs {
                         saplingStock(state, graph),
                         blocks.ore(),
                         state.built("mine") == Built.BUILT),
-                new MoreRules.Security(fenceGaps(service), blocks.openDoors(), blocks.hoppers(), level.isNight()),
+                new MoreRules.Security(fenceGaps(level), blocks.openDoors(), blocks.hoppers(), level.isNight()),
                 reserves(state.facts()),
                 strategicGoals(service));
     }
@@ -135,14 +135,8 @@ final class MoreInputs {
         return waiting;
     }
 
-    private static int fenceGaps(BoardService service) {
-        int gaps = 0;
-        for (BoardTicket ticket : service.board().tickets()) {
-            if (ticket.boardCase() == BoardCase.REPAIR_FENCE && open(service, ticket.id())) {
-                gaps++;
-            }
-        }
-        return gaps;
+    private static int fenceGaps(ServerLevel level) {
+        return FenceWatch.liveBreaks(level).size();
     }
 
     private static int strategicGoals(BoardService service) {

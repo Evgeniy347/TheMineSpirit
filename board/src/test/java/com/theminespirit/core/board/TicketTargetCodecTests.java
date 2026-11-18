@@ -8,6 +8,7 @@ import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.town.PlotLeveling;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,7 +32,6 @@ class TicketTargetCodecTests {
                 List.of(new PlotLeveling.Box(7, 61, 8, 7, 61, 8)));
         TicketTarget target = TicketTarget.at(TARGET)
                 .withScheme("hut.json")
-                .withFenceBlock("oak_fence")
                 .withLureItem("carrot")
                 .withSupply("coal", 12)
                 .withCraterBlocks(5)
@@ -49,6 +49,31 @@ class TicketTargetCodecTests {
 
         assertEquals(
                 target, TicketTargetCodec.decode(encoded), "Цель world:backfill обязана пережить перезапуск целиком");
+    }
+
+    @Test
+    void encodeAndDecode_FenceCells_KeepsEveryCellAndBlock() {
+        List<BlockCoord> cells = new ArrayList<>();
+        List<String> blocks = new ArrayList<>();
+        for (int index = 0; index < 20; index++) {
+            cells.add(new BlockCoord(100 + index, 64, -30 + index));
+            blocks.add(index % 2 == 0 ? "minecraft:oak_fence" : "minecraft:cobblestone_wall");
+        }
+        TicketTarget target = TicketTarget.at(cells.get(0)).withFenceCells(cells, blocks);
+
+        TicketTarget restored =
+                TicketTargetCodec.decode(TicketTargetCodec.encode(target).orElseThrow());
+
+        assertEquals(target, restored, "Задание ограды после перезапуска обязано помнить все проломы и их блоки");
+    }
+
+    @Test
+    void decode_LegacyFenceKey_KeepsBlock() {
+        TicketTarget restored = TicketTargetCodec.decode(
+                Map.of("Target", List.of(TARGET.x(), TARGET.y(), TARGET.z()), "Fence", "oak_fence"));
+
+        assertEquals(
+                "oak_fence", restored.fenceBlock(), "Цель старой заявки ограды помнит блок: иначе пролом нечем чинить");
     }
 
     @Test

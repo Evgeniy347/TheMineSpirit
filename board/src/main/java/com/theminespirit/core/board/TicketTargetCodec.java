@@ -36,6 +36,7 @@ public final class TicketTargetCodec {
     private static final String LEVELING_FILL = "LevelingFill";
     private static final String LEVELING_VOIDS = "LevelingVoids";
     private static final String DEPOSIT = "Deposit";
+    private static final String CELL_BLOCKS = "CellBlocks";
 
     private TicketTargetCodec() {}
 
@@ -73,6 +74,10 @@ public final class TicketTargetCodec {
         put(map, BUILDING, target.building());
         putLeveling(map, target.leveling());
         putCoord(map, DEPOSIT, target.deposit());
+        TargetCellsCodec.put(map, target.fenceCells());
+        if (!target.fenceCellBlocks().isEmpty()) {
+            map.put(CELL_BLOCKS, target.fenceCellBlocks());
+        }
         return Optional.of(Map.copyOf(map));
     }
 
@@ -105,7 +110,9 @@ public final class TicketTargetCodec {
                 null,
                 null,
                 coord(map, DEPOSIT),
-                null);
+                null,
+                TargetCellsCodec.decode(map),
+                strings(map, CELL_BLOCKS));
     }
 
     private static void putLeveling(Map<String, Object> map, @Nullable PlotLeveling leveling) {

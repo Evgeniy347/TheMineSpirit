@@ -61,7 +61,6 @@ public final class TicketPlans {
     private static final String WITHDRAW = "withdraw";
     private static final String MINECRAFT = "minecraft:";
     private static final String DEFAULT_SCHEME = "stone_house";
-    private static final String DEFAULT_FENCE_BLOCK = "oak_fence";
     private static final String DEFAULT_LURE_ITEM = "wheat";
     private static final int DISMANTLE_RADIUS = 4;
     private static final String FENCE_SCHEME = "fence";
@@ -351,8 +350,7 @@ public final class TicketPlans {
     }
 
     private static TaskNode repairFence(TicketTarget target) {
-        String fence = target.fenceBlock() == null ? DEFAULT_FENCE_BLOCK : target.fenceBlock();
-        return sequence(gotoTarget(target), fillArea(target, fence, 0));
+        return FencePlans.repair(target);
     }
 
     private static TaskNode captureAnimal(TicketTarget target) {
@@ -800,30 +798,6 @@ public final class TicketPlans {
             params.put(BuildSchematicParams.PREVIOUS, previous);
         }
         return new ScriptCall(BUILD_SCHEMATIC, Map.copyOf(params));
-    }
-
-    private static TaskNode fillArea(TicketTarget target, String block, int radius) {
-        return fillArea(target, block, radius, target.target().y());
-    }
-
-    private static TaskNode fillArea(TicketTarget target, String block, int radius, int fromY) {
-        return new ScriptCall(
-                FILL,
-                Map.of(
-                        BLOCK,
-                        block,
-                        "x1",
-                        target.target().x() - radius,
-                        "y1",
-                        fromY,
-                        "z1",
-                        target.target().z() - radius,
-                        "x2",
-                        target.target().x() + radius,
-                        "y2",
-                        target.target().y(),
-                        "z2",
-                        target.target().z() + radius));
     }
 
     static ScriptCall gotoTarget(TicketTarget target) {
