@@ -31,7 +31,7 @@
 | `scripts/schematic.sh show <файл\|id> [поворот]` | шапка, материалы и срезы по слоям постройки (с поворотом) | срезы `y0…` и строки `НАРУШЕНИЕ`, если есть |
 | `scripts/testing/check-strategist.sh` | тесты агента-стратега (`python3 -m unittest`, сценарии, сторожа) и сценарии надзора `scripts/strategist.sh` на фейковом REST; сервер Minecraft и настоящий opencode не нужны | все строки `OK` |
 | `cd agents/strategist && python3 -m unittest discover -s tests -t .` | только Python-тесты агента-стратега | `OK` в последней строке |
-| `scripts/publish.sh` | публикует мод одним запуском: сборка, раскладка `server/`, снимок мира в архив, jar на сервер, пак клиента, страница «Сервер», тег; `--temp` — живая сборка без тега, `--sync` — согласовать пак и страницу с `mods/`. **Только по согласованию с пользователем** (нужно подтверждение или `-y`) | `Установлен theminespirit-<версия>.jar` |
+| `scripts/publish.sh` | публикует мод одним запуском: сборка, раскладка `server/`, снимок мира в архив, jar на сервер, пак клиента, страница «Сервер», тег; с ПК — отправка main на сервер и запуск публикации там; `--temp` — живая сборка без тега, `--sync` — согласовать пак и страницу с `mods/`. **Только по согласованию с пользователем** (нужно подтверждение или `-y`) | `Установлен theminespirit-<версия>.jar` |
 
 Первая сборка скачивает Gradle, Minecraft и NeoForge — несколько минут; дальше секунды.
 
@@ -161,7 +161,7 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [scripts/gametest.sh](scripts/gametest.sh) | обёртка над `scripts/test.sh gametest` (совместимость) |
 | [scripts/prove-red.sh](scripts/prove-red.sh) | тест `fix:`-коммита краснеет на родителе и зеленеет на коммите |
 | [scripts/schematic.sh](scripts/schematic.sh) | постройки текстом: `show` (материалы, срезы), `check` (сторожа) |
-| [scripts/publish.sh](scripts/publish.sh) | сборка и публикация мода целиком (раскладка `server/`, снимок мира в архив, сервер, пак клиента, страница, тег) — только по согласованию; `--temp`/`--sync` |
+| [scripts/publish.sh](scripts/publish.sh) | сборка и публикация мода целиком (раскладка `server/`, снимок мира в архив, сервер, пак клиента, страница, тег) — только по согласованию; с ПК — main уходит на сервер, публикация идёт там; `--temp`/`--sync` |
 | [server/](server/README.md), [server/scripts/world-snapshot.sh](server/scripts/world-snapshot.sh), [server/scripts/world-restore.sh](server/scripts/world-restore.sh), [server/scripts/hang-watch.sh](server/scripts/hang-watch.sh) | скрипты и конфиги сервера (источник для `publish.sh`), снимок мира в tar-архив и откат, сторож зависания тика с дампом и перезапуском; cron каждые 10 минут и раз в минуту; мир в git не хранится |
 | [scripts/server-cleanup.sh](scripts/server-cleanup.sh) | уборка сервера по cron: `tmp/` старше суток, `logs/` старше 14 дней |
 | [scripts/nightly-analyzers.sh](scripts/nightly-analyzers.sh), [scripts/python-bin.sh](scripts/python-bin.sh) | ночной полный прогон по main (03:00, cron ставит `publish.sh`): Spotless, Checkstyle, PMD, SpotBugs и unit-тесты в отдельном чистом checkout, только при изменениях; сводку находок разбирает java из toolchain (python не нужен), статус — `/opt/minecraft/logs/nightly-analyzers.status`; `python-bin.sh` — один выбор python для `publish.sh` и проверок |

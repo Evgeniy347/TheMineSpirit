@@ -15,6 +15,11 @@ CLEANUP_SCRIPT_DIR="${CLEANUP_SCRIPT_DIR:-/opt/minecraft/scripts}"
 BUILD_LOCK="${BUILD_LOCK:-/opt/minecraft/tmp/build.lock}"
 BUILD_LOCK_WAIT="${BUILD_LOCK_WAIT:-1800}"
 MOD_JAR_MIN_CLASSES="${MOD_JAR_MIN_CLASSES:-1000}"
+PUBLISH_SSH="${PUBLISH_SSH-domovoy@192.168.0.147}"
+PUBLISH_REMOTE="${PUBLISH_REMOTE:-auto}"
+PUBLISH_SERVER_CLONE="${PUBLISH_SERVER_CLONE:-/opt/minecraft/the-mine-spirit}"
+PUBLISH_PUSH_REF="${PUBLISH_PUSH_REF:-publish/main}"
+SSH_OPTS=(-o BatchMode=yes -o ConnectTimeout=10)
 
 assume_yes=false
 dry_run=false
@@ -50,6 +55,16 @@ usage() {
       --check-build только собрать :mod и показать путь/sha jar, ничего не выкладывая
       --verify-jar <файл> проверить содержимое jar и выйти (сборки и выкладки нет)
   -h, --help        эта справка
+
+Публикация с ПК:
+  Если /opt/minecraft/server на машине нет, скрипт отправляет main в remote server
+  (ветка publish/main), по ssh делает fast-forward в клоне /opt/minecraft/the-mine-spirit
+  и запускает публикацию там: сборка, снимок мира, пак, страница и тег — на сервере.
+  Расхождение веток или незакоммиченные файлы в клоне — ОШИБКА: синхронизируйте ветки
+  вручную и повторите публикацию с ПК или на сервере. --sync с ПК тоже выполняется
+  на сервере; --temp с ПК не поддерживается (временная сборка — в дереве задачи на
+  сервере). PUBLISH_SSH (domovoy@192.168.0.147), PUBLISH_REMOTE=auto|1|0,
+  PUBLISH_SERVER_CLONE и PUBLISH_PUSH_REF меняют поведение.
 
 Перед установкой jar проверяется по содержимому: в нём обязан быть непустой
 META-INF/neoforge.mods.toml с modId мода и больше 1000 классов (MOD_JAR_MIN_CLASSES).
@@ -95,6 +110,85 @@ version_of() {
 
 sha256_of() {
     sha256sum "$1" 2>/dev/null | cut -d' ' -f1
+}
+
+# lib: с ПК каталогов /opt нет — публикует сервер, а скрипт лишь отправляет туда main и
+# запускает публикацию по ssh. Расхождение веток не лечим сами: падаем и просим
+# синхронизировать вручную (иначе на сервер уедет не тот код).
+remote_target() {
+    case "$PUBLISH_REMOTE" in
+        0) return 1 ;;
+        1) [ -n "$PUBLISH_SSH" ] ;;
+        *) [ -n "$PUBLISH_SSH" ] && [ ! -d "$SERVER_DIR" ] ;;
+    esac
+}
+
+remote_env() {
+    printf "SERVER_DIR='%s' CLIENT_DIR='%s' GATEWAY_DIR='%s' CLEANUP_SCRIPT_DIR='%s' WORLD_BACKUPS='%s' BUILD_LOCK='%s' PUBLISH_REMOTE=0" \
+        "$SERVER_DIR" "$CLIENT_DIR" "$GATEWAY_DIR" "$CLEANUP_SCRIPT_DIR" "$WORLD_BACKUPS" "$BUILD_LOCK"
+}
+
+remote_sync() {
+    if ! command -v ssh >/dev/null 2>&1; then
+        echo "ОШИБКА: нет ssh — публикация с ПК невозможна" >&2
+        return 1
+    fi
+    echo "Синхронизация пака и страницы на $PUBLISH_SSH (клон $PUBLISH_SERVER_CLONE)…"
+    ssh "${SSH_OPTS[@]}" "$PUBLISH_SSH" \
+        "cd '$PUBLISH_SERVER_CLONE' && $(remote_env) bash scripts/publish.sh --sync"
+}
+
+publish_remote() {
+    local head extra="" rc=0
+    if ! command -v ssh >/dev/null 2>&1; then
+        echo "ОШИБКА: нет ssh — публикация с ПК невозможна" >&2
+        return 1
+    fi
+    if [ -n "$(git -C "$MOD_DIR" status --porcelain 2>/dev/null || true)" ]; then
+        echo "ВНИМАНИЕ: в локальном дереве есть незакоммиченные изменения — публикуется закоммиченный main." >&2
+    fi
+    head="$(git -C "$MOD_DIR" rev-parse HEAD)"
+    echo "Публикация с ПК: main ${head:0:10} → $PUBLISH_SSH:$PUBLISH_SERVER_CLONE"
+    if ! git -C "$MOD_DIR" push server "main:refs/heads/$PUBLISH_PUSH_REF"; then
+        echo "ОШИБКА: не отправить main на сервер (нет remote server или ветки разошлись)." >&2
+        echo "Синхронизируйте ветки вручную (например, git pull server main), затем повторите публикацию с ПК или на сервере." >&2
+        return 1
+    fi
+    $do_restart || extra="--no-restart"
+    ssh "${SSH_OPTS[@]}" "$PUBLISH_SSH" \
+        "$(remote_env) bash -s -- '$PUBLISH_SERVER_CLONE' '$PUBLISH_PUSH_REF' $extra" <<'REMOTE' || rc=$?
+clone="$1"
+ref="$2"
+shift 2
+cd "$clone" || { echo "ОШИБКА: нет клона $clone на сервере" >&2; exit 2; }
+branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || echo detached)"
+if [ "$branch" != main ]; then
+    echo "ОШИБКА: клон $clone на ветке $branch, а публикация идёт с main." >&2
+    echo "Синхронизируйте ветки вручную, затем повторите публикацию — с ПК или на сервере." >&2
+    exit 3
+fi
+target="$(git rev-parse --verify "refs/heads/$ref" 2>/dev/null || true)"
+if [ -z "$target" ]; then
+    echo "ОШИБКА: в клоне $clone нет отправленной ветки $ref." >&2
+    exit 3
+fi
+if ! git merge --ff-only "$ref"; then
+    echo "ОШИБКА: ветки разошлись: fast-forward $ref не прошёл." >&2
+    echo "Проверьте git status в $clone (незакоммиченные файлы) и синхронизируйте ветки вручную." >&2
+    exit 4
+fi
+if [ "$(git rev-parse HEAD)" != "$target" ]; then
+    echo "ОШИБКА: ветки разошлись: в main на сервере есть коммиты, которых нет в отправленной." >&2
+    echo "Синхронизируйте ветки вручную, затем повторите публикацию — с ПК или на сервере." >&2
+    exit 5
+fi
+exec bash scripts/publish.sh -y "$@"
+REMOTE
+    if [ "$rc" -ne 0 ]; then
+        echo "ОШИБКА: публикация на $PUBLISH_SSH не выполнена (код $rc)" >&2
+        return 1
+    fi
+    echo "Готово: публикация выполнена на $PUBLISH_SSH ($PUBLISH_SERVER_CLONE)"
 }
 
 # lib: след выбранной сборки в выводе — по нему разбирают инцидент выкладки: какой коммит, какой файл,
@@ -520,6 +614,14 @@ sync_existing() {
 }
 
 if [ "$mode" = sync ]; then
+    if remote_target; then
+        if $dry_run; then
+            echo "Режим --sync с ПК: пак и страница согласуются на $PUBLISH_SSH (клон $PUBLISH_SERVER_CLONE)."
+            exit 0
+        fi
+        remote_sync
+        exit $?
+    fi
     if $dry_run; then
         echo "Режим --sync: сравнить $SERVER_DIR/mods/theminespirit-*.jar с паком клиента и $GATEWAY_DIR/$STATUS_REL"
         echo "и при расхождении обновить пак (/opt/minecraft/client/publish.sh) и страницу."
@@ -546,6 +648,10 @@ else
         echo "ОШИБКА: --temp — из дерева задачи (не main). Возврат на main: scripts/publish.sh без --temp." >&2
         exit 2
     fi
+    if remote_target; then
+        echo "ОШИБКА: --temp с ПК не поддерживается: временная сборка делается в дереве задачи на сервере." >&2
+        exit 2
+    fi
 fi
 
 echo "ВНИМАНИЕ: публикация мода и перезапуск сервера выполняются ТОЛЬКО ПО"
@@ -555,7 +661,11 @@ echo
 if $assume_yes; then
     echo "Согласование подтверждено флагом -y/--yes."
 elif ! $dry_run; then
-    printf 'Продолжить публикацию на %s? [y/N] ' "$SERVER_DIR"
+    if remote_target; then
+        printf 'Продолжить публикацию через %s (клон %s)? [y/N] ' "$PUBLISH_SSH" "$PUBLISH_SERVER_CLONE"
+    else
+        printf 'Продолжить публикацию на %s? [y/N] ' "$SERVER_DIR"
+    fi
     read -r answer || answer=""
     case "$answer" in
         y|Y|yes|YES|да|Да|ДА) ;;
@@ -567,6 +677,16 @@ elif ! $dry_run; then
 fi
 
 if $dry_run; then
+    if remote_target; then
+        echo "Режим --dry-run: публикация с ПК, изменения не вносятся."
+        echo "  1. git push server main:refs/heads/$PUBLISH_PUSH_REF"
+        echo "  2. ssh $PUBLISH_SSH: в клоне $PUBLISH_SERVER_CLONE — проверка ветки main и fast-forward $PUBLISH_PUSH_REF"
+        echo "     (при расхождении веток — ОШИБКА и просьба синхронизировать вручную)"
+        echo "  3. scripts/publish.sh -y$([ "$do_restart" = true ] || echo " --no-restart") в клоне: сборка, снимок мира,"
+        echo "     установка jar, перезапуск, пак клиента, страница «Сервер», тег v<версия> и отправка в backup"
+        echo "Изменения не вносились."
+        exit 0
+    fi
     echo "Режим --dry-run: ниже план, изменения не вносятся."
     echo "  1. сборка мода: ./gradlew --quiet assemble (без тестов — решение владельца 25.10)"
     echo "  2. поиск $MOD_JAR_DIR/theminespirit-*.jar (кроме -sources/-javadoc), берётся самый свежий;"
@@ -593,6 +713,14 @@ if $dry_run; then
     fi
     echo "Изменения не вносились."
     exit 0
+fi
+
+if remote_target; then
+    if publish_remote; then
+        exit 0
+    else
+        exit $?
+    fi
 fi
 
 if ! acquire_build_lock; then

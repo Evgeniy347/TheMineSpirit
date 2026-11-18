@@ -160,7 +160,7 @@ run_publish() {
     printf '#!/usr/bin/env bash\nexit 0\n' >"$client/publish.sh"
     chmod +x "$client/publish.sh"
     make_gateway "$gateway"
-    FAKE_JAR="$jar" FAKE_CP_LOG="${CP_LOG:-}" PATH="$work/bin:$PATH" \
+    FAKE_JAR="$jar" FAKE_CP_LOG="${CP_LOG:-}" PATH="$work/bin:$PATH" PUBLISH_REMOTE=0 \
         SERVER_DIR="$server" CLIENT_DIR="$client" GATEWAY_DIR="$gateway" \
         CLEANUP_SCRIPT_DIR="$work/cleanup" HANG_WATCH_LOG="$work/hang-watch.log" \
         BUILD_LOCK="$work/build.lock" TMUX_SESSION=publish-check \
@@ -217,5 +217,78 @@ code=$?
     && [ -f "$work/sync/client/pack/mods/keep.txt" ] && [ ! -e "$work/sync/client/publish.sh" ] \
     && ok "--sync: битый jar на сервере не расходится по клиентам (код=1, пак не тронут)" \
     || fail "--sync: код=$code, вывод: $out"
+
+# lib: публикация с ПК: скрипт отправляет main на сервер (remote server → publish/main),
+# делает fast-forward в клоне сервера и запускает публикацию там. При расхождении веток —
+# падает и просит синхронизировать вручную, ничего не выкладывая.
+cat >"$work/bin/ssh" <<'FAKE'
+#!/usr/bin/env bash
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -o) shift 2 ;;
+        -*) shift ;;
+        *) break ;;
+    esac
+done
+shift
+exec bash -c "$*"
+FAKE
+chmod +x "$work/bin/ssh"
+
+make_remote_clone() {
+    local repo="$1" clone="$2" remote="$3"
+    mkdir -p "$remote/client/pack/mods"
+    printf '#!/usr/bin/env bash\nexit 0\n' >"$remote/client/publish.sh"
+    chmod +x "$remote/client/publish.sh"
+    make_gateway "$remote/gateway"
+    git -C "$repo" checkout -q main
+    cat >"$repo/server/scripts/world-snapshot.sh" <<'FAKE'
+#!/usr/bin/env bash
+mkdir -p "${WORLD_BACKUPS:?}"
+: >"$WORLD_BACKUPS/world-$(date +%s)-$1.tar.zst"
+FAKE
+    chmod +x "$repo/server/scripts/world-snapshot.sh"
+    git -C "$repo" add -A
+    git -C "$repo" commit -qm "заглушка снимка мира"
+    git clone -q "$repo" "$clone"
+    git -C "$repo" remote add server "$clone"
+    git -C "$repo" commit -q --allow-empty -m "публикуемая правка"
+}
+
+run_remote_publish() {
+    local repo="$1" clone="$2" remote="$3" jar="$4"
+    PUBLISH_REMOTE=1 PUBLISH_SSH=publish-check PUBLISH_SERVER_CLONE="$clone" \
+        SERVER_DIR="$remote/server" CLIENT_DIR="$remote/client" GATEWAY_DIR="$remote/gateway" \
+        WORLD_BACKUPS="$remote/world" CLEANUP_SCRIPT_DIR="$remote/cleanup" \
+        HANG_WATCH_LOG="$remote/hang-watch.log" BUILD_LOCK="$remote/build.lock" \
+        TMUX_SESSION=publish-check PATH="$work/bin:$PATH" FAKE_JAR="$jar" \
+        bash "$repo/scripts/publish.sh" -y 2>&1
+}
+
+repo="$work/repo-pc"
+make_repo "$repo"
+clone="$work/remote-clone"
+remote="$work/remote"
+make_remote_clone "$repo" "$clone" "$remote"
+out=$(run_remote_publish "$repo" "$clone" "$remote" "$good_jar")
+code=$?
+[ "$code" = 0 ] && echo "$out" | grep -q "Публикация с ПК" \
+    && echo "$out" | grep -q "Готово: публикация выполнена" \
+    && [ -f "$remote/server/mods/theminespirit-0.1.9.jar" ] \
+    && [ -f "$remote/client/pack/mods/theminespirit-0.1.9.jar" ] \
+    && grep -q '"version": "0.1.9"' "$remote/gateway/users/admin/sites/the-mine-spirit/server/mod.json" \
+    && [ "$(git -C "$clone" rev-parse HEAD)" = "$(git -C "$repo" rev-parse main)" ] \
+    && ok "публикация с ПК: main ушёл на сервер, публикация выполнена в клоне" \
+    || fail "публикация с ПК: код=$code, вывод: $out"
+
+rm -f "$remote/server"/mods/theminespirit-*.jar
+printf 'правка только на сервере\n' >>"$clone/server/README.md"
+git -C "$clone" commit -qam "коммит только на сервере"
+out=$(run_remote_publish "$repo" "$clone" "$remote" "$good_jar")
+code=$?
+[ "$code" = 1 ] && echo "$out" | grep -q "разошлись" && echo "$out" | grep -q "ручную" \
+    && [ ! -e "$remote/server/mods/theminespirit-0.1.9.jar" ] \
+    && ok "публикация с ПК: расхождение веток — код=1, просьба синхронизировать вручную, ничего не выложено" \
+    || fail "публикация с ПК при расхождении: код=$code, вывод: $out"
 
 exit $failed
