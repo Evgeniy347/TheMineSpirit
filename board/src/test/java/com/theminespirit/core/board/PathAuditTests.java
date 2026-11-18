@@ -69,17 +69,22 @@ class PathAuditTests {
     }
 
     @Test
-    void streets_SunkPathBelowLevel_CountedEvenWhenProbeMapsDirt() {
+    void streets_SunkPathBelowLevel_NotCounted() {
         ScriptCall call = new ScriptCall(
                 "build_schematic", Map.of("file", "street5_straight", "x", FEET.x(), "y", FEET.y(), "z", FEET.z()));
 
         BuildGap.Gap gap = BuildGap.trace(call, "oak", new SunkMappedPathProbe(), new PresetSchemes());
 
         assertEquals(
-                pathColumns().size(),
+                0,
                 gap.placed().getOrDefault("dirt", 0),
-                "Тропа, утопленная в поверхность ниже уровня схемы, — готовая улица: аудит улиц сверяет её по "
-                        + "настоящему блоку, а не по подмене «дёрн». Не хватает: " + gap.missingCells());
+                "Тропа, утопленная ниже уровня схемы, — ступенька, а не покрытие: аудит обязан требовать тропу в "
+                        + "клетке плана. Поставлено: " + gap.placed() + ", не хватает: " + gap.missingCells());
+        assertEquals(
+                "minecraft:" + DIRT_PATH,
+                gap.missingCells().get(PATH),
+                "Клетка улицы на уровне плана пуста, а тропа лежит ниже: аудит обязан назвать недостающую клетку "
+                        + PATH + ". Не хватает: " + gap.missingCells());
     }
 
     private static final class SunkMappedPathProbe implements BuildGap.Probe {

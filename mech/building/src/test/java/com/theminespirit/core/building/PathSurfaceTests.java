@@ -141,17 +141,19 @@ class PathSurfaceTests {
     }
 
     @Test
-    void walkwayPlaced_PathOneBelowCell_CountsWhenCellIsPassable() {
+    void walkwayPlaced_PathOneBelowCell_NotPlaced() {
+        assertFalse(
+                SchematicGround.walkwayPlaced("minecraft:dirt_path", "minecraft:air"),
+                "Тропа ниже уровня плана — ступенька, а не готовая улица: аудит обязан требовать её в клетке схемы");
         assertTrue(
-                SchematicGround.walkwayPlaced("minecraft:dirt_path", "minecraft:air", "minecraft:dirt_path", true),
-                "На неровной земле лопата кладёт тропу в поверхность ниже клетки схемы: аудит обязан её считать");
+                SchematicGround.walkwayPlaced("minecraft:dirt_path", "minecraft:dirt_path"),
+                "Дорожка в самой клетке схемы — готовая улица на уровне плана");
     }
 
     @Test
     void walkwayPlaced_PathAboveStandingPath_NotCountedAsSurface() {
         assertFalse(
-                SchematicGround.walkwayPlaced(
-                        "minecraft:dirt_path", "minecraft:grass_block", "minecraft:dirt_path", false),
+                SchematicGround.walkwayPlaced("minecraft:dirt_path", "minecraft:grass_block"),
                 "Тропа в воздухе над дёрном — висящая: аудит обязан требовать её в поверхности, а не над ней");
     }
 

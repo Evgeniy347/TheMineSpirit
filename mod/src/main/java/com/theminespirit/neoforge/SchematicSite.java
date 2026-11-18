@@ -145,11 +145,7 @@ final class SchematicSite {
         if (!SchematicActions.isWalkway(entry.block()) || !current.isAir()) {
             return false;
         }
-        return SchematicGround.walkwayPlaced(
-                entry.block(),
-                BlockStates.idOf(current),
-                BlockStates.idOf(level.getBlockState(toPos(entry.pos()).below())),
-                true);
+        return SchematicGround.walkwayPlaced(entry.block(), BlockStates.idOf(current));
     }
 
     boolean rightBlockWrongState(Schematic.PlacedEntry entry) {

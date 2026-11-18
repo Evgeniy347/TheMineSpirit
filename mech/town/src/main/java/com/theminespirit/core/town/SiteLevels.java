@@ -36,10 +36,9 @@ public final class SiteLevels {
     public static PlotLeveling leveling(StageSite site, IntBinaryOperator tops, Predicate<BlockCoord> planned) {
         Objects.requireNonNull(planned, "Признак плана не может быть null: без него расчистка срежет постройку");
         BlockCoord chest = chestSpot(site);
+        Predicate<ColumnMask.Cell> skip = cell -> cell.x() == chest.x() && cell.z() == chest.z();
         return new PlotLeveling(
-                extra(site, tops, cell -> cell.x() == chest.x() && cell.z() == chest.z(), planned),
-                List.of(),
-                PlotLeveling.DEFAULT_BLOCK);
+                extra(site, tops, skip, planned), fill(site, tops, skip, planned), PlotLeveling.DEFAULT_BLOCK);
     }
 
     public static List<PlotLeveling.Box> extra(StageSite site, IntBinaryOperator tops) {
@@ -64,6 +63,36 @@ public final class SiteLevels {
             }
             int top = tops.applyAsInt(column.x(), column.z());
             for (int y = level + 1; y < top; y++) {
+                if (!planned.test(new BlockCoord(column.x(), y, column.z()))) {
+                    layers.computeIfAbsent(y, key -> new TreeMap<>())
+                            .computeIfAbsent(column.z(), key -> new ArrayList<>())
+                            .add(column.x());
+                }
+            }
+        }
+        List<PlotLeveling.Box> boxes = new ArrayList<>();
+        layers.forEach((y, rows) -> {
+            List<PlotLeveling.Box> runs = new ArrayList<>();
+            rows.forEach((z, xs) -> runs.addAll(runs(xs, y, z)));
+            boxes.addAll(merged(runs));
+        });
+        return List.copyOf(boxes);
+    }
+
+    private static List<PlotLeveling.Box> fill(
+            StageSite site, IntBinaryOperator tops, Predicate<ColumnMask.Cell> skip, Predicate<BlockCoord> planned) {
+        Objects.requireNonNull(tops, "Высоты колонок не могут быть null: без них низин до уровня не найти");
+        int level = level(site);
+        Map<Integer, Map<Integer, List<Integer>>> layers = new TreeMap<>();
+        for (ColumnMask.Cell column : site.zone().cells()) {
+            if (skip.test(column) || site.mineColumn(column.x(), column.z())) {
+                continue;
+            }
+            int top = tops.applyAsInt(column.x(), column.z());
+            if (top > level || level - top + 1 > PlotLeveling.MAX_SHIFT) {
+                continue;
+            }
+            for (int y = top; y <= level; y++) {
                 if (!planned.test(new BlockCoord(column.x(), y, column.z()))) {
                     layers.computeIfAbsent(y, key -> new TreeMap<>())
                             .computeIfAbsent(column.z(), key -> new ArrayList<>())

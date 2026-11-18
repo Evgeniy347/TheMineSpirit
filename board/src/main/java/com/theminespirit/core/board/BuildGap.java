@@ -188,10 +188,8 @@ public final class BuildGap {
             }
             String item = bare(WoodSpecies.swap(SchematicBlocks.itemOf(block), wood));
             String standing = probe.block(at);
-            BlockCoord below = new BlockCoord(at.x(), at.y() - 1, at.z());
             boolean done = SchematicActions.isWalkway(block)
-                    ? SchematicGround.walkwayPlaced(
-                            block, probe.rawBlock(at), probe.rawBlock(below), probe.passable(at))
+                    ? SchematicGround.walkwayPlaced(block, probe.rawBlock(at))
                     : BlockMatch.matches(standing, item);
             count(at, item, block, () -> done, " ожидается " + item + ", стоит " + standing);
         }

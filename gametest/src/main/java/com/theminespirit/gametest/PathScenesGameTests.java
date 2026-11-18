@@ -32,11 +32,12 @@ public final class PathScenesGameTests {
     private static final BlockPos FLAT_ORIGIN = new BlockPos(1, 1, 1);
     private static final BlockPos LOW_ORIGIN = new BlockPos(2, 1, 2);
     private static final BlockPos WEED_ORIGIN = new BlockPos(4, 2, 4);
+    private static final BlockPos SUNK_ORIGIN = new BlockPos(3, 1, 3);
 
     private PathScenesGameTests() {}
 
     @GameTest(template = "arena", batch = "scene_path_arena", timeoutTicks = 400)
-    public static void pathScene_FlatAndUnevenGround_PathLiesInSurface(GameTestHelper helper) {
+    public static void pathScene_UnevenGround_PathStaysOnPlanLevel(GameTestHelper helper) {
         GameTestFixtures.reset(helper, 16);
         for (int x = -1; x <= 10; x++) {
             for (int z = -1; z <= 10; z++) {
@@ -51,20 +52,29 @@ public final class PathScenesGameTests {
                 (ChestBlockEntity) helper.getLevel().getBlockEntity(helper.absolutePos(new BlockPos(10, 1, 10)));
         chest.setItem(0, new ItemStack(Items.IRON_SHOVEL));
         helper.setBlock(WEED_ORIGIN.getX(), WEED_ORIGIN.getY() - 1, WEED_ORIGIN.getZ(), Blocks.SHORT_GRASS);
+        helper.setBlock(SUNK_ORIGIN.getX(), SUNK_ORIGIN.getY() - 1, SUNK_ORIGIN.getZ(), Blocks.AIR);
+        helper.setBlock(SUNK_ORIGIN.getX(), SUNK_ORIGIN.getY() - 2, SUNK_ORIGIN.getZ(), Blocks.DIRT_PATH);
 
         SpiritEntity flat = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(8, 1, 8));
         SpiritEntity low = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(7, 1, 7));
         SpiritEntity weed = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(6, 1, 6));
+        SpiritEntity sunk = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(5, 1, 5));
         low.getInventory().setItem(0, new ItemStack(Items.IRON_SHOVEL));
         weed.getInventory().setItem(0, new ItemStack(Items.IRON_SHOVEL));
+        sunk.getInventory().setItem(0, new ItemStack(Items.IRON_SHOVEL));
+        low.getInventory().setItem(1, new ItemStack(Items.DIRT, 4));
+        weed.getInventory().setItem(1, new ItemStack(Items.DIRT, 4));
+        sunk.getInventory().setItem(1, new ItemStack(Items.DIRT, 4));
         SpiritRun flatRun = SpiritRun.launch(helper, flat, build(helper, FLAT_ORIGIN), SETTLE_TICKS);
         SpiritRun lowRun = SpiritRun.launch(helper, low, build(helper, LOW_ORIGIN), SETTLE_TICKS);
         SpiritRun weedRun = SpiritRun.launch(helper, weed, build(helper, WEED_ORIGIN), SETTLE_TICKS);
+        SpiritRun sunkRun = SpiritRun.launch(helper, sunk, build(helper, SUNK_ORIGIN), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             flatRun.assertStarted();
             lowRun.assertStarted();
             weedRun.assertStarted();
+            sunkRun.assertStarted();
             helper.assertTrue(
                     flat.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
                     "тропа на ровной земле обязана встать целиком, статус "
@@ -83,22 +93,42 @@ public final class PathScenesGameTests {
                     helper.getBlockState(FLAT_ORIGIN).isAir(),
                     "старая тропа блоком над поверхностью снята, а не осталась висеть над новой");
             helper.assertTrue(
-                    helper.getBlockState(new BlockPos(LOW_ORIGIN.getX(), -1, LOW_ORIGIN.getZ()))
+                    helper.getBlockState(new BlockPos(LOW_ORIGIN.getX(), 0, LOW_ORIGIN.getZ()))
                             .is(Blocks.DIRT_PATH),
-                    "на неровной земле тропа ложится в поверхность колонки, а не висит на уровне схемы");
+                    "тропа на низкой колонке поднята в уровень плана, а не утоплена ниже схемы");
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(LOW_ORIGIN.getX(), -1, LOW_ORIGIN.getZ()))
+                            .is(Blocks.DIRT),
+                    "под поднятой тропой остаётся подсыпанная земля — дорожка не висит");
             helper.assertTrue(
                     helper.getBlockState(LOW_ORIGIN).isAir(),
-                    "клетка схемы над низкой колонкой остаётся воздухом: тропа не ставится блоком над землёй");
+                    "клетка схемы над дорожкой остаётся воздухом: тропа не встаёт блоком над землёй");
             helper.assertTrue(
                     weed.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "сорняк в клетке тропы снят и тропа легла ниже, статус "
+                    "сорняк в клетке тропы снят и тропа легла в уровень плана, статус "
                             + weed.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
                             + weed.taskFailureReason().orElse("нет"));
-            helper.assertTrue(helper.getBlockState(WEED_ORIGIN).isAir(), "клетка тропы очищена от травы");
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(WEED_ORIGIN.getX(), WEED_ORIGIN.getY() - 1, WEED_ORIGIN.getZ()))
+                            .is(Blocks.DIRT_PATH),
+                    "тропа поднята в клетку плана: сорняк снят, земля подсыпана");
             helper.assertTrue(
                     helper.getBlockState(new BlockPos(WEED_ORIGIN.getX(), WEED_ORIGIN.getY() - 2, WEED_ORIGIN.getZ()))
+                            .is(Blocks.GRASS_BLOCK),
+                    "опора под поднятой тропой цела");
+            helper.assertTrue(
+                    sunk.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                    "утопленная тропа поднята в уровень плана, статус "
+                            + sunk.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина "
+                            + sunk.taskFailureReason().orElse("нет"));
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(SUNK_ORIGIN.getX(), 0, SUNK_ORIGIN.getZ()))
                             .is(Blocks.DIRT_PATH),
-                    "тропа лежит в верхнем блоке земли под клеткой схемы");
+                    "старая утопленная тропа переложена в клетку плана");
+            helper.assertTrue(
+                    helper.getBlockState(new BlockPos(SUNK_ORIGIN.getX(), -1, SUNK_ORIGIN.getZ()))
+                            .is(Blocks.DIRT),
+                    "старая тропа снята лопатой до земли: под новой дорожкой ступеньки нет");
             helper.setBlock(LOW_ORIGIN.getX(), -1, LOW_ORIGIN.getZ(), Blocks.AIR);
             GameTestFixtures.finish(helper, 16);
         });

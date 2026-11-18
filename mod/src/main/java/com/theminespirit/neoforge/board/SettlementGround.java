@@ -39,13 +39,17 @@ public final class SettlementGround {
     static PlotLeveling leveling(ServerLevel level, StageSite site) {
         IntBinaryOperator tops = tops(level, site.anchor().y() + 1);
         PlotLeveling plan = SiteLevels.leveling(site, tops, PlotPlanBlocks.of(site)::planned);
-        if (!plan.cut().isEmpty()) {
+        if (!plan.cut().isEmpty() || !plan.fill().isEmpty()) {
             LOGGER.info(
-                    "Расчистка на y={}: лишнего выше уровня {} ящиков, подсыпки нет",
+                    "Выравнивание на y={}: срезка {} боксов, подсыпка {} боксов",
                     site.anchor().y(),
-                    plan.cut().size());
+                    plan.cut().size(),
+                    plan.fill().size());
             if (plan.cut().size() <= LEVELING_SHOWN) {
                 LOGGER.info("[plot] срезка выше уровня: {}", plan.cut());
+            }
+            if (plan.fill().size() <= LEVELING_SHOWN) {
+                LOGGER.info("[plot] подсыпка до уровня: {}", plan.fill());
             }
         }
         return plan;

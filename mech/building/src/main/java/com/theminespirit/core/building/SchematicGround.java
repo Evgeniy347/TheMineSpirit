@@ -55,13 +55,12 @@ public final class SchematicGround {
         return false;
     }
 
-    public static boolean walkwayPlaced(String wantedBlock, String cellBlock, String belowBlock, boolean cellPassable) {
+    public static boolean walkwayPlaced(String wantedBlock, String cellBlock) {
         Objects.requireNonNull(wantedBlock, "Блок схемы не может быть null: без него нечего сверять");
         Objects.requireNonNull(cellBlock, "Блок клетки не может быть null: без него нечего сверять");
-        Objects.requireNonNull(belowBlock, "Блок под клеткой не может быть null: тропа бывает в поверхности ниже");
         if (!SchematicActions.isWalkway(wantedBlock)) {
             return false;
         }
-        return SchematicActions.isWalkway(cellBlock) || (cellPassable && SchematicActions.isWalkway(belowBlock));
+        return SchematicActions.isWalkway(cellBlock);
     }
 }

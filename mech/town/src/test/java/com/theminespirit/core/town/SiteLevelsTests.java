@@ -220,20 +220,67 @@ class SiteLevelsTests {
     }
 
     @Test
-    void leveling_ColumnHigherThanLevel_HasCutWithoutFill() {
-        ColumnMask.Cell cell = freeCell();
-        PlotLeveling plan = SiteLevels.leveling(SITE, tops(cell, LEVEL + 3));
+    void leveling_MixedColumns_CutAboveFillBelow() {
+        List<ColumnMask.Cell> cells = freeCells(3);
+        ColumnMask.Cell tall = cells.get(0);
+        ColumnMask.Cell low = cells.get(1);
+        ColumnMask.Cell deep = cells.get(2);
+        IntBinaryOperator tops = (x, z) -> {
+            if (x == tall.x() && z == tall.z()) {
+                return LEVEL + 3;
+            }
+            if (x == low.x() && z == low.z()) {
+                return LEVEL - 2;
+            }
+            if (x == deep.x() && z == deep.z()) {
+                return LEVEL - 11;
+            }
+            return LEVEL;
+        };
 
-        assertEquals(3, plan.cut().size(), "Расчистка срезает всё лишнее выше y, слой за слоем");
-        assertEquals(List.of(), plan.fill(), "Расчистка ничего не подсыпает: ямы ниже y её не держат");
+        PlotLeveling plan = SiteLevels.leveling(SITE, tops);
+
+        assertEquals(
+                List.of(
+                        new PlotLeveling.Box(tall.x(), LEVEL, tall.z(), tall.x(), LEVEL, tall.z()),
+                        new PlotLeveling.Box(tall.x(), LEVEL + 1, tall.z(), tall.x(), LEVEL + 1, tall.z()),
+                        new PlotLeveling.Box(tall.x(), LEVEL + 2, tall.z(), tall.x(), LEVEL + 2, tall.z())),
+                plan.cut(),
+                "Выравнивание срезает всё лишнее выше уровня, слой за слоем");
+        assertEquals(
+                List.of(
+                        new PlotLeveling.Box(low.x(), LEVEL - 2, low.z(), low.x(), LEVEL - 2, low.z()),
+                        new PlotLeveling.Box(low.x(), LEVEL - 1, low.z(), low.x(), LEVEL - 1, low.z())),
+                plan.fill(),
+                "Выравнивание подсыпает низину до уровня плана: весь план живёт на одном уровне");
+        assertTrue(
+                plan.fill().stream().noneMatch(box -> box.x1() == deep.x() && box.z1() == deep.z()),
+                "Низину глубже " + PlotLeveling.MAX_SHIFT + " блоков не засыпаем: это уже обрыв, а не яма");
         assertEquals(
                 List.of(),
                 plan.voids(),
-                "Расчистка не ищет пустоты под участком: это работа выравнивания, а не расчистки");
+                "Выравнивание не ищет пустоты под участком: это работа расчистки, а не уровня");
+        assertTrue(
+                SiteLevels.leveling(SITE, tops, at -> at.x() == low.x() && at.z() == low.z())
+                        .fill()
+                        .isEmpty(),
+                "Клетку, где блок ставит сам план, подсыпка не дублирует");
     }
 
     private static IntBinaryOperator tops(ColumnMask.Cell cell, int top) {
         return (x, z) -> x == cell.x() && z == cell.z() ? top : LEVEL;
+    }
+
+    private static List<ColumnMask.Cell> freeCells(int count) {
+        BlockCoord chest = SiteLevels.chestSpot(SITE);
+        List<ColumnMask.Cell> found = SITE.zone().cells().stream()
+                .filter(cell -> !SITE.planCell(cell.x(), LEVEL, cell.z()))
+                .filter(cell -> !SITE.ringPost(cell.x(), cell.z()))
+                .filter(cell -> cell.x() != chest.x() || cell.z() != chest.z())
+                .limit(count)
+                .toList();
+        assertEquals(count, found.size(), "На площадке мало свободных клеток для сцены выравнивания");
+        return found;
     }
 
     private static ColumnMask.Cell freeCell() {

@@ -47,32 +47,43 @@ final class PathTrample {
                     BlockPlacer.RefuseReason.NO_MATERIAL, "нет лопаты для тропинки: сначала нужна лопата");
         }
         ItemStack shovel = spirit.getInventory().getItem(slot);
-        if (air && !raised) {
-            BlockPos below = target.below();
-            if (!level.getBlockState(below).canBeReplaced()) {
+        BlockState before = level.getBlockState(target);
+        if (air) {
+            if (!PathGround.openAbove(BlockStates.idOf(level.getBlockState(target.above())))) {
                 return new BlockPlacer.Refused(
                         BlockPlacer.RefuseReason.NO_SUPPORT,
-                        "под пустой клеткой " + target.toShortString() + " нет опоры: дорожка повиснет в воздухе");
+                        "над клеткой " + target.toShortString() + " не воздух: дорожку топчут под открытым небом");
             }
             if (spirit.getInventory().countItem(Items.DIRT) < 1) {
                 return new BlockPlacer.Refused(
                         BlockPlacer.RefuseReason.NO_MATERIAL,
-                        "нет земли под дорожку в " + target.toShortString() + ": снизу пусто");
+                        "нет земли, чтобы поднять дорожку в уровень плана в " + target.toShortString());
+            }
+            BlockPos below = target.below();
+            boolean sunk = SchematicActions.isWalkway(BlockStates.idOf(level.getBlockState(below)));
+            if (sunk) {
+                if (!SpiritBlocks.place(
+                        (ServerLevel) spirit.level(), below, Blocks.DIRT.defaultBlockState(), spirit, "PATH_TRAMPLE")) {
+                    return new BlockPlacer.Refused(
+                            BlockPlacer.RefuseReason.NO_SUPPORT,
+                            "старую утопленную тропу в " + below.toShortString() + " снять не вышло");
+                }
+                SpiritGesture.workOn(spirit, below);
+                shovel.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
+            } else if (!raised && !level.getBlockState(below).canBeReplaced()) {
+                return new BlockPlacer.Refused(
+                        BlockPlacer.RefuseReason.NO_SUPPORT,
+                        "под пустой клеткой " + target.toShortString() + " нет опоры: дорожка повиснет в воздухе");
             }
             spirit.getInventory().removeItemType(Items.DIRT, 1);
             SpiritBlocks.place(
-                    (ServerLevel) spirit.level(), below, Blocks.DIRT.defaultBlockState(), spirit, "PATH_TRAMPLE");
-            SpiritBlocks.place(
-                    (ServerLevel) spirit.level(), target, Blocks.DIRT_PATH.defaultBlockState(), spirit, "PATH_TRAMPLE");
-            SpiritGesture.workOn(spirit, target);
-            shovel.hurtAndBreak(1, spirit, EquipmentSlot.MAINHAND);
-            if (level instanceof ServerLevel server) {
-                PlacedBlocksData.get(server).markSpirit(target);
-            }
-            return new BlockPlacer.Started(target.immutable());
+                    (ServerLevel) spirit.level(),
+                    raised || sunk ? target : below,
+                    Blocks.DIRT.defaultBlockState(),
+                    spirit,
+                    "PATH_TRAMPLE");
         }
-        BlockPos ground = raised ? target.below() : target;
-        BlockState before = level.getBlockState(ground);
+        BlockPos ground = target;
         UseOnContext context = new UseOnContext(level, null, InteractionHand.MAIN_HAND, shovel, topFace(ground));
         InteractionResult result = shovel.getItem().useOn(context);
         if (!result.consumesAction() || !level.getBlockState(ground).is(Blocks.DIRT_PATH)) {
