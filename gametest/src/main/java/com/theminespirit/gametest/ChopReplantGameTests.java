@@ -29,9 +29,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 final class ChopReplantGameTests {
     private ChopReplantGameTests() {}
 
-    // [флак] обновление участка: шесть саженцев — ствол и досадка сеткой, каждую клетку дух обходит;
-    // потолок с запасом на флаки полного прогона
-    @SceneStep(template = FIELD, timeoutTicks = 800)
+    // mc: [флак] шесть саженцев — дух обходит каждую клетку; после кроны оставшаяся листва распадается сама
+    @SceneStep(template = FIELD, timeoutTicks = 2600)
     public static void chopTree_ReplantOakWithExtraSaplings_RenewsAreaAwayFromWall(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
@@ -43,6 +42,7 @@ final class ChopReplantGameTests {
         }
         SpiritEntity spirit = spawnChopper(helper);
         spirit.getInventory().setItem(1, new ItemStack(Items.OAK_SAPLING, 6));
+        spirit.getInventory().setItem(2, new ItemStack(Items.DIRT, 16));
         ChopTreeScript script = new ChopTreeScript(spirit, chopParams("oak", 1, true));
         ScriptStatus[] status = driveScript(helper, spirit, script);
 
@@ -69,6 +69,7 @@ final class ChopReplantGameTests {
         helper.setBlock(7, 1, 7, Blocks.STONE);
         helper.setBlock(7, 1, 9, Blocks.STONE);
         SpiritEntity birches = spawnChopper(helper);
+        birches.getInventory().setItem(1, new ItemStack(Items.DIRT, 16));
         ChopTreeScript shapes = new ChopTreeScript(birches, chopParams("birch", 5));
         ScriptStatus[] shapeStatus = driveScript(helper, birches, shapes);
 

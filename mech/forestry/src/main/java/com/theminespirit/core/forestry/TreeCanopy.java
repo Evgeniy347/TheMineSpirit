@@ -21,11 +21,15 @@ public final class TreeCanopy {
         Objects.requireNonNull(view, "TreeView не может быть null: по нему отличают листву от прочих блоков");
         Set<BlockCoord> logs = new HashSet<>(tree.logs());
         Bounds box = Bounds.of(tree);
+        List<BlockCoord> foreign = foreignLogs(box, view, logs);
         Set<BlockCoord> seen = new HashSet<>(logs);
         Deque<BlockCoord> queue = new ArrayDeque<>();
         for (BlockCoord log : tree.logs()) {
             forEachNeighbor(log, cell -> {
-                if (box.contains(cell) && seen.add(cell) && view.isNaturalLeaves(cell)) {
+                if (box.contains(cell)
+                        && seen.add(cell)
+                        && view.isNaturalLeaves(cell)
+                        && ownedBy(cell, tree.logs(), foreign)) {
                     queue.add(cell);
                 }
             });
@@ -36,10 +40,10 @@ public final class TreeCanopy {
                 if (!box.contains(cell) || !seen.add(cell)) {
                     return;
                 }
-                if (view.isLog(cell) && !logs.contains(cell)) {
+                if (view.isAnyLog(cell) && !logs.contains(cell)) {
                     return;
                 }
-                if (view.isNaturalLeaves(cell)) {
+                if (view.isNaturalLeaves(cell) && ownedBy(cell, tree.logs(), foreign)) {
                     queue.add(cell);
                     found.add(cell);
                 }
@@ -51,6 +55,35 @@ public final class TreeCanopy {
                 .thenComparingInt(BlockCoord::x)
                 .thenComparingInt(BlockCoord::z));
         return List.copyOf(found);
+    }
+
+    private static List<BlockCoord> foreignLogs(Bounds box, TreeView view, Set<BlockCoord> logs) {
+        List<BlockCoord> foreign = new ArrayList<>();
+        for (int x = box.minX(); x <= box.maxX(); x++) {
+            for (int y = box.minY(); y <= box.maxY(); y++) {
+                for (int z = box.minZ(); z <= box.maxZ(); z++) {
+                    BlockCoord cell = new BlockCoord(x, y, z);
+                    if (!logs.contains(cell) && view.isAnyLog(cell)) {
+                        foreign.add(cell);
+                    }
+                }
+            }
+        }
+        return foreign;
+    }
+
+    private static boolean ownedBy(BlockCoord cell, List<BlockCoord> logs, List<BlockCoord> foreign) {
+        long self = nearestSquared(cell, logs);
+        long other = nearestSquared(cell, foreign);
+        return self < other;
+    }
+
+    private static long nearestSquared(BlockCoord cell, List<BlockCoord> cells) {
+        long best = Long.MAX_VALUE;
+        for (BlockCoord other : cells) {
+            best = Math.min(best, distanceSquared(cell, other));
+        }
+        return best;
     }
 
     private static void forEachNeighbor(BlockCoord cell, Consumer<BlockCoord> action) {

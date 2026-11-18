@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.forestry.ChopPlan;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeView;
@@ -8,8 +9,11 @@ import com.theminespirit.core.policy.BlockProtection;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
+import org.slf4j.Logger;
 
 final class ChopPass {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     enum Step {
         RUNNING,
         PROTECTED,
@@ -24,6 +28,7 @@ final class ChopPass {
     private ChopPlan plan = new ChopPlan(List.of());
     private int index;
     private boolean breaking;
+    private boolean skipLogged;
 
     ChopPass(SpiritEntity spirit, TreeView view, boolean orchard, BlockBreaker breaker) {
         this.spirit = spirit;
@@ -37,6 +42,7 @@ final class ChopPass {
         plan = ChopPlan.of(target, from, this::protectedCell);
         index = 0;
         breaking = false;
+        skipLogged = false;
     }
 
     Step tick() {
@@ -56,6 +62,16 @@ final class ChopPass {
             }
             if (begin instanceof BlockBreaker.Protected) {
                 return Step.PROTECTED;
+            }
+            if (begin instanceof BlockBreaker.Refused refused && !skipLogged) {
+                skipLogged = true;
+                LOGGER.warn(
+                        "[chop] {} у дерева {}: бревно {} не берётся с места — {}: {}",
+                        spirit.getName().getString(),
+                        tree.base(),
+                        log,
+                        refused.reason(),
+                        refused.message());
             }
             index++;
         }

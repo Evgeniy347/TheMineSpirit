@@ -69,7 +69,9 @@ final class ChopSceneSupport {
                 }
             }
         }
-        var leavesState = leaves.defaultBlockState().setValue(LeavesBlock.PERSISTENT, false);
+        var leavesState = leaves.defaultBlockState()
+                .setValue(LeavesBlock.PERSISTENT, false)
+                .setValue(LeavesBlock.DISTANCE, 1);
         for (int dx = -1; dx <= 2; dx++) {
             for (int dz = -1; dz <= 2; dz++) {
                 boolean ring = dx == -1 || dx == 2 || dz == -1 || dz == 2;
@@ -91,7 +93,10 @@ final class ChopSceneSupport {
 
     static void addLeavesCrown(GameTestHelper helper, int x, int z, int trunkHeight, Block leavesBlock) {
         int top = trunkHeight;
-        var leavesState = leavesBlock.defaultBlockState().setValue(LeavesBlock.PERSISTENT, false);
+        var leavesState = leavesBlock
+                .defaultBlockState()
+                .setValue(LeavesBlock.PERSISTENT, false)
+                .setValue(LeavesBlock.DISTANCE, 1);
         helper.setBlock(x, top + 1, z, leavesState);
         helper.setBlock(x + 1, top, z, leavesState);
         helper.setBlock(x - 1, top, z, leavesState);

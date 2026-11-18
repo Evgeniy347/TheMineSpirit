@@ -182,7 +182,7 @@ final class ChopAscent {
                     tree.base(),
                     feet.toShortString(),
                     scaffold.failureReason());
-            return Step.GIVE_UP;
+            return Step.RETRY;
         }
         return scaffold.climbing() ? Step.RUNNING : Step.READY;
     }

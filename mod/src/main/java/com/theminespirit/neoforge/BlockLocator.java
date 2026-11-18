@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.observation.BlockBox;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.SectionCursor;
 import com.theminespirit.core.observation.SectionSlice;
@@ -18,6 +19,8 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 
 public final class BlockLocator {
+    private static final int SEARCH_Y_RADIUS = 64;
+
     private BlockLocator() {}
 
     public static Search search(Level level, BlockPos center, int radius, Set<Block> blocks) {
@@ -41,7 +44,9 @@ public final class BlockLocator {
             this.center = center;
             this.centerCoord = new BlockCoord(center.getX(), center.getY(), center.getZ());
             this.blocks = blocks;
-            this.cursor = LoadedWorld.cursor(LoadedWorld.cube(level, centerCoord, radius), centerCoord);
+            int minY = Math.max(level.getMinBuildHeight(), centerCoord.y() - SEARCH_Y_RADIUS);
+            int maxY = Math.min(level.getMaxBuildHeight() - 1, centerCoord.y() + SEARCH_Y_RADIUS);
+            this.cursor = LoadedWorld.cursor(BlockBox.cube(centerCoord, radius).clampY(minY, maxY), centerCoord);
         }
 
         public List<BlockPos> step(int maxSlices) {

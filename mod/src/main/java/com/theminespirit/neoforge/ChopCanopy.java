@@ -4,7 +4,6 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeCanopy;
 import com.theminespirit.core.forestry.TreeView;
-import com.theminespirit.core.mining.ToolChoice;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -31,11 +30,11 @@ final class ChopCanopy {
 
     void begin(Tree target) {
         tree = target;
-        plan = TreeCanopy.plan(target, view);
         index = 0;
         removed = 0;
         skipped = 0;
         breaking = false;
+        plan = TreeCanopy.plan(target, view);
         if (plan.isEmpty()) {
             return;
         }
@@ -61,9 +60,8 @@ final class ChopCanopy {
                 index++;
                 continue;
             }
-            BlockCoord cell = plan.get(index);
-            BlockPos pos = toPos(cell);
-            if (breaker.beginWithSlot(pos, ToolChoice.HAND) instanceof BlockBreaker.Started) {
+            BlockPos pos = toPos(plan.get(index));
+            if (breaker.beginChop(pos, false) instanceof BlockBreaker.Started) {
                 breaking = true;
                 return true;
             }
@@ -96,7 +94,7 @@ final class ChopCanopy {
     private void finish() {
         if (removed > 0) {
             LOGGER.info(
-                    "[chop] {} у дерева {}: снято листвы {}, без подхода {}, осталось {}",
+                    "[chop] {} у дерева {}: снято листвы {}, без доступа {}, осталось {}",
                     spirit.getName().getString(),
                     tree.base(),
                     removed,

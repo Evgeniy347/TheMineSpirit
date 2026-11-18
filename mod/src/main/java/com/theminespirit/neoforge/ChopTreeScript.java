@@ -15,6 +15,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -162,6 +163,16 @@ public final class ChopTreeScript implements ScriptInstance {
 
     private ScriptStatus reject(NotATree notATree) {
         rejected++;
+        if (rejected <= 5) {
+            LOGGER.warn(
+                    "[chop] дух {}: бревно {} не признано деревом — {}; брёвен {}, порода {}, список {}",
+                    spirit.getName().getString(),
+                    notATree.logs().stream().min(Comparator.naturalOrder()).orElse(null),
+                    notATree.reason(),
+                    notATree.logs().size(),
+                    ChopTreeText.speciesText(params),
+                    notATree.logs().stream().sorted().limit(6).toList());
+        }
         search.markKnown(notATree.logs());
         return ScriptStatus.RUNNING;
     }

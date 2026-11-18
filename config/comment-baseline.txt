@@ -5,9 +5,6 @@ gametest/BoardGameTests.java	[флак] добыча одного бревна �
 gametest/BoardGameTests.java	машины не укладывается в 400 тиков, запас двойной.
 gametest/BoardV2GameTests.java	[флак] перенос: путь, разбор старого загона и стройка нового 4×5; под нагрузкой
 gametest/BoardV2GameTests.java	машины 400 тиков мало, запас двойной.
-gametest/ChopBigTreesGameTests.java	[флак] замер 885 тиков: 80 брёвен 2×2 высотой 20 рубятся с одной стоянки; потолок 1800 ≈ 2× замера
-gametest/ChopReplantGameTests.java	[флак] обновление участка: шесть саженцев — ствол и досадка сеткой, каждую клетку дух обходит;
-gametest/ChopReplantGameTests.java	потолок с запасом на флаки полного прогона
 gametest/DemoAuditGameTests.java	[флак] два свободных слота: заходы к сундуку и обратно — запас тиков на подходы, тест меряет результат
 gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.
 gametest/DemoAuditGameTests.java	[флак] дом игрока 1 — сотни блоков под коньком: запас тиков на подходы, тест меряет результат.

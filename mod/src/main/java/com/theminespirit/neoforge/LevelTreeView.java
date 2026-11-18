@@ -176,6 +176,16 @@ public final class LevelTreeView implements TreeView {
     }
 
     @Override
+    public boolean isAnyLog(BlockCoord coord) {
+        LevelChunk chunk = level.getChunkSource().getChunkNow(coord.x() >> 4, coord.z() >> 4);
+        if (chunk == null) {
+            return false;
+        }
+        return chunk.getBlockState(new BlockPos(coord.x(), coord.y(), coord.z()))
+                .is(BlockTags.LOGS);
+    }
+
+    @Override
     public boolean isNaturalLeaves(BlockCoord coord) {
         return kind(coord) == Kind.NATURAL_LEAVES;
     }

@@ -34,8 +34,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 final class ChopBigTreesGameTests {
     private ChopBigTreesGameTests() {}
 
-    // [флак] замер 885 тиков: 80 брёвен 2×2 высотой 20 рубятся с одной стоянки; потолок 1800 ≈ 2× замера
-    @SceneStep(template = "mine_arena", timeoutTicks = 1800)
+    // mc: [флак] замер 885 тиков на 80 брёвен 2×2 высотой 20; крона и дроп добавляют до половины, потолок 3600
+    @SceneStep(template = "mine_arena", timeoutTicks = 3600)
     public static void chopTree_GiantSpruceTwoByTwoHeightTwenty_ChoppedFromOneStand(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         clearField(helper, 22);
@@ -53,7 +53,10 @@ final class ChopBigTreesGameTests {
         helper.setBlock(hanging.getX() + 1, 20, hanging.getZ(), Blocks.JUNGLE_LOG);
         helper.setBlock(hanging.getX() + 2, 20, hanging.getZ(), Blocks.JUNGLE_LOG);
         helper.setBlock(hanging.getX() + 3, 20, hanging.getZ(), Blocks.JUNGLE_LOG);
-        var branchLeaves = Blocks.JUNGLE_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, false);
+        var branchLeaves = Blocks.JUNGLE_LEAVES
+                .defaultBlockState()
+                .setValue(LeavesBlock.PERSISTENT, false)
+                .setValue(LeavesBlock.DISTANCE, 1);
         helper.setBlock(hanging.getX() + 2, 21, hanging.getZ(), branchLeaves);
         helper.setBlock(hanging.getX() + 3, 21, hanging.getZ(), branchLeaves);
         for (int dx = -1; dx <= 1; dx++) {
@@ -69,7 +72,10 @@ final class ChopBigTreesGameTests {
         helper.setBlock(9, 3, 8, Blocks.OAK_LOG);
         helper.setBlock(10, 3, 8, Blocks.OAK_LOG);
         helper.setBlock(10, 4, 8, Blocks.OAK_LOG);
-        var leaves = Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, false);
+        var leaves = Blocks.OAK_LEAVES
+                .defaultBlockState()
+                .setValue(LeavesBlock.PERSISTENT, false)
+                .setValue(LeavesBlock.DISTANCE, 1);
         for (int dx = 8; dx <= 10; dx++) {
             for (int dz = 7; dz <= 9; dz++) {
                 for (int y = 3; y <= 5; y++) {
@@ -106,7 +112,7 @@ final class ChopBigTreesGameTests {
         });
 
         SpiritRun run = SpiritRun.launch(
-                helper, spirit, new SequenceNode(List.of(chopCall("spruce", 1), chopCall("oak", 1))), SETTLE_TICKS);
+                helper, spirit, new SequenceNode(List.of(chopCall("oak", 1), chopCall("spruce", 1))), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {
             run.assertStarted();

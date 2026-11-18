@@ -55,7 +55,7 @@ final class TreeChop {
         if (step == ChopAscent.Step.NO_STAND) {
             refusal = ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
         }
-        phase = step == ChopAscent.Step.READY ? Phase.CHOP : Phase.ASCENT;
+        phase = Phase.ASCENT;
         BlockPos stand = ascent.stand();
         if (stand != null) {
             BlockCoord base = tree.base();
@@ -100,7 +100,7 @@ final class TreeChop {
     private ChopOutcome ascent() {
         return switch (ascent.tick()) {
             case RUNNING -> ChopOutcome.running();
-            case READY -> resumeChop();
+            case READY -> startCanopy();
             case RETRY -> retryStand();
             case GIVE_UP -> giveUp();
             case NO_STAND -> ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
@@ -112,7 +112,7 @@ final class TreeChop {
         List<BlockCoord> rest =
                 pass.rest(feet == null ? tree.base() : toCoord(feet)).order();
         if (rest.isEmpty()) {
-            return startCanopy();
+            return startReturn();
         }
         if (ascent.pursue(rest) != null) {
             return ChopOutcome.running();
@@ -122,7 +122,7 @@ final class TreeChop {
 
     private ChopOutcome giveUp() {
         if (pass.remaining() == 0) {
-            return startCanopy();
+            return startReturn();
         }
         return ascent.tried() > 1 ? leftStanding() : ChopOutcome.simple(ChopOutcome.State.UNREACHABLE);
     }
@@ -145,7 +145,7 @@ final class TreeChop {
         ChopPlan rest = pass.rest(stand == null ? tree.base() : toCoord(stand));
         pass.continueWith(rest);
         if (rest.order().isEmpty()) {
-            return startCanopy();
+            return startReturn();
         }
         BlockPos picked = ascent.pursue(rest.order());
         if (picked == null) {
@@ -183,7 +183,7 @@ final class TreeChop {
         if (canopy.tick()) {
             return ChopOutcome.running();
         }
-        return startReturn();
+        return pass.remaining() == 0 ? startReturn() : resumeChop();
     }
 
     private ChopOutcome startReturn() {
