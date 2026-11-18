@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.OrchardPlot;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownFixtures;
 import org.junit.jupiter.api.Test;
@@ -50,5 +53,23 @@ class PlotPlanBlocksTests {
                 "Порода поселения birch не оставляет в плане жёстко зашитых oak-саженцев");
         assertEquals(
                 "birch", birch.wood(), "Порода этапа берётся из участка поселения, а не подставляется по умолчанию");
+    }
+
+    @Test
+    void plan_ExtraOrchardTrees_CountAsPlannedPlantings() {
+        StageSite site = TownFixtures.site(TownFixtures.planWithOrchard("orchard_jungle"));
+        OrchardPlot plot = site.extraOrchard("orchard_jungle").orElseThrow();
+        PlotPlanBlocks.Plan plan = PlotPlanBlocks.of(site);
+
+        for (BlockCoord at : plot.saplings()) {
+            assertTrue(
+                    plan.planned(at),
+                    "Саженец сада '" + plot.building() + "' в " + at + " вне плана поселения: уборка считает блок "
+                            + "лишним и рубит дерево на месте схемы");
+            assertEquals(
+                    WoodSpecies.swap("minecraft:oak_sapling", plot.wood()),
+                    plan.blocks().get(at),
+                    "В плане сад '" + plot.building() + "' ждёт саженец своей породы, иначе аудит не узнаёт посадку");
+        }
     }
 }

@@ -9,6 +9,7 @@ import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.FloatingBlocks;
+import com.theminespirit.core.town.OrchardPlot;
 import com.theminespirit.core.town.SchemeBuild;
 import com.theminespirit.core.town.SiteLevels;
 import com.theminespirit.core.town.StageSchemes;
@@ -92,6 +93,10 @@ public final class PlotPlanBlocks {
         }
         String sapling = WoodSpecies.swap("minecraft:oak_sapling", site.wood());
         site.orchardSaplings().forEach(at -> blocks.putIfAbsent(at, sapling));
+        for (OrchardPlot plot : site.extraOrchards()) {
+            String tree = WoodSpecies.swap("minecraft:oak_sapling", plot.wood());
+            plot.saplings().forEach(at -> blocks.putIfAbsent(at, tree));
+        }
         return new Plan(blocks);
     }
 
