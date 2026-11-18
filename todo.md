@@ -34,6 +34,45 @@
       состояние (`policy`/`tactics`/`inventory`/`hunger`/`coordinator`) держат весь `neoforge`, потому что
       зависят от core-пакетов механик. База `:spirit` + adapter-подмодули `:mech:<имя>:adapter` (или интерфейсы
       вместо `SpiritEntity`): ~150 файлов, средний риск; без этого шаг 3 плана neoforgesplit не пройти.
+- [ ] Техдолг аудита построек (разбор кода 18.11; чинить и разбирать по одному пункту). Аудит многоуровневый:
+      схема↔мир (`RepairAudit`), задание↔мир по предметам (`BuildGap.trace`), план↔мир по мусору
+      (`SettlementScan.Strays`/`BuildingAudit.clearing`), плюс особые — дом, пол, ворота этапа. Пункты:
+      1. Состав особых построек задан двумя разными наборами: `BuildingAuditInputs.java:22-25` (`SPECIAL` —
+         `yard/torches/orchard/orchard_extra/clearing`; `STAGE_KEYS` — `chests/lighting/orchard_oak`) и
+         переименованием id в `key()` (`BuildingAuditInputs.java:113-115`: yard→chests, torches→lighting,
+         orchard/orchard_extra→orchard_oak).
+      2. Порода сада в аудите одна на все сады: `placements()` передаёт `scan.wood()` схеме каждого члена группы
+         (`BuildingAuditInputs.java:212-213`), схема перекрашивается этой породой (`BuildingAudit.java:144`); в
+         хозяйстве порода по площадке — `FarmInputs.java:46-55` (`site.wood()`/`plot.wood()`), у доп. сада —
+         `OrchardSites.speciesOfBuilding(place.id())` (`StageSites.java:141`).
+      3. Ориентация места плана не участвует ни в постройке, ни в аудите: у `Placement` есть `facing`
+         (`Placement.java:6`), но план постройки кладёт только file/x/y/z/wood/previous
+         (`TicketPlans.java:787-801`), аудит — `BuildRotation.NONE` (`BuildingAudit.java:148`); поворот применяют
+         только части ограды (`StageBuilds.java:127`) и плитки улиц (`StreetWork.java:30`).
+      4. Нет схемы — аудит «0 из 0» без unknown: `stageOrchard` возвращает `Audit(0, 0, …)` при пустой схеме
+         (`BuildingAudit.java:131-134`), отличить «схемы нет» от «всё уже на месте» по результату нельзя.
+      5. Материал ремонта в аудите захардкожен: дыры пола — `minecraft:cobblestone` (`BuildingAudit.java:57`),
+         ямы расчистки — `minecraft:dirt` (`BuildingAudit.java:104`).
+      6. Улицы сверяются без вида плитки: `streetProbe` сводит `dirt/grass_block/dirt_path/path/coarse_dirt` к
+         `minecraft:dirt` (`BuildingAudit.java:205-215`), поэтому подмена любого из них аудитом не видна.
+      7. Два независимых статических кэша по 600 тиков: `BuildingAudit.SCHEMES/GAPS` (`BuildingAudit.java:36-38`,
+         сброс по бакету `getGameTime()` — `196-203`) и `BuiltAuditCache` со своим бакетом и ключом
+         dimension|step|level|anchor|fallback (`BuiltAuditCache.java:11-31`). Кэши общие на процесс: сброс по
+         времени одного уровня чистит и записи других.
+      8. Разбор параметров `build_schematic` в `SchemeAudit` молчаливый: строковый литерал вместо константы
+         `TicketPlans.BUILD_SCHEMATIC` (`SchemeAudit.java:22,53` против `TicketPlans.java:52`), проверки через
+         `instanceof` с `Optional.empty()` при любом несовпадении (`SchemeAudit.java:22-28,53-59`); необязательные
+         `_sapling`-клетки считаются обязательными (`SchemeAudit.java:48-50`), второстепенные части отбрасываются
+         (`43-45`).
+      9. Подбор схемы по id неявный: алиасы `storage→warehouse`, `pen→pen_cow` и префикс `graph:building:`
+         (`StageCatalog.java:12-13`), отрезание хвоста id по `_` до первого совпадения с каталогом/графом
+         (`132-144`), аудит этапа берёт только схему уровня 1 (`25-35`, `entry(...).level(1).scheme()`).
+      10. Метки ремонта захардкожены: switch `StageRepair.label` на id мест и русские строки
+          «Ограда/Факелы/Улицы» (`StageRepair.java:110-127`), `BUILD_ORCHARD → "orchard_oak"`
+          (`StageWorldGate.java:161`).
+      11. Две разные мерки одной постройки: `PlotTrace` пишет «нет N из M блоков» по предметам задания
+          (`BuildGap.trace`, `PlotTrace.java:22-25`), `BuildingAudit` — по клеткам схемы (`RepairAudit`); оба
+          пишут в лог с префиксом `[layout]`.
 - [ ] Невыполнимые задания (владелец 21.10): дух не должен получать задание, которое не может выполнить (нет
       инструмента/материала/пути, владелец задания исчез); если всё же получил — инцидент в журнал (для разбора:
       дух, задание, причина невыполнимости, состояние) и сразу новое задание, а не `wait`. Тест на доске (core) +
