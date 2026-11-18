@@ -494,9 +494,16 @@ kill_own_tree() {
         [ "$now" -lt "$deadline" ] || break
         pause_tick 0.2
     done
-    for pid in $pids; do
-        kill -KILL "$pid" 2>/dev/null
-    done
+    if [ "${OS:-}" = "Windows_NT" ] && command -v taskkill >/dev/null 2>&1; then
+        # lib: msys ps видит не всё дерево Windows, поэтому добиваем задачу вместе с детьми.
+        for pid in $pids; do
+            taskkill //PID "$pid" //T //F >/dev/null 2>&1 || true
+        done
+    else
+        for pid in $pids; do
+            kill -KILL "$pid" 2>/dev/null
+        done
+    fi
     return 0
 }
 
@@ -649,6 +656,15 @@ monitor_loop() {
             exit 124
         fi
     done
+    if ! pid_is_live "$MONITOR_MAIN_PID" && [ ! -f "$MONITOR_LOG_FILE.stopped" ]; then
+        echo "test.sh: обёртка прогона исчезла — снимаю её процессы" >&2
+        kill_gametest_server
+        if [ -f "$MONITOR_LOG_FILE.gradlepids" ]; then
+            while read -r gpid; do
+                [ -n "$gpid" ] && kill_own_tree "$gpid" 5 "$MONITOR_GRADLE_GROUP"
+            done <"$MONITOR_LOG_FILE.gradlepids"
+        fi
+    fi
     close_pause_tick
 }
 
