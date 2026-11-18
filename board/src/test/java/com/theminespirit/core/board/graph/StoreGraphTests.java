@@ -196,6 +196,27 @@ class StoreGraphTests {
                 "В сундуке дерево и камень вместе — сортировка обязана появиться: " + plan.tasks());
     }
 
+    @Test
+    void inventoryOverloaded_IsImplemented_PostedToBoard() {
+        SupplyGraph graph = SupplyGraph.loadDefault();
+        GraphWorld world = GraphWorld.empty().event("inventory_overloaded");
+        GraphState state = world.state();
+        GraphPlan plan = GraphPlanner.plan(graph, state);
+        String id = "event:inventory_overloaded:unload_overloaded";
+
+        GraphTickets.Result tickets = GraphTickets.of(graph, state, plan);
+
+        assertTrue(
+                plan.tasks().stream().anyMatch(task -> id.equals(task.id()) && task.implemented()),
+                "Перегруз инвентаря исполняется: дух сам уносит лишнее в сундук");
+        assertTrue(
+                tickets.unimplemented().stream().noneMatch(task -> id.equals(task.id())),
+                "Реализованная разгрузка не попадает в список нереализованных");
+        assertTrue(
+                tickets.post().stream().anyMatch(ticket -> (GraphTickets.PREFIX + id).equals(ticket.id())),
+                "Задача разгрузки ставится на доску, а не остаётся советом");
+    }
+
     private static GraphPlan plan(GraphWorld world, GraphFacts facts) {
         return GraphPlanner.plan(
                 world.graph, world.state().withFacts(facts, world.graph.costs().life()));

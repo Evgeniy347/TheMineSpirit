@@ -15,18 +15,21 @@ import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
 
-final class ChestOpenScan {
+public final class ChestOpenScan {
     private static final int TTL_TICKS = 2400;
     private static final Map<ServerLevel, BlockedCells> SEEN = new WeakHashMap<>();
 
     private ChestOpenScan() {}
 
-    static List<BlockedCells.Mark> marks(ServerLevel level) {
+    public static List<BlockedCells.Mark> marks(ServerLevel level) {
         BlockedCells seen = SEEN.computeIfAbsent(level, ignored -> new BlockedCells(TTL_TICKS));
         long now = level.getGameTime();
         Set<BlockCoord> found = new LinkedHashSet<>();
         for (BlockCoord pos : ChestSnapshots.positions(level)) {
             if (!ChestSnapshots.countable(level, pos)) {
+                continue;
+            }
+            if (ChestDemolition.removable(level, pos)) {
                 continue;
             }
             List<BlockPos> covers = covers(level, pos);

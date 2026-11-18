@@ -11,6 +11,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.ChestDemolition;
+import com.theminespirit.neoforge.board.ChestOpenScan;
 import com.theminespirit.neoforge.board.GraphSource;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.List;
@@ -125,6 +126,18 @@ final class ChestGraphScene {
         helper.assertTrue(
                 ChestDemolition.removable(level, new BlockCoord(x, y + 2, z)),
                 "Сундук в воздухе выше высоты поселения +1 под снос, даже если его поставил дух");
+        level.setBlockAndUpdate(new BlockPos(x, y + 1, z), Blocks.STONE.defaultBlockState());
+        helper.assertTrue(
+                ChestOpenScan.marks(level).stream()
+                        .anyMatch(mark -> coord(new BlockPos(x, y + 1, z)).equals(mark.cell())),
+                "Сундук на месте закрыт сверху — доступ к нему расчищают, иначе дух не откроет склад");
+        level.setBlockAndUpdate(new BlockPos(x, y + 3, z), Blocks.STONE.defaultBlockState());
+        helper.assertTrue(
+                ChestOpenScan.marks(level).stream()
+                        .noneMatch(mark -> coord(new BlockPos(x, y + 3, z)).equals(mark.cell())),
+                "К висящему сундуку под снос доступ не расчищают: его разбирают целиком, а не ломают крышу над ним");
+        level.setBlockAndUpdate(new BlockPos(x, y + 1, z), Blocks.AIR.defaultBlockState());
+        level.setBlockAndUpdate(new BlockPos(x, y + 3, z), Blocks.AIR.defaultBlockState());
         level.setBlockAndUpdate(new BlockPos(x, y - 1, z), Blocks.CHEST.defaultBlockState());
         placed.mark(new BlockPos(x, y - 1, z));
         helper.assertTrue(

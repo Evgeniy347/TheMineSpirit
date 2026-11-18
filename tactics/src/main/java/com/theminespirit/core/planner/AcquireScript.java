@@ -150,10 +150,10 @@ public final class AcquireScript implements ScriptInstance {
             }
             return Optional.empty();
         }
-        List<ScriptCall> withdraws = supplies.withdraw(item, count - startInventory);
-        if (attempts == 1) {
+        List<ScriptCall> withdraws =
+                StorageItems.container(item) ? List.of() : supplies.withdraw(item, count - startInventory);
+        if (attempts == 1)
             chestPlanned = withdraws.stream().mapToInt(step -> count(step)).sum();
-        }
         int need = count - startInventory - chestPlanned;
         List<TaskNode> nodes = new ArrayList<>(withdraws);
         if (need > 0) {

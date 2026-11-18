@@ -122,7 +122,8 @@
           "id": "unload_overloaded",
           "case": "ACTIVITY_UNLOAD",
           "base": 85,
-          "consumes": {}
+          "consumes": {},
+          "implemented": true
         }
       ],
       "advice": [
