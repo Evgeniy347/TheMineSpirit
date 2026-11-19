@@ -5,6 +5,7 @@ import com.theminespirit.core.board.ClearSummary;
 import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Map;
+import net.minecraft.world.entity.Entity;
 import org.slf4j.Logger;
 
 final class ClearReport {
@@ -12,7 +13,7 @@ final class ClearReport {
 
     private ClearReport() {}
 
-    static void clean(Logger logger, SpiritEntity spirit, BuildBox box) {
+    static void clean(Logger logger, Entity spirit, BuildBox box) {
         SUMMARY.empty(spirit.level().getGameTime()).ifPresent(summary -> {
             if (summary.first()) {
                 logger.info(
@@ -41,7 +42,7 @@ final class ClearReport {
             int fromPlace,
             int vanished) {}
 
-    static void success(Logger logger, SpiritEntity spirit, BuildBox box, Metrics metrics, String summary) {
+    static void success(Logger logger, Entity spirit, BuildBox box, Metrics metrics, String summary) {
         SUMMARY.cleared(metrics.removed(), spirit.level().getGameTime()).ifPresent(report -> {
             if (report.first()) {
                 logger.info(

@@ -2,13 +2,14 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.mining.BreakSkipTally;
 import com.theminespirit.core.observation.BlockCoord;
+import net.minecraft.world.entity.Entity;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class SkipLog {
     private SkipLog() {}
 
-    static void skipped(Logger logger, SpiritEntity spirit, String tag, BreakSkipTally.Sample sample) {
+    static void skipped(Logger logger, Entity spirit, String tag, BreakSkipTally.Sample sample) {
         logger.info(
                 "[{}] {}: блок {} пропущен — {}; кандидат стоянки {}",
                 tag,

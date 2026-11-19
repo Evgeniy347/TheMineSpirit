@@ -10,18 +10,19 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
 final class FillTerrain implements FillOrder.World {
     private final Level level;
-    private final SpiritEntity spirit;
+    private final Entity spirit;
     private final BlockState wanted;
     private final Set<BlockCoord> region;
     private int blockReads;
 
-    FillTerrain(Level level, SpiritEntity spirit, BlockState wanted, Set<BlockCoord> region) {
+    FillTerrain(Level level, Entity spirit, BlockState wanted, Set<BlockCoord> region) {
         this.level = level;
         this.spirit = spirit;
         this.wanted = wanted;
@@ -77,7 +78,7 @@ final class FillTerrain implements FillOrder.World {
 
     private Set<BlockCoord> occupiedByOthers() {
         Set<BlockCoord> cells = new HashSet<>();
-        for (SpiritEntity other : level.getEntitiesOfClass(SpiritEntity.class, regionBox())) {
+        for (Entity other : level.getEntitiesOfClass(Entity.class, regionBox())) {
             if (other.getUUID().equals(spirit.getUUID()) || other.isRemoved()) {
                 continue;
             }

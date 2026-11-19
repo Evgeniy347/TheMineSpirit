@@ -7,6 +7,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.api.Point;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -15,12 +16,12 @@ import org.slf4j.Logger;
 final class MineObstacleClear {
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    private final SpiritEntity spirit;
+    private final Entity spirit;
     private final Level level;
     private final BlockBreaker breaker;
     private @Nullable BlockCoord breaking;
 
-    MineObstacleClear(SpiritEntity spirit, Level level, BlockBreaker breaker) {
+    MineObstacleClear(Entity spirit, Level level, BlockBreaker breaker) {
         this.spirit = spirit;
         this.level = level;
         this.breaker = breaker;

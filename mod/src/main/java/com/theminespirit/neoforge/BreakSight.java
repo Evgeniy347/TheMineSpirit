@@ -7,13 +7,14 @@ import com.theminespirit.core.tactics.api.adapter.Visibility;
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 final class BreakSight {
     private BreakSight() {}
 
-    static Visibility visible(SpiritEntity spirit, BlockPos target, boolean leavesPass) {
+    static Visibility visible(Entity spirit, BlockPos target, boolean leavesPass) {
         Predicate<BlockCoord> passable = leavesPass ? cell -> leaves(spirit.level(), cell) : cell -> false;
         return BlockSight.visible(
                 point(spirit.getEyePosition()),

@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 
 final class StandClaims {
     private static final int TTL = 400;
@@ -16,7 +17,7 @@ final class StandClaims {
 
     private StandClaims() {}
 
-    static Set<BlockCoord> taken(ServerLevel level, SpiritEntity spirit, BlockCoord around) {
+    static Set<BlockCoord> taken(ServerLevel level, Entity spirit, BlockCoord around) {
         Set<BlockCoord> cells = new HashSet<>();
         Map<UUID, Claim> claims = CLAIMS.computeIfAbsent(level, ignored -> new HashMap<>());
         long now = level.getGameTime();
@@ -35,7 +36,7 @@ final class StandClaims {
         return cells;
     }
 
-    static void claim(SpiritEntity spirit, BlockCoord cell) {
+    static void claim(Entity spirit, BlockCoord cell) {
         if (!(spirit.level() instanceof ServerLevel level)) {
             return;
         }
@@ -43,7 +44,7 @@ final class StandClaims {
                 .put(spirit.getUUID(), new Claim(cell, level.getGameTime() + TTL));
     }
 
-    static void release(SpiritEntity spirit) {
+    static void release(Entity spirit) {
         if (!(spirit.level() instanceof ServerLevel level)) {
             return;
         }

@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
 
 final class StandSearch {
@@ -23,7 +24,7 @@ final class StandSearch {
 
     private StandSearch() {}
 
-    static Resolved resolve(SpiritEntity spirit, BlockPos point) {
+    static Resolved resolve(Entity spirit, BlockPos point) {
         if (!(spirit.level() instanceof ServerLevel level)) {
             return new Resolved(point, null);
         }
@@ -73,13 +74,13 @@ final class StandSearch {
         return new Resolved(new BlockPos(found.x(), found.y(), found.z()), null);
     }
 
-    private static Set<BlockCoord> occupiedByOtherSpirits(SpiritEntity spirit, BlockCoord around) {
+    private static Set<BlockCoord> occupiedByOtherSpirits(Entity spirit, BlockCoord around) {
         Set<BlockCoord> occupied = new HashSet<>();
         if (!(spirit.level() instanceof ServerLevel level)) {
             return occupied;
         }
         for (Object found : level.getEntitiesOfClass(
-                SpiritEntity.class,
+                Entity.class,
                 new AABB(
                         around.x() - BoardTuning.workStandRadius(),
                         around.y() - 4,
@@ -87,7 +88,7 @@ final class StandSearch {
                         around.x() + BoardTuning.workStandRadius(),
                         around.y() + 4,
                         around.z() + BoardTuning.workStandRadius()))) {
-            SpiritEntity other = (SpiritEntity) found;
+            Entity other = (Entity) found;
             if (other.getUUID().equals(spirit.getUUID())) {
                 continue;
             }

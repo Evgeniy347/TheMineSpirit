@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.api.TreeSpecies;
+import net.minecraft.world.entity.Entity;
 import org.slf4j.Logger;
 
 final class ChopReturn {
@@ -13,7 +14,7 @@ final class ChopReturn {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    private final SpiritEntity spirit;
+    private final Entity spirit;
     private final ChopScaffold scaffold;
     private final ChopHarvest harvest;
     private Tree tree;
@@ -22,7 +23,7 @@ final class ChopReturn {
     private int leavesRemoved;
     private Stage stage;
 
-    ChopReturn(SpiritEntity spirit, ChopScaffold scaffold, ChopHarvest harvest) {
+    ChopReturn(Entity spirit, ChopScaffold scaffold, ChopHarvest harvest) {
         this.spirit = spirit;
         this.scaffold = scaffold;
         this.harvest = harvest;

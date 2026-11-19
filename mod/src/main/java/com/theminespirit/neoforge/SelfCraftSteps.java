@@ -7,11 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 
 final class SelfCraftSteps {
     private SelfCraftSteps() {}
 
-    static List<ScriptCall> of(SpiritEntity spirit, String blockId, int count) {
+    static List<ScriptCall> of(Entity spirit, String blockId, int count) {
         List<ScriptCall> steps = new ArrayList<>();
         if (spirit.level() instanceof ServerLevel server) {
             SettlementPlotStore.liveSite(server).ifPresent(site -> {
