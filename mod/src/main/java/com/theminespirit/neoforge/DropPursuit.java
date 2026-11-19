@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.board.pickup.PickupSpot;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.pickup.PickupSpot;
 import com.theminespirit.core.pickup.PickupTuning;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.ArrayList;

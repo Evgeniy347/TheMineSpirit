@@ -76,7 +76,7 @@ final class DeadCodeExemptions {
                     "core/perception/HazardFacts.java|method|HazardFacts#hasWater",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
             new Exemption(
-                    "core/pickup/PickupSpot.java|method|PickupSpot#forDrop",
+                    "core/board/pickup/PickupSpot.java|method|PickupSpot#forDrop",
                     "Заготовка под открытую задачу: todo.md → «Инвентарь, ценности и поход»"),
             new Exemption(
                     "core/social/TransferOrder.java|method|TransferOrder#fromWarehouse",

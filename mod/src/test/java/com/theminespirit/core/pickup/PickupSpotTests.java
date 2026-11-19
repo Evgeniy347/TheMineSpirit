@@ -3,6 +3,7 @@ package com.theminespirit.core.pickup;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.pickup.PickupSpot;
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;

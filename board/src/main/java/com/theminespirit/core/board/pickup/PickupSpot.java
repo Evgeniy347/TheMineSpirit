@@ -1,4 +1,4 @@
-package com.theminespirit.core.pickup;
+package com.theminespirit.core.board.pickup;
 
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;

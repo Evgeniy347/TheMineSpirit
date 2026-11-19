@@ -9,7 +9,6 @@ com.theminespirit.core.husbandry
 com.theminespirit.core.inventory
 com.theminespirit.core.mining
 com.theminespirit.core.movement
-com.theminespirit.core.pickup
 com.theminespirit.core.planner
 com.theminespirit.core.policy
 com.theminespirit.core.reload

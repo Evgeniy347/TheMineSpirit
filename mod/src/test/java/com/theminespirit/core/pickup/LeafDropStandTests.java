@@ -3,6 +3,7 @@ package com.theminespirit.core.pickup;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.theminespirit.core.board.WorkStand;
+import com.theminespirit.core.board.pickup.LeafDropStand;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Optional;
 import java.util.Set;

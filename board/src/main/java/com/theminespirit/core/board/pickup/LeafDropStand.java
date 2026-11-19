@@ -1,4 +1,4 @@
-package com.theminespirit.core.pickup;
+package com.theminespirit.core.board.pickup;
 
 import com.theminespirit.core.board.WorkStand;
 import com.theminespirit.core.observation.BlockCoord;

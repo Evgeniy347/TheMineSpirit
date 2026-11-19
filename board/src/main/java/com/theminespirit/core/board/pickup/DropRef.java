@@ -1,4 +1,4 @@
-package com.theminespirit.core.pickup;
+package com.theminespirit.core.board.pickup;
 
 import java.util.Objects;
 
