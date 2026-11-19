@@ -31,6 +31,7 @@ import com.theminespirit.core.tactics.adapter.TacticsFormatException;
 import com.theminespirit.core.tactics.adapter.TacticsStateCodec;
 import com.theminespirit.core.tactics.api.Layer;
 import com.theminespirit.core.task.SpiritReading;
+import com.theminespirit.neoforge.board.HomedSpirit;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import com.theminespirit.neoforge.hunger.HungerState;
 import com.theminespirit.neoforge.inventory.ArmorEquipPolicy;
@@ -69,7 +70,7 @@ import net.minecraft.world.phys.AABB;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
-public final class SpiritEntity extends PathfinderMob implements TerminalCrafter {
+public final class SpiritEntity extends PathfinderMob implements TerminalCrafter, HomedSpirit {
     public static final String DEFAULT_NAME = "spirit";
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -332,6 +333,7 @@ public final class SpiritEntity extends PathfinderMob implements TerminalCrafter
         policies.clearWorkZone();
     }
 
+    @Override
     public Optional<BlockCoord> home() {
         return home.point();
     }

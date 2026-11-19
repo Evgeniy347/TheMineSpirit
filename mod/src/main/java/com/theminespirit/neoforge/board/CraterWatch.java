@@ -6,7 +6,6 @@ import com.theminespirit.core.board.CraterProfiles;
 import com.theminespirit.core.board.api.Point;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritConfig;
-import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +79,7 @@ public final class CraterWatch {
     private static List<Point> homes(ServerLevel level) {
         List<Point> homes = new ArrayList<>();
         for (Entity entity : level.getAllEntities()) {
-            if (entity instanceof SpiritEntity spirit && !spirit.isRemoved()) {
+            if (entity instanceof HomedSpirit spirit && !spirit.isRemoved()) {
                 spirit.home().ifPresent(home -> homes.add(new Point(home.x(), home.z())));
             }
         }

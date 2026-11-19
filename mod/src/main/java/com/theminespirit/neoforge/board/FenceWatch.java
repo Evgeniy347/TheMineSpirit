@@ -5,7 +5,6 @@ import com.theminespirit.core.board.FenceRepairs;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.FenceLedger;
 import com.theminespirit.neoforge.SpiritConfig;
-import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -74,7 +73,7 @@ public final class FenceWatch {
     private static boolean nearSettlement(ServerLevel level, BlockPos pos) {
         long limit = (long) BoardTuning.FENCE_WATCH_RADIUS * BoardTuning.FENCE_WATCH_RADIUS;
         for (Entity entity : level.getAllEntities()) {
-            if (!(entity instanceof SpiritEntity spirit) || spirit.isRemoved()) {
+            if (!(entity instanceof HomedSpirit spirit) || spirit.isRemoved()) {
                 continue;
             }
             Optional<BlockCoord> home = spirit.home();
