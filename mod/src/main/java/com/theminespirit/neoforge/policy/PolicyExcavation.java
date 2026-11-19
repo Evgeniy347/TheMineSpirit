@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.policy;
 
+import com.theminespirit.core.mining.MineObstruction;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.PolicyId;
@@ -8,6 +9,7 @@ import com.theminespirit.core.town.PlanBuilding;
 import com.theminespirit.core.town.PlanBuildings;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.core.town.StageSite;
+import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.BuildPlanOwner;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.ChestDemolition;
@@ -80,7 +82,9 @@ final class PolicyExcavation {
     static BlockProtection.Decision excavate(ProtectionGate gate, SpiritEntity spirit, BlockPos pos, BlockState state) {
         if (spirit.level() instanceof ServerLevel server) {
             PlacedBlocksData placed = PlacedBlocksData.get(server);
-            if ((placed.isSpiritMarked(pos) || placed.isMarked(pos)) && !mineVoid(server, pos)) {
+            if ((placed.isSpiritMarked(pos) || placed.isMarked(pos))
+                    && !mineVoid(server, pos)
+                    && !MineObstruction.clearable(BlockStates.idOf(state))) {
                 PlotBreakLog.refused(
                         server,
                         pos,

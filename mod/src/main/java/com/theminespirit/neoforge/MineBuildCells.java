@@ -42,7 +42,6 @@ final class MineBuildCells {
     private final SpiritEntity spirit;
     private final Level level;
     private final BlockPlacer placer;
-    private final BlockBreaker breaker;
     private final MineAimStep aim;
     private final List<MineColumn> plan;
     private final Map<MineColumn, MineColumn> parents;
@@ -51,6 +50,7 @@ final class MineBuildCells {
     private final Set<BlockCoord> openCells;
     private final Host host;
     private final Set<BlockCoord> leftOres = new HashSet<>();
+    private final MineCellDig dig;
 
     private int floors;
     private int plugs;
@@ -70,7 +70,6 @@ final class MineBuildCells {
         this.spirit = setup.spirit();
         this.level = setup.level();
         this.placer = setup.placer();
-        this.breaker = setup.breaker();
         this.aim = setup.aim();
         this.plan = grid.plan();
         this.parents = grid.parents();
@@ -78,6 +77,11 @@ final class MineBuildCells {
         this.closed = grid.closed();
         this.openCells = grid.openCells();
         this.host = grid.host();
+        this.dig = new MineCellDig(
+                this.aim,
+                setup.breaker(),
+                new MineObstacleClear(setup.spirit(), setup.level(), setup.breaker()),
+                this.host);
     }
 
     Set<BlockCoord> leftOres() {
@@ -254,39 +258,11 @@ final class MineBuildCells {
     }
 
     void startBreak(BlockCoord cell, OptionalInt slot) {
-        BlockPos pos = toPos(cell);
-        BlockBreaker.Begin begin =
-                slot.isPresent() ? breaker.beginWithSlot(pos, slot.getAsInt()) : breaker.beginExcavate(pos);
-        if (begin instanceof BlockBreaker.Started) {
-            host.breaking();
-            return;
-        }
-        if (begin instanceof BlockBreaker.Refused refused) {
-            if (refused.reason() == BlockBreaker.RefuseReason.AIR) {
-                return;
-            }
-            if (refused.reason() == BlockBreaker.RefuseReason.OUT_OF_REACH) {
-                aimAt(cell, new MineCellPlan.Seen(aim.occupantText(cell), false, true, false));
-                return;
-            }
-            if (refused.reason() == BlockBreaker.RefuseReason.NO_SIGHT) {
-                aimAt(cell, new MineCellPlan.Seen(aim.occupantText(cell), false, false, true));
-                return;
-            }
-            host.failed("клетку шахты " + cell + " не выломать: " + refused.message() + aim.context(cell));
-            return;
-        }
-        host.failed("клетку шахты " + cell + " не выломать: " + ((BlockBreaker.Protected) begin).reason()
-                + aim.context(cell));
+        dig.startBreak(cell, slot);
     }
 
     private void aimAt(BlockCoord cell, MineCellPlan.Seen seen) {
-        MineAimStep.Begin begin = aim.begin(cell, seen);
-        switch (begin.next()) {
-            case READY -> {}
-            case AIM -> host.aim();
-            case REFUSE -> host.failed(begin.failure());
-        }
+        dig.aimAt(cell, seen);
     }
 
     private List<MineOres.Pick> picks(BlockState state) {
