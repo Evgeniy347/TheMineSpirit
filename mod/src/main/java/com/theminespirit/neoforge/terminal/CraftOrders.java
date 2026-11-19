@@ -7,7 +7,6 @@ import com.theminespirit.core.crafting.OrderBook;
 import com.theminespirit.core.crafting.RecipeSpec;
 import com.theminespirit.core.town.SettlementReach;
 import com.theminespirit.neoforge.ModEntities;
-import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.crafting.ItemIds;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
 import com.theminespirit.neoforge.crafting.RecipeSource;
@@ -98,7 +97,7 @@ public final class CraftOrders {
             }
             ChainPlan plan = ChainCraft.ofRecipe(
                     RecipeKnowledge.of(overworld).index(), spec.get(), order.crafts(), storage.freePlain());
-            Optional<SpiritEntity> crafter = crafter(overworld, reach.get());
+            Optional<TerminalCrafter> crafter = crafter(overworld, reach.get());
             if (!plan.feasible() || crafter.isEmpty()) {
                 store.book().update(order.id(), plan.missing());
                 continue;
@@ -114,7 +113,7 @@ public final class CraftOrders {
         return done;
     }
 
-    private static Optional<SpiritEntity> crafter(ServerLevel level, SettlementReach reach) {
+    private static Optional<TerminalCrafter> crafter(ServerLevel level, SettlementReach reach) {
         AABB box = new AABB(
                 reach.minX(),
                 level.getMinBuildHeight(),
@@ -123,7 +122,8 @@ public final class CraftOrders {
                 level.getMaxBuildHeight(),
                 reach.maxZ() + 1);
         return level.getEntities(ModEntities.SPIRIT.get(), box, Entity::isAlive).stream()
-                .min(Comparator.comparing(spirit -> spirit.getUUID().toString()));
+                .min(Comparator.comparing(spirit -> spirit.getUUID().toString()))
+                .map(spirit -> (TerminalCrafter) spirit);
     }
 
     private static String deliver(
@@ -131,7 +131,7 @@ public final class CraftOrders {
             SettlementStorage storage,
             OrderBook.Order order,
             ChainExecutor.Done crafted,
-            SpiritEntity crafter) {
+            TerminalCrafter crafter) {
         crafted.extras().forEach(stack -> stash(storage, stack, crafter));
         Optional<ServerPlayer> owner = owner(level, order);
         if (owner.isPresent() && CraftTerminalService.access(owner.get()).allowed()) {
@@ -151,7 +151,7 @@ public final class CraftOrders {
         return pos.getX() + " " + pos.getY() + " " + pos.getZ();
     }
 
-    private static void stash(SettlementStorage storage, ItemStack stack, SpiritEntity crafter) {
+    private static void stash(SettlementStorage storage, ItemStack stack, TerminalCrafter crafter) {
         ItemStack rest = storage.insert(stack);
         if (!rest.isEmpty()) {
             crafter.spawnAtLocation(rest);
@@ -170,7 +170,7 @@ public final class CraftOrders {
     }
 
     private static void report(
-            ServerLevel level, OrderBook.Order order, ChainPlan plan, SpiritEntity crafter, String where) {
+            ServerLevel level, OrderBook.Order order, ChainPlan plan, TerminalCrafter crafter, String where) {
         Component item = ItemIds.item(order.item())
                 .map(found -> new ItemStack(found).getHoverName())
                 .orElse(Component.literal(order.item()));

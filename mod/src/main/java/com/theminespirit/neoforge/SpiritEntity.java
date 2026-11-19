@@ -43,6 +43,7 @@ import com.theminespirit.neoforge.policy.SpiritWorkZoneStore;
 import com.theminespirit.neoforge.tactics.SpiritGear;
 import com.theminespirit.neoforge.tactics.SpiritTacticsStore;
 import com.theminespirit.neoforge.tactics.TacticsService;
+import com.theminespirit.neoforge.terminal.TerminalCrafter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -68,7 +69,7 @@ import net.minecraft.world.phys.AABB;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
-public final class SpiritEntity extends PathfinderMob {
+public final class SpiritEntity extends PathfinderMob implements TerminalCrafter {
     public static final String DEFAULT_NAME = "spirit";
 
     private static final Logger LOGGER = LogUtils.getLogger();

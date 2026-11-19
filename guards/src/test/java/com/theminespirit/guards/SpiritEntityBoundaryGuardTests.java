@@ -6,13 +6,13 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class SpiritEntityBoundaryGuardTests {
-    private static final int MAX_FILES = 419;
+    private static final int MAX_FILES = 418;
 
     @Test
     void spiritEntity_ReferencesGrow_AreReported() {
         assertEquals(
-                List.of("SpiritEntity: 420 файлов при пределе 419"),
-                growthProblems(420),
+                List.of("SpiritEntity: " + (MAX_FILES + 2) + " файлов при пределе " + MAX_FILES),
+                growthProblems(MAX_FILES + 2),
                 "Сторож ослеп: рост числа ссылок на SpiritEntity обязан попасть в нарушители");
     }
 
