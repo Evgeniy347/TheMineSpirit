@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
@@ -32,7 +33,6 @@ public final class StageBuilds {
     public static final String SUPPORT = "minecraft:dirt";
     private static final Map<String, List<List<WallPiece>>> FENCE_PARTS = new HashMap<>();
     private static final String AIR = "minecraft:air";
-    private static final int OLD_POST_RANGE = 3;
 
     private StageBuilds() {}
 
@@ -165,7 +165,9 @@ public final class StageBuilds {
 
     private static List<BlockCoord> oldFence(ServerLevel level, ColumnMask.Cell post, int fenceY) {
         List<BlockCoord> found = new ArrayList<>();
-        for (int y = fenceY - OLD_POST_RANGE; y <= fenceY + OLD_POST_RANGE; y++) {
+        for (int y = fenceY - BoardConfig.current().facts().oldPostRadius();
+                y <= fenceY + BoardConfig.current().facts().oldPostRadius();
+                y++) {
             if (y == fenceY) {
                 continue;
             }

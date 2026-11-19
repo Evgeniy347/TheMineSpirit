@@ -58,7 +58,11 @@ public record FactTuning(
         int stockScanHeight,
         int campfireDropRadius,
         int hiveVerticalRadius,
-        int flowerVerticalRadius) {
+        int flowerVerticalRadius,
+        int dangerWorkRadius,
+        int waterScanRadius,
+        int oldPostRadius,
+        int pitSurfaceRadius) {
 
     private static final Set<String> FIELDS = Set.of(
             "animalRadius",
@@ -112,10 +116,14 @@ public record FactTuning(
             "stockScanHeight",
             "campfireDropRadius",
             "hiveVerticalRadius",
-            "flowerVerticalRadius");
+            "flowerVerticalRadius",
+            "dangerWorkRadius",
+            "waterScanRadius",
+            "oldPostRadius",
+            "pitSurfaceRadius");
     private static final FactTuning DEFAULTS = new FactTuning(
             48, 12, 16, 48, 20, 3, 8, 8, 16, 24, 24, 4, 32, 48, 16, 8, 32, 24, 8, 24, 4, 16, 16, 32, 16, 16, 24, 16, 12,
-            16, 16, 16, 16, 64, 16, 32, 4, 32, 32, 16, 16, 24, 48, 8, 64, 48, 24, 48, 4, 2, 8, 4);
+            16, 16, 16, 16, 64, 16, 32, 4, 32, 32, 16, 16, 24, 48, 8, 64, 48, 24, 48, 4, 2, 8, 4, 8, 2, 3, 3);
 
     public FactTuning {
         requirePositive(animalRadius, "animalRadius");
@@ -170,6 +178,10 @@ public record FactTuning(
         requirePositive(campfireDropRadius, "campfireDropRadius");
         requirePositive(hiveVerticalRadius, "hiveVerticalRadius");
         requirePositive(flowerVerticalRadius, "flowerVerticalRadius");
+        requirePositive(dangerWorkRadius, "dangerWorkRadius");
+        requirePositive(waterScanRadius, "waterScanRadius");
+        requirePositive(oldPostRadius, "oldPostRadius");
+        requirePositive(pitSurfaceRadius, "pitSurfaceRadius");
     }
 
     static FactTuning defaults() {
@@ -238,7 +250,11 @@ public record FactTuning(
                 integer(node, "stockScanHeight", origin),
                 integer(node, "campfireDropRadius", origin),
                 integer(node, "hiveVerticalRadius", origin),
-                integer(node, "flowerVerticalRadius", origin));
+                integer(node, "flowerVerticalRadius", origin),
+                integer(node, "dangerWorkRadius", origin),
+                integer(node, "waterScanRadius", origin),
+                integer(node, "oldPostRadius", origin),
+                integer(node, "pitSurfaceRadius", origin));
     }
 
     private static int integer(JsonNode node, String field, String origin) {

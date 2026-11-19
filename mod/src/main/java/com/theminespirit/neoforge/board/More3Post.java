@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.FenceStubPlan;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
@@ -15,7 +16,6 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 
 final class More3Post {
-    private static final int DANGER_RADIUS = 8;
     private static final Set<String> NODES = Set.of(
             "secure_danger",
             "fence_danger",
@@ -80,7 +80,10 @@ final class More3Post {
                     continue;
                 }
                 BlockPos feet = spirit.blockPosition();
-                if (!near(danger.position(), new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), DANGER_RADIUS)) {
+                if (!near(
+                        danger.position(),
+                        new BlockCoord(feet.getX(), feet.getY(), feet.getZ()),
+                        BoardConfig.current().facts().dangerWorkRadius())) {
                     continue;
                 }
                 if (ActivityLaunch.launchNow(post, spirit, BoardCase.ACTIVITY_MOVE, "goto", gotoPoint(home))) {

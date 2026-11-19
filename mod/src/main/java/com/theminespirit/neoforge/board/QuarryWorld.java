@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.route.QuarryArea;
 import com.theminespirit.core.board.route.QuarryProbe;
 import com.theminespirit.core.board.route.RouteDigging;
@@ -15,7 +16,6 @@ import org.jspecify.annotations.Nullable;
 
 final class QuarryWorld implements QuarryProbe {
     private static final int WATER_PROBE = 6;
-    private static final int WATER_SCAN_RADIUS = 2;
 
     private final ServerLevel level;
     private final QuarryArea area;
@@ -75,9 +75,15 @@ final class QuarryWorld implements QuarryProbe {
     @Override
     public int waterAround(int x, int y, int z) {
         int count = 0;
-        for (int dx = -WATER_SCAN_RADIUS; dx <= WATER_SCAN_RADIUS; dx++) {
-            for (int dy = -WATER_SCAN_RADIUS; dy <= WATER_SCAN_RADIUS; dy++) {
-                for (int dz = -WATER_SCAN_RADIUS; dz <= WATER_SCAN_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().waterScanRadius();
+                dx <= BoardConfig.current().facts().waterScanRadius();
+                dx++) {
+            for (int dy = -BoardConfig.current().facts().waterScanRadius();
+                    dy <= BoardConfig.current().facts().waterScanRadius();
+                    dy++) {
+                for (int dz = -BoardConfig.current().facts().waterScanRadius();
+                        dz <= BoardConfig.current().facts().waterScanRadius();
+                        dz++) {
                     BlockPos at = new BlockPos(x + dx, y + dy, z + dz);
                     if (level.isLoaded(at)
                             && level.getBlockState(at).getFluidState().is(FluidTags.WATER)) {

@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.movement.BlockKind;
 import com.theminespirit.core.movement.PerchLevel;
 import com.theminespirit.core.movement.PitExitPlanner;
@@ -24,7 +25,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 final class PitRescue {
-    private static final int SURFACE_RADIUS = 3;
     private static final String GOTO = "goto";
     private static final String DIG_OUT = "dig_out";
     private static final String PILLAR = "pillar_up";
@@ -36,8 +36,12 @@ final class PitRescue {
         BlockPos feet = spirit.blockPosition();
         List<Integer> heights = new ArrayList<>();
         int highest = feet.getY();
-        for (int dx = -SURFACE_RADIUS; dx <= SURFACE_RADIUS; dx++) {
-            for (int dz = -SURFACE_RADIUS; dz <= SURFACE_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().pitSurfaceRadius();
+                dx <= BoardConfig.current().facts().pitSurfaceRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().pitSurfaceRadius();
+                    dz <= BoardConfig.current().facts().pitSurfaceRadius();
+                    dz++) {
                 if (dx != 0 || dz != 0) {
                     int height = top(level, feet.getX() + dx, feet.getZ() + dz);
                     heights.add(height);

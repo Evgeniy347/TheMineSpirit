@@ -270,6 +270,10 @@
     "stockScanHeight": 4,
     "campfireDropRadius": 2,
     "hiveVerticalRadius": 8,
-    "flowerVerticalRadius": 4
+    "flowerVerticalRadius": 4,
+    "dangerWorkRadius": 8,
+    "waterScanRadius": 2,
+    "oldPostRadius": 3,
+    "pitSurfaceRadius": 3
   }
 }
