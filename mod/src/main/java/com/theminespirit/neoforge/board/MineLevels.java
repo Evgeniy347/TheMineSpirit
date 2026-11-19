@@ -11,7 +11,6 @@ import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SpiritConfig;
-import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,7 +25,7 @@ final class MineLevels {
 
     static boolean post(GraphPost post, String node, int priority, Map<String, Integer> need) {
         ServerLevel level = post.level;
-        List<SpiritEntity> spirits = post.spirits;
+        List<? extends HomedSpirit> spirits = post.spirits;
         if (!SpiritConfig.boardEnabled() || spirits.isEmpty() || !node.startsWith(PREFIX)) {
             return false;
         }
