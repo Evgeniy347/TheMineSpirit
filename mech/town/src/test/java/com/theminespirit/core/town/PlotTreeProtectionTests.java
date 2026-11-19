@@ -8,18 +8,18 @@ import org.junit.jupiter.api.Test;
 class PlotTreeProtectionTests {
 
     @Test
-    void treeObstacle_NaturalTrunk_IsObstacle() {
+    void treeObstacle_TrunkWithoutWoodenPlan_IsObstacle() {
         assertTrue(
                 PlotProtection.treeObstacle(true, false),
-                "Ствол с кроной — природное дерево даже с отметкой духа: его рубят в любом месте поселения "
-                        + "и сажают саженец заново");
+                "Ствол вне плана дерева — природное дерево: план его игнорирует, дух рубит его в любом месте "
+                        + "поселения и сажает саженец заново");
     }
 
     @Test
-    void treeObstacle_BuiltTrunk_IsNotObstacle() {
+    void treeObstacle_TrunkOnWoodenPlanCell_IsNotObstacle() {
         assertFalse(
                 PlotProtection.treeObstacle(true, true),
-                "Бревно, поставленное стройкой в стену, — постройка, а не дерево: рубка не снимает дом");
+                "Бревно, которое держит стена по плану, — постройка, а не дерево: рубка не снимает дом");
     }
 
     @Test

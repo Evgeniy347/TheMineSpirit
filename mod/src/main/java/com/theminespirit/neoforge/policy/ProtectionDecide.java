@@ -16,7 +16,6 @@ import java.util.Collections;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
@@ -80,18 +79,23 @@ final class ProtectionDecide {
         if (!OrchardTrees.treePart(state) || !(level instanceof ServerLevel server)) {
             return false;
         }
-        PlacedBlocksData placed = PlacedBlocksData.get(server);
-        boolean marked = placed.isMarked(pos) || placed.isSpiritMarked(pos);
-        return PlotProtection.treeObstacle(true, marked && !canopy(level, pos));
+        return PlotProtection.treeObstacle(true, woodenPlan(PlotCellStructure.plannedId(server, pos)));
     }
 
-    private static boolean canopy(Level level, BlockPos pos) {
-        for (BlockPos near : BlockPos.betweenClosed(pos.offset(-2, 0, -2), pos.offset(2, 4, 2))) {
-            if (level.getBlockState(near).is(BlockTags.LEAVES)) {
-                return true;
-            }
+    private static boolean woodenPlan(@Nullable String planned) {
+        if (planned == null) {
+            return false;
         }
-        return false;
+        String path = planned;
+        int state = path.indexOf('[');
+        if (state >= 0) {
+            path = path.substring(0, state);
+        }
+        int colon = path.indexOf(':');
+        if (colon >= 0) {
+            path = path.substring(colon + 1);
+        }
+        return path.endsWith("_log") || path.endsWith("_wood") || path.endsWith("_leaves") || path.endsWith("_sapling");
     }
 
     private PlotOutcome plotCheck(Request request, Level level, BlockCoord coord) {
