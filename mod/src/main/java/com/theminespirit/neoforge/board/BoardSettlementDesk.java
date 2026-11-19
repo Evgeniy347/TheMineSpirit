@@ -141,7 +141,7 @@ final class BoardSettlementDesk {
                         break;
                     }
                     String empty = run == TicketRun.SUCCEEDED && spirit.level() instanceof ServerLevel level
-                            ? progress.emptyResult(level, ticket, targets.get(ticket.id()))
+                            ? progress.emptyResult(level, ticket, targets.get(ticket.id()), spirit)
                             : null;
                     settle(spirit, ticket, run == TicketRun.SUCCEEDED && empty == null, empty, spirits);
                 }

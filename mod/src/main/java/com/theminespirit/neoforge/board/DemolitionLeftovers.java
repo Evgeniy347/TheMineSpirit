@@ -1,9 +1,11 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.DemolitionVerdict;
 import com.theminespirit.core.town.FenceDemolition;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.BlockStates;
+import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -13,6 +15,10 @@ import org.jspecify.annotations.Nullable;
 
 final class DemolitionLeftovers {
     private DemolitionLeftovers() {}
+
+    static boolean allowedByProtection(SpiritEntity spirit, BlockPos pos, BlockState state) {
+        return DemolitionVerdict.permissible(spirit.protectionGate().checkDemolish(pos, state), false);
+    }
 
     static @Nullable String reason(
             ServerLevel level,

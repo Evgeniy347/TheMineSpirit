@@ -14,6 +14,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.StageSite;
+import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -83,9 +84,9 @@ final class StageProgressWatch {
     }
 
     @Nullable
-    String emptyResult(ServerLevel level, BoardTicket ticket, @Nullable TicketTarget target) {
+    String emptyResult(ServerLevel level, BoardTicket ticket, @Nullable TicketTarget target, SpiritEntity spirit) {
         if (ticket.boardCase() == BoardCase.DISMANTLE_SHELTER) {
-            return demolishResult(level, target);
+            return demolishResult(level, target, spirit);
         }
         Integer before = placedAtIssue.remove(ticket.id());
         logOverall(level, ticket, target);
@@ -108,7 +109,8 @@ final class StageProgressWatch {
                 + ", как и при выдаче — нет материала или подхода, задание не считается сделанным";
     }
 
-    private static @Nullable String demolishResult(ServerLevel level, @Nullable TicketTarget target) {
+    private static @Nullable String demolishResult(
+            ServerLevel level, @Nullable TicketTarget target, SpiritEntity spirit) {
         if (target == null || target.work() == null) {
             return "разбор закрыт без факта мира: у задания нет списка блоков для сверки";
         }
@@ -119,11 +121,13 @@ final class StageProgressWatch {
         int allowed = 0;
         for (PlannedBlock block : planned) {
             BlockCoord at = block.at();
-            BlockState state = level.getBlockState(new BlockPos(at.x(), at.y(), at.z()));
+            BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
+            BlockState state = level.getBlockState(pos);
             if (state.isAir() || !state.getFluidState().isEmpty()) {
                 continue;
             }
-            if (DemolitionLeftovers.reason(level, site, plan, at, state) != null) {
+            if (DemolitionLeftovers.allowedByProtection(spirit, pos, state)
+                    || DemolitionLeftovers.reason(level, site, plan, at, state) != null) {
                 allowed++;
                 continue;
             }
