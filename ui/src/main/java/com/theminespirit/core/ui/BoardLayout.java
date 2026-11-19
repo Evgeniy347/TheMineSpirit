@@ -21,6 +21,9 @@ public final class BoardLayout {
     public static final int TILE_GAP = 2;
     public static final int TILE_TEXT_TOP = 3;
     public static final int TILE_LINE_STEP = 10;
+    public static final int ICON_SIZE = 16;
+    public static final int ICON_GAP = 2;
+    public static final int ICON_TOP = 2;
 
     private final Rect window;
     private final Rect inner;
@@ -116,6 +119,39 @@ public final class BoardLayout {
             throw new IllegalArgumentException("Номер плитки не может быть отрицательным: " + index);
         }
         return new Rect(area.x(), list.y() + index * (TILE_HEIGHT + TILE_GAP), area.width(), TILE_HEIGHT);
+    }
+
+    public static IconGrid iconGrid(int tileWidth, int count) {
+        if (tileWidth < 0) {
+            throw new IllegalArgumentException("Ширина плитки " + tileWidth + " отрицательна: значки некуда класть");
+        }
+        if (count < 0) {
+            throw new IllegalArgumentException("Число значков " + count + " отрицательно: показывать нечего");
+        }
+        if (count == 0) {
+            return new IconGrid(0, 0, 0);
+        }
+        int rows = Math.max(1, (TILE_HEIGHT - 2 * ICON_TOP + ICON_GAP) / (ICON_SIZE + ICON_GAP));
+        int blockLimit = Math.max(ICON_SIZE, tileWidth / 2);
+        int columns = Math.max(1, Math.min(count, (blockLimit + ICON_GAP) / (ICON_SIZE + ICON_GAP)));
+        return new IconGrid(columns, rows, columns * rows);
+    }
+
+    public record IconGrid(int columns, int rows, int capacity) {
+        public IconGrid {
+            if (columns < 0 || rows < 0 || capacity < 0) {
+                throw new IllegalArgumentException(
+                        "Сетка значков " + columns + "x" + rows + "/" + capacity + " отрицательна: рисовать нечего");
+            }
+            if (capacity != columns * rows) {
+                throw new IllegalArgumentException("Вместимость сетки " + capacity + " не равна " + columns + "x" + rows
+                        + ": скрытые значки посчитаются неверно");
+            }
+        }
+
+        public int width() {
+            return columns == 0 ? 0 : columns * (ICON_SIZE + ICON_GAP) - ICON_GAP;
+        }
     }
 
     public int columnAt(double mouseX, double mouseY) {

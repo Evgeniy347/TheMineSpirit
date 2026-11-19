@@ -22,8 +22,6 @@ import org.jspecify.annotations.Nullable;
 final class BoardTileView {
     static final int TEXT_PAD = 4;
     static final int STRIPE = 2;
-    static final int ICON = 16;
-    static final int ICON_GAP = 2;
     private static final String KEY = ModIdentity.MOD_ID + ".board.";
     private static final int TEXT_COLOR = 0xFFFFFFFF;
     private static final int MUTED_COLOR = 0xFFA0A0A0;
@@ -70,18 +68,22 @@ final class BoardTileView {
         List<BoardMaterials.Material> allIcons = new ArrayList<>();
         List<BoardMaterials.Material> texts = new ArrayList<>();
         for (BoardMaterials.Material material : BoardMaterials.of(tile)) {
-            if (material.kind() == BoardMaterials.Kind.NEED
-                    || material.kind() == BoardMaterials.Kind.MISSING
-                    || stack(material.item()) == null) {
+            if (stack(material.item()) == null) {
                 texts.add(material);
             } else {
                 allIcons.add(material);
             }
         }
-        int maxIcons = Math.max(1, (width - 2 * TEXT_PAD) / (ICON + ICON_GAP));
-        List<BoardMaterials.Material> icons = allIcons.size() > maxIcons ? allIcons.subList(0, maxIcons) : allIcons;
-        int iconsWidth = icons.isEmpty() ? 0 : icons.size() * (ICON + ICON_GAP) - ICON_GAP;
-        int textWidth = Math.max(0, width - 2 * TEXT_PAD - (iconsWidth > 0 ? iconsWidth + 2 : 0));
+        BoardLayout.IconGrid grid = BoardLayout.iconGrid(width, allIcons.size());
+        int shown = Math.min(allIcons.size(), grid.capacity());
+        int hidden = allIcons.size() - shown;
+        if (hidden > 0 && grid.capacity() > 1) {
+            shown = grid.capacity() - 1;
+            hidden = allIcons.size() - shown;
+        }
+        List<BoardMaterials.Material> icons = allIcons.subList(0, shown);
+        int textWidth =
+                Math.max(0, width - 2 * TEXT_PAD - (grid.width() > 0 ? grid.width() + BoardLayout.ICON_GAP : 0));
         int lineStep = BoardLayout.TILE_LINE_STEP;
         int lineY = y + BoardLayout.TILE_TEXT_TOP;
         graphics.drawString(
@@ -93,18 +95,18 @@ final class BoardTileView {
         lineY += lineStep;
         graphics.drawString(
                 font,
-                font.plainSubstrByWidth(BoardTileTexts.detailsText(tile).getString(), width - 2 * TEXT_PAD),
+                font.plainSubstrByWidth(BoardTileTexts.detailsText(tile).getString(), textWidth),
                 x + TEXT_PAD,
                 lineY,
                 MUTED_COLOR);
         lineY += lineStep;
         Component time = BoardTileTexts.timeText(tile);
         if (time != null) {
-            lineY = drawLine(graphics, font, time, x, lineY, width, MUTED_COLOR);
+            lineY = drawLine(graphics, font, time, x, lineY, textWidth, MUTED_COLOR);
         }
         Component spent = BoardTileTexts.spentText(tile);
         if (spent != null) {
-            lineY = drawLine(graphics, font, spent, x, lineY, width, MUTED_COLOR);
+            lineY = drawLine(graphics, font, spent, x, lineY, textWidth, MUTED_COLOR);
         }
         String third = null;
         int thirdColor = UNRESOLVED_COLOR;
@@ -116,29 +118,32 @@ final class BoardTileView {
             third = BoardTileTexts.waitText(waits.get(0), context.byId()).getString();
         }
         if (third != null) {
-            lineY = drawLine(graphics, font, Component.literal(third), x, lineY, width, thirdColor);
-        }
-        if (allIcons.size() > maxIcons) {
-            texts.addAll(allIcons.subList(maxIcons, allIcons.size()));
+            lineY = drawLine(graphics, font, Component.literal(third), x, lineY, textWidth, thirdColor);
         }
         for (BoardMaterials.Material material : texts) {
             if (lineY + BoardLayout.TILE_LINE_STEP > y + BoardLayout.TILE_HEIGHT) {
                 break;
             }
-            lineY = drawLine(graphics, font, BoardTileTexts.materialText(material), x, lineY, width, UNRESOLVED_COLOR);
+            lineY = drawLine(
+                    graphics, font, BoardTileTexts.materialText(material), x, lineY, textWidth, UNRESOLVED_COLOR);
         }
-        return renderIcons(graphics, font, icons, rect, cursor, tile);
+        return renderIcons(graphics, font, icons, grid, hidden, rect, cursor, tile);
     }
 
     private static @Nullable Hover renderIcons(
             GuiGraphics graphics,
             Font font,
             List<BoardMaterials.Material> icons,
+            BoardLayout.IconGrid grid,
+            int hidden,
             BoardLayout.Rect rect,
             Cursor cursor,
             BoardTile tile) {
-        int startX = rect.x() + rect.width() - TEXT_PAD + ICON_GAP - icons.size() * (ICON + ICON_GAP);
-        int iconY = rect.y() + 2;
+        if (grid.columns() == 0) {
+            return null;
+        }
+        int startX = rect.x() + rect.width() - TEXT_PAD - grid.width();
+        int startY = rect.y() + BoardLayout.ICON_TOP;
         BoardMaterials.Material hovered = null;
         for (int i = 0; i < icons.size(); i++) {
             BoardMaterials.Material material = icons.get(i);
@@ -146,14 +151,47 @@ final class BoardTileView {
             if (stack == null) {
                 continue;
             }
-            int iconX = startX + i * (ICON + ICON_GAP);
+            int iconX = iconX(startX, grid, i);
+            int iconY = iconY(startY, grid, i);
             graphics.renderItem(stack, iconX, iconY);
-            graphics.renderItemDecorations(font, stack, iconX, iconY, BoardTileTexts.countText(material.count()));
-            if (cursor.x() >= iconX && cursor.x() < iconX + ICON && cursor.y() >= iconY && cursor.y() < iconY + ICON) {
+            drawCount(graphics, font, material, iconX, iconY);
+            if (isInside(cursor, iconX, iconY)) {
                 hovered = material;
             }
         }
+        if (hidden > 0) {
+            int index = icons.size();
+            graphics.drawString(
+                    font, "+" + hidden, iconX(startX, grid, index), iconY(startY, grid, index) + 4, FAILED_COLOR, true);
+        }
         return hovered == null ? null : new Hover(tile, hovered);
+    }
+
+    private static int iconX(int startX, BoardLayout.IconGrid grid, int index) {
+        return startX + (index % grid.columns()) * (BoardLayout.ICON_SIZE + BoardLayout.ICON_GAP);
+    }
+
+    private static int iconY(int startY, BoardLayout.IconGrid grid, int index) {
+        return startY + (index / grid.columns()) * (BoardLayout.ICON_SIZE + BoardLayout.ICON_GAP);
+    }
+
+    private static boolean isInside(Cursor cursor, int iconX, int iconY) {
+        return cursor.x() >= iconX
+                && cursor.x() < iconX + BoardLayout.ICON_SIZE
+                && cursor.y() >= iconY
+                && cursor.y() < iconY + BoardLayout.ICON_SIZE;
+    }
+
+    private static void drawCount(
+            GuiGraphics graphics, Font font, BoardMaterials.Material material, int iconX, int iconY) {
+        String count = BoardTileTexts.countText(material.count());
+        int starWidth = material.kind() == BoardMaterials.Kind.NEED ? font.width("*") : 0;
+        int numberX = iconX + BoardLayout.ICON_SIZE - font.width(count) - starWidth;
+        int numberY = iconY + BoardLayout.ICON_SIZE - font.lineHeight + 1;
+        graphics.drawString(font, count, numberX, numberY, TEXT_COLOR, true);
+        if (starWidth > 0) {
+            graphics.drawString(font, "*", numberX + font.width(count), numberY, FAILED_COLOR, true);
+        }
     }
 
     static List<Component> tooltip(
@@ -191,8 +229,8 @@ final class BoardTileView {
         return lines;
     }
 
-    private static int drawLine(GuiGraphics g, Font font, Component text, int x, int y, int width, int color) {
-        g.drawString(font, font.plainSubstrByWidth(text.getString(), width - 2 * TEXT_PAD), x + TEXT_PAD, y, color);
+    private static int drawLine(GuiGraphics g, Font font, Component text, int x, int y, int maxWidth, int color) {
+        g.drawString(font, font.plainSubstrByWidth(text.getString(), maxWidth), x + TEXT_PAD, y, color);
         return y + BoardLayout.TILE_LINE_STEP;
     }
 

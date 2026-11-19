@@ -118,4 +118,40 @@ class BoardLayoutTests {
                         + needed + " больше TILE_HEIGHT " + BoardLayout.TILE_HEIGHT
                         + ": последняя строка обрежется. Увеличьте TILE_HEIGHT или уменьшите шаг строк");
     }
+
+    @Test
+    void iconGrid_NoMaterials_IsEmpty() {
+        BoardLayout.IconGrid grid = BoardLayout.iconGrid(200, 0);
+
+        assertEquals(0, grid.capacity(), "Задание без материалов не рисует ни одного значка");
+        assertEquals(0, grid.width(), "Пустая сетка значков не отнимает ширину у текста задания");
+    }
+
+    @Test
+    void iconGrid_FewMaterials_FitEveryIcon() {
+        BoardLayout.IconGrid grid = BoardLayout.iconGrid(200, 3);
+
+        assertEquals(3, grid.columns(), "Мало предметов — каждый значок стоит в своём столбце");
+        assertTrue(grid.capacity() >= 3, "Три значка обязаны поместиться целиком, без сокращения в +N");
+        assertTrue(
+                grid.width() <= 200 / 2,
+                "Значки не должны заслонять название задания: им отдана не больше половины карточки");
+    }
+
+    @Test
+    void iconGrid_ManyMaterials_UseRowsAndLeaveOverflow() {
+        BoardLayout.IconGrid grid = BoardLayout.iconGrid(200, 30);
+
+        assertEquals(3, grid.rows(), "Карточка вмещает три ряда значков по высоте");
+        assertTrue(grid.capacity() < 30, "Лишние значки сворачиваются в +N, а не пропадают молча");
+        assertTrue(grid.width() <= 200 / 2, "Даже при обилии ресурсов значки не заслоняют название задания");
+    }
+
+    @Test
+    void iconGrid_NarrowTile_ShowsSingleColumn() {
+        BoardLayout.IconGrid grid = BoardLayout.iconGrid(20, 5);
+
+        assertEquals(1, grid.columns(), "В узкой карточке значок стоит один в ряд");
+        assertEquals(BoardLayout.ICON_SIZE, grid.width(), "Значок обязан целиком влезть в узкую карточку");
+    }
 }
