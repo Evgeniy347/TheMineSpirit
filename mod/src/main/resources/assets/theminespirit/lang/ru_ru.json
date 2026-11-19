@@ -37,6 +37,7 @@
   "theminespirit.board.missing": "Не хватает:",
   "theminespirit.board.material.gather": "Добыть: %s ×%s",
   "theminespirit.board.material.supply": "Подвезти: %s ×%s",
+  "theminespirit.board.material.haveNeed": "%s: есть %s / надо %s",
   "theminespirit.board.material.need": "Нужно: %s ×%s",
   "theminespirit.board.material.missing": "Не хватает: %s ×%s",
   "theminespirit.board.unfinished": "не удалось завершить",

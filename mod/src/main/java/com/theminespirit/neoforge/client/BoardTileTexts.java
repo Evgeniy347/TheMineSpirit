@@ -25,6 +25,13 @@ final class BoardTileTexts {
     }
 
     static Component materialText(BoardMaterials.Material material) {
+        if (material.kind() == BoardMaterials.Kind.NEED && material.have() != null) {
+            return Component.translatable(
+                    KEY + "material.haveNeed",
+                    itemName(material.item()),
+                    Component.literal(countText(material.have())),
+                    Component.literal(countText(material.count())));
+        }
         String key = switch (material.kind()) {
             case GATHER -> KEY + "material.gather";
             case SUPPLY -> KEY + "material.supply";

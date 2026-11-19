@@ -17,7 +17,12 @@ public final class BoardMaterials {
         MISSING
     }
 
-    public record Material(Kind kind, String item, int count) {
+    public record Material(
+            Kind kind, String item, int count, @Nullable Integer have) {
+        public Material(Kind kind, String item, int count) {
+            this(kind, item, count, null);
+        }
+
         public Material {
             Objects.requireNonNull(kind, "Вид материала не может быть null: по нему экран выбирает подпись");
             if (item == null || item.isBlank()) {
@@ -42,16 +47,26 @@ public final class BoardMaterials {
         }
         if ("REPAIR_BUILDING".equals(tile.boardCase())) {
             for (Map.Entry<String, Integer> entry : new TreeMap<>(tile.requiredItems()).entrySet()) {
-                materials.add(new Material(Kind.NEED, entry.getKey(), entry.getValue()));
+                materials.add(new Material(
+                        Kind.NEED,
+                        entry.getKey(),
+                        entry.getValue(),
+                        tile.stock().get(entry.getKey())));
             }
         }
+        boolean needRows = "REPAIR_BUILDING".equals(tile.boardCase());
         for (Map.Entry<String, Integer> entry : new TreeMap<>(tile.missing()).entrySet()) {
-            if (entry.getKey().equals(supplyItem)) {
+            if (entry.getKey().equals(supplyItem) || (needRows && tile.stock().containsKey(entry.getKey()))) {
                 continue;
             }
             materials.add(new Material(Kind.MISSING, entry.getKey(), entry.getValue()));
         }
         return List.copyOf(materials);
+    }
+
+    public static boolean shortage(Material material) {
+        Objects.requireNonNull(material, "Материал не может быть null: по нему решают, ставить ли звезду");
+        return material.kind() == Kind.NEED && (material.have() == null || material.count() > material.have());
     }
 
     public static @Nullable Kind supplyKind(String boardCase) {

@@ -26,7 +26,8 @@ public record BoardTask(
         @Nullable String waitReason,
         @Nullable String supplyItem,
         int supplyCount,
-        List<String> executors) {
+        List<String> executors,
+        Map<String, Integer> stock) {
 
     public BoardTask(
             String id,
@@ -70,7 +71,8 @@ public record BoardTask(
                 waitReason,
                 supplyItem,
                 supplyCount,
-                List.of());
+                List.of(),
+                Map.of());
     }
 
     public BoardTask(
@@ -257,6 +259,8 @@ public record BoardTask(
                 requiredItems, "requiredItems не может быть null: задание без ресурсов задают пустой картой"));
         missing = Map.copyOf(Objects.requireNonNull(
                 missing, "missing не может быть null: задание без нехватки задают пустой картой"));
+        stock = Map.copyOf(
+                Objects.requireNonNull(stock, "stock не может быть null: без снимка склада задают пустой картой"));
         dependsOn = List.copyOf(Objects.requireNonNull(
                 dependsOn, "dependsOn не может быть null: задание без зависимостей задают пустым списком"));
         if (effectivePriority < 0) {

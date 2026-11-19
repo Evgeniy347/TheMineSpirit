@@ -98,6 +98,44 @@ class BoardMaterialsTests {
     }
 
     @Test
+    void of_RepairWithStock_ShowsHaveAndNeedWithoutDuplicateMissing() {
+        BoardTile repair = new BoardTile(
+                "repair:hut",
+                "REPAIR_BUILDING",
+                1,
+                90,
+                null,
+                "PENDING",
+                BoardTileGroup.AVAILABLE,
+                Map.of("minecraft:cobblestone", 4),
+                List.of(),
+                0,
+                0,
+                0,
+                0,
+                null,
+                0,
+                List.of("building=Хижина"),
+                Map.of("minecraft:dirt", 5, "minecraft:cobblestone", 8),
+                Map.of("minecraft:dirt", 10240, "minecraft:cobblestone", 4));
+
+        List<BoardMaterials.Material> materials = BoardMaterials.of(repair);
+
+        assertEquals(
+                List.of(
+                        new BoardMaterials.Material(BoardMaterials.Kind.NEED, "minecraft:cobblestone", 8, 4),
+                        new BoardMaterials.Material(BoardMaterials.Kind.NEED, "minecraft:dirt", 5, 10240)),
+                materials,
+                "Карточка показывает «есть / надо» и не дублирует нехватку отдельной строкой");
+        assertTrue(
+                BoardMaterials.shortage(materials.get(0)),
+                "Звезда нехватки — только у предмета, которого на складе меньше: булыжника 4 из 8");
+        assertTrue(
+                !BoardMaterials.shortage(materials.get(1)),
+                "Земли 10 240 при нужде 528: звезды быть не должно, склад закрывает нужду");
+    }
+
+    @Test
     void of_RepairBuilding_ShowsNeedThenMissing() {
         BoardTile repair = new BoardTile(
                 "repair:hut",

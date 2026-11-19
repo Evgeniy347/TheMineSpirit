@@ -72,6 +72,7 @@ public final class BoardJson {
         map.put("assignee", task.assignee());
         map.put("status", task.status());
         map.put("requiredItems", task.requiredItems());
+        map.put("stock", task.stock());
         map.put("missing", task.missing());
         map.put("dependsOn", task.dependsOn());
         map.put("createdAt", task.createdAt());

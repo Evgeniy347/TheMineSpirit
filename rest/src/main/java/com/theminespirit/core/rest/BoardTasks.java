@@ -11,6 +11,7 @@ import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -109,6 +110,17 @@ public final class BoardTasks {
                 BoardWhy.waitReason(board, ticket, stock, board.now()).orElse(null),
                 target == null ? null : target.supplyItem(),
                 target == null ? 0 : target.supplyCount(),
-                ticket.executors().stream().map(UUID::toString).toList());
+                ticket.executors().stream().map(UUID::toString).toList(),
+                stockOf(ticket.requiredItems(), stock));
+    }
+
+    private static Map<String, Integer> stockOf(Map<String, Integer> required, StockView stock) {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        required.forEach((item, need) -> {
+            if (ResourceGate.needsStock(item)) {
+                counts.put(item, stock.count(item));
+            }
+        });
+        return Map.copyOf(counts);
     }
 }

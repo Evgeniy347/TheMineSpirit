@@ -30,7 +30,8 @@ class BoardTileCodecTests {
                 null,
                 0,
                 List.of("target=1,2,3", "building=Хижина"),
-                Map.of("minecraft:dirt", 5, "minecraft:cobblestone", 8));
+                Map.of("minecraft:dirt", 5, "minecraft:cobblestone", 8),
+                Map.of("minecraft:dirt", 10240, "minecraft:cobblestone", 4));
 
         FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
         try {

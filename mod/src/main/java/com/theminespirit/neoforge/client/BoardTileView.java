@@ -185,7 +185,7 @@ final class BoardTileView {
     private static void drawCount(
             GuiGraphics graphics, Font font, BoardMaterials.Material material, int iconX, int iconY) {
         String count = BoardTileTexts.countText(material.count());
-        int starWidth = material.kind() == BoardMaterials.Kind.NEED ? font.width("*") : 0;
+        int starWidth = BoardMaterials.shortage(material) ? font.width("*") : 0;
         int numberX = iconX + BoardLayout.ICON_SIZE - font.width(count) - starWidth;
         int numberY = iconY + BoardLayout.ICON_SIZE - font.lineHeight + 1;
         graphics.drawString(font, count, numberX, numberY, TEXT_COLOR, true);

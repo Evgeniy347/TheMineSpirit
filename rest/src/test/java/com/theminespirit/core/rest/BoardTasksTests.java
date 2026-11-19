@@ -56,6 +56,24 @@ class BoardTasksTests {
     }
 
     @Test
+    void of_GrassInStock_DirtNeedCoveredAndStockShown() {
+        Board board = new Board(() -> 0);
+        BoardTicket ticket = ticket("repair:hut", Map.of("minecraft:dirt", 528));
+        board.submit(ticket);
+
+        BoardTask task = BoardTasks.of(board, ticket, new StockView(Map.of("minecraft:grass_block", 1575)));
+
+        assertEquals(
+                Map.of(),
+                task.missing(),
+                "Нужду в земле закрывает дёрн: задание не ждёт добычи, и карточка не показывает нехватку");
+        assertEquals(
+                Map.of("minecraft:dirt", 1575),
+                task.stock(),
+                "Карточка несёт склад по нужным предметам: наблюдатель видит «есть 1575 / надо 528»");
+    }
+
+    @Test
     void of_ClaimedTicket_ReportsHolderForObserver() {
         Board board = new Board(() -> 0);
         BoardTicket ticket = ticket("supply:dirt", Map.of());
