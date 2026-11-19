@@ -154,7 +154,8 @@ class CrossPathScenarioTests {
         return facts(
                 named(
                         spirit("spirit-1", 4, 20),
-                        spirit("spirit-2", 20, 20, true, true, null, List.of(tool("pickaxe", 1, 1, 100)), List.of()),
+                        spirit(new CrossScene.SpiritSpec(
+                                "spirit-2", 20, 20, true, true, null, List.of(tool("pickaxe", 1, 1, 100)), List.of())),
                         spirit("spirit-3")),
                 threats,
                 List.of(chest(Map.of("food", 8, "oak_log", 8))),

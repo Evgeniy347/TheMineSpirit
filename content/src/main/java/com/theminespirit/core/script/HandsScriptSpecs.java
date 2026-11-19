@@ -3,8 +3,6 @@ package com.theminespirit.core.script;
 import java.util.List;
 
 final class HandsScriptSpecs {
-    private HandsScriptSpecs() {}
-
     private static final String TARGET = "target";
     private static final String BLOCK = "block";
     private static final String COUNT = "count";
@@ -12,6 +10,8 @@ final class HandsScriptSpecs {
     private static final String ITEM = "item";
     private static final String CONTAINER = "container";
     private static final String RADIUS = "radius";
+
+    private HandsScriptSpecs() {}
 
     static List<ScriptSpec> itemSpecs() {
         return List.of(

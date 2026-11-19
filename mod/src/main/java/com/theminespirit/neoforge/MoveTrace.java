@@ -89,6 +89,7 @@ public final class MoveTrace {
         write(line, tick);
     }
 
+    @SuppressWarnings("PMD.CloseResource")
     private static void write(String line, long tick) {
         synchronized (WRITE_LOCK) {
             try {
@@ -116,15 +117,16 @@ public final class MoveTrace {
     }
 
     private static void open() throws IOException {
-        if (writer != null) {
-            writer.close();
-            writer = null;
-            Files.move(FILE, OLD, StandardCopyOption.REPLACE_EXISTING);
+        synchronized (WRITE_LOCK) {
+            if (writer != null) {
+                writer.close();
+                Files.move(FILE, OLD, StandardCopyOption.REPLACE_EXISTING);
+            }
+            Files.createDirectories(FILE.getParent());
+            written = Files.exists(FILE) ? Files.size(FILE) : 0;
+            writer = Files.newBufferedWriter(
+                    FILE, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         }
-        Files.createDirectories(FILE.getParent());
-        written = Files.exists(FILE) ? Files.size(FILE) : 0;
-        writer = Files.newBufferedWriter(
-                FILE, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
     private static boolean same(@Nullable BlockPos first, @Nullable BlockPos second) {

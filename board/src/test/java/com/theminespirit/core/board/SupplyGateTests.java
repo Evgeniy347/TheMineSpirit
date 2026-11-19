@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 class SupplyGateTests {
 
     private static final long BACKOFF = BoardTuning.FAIL_BACKOFF_TICKS;
+    private static final BlockCoord SITE = new BlockCoord(0, 64, 0);
+    private static final UUID SPIRIT = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     @Test
     void merge_GrownDemand_KeepsSingleRequestWithNewCount() {
@@ -267,9 +269,6 @@ class SupplyGateTests {
                 SupplyGate.hasActiveSupply(board, targets, "dirt"),
                 "Заявка без цели-предмета не держит ничего: сравнивать нечего, нужды в добыче это не отменяет");
     }
-
-    private static final BlockCoord SITE = new BlockCoord(0, 64, 0);
-    private static final UUID SPIRIT = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     private static BoardTicket supplyTicket(String id) {
         return new BoardTicket(

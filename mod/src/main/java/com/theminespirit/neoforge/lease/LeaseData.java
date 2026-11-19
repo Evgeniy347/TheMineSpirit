@@ -30,7 +30,6 @@ public final class LeaseData extends SavedData {
     public static final String NAME = ModIdentity.MOD_ID + "_leases";
 
     private static final Logger LOGGER = LogUtils.getLogger();
-    private final Map<String, Integer> undoFailures = new HashMap<>();
     private static final String LEASES = "Leases";
     private static final String MIGRATED = "Migrated";
     private static final String ID = "Id";
@@ -51,6 +50,7 @@ public final class LeaseData extends SavedData {
             new SavedData.Factory<>(LeaseData::new, LeaseData::load, null);
 
     private final LeaseBook book = new LeaseBook();
+    private final Map<String, Integer> undoFailures = new HashMap<>();
     private final Map<String, Long> suspendedSince = new HashMap<>();
     private boolean migrated;
 

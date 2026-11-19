@@ -34,12 +34,10 @@ public final class Perf {
         return new Span(name);
     }
 
+    @SuppressWarnings("try")
     public static void time(String name, Runnable block) {
-        Span span = new Span(name);
-        try {
+        try (Span ignored = new Span(name)) {
             block.run();
-        } finally {
-            span.close();
         }
     }
 

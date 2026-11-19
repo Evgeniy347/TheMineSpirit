@@ -27,13 +27,20 @@ class TeamDefenseLineScenarioTests {
             List.of(pair(-100, 0), pair(-50, 0), pair(0, 0), pair(50, 0), pair(100, 0));
 
     @ParameterizedTest(name = "{0}")
-    @MethodSource("com.theminespirit.core.intellect.defense.TeamDefenseLineCases#lineCases")
+    @MethodSource({
+        "com.theminespirit.core.intellect.defense.TeamDefenseLineCases#lineCases",
+        "com.theminespirit.core.intellect.defense.TeamDefenseLineCases#lineWoundedCases"
+    })
     void line_Scenarios_MatchOwnerCases(TeamDefenseScenarios.Case scenario) {
         verify(scenario);
     }
 
     @ParameterizedTest(name = "{0}")
-    @MethodSource("com.theminespirit.core.intellect.defense.TeamDefenseLineHelpCases#helpCases")
+    @MethodSource({
+        "com.theminespirit.core.intellect.defense.TeamDefenseLineHelpCases#helpCases",
+        "com.theminespirit.core.intellect.defense.TeamDefenseLineHelpCases#helpEdgeCases",
+        "com.theminespirit.core.intellect.defense.TeamDefenseLineHelpCases#helpHungryCases"
+    })
     void lineHelp_Scenarios_MatchOwnerCases(TeamDefenseScenarios.Case scenario) {
         verify(scenario);
     }

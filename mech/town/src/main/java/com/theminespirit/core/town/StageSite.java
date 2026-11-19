@@ -43,22 +43,10 @@ public record StageSite(
     public StageSite {
         StageSiteChecks.check(
                 anchor,
-                hut,
-                yard,
-                mine,
-                minePlot,
-                orchard,
+                new StageSiteChecks.Pieces(hut, yard, mine, minePlot, orchard),
                 wood,
-                orchardSaplings,
-                extraOrchards,
-                fields,
-                placements,
-                level,
-                zone,
-                streets,
-                enclosure,
-                fenceStrip,
-                ring);
+                new StageSiteChecks.Plots(orchardSaplings, extraOrchards, fields, placements),
+                new StageSiteChecks.Masks(level, zone, streets, enclosure, fenceStrip, ring));
         orchardSaplings = List.copyOf(orchardSaplings);
         extraOrchards = List.copyOf(extraOrchards);
         fields = List.copyOf(fields);

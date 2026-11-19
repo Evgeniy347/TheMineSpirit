@@ -39,6 +39,37 @@ final class ChopBigTreesGameTests {
     public static void chopTree_GiantSpruceTwoByTwoHeightTwenty_ChoppedFromOneStand(GameTestHelper helper) {
         GameTestFixtures.sweepEntities(helper);
         clearField(helper, 22);
+        buildGiantSpruce(helper);
+        buildNeighbourTrees(helper);
+        BrokenAxes broken = brokenAxes(helper);
+        SpiritEntity spirit = spawnChopper(helper);
+        SpiritEntity climber = spawnClimber(helper);
+        SpiritRun climbRun = SpiritRun.launch(helper, climber, chopCall("jungle", 1), SETTLE_TICKS);
+        int groundY = helper.absolutePos(BlockPos.ZERO).getY();
+        Track track = new Track();
+        helper.onEachTick(() -> track.climbTop =
+                Math.max(track.climbTop, climber.blockPosition().getY() - groundY));
+        helper.onEachTick(() -> trackStand(helper, spirit, track));
+
+        SpiritRun run = SpiritRun.launch(
+                helper, spirit, new SequenceNode(List.of(chopCall("oak", 1), chopCall("spruce", 1))), SETTLE_TICKS);
+
+        helper.succeedWhen(() -> {
+            assertChopped(helper, run, spirit, broken);
+            assertLoot(helper, spirit, broken);
+            assertClimb(helper, climbRun, climber, track);
+            assertStand(helper, track, run);
+            clearField(helper, 22);
+        });
+    }
+
+    private static final class Track {
+        private BlockPos standAt;
+        private double maxShift;
+        private int climbTop = Integer.MIN_VALUE;
+    }
+
+    private static void buildGiantSpruce(GameTestHelper helper) {
         for (int x = 0; x < PLATFORM; x++) {
             for (int z = 0; z < PLATFORM; z++) {
                 helper.setBlock(x, 0, z, Blocks.DIRT);
@@ -67,6 +98,9 @@ final class ChopBigTreesGameTests {
                 helper.setBlock(hanging.getX() + dx, -4, hanging.getZ() + dz, Blocks.WATER);
             }
         }
+    }
+
+    private static void buildNeighbourTrees(GameTestHelper helper) {
         buildSquaredTree(helper, 4, 4, 20, 20, Blocks.SPRUCE_LOG, Blocks.SPRUCE_LEAVES);
         buildOakTree(helper, 8, 8, 5);
         helper.setBlock(9, 3, 8, Blocks.OAK_LOG);
@@ -86,85 +120,83 @@ final class ChopBigTreesGameTests {
                 }
             }
         }
-        BrokenAxes broken = brokenAxes(helper);
-        SpiritEntity spirit = spawnChopper(helper);
+    }
+
+    private static SpiritEntity spawnClimber(GameTestHelper helper) {
         SpiritEntity climber = helper.spawn(ModEntities.SPIRIT.get(), new BlockPos(8, 1, 1));
         climber.getInventory().setItem(0, new ItemStack(Items.IRON_AXE));
         climber.getInventory().addItem(new ItemStack(Items.DIRT, 32));
-        SpiritRun climbRun = SpiritRun.launch(helper, climber, chopCall("jungle", 1), SETTLE_TICKS);
-        int groundY = helper.absolutePos(BlockPos.ZERO).getY();
-        int[] climbTop = {Integer.MIN_VALUE};
-        helper.onEachTick(() ->
-                climbTop[0] = Math.max(climbTop[0], climber.blockPosition().getY() - groundY));
+        return climber;
+    }
 
-        BlockPos[] standAt = {null};
-        double[] maxShift = {0};
-        helper.onEachTick(() -> {
-            if (standAt[0] == null) {
-                if (helper.getBlockState(new BlockPos(4, 20, 4)).isAir()) {
-                    standAt[0] = spirit.blockPosition();
-                }
-                return;
+    private static void trackStand(GameTestHelper helper, SpiritEntity spirit, Track track) {
+        if (track.standAt == null) {
+            if (helper.getBlockState(new BlockPos(4, 20, 4)).isAir()) {
+                track.standAt = spirit.blockPosition();
             }
-            if (!helper.getBlockState(new BlockPos(4, 1, 4)).isAir()) {
-                maxShift[0] = Math.max(maxShift[0], standAt[0].distSqr(spirit.blockPosition()));
-            }
-        });
+            return;
+        }
+        if (!helper.getBlockState(new BlockPos(4, 1, 4)).isAir()) {
+            track.maxShift = Math.max(track.maxShift, track.standAt.distSqr(spirit.blockPosition()));
+        }
+    }
 
-        SpiritRun run = SpiritRun.launch(
-                helper, spirit, new SequenceNode(List.of(chopCall("oak", 1), chopCall("spruce", 1))), SETTLE_TICKS);
+    private static void assertChopped(GameTestHelper helper, SpiritRun run, SpiritEntity spirit, BrokenAxes broken) {
+        run.assertStarted();
+        helper.assertTrue(
+                spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
+                "ель 2×2 высотой 20: всё дерево рубится с одной стоянки без столба. Статус: "
+                        + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
+                        + spirit.taskFailureReason().orElse("нет"));
+        int logsInWorld = countBlocksInWorld(helper, Blocks.SPRUCE_LOG);
+        helper.assertTrue(logsInWorld == 0, "все 80 брёвен ели 2×2 обязаны быть срублены, осталось " + logsInWorld);
+        helper.assertTrue(
+                countBlocksInWorld(helper, Blocks.COBBLESTONE) == 0,
+                "столб не строится: булыжника в мире быть не должно");
+        int oakLogs = countBlocksInWorld(helper, Blocks.OAK_LOG);
+        helper.assertTrue(
+                oakLogs == 0,
+                "дуб с боковой веткой обязан срубиться целиком: пня и висящей верхушки не остаётся, " + "а в мире "
+                        + oakLogs);
+        helper.assertTrue(
+                countBlocksInWorld(helper, Blocks.JUNGLE_LOG) == 0,
+                "все брёвна ствола над ямой срублены без ходимых стоянок: осталось "
+                        + countBlocksInWorld(helper, Blocks.JUNGLE_LOG));
+        broken.assertDone(helper);
+    }
 
-        helper.succeedWhen(() -> {
-            run.assertStarted();
-            helper.assertTrue(
-                    spirit.taskStatus().orElse(null) == RunStatus.SUCCEEDED,
-                    "ель 2×2 высотой 20: всё дерево рубится с одной стоянки без столба. Статус: "
-                            + spirit.taskStatus().map(RunStatus::name).orElse("нет задачи") + ", причина: "
-                            + spirit.taskFailureReason().orElse("нет"));
-            int logsInWorld = countBlocksInWorld(helper, Blocks.SPRUCE_LOG);
-            helper.assertTrue(logsInWorld == 0, "все 80 брёвен ели 2×2 обязаны быть срублены, осталось " + logsInWorld);
-            int logsInInventory = spruce(spirit) + broken.spruce();
-            int logsOnGround = GameTestFixtures.countInWorld(helper, Items.SPRUCE_LOG);
-            helper.assertTrue(
-                    logsInInventory + logsOnGround == 80,
-                    "все 80 брёвен ели обязаны сохраниться: в инвентаре " + logsInInventory + ", на земле "
-                            + logsOnGround);
-            helper.assertTrue(
-                    logsOnGround == 0, "дроп со всего дерева обязан быть подобран: на земле осталось " + logsOnGround);
-            helper.assertTrue(
-                    countBlocksInWorld(helper, Blocks.COBBLESTONE) == 0,
-                    "столб не строится: булыжника в мире быть не должно");
-            int oakLogs = countBlocksInWorld(helper, Blocks.OAK_LOG);
-            helper.assertTrue(
-                    oakLogs == 0,
-                    "дуб с боковой веткой обязан срубиться целиком: пня и висящей верхушки не остаётся, " + "а в мире "
-                            + oakLogs);
-            broken.assertDone(helper);
-            climbRun.assertStarted();
-            helper.assertTrue(
-                    countBlocksInWorld(helper, Blocks.JUNGLE_LOG) == 0,
-                    "все брёвна ствола над ямой срублены без ходимых стоянок: осталось "
-                            + countBlocksInWorld(helper, Blocks.JUNGLE_LOG));
-            helper.assertTrue(
-                    climbTop[0] >= 20,
-                    "без подъёма верх ветки над ямой не срубить: дух поднимался только до " + climbTop[0]
-                            + " (нужна стоянка на 20)");
-            List<Lease> scaffolds = LeaseData.get(helper.getLevel()).book().all().stream()
-                    .filter(lease -> "scaffold".equals(lease.purpose()) && lease.ownedBy(climber.getUUID()))
-                    .toList();
-            helper.assertTrue(
-                    !scaffolds.isEmpty() && scaffolds.stream().allMatch(lease -> lease.status() == LeaseStatus.DONE),
-                    "подъём к стволу идёт на аренде подмостей и закрывается DONE после спуска: " + scaffolds);
-            helper.assertTrue(
-                    standAt[0] != null, "рубка обязана начаться: верхнее бревно срублено, стоянка зафиксирована");
-            helper.assertTrue(
-                    maxShift[0] <= 1,
-                    "после подхода дух рубит с одной стоянки: сдвиг за всю рубку не больше 1 блока, " + "а он "
-                            + maxShift[0] + " (квадрат расстояния от стоянки " + standAt[0] + ")");
-            LOGGER.info("chop_tree, ель 2×2 высотой 20 с одной стоянки: {} тиков духа", run.spiritTicks());
+    private static void assertLoot(GameTestHelper helper, SpiritEntity spirit, BrokenAxes broken) {
+        int logsInInventory = spruce(spirit) + broken.spruce();
+        int logsOnGround = GameTestFixtures.countInWorld(helper, Items.SPRUCE_LOG);
+        helper.assertTrue(
+                logsInInventory + logsOnGround == 80,
+                "все 80 брёвен ели обязаны сохраниться: в инвентаре " + logsInInventory + ", на земле " + logsOnGround);
+        helper.assertTrue(
+                logsOnGround == 0, "дроп со всего дерева обязан быть подобран: на земле осталось " + logsOnGround);
+    }
 
-            clearField(helper, 22);
-        });
+    private static void assertClimb(GameTestHelper helper, SpiritRun climbRun, SpiritEntity climber, Track track) {
+        climbRun.assertStarted();
+        helper.assertTrue(
+                track.climbTop >= 20,
+                "без подъёма верх ветки над ямой не срубить: дух поднимался только до " + track.climbTop
+                        + " (нужна стоянка на 20)");
+        List<Lease> scaffolds = LeaseData.get(helper.getLevel()).book().all().stream()
+                .filter(lease -> "scaffold".equals(lease.purpose()) && lease.ownedBy(climber.getUUID()))
+                .toList();
+        helper.assertTrue(
+                !scaffolds.isEmpty() && scaffolds.stream().allMatch(lease -> lease.status() == LeaseStatus.DONE),
+                "подъём к стволу идёт на аренде подмостей и закрывается DONE после спуска: " + scaffolds);
+    }
+
+    private static void assertStand(GameTestHelper helper, Track track, SpiritRun run) {
+        helper.assertTrue(
+                track.standAt != null, "рубка обязана начаться: верхнее бревно срублено, стоянка зафиксирована");
+        helper.assertTrue(
+                track.maxShift <= 1,
+                "после подхода дух рубит с одной стоянки: сдвиг за всю рубку не больше 1 блока, " + "а он "
+                        + track.maxShift + " (квадрат расстояния от стоянки " + track.standAt + ")");
+        LOGGER.info("chop_tree, ель 2×2 высотой 20 с одной стоянки: {} тиков духа", run.spiritTicks());
     }
 
     private record BrokenAxes(SpiritEntity mid, SpiritEntity last, SpiritRun midRun, SpiritRun lastRun) {

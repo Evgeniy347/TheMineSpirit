@@ -53,7 +53,7 @@ public final class TeamDefensePlanner {
                     throw new IllegalStateException(
                             "отряду " + squad.id() + " не назначен пост помощи: таблица постов разошлась с отрядами");
                 }
-                orders.add(SquadOrders.reinforce(
+                orders.add(SquadOrders.reinforce(new SquadOrders.ReinforceRequest(
                         center,
                         squad,
                         clusters.get(helpIndex),
@@ -61,7 +61,7 @@ public final class TeamDefensePlanner {
                         firstLocalId(locals.get(helpIndex)),
                         profile,
                         weights,
-                        members));
+                        members)));
             } else {
                 orders.add(SquadOrders.stay(center, squad, members, weights));
             }
@@ -81,7 +81,7 @@ public final class TeamDefensePlanner {
     private static List<List<DefenseSquad>> localSquads(
             List<DefenseSquad> squads, List<ThreatCluster> clusters, double radius) {
         List<List<DefenseSquad>> locals = new ArrayList<>(clusters.size());
-        for (int index = 0; index < clusters.size(); index++) {
+        for (ThreatCluster unused : clusters) {
             locals.add(new ArrayList<>());
         }
         for (DefenseSquad squad : squads) {

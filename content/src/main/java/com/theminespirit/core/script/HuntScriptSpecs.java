@@ -4,11 +4,11 @@ import com.theminespirit.core.husbandry.Species;
 import java.util.List;
 
 final class HuntScriptSpecs {
-    private HuntScriptSpecs() {}
-
     private static final String RADIUS = "radius";
     private static final String SPECIES = "species";
     private static final String COUNT = "count";
+
+    private HuntScriptSpecs() {}
 
     static List<ScriptSpec> huntingSpecs() {
         return List.of(

@@ -38,8 +38,9 @@ class DemandSafetyChainScenarioTests {
     void case15_TrappedInWater_RescueBlocksRaisedAndBridgeWaitsForPlanks() {
         GraphWorld world = pair(stageTwo());
         world.with("oak_log", 0).with("oak_planks", 0).with("cobblestone", 0);
-        GraphFacts facts = facts(
-                named(spirit("spirit-1", 20, 20, true, false, "water", List.of(), List.of()), spirit("spirit-2")));
+        GraphFacts facts = facts(named(
+                spirit(new CrossScene.SpiritSpec("spirit-1", 20, 20, true, false, "water", List.of(), List.of())),
+                spirit("spirit-2")));
         GraphPlan plan = plan(world, facts);
 
         GraphPlan.Task bridge = task(plan, "bridge");

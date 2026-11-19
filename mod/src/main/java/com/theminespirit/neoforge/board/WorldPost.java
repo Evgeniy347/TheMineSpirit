@@ -33,11 +33,11 @@ final class WorldPost {
     static final String BACKFILL_PREFIX = "world:backfill:";
     static final List<String> OPEN_PREFIXES =
             List.of(BACKFILL_PREFIX, "world:trace:", PlanBreachPost.PREFIX, AccessPost.PREFIX, AccessPost.CHEST_PREFIX);
+    static final int BATCH = 8;
     private static final String REPAIR = REPAIR_NODE;
     private static final Comparator<BlockCoord> ORDER = Comparator.comparingInt(BlockCoord::y)
             .thenComparingInt(BlockCoord::x)
             .thenComparingInt(BlockCoord::z);
-    static final int BATCH = 8;
     private static final Set<BlockCoord> PLANNED_SKIPPED = ConcurrentHashMap.newKeySet();
     private static final Logger LOGGER = LogUtils.getLogger();
 

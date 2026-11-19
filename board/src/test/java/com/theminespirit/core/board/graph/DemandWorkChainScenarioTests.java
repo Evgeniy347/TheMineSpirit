@@ -247,7 +247,8 @@ class DemandWorkChainScenarioTests {
     @Test
     void case33_NoStairsOutOfPit_PlanksAndStoneRaised() {
         GraphWorld world = GraphWorld.settled().with("oak_planks", 0).with("cobblestone", 0);
-        GraphFacts facts = facts(named(spirit("spirit-1", 20, 20, true, false, "pit", List.of(), List.of())));
+        GraphFacts facts = facts(
+                named(spirit(new CrossScene.SpiritSpec("spirit-1", 20, 20, true, false, "pit", List.of(), List.of()))));
         GraphPlan plan = plan(world, facts);
 
         assertTrue(ids(plan).contains("pillar"), "Из ямы без ступеней поднимаются столбом: " + ids(plan));

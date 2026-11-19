@@ -88,7 +88,11 @@ final class TeamDefenseLineCases {
                         "S4",
                         "STAY",
                         "S5",
-                        "STAY"),
+                        "STAY"));
+    }
+
+    static List<TeamDefenseScenarios.Case> lineWoundedCases() {
+        return List.of(
                 caseOf(
                         "L06",
                         "4 слева у раненых и 5 справа: помощь идёт на оба края, средняя пара остаётся",

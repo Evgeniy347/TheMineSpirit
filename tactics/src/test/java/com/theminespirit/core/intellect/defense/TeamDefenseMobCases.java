@@ -88,7 +88,11 @@ final class TeamDefenseMobCases {
                         "S2",
                         "STAY",
                         "S3",
-                        "STAY"),
+                        "STAY"));
+    }
+
+    static List<TeamDefenseScenarios.Case> mobSpiderCases() {
+        return List.of(
                 stanceCase(
                         "M07",
                         "4 зомби: базовая угроза, пара держит сама",
@@ -138,7 +142,11 @@ final class TeamDefenseMobCases {
                         "S3",
                         "REINFORCE",
                         "S4",
-                        "STAY"),
+                        "STAY"));
+    }
+
+    static List<TeamDefenseScenarios.Case> mobStanceCases() {
+        return List.of(
                 stanceCase(
                         "M11",
                         "зомби и крипер в одном секторе: мечник сперва бьёт зомби, крипер — забота лучника",
@@ -210,7 +218,11 @@ final class TeamDefenseMobCases {
                         List.of(zombies(3, 0, -100), TeamDefenseScenarios.skeletons(3, 10, -100)),
                         CombatStance.WITHDRAW,
                         "S1",
-                        "RETREAT"),
+                        "RETREAT"));
+    }
+
+    static List<TeamDefenseScenarios.Case> mobPotionCases() {
+        return List.of(
                 caseOf(
                         "M20",
                         "8 криперов слева и 4 скелета справа: сильнейший край получает две пары, слабый одну",

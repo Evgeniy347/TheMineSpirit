@@ -25,7 +25,7 @@ final class Leftovers {
         if (target.leveling() != null) {
             String raw = target.leveling().block();
             String block = raw.contains(":") ? raw : MINECRAFT + raw;
-            if (!block.equals(MINECRAFT + PlotLeveling.DEFAULT_BLOCK) && !items.contains(block)) {
+            if (!(MINECRAFT + PlotLeveling.DEFAULT_BLOCK).equals(block) && !items.contains(block)) {
                 items.add(block);
             }
         }

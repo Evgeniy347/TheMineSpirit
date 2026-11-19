@@ -6,11 +6,11 @@ import com.theminespirit.core.perception.MemoryType;
 import java.util.List;
 
 final class SenseScriptSpecs {
-    private SenseScriptSpecs() {}
-
     private static final String RADIUS = "radius";
     private static final String FILTER = "filter";
     private static final String SPECIES = "species";
+
+    private SenseScriptSpecs() {}
 
     static List<ScriptSpec> perceptionSpecs() {
         return List.of(

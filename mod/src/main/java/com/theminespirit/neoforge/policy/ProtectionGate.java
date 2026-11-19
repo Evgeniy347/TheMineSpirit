@@ -1,27 +1,20 @@
 package com.theminespirit.neoforge.policy;
 
-import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.BodyFlags;
-import com.theminespirit.core.policy.BreakVeto;
 import com.theminespirit.core.policy.LocalSurroundings;
 import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.policy.PortalPolicy;
 import com.theminespirit.core.policy.SelfRescue;
-import com.theminespirit.core.policy.SettlementBreak;
 import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.policy.ZonePolicy;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.PlanBuilding;
 import com.theminespirit.core.town.PlotProtection;
-import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.BuildPlanOwner;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
-import com.theminespirit.neoforge.board.PlotBreakLog;
-import com.theminespirit.neoforge.board.PlotCellStructure;
-import java.util.Collections;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -31,9 +24,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
 public final class ProtectionGate {
-    private static final BlockProtection PROTECTION =
-            DataTables.INSTANCE.protection().current();
-    private static final String AIR_ID = "minecraft:air";
+    static final BlockProtection PROTECTION = DataTables.INSTANCE.protection().current();
+    static final String AIR_ID = "minecraft:air";
 
     private final SpiritEntity spirit;
     private final boolean journal;
@@ -136,88 +128,24 @@ public final class ProtectionGate {
             PlanBuilding ownBuilding,
             PlotProtection.Action action,
             PlotProtection.Ground ground) {
+        return new ProtectionDecide(this)
+                .decide(new ProtectionDecide.Request(pos, state, tended, demolish, ownBuilding, action, ground));
+    }
+
+    SpiritEntity spirit() {
+        return spirit;
+    }
+
+    boolean journaling() {
+        return journal;
+    }
+
+    ProtectionNeighbours neighbours() {
+        return neighbours;
+    }
+
+    void counted() {
         checks++;
-        BlockCoord coord = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
-        BlockProtection.Decision outside = checkTravel(coord);
-        if (outside instanceof BlockProtection.Refused) {
-            return outside;
-        }
-        Optional<String> carried = OtherSpiritSupport.carried(spirit, pos);
-        if (carried.isPresent()) {
-            return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, carried.orElseThrow());
-        }
-        Level level = spirit.level();
-        if (!tended && OrchardTrees.treePart(state) && OrchardTrees.planned(level, coord)) {
-            return new BlockProtection.Refused(
-                    PolicyId.PROTECTED_ZONE,
-                    "в " + pos.toShortString() + " дерево или саженец сада плана: сад — часть плана, его не снимают "
-                            + "снос, расчистка, выравнивание и фоновая рубка — только задание сада");
-        }
-        String dimension = level.dimension().location().toString();
-        boolean inProtectedZone = PolicyConfig.zones().contains(dimension, coord);
-        boolean unprotectArea = level instanceof ServerLevel server
-                && UnprotectService.of(server.getServer()).covers(dimension, coord, System.currentTimeMillis());
-        StageSite site = PolicyExcavation.site(level);
-        PlotProtection.Ground effective = ground;
-        if (site != null
-                && tended
-                && site.protectionBuilding(coord.x(), coord.y(), coord.z()) == PlanBuilding.ORCHARD) {
-            effective = PlotProtection.Ground.ORCHARD_CARE;
-        }
-        if (unprotectArea) {
-            effective = PlotProtection.Ground.PLAYER_COMMAND;
-        }
-        boolean structure = level instanceof ServerLevel server && PlotCellStructure.isStructure(server, pos);
-        PlotProtection.Decision plot = PlotProtection.check(site, coord, action, effective, ownBuilding, structure);
-        if (plot instanceof PlotProtection.Refused refused) {
-            if (journal && level instanceof ServerLevel server) {
-                PlotBreakLog.refused(server, pos, spirit, action.name(), effective, refused.reason());
-            }
-            return new BlockProtection.Refused(PolicyId.PROTECTED_BLOCKS, refused.reason());
-        }
-        boolean planCell = plot instanceof PlotProtection.Allowed allowed && allowed.building() != PlanBuilding.NONE;
-        BlockProtection.Decision decision;
-        if (demolish
-                && !inProtectedZone
-                && level instanceof ServerLevel server
-                && PolicyExcavation.inFenceStrip(server, coord, blockId(state))) {
-            decision = new BlockProtection.Allowed();
-        } else if (planCell) {
-            decision = new BlockProtection.Allowed();
-        } else if (tended) {
-            decision = PROTECTION.check(
-                    blockId(state),
-                    Collections.nCopies(BlockProtection.NEIGHBOUR_COUNT, AIR_ID),
-                    new BlockProtection.Placement(false, inProtectedZone, unprotectArea));
-        } else {
-            PlotMarks.Marks marks = PlotMarks.of(level, pos, coord);
-            SettlementBreak.Origin origin = marks.placedByPlayer()
-                    ? SettlementBreak.Origin.PLAYER
-                    : marks.spiritMarked() ? SettlementBreak.Origin.SPIRIT : SettlementBreak.Origin.UNKNOWN;
-            decision = SettlementBreak.decide(
-                    PROTECTION,
-                    new SettlementBreak.Facts(
-                            origin,
-                            marks.onPlot(),
-                            false,
-                            blockId(state),
-                            inProtectedZone,
-                            unprotectArea,
-                            PlanBuilding.NONE,
-                            ownBuilding),
-                    demolish ? SettlementBreak.Intent.DEMOLISH : SettlementBreak.Intent.BREAK,
-                    () -> neighbours.ids(level, pos));
-        }
-        if (decision instanceof BlockProtection.Refused) {
-            return decision;
-        }
-        BlockPos feet = spirit.blockPosition();
-        BreakSafety veto = BreakVeto.checkBelowFeet(
-                coord, new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), new LevelSafetyView(level));
-        if (veto instanceof BreakSafety.Unsafe unsafe) {
-            return new BlockProtection.Refused(PolicyId.DROP, unsafe.reason());
-        }
-        return decision;
     }
 
     public BlockProtection.Decision checkPlace(BlockPos pos) {

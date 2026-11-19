@@ -100,7 +100,7 @@ final class SquadOrders {
                 reason(decision, squadStance, cluster));
     }
 
-    static SquadOrder reinforce(
+    record ReinforceRequest(
             Point center,
             DefenseSquad squad,
             ThreatCluster cluster,
@@ -108,7 +108,17 @@ final class SquadOrders {
             Optional<String> local,
             DefenseProfile profile,
             DefenseWeights weights,
-            List<MemberOrder> members) {
+            List<MemberOrder> members) {}
+
+    static SquadOrder reinforce(ReinforceRequest request) {
+        Point center = request.center();
+        DefenseSquad squad = request.squad();
+        ThreatCluster cluster = request.cluster();
+        Point post = request.post();
+        Optional<String> local = request.local();
+        DefenseProfile profile = request.profile();
+        DefenseWeights weights = request.weights();
+        List<MemberOrder> members = request.members();
         Map<UUID, CombatStance> stances = new LinkedHashMap<>();
         Map<UUID, DefensePotion> potions = new LinkedHashMap<>();
         DefenseSquad target = new DefenseSquad("цель", squad.members());

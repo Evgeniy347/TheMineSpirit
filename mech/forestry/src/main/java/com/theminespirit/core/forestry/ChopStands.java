@@ -30,6 +30,7 @@ public final class ChopStands {
         }
     }
 
+    @FunctionalInterface
     public interface View {
         boolean standable(BlockCoord feet);
 

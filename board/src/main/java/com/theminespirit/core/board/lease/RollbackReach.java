@@ -23,6 +23,7 @@ public final class RollbackReach {
         }
     }
 
+    @FunctionalInterface
     public interface Ground {
         int NO_GROUND = Integer.MIN_VALUE;
 

@@ -19,11 +19,13 @@ import com.theminespirit.neoforge.crafting.RecipeKnowledge;
 import com.theminespirit.neoforge.inventory.InventoryTables;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Items;
 import org.slf4j.Logger;
@@ -45,62 +47,93 @@ final class TransferBuildDesk {
         if (target.isEmpty()) {
             return false;
         }
-        Map<String, Integer> need;
-        try {
-            TaskNode plan = TicketPlans.plan(build.boardCase(), build.level(), target.orElseThrow());
-            need = BuildRemainder.left(
-                    level, build.boardCase(), plan, CaseMaterials.need(plan, FirstStepsRunner.materialSource(level)));
-        } catch (RuntimeException failure) {
-            LOGGER.warn("Материалы стройки {} для передачи не посчитаны: {}", build.id(), failure.getMessage());
+        Optional<Map<String, Integer>> computed = buildNeed(level, build, target.orElseThrow());
+        if (computed.isEmpty()) {
             return false;
         }
-        Map<String, Integer> wood = new HashMap<>();
-        need.forEach((item, count) -> {
-            if (!OwnWood.species(item).isEmpty() || OwnWood.stick(item)) {
-                wood.put(item, count);
-            }
-        });
         BlockCoord yard = SettlementPlotStore.liveSite(level)
                 .map(site -> site.workYard())
                 .orElseGet(() -> builder.home().orElseGet(() -> TransferStockDesk.at(builder)));
         Map<String, Integer> pooled = TransferStockDesk.hasSettlementChest(level, yard)
                 ? TransferStockDesk.chestStock(level, service, yard, build.id())
                 : Map.of();
-        if (!wood.isEmpty() && (ownWoodCovers(builder, wood) || pooledWoodCovers(builder, wood, pooled))) {
-            need = new HashMap<>(need);
-            need.keySet().removeAll(wood.keySet());
+        List<Ingredient> materials = materials(trimmed(computed.orElseThrow(), builder, pooled));
+        if (materials.isEmpty()) {
+            return false;
         }
-        if (need.containsKey(DIRT) || need.containsKey("minecraft:" + DIRT)) {
-            need = new HashMap<>(need);
-            need.remove(DIRT);
-            need.remove("minecraft:" + DIRT);
+        List<TransferOrder> orders = orders(level, spirits, build, builder, materials);
+        if (TransferWatch.submitOrders(service, spirits, build, orders, level.getGameTime())) {
+            return true;
+        }
+        return TransferCarriers.awaitsDelivery(service.board(), build.id());
+    }
+
+    private static Optional<Map<String, Integer>> buildNeed(ServerLevel level, BoardTicket build, TicketTarget target) {
+        try {
+            TaskNode plan = TicketPlans.plan(build.boardCase(), build.level(), target);
+            return Optional.of(BuildRemainder.left(
+                    level, build.boardCase(), plan, CaseMaterials.need(plan, FirstStepsRunner.materialSource(level))));
+        } catch (RuntimeException failure) {
+            LOGGER.warn("Материалы стройки {} для передачи не посчитаны: {}", build.id(), failure.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private static Map<String, Integer> trimmed(
+            Map<String, Integer> need, SpiritEntity builder, Map<String, Integer> pooled) {
+        Map<String, Integer> left = need;
+        Map<String, Integer> wood = new HashMap<>();
+        need.forEach((item, count) -> {
+            if (!OwnWood.species(item).isEmpty() || OwnWood.stick(item)) {
+                wood.put(item, count);
+            }
+        });
+        if (!wood.isEmpty() && (ownWoodCovers(builder, wood) || pooledWoodCovers(builder, wood, pooled))) {
+            left = without(left, wood.keySet());
+        }
+        if (left.containsKey(DIRT) || left.containsKey("minecraft:" + DIRT)) {
+            left = without(left, Set.of(DIRT, "minecraft:" + DIRT));
         }
         if (!pooled.isEmpty()) {
-            Map<String, Integer> missing = new HashMap<>(need);
+            Map<String, Integer> missing = new HashMap<>(left);
             missing.entrySet().removeIf(entry -> pooledCount(pooled, bareId(entry.getKey())) >= entry.getValue());
-            need = missing;
+            left = missing;
         }
-        int torches = need.getOrDefault("torch", 0) + need.getOrDefault("minecraft:torch", 0);
+        int torches = left.getOrDefault("torch", 0) + left.getOrDefault("minecraft:torch", 0);
         int coal = builder.getInventory().countItem(Items.COAL)
                 + builder.getInventory().countItem(Items.CHARCOAL)
                 + pooledCount(pooled, "coal")
                 + pooledCount(pooled, "charcoal")
                 + (pooledCount(pooled, "torch") + TORCHES_PER_COAL - 1) / TORCHES_PER_COAL;
         if (torches > 0 && coal * TORCHES_PER_COAL >= torches) {
-            need = new HashMap<>(need);
-            need.remove("torch");
-            need.remove("minecraft:torch");
+            left = without(left, Set.of("torch", "minecraft:torch"));
         }
+        return left;
+    }
+
+    private static Map<String, Integer> without(Map<String, Integer> need, Collection<String> removed) {
+        Map<String, Integer> left = new HashMap<>(need);
+        left.keySet().removeAll(removed);
+        return left;
+    }
+
+    private static List<Ingredient> materials(Map<String, Integer> need) {
         List<Ingredient> materials = new ArrayList<>();
         need.forEach((item, count) -> materials.add(new Ingredient(ItemIds.normalize(item), count)));
-        if (materials.isEmpty()) {
-            return false;
-        }
+        return materials;
+    }
+
+    private static List<TransferOrder> orders(
+            ServerLevel level,
+            List<SpiritEntity> spirits,
+            BoardTicket build,
+            SpiritEntity builder,
+            List<Ingredient> materials) {
         StackMapper mapper = new StackMapper();
         RecipeKnowledge recipes = RecipeKnowledge.of(level);
         BlockCoord home = builder.home().orElseGet(() -> TransferStockDesk.at(builder));
         boolean chest = TransferStockDesk.hasSettlementChest(level, home);
-        List<TransferOrder> orders = TransferPlanner.planForCraft(new TransferPlanner.CraftRequest(
+        return TransferPlanner.planForCraft(new TransferPlanner.CraftRequest(
                 build.boardCase().name().toLowerCase(Locale.ROOT),
                 builder.getUUID(),
                 TransferStockDesk.at(builder),
@@ -119,10 +152,6 @@ final class TransferBuildDesk {
                 InventoryTables.values(),
                 BoardTuning.transferRadiusBlocks(),
                 BoardTuning.transferMaxCount()));
-        if (TransferWatch.submitOrders(service, spirits, build, orders, level.getGameTime())) {
-            return true;
-        }
-        return TransferCarriers.awaitsDelivery(service.board(), build.id());
     }
 
     static boolean ownWoodCovers(SpiritEntity crafter, Map<String, Integer> need) {

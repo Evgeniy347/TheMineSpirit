@@ -31,6 +31,17 @@ final class GraphNeeds {
 
     private GraphNeeds() {}
 
+    record NeedRequest(
+            Board board,
+            BoardTicket ticket,
+            @Nullable TicketTarget target,
+            @Nullable String holder,
+            Collection<String> items,
+            StockView stock,
+            long now,
+            @Nullable ServerLevel level,
+            @Nullable FailureFact fact) {}
+
     static GraphBlock.@Nullable Need of(
             Board board,
             BoardTicket ticket,
@@ -41,42 +52,20 @@ final class GraphNeeds {
         ServerLevel level = spirit.level() instanceof ServerLevel server ? server : null;
         FailureFact fact =
                 spirit.brainIfPresent().flatMap(SpiritBrain::failureFact).orElse(null);
-        return of(board, ticket, target, spirit.getUUID().toString(), SpiritItems.ids(spirit), stock, now, level, fact);
+        return of(new NeedRequest(
+                board, ticket, target, spirit.getUUID().toString(), SpiritItems.ids(spirit), stock, now, level, fact));
     }
 
-    static GraphBlock.@Nullable Need of(
-            Board board,
-            BoardTicket ticket,
-            @Nullable TicketTarget target,
-            @Nullable String holder,
-            Collection<String> items,
-            StockView stock,
-            long now) {
-        return of(board, ticket, target, holder, items, stock, now, null, null);
-    }
-
-    static GraphBlock.@Nullable Need of(
-            Board board,
-            BoardTicket ticket,
-            @Nullable TicketTarget target,
-            @Nullable String holder,
-            Collection<String> items,
-            StockView stock,
-            long now,
-            FailureFact fact) {
-        return of(board, ticket, target, holder, items, stock, now, null, fact);
-    }
-
-    private static GraphBlock.@Nullable Need of(
-            Board board,
-            BoardTicket ticket,
-            @Nullable TicketTarget target,
-            @Nullable String holder,
-            Collection<String> items,
-            StockView stock,
-            long now,
-            @Nullable ServerLevel level,
-            @Nullable FailureFact fact) {
+    static GraphBlock.@Nullable Need of(NeedRequest request) {
+        Board board = request.board();
+        BoardTicket ticket = request.ticket();
+        @Nullable TicketTarget target = request.target();
+        @Nullable String holder = request.holder();
+        Collection<String> items = request.items();
+        StockView stock = request.stock();
+        long now = request.now();
+        @Nullable ServerLevel level = request.level();
+        @Nullable FailureFact fact = request.fact();
         if (holder != null && board.stuck().isStuck(UUID.fromString(holder), now)) {
             return new GraphBlock.Path(point(target));
         }

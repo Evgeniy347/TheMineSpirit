@@ -1,18 +1,13 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.ExpeditionRule;
 import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.MaterialSource;
-import com.theminespirit.core.board.StageCatalog;
-import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.ToolFate;
 import com.theminespirit.core.board.ToolsConfig;
-import com.theminespirit.core.board.WarehouseApproval;
-import com.theminespirit.core.board.WarehouseRules;
 import com.theminespirit.core.board.graph.ChestReach;
 import com.theminespirit.core.board.graph.GraphBuildingMaterials;
 import com.theminespirit.core.board.graph.GraphFacts;
@@ -22,8 +17,6 @@ import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;
-import com.theminespirit.core.board.route.RouteMarker;
-import com.theminespirit.core.board.route.RoutePlan;
 import com.theminespirit.core.intellect.StockCatalog;
 import com.theminespirit.core.log.Perf;
 import com.theminespirit.core.reload.DataTables;
@@ -70,15 +63,11 @@ final class GraphInputs {
         PHASES.clear();
         int stage = service.board().ledger().stage();
         long started = System.nanoTime();
-        Map<String, Built> buildings = buildings(level, service, service.board().ledger(), scan, graph);
+        Map<String, Built> buildings = GraphBuildInputs.of(level, service, scan, graph);
         mark("buildings", started);
         Optional<TownPlan> town = SettlementPlotStore.get(level).town();
         LifeInputs.Input life = LifeInputs.of(level, spirits, around.events());
-        Set<String> events = new LinkedHashSet<>(life.events());
-        if (ExpeditionRule.ready(buildings.get("mine"), ExpeditionGate.ready(stock, level))) {
-            events.add("expedition_ready");
-        }
-        SettlementEvents.add(events, level, service, scan);
+        Set<String> events = events(level, service, scan, stock, buildings, life);
         started = System.nanoTime();
         GraphFacts baseFacts = GraphFactInputs.of(service, spirits, graph, buildings, scan, town, around);
         mark("factBase", started);
@@ -102,12 +91,7 @@ final class GraphInputs {
         GraphFacts facts = DigInputs.apply(level, spirits, world);
         mark("factDig", started);
         GraphStockNote.log(facts, spirits);
-        List<GraphBlock> blocks = new ArrayList<>(service.board().failures().graphBlocks());
-        blocks.addAll(service.supply().shortages());
-        blocks.addAll(service.sources
-                .graphFailures()
-                .pathBlocks(service.board().now(), graph.costs().choice().failureHalfLife(), (int)
-                        Math.ceil(graph.costs().choice().failureTargets())));
+        List<GraphBlock> blocks = blocks(service, graph);
         started = System.nanoTime();
         GraphState state = new GraphState(
                         GraphNames.stock(
@@ -126,7 +110,43 @@ final class GraphInputs {
                 .withFacts(
                         GraphStoreInputs.of(facts, level, graph), graph.costs().life());
         mark("base", started);
-        started = System.nanoTime();
+        return layers(state, level, service, spirits, scan, graph, around).withBlocks(blocks);
+    }
+
+    private static Set<String> events(
+            ServerLevel level,
+            BoardService service,
+            FirstStepsRunner.StageScan scan,
+            StockView stock,
+            Map<String, Built> buildings,
+            LifeInputs.Input life) {
+        Set<String> events = new LinkedHashSet<>(life.events());
+        if (ExpeditionRule.ready(buildings.get("mine"), ExpeditionGate.ready(stock, level))) {
+            events.add("expedition_ready");
+        }
+        SettlementEvents.add(events, level, service, scan);
+        return events;
+    }
+
+    private static List<GraphBlock> blocks(BoardService service, SupplyGraph graph) {
+        List<GraphBlock> blocks = new ArrayList<>(service.board().failures().graphBlocks());
+        blocks.addAll(service.supply().shortages());
+        blocks.addAll(service.sources
+                .graphFailures()
+                .pathBlocks(service.board().now(), graph.costs().choice().failureHalfLife(), (int)
+                        Math.ceil(graph.costs().choice().failureTargets())));
+        return blocks;
+    }
+
+    private static GraphState layers(
+            GraphState state,
+            ServerLevel level,
+            BoardService service,
+            List<SpiritEntity> spirits,
+            FirstStepsRunner.StageScan scan,
+            SupplyGraph graph,
+            GraphSurroundings.Around around) {
+        long started = System.nanoTime();
         GraphState more3 = More3Inputs.apply(
                 More2Inputs.apply(
                         MoreInputs.apply(
@@ -154,7 +174,7 @@ final class GraphInputs {
         GraphState more7 = More7Inputs.apply(more5, level, graph, scan);
         mark("more7", started);
         started = System.nanoTime();
-        GraphState done = More6Inputs.apply(more7, level, around, scan).withBlocks(blocks);
+        GraphState done = More6Inputs.apply(more7, level, around, scan);
         mark("more6", started);
         return done;
     }
@@ -189,59 +209,6 @@ final class GraphInputs {
             }
         }
         return Optional.of(itemId);
-    }
-
-    private static Map<String, Built> buildings(
-            ServerLevel level,
-            BoardService service,
-            BoardLedger ledger,
-            FirstStepsRunner.StageScan scan,
-            SupplyGraph graph) {
-        Map<String, Built> buildings = new HashMap<>(StageBuilt.of(scan.facts()));
-        RoutePlan routes = RouteStore.get(level).plan();
-        for (RouteMarker marker : routes.markers().values()) {
-            buildings.put(marker.resource().pathBuilding(), marker.pathBuilt() ? Built.BUILT : Built.PLANNED);
-            if (marker.routeBuilt()) {
-                buildings.put(marker.resource().routeBuilding(), Built.BUILT);
-            } else if (marker.pathBuilt()) {
-                buildings.put(marker.resource().routeBuilding(), Built.PLANNED);
-            }
-        }
-        Optional<TownPlan> town = SettlementPlotStore.get(level).town();
-        buildings.putAll(planBuilt(level, service, scan, town));
-        PlanStatesInputs.apply(level, scan, town, ledger, graph, buildings);
-        FarmBuilt.apply(service, level, scan, ledger, graph, town, buildings);
-        WarehouseApproval.apply(
-                buildings,
-                WarehouseRules.builtLevel(ledger),
-                WarehouseOrderStore.get(level).order());
-        return buildings;
-    }
-
-    private static Map<String, Built> planBuilt(
-            ServerLevel level, BoardService service, FirstStepsRunner.StageScan scan, Optional<TownPlan> town) {
-        BoardLedger ledger = service.board().ledger();
-        Map<String, Built> states = new HashMap<>();
-        StageRules rules = DataTables.INSTANCE.stages().current();
-        int stage = service.board().ledger().stage();
-        if (stage > rules.stages().size()) {
-            return states;
-        }
-        for (String id : rules.stages().get(stage - 1).plan()) {
-            Optional<StageCatalog.Entry> entry = StageCatalog.entry(id);
-            if (entry.isEmpty() || entry.orElseThrow().boardCase() != BoardCase.BUILD_PLACED) {
-                continue;
-            }
-            Optional<Boolean> world = town.isPresent()
-                    ? PlanStatesInputs.worldBuilt(level, scan, town.orElseThrow(), entry.orElseThrow())
-                    : Optional.empty();
-            boolean built = ledger.hasPlan(id, 1) || world.orElse(false);
-            if (world.orElse(false)) {
-                ledger.notePlan(id, 1);
-            }
-            states.put(id, built ? Built.BUILT : Built.PLANNED);
-        }
-        return states;
     }
 
     private static Map<String, Map<String, Integer>> materials(

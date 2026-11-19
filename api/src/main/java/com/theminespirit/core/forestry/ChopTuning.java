@@ -15,29 +15,30 @@ public final class ChopTuning {
     public static final int COLLECT_RADIUS = 6;
     public static final int MAX_SEARCH_RADIUS = 256;
     public static final int GATHER_RADIUS_MAX = 32;
+    private static final String RADIUS = "radius=";
 
     private ChopTuning() {}
 
     public static int maxDistance(int requestedRadius) {
         if (requestedRadius < 1) {
-            throw new IllegalArgumentException("radius=" + requestedRadius
-                    + ": предел поиска деревьев меньше единицы, дерево не нашлось бы никогда");
+            throw new IllegalArgumentException(
+                    RADIUS + requestedRadius + ": предел поиска деревьев меньше единицы, дерево не нашлось бы никогда");
         }
         return Math.min(requestedRadius, MAX_SEARCH_RADIUS);
     }
 
     public static int gatherDistance(int requestedRadius) {
         if (requestedRadius < 1) {
-            throw new IllegalArgumentException("radius=" + requestedRadius
-                    + ": радиус сбора меньше единицы, ближний источник не нашёлся бы никогда");
+            throw new IllegalArgumentException(
+                    RADIUS + requestedRadius + ": радиус сбора меньше единицы, ближний источник не нашёлся бы никогда");
         }
         return Math.min(requestedRadius, GATHER_RADIUS_MAX);
     }
 
     public static int extendTo(int requestedRadius, int nearestFar) {
         if (requestedRadius < 1) {
-            throw new IllegalArgumentException("radius=" + requestedRadius
-                    + ": предел поиска деревьев меньше единицы, дерево не нашлось бы никогда");
+            throw new IllegalArgumentException(
+                    RADIUS + requestedRadius + ": предел поиска деревьев меньше единицы, дерево не нашлось бы никогда");
         }
         if (nearestFar > requestedRadius) {
             return Math.min(nearestFar, MAX_SEARCH_RADIUS);
@@ -47,7 +48,7 @@ public final class ChopTuning {
 
     public static int scanRadius(int requestedRadius, int maxDistance) {
         if (requestedRadius < 1 || maxDistance < 1) {
-            throw new IllegalArgumentException("radius=" + requestedRadius + ", предел " + maxDistance
+            throw new IllegalArgumentException(RADIUS + requestedRadius + ", предел " + maxDistance
                     + ": радиус поиска меньше единицы, дерево не нашлось бы никогда");
         }
         return Math.min(Math.max(requestedRadius, maxDistance), MAX_SEARCH_RADIUS);

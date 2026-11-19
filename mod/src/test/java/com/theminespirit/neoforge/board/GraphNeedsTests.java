@@ -20,24 +20,34 @@ import com.theminespirit.core.planner.Ingredient;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 class GraphNeedsTests {
     private static final BlockCoord SITE = new BlockCoord(10, 64, 20);
     private static final String HOLDER = "00000000-0000-0000-0000-000000000001";
+    private static final MaterialSource SOURCE = new MaterialSource() {
+        @Override
+        public int outputCount(String item) {
+            return 1;
+        }
+
+        @Override
+        public List<Ingredient> ingredientsFor(String item) {
+            return List.of();
+        }
+
+        @Override
+        public Map<String, Integer> schematicBlocks(String file) {
+            return "fence".equals(file) ? Map.of("minecraft:oak_fence", 32) : Map.of();
+        }
+    };
 
     @Test
     void supplyGather_OwnItemOnly_NeverBlocksOnItself() {
         BoardTicket ticket = ticket("supply_gather:jungle_log", BoardCase.GATHER_MATERIALS, List.of());
 
-        GraphBlock.Need need = GraphNeeds.of(
-                new Board(() -> 0L),
-                ticket,
-                TicketTarget.at(SITE).withSupply("jungle_log", 4),
-                HOLDER,
-                List.of(),
-                new StockView(Map.of()),
-                0);
+        GraphBlock.Need need = ask(ticket, TicketTarget.at(SITE).withSupply("jungle_log", 4), List.of(), null);
 
         assertNull(
                 need,
@@ -49,14 +59,7 @@ class GraphNeedsTests {
     void supplyGather_WithAxe_NeedsToolNotDepositPoint() {
         BoardTicket ticket = ticket("supply_gather:jungle_log", BoardCase.GATHER_MATERIALS, List.of("tool=axe"));
 
-        GraphBlock.Need need = GraphNeeds.of(
-                new Board(() -> 0L),
-                ticket,
-                TicketTarget.at(SITE).withSupply("jungle_log", 4),
-                HOLDER,
-                List.of(),
-                new StockView(Map.of()),
-                0);
+        GraphBlock.Need need = ask(ticket, TicketTarget.at(SITE).withSupply("jungle_log", 4), List.of(), null);
 
         GraphBlock.Tool tool = assertInstanceOf(GraphBlock.Tool.class, need, "Нет топора — нужда в топоре");
         assertEquals("axe", tool.kind(), "Нужда называет инструмент");
@@ -67,8 +70,7 @@ class GraphNeedsTests {
     void graphGather_Failure_NeedsPathAtWorkSite() {
         BoardTicket ticket = ticket("graph:chop_jungle_log", BoardCase.GATHER_MATERIALS, List.of());
 
-        GraphBlock.Need need = GraphNeeds.of(
-                new Board(() -> 0L), ticket, TicketTarget.at(SITE), HOLDER, List.of(), new StockView(Map.of()), 0);
+        GraphBlock.Need need = ask(ticket, TicketTarget.at(SITE), List.of(), null);
 
         assertEquals(
                 new GraphBlock.Path("10,64,20"),
@@ -80,15 +82,8 @@ class GraphNeedsTests {
     void graphGather_NoTrees_BlocksOnWorldSpeciesTag() {
         BoardTicket ticket = ticket("graph:chop_jungle_log", BoardCase.GATHER_MATERIALS, List.of());
 
-        GraphBlock.Need need = GraphNeeds.of(
-                new Board(() -> 0L),
-                ticket,
-                TicketTarget.at(SITE).withSupply("jungle_log", 4),
-                HOLDER,
-                List.of(),
-                new StockView(Map.of()),
-                0,
-                FailureFact.NO_TREES);
+        GraphBlock.Need need =
+                ask(ticket, TicketTarget.at(SITE).withSupply("jungle_log", 4), List.of(), FailureFact.NO_TREES);
 
         assertEquals(
                 new GraphBlock.World("tree:jungle"),
@@ -101,15 +96,8 @@ class GraphNeedsTests {
     void graphGather_Night_BlocksOnDaylight() {
         BoardTicket ticket = ticket("graph:chop_jungle_log", BoardCase.GATHER_MATERIALS, List.of());
 
-        GraphBlock.Need need = GraphNeeds.of(
-                new Board(() -> 0L),
-                ticket,
-                TicketTarget.at(SITE).withSupply("jungle_log", 4),
-                HOLDER,
-                List.of(),
-                new StockView(Map.of()),
-                0,
-                FailureFact.NIGHT);
+        GraphBlock.Need need =
+                ask(ticket, TicketTarget.at(SITE).withSupply("jungle_log", 4), List.of(), FailureFact.NIGHT);
 
         assertEquals(
                 new GraphBlock.World("time:day"),
@@ -122,15 +110,8 @@ class GraphNeedsTests {
     void undoLease_NoScaffoldMaterial_NeedsMaterialNotPath() {
         BoardTicket ticket = undo("graph:event:undo_lease:undo:lease-1#key");
 
-        GraphBlock.Need need = GraphNeeds.of(
-                new Board(() -> 0L),
-                ticket,
-                TicketTarget.at(SITE),
-                HOLDER,
-                List.of("minecraft:stone_pickaxe"),
-                new StockView(Map.of()),
-                0,
-                FailureFact.NO_MATERIAL);
+        GraphBlock.Need need =
+                ask(ticket, TicketTarget.at(SITE), List.of("minecraft:stone_pickaxe"), FailureFact.NO_MATERIAL);
 
         assertEquals(
                 new GraphBlock.Item("minecraft:dirt", 1),
@@ -143,15 +124,8 @@ class GraphNeedsTests {
     void undoLease_NoTool_NeedsPickaxeNotPath() {
         BoardTicket ticket = undo("graph:event:undo_lease:undo:lease-1#key");
 
-        GraphBlock.Need need = GraphNeeds.of(
-                new Board(() -> 0L),
-                ticket,
-                TicketTarget.at(SITE),
-                HOLDER,
-                List.of("minecraft:stone_pickaxe"),
-                new StockView(Map.of()),
-                0,
-                FailureFact.NO_TOOL);
+        GraphBlock.Need need =
+                ask(ticket, TicketTarget.at(SITE), List.of("minecraft:stone_pickaxe"), FailureFact.NO_TOOL);
 
         assertEquals(
                 new GraphBlock.Tool("_pickaxe", 0, HOLDER),
@@ -163,14 +137,7 @@ class GraphNeedsTests {
     void graphMake_EmptyStock_NeedsProducedItem() {
         BoardTicket ticket = ticket("graph:make:stick", BoardCase.GATHER_MATERIALS, List.of());
 
-        GraphBlock.Need need = GraphNeeds.of(
-                new Board(() -> 0L),
-                ticket,
-                TicketTarget.at(SITE).withSupply("stick", 4),
-                HOLDER,
-                List.of(),
-                new StockView(Map.of()),
-                0);
+        GraphBlock.Need need = ask(ticket, TicketTarget.at(SITE).withSupply("stick", 4), List.of(), null);
 
         assertEquals(
                 new GraphBlock.Item("stick", 4), need, "Неудачный крафт ждёт свой предмет: граф поднимет его цепочку");
@@ -201,22 +168,11 @@ class GraphNeedsTests {
                 "Полный запас закрывает вложенный план: лишняя нужда заперла бы задание навсегда");
     }
 
-    private static final MaterialSource SOURCE = new MaterialSource() {
-        @Override
-        public int outputCount(String item) {
-            return 1;
-        }
-
-        @Override
-        public List<Ingredient> ingredientsFor(String item) {
-            return List.of();
-        }
-
-        @Override
-        public Map<String, Integer> schematicBlocks(String file) {
-            return "fence".equals(file) ? Map.of("minecraft:oak_fence", 32) : Map.of();
-        }
-    };
+    private static GraphBlock.Need ask(
+            BoardTicket ticket, TicketTarget target, List<String> items, @Nullable FailureFact fact) {
+        return GraphNeeds.of(new GraphNeeds.NeedRequest(
+                new Board(() -> 0L), ticket, target, HOLDER, items, new StockView(Map.of()), 0, null, fact));
+    }
 
     private static BoardTicket ticket(String id, BoardCase boardCase, List<String> modifiers) {
         return new BoardTicket(

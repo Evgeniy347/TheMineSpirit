@@ -3,6 +3,7 @@ package com.theminespirit.core.building;
 import java.util.Objects;
 
 public final class PillarBase {
+    @FunctionalInterface
     public interface Column {
         boolean supported(int y);
     }

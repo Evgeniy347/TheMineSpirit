@@ -41,7 +41,11 @@ final class TeamDefenseCircleHelpCases {
                         "S2",
                         "ENGAGE",
                         "S3",
-                        "ENGAGE"),
+                        "ENGAGE"));
+    }
+
+    static List<TeamDefenseScenarios.Case> circleHelpRoamingCases() {
+        return List.of(
                 caseOf(
                         "C14",
                         "сбежались в одну точку, мобы с востока: отряд идёт к восточному сектору",

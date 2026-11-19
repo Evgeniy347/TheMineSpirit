@@ -68,9 +68,9 @@ public class ClearAreaSession {
     final boolean demolish;
     final ClearBlocked blocked;
     final TreeFelling felling;
+    ClearScaffoldWork scaffold;
     private final Map<State, Integer> phaseTicks = new EnumMap<>(State.class);
     private ClearAreaRun run;
-    ClearScaffoldWork scaffold;
 
     public ClearAreaSession(SpiritEntity spirit, BuildBox box) {
         this(spirit, box, false);

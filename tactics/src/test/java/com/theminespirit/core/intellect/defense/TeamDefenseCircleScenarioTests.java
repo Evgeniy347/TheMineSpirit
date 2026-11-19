@@ -25,13 +25,21 @@ class TeamDefenseCircleScenarioTests {
     private static final List<TeamDefenseScenarios.SquadSpec> RING_TWO = ring(STAGE_TWO, 8);
 
     @ParameterizedTest(name = "{0}")
-    @MethodSource("com.theminespirit.core.intellect.defense.TeamDefenseCircleCases#circleCases")
+    @MethodSource({
+        "com.theminespirit.core.intellect.defense.TeamDefenseCircleCases#circleCasesStageOne",
+        "com.theminespirit.core.intellect.defense.TeamDefenseCircleCases#circleCasesStageOneEdges",
+        "com.theminespirit.core.intellect.defense.TeamDefenseCircleCases#circleCasesStageTwo",
+        "com.theminespirit.core.intellect.defense.TeamDefenseCircleCases#circleCasesStageThree"
+    })
     void circle_Scenarios_MatchSectorPlan(TeamDefenseScenarios.Case scenario) {
         verify(scenario);
     }
 
     @ParameterizedTest(name = "{0}")
-    @MethodSource("com.theminespirit.core.intellect.defense.TeamDefenseCircleHelpCases#circleHelpCases")
+    @MethodSource({
+        "com.theminespirit.core.intellect.defense.TeamDefenseCircleHelpCases#circleHelpCases",
+        "com.theminespirit.core.intellect.defense.TeamDefenseCircleHelpCases#circleHelpRoamingCases"
+    })
     void circleHelp_Scenarios_MatchSectorPlan(TeamDefenseScenarios.Case scenario) {
         verify(scenario);
     }

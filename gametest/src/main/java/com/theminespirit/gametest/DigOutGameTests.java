@@ -6,7 +6,6 @@ import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardState;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
-import com.theminespirit.core.board.RescuePlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.lease.LeaseStatus;
 import com.theminespirit.core.observation.BlockCoord;
@@ -18,8 +17,6 @@ import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.board.BoardService;
 import com.theminespirit.neoforge.lease.LeaseData;
-import com.theminespirit.neoforge.lease.LeaseRun;
-import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import com.theminespirit.neoforge.policy.PlanBreachData;
 import com.theminespirit.neoforge.policy.RescueBreach;
 import java.util.ArrayList;
@@ -41,7 +38,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(ModIdentity.MOD_ID)
 @PrefixGameTestTemplate(false)
 public final class DigOutGameTests {
-    private static final int TOP = 12;
+    static final int TOP = 12;
     private static final int POCKET = TOP - 7;
     private static final BlockPos UNDER_CHEST = new BlockPos(2, TOP - 2, 2);
     private static final BlockPos WATER_POCKET = new BlockPos(6, POCKET, 2);
@@ -77,120 +74,68 @@ public final class DigOutGameTests {
         for (List<BlockPos> cells : pockets) {
             spirits.add(spawnInPocket(helper, board, cells, tickets, starts));
         }
-        PillarScene pillar = spawnOnOwnPillar(helper, board);
+        DigOutPillarScene.Pillar pillar = DigOutPillarScene.spawnOnOwnPillar(helper, board);
         assertBreachStore(helper);
         DigOutBudget budget = DigOutBudget.start(board);
         helper.onEachTick(budget::sample);
-        helper.succeedWhen(() -> {
-            for (int index = 0; index < spirits.size(); index++) {
-                SpiritEntity spirit = spirits.get(index);
-                String ticket = tickets.get(index);
-                int startY = starts.get(index);
-                BlockPos current = spirit.blockPosition();
-                helper.assertTrue(
-                        DigOutScript.open(helper.getLevel(), current) || current.getY() >= startY + 3,
-                        "замурованный дух обязан выбраться из кармана (INC-45): стоит в " + current + ", старт "
-                                + startY + ", задача "
-                                + spirit.currentTaskScript().orElse("-") + " "
-                                + spirit.taskStatus().orElse(null)
-                                + ", причина " + spirit.taskFailureReason().orElse("нет"));
-                helper.assertTrue(
-                        board.board().statusOf(ticket).orElse(null) == BoardStatus.DONE,
-                        "выход закрывается заданием доски, статус "
-                                + board.board().statusOf(ticket).orElse(null) + " у задания " + ticket);
-                helper.assertFalse(
-                        board.board()
-                                .stuck()
-                                .isStuck(spirit.getUUID(), board.board().now()),
-                        "выполненный выход снимает метку «не двигается» по факту, а не по тайм-ауту");
-                helper.assertTrue(
-                        helper.getBlockState(planks.get(index))
-                                .is(
-                                        planks.get(index).equals(UNDER_CHEST.above(2))
-                                                ? Blocks.CHEST
-                                                : Blocks.JUNGLE_PLANKS),
-                        "Разбор при выходе временный: сломанная доска плана обязана вернуться на место после "
-                                + "спасения, иначе в постройке остаётся дыра (observe25 B2); в клетке "
-                                + planks.get(index) + " сейчас " + helper.getBlockState(planks.get(index)));
-            }
+        PocketScene scene = new PocketScene(board, spirits, tickets, starts, planks);
+        helper.succeedWhen(() -> assertPocket(helper, scene, pillar, budget));
+    }
+
+    private record PocketScene(
+            BoardService board,
+            List<SpiritEntity> spirits,
+            List<String> tickets,
+            List<Integer> starts,
+            List<BlockPos> planks) {}
+
+    private static void assertPocket(
+            GameTestHelper helper, PocketScene scene, DigOutPillarScene.Pillar pillar, DigOutBudget budget) {
+        assertPocketsEscaped(helper, scene);
+        DigOutPillarScene.assertPillarGone(helper, scene.board(), pillar);
+        assertDigOutLeasesClosed(helper, scene.spirits());
+        DigOutBudget.assertWithin(helper, budget.maxMillis());
+        SpiritEntity walker = scene.spirits().get(0);
+        walker.getNavigation().moveTo(walker.getX() + 1, walker.getY(), walker.getZ(), 1.0);
+        helper.assertFalse(
+                walker.getNavigation().isDone(),
+                "соседняя клетка — настоящая цель шага: с точностью в блок дух считает её достигнутой и стоит");
+        scene.spirits().forEach(SpiritEntity::discard);
+        pillar.spirit().discard();
+        GameTestFixtures.finish(helper, 16);
+    }
+
+    private static void assertPocketsEscaped(GameTestHelper helper, PocketScene scene) {
+        BoardService board = scene.board();
+        List<BlockPos> planks = scene.planks();
+        for (int index = 0; index < scene.spirits().size(); index++) {
+            SpiritEntity spirit = scene.spirits().get(index);
+            String ticket = scene.tickets().get(index);
+            int startY = scene.starts().get(index);
+            BlockPos current = spirit.blockPosition();
             helper.assertTrue(
-                    pillar.spirit().getY() <= pillar.groundY() + 0.5,
-                    "дух на своём столбе обязан спуститься на землю, а не висеть на нём: стоит на "
-                            + pillar.spirit().blockPosition() + ", земля на " + pillar.groundY() + ", задача "
-                            + pillar.spirit().currentTaskScript().orElse("-") + " "
-                            + pillar.spirit().taskStatus().orElse(null) + ", причина "
-                            + pillar.spirit().taskFailureReason().orElse("нет"));
-            for (BlockPos cell : pillar.column()) {
-                helper.assertTrue(
-                        helper.getBlockState(cell).isAir(),
-                        "свой столб разобран до конца: в " + cell + " остался блок, и блоки не вернулись в работу");
-            }
+                    DigOutScript.open(helper.getLevel(), current) || current.getY() >= startY + 3,
+                    "замурованный дух обязан выбраться из кармана (INC-45): стоит в " + current + ", старт "
+                            + startY + ", задача "
+                            + spirit.currentTaskScript().orElse("-") + " "
+                            + spirit.taskStatus().orElse(null)
+                            + ", причина " + spirit.taskFailureReason().orElse("нет"));
             helper.assertTrue(
-                    LeaseData.get(helper.getLevel())
-                                    .book()
-                                    .require(pillar.leaseId())
-                                    .status()
-                            == LeaseStatus.DONE,
-                    "успешный разбор столба закрывает аренду подмостей DONE: иначе клетки остались бы в уборке "
-                            + "графа, а не вернулись в работу");
-            assertDigOutLeasesClosed(helper, spirits);
+                    board.board().statusOf(ticket).orElse(null) == BoardStatus.DONE,
+                    "выход закрывается заданием доски, статус "
+                            + board.board().statusOf(ticket).orElse(null) + " у задания " + ticket);
             helper.assertFalse(
                     board.board()
                             .stuck()
-                            .isStuck(pillar.spirit().getUUID(), board.board().now()),
-                    "выполненный спуск со столба снимает метку «не двигается» по факту, а не по тайм-ауту: "
-                            + "иначе дух навсегда выпадает из раздачи");
-            DigOutBudget.assertWithin(helper, budget.maxMillis());
-            SpiritEntity walker = spirits.get(0);
-            walker.getNavigation().moveTo(walker.getX() + 1, walker.getY(), walker.getZ(), 1.0);
-            helper.assertFalse(
-                    walker.getNavigation().isDone(),
-                    "соседняя клетка — настоящая цель шага: с точностью в блок дух считает её достигнутой и стоит");
-            spirits.forEach(SpiritEntity::discard);
-            pillar.spirit().discard();
-            GameTestFixtures.finish(helper, 16);
-        });
-    }
-
-    private record PillarScene(SpiritEntity spirit, List<BlockPos> column, int groundY, String leaseId) {}
-
-    private static PillarScene spawnOnOwnPillar(GameTestHelper helper, BoardService board) {
-        BlockPos base = new BlockPos(0, TOP + 1, 0);
-        List<BlockPos> column = new ArrayList<>();
-        SpiritEntity spirit = helper.spawn(ModEntities.SPIRIT.get(), base.above(5));
-        LeaseRun lease = LeaseRun.open(spirit, "scaffold");
-        PlacedBlocksData placed = PlacedBlocksData.get(helper.getLevel());
-        for (int dy = 0; dy < 5; dy++) {
-            BlockPos cell = base.above(dy);
-            helper.setBlock(cell, Blocks.DIRT);
-            placed.markSpirit(helper.absolutePos(cell));
-            lease.placed(helper.absolutePos(cell), "minecraft:dirt");
-            column.add(cell);
+                            .isStuck(spirit.getUUID(), board.board().now()),
+                    "выполненный выход снимает метку «не двигается» по факту, а не по тайм-ауту");
+            helper.assertTrue(
+                    helper.getBlockState(planks.get(index))
+                            .is(planks.get(index).equals(UNDER_CHEST.above(2)) ? Blocks.CHEST : Blocks.JUNGLE_PLANKS),
+                    "Разбор при выходе временный: сломанная доска плана обязана вернуться на место после "
+                            + "спасения, иначе в постройке остаётся дыра (observe25 B2); в клетке "
+                            + planks.get(index) + " сейчас " + helper.getBlockState(planks.get(index)));
         }
-        spirit.getInventory().setItem(0, new ItemStack(Items.IRON_SHOVEL));
-        BlockPos home = helper.absolutePos(new BlockPos(8, TOP + 1, 5));
-        spirit.setHome(new BlockCoord(home.getX(), home.getY(), home.getZ()));
-        BlockPos feet = spirit.blockPosition();
-        BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-        UUID id = spirit.getUUID();
-        long now = helper.getLevel().getGameTime();
-        String ticket = "rescue:" + id;
-        board.board().stuck().see(id, at, now);
-        board.board().stuck().mark(id, now, "сцена: дух на своём столбе", true);
-        TaskNode plan = RescuePlans.descent(new BlockCoord(home.getX(), home.getY(), home.getZ()));
-        board.submit(
-                new BoardTicket(
-                        ticket,
-                        BoardCase.RESCUE_SPIRIT,
-                        Optional.of(id),
-                        BoardRules.priorityOf(BoardCase.RESCUE_SPIRIT),
-                        now,
-                        1,
-                        BoardTicket.ALWAYS_CAUSE,
-                        List.of(),
-                        Map.of()),
-                TicketTarget.at(at).withPlan(plan));
-        return new PillarScene(spirit, column, helper.absolutePos(base).getY(), lease.id());
     }
 
     private static void assertDigOutLeasesClosed(GameTestHelper helper, List<SpiritEntity> spirits) {

@@ -59,7 +59,11 @@ final class TeamDefenseLineHelpCases {
                         "S4",
                         "REINFORCE",
                         "S5",
-                        "STAY"),
+                        "STAY"));
+    }
+
+    static List<TeamDefenseScenarios.Case> helpEdgeCases() {
+        return List.of(
                 caseOf(
                         "L14",
                         "по 10 мобов на оба края: к каждому краю ближайшая пара, средняя держит середину",
@@ -104,7 +108,11 @@ final class TeamDefenseLineHelpCases {
                         "S4",
                         "REINFORCE",
                         "S5",
-                        "ENGAGE"),
+                        "ENGAGE"));
+    }
+
+    static List<TeamDefenseScenarios.Case> helpHungryCases() {
+        return List.of(
                 caseOf(
                         "L17",
                         "мобов нет, средняя пара голодна: она ест, остальные стоят",

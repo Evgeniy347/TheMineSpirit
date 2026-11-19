@@ -10,12 +10,12 @@ import com.theminespirit.core.mining.SafeMineMode;
 import java.util.List;
 
 final class ResourceScriptSpecs {
-    private ResourceScriptSpecs() {}
-
     private static final String RADIUS = "radius";
     private static final String SPECIES = "species";
     private static final String COUNT = "count";
     private static final String DIRECTION = "direction";
+
+    private ResourceScriptSpecs() {}
 
     static List<ScriptSpec> forestryAndMiningSpecs() {
         return List.of(

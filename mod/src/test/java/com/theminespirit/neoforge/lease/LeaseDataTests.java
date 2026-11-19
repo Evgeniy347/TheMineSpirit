@@ -9,6 +9,7 @@ import com.theminespirit.core.board.lease.LeaseCell;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.UUID;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -34,7 +35,7 @@ class LeaseDataTests {
         data.book().orphan(orphan.id());
         data.migrateLegacy(List.of(new BlockCoord(5, 64, 0)), 30);
 
-        CompoundTag saved = data.save(new CompoundTag(), null);
+        CompoundTag saved = data.save(new CompoundTag(), RegistryAccess.EMPTY);
         LeaseData loaded = LeaseData.load(saved, null);
 
         assertEquals(
@@ -125,7 +126,7 @@ class LeaseDataTests {
         LeaseData data = new LeaseData();
         Lease lease = data.book().open(SPIRIT, "ticket", "scaffold", 10);
         data.book().record(lease.id(), LeaseCell.placed(new BlockCoord(0, 64, 0), "minecraft:dirt"));
-        return data.save(new CompoundTag(), null);
+        return data.save(new CompoundTag(), RegistryAccess.EMPTY);
     }
 
     private static CompoundTag firstLease(CompoundTag saved) {

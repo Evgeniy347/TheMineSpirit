@@ -52,13 +52,14 @@ final class ChopTally {
     String summary(ChopTreeParams params) {
         return ChopTreeText.summary(
                 params,
-                chopped,
-                standingLogs,
-                protectedLogs,
-                plantedSaplings,
-                skippedCells,
-                lackedSaplings,
-                leavesRemoved);
+                new ChopTreeText.Counts(
+                        chopped,
+                        standingLogs,
+                        protectedLogs,
+                        plantedSaplings,
+                        skippedCells,
+                        lackedSaplings,
+                        leavesRemoved));
     }
 
     private ChopTreeSaved.Values values() {

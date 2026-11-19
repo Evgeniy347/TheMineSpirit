@@ -10,7 +10,6 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 final class GraphStore {
-    private static final String EXCHANGE = "exchange_chest";
     static final String MINIMUM = "store:minimum";
     static final String TRANSFER = "store:transfer";
     static final String SMELT = "store:smelt";
@@ -22,6 +21,7 @@ final class GraphStore {
     static final String SMELT_TAKE = "store:smelt:take";
     static final String CHESTS = "store:chests";
     static final String SORTED = "store:sorted";
+    private static final String EXCHANGE = "exchange_chest";
     private static final String FURNACE = "furnace";
     private static final String CHEST_BUILDING = "chests";
     private static final double DEFAULT_BASE = 50;

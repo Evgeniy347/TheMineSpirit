@@ -211,8 +211,8 @@ class CrossSettlementScenarioTests {
     @Test
     void repair_WornPickaxe_NeedsAnvilBeforeGraphRepairsTool() {
         GraphWorld stageOneWorld = stageOne();
-        GraphFacts worn = facts(
-                named(spirit("spirit-1", 20, 20, false, false, null, List.of(tool("pickaxe", 1, 1, 100)), List.of())));
+        GraphFacts worn = facts(named(spirit(new CrossScene.SpiritSpec(
+                "spirit-1", 20, 20, false, false, null, List.of(tool("pickaxe", 1, 1, 100)), List.of()))));
         GraphPlan first = plan(stageOneWorld, worn);
         GraphPlan.Task repair = task(first, "event:tool_worn:repair_tool");
 

@@ -138,7 +138,7 @@ class CrossBattleWorkScenarioTests {
                 named(
                         spirit("spirit-1", 4, 20),
                         spirit("spirit-2"),
-                        spirit("spirit-3", 20, 20, true, true, "pit", List.of(), List.of())),
+                        spirit(new CrossScene.SpiritSpec("spirit-3", 20, 20, true, true, "pit", List.of(), List.of()))),
                 List.of(
                         threat("mob-a", "spirit-1", GraphFacts.TargetKind.SPIRIT, 1),
                         threat("mob-b", "spirit-1", GraphFacts.TargetKind.SPIRIT, 2)),
@@ -265,7 +265,7 @@ class CrossBattleWorkScenarioTests {
                 named(
                         spirit("spirit-1"),
                         spirit("spirit-2"),
-                        spirit("spirit-3", 20, 20, true, true, "pit", List.of(), List.of())),
+                        spirit(new CrossScene.SpiritSpec("spirit-3", 20, 20, true, true, "pit", List.of(), List.of()))),
                 List.of(),
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),

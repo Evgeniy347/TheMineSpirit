@@ -3,13 +3,13 @@ package com.theminespirit.core.script;
 import java.util.List;
 
 final class SocialScriptSpecs {
-    private SocialScriptSpecs() {}
-
     private static final String RADIUS = "radius";
     private static final String TARGET = "target";
     private static final String BLOCK = "block";
     private static final String COUNT = "count";
     private static final String ITEM = "item";
+
+    private SocialScriptSpecs() {}
 
     static List<ScriptSpec> socialSpecs() {
         return List.of(

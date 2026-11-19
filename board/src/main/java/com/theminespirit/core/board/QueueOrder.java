@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.PriorityQueue;
+import java.util.Queue;
 import org.jspecify.annotations.Nullable;
 
 public final class QueueOrder {
@@ -57,7 +58,7 @@ public final class QueueOrder {
             }
             dependencies.put(ticket.id(), openDependencies);
         }
-        PriorityQueue<Map.Entry<String, Integer>> queue = new PriorityQueue<>(
+        Queue<Map.Entry<String, Integer>> queue = new PriorityQueue<>(
                 Comparator.comparingInt(Map.Entry<String, Integer>::getValue).reversed());
         for (Map.Entry<String, Integer> entry : effective.entrySet()) {
             queue.add(Map.entry(entry.getKey(), entry.getValue()));

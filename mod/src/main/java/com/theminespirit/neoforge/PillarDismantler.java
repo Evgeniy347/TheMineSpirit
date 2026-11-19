@@ -25,12 +25,13 @@ final class PillarDismantler {
         FAILED
     }
 
+    static final int BREAK_INTERVAL_TICKS = 20;
+
     private final SpiritEntity spirit;
     private final Level level;
     private final List<BlockCoord> pending;
     private final @Nullable LeaseRun lease;
     private final boolean keepLease;
-    static final int BREAK_INTERVAL_TICKS = 20;
     private int sinceBreak = BREAK_INTERVAL_TICKS;
     private int cursor;
     private int returned;

@@ -69,7 +69,11 @@ final class TeamDefenseGearCases {
                         "S2",
                         "STAY",
                         "S3",
-                        "STAY"),
+                        "STAY"));
+    }
+
+    static List<TeamDefenseScenarios.Case> gearStrainCases() {
+        return List.of(
                 caseOf(
                         "G06",
                         "4 моба, слабое оружие: ёмкости мало, помощь идёт",
@@ -113,7 +117,11 @@ final class TeamDefenseGearCases {
                         "S2",
                         "STAY",
                         "S3",
-                        "STAY"),
+                        "STAY"));
+    }
+
+    static List<TeamDefenseScenarios.Case> gearRoutineCases() {
+        return List.of(
                 caseOf(
                         "G10",
                         "4 моба, пара сыта: дерётся",

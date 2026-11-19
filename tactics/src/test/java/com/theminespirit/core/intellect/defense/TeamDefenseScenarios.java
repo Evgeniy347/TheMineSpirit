@@ -10,7 +10,7 @@ import com.theminespirit.core.tactics.TacticsConfig;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -258,7 +258,8 @@ final class TeamDefenseScenarios {
         });
         scenario.stances().forEach((squad, expected) -> {
             SquadOrder order = orderOf(plan, squad);
-            Set<CombatStance> actual = new HashSet<>(order.memberStances().values());
+            Set<CombatStance> actual = EnumSet.noneOf(CombatStance.class);
+            actual.addAll(order.memberStances().values());
             assertEquals(
                     expected,
                     actual,

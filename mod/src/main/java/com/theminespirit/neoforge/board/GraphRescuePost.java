@@ -18,8 +18,8 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class GraphRescuePost {
-    private static final Logger LOGGER = LogUtils.getLogger();
     static final String RESCUE = "rescue:";
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     record HelperChoice(Optional<UUID> id, String why, boolean pending) {}
 

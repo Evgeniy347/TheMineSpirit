@@ -18,7 +18,12 @@ public final class RecipeKnowledgeGameTests {
 
     static void check(GameTestHelper helper) {
         RecipeKnowledge knowledge = RecipeKnowledge.of(helper.getLevel());
+        checkCrafting(helper, knowledge);
+        checkFurnace(helper, knowledge);
+        checkGather(helper, knowledge);
+    }
 
+    private static void checkCrafting(GameTestHelper helper, RecipeKnowledge knowledge) {
         helper.assertTrue(
                 knowledge.isCraftable("stick"),
                 "палка обязана быть craftable по рецептам сервера: без этого резолвер не спланирует крафт палок");
@@ -49,6 +54,18 @@ public final class RecipeKnowledgeGameTests {
                         && pickaxe.get(0).item().endsWith("_planks")
                         && pickaxe.get(1).equals(new Ingredient("stick", 2)),
                 "кирка обязана требовать 3 доски и 2 палки, знания вернули " + pickaxe);
+        helper.assertTrue(
+                !knowledge.isCraftable("written_book"),
+                "книга-копия делается динамическим рецептом (CustomRecipe): модель крафта духа его не поддерживает, "
+                        + "иначе дух попробует скрафтить то, что рецептом сетки не описывается");
+        Optional<RecipeSpec> recipe = knowledge.craftRecipe("stick", Map.of());
+        helper.assertTrue(
+                recipe.isPresent() && recipe.get().outputCount() == 4,
+                "палки при пустом инвентаре обязаны выбирать рецепт из досок (4 за крафт), а не из бамбука (1 за "
+                        + "крафт), выбран " + recipe);
+    }
+
+    private static void checkFurnace(GameTestHelper helper, RecipeKnowledge knowledge) {
         helper.assertTrue(knowledge.isSmeltable("iron_ingot"), "слиток железа обязан быть smeltable");
         helper.assertTrue(
                 !knowledge.isCraftable("iron_ingot"),
@@ -86,15 +103,9 @@ public final class RecipeKnowledgeGameTests {
                 knowledge.burnTicks("lava_bucket") == 20000,
                 "ведро лавы горит 20000 тиков по data map furnace_fuels, знания вернули "
                         + knowledge.burnTicks("lava_bucket"));
-        helper.assertTrue(
-                !knowledge.isCraftable("written_book"),
-                "книга-копия делается динамическим рецептом (CustomRecipe): модель крафта духа его не поддерживает, "
-                        + "иначе дух попробует скрафтить то, что рецептом сетки не описывается");
-        Optional<RecipeSpec> recipe = knowledge.craftRecipe("stick", Map.of());
-        helper.assertTrue(
-                recipe.isPresent() && recipe.get().outputCount() == 4,
-                "палки при пустом инвентаре обязаны выбирать рецепт из досок (4 за крафт), а не из бамбука (1 за "
-                        + "крафт), выбран " + recipe);
+    }
+
+    private static void checkGather(GameTestHelper helper, RecipeKnowledge knowledge) {
         helper.assertTrue(
                 knowledge.isGatherable("raw_iron"),
                 "raw_iron обязан стать gatherable через знание «дроп ← руда» из drops.json: без него "

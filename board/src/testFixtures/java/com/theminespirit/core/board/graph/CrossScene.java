@@ -14,6 +14,9 @@ final class CrossScene {
     static final BlockCoord STAND = new BlockCoord(0, 64, 0);
     static final EatNeed FED = new EatNeed(20, 20, 20, 20);
     static final EatNeed HUNGRY = new EatNeed(4, 20, 20, 20);
+    static final String ORDER_HINT = "ПОРЯДОК: решение неадекватно — поправь веса графа; новый порядок разумен "
+            + "(например, после новой механики) — поправь ожидание теста с причиной; честная конкуренция (постройки "
+            + "между собой) — объяви соперника аргументом rivals. Веса под тест не подгонять";
     private static final List<String> TIERS = List.of("wooden", "stone", "iron", "diamond", "netherite");
 
     private CrossScene() {}
@@ -62,14 +65,14 @@ final class CrossScene {
     }
 
     static GraphFacts.Spirit spirit(String id) {
-        return spirit(id, 20, 20, false, false, null, List.of(), List.of());
+        return spirit(new SpiritSpec(id, 20, 20, false, false, null, List.of(), List.of()));
     }
 
     static GraphFacts.Spirit spirit(String id, float health, int food) {
-        return spirit(id, health, food, false, false, null, List.of(), List.of());
+        return spirit(new SpiritSpec(id, health, food, false, false, null, List.of(), List.of()));
     }
 
-    static GraphFacts.Spirit spirit(
+    record SpiritSpec(
             String id,
             float health,
             int food,
@@ -77,37 +80,25 @@ final class CrossScene {
             boolean stuck,
             String trap,
             List<GraphFacts.Tool> tools,
-            List<GraphFacts.Armor> armor) {
-        return spirit(id, health, food, trapped, stuck, trap, null, Map.of(), tools, armor);
-    }
+            List<GraphFacts.Armor> armor) {}
 
-    static GraphFacts.Spirit spirit(
-            String id,
-            float health,
-            int food,
-            boolean trapped,
-            boolean stuck,
-            String trap,
-            String activity,
-            Map<String, Integer> inventory,
-            List<GraphFacts.Tool> tools,
-            List<GraphFacts.Armor> armor) {
+    static GraphFacts.Spirit spirit(SpiritSpec spec) {
         return new GraphFacts.Spirit(
-                id,
+                spec.id(),
                 HOME,
-                health,
-                Math.max(20, health),
-                health < 20 ? new GraphFacts.Hurt(6, "minecraft:zombie", 5) : null,
-                food,
+                spec.health(),
+                Math.max(20, spec.health()),
+                spec.health() < 20 ? new GraphFacts.Hurt(6, "minecraft:zombie", 5) : null,
+                spec.food(),
                 300,
                 false,
-                trapped,
-                stuck,
-                activity,
-                inventory,
-                armor,
-                tools,
-                trap);
+                spec.trapped(),
+                spec.stuck(),
+                null,
+                Map.of(),
+                spec.armor(),
+                spec.tools(),
+                spec.trap());
     }
 
     static GraphFacts.Tool tool(String kind, int tier, int durability) {
@@ -175,10 +166,6 @@ final class CrossScene {
                 .orElseThrow(() -> new AssertionError("Нет задания " + id + ": "
                         + plan.tasks().stream().map(GraphPlan.Task::id).toList()));
     }
-
-    static final String ORDER_HINT = "ПОРЯДОК: решение неадекватно — поправь веса графа; новый порядок разумен "
-            + "(например, после новой механики) — поправь ожидание теста с причиной; честная конкуренция (постройки "
-            + "между собой) — объяви соперника аргументом rivals. Веса под тест не подгонять";
 
     static List<String> ahead(GraphPlan plan, GraphPlan.Task task, String... rivals) {
         List<String> allowed = List.of(rivals);

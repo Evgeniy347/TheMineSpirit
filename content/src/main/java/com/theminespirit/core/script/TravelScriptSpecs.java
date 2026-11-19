@@ -3,13 +3,13 @@ package com.theminespirit.core.script;
 import java.util.List;
 
 final class TravelScriptSpecs {
-    private TravelScriptSpecs() {}
-
     private static final String RADIUS = "radius";
     private static final String TARGET = "target";
     private static final String BLOCK = "block";
     private static final String COUNT = "count";
     private static final String NEAREST = "nearest";
+
+    private TravelScriptSpecs() {}
 
     static List<ScriptSpec> travelSpecs() {
         return List.of(

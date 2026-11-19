@@ -20,6 +20,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 final class PlaceBlockScript implements ScriptInstance {
     private final SpiritEntity spirit;
@@ -69,63 +70,83 @@ final class PlaceBlockScript implements ScriptInstance {
             return outcome;
         }
         if (!approached) {
-            BlockPos pos = toPos(target);
-            double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(pos));
-            if (distance > BlockBreaker.REACH || standRequired) {
-                if (stands.isEmpty()) {
-                    fillStands();
-                }
-                if (standIndex >= stands.size()) {
-                    return failMovement(
-                            "к клетке " + pos.toShortString() + " не подойти: стоянки недостижимы; поставлено 0 из 1");
-                }
-                if (!approach.isActive()) {
-                    BlockCoord stand = stands.get(standIndex);
-                    approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
-                }
-                switch (approach.tick()) {
-                    case MOVING -> {
-                        return ScriptStatus.RUNNING;
-                    }
-                    case ARRIVED -> approached = true;
-                    case STUCK, TIMEOUT -> {
-                        approach.cancel();
-                        standIndex++;
-                        return ScriptStatus.RUNNING;
-                    }
-                }
-            } else {
-                approached = true;
-            }
-            return ScriptStatus.RUNNING;
+            return approachTick();
         }
         if (clearing) {
-            BlockBreaker.Progress progress = breaker.tick();
-            if (progress == BlockBreaker.Progress.BREAKING) {
-                return ScriptStatus.RUNNING;
-            }
-            clearing = false;
-            return ScriptStatus.RUNNING;
+            return clearingTick();
         }
         BlockPos targetPos = toPos(target);
         if (clearable(level.getBlockState(targetPos))) {
-            if (breaker == null) {
-                breaker = new BlockBreaker(spirit);
-            }
-            BlockBreaker.Begin dig = breaker.beginExcavate(targetPos);
-            if (dig instanceof BlockBreaker.Started) {
-                clearing = true;
-                return ScriptStatus.RUNNING;
-            }
-            if (dig instanceof BlockBreaker.Refused refused && refused.reason() != BlockBreaker.RefuseReason.AIR) {
-                return fail("клетка " + targetPos.toShortString() + " занята и не расчищается: " + refused.message()
-                        + "; поставлено 0 из 1");
-            }
-            if (dig instanceof BlockBreaker.Protected protectedBlock) {
-                return fail("клетка " + targetPos.toShortString() + " занята защищённым блоком: "
-                        + protectedBlock.reason() + "; поставлено 0 из 1");
+            ScriptStatus stopped = excavate(targetPos);
+            if (stopped != null) {
+                return stopped;
             }
         }
+        return beginPlacing();
+    }
+
+    private ScriptStatus approachTick() {
+        BlockPos pos = toPos(target);
+        double distance = spirit.getEyePosition().distanceTo(Vec3.atCenterOf(pos));
+        if (distance <= BlockBreaker.REACH && !standRequired) {
+            approached = true;
+            return ScriptStatus.RUNNING;
+        }
+        if (stands.isEmpty()) {
+            fillStands();
+        }
+        if (standIndex >= stands.size()) {
+            return failMovement(
+                    "к клетке " + pos.toShortString() + " не подойти: стоянки недостижимы; поставлено 0 из 1");
+        }
+        if (!approach.isActive()) {
+            BlockCoord stand = stands.get(standIndex);
+            approach.begin(new Vec3(stand.x() + 0.5, stand.y(), stand.z() + 0.5), BuildTuning.STAND_ARRIVAL);
+        }
+        switch (approach.tick()) {
+            case MOVING -> {
+                return ScriptStatus.RUNNING;
+            }
+            case ARRIVED -> approached = true;
+            case STUCK, TIMEOUT -> {
+                approach.cancel();
+                standIndex++;
+                return ScriptStatus.RUNNING;
+            }
+        }
+        return ScriptStatus.RUNNING;
+    }
+
+    private ScriptStatus clearingTick() {
+        BlockBreaker.Progress progress = breaker.tick();
+        if (progress == BlockBreaker.Progress.BREAKING) {
+            return ScriptStatus.RUNNING;
+        }
+        clearing = false;
+        return ScriptStatus.RUNNING;
+    }
+
+    private @Nullable ScriptStatus excavate(BlockPos targetPos) {
+        if (breaker == null) {
+            breaker = new BlockBreaker(spirit);
+        }
+        BlockBreaker.Begin dig = breaker.beginExcavate(targetPos);
+        if (dig instanceof BlockBreaker.Started) {
+            clearing = true;
+            return ScriptStatus.RUNNING;
+        }
+        if (dig instanceof BlockBreaker.Refused refused && refused.reason() != BlockBreaker.RefuseReason.AIR) {
+            return fail("клетка " + targetPos.toShortString() + " занята и не расчищается: " + refused.message()
+                    + "; поставлено 0 из 1");
+        }
+        if (dig instanceof BlockBreaker.Protected protectedBlock) {
+            return fail("клетка " + targetPos.toShortString() + " занята защищённым блоком: " + protectedBlock.reason()
+                    + "; поставлено 0 из 1");
+        }
+        return null;
+    }
+
+    private ScriptStatus beginPlacing() {
         BlockPlacer.Begin begin = placer.begin(toPos(target), wanted, blockId);
         if (begin instanceof BlockPlacer.Started) {
             placed = 1;
@@ -143,24 +164,26 @@ final class PlaceBlockScript implements ScriptInstance {
             case OCCUPIED ->
                 fail("клетка " + toPos(target).toShortString() + " занята: место занято; поставлено 0 из 1");
             case NO_SUPPORT -> fail(refused.message() + "; поставлено 0 из 1");
-            case OUT_OF_REACH -> {
-                approached = false;
-                standRequired = true;
-                if (stands.isEmpty()) {
-                    fillStands();
-                    standIndex = 0;
-                } else {
-                    standIndex++;
-                }
-                if (standIndex >= stands.size()) {
-                    yield failMovement("клетка " + toPos(target).toShortString()
-                            + " вне досягаемости: стоянки недостижимы; поставлено 0 из 1");
-                }
-                yield ScriptStatus.RUNNING;
-            }
+            case OUT_OF_REACH -> reachFailed();
             case CHUNK_NOT_LOADED ->
                 fail("чанк с клеткой " + toPos(target).toShortString() + " не загружен; поставлено 0 из 1");
         };
+    }
+
+    private ScriptStatus reachFailed() {
+        approached = false;
+        standRequired = true;
+        if (stands.isEmpty()) {
+            fillStands();
+            standIndex = 0;
+        } else {
+            standIndex++;
+        }
+        if (standIndex >= stands.size()) {
+            return failMovement("клетка " + toPos(target).toShortString()
+                    + " вне досягаемости: стоянки недостижимы; поставлено 0 из 1");
+        }
+        return ScriptStatus.RUNNING;
     }
 
     private void fillStands() {

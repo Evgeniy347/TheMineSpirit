@@ -35,17 +35,35 @@ final class ChopReplantGameTests {
         GameTestFixtures.sweepEntities(helper);
         prepareField(helper);
         buildOakTree(helper, 4, 4, 5);
-        for (int z = 0; z < PLATFORM; z++) {
-            for (int y = 1; y <= 3; y++) {
-                helper.setBlock(8, y, z, Blocks.COBBLESTONE);
-            }
-        }
+        buildWall(helper);
         SpiritEntity spirit = spawnChopper(helper);
         spirit.getInventory().setItem(1, new ItemStack(Items.OAK_SAPLING, 6));
         spirit.getInventory().setItem(2, new ItemStack(Items.DIRT, 16));
         ChopTreeScript script = new ChopTreeScript(spirit, chopParams("oak", 1, true));
         ScriptStatus[] status = driveScript(helper, spirit, script);
 
+        buildBirchShapes(helper);
+        SpiritEntity birches = spawnChopper(helper);
+        birches.getInventory().setItem(1, new ItemStack(Items.DIRT, 16));
+        ChopTreeScript shapes = new ChopTreeScript(birches, chopParams("birch", 5));
+        ScriptStatus[] shapeStatus = driveScript(helper, birches, shapes);
+
+        helper.succeedWhen(() -> {
+            assertReplant(helper, status, script);
+            assertShapes(helper, shapeStatus, shapes, spirit);
+            clearField(helper);
+        });
+    }
+
+    private static void buildWall(GameTestHelper helper) {
+        for (int z = 0; z < PLATFORM; z++) {
+            for (int y = 1; y <= 3; y++) {
+                helper.setBlock(8, y, z, Blocks.COBBLESTONE);
+            }
+        }
+    }
+
+    private static void buildBirchShapes(GameTestHelper helper) {
         for (int y = 8; y <= 10; y++) {
             helper.setBlock(1, y, 8, Blocks.BIRCH_LOG);
         }
@@ -68,61 +86,58 @@ final class ChopReplantGameTests {
         helper.setBlock(6, 1, 8, Blocks.STONE);
         helper.setBlock(7, 1, 7, Blocks.STONE);
         helper.setBlock(7, 1, 9, Blocks.STONE);
-        SpiritEntity birches = spawnChopper(helper);
-        birches.getInventory().setItem(1, new ItemStack(Items.DIRT, 16));
-        ChopTreeScript shapes = new ChopTreeScript(birches, chopParams("birch", 5));
-        ScriptStatus[] shapeStatus = driveScript(helper, birches, shapes);
+    }
 
-        helper.succeedWhen(() -> {
-            helper.assertTrue(
-                    status[0] == ScriptStatus.SUCCEEDED,
-                    "рубка с обновлением участка обязана завершиться успехом, статус " + status[0] + ", причина: "
-                            + script.failureReason() + ", итог: " + script.summary());
-            helper.assertTrue(
-                    helper.getBlockState(new BlockPos(4, 1, 4)).is(Blocks.OAK_SAPLING),
-                    "на месте ствола обязан стоять саженец дуба, а стоит "
-                            + helper.getBlockState(new BlockPos(4, 1, 4)).getBlock());
-            int saplings = countBlocksInWorld(helper, Blocks.OAK_SAPLING);
-            helper.assertTrue(
-                    saplings >= 2,
-                    "шесть саженцев при одном на ствол дают досадку участка: всего посажено " + saplings);
-            for (int x = 0; x < PLATFORM; x++) {
-                for (int z = 0; z < PLATFORM; z++) {
-                    if (!helper.getBlockState(new BlockPos(x, 1, z)).is(Blocks.OAK_SAPLING)) {
-                        continue;
-                    }
-                    for (int dx = -1; dx <= 1; dx++) {
-                        for (int dz = -1; dz <= 1; dz++) {
-                            for (int y = 1; y <= 2; y++) {
-                                helper.assertTrue(
-                                        !helper.getBlockState(new BlockPos(x + dx, y, z + dz))
-                                                .is(Blocks.COBBLESTONE),
-                                        "саженец в клетке " + new BlockPos(x, 1, z) + " стоит вплотную к стене "
-                                                + "игрока: зазор buildingGap=2 не соблюдён");
-                            }
+    private static void assertReplant(GameTestHelper helper, ScriptStatus[] status, ChopTreeScript script) {
+        helper.assertTrue(
+                status[0] == ScriptStatus.SUCCEEDED,
+                "рубка с обновлением участка обязана завершиться успехом, статус " + status[0] + ", причина: "
+                        + script.failureReason() + ", итог: " + script.summary());
+        helper.assertTrue(
+                helper.getBlockState(new BlockPos(4, 1, 4)).is(Blocks.OAK_SAPLING),
+                "на месте ствола обязан стоять саженец дуба, а стоит "
+                        + helper.getBlockState(new BlockPos(4, 1, 4)).getBlock());
+        int saplings = countBlocksInWorld(helper, Blocks.OAK_SAPLING);
+        helper.assertTrue(
+                saplings >= 2, "шесть саженцев при одном на ствол дают досадку участка: всего посажено " + saplings);
+        for (int x = 0; x < PLATFORM; x++) {
+            for (int z = 0; z < PLATFORM; z++) {
+                if (!helper.getBlockState(new BlockPos(x, 1, z)).is(Blocks.OAK_SAPLING)) {
+                    continue;
+                }
+                for (int dx = -1; dx <= 1; dx++) {
+                    for (int dz = -1; dz <= 1; dz++) {
+                        for (int y = 1; y <= 2; y++) {
+                            helper.assertTrue(
+                                    !helper.getBlockState(new BlockPos(x + dx, y, z + dz))
+                                            .is(Blocks.COBBLESTONE),
+                                    "саженец в клетке " + new BlockPos(x, 1, z) + " стоит вплотную к стене "
+                                            + "игрока: зазор buildingGap=2 не соблюдён");
                         }
                     }
                 }
             }
-            helper.assertTrue(
-                    shapeStatus[0] == ScriptStatus.SUCCEEDED,
-                    "рубка висящей верхушки, склона, веток и двух деревьев рядом обязана завершиться, статус "
-                            + shapeStatus[0] + ", причина: " + shapes.failureReason());
-            helper.assertTrue(
-                    countBlocksInWorld(helper, Blocks.OAK_LOG) == 0
-                            && countBlocksInWorld(helper, Blocks.OAK_LEAVES) == 0,
-                    "дуб срублен целиком: ствола и кроны над пнём не осталось, а в мире брёвен "
-                            + countBlocksInWorld(helper, Blocks.OAK_LOG) + ", листвы "
-                            + countBlocksInWorld(helper, Blocks.OAK_LEAVES));
-            helper.assertTrue(
-                    GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG) >= 5,
-                    "дроп дуба собран в инвентарь, а не брошен у пня; в инвентаре " + spirit.getInventory());
-            helper.assertTrue(
-                    countBlocksInWorld(helper, Blocks.BIRCH_LOG) == 0,
-                    "все формы срублены целиком: висящая верхушка, склон у воды, ветки и два дерева рядом — "
-                            + "брёвен не осталось");
-            clearField(helper);
-        });
+        }
+    }
+
+    private static void assertShapes(
+            GameTestHelper helper, ScriptStatus[] shapeStatus, ChopTreeScript shapes, SpiritEntity spirit) {
+        helper.assertTrue(
+                shapeStatus[0] == ScriptStatus.SUCCEEDED,
+                "рубка висящей верхушки, склона, веток и двух деревьев рядом обязана завершиться, статус "
+                        + shapeStatus[0] + ", причина: " + shapes.failureReason());
+        helper.assertTrue(
+                countBlocksInWorld(helper, Blocks.OAK_LOG) == 0 && countBlocksInWorld(helper, Blocks.OAK_LEAVES) == 0,
+                "дуб срублен целиком: ствола и кроны над пнём не осталось, а в мире брёвен "
+                        + countBlocksInWorld(helper, Blocks.OAK_LOG) + ", листвы "
+                        + countBlocksInWorld(helper, Blocks.OAK_LEAVES));
+        helper.assertTrue(
+                GameTestFixtures.countInInventory(spirit.getInventory(), Items.OAK_LOG) >= 5,
+                "дроп дуба собран в инвентарь, а не брошен у пня; в инвентаре " + spirit.getInventory());
+        helper.assertTrue(
+                countBlocksInWorld(helper, Blocks.BIRCH_LOG) == 0,
+                "все формы срублены целиком: висящая верхушка, склон у воды, ветки и два дерева рядом — "
+                        + "брёвен не осталось");
     }
 
     private static void leaf(GameTestHelper helper, int x, int y, int z) {

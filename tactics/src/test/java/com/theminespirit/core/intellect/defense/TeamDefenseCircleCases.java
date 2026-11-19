@@ -16,7 +16,7 @@ final class TeamDefenseCircleCases {
 
     private TeamDefenseCircleCases() {}
 
-    static List<TeamDefenseScenarios.Case> circleCases() {
+    static List<TeamDefenseScenarios.Case> circleCasesStageOne() {
         return List.of(
                 caseOf(
                         "C01",
@@ -80,7 +80,11 @@ final class TeamDefenseCircleCases {
                         "S7",
                         "STAY",
                         "S8",
-                        "ENGAGE"),
+                        "ENGAGE"));
+    }
+
+    static List<TeamDefenseScenarios.Case> circleCasesStageOneEdges() {
+        return List.of(
                 caseOf(
                         "C04",
                         "этап 1: четыре моба с запада — западный пост держит сам",
@@ -122,7 +126,11 @@ final class TeamDefenseCircleCases {
                         "S7",
                         "STAY",
                         "S8",
-                        "ENGAGE"),
+                        "ENGAGE"));
+    }
+
+    static List<TeamDefenseScenarios.Case> circleCasesStageTwo() {
+        return List.of(
                 caseOf(
                         "C06",
                         "этап 2 (участок 70): четыре моба с севера — северный пост держит сам",
@@ -150,7 +158,11 @@ final class TeamDefenseCircleCases {
                         RING_TWO,
                         List.of(zombies(8, 0, -80)),
                         "S4",
-                        "ENGAGE"),
+                        "ENGAGE"));
+    }
+
+    static List<TeamDefenseScenarios.Case> circleCasesStageThree() {
+        return List.of(
                 caseOf(
                         "C08",
                         "этап 3 (180×180): четыре моба с запада — западный пост держит сам",

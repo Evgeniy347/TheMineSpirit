@@ -29,7 +29,7 @@ class WorldTicketRefreshTests {
         assertEquals(
                 Map.of("minecraft:oak_log", 80),
                 board.tickets().stream()
-                        .filter(ticket -> ticket.id().equals(FenceRepairs.TICKET_ID))
+                        .filter(ticket -> FenceRepairs.TICKET_ID.equals(ticket.id()))
                         .findFirst()
                         .orElseThrow()
                         .requiredItems(),

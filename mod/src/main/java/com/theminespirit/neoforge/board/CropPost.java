@@ -9,16 +9,25 @@ import java.util.Map;
 import java.util.Optional;
 
 final class CropPost {
+    private static final String BEETROOT = "beetroot";
     private static final Map<String, String> FIELD = Map.of(
-            "harvest_carrot", "carrot",
-            "harvest_potato", "potato",
-            "harvest_beetroot", "beetroot",
-            "harvest_beetroot_seeds", "beetroot");
+            "harvest_carrot",
+            "carrot",
+            "harvest_potato",
+            "potato",
+            "harvest_beetroot",
+            BEETROOT,
+            "harvest_beetroot_seeds",
+            BEETROOT);
     private static final Map<String, String> WILD = Map.of(
-            "forage_carrot", "carrot",
-            "forage_potato", "potato",
-            "forage_beetroot", "beetroot",
-            "forage_beetroot_seeds", "beetroot");
+            "forage_carrot",
+            "carrot",
+            "forage_potato",
+            "potato",
+            "forage_beetroot",
+            BEETROOT,
+            "forage_beetroot_seeds",
+            BEETROOT);
     private static final String WILD_TAG = "crop:";
 
     private CropPost() {}

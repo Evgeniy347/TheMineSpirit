@@ -6,30 +6,32 @@ import com.theminespirit.core.script.ChopTreeParams;
 final class ChopTreeText {
     private ChopTreeText() {}
 
-    static String summary(
-            ChopTreeParams params,
+    record Counts(
             int chopped,
             int standingLogs,
             int protectedLogs,
             int plantedSaplings,
             int skippedCells,
             boolean lackedSaplings,
-            int leavesRemoved) {
+            int leavesRemoved) {}
+
+    static String summary(ChopTreeParams params, Counts counts) {
         StringBuilder text = new StringBuilder("срублено деревьев ")
-                .append(chopped)
+                .append(counts.chopped())
                 .append(" из ")
                 .append(params.count());
-        if (standingLogs > 0) {
-            text.append("; оставлено брёвен: ").append(standingLogs);
+        if (counts.standingLogs() > 0) {
+            text.append("; оставлено брёвен: ").append(counts.standingLogs());
         }
-        if (leavesRemoved > 0) {
-            text.append("; снято листвы: ").append(leavesRemoved);
+        if (counts.leavesRemoved() > 0) {
+            text.append("; снято листвы: ").append(counts.leavesRemoved());
         }
-        if (protectedLogs > 0) {
-            text.append("; пропущено защищённых: ").append(protectedLogs);
+        if (counts.protectedLogs() > 0) {
+            text.append("; пропущено защищённых: ").append(counts.protectedLogs());
         }
         if (params.replant()) {
-            text.append("; replant: ").append(replantText(plantedSaplings, skippedCells, lackedSaplings));
+            text.append("; replant: ")
+                    .append(replantText(counts.plantedSaplings(), counts.skippedCells(), counts.lackedSaplings()));
         }
         return text.toString();
     }

@@ -2,17 +2,13 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.DispatchRound;
-import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.board.TransferCarriers;
 import com.theminespirit.core.board.TransferTicket;
-import com.theminespirit.core.board.VitalGate;
 import com.theminespirit.core.coordinator.WorkKind;
 import com.theminespirit.core.coordinator.WorkTarget;
 import com.theminespirit.core.engine.RunStatus;
@@ -44,6 +40,7 @@ final class BoardDispatchDesk {
     private long lastDispatch;
     private int claims;
     private final IssueSteps timer = new IssueSteps();
+    private final DispatchTrouble trouble = new DispatchTrouble(this);
 
     BoardDispatchDesk(BoardService host, Board board, Map<String, TicketTarget> targets) {
         this.host = Objects.requireNonNull(host, "host не может быть null: занятие запускает доска");
@@ -100,6 +97,22 @@ final class BoardDispatchDesk {
         return activities;
     }
 
+    Board board() {
+        return board;
+    }
+
+    Map<String, TicketTarget> targets() {
+        return targets;
+    }
+
+    BoardSettlementDesk settlementDesk() {
+        return settlement;
+    }
+
+    BoardService host() {
+        return host;
+    }
+
     void activityIssued(String ticketId, long generation) {
         settlement.issued(ticketId, generation);
     }
@@ -131,161 +144,118 @@ final class BoardDispatchDesk {
         step = timer.lap("claimable", step);
         transferWait.retain(board);
         crafters.retain(id -> board.statusOf(id).filter(TransferWatch::open).isPresent());
-        withdrawForVitals(spirits, claimable);
+        trouble.withdrawForVitals(spirits, claimable);
         step = timer.lap("vitals", step);
         DispatchRound round = new DispatchRound(board, now);
         DispatchPick pick = new DispatchPick(round, spirits, stock);
         step = timer.lap("candidates", step);
         Optional<BlockCoord> settlementHome = HomePoint.of(level, spirits);
         timer.lap("home", step);
+        Batch batch = new Batch(level, spirits, stock, round, pick, settlementHome, now);
         int explained = 0;
         for (BoardTicket ticket : timer.window(claimable)) {
-            long chooseStarted = System.nanoTime();
-            SpiritEntity spirit = pick.choose(ticket, targets.get(ticket.id()), crafters);
-            timer.add("choose", chooseStarted);
-            if (spirit == null) {
-                if (explained++ < IssueSteps.WHY_BATCH) {
-                    long whyStarted = System.nanoTime();
-                    board.noteWait(ticket.id(), pick.why(ticket, targets.get(ticket.id())));
-                    timer.add("why", whyStarted);
-                }
-                continue;
-            }
-            for (BoardTicket displaced : round.drainDisplaced(spirit.getUUID())) {
-                settlement.displace(spirit, displaced, ticket);
-            }
-            if (targets.get(ticket.id()) == null && settlementHome.isEmpty()) {
-                board.noteWait(ticket.id(), "поселение без дома: заданию некуда идти");
-                continue;
-            }
-            TicketTarget base = targets.get(ticket.id());
-            if (base == null) {
-                base = TicketTarget.at(settlementHome.orElseThrow());
-            }
-            board.noteWait(ticket.id(), null);
-            TicketTarget target = IssueSteps.gatherOnTop(ticket, TransferTicket.restore(ticket, base), spirit);
-            Optional<TicketTarget> fitted = IssueSteps.fitTransfer(ticket, target, spirit);
-            if (fitted.isEmpty()) {
-                dropEmptyTransfer(ticket, target, spirit);
-                continue;
-            }
-            target = fitted.orElseThrow();
-            long transferStarted = System.nanoTime();
-            boolean awaits = TransferWatch.ensureTransfers(level, host, spirits, stock, ticket, spirit, now);
-            timer.add("transfers", transferStarted);
-            if (awaits) {
-                transferWait.await(board, crafters, ticket, spirit, spirits, round);
-                continue;
-            }
-            long planStarted = System.nanoTime();
-            Optional<TaskNode> planned = planTicket(ticket, target, round);
-            timer.add("plan", planStarted);
-            if (planned.isEmpty()) {
-                continue;
-            }
-            TaskNode plan = planned.orElseThrow();
-            if (spirit.runsBackgroundTask()) {
-                LOGGER.info(
-                        "Задание {} вытесняет фоновое занятие {} духа {}",
-                        ticket.id(),
-                        spirit.currentTaskScript().orElse("?"),
-                        spirit.displayName());
-            }
-            try {
-                long startStarted = System.nanoTime();
-                JobLaunch.start(spirit, ticket.id(), plan);
-                timer.add("start", startStarted);
-            } catch (RuntimeException failure) {
-                LOGGER.error(
-                        "Задание {}: дух {} не принял задание: {}",
-                        ticket.id(),
-                        spirit.displayName(),
-                        failure.getMessage());
-                continue;
-            }
-            BoardOutcome outcome = board.claim(ticket.id(), spirit.getUUID(), now);
-            if (outcome == BoardOutcome.CLAIMED) {
-                crafters.forget(ticket.id());
-                settlement.issued(ticket.id(), spirit.taskGeneration());
-                settlement.progressIssued(level, ticket, target);
-                claims++;
-                round.take(spirit.getUUID());
-                WorkReserveHub.reserve(spirit, new WorkTarget(WorkKind.CELL, target.target()));
-                host.notices.assigned(board, ticket, target, pick.whyChosen(ticket, spirit, crafters), spirit);
-            } else {
-                JobLaunch.dropUnclaimed(spirit, ticket.id(), outcome);
-            }
-            pick.refresh(spirit);
-        }
-    }
-
-    private void withdrawForVitals(List<SpiritEntity> spirits, List<BoardTicket> claimable) {
-        for (SpiritEntity spirit : spirits) {
-            if (spirit.isRemoved()) {
-                continue;
-            }
-            Map<String, String> needs = SpiritVitals.needs(spirit);
-            if (needs.isEmpty()) {
-                continue;
-            }
-            boolean chain = claimable.stream()
-                    .anyMatch(ticket -> VitalGate.satisfies(ticket.id(), needs)
-                            && ticket.assignee().map(spirit.getUUID()::equals).orElse(true));
-            if (!chain) {
-                continue;
-            }
-            List<BoardTicket> held = List.copyOf(board.assignedTo(spirit.getUUID()));
-            for (BoardTicket ticket : held) {
-                if (VitalGate.blocksWork(ticket, needs)) {
-                    settlement.withdraw(
-                            spirit, ticket, needs.values().iterator().next());
-                }
+            if (issueTicket(batch, ticket, explained < IssueSteps.WHY_BATCH)) {
+                explained++;
             }
         }
     }
 
-    private Optional<TaskNode> planTicket(BoardTicket ticket, TicketTarget target, DispatchRound round) {
+    private record Batch(
+            ServerLevel level,
+            List<SpiritEntity> spirits,
+            StockView stock,
+            DispatchRound round,
+            DispatchPick pick,
+            Optional<BlockCoord> settlementHome,
+            long now) {}
+
+    private boolean issueTicket(Batch batch, BoardTicket ticket, boolean explain) {
+        long chooseStarted = System.nanoTime();
+        SpiritEntity spirit = batch.pick().choose(ticket, targets.get(ticket.id()), crafters);
+        timer.add("choose", chooseStarted);
+        if (spirit == null) {
+            return explainWait(batch, ticket, explain);
+        }
+        for (BoardTicket displaced : batch.round().drainDisplaced(spirit.getUUID())) {
+            settlement.displace(spirit, displaced, ticket);
+        }
+        if (targets.get(ticket.id()) == null && batch.settlementHome().isEmpty()) {
+            board.noteWait(ticket.id(), "поселение без дома: заданию некуда идти");
+            return false;
+        }
+        TicketTarget base = targets.get(ticket.id());
+        if (base == null) {
+            base = TicketTarget.at(batch.settlementHome().orElseThrow());
+        }
+        board.noteWait(ticket.id(), null);
+        TicketTarget target = IssueSteps.gatherOnTop(ticket, TransferTicket.restore(ticket, base), spirit);
+        Optional<TicketTarget> fitted = IssueSteps.fitTransfer(ticket, target, spirit);
+        if (fitted.isEmpty()) {
+            trouble.dropEmptyTransfer(ticket, target, spirit);
+            return false;
+        }
+        target = fitted.orElseThrow();
+        long transferStarted = System.nanoTime();
+        boolean awaits = TransferWatch.ensureTransfers(
+                batch.level(), host, batch.spirits(), batch.stock(), ticket, spirit, batch.now());
+        timer.add("transfers", transferStarted);
+        if (awaits) {
+            transferWait.await(board, crafters, ticket, spirit, batch.spirits(), batch.round());
+            return false;
+        }
+        return startJob(batch, ticket, target, spirit);
+    }
+
+    private boolean explainWait(Batch batch, BoardTicket ticket, boolean explain) {
+        if (!explain) {
+            return false;
+        }
+        long whyStarted = System.nanoTime();
+        board.noteWait(ticket.id(), batch.pick().why(ticket, targets.get(ticket.id())));
+        timer.add("why", whyStarted);
+        return true;
+    }
+
+    private boolean startJob(Batch batch, BoardTicket ticket, TicketTarget target, SpiritEntity spirit) {
+        long planStarted = System.nanoTime();
+        Optional<TaskNode> planned = trouble.planTicket(ticket, target, batch.round());
+        timer.add("plan", planStarted);
+        if (planned.isEmpty()) {
+            return false;
+        }
+        TaskNode plan = planned.orElseThrow();
+        if (spirit.runsBackgroundTask()) {
+            LOGGER.info(
+                    "Задание {} вытесняет фоновое занятие {} духа {}",
+                    ticket.id(),
+                    spirit.currentTaskScript().orElse("?"),
+                    spirit.displayName());
+        }
         try {
-            return Optional.of(JobLaunch.plan(ticket, target));
+            long startStarted = System.nanoTime();
+            JobLaunch.start(spirit, ticket.id(), plan);
+            timer.add("start", startStarted);
         } catch (RuntimeException failure) {
-            if (RepairPlan.goalless(ticket, targets.get(ticket.id()))) {
-                dropGoallessRepair(ticket);
-                return Optional.empty();
-            }
             LOGGER.error(
-                    "Задание {} (кейс {}): план не собран: {}", ticket.id(), ticket.boardCase(), failure.getMessage());
-            dropUnplannedTransfer(ticket, round);
-            return Optional.empty();
+                    "Задание {}: дух {} не принял задание: {}",
+                    ticket.id(),
+                    spirit.displayName(),
+                    failure.getMessage());
+            return false;
         }
-    }
-
-    private void dropGoallessRepair(BoardTicket ticket) {
-        board.cancel(ticket.id());
-        targets.remove(ticket.id());
-        host.persistBoard();
-        LOGGER.info(
-                "[board] ремонт {} снят: цели нет (план сменился или сервер перезапущен), аудит этапа поставит заново",
-                ticket.id());
-    }
-
-    private void dropUnplannedTransfer(BoardTicket ticket, DispatchRound round) {
-        if (ticket.boardCase() != BoardCase.TRANSFER_ITEM) {
-            return;
+        BoardOutcome outcome = board.claim(ticket.id(), spirit.getUUID(), batch.now());
+        if (outcome == BoardOutcome.CLAIMED) {
+            crafters.forget(ticket.id());
+            settlement.issued(ticket.id(), spirit.taskGeneration());
+            settlement.progressIssued(batch.level(), ticket, target);
+            claims++;
+            batch.round().take(spirit.getUUID());
+            WorkReserveHub.reserve(spirit, new WorkTarget(WorkKind.CELL, target.target()));
+            host.notices.assigned(board, ticket, target, batch.pick().whyChosen(ticket, spirit, crafters), spirit);
+        } else {
+            JobLaunch.dropUnclaimed(spirit, ticket.id(), outcome);
         }
-        TransferCarriers.dropUnplanned(board, round, ticket);
-        targets.remove(ticket.id());
-        LOGGER.warn(
-                "[incident] передача {} снята: план не собран, держатель {} свободен, доска поставит её заново",
-                ticket.id(),
-                ticket.assignee().map(UUID::toString).orElse("-"));
-        host.persistBoard();
-    }
-
-    private void dropEmptyTransfer(BoardTicket ticket, TicketTarget target, SpiritEntity spirit) {
-        board.cancel(ticket.id());
-        targets.remove(ticket.id());
-        host.persistBoard();
-        LOGGER.info(
-                "Передача {} снята: у духа {} не осталось {}", ticket.id(), spirit.displayName(), target.supplyItem());
+        batch.pick().refresh(spirit);
+        return false;
     }
 }

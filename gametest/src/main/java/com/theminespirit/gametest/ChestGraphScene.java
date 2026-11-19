@@ -10,6 +10,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
+import com.theminespirit.neoforge.board.BoardService;
 import com.theminespirit.neoforge.board.ChestDemolition;
 import com.theminespirit.neoforge.board.ChestOpenScan;
 import com.theminespirit.neoforge.board.GraphSource;
@@ -46,55 +47,11 @@ final class ChestGraphScene {
         GameTestFilter.setBoardEnabled(true);
         try {
             long now = level.getGameTime();
-            service.submit(
-                    new BoardTicket(
-                            "warehouse_chest:ожидание",
-                            BoardCase.STOCK_CHESTS,
-                            Optional.empty(),
-                            BoardRules.priorityOf(BoardCase.STOCK_CHESTS),
-                            now,
-                            1,
-                            BoardTicket.ALWAYS_CAUSE,
-                            List.of(),
-                            Map.of()),
-                    TicketTarget.at(coord(full.above())));
-            GraphSource graph = new GraphSource();
             StockView stock = new StockView(Map.of("minecraft:oak_planks", 8));
-            graph.tick(level, service, List.of(spirit), stock, Set.of(), now);
-            graph.tick(level, service, List.of(spirit), stock, Set.of(), now);
-            String id = "demolish_chest:" + empty.getX() + "," + empty.getY() + "," + empty.getZ();
-            boolean issued = service.board().find(id).isPresent();
-            helper.onEachTick(
-                    () -> helper.assertTrue(
-                            issued,
-                            "Граф обязан выдать разбор пустого внепланового сундука: ближайший полный сундук и ожидание расширения склада не блокируют независимую работу"));
-            helper.assertTrue(
-                    level.getBlockState(full).is(Blocks.CHEST),
-                    "Содержимое полного сундука сохраняется, пока нет места для переноса");
+            String id = assertEmptyChestDemolish(helper, service, spirit, stock, now, full, empty);
             service.cancel(level, id);
             ((ChestBlockEntity) level.getBlockEntity(full)).clearContent();
-            GraphSource nearest = new GraphSource();
-            nearest.tick(level, service, List.of(spirit), stock, Set.of(), now);
-            nearest.tick(level, service, List.of(spirit), stock, Set.of(), now);
-            String failed = "demolish_chest:" + full.getX() + "," + full.getY() + "," + full.getZ();
-            helper.assertTrue(
-                    service.board().claim(failed, spirit.getUUID(), now) == BoardOutcome.CLAIMED
-                            && service.board().fail(failed),
-                    "Отказ исполнителя оставляет ближайший сундук в ожидании повторной попытки, а не отменяет его защиту");
-            level.setBlockAndUpdate(independentChest, Blocks.CHEST.defaultBlockState());
-            GraphSource retry = new GraphSource();
-            retry.tick(level, service, List.of(spirit), stock, Set.of(), now);
-            retry.tick(level, service, List.of(spirit), stock, Set.of(), now);
-            String next = "demolish_chest:" + independentChest.getX() + "," + independentChest.getY() + ","
-                    + independentChest.getZ();
-            boolean independent = service.board().statusOf(next).orElse(null) == BoardStatus.PENDING;
-            helper.onEachTick(
-                    () -> helper.assertTrue(
-                            independent,
-                            "Отказ ближайшего сундука не блокирует разбор следующего: граф обязан продолжить поиск после непринятого билета"));
-            helper.assertTrue(
-                    service.board().statusOf(failed).orElseThrow() == BoardStatus.FAILED,
-                    "Независимая работа не снимает задержку повторного разбора первого сундука");
+            assertFailedChestRetry(helper, service, spirit, stock, now, full, independentChest);
         } finally {
             GameTestFilter.setBoardEnabled(false);
             service.board().all().stream()
@@ -111,6 +68,75 @@ final class ChestGraphScene {
             level.setBlockAndUpdate(full, original);
             level.setBlockAndUpdate(independentChest, independentOriginal);
         }
+    }
+
+    private static String assertEmptyChestDemolish(
+            GameTestHelper helper,
+            BoardService service,
+            SpiritEntity spirit,
+            StockView stock,
+            long now,
+            BlockPos full,
+            BlockPos empty) {
+        ServerLevel level = helper.getLevel();
+        service.submit(
+                new BoardTicket(
+                        "warehouse_chest:ожидание",
+                        BoardCase.STOCK_CHESTS,
+                        Optional.empty(),
+                        BoardRules.priorityOf(BoardCase.STOCK_CHESTS),
+                        now,
+                        1,
+                        BoardTicket.ALWAYS_CAUSE,
+                        List.of(),
+                        Map.of()),
+                TicketTarget.at(coord(full.above())));
+        GraphSource graph = new GraphSource();
+        graph.tick(level, service, List.of(spirit), stock, Set.of(), now);
+        graph.tick(level, service, List.of(spirit), stock, Set.of(), now);
+        String id = "demolish_chest:" + empty.getX() + "," + empty.getY() + "," + empty.getZ();
+        boolean issued = service.board().find(id).isPresent();
+        helper.onEachTick(
+                () -> helper.assertTrue(
+                        issued,
+                        "Граф обязан выдать разбор пустого внепланового сундука: ближайший полный сундук и ожидание расширения склада не блокируют независимую работу"));
+        helper.assertTrue(
+                level.getBlockState(full).is(Blocks.CHEST),
+                "Содержимое полного сундука сохраняется, пока нет места для переноса");
+        return id;
+    }
+
+    private static void assertFailedChestRetry(
+            GameTestHelper helper,
+            BoardService service,
+            SpiritEntity spirit,
+            StockView stock,
+            long now,
+            BlockPos full,
+            BlockPos independentChest) {
+        ServerLevel level = helper.getLevel();
+        GraphSource nearest = new GraphSource();
+        nearest.tick(level, service, List.of(spirit), stock, Set.of(), now);
+        nearest.tick(level, service, List.of(spirit), stock, Set.of(), now);
+        String failed = "demolish_chest:" + full.getX() + "," + full.getY() + "," + full.getZ();
+        helper.assertTrue(
+                service.board().claim(failed, spirit.getUUID(), now) == BoardOutcome.CLAIMED
+                        && service.board().fail(failed),
+                "Отказ исполнителя оставляет ближайший сундук в ожидании повторной попытки, а не отменяет его защиту");
+        level.setBlockAndUpdate(independentChest, Blocks.CHEST.defaultBlockState());
+        GraphSource retry = new GraphSource();
+        retry.tick(level, service, List.of(spirit), stock, Set.of(), now);
+        retry.tick(level, service, List.of(spirit), stock, Set.of(), now);
+        String next = "demolish_chest:" + independentChest.getX() + "," + independentChest.getY() + ","
+                + independentChest.getZ();
+        boolean independent = service.board().statusOf(next).orElse(null) == BoardStatus.PENDING;
+        helper.onEachTick(
+                () -> helper.assertTrue(
+                        independent,
+                        "Отказ ближайшего сундука не блокирует разбор следующего: граф обязан продолжить поиск после непринятого билета"));
+        helper.assertTrue(
+                service.board().statusOf(failed).orElseThrow() == BoardStatus.FAILED,
+                "Независимая работа не снимает задержку повторного разбора первого сундука");
     }
 
     private static void checkSurfaceLevel(GameTestHelper helper, ServerLevel level, int x, int y, int z) {

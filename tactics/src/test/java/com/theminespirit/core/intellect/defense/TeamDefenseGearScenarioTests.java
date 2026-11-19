@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.Point;
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,7 +24,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 class TeamDefenseGearScenarioTests {
 
     @ParameterizedTest(name = "{0}")
-    @MethodSource("com.theminespirit.core.intellect.defense.TeamDefenseGearCases#gearCases")
+    @MethodSource({
+        "com.theminespirit.core.intellect.defense.TeamDefenseGearCases#gearCases",
+        "com.theminespirit.core.intellect.defense.TeamDefenseGearCases#gearStrainCases",
+        "com.theminespirit.core.intellect.defense.TeamDefenseGearCases#gearRoutineCases"
+    })
     void gear_Scenarios_AdjustHelpToEquipment(TeamDefenseScenarios.Case scenario) {
         verify(scenario);
     }
@@ -54,8 +58,8 @@ class TeamDefenseGearScenarioTests {
                 TeamDefenseScenarios.PROFILE,
                 TeamDefenseScenarios.WEIGHTS);
 
-        Set<CombatStance> stances =
-                new HashSet<>(orderOf(plan, "S1").memberStances().values());
+        Set<CombatStance> stances = EnumSet.noneOf(CombatStance.class);
+        stances.addAll(orderOf(plan, "S1").memberStances().values());
         assertEquals(
                 Set.of(CombatStance.HEAL, CombatStance.ENGAGE),
                 stances,

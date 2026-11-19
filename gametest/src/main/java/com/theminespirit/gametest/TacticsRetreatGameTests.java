@@ -38,95 +38,114 @@ public final class TacticsRetreatGameTests {
         Husk husk = TacticsScene.watcher(helper, EntityType.HUSK, huskAt);
         TacticsScene.slowDown(husk, SLOW_ENEMY_SPEED);
         PolicyScene scene = TacticsScene.ambush(helper, spirit, husk, huskAt, true, TacticsScene.LOW_HP);
-        float startHealth = husk.getHealth();
-        int[] hitAt = {-1};
-        boolean[] kitePassed = {false};
-        SpiritEntity[] dodger = {null};
-        AbstractArrow[] arrow = new AbstractArrow[1];
-        double[] startX = new double[1];
-        double[] startZ = new double[1];
-        double[] lastX = new double[1];
-        double[] lastZ = new double[1];
-        double[] maxSideways = new double[1];
-        double[] closest = {Double.MAX_VALUE};
-        float[] dodgeHealth = new float[1];
-        int[] firedAt = {-1};
-        helper.onEachTick(() -> {
+        RetreatTrack track = new RetreatTrack(husk.getHealth());
+        helper.onEachTick(() -> track.tick(helper, scene, spirit, husk));
+
+        helper.succeedWhen(() -> {
+            scene.assertStarted();
+            if (!track.kitePassed) {
+                assertKite(helper, spirit, husk, track);
+                track.startDodge(helper);
+                helper.assertTrue(false, "ждём уклонения от стрелы скелета");
+            }
+            assertDodge(helper, track);
+        });
+    }
+
+    private static void assertKite(GameTestHelper helper, SpiritEntity spirit, Husk husk, RetreatTrack track) {
+        helper.assertTrue(track.hitAt >= 0, "стрела ещё не попала во врага");
+        helper.assertTrue(
+                spirit.tactics().retreat().method() == RetreatMethod.KITE,
+                "исполняемый отход — KITE, получено "
+                        + spirit.tactics().retreat().method());
+        helper.assertTrue(spirit.tactics().combat().strikes() == 0, "кайт не рукопашная: ударов мечом нет");
+        helper.assertTrue(
+                spirit.distanceTo(husk) > 4.0,
+                "дух держит дистанцию больше начальной, сейчас " + spirit.distanceTo(husk));
+        track.kitePassed = true;
+        husk.discard();
+        spirit.discard();
+    }
+
+    private static void assertDodge(GameTestHelper helper, RetreatTrack track) {
+        boolean flying = track.arrow != null
+                && track.arrow.isAlive()
+                && track.arrow.getDeltaMovement().lengthSqr() > 0.0001;
+        if (flying && helper.getTick() - track.firedAt < DODGE_LIMIT_TICKS) {
+            helper.assertTrue(false, "стрела ещё летит к духу");
+        }
+        helper.assertTrue(
+                track.dodger.getHealth() >= track.dodgeHealth,
+                "Стрела скелета не попала в духа: рефлекс уклонения обязан увести его с траектории, иначе первая "
+                        + "стрела снимает здоровье. Здоровье " + track.dodger.getHealth() + " из " + track.dodgeHealth
+                        + ", дух " + track.dodger.position() + ", стрела " + arrowText(track.arrow) + ", смещение "
+                        + track.maxSideways + ", ближайшая точка " + track.closest);
+        helper.assertTrue(
+                track.maxSideways >= DODGE_DISTANCE,
+                "Дух шагнул в сторону от траектории: смещение " + track.maxSideways + " меньше " + DODGE_DISTANCE
+                        + ", стрела " + arrowText(track.arrow));
+        helper.assertTrue(
+                track.closest <= 0.5,
+                "Стрела прошла через место, где дух стоял: иначе промах случайный и проверять нечего, ближайшая "
+                        + "точка " + track.closest + ", стрела " + arrowText(track.arrow));
+        TacticsScene.finish(helper, track.dodger);
+    }
+
+    private static final class RetreatTrack {
+        private final float startHealth;
+        private int hitAt = -1;
+        private boolean kitePassed;
+        private SpiritEntity dodger;
+        private AbstractArrow arrow;
+        private double startX;
+        private double startZ;
+        private double lastX;
+        private double lastZ;
+        private double maxSideways;
+        private double closest = Double.MAX_VALUE;
+        private float dodgeHealth;
+        private int firedAt = -1;
+
+        private RetreatTrack(float startHealth) {
+            this.startHealth = startHealth;
+        }
+
+        private void tick(GameTestHelper helper, PolicyScene scene, SpiritEntity spirit, Husk husk) {
             if (!scene.started()) {
                 return;
             }
-            if (hitAt[0] < 0 && husk.getHealth() < startHealth) {
-                hitAt[0] = scene.ticks();
+            if (hitAt < 0 && husk.getHealth() < startHealth) {
+                hitAt = scene.ticks();
             }
-            if (hitAt[0] < 0 && scene.ticks() > KITE_LIMIT_TICKS) {
+            if (hitAt < 0 && scene.ticks() > KITE_LIMIT_TICKS) {
                 helper.fail("стрела не попала во врага за " + KITE_LIMIT_TICKS + " тиков, выстрелов "
                         + spirit.tactics().combat().shots() + ", решение "
                         + spirit.tactics().explain().orElse("нет"));
             }
-            if (dodger[0] == null || arrow[0] == null) {
+            if (dodger == null || arrow == null) {
                 return;
             }
-            maxSideways[0] =
-                    Math.max(maxSideways[0], Math.hypot(dodger[0].getX() - startX[0], dodger[0].getZ() - startZ[0]));
-            boolean flying = arrow[0].isAlive() && arrow[0].getDeltaMovement().lengthSqr() > 0.0001;
+            maxSideways = Math.max(maxSideways, Math.hypot(dodger.getX() - startX, dodger.getZ() - startZ));
+            boolean flying = arrow.isAlive() && arrow.getDeltaMovement().lengthSqr() > 0.0001;
             if (flying) {
-                closest[0] = Math.min(
-                        closest[0],
-                        segmentDistance(startX[0], startZ[0], lastX[0], lastZ[0], arrow[0].getX(), arrow[0].getZ()));
-                lastX[0] = arrow[0].getX();
-                lastZ[0] = arrow[0].getZ();
+                closest = Math.min(closest, segmentDistance(startX, startZ, lastX, lastZ, arrow.getX(), arrow.getZ()));
+                lastX = arrow.getX();
+                lastZ = arrow.getZ();
             }
-        });
+        }
 
-        helper.succeedWhen(() -> {
-            scene.assertStarted();
-            if (!kitePassed[0]) {
-                helper.assertTrue(hitAt[0] >= 0, "стрела ещё не попала во врага");
-                helper.assertTrue(
-                        spirit.tactics().retreat().method() == RetreatMethod.KITE,
-                        "исполняемый отход — KITE, получено "
-                                + spirit.tactics().retreat().method());
-                helper.assertTrue(spirit.tactics().combat().strikes() == 0, "кайт не рукопашная: ударов мечом нет");
-                helper.assertTrue(
-                        spirit.distanceTo(husk) > 4.0,
-                        "дух держит дистанцию больше начальной, сейчас " + spirit.distanceTo(husk));
-                kitePassed[0] = true;
-                husk.discard();
-                spirit.discard();
-                dodger[0] = TacticsScene.spirit(helper, new BlockPos(5, 1, 8));
-                dodger[0].setDemo(true);
-                Skeleton skeleton = TacticsScene.watcher(helper, EntityType.SKELETON, new BlockPos(5, 1, 0));
-                startX[0] = dodger[0].getX();
-                startZ[0] = dodger[0].getZ();
-                dodgeHealth[0] = dodger[0].getHealth();
-                arrow[0] = shoot(skeleton, dodger[0]);
-                lastX[0] = arrow[0].getX();
-                lastZ[0] = arrow[0].getZ();
-                firedAt[0] = (int) helper.getTick();
-                helper.assertTrue(false, "ждём уклонения от стрелы скелета");
-            }
-            boolean flying = arrow[0] != null
-                    && arrow[0].isAlive()
-                    && arrow[0].getDeltaMovement().lengthSqr() > 0.0001;
-            if (flying && helper.getTick() - firedAt[0] < DODGE_LIMIT_TICKS) {
-                helper.assertTrue(false, "стрела ещё летит к духу");
-            }
-            helper.assertTrue(
-                    dodger[0].getHealth() >= dodgeHealth[0],
-                    "Стрела скелета не попала в духа: рефлекс уклонения обязан увести его с траектории, иначе первая "
-                            + "стрела снимает здоровье. Здоровье " + dodger[0].getHealth() + " из " + dodgeHealth[0]
-                            + ", дух " + dodger[0].position() + ", стрела " + arrowText(arrow[0]) + ", смещение "
-                            + maxSideways[0] + ", ближайшая точка " + closest[0]);
-            helper.assertTrue(
-                    maxSideways[0] >= DODGE_DISTANCE,
-                    "Дух шагнул в сторону от траектории: смещение " + maxSideways[0] + " меньше " + DODGE_DISTANCE
-                            + ", стрела " + arrowText(arrow[0]));
-            helper.assertTrue(
-                    closest[0] <= 0.5,
-                    "Стрела прошла через место, где дух стоял: иначе промах случайный и проверять нечего, ближайшая "
-                            + "точка " + closest[0] + ", стрела " + arrowText(arrow[0]));
-            TacticsScene.finish(helper, dodger[0]);
-        });
+        private void startDodge(GameTestHelper helper) {
+            dodger = TacticsScene.spirit(helper, new BlockPos(5, 1, 8));
+            dodger.setDemo(true);
+            Skeleton skeleton = TacticsScene.watcher(helper, EntityType.SKELETON, new BlockPos(5, 1, 0));
+            startX = dodger.getX();
+            startZ = dodger.getZ();
+            dodgeHealth = dodger.getHealth();
+            arrow = shoot(skeleton, dodger);
+            lastX = arrow.getX();
+            lastZ = arrow.getZ();
+            firedAt = (int) helper.getTick();
+        }
     }
 
     private static String arrowText(AbstractArrow arrow) {

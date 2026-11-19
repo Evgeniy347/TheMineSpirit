@@ -5,10 +5,10 @@ import com.theminespirit.core.farming.CropKind;
 import java.util.List;
 
 final class BuildScriptSpecs {
-    private BuildScriptSpecs() {}
-
     private static final String RADIUS = "radius";
     private static final String BLOCK = "block";
+
+    private BuildScriptSpecs() {}
 
     static List<ScriptSpec> placementSpecs() {
         return List.of(

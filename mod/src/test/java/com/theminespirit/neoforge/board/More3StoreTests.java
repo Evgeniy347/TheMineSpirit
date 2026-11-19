@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -79,7 +80,7 @@ class More3StoreTests {
         More3Store store = new More3Store();
         store.noteDamage(new BlockCoord(4, 70, 5), "mob", 100);
 
-        CompoundTag saved = store.save(new CompoundTag(), null);
+        CompoundTag saved = store.save(new CompoundTag(), RegistryAccess.EMPTY);
         More3Store loaded = More3Store.load(saved, null);
 
         assertEquals(

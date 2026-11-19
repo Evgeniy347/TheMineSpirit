@@ -3,9 +3,9 @@ package com.theminespirit.core.script;
 import java.util.List;
 
 final class TerrainScriptSpecs {
-    private TerrainScriptSpecs() {}
-
     private static final String BLOCK = "block";
+
+    private TerrainScriptSpecs() {}
 
     static List<ScriptSpec> terrainSpecs() {
         return List.of(

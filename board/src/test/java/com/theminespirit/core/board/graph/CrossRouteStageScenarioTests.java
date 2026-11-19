@@ -42,7 +42,10 @@ class CrossRouteStageScenarioTests {
         world.built("hut", Built.PLANNED);
         world.with("oak_planks", 64).with("oak_log", 64).with("cobblestone", 64);
         GraphFacts facts = facts(
-                named(spirit("spirit-1"), spirit("spirit-2", 20, 20, true, false, "water", List.of(), List.of())),
+                named(
+                        spirit("spirit-1"),
+                        spirit(new CrossScene.SpiritSpec(
+                                "spirit-2", 20, 20, true, false, "water", List.of(), List.of()))),
                 List.of(),
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),
@@ -114,7 +117,9 @@ class CrossRouteStageScenarioTests {
         GraphWorld world = stageOne();
         world.with("oak_log", 0).with("oak_planks", 0);
         GraphFacts facts = facts(
-                named(spirit("spirit-1"), spirit("spirit-2", 20, 20, true, true, null, List.of(), List.of())),
+                named(
+                        spirit("spirit-1"),
+                        spirit(new CrossScene.SpiritSpec("spirit-2", 20, 20, true, true, null, List.of(), List.of()))),
                 List.of(),
                 List.of(),
                 new GraphSiteFacts.Terrain(2, 0, 0, 2, 0, Map.of(), Map.of("minecraft:dirt", 2), Map.of()),

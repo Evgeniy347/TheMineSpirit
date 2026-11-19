@@ -16,6 +16,7 @@ import com.theminespirit.core.movement.network.PathNetwork;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -141,7 +142,7 @@ class WarehouseStandsTests {
         if (!MiningSafety.canStand(start, world)) {
             return seen;
         }
-        ArrayDeque<BlockCoord> queue = new ArrayDeque<>();
+        Deque<BlockCoord> queue = new ArrayDeque<>();
         seen.add(start);
         queue.add(start);
         while (!queue.isEmpty()) {

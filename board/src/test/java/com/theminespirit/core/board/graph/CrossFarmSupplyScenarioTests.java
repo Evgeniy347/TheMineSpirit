@@ -52,7 +52,8 @@ class CrossFarmSupplyScenarioTests {
         world.event("animal_starving");
         GraphFacts facts = new GraphFacts(
                 named(
-                        spirit("spirit-1", 20, 20, false, false, null, List.of(wornShears()), List.of()),
+                        spirit(new CrossScene.SpiritSpec(
+                                "spirit-1", 20, 20, false, false, null, List.of(wornShears()), List.of())),
                         spirit("spirit-2")),
                 List.of(threat("wolf-a", "animal-1", GraphFacts.TargetKind.ANIMAL, 2)),
                 List.of(),

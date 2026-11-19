@@ -5,11 +5,11 @@ import com.theminespirit.core.husbandry.Species;
 import java.util.List;
 
 final class FarmScriptSpecs {
-    private FarmScriptSpecs() {}
-
     private static final String RADIUS = "radius";
     private static final String SPECIES = "species";
     private static final String COUNT = "count";
+
+    private FarmScriptSpecs() {}
 
     static List<ScriptSpec> cropCareSpecs() {
         return List.of(

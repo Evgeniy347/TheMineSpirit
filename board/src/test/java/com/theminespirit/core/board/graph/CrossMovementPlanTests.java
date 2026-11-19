@@ -104,7 +104,10 @@ class CrossMovementPlanTests {
         GraphWorld world = stageOne();
         world.with("oak_planks", 64).with("cobblestone", 64).with("oak_log", 64);
         GraphFacts facts = facts(
-                named(spirit("spirit-1"), spirit("spirit-2", 20, 20, true, false, "pit", List.of(), List.of())),
+                named(
+                        spirit("spirit-1"),
+                        spirit(new CrossScene.SpiritSpec(
+                                "spirit-2", 20, 20, true, false, "pit", List.of(), List.of()))),
                 List.of(),
                 List.of(),
                 GraphSiteFacts.Terrain.empty(),

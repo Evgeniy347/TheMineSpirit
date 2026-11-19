@@ -20,7 +20,12 @@ class TeamDefenseMobScenarioTests {
             List.of(pair(-100, 0), pair(-50, 0), pair(0, 0), pair(50, 0), pair(100, 0));
 
     @ParameterizedTest(name = "{0}")
-    @MethodSource("com.theminespirit.core.intellect.defense.TeamDefenseMobCases#mobCases")
+    @MethodSource({
+        "com.theminespirit.core.intellect.defense.TeamDefenseMobCases#mobCases",
+        "com.theminespirit.core.intellect.defense.TeamDefenseMobCases#mobSpiderCases",
+        "com.theminespirit.core.intellect.defense.TeamDefenseMobCases#mobStanceCases",
+        "com.theminespirit.core.intellect.defense.TeamDefenseMobCases#mobPotionCases"
+    })
     void mob_Scenarios_MatchEnemyTypeAndWeight(TeamDefenseScenarios.Case scenario) {
         verify(scenario);
     }

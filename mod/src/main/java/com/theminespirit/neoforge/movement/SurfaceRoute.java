@@ -26,6 +26,8 @@ public final class SurfaceRoute {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static long maxSliceNanos;
 
+    private SurfaceRoute() {}
+
     public static long maxSliceMillis() {
         return maxSliceNanos / 1_000_000L;
     }
@@ -69,8 +71,6 @@ public final class SurfaceRoute {
             return walk;
         }
     }
-
-    private SurfaceRoute() {}
 
     public static Pending begin(SpiritEntity spirit, BlockCoord target, boolean descent, boolean rescue) {
         BlockPos feet = spirit.blockPosition();

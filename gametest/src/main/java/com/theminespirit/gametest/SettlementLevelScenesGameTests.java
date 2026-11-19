@@ -115,8 +115,8 @@ public final class SettlementLevelScenesGameTests {
                 "Поиск пути не записывает пролом: учёт ведёт только настоящее действие, иначе доска «ремонтирует» "
                         + "клетки, которых никто не ломал");
         int logged = PlotBreakSeen.get(helper.getLevel()).size();
-        RouteCell.kind(new RouteLevelView(spirit).cell(cell.x(), cell.y(), cell.z()));
-        RouteCell.kind(new RouteLevelView(spirit, true).cell(cell.x(), cell.y(), cell.z()));
+        int plain = RouteCell.kind(new RouteLevelView(spirit).cell(cell.x(), cell.y(), cell.z()));
+        int rescue = RouteCell.kind(new RouteLevelView(spirit, true).cell(cell.x(), cell.y(), cell.z()));
         BlockCoord spare = PlotPlanBlocks.of(site).blocks().keySet().stream()
                 .filter(at -> site.protectionCell(at.x(), at.y(), at.z()) && !at.equals(cell))
                 .findFirst()
@@ -124,13 +124,12 @@ public final class SettlementLevelScenesGameTests {
         helper.getLevel()
                 .setBlockAndUpdate(
                         new BlockPos(spare.x(), spare.y(), spare.z()), Blocks.JUNGLE_PLANKS.defaultBlockState());
-        RouteCell.kind(new RouteLevelView(spirit).cell(spare.x(), spare.y(), spare.z()));
+        int spareKind = RouteCell.kind(new RouteLevelView(spirit).cell(spare.x(), spare.y(), spare.z()));
         helper.assertTrue(
-                RouteCell.kind(new RouteLevelView(spirit).cell(cell.x(), cell.y(), cell.z())) == RouteCell.BLOCKED,
+                plain == RouteCell.BLOCKED && spareKind == RouteCell.BLOCKED,
                 "Обычный проход не прокапывает клетку плана: обход дома остаётся запретом");
         helper.assertTrue(
-                RouteCell.kind(new RouteLevelView(spirit, true).cell(cell.x(), cell.y(), cell.z()))
-                        != RouteCell.BLOCKED,
+                rescue != RouteCell.BLOCKED,
                 "Маршрут спасения видит ту же ломку, что разрешает ProtectionGate: иначе клетка плана навсегда "
                         + "закрывает путь наружу");
         helper.assertTrue(

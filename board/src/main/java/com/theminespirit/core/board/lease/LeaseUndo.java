@@ -40,21 +40,23 @@ public final class LeaseUndo {
     }
 
     private static long mix(long hash, int value) {
+        long result = hash;
         for (int shift = 0; shift < 32; shift += 8) {
-            hash ^= (value >>> shift) & 0xffL;
-            hash *= FNV_PRIME;
+            result ^= (value >>> shift) & 0xffL;
+            result *= FNV_PRIME;
         }
-        return hash;
+        return result;
     }
 
     private static long mixText(long hash, @Nullable String text) {
         if (text == null) {
             return mix(hash, -1);
         }
+        long result = hash;
         for (int at = 0; at < text.length(); at++) {
-            hash = mix(hash, text.charAt(at));
+            result = mix(result, text.charAt(at));
         }
-        return mix(hash, -2);
+        return mix(result, -2);
     }
 
     public static List<Step> order(Lease lease) {
