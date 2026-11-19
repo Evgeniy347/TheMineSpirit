@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.base.NamespacedId;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -11,7 +12,6 @@ import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 
 public final class GearRules {
-    private static final String NAMESPACE = "minecraft:";
     private static final List<String> ARMOR_SLOTS = List.of("HEAD", "CHEST", "LEGS", "FEET");
     private static final Set<String> TOOL_KINDS = Set.of("pickaxe", "axe", "shovel", "sword", "hoe");
 
@@ -205,7 +205,7 @@ public final class GearRules {
     }
 
     private static String shortId(String item) {
-        return item.startsWith(NAMESPACE) ? item.substring(NAMESPACE.length()) : item;
+        return item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
     }
 
     private static String suffix(String slot) {

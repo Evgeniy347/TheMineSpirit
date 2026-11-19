@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.board.graph.GraphKits;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
@@ -16,7 +17,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
 final class More4Scripts {
-    static final String MINECRAFT = "minecraft:";
     static final String NEAREST = "nearest";
     static final int CONTAINER_RADIUS = 8;
     static final int MAX_COUNT = 64;
@@ -42,10 +42,11 @@ final class More4Scripts {
     static Optional<String> rareItem(Map<String, Integer> items, Set<String> rares) {
         Set<String> known = new LinkedHashSet<>();
         for (String rare : rares) {
-            known.add(rare.startsWith(MINECRAFT) ? rare.substring(MINECRAFT.length()) : rare);
+            known.add(rare.startsWith(NamespacedId.MINECRAFT) ? rare.substring(NamespacedId.MINECRAFT.length()) : rare);
         }
         for (String item : items.keySet().stream().sorted().toList()) {
-            String name = item.startsWith(MINECRAFT) ? item.substring(MINECRAFT.length()) : item;
+            String name =
+                    item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
             if (known.contains(name) && items.getOrDefault(item, 0) > 0) {
                 return Optional.of(item);
             }

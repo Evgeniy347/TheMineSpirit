@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.alchemy.BrewRecipes;
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
@@ -16,7 +17,6 @@ final class BrewPlans {
     private static final String RADIUS = "radius";
     private static final String ACQUIRE = "acquire";
     private static final String CRAFT = "craft";
-    private static final String MINECRAFT = "minecraft:";
 
     private BrewPlans() {}
 
@@ -35,12 +35,12 @@ final class BrewPlans {
         int rods = (count + 1) / 2;
         return new SequenceNode(List.of(
                 TicketPlans.gotoTarget(target),
-                new ScriptCall(ACQUIRE, Map.of(ITEM, MINECRAFT + "blaze_rod", COUNT, rods)),
+                new ScriptCall(ACQUIRE, Map.of(ITEM, NamespacedId.MINECRAFT + "blaze_rod", COUNT, rods)),
                 new ScriptCall(
                         CRAFT,
                         Map.of(
                                 ITEM,
-                                MINECRAFT + "blaze_powder",
+                                NamespacedId.MINECRAFT + "blaze_powder",
                                 COUNT,
                                 count,
                                 RADIUS,
@@ -54,7 +54,8 @@ final class BrewPlans {
         steps.add(TicketPlans.gotoTarget(target));
         BrewRecipes.needs(product, count)
                 .forEach((item, need) -> steps.add(new ScriptCall(
-                        ACQUIRE, Map.of(ITEM, MINECRAFT + item, COUNT, Math.min(need, CatalogLimits.COUNT_MAX)))));
+                        ACQUIRE,
+                        Map.of(ITEM, NamespacedId.MINECRAFT + item, COUNT, Math.min(need, CatalogLimits.COUNT_MAX)))));
         steps.add(new ScriptCall(
                 "brew", Map.of(ITEM, product, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));
         return new SequenceNode(steps);
@@ -64,14 +65,14 @@ final class BrewPlans {
         int count = target.count() > 0 ? Math.min(target.count(), CatalogLimits.COUNT_MAX) : 1;
         return new SequenceNode(List.of(
                 TicketPlans.gotoTarget(target),
-                new ScriptCall(ACQUIRE, Map.of(ITEM, MINECRAFT + "soul_sand", COUNT, 1)),
-                new ScriptCall(ACQUIRE, Map.of(ITEM, MINECRAFT + "nether_wart", COUNT, 1)),
+                new ScriptCall(ACQUIRE, Map.of(ITEM, NamespacedId.MINECRAFT + "soul_sand", COUNT, 1)),
+                new ScriptCall(ACQUIRE, Map.of(ITEM, NamespacedId.MINECRAFT + "nether_wart", COUNT, 1)),
                 new ScriptCall("farm_nether_wart", Map.of(COUNT, count, RADIUS, CatalogLimits.FARM_RADIUS_DEFAULT)),
-                TicketPlans.store(target, MINECRAFT + "nether_wart")));
+                TicketPlans.store(target, NamespacedId.MINECRAFT + "nether_wart")));
     }
 
     private static TaskNode stand(TicketTarget target) {
-        return TicketPlans.placeInYard(MINECRAFT + "brewing_stand", 1, target);
+        return TicketPlans.placeInYard(NamespacedId.MINECRAFT + "brewing_stand", 1, target);
     }
 
     private static String product(@Nullable String craft) {

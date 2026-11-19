@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.ArrayList;
@@ -19,7 +20,6 @@ public final class RecipeImport {
     public static final double REVERSE_WEIGHT = 0.1;
     private static final String COALS = "#coals";
     private static final String ALT_PREFIX = "#alt_";
-    private static final String NAMESPACE = "minecraft:";
     private static final Map<String, String> STATIONS = Map.of(
             "smelting", "furnace",
             "blasting", "blast_furnace",
@@ -470,7 +470,7 @@ public final class RecipeImport {
 
     private static String tagName(String raw) {
         String name = raw.startsWith(INGREDIENT_TAG) ? raw.substring(1) : raw;
-        return name.startsWith(NAMESPACE) ? name.substring(NAMESPACE.length()) : name;
+        return name.startsWith(NamespacedId.MINECRAFT) ? name.substring(NamespacedId.MINECRAFT.length()) : name;
     }
 
     private static String simple(String type) {

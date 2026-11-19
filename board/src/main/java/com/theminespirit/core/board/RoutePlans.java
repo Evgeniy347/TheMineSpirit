@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
@@ -24,7 +25,6 @@ final class RoutePlans {
     private static final String ACQUIRE = "acquire";
     private static final String CLEAR_AREA = "clear_area";
     private static final String DEPOSIT = "deposit";
-    private static final String MINECRAFT = "minecraft:";
 
     private RoutePlans() {}
 
@@ -87,6 +87,6 @@ final class RoutePlans {
     }
 
     private static String full(String block) {
-        return block.contains(":") ? block : MINECRAFT + block;
+        return block.contains(":") ? block : NamespacedId.MINECRAFT + block;
     }
 }

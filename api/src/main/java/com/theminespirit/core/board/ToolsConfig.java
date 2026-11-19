@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.HashSet;
 import java.util.List;
@@ -17,7 +18,6 @@ public record ToolsConfig(List<String> set, String tier, List<String> repairTier
     public static final List<String> TARGET_TIERS = List.of("stone", "iron", "diamond");
 
     private static final Set<String> FIELDS = Set.of("set", "tier", "repairTiers");
-    private static final String MINECRAFT_PREFIX = "minecraft:";
     private static final ToolsConfig DEFAULTS =
             new ToolsConfig(List.of("pickaxe", "axe", "shovel"), "stone", List.of("iron", "diamond"));
 
@@ -116,7 +116,7 @@ public record ToolsConfig(List<String> set, String tier, List<String> repairTier
     }
 
     public static String itemId(String tier, String kind) {
-        return MINECRAFT_PREFIX + tier + "_" + kind;
+        return NamespacedId.MINECRAFT + tier + "_" + kind;
     }
 
     private static Optional<String> partAfterLastUnderscore(String itemId) {
@@ -129,6 +129,6 @@ public record ToolsConfig(List<String> set, String tier, List<String> repairTier
     }
 
     private static String stripPrefix(String itemId) {
-        return itemId.startsWith(MINECRAFT_PREFIX) ? itemId.substring(MINECRAFT_PREFIX.length()) : itemId;
+        return itemId.startsWith(NamespacedId.MINECRAFT) ? itemId.substring(NamespacedId.MINECRAFT.length()) : itemId;
     }
 }

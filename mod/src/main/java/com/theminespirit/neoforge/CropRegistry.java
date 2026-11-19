@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.farming.CropKind;
 import java.util.Arrays;
 import java.util.Set;
@@ -11,7 +12,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
 public final class CropRegistry {
-    private static final String DEFAULT_NAMESPACE = "minecraft:";
 
     private CropRegistry() {}
 
@@ -20,11 +20,11 @@ public final class CropRegistry {
     }
 
     public static Item plantItem(CropKind kind) {
-        return lookup(BuiltInRegistries.ITEM, DEFAULT_NAMESPACE + kind.plantItem(), kind, "посадочный предмет");
+        return lookup(BuiltInRegistries.ITEM, NamespacedId.MINECRAFT + kind.plantItem(), kind, "посадочный предмет");
     }
 
     public static Item produceItem(CropKind kind) {
-        return lookup(BuiltInRegistries.ITEM, DEFAULT_NAMESPACE + kind.produceItem(), kind, "предмет урожая");
+        return lookup(BuiltInRegistries.ITEM, NamespacedId.MINECRAFT + kind.produceItem(), kind, "предмет урожая");
     }
 
     public static Block fruitBlock(CropKind kind) {

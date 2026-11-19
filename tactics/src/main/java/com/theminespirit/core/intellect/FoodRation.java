@@ -1,5 +1,6 @@
 package com.theminespirit.core.intellect;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.processing.CookableFoods;
 import java.util.Comparator;
 import java.util.Map;
@@ -9,7 +10,6 @@ import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 
 public final class FoodRation {
-    private static final String DEFAULT_NAMESPACE = "minecraft:";
 
     public record Choice(String item, boolean needsCooking) {
         public Choice {
@@ -73,6 +73,6 @@ public final class FoodRation {
     }
 
     private static String qualify(String item) {
-        return item.indexOf(':') < 0 ? DEFAULT_NAMESPACE + item : item;
+        return item.indexOf(':') < 0 ? NamespacedId.MINECRAFT + item : item;
     }
 }

@@ -1,5 +1,6 @@
 package com.theminespirit.core.crafting;
 
+import com.theminespirit.core.base.NamespacedId;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -16,7 +17,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public final class Obtainability {
-    private static final String MINECRAFT = "minecraft:";
 
     private final Function<String, Optional<RecipeSpec>> craft;
     private final Function<String, List<RecipeSpec>> smelt;
@@ -110,6 +110,6 @@ public final class Obtainability {
 
     private static String key(String item) {
         Objects.requireNonNull(item, "Имя предмета не может быть null: по нему ищут путь");
-        return item.startsWith(MINECRAFT) ? item.substring(MINECRAFT.length()) : item;
+        return item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
     }
 }

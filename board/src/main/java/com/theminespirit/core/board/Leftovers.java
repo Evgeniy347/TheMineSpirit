@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.town.PlotLeveling;
@@ -7,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 final class Leftovers {
-    private static final String MINECRAFT = "minecraft:";
     private static final String TORCH = "minecraft:torch";
     static final List<String> ITEMS = List.of(
             "minecraft:stick",
@@ -24,8 +24,8 @@ final class Leftovers {
         List<String> items = new ArrayList<>(ITEMS);
         if (target.leveling() != null) {
             String raw = target.leveling().block();
-            String block = raw.contains(":") ? raw : MINECRAFT + raw;
-            if (!(MINECRAFT + PlotLeveling.DEFAULT_BLOCK).equals(block) && !items.contains(block)) {
+            String block = raw.contains(":") ? raw : NamespacedId.MINECRAFT + raw;
+            if (!(NamespacedId.MINECRAFT + PlotLeveling.DEFAULT_BLOCK).equals(block) && !items.contains(block)) {
                 items.add(block);
             }
         }

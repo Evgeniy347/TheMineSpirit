@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
@@ -26,9 +27,8 @@ public final class StagePlans {
     private static final String TABLE = "minecraft:crafting_table";
     private static final String FURNACE = "minecraft:furnace";
     private static final String TABLE_BLOCK = "crafting_table";
-    private static final String MINECRAFT = "minecraft:";
-    private static final String COBBLESTONE = MINECRAFT + "cobblestone";
-    private static final String SUPPORT = MINECRAFT + "dirt";
+    private static final String COBBLESTONE = NamespacedId.MINECRAFT + "cobblestone";
+    private static final String SUPPORT = NamespacedId.MINECRAFT + "dirt";
     private static final int CHEST_PLANKS = 20;
     private static final int FELL_LAYER = 4;
     private static final int FURNACE_STONE = 8;
@@ -85,7 +85,8 @@ public final class StagePlans {
                             }
                             String id = target.wood() == null ? item : WoodSpecies.swap(item, target.wood());
                             steps.add(PlanSteps.acquire(
-                                    id.contains(":") ? id : MINECRAFT + id, Math.min(count, CatalogLimits.COUNT_MAX)));
+                                    id.contains(":") ? id : NamespacedId.MINECRAFT + id,
+                                    Math.min(count, CatalogLimits.COUNT_MAX)));
                         }));
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("file", scheme);
@@ -124,7 +125,8 @@ public final class StagePlans {
                             }
                             String id = target.wood() == null ? item : WoodSpecies.swap(item, target.wood());
                             steps.add(PlanSteps.acquire(
-                                    id.contains(":") ? id : MINECRAFT + id, Math.min(count, CatalogLimits.COUNT_MAX)));
+                                    id.contains(":") ? id : NamespacedId.MINECRAFT + id,
+                                    Math.min(count, CatalogLimits.COUNT_MAX)));
                         }));
         steps.add(new ScriptCall("build_schematic", Map.copyOf(params)));
         return new SequenceNode(steps);
@@ -134,7 +136,7 @@ public final class StagePlans {
         List<TaskNode> steps = new ArrayList<>();
         steps.add(PlanSteps.gotoPoint(site.workYard()));
         String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
-        steps.add(PlanSteps.withdraw(MINECRAFT + wood + "_planks", CHEST_PLANKS));
+        steps.add(PlanSteps.withdraw(NamespacedId.MINECRAFT + wood + "_planks", CHEST_PLANKS));
         for (SchemeBuild build : builds) {
             steps.add(
                     build.only().contains(TABLE_BLOCK)

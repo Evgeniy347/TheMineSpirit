@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.board.StockParts;
 import com.theminespirit.core.board.StockScan;
 import com.theminespirit.core.board.StockView;
@@ -37,7 +38,6 @@ public final class StockReader {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int CONTAINER_RADIUS = 8;
     private static final int SCAN_HEIGHT = 4;
-    private static final String MINECRAFT_PREFIX = "minecraft:";
     private static final String POTION_PREFIX = "potion_";
     private static final String SPLASH_PREFIX = "splash_potion_";
 
@@ -204,6 +204,6 @@ public final class StockReader {
     }
 
     private static String shortId(String itemId) {
-        return itemId.startsWith(MINECRAFT_PREFIX) ? itemId.substring(MINECRAFT_PREFIX.length()) : itemId;
+        return itemId.startsWith(NamespacedId.MINECRAFT) ? itemId.substring(NamespacedId.MINECRAFT.length()) : itemId;
     }
 }

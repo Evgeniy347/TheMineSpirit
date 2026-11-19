@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.forestry.TreeSpecies;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -13,7 +14,6 @@ public final class ToolGate {
     public static final String AXE = ToolsConfig.AXE;
     public static final String TOOL_MODIFIER = "tool=";
     public static final String CARRY_MODIFIER = "carry=";
-    private static final String MINECRAFT = "minecraft:";
 
     public enum Hands {
         PICKAXE,
@@ -151,7 +151,7 @@ public final class ToolGate {
         if (item == null) {
             return false;
         }
-        String id = item.startsWith(MINECRAFT) ? item : MINECRAFT + item;
+        String id = item.startsWith(NamespacedId.MINECRAFT) ? item : NamespacedId.MINECRAFT + item;
         return TreeSpecies.ofLog(id).isPresent();
     }
 

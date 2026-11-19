@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.WoodSpecies;
@@ -22,7 +23,6 @@ import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
 
 public final class CaseMaterials {
-    private static final String MINECRAFT_PREFIX = "minecraft:";
     private static final String ITEM = "item";
     private static final List<String> FUEL_ALTERNATIVES = List.of("charcoal", "coal");
 
@@ -192,6 +192,6 @@ public final class CaseMaterials {
     }
 
     private static String normalize(String item) {
-        return item.startsWith(MINECRAFT_PREFIX) ? item.substring(MINECRAFT_PREFIX.length()) : item;
+        return item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
     }
 }

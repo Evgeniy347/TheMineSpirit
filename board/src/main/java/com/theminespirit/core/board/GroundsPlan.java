@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.building.FillArea;
 import com.theminespirit.core.building.FillOrder;
@@ -27,7 +28,6 @@ public final class GroundsPlan {
     private static final int CUT_SLACK = 12;
     private static final int FILL_SLACK = 40;
     private static final String CLEAR_AREA = "clear_area";
-    private static final String MINECRAFT = "minecraft:";
 
     private GroundsPlan() {}
 
@@ -135,7 +135,7 @@ public final class GroundsPlan {
                     "acquire",
                     Map.of(
                             "item",
-                            MINECRAFT + leveling.block(),
+                            NamespacedId.MINECRAFT + leveling.block(),
                             "count",
                             Math.min(deepVolume, CatalogLimits.COUNT_MAX))));
         }
@@ -178,7 +178,7 @@ public final class GroundsPlan {
                 "acquire_at",
                 Map.of(
                         "item",
-                        MINECRAFT + PlotLeveling.DEFAULT_BLOCK,
+                        NamespacedId.MINECRAFT + PlotLeveling.DEFAULT_BLOCK,
                         "count",
                         Math.min(volume, CatalogLimits.COUNT_MAX),
                         "x",
@@ -226,8 +226,8 @@ public final class GroundsPlan {
     }
 
     private static List<String> dropFilter(PlotLeveling leveling) {
-        String dirt = MINECRAFT + PlotLeveling.DEFAULT_BLOCK;
-        String block = leveling.block().contains(":") ? leveling.block() : MINECRAFT + leveling.block();
+        String dirt = NamespacedId.MINECRAFT + PlotLeveling.DEFAULT_BLOCK;
+        String block = leveling.block().contains(":") ? leveling.block() : NamespacedId.MINECRAFT + leveling.block();
         if (EarthCover.earth(block)) {
             return EarthCover.ids(dirt);
         }

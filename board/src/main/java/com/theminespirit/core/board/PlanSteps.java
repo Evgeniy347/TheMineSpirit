@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
@@ -23,7 +24,6 @@ import org.jspecify.annotations.Nullable;
 
 final class PlanSteps {
     static final String AIR = "minecraft:air";
-    static final String MINECRAFT = "minecraft:";
     private static final String WAIT = "wait";
     private static final String TICKS = "ticks";
     private static final int PLANKS_PER_LOG = 4;
@@ -155,7 +155,9 @@ final class PlanSteps {
         String wood = target.wood() == null ? WoodSpecies.OAK : target.wood();
         builds.forEach(build -> materials(build)
                 .forEach((item, count) -> counts.merge(
-                        WoodSpecies.swap(item.contains(":") ? item : MINECRAFT + item, wood), count, Integer::sum)));
+                        WoodSpecies.swap(item.contains(":") ? item : NamespacedId.MINECRAFT + item, wood),
+                        count,
+                        Integer::sum)));
         List<TaskNode> steps = new ArrayList<>();
         StageWork work = target.work();
         if (work != null) {
@@ -167,7 +169,7 @@ final class PlanSteps {
             });
             int logs = (woodPlanks(counts) + PLANKS_PER_LOG - 1) / PLANKS_PER_LOG;
             if (logs > 0) {
-                steps.add(withdraw(MINECRAFT + wood + "_log", Math.min(logs, CatalogLimits.COUNT_MAX)));
+                steps.add(withdraw(NamespacedId.MINECRAFT + wood + "_log", Math.min(logs, CatalogLimits.COUNT_MAX)));
             }
         }
         if (!blocks.isEmpty()) {

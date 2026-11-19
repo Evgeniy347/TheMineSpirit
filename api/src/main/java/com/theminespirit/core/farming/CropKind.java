@@ -1,5 +1,6 @@
 package com.theminespirit.core.farming;
 
+import com.theminespirit.core.base.NamespacedId;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -21,7 +22,6 @@ public enum CropKind {
     PUMPKIN("minecraft:pumpkin_stem", 7, "pumpkin_seeds", "pumpkin", HarvestMethod.BREAK_FRUIT, "minecraft:pumpkin"),
     COCOA("minecraft:cocoa", 2, "cocoa_beans", "cocoa_beans", HarvestMethod.BREAK, null, "minecraft:jungle_log");
 
-    private static final String MINECRAFT_NAMESPACE = "minecraft:";
     private static final List<String> NAMES = Arrays.stream(values())
             .map(kind -> kind.name().toLowerCase(Locale.ROOT))
             .toList();
@@ -83,14 +83,15 @@ public enum CropKind {
 
     public static Optional<CropKind> ofProduce(String item) {
         Objects.requireNonNull(item, "Идентификатор урожая не может быть null: без него культуру не сопоставить");
-        String bare = item.startsWith(MINECRAFT_NAMESPACE) ? item.substring(MINECRAFT_NAMESPACE.length()) : item;
+        String bare = item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
         for (CropKind kind : values()) {
             if (kind == ANY) {
                 continue;
             }
             String produce = kind.produceItem();
-            String produceBare =
-                    produce.startsWith(MINECRAFT_NAMESPACE) ? produce.substring(MINECRAFT_NAMESPACE.length()) : produce;
+            String produceBare = produce.startsWith(NamespacedId.MINECRAFT)
+                    ? produce.substring(NamespacedId.MINECRAFT.length())
+                    : produce;
             if (produceBare.equals(bare)) {
                 return Optional.of(kind);
             }
@@ -205,6 +206,6 @@ public enum CropKind {
     }
 
     private static String canonicalId(String blockId) {
-        return blockId.indexOf(':') < 0 ? MINECRAFT_NAMESPACE + blockId : blockId;
+        return blockId.indexOf(':') < 0 ? NamespacedId.MINECRAFT + blockId : blockId;
     }
 }

@@ -1,11 +1,11 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.building.WoodSpecies;
 import java.util.Map;
 import java.util.Objects;
 
 public record BuildingWood(String species, String reason) {
-    private static final String NAMESPACE = "minecraft:";
     private static final int PLANKS_PER_LOG = 4;
 
     public BuildingWood {
@@ -78,6 +78,6 @@ public record BuildingWood(String species, String reason) {
     }
 
     private static int count(Map<String, Integer> items, String item) {
-        return items.getOrDefault(item, 0) + items.getOrDefault(NAMESPACE + item, 0);
+        return items.getOrDefault(item, 0) + items.getOrDefault(NamespacedId.MINECRAFT + item, 0);
     }
 }

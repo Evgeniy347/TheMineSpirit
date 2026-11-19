@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.OrchardPlot;
@@ -13,7 +14,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 
 final class TreeCenterLogs {
-    private static final String NAMESPACE = "minecraft:";
     private static final int RADIUS = 16;
     private static final int BELOW = 4;
     private static final int ABOVE = 16;
@@ -39,7 +39,7 @@ final class TreeCenterLogs {
                     String id = BuiltInRegistries.BLOCK
                             .getKey(level.getBlockState(pos).getBlock())
                             .getPath();
-                    Optional<TreeSpecies> species = TreeSpecies.ofLog(NAMESPACE + id);
+                    Optional<TreeSpecies> species = TreeSpecies.ofLog(NamespacedId.MINECRAFT + id);
                     if (species.isEmpty()) {
                         continue;
                     }

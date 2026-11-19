@@ -1,12 +1,12 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.base.NamespacedId;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 final class ChestTools {
-    private static final String NAMESPACE = "minecraft:";
 
     private ChestTools() {}
 
@@ -40,7 +40,8 @@ final class ChestTools {
                     continue;
                 }
                 String id = item.getKey();
-                String name = id.startsWith(NAMESPACE) ? id.substring(NAMESPACE.length()) : id;
+                String name =
+                        id.startsWith(NamespacedId.MINECRAFT) ? id.substring(NamespacedId.MINECRAFT.length()) : id;
                 if (!graph.isTool(name)) {
                     continue;
                 }

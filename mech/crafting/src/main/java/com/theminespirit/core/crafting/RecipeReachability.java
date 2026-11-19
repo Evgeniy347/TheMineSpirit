@@ -1,11 +1,11 @@
 package com.theminespirit.core.crafting;
 
+import com.theminespirit.core.base.NamespacedId;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 
 public final class RecipeReachability {
-    private static final String MINECRAFT = "minecraft:";
 
     private final Obtainability obtainability;
 
@@ -24,6 +24,6 @@ public final class RecipeReachability {
 
     private static String normalize(String item) {
         Objects.requireNonNull(item, "Имя предмета не может быть null: по нему ищут путь");
-        return item.startsWith(MINECRAFT) ? item.substring(MINECRAFT.length()) : item;
+        return item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
     }
 }

@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.FenceStubPlan;
 import com.theminespirit.core.board.TicketTarget;
@@ -27,7 +28,7 @@ import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
 final class More4Post {
-    private static final String BREAD = More4Scripts.MINECRAFT + "bread";
+    private static final String BREAD = NamespacedId.MINECRAFT + "bread";
     private static final String WAIT = "wait";
     private static final String TICKS = "ticks";
     private static final String DROP_TO_PLAYER = "drop_to_player";

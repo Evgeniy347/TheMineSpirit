@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.building.WoodSpecies;
 import java.util.HashMap;
@@ -12,7 +13,6 @@ import java.util.Set;
 public final class GraphNames {
     public static final String FOOD = "food";
     public static final String SOIL = "soil";
-    private static final String NAMESPACE = "minecraft:";
     private static final Map<String, String> SUFFIXES = Map.of("_bed", "bed");
     private static final String DIAMOND_FOUND = "ore:diamond_found";
     private static final String GEODE = "geode";
@@ -46,7 +46,7 @@ public final class GraphNames {
 
     public static String graphItem(String item) {
         Objects.requireNonNull(item, "Предмет мира не может быть null: его переводят в узел графа");
-        String name = item.startsWith(NAMESPACE) ? item.substring(NAMESPACE.length()) : item;
+        String name = item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
         if (MANGROVE_PROPAGULE.equals(name)) {
             return MANGROVE_SAPLING;
         }
@@ -70,8 +70,9 @@ public final class GraphNames {
         Map<String, Integer> counts = new HashMap<>();
         available.forEach((item, count) -> {
             counts.merge(graphItem(item), count, Integer::sum);
-            String name = item.startsWith(NAMESPACE) ? item.substring(NAMESPACE.length()) : item;
-            if (foods.contains(name) || foods.contains(NAMESPACE + name)) {
+            String name =
+                    item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
+            if (foods.contains(name) || foods.contains(NamespacedId.MINECRAFT + name)) {
                 counts.merge(FOOD, count, Integer::sum);
             }
         });
@@ -87,7 +88,8 @@ public final class GraphNames {
 
     public static Set<String> blockWorld(String block) {
         Objects.requireNonNull(block, "Блок округи не может быть null: по нему ищется метка мира");
-        String name = block.startsWith(NAMESPACE) ? block.substring(NAMESPACE.length()) : block;
+        String name =
+                block.startsWith(NamespacedId.MINECRAFT) ? block.substring(NamespacedId.MINECRAFT.length()) : block;
         return GROUND.getOrDefault(name, Set.of());
     }
 

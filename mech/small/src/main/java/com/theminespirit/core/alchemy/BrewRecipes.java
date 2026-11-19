@@ -1,5 +1,6 @@
 package com.theminespirit.core.alchemy;
 
+import com.theminespirit.core.base.NamespacedId;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,7 +19,6 @@ public final class BrewRecipes {
     public static final String SPLASH_PREFIX = "splash_potion_";
     public static final String POTION_PREFIX = "potion_";
     public static final int BOTTLES_PER_BREW = 3;
-    private static final String MINECRAFT = "minecraft:";
     private static final Map<String, String> EFFECTS = effects();
 
     private BrewRecipes() {}
@@ -64,9 +64,9 @@ public final class BrewRecipes {
         }
         List<Step> steps = new ArrayList<>();
         steps.add(new Step(BASE_INGREDIENT, POTION_ITEM, AWKWARD));
-        steps.add(new Step(ingredient, POTION_ITEM, MINECRAFT + name));
+        steps.add(new Step(ingredient, POTION_ITEM, NamespacedId.MINECRAFT + name));
         if (splashing(product)) {
-            steps.add(new Step(SPLASH_INGREDIENT, SPLASH_ITEM, MINECRAFT + name));
+            steps.add(new Step(SPLASH_INGREDIENT, SPLASH_ITEM, NamespacedId.MINECRAFT + name));
         }
         return Optional.of(List.copyOf(steps));
     }

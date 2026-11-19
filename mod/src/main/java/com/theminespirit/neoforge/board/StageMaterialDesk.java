@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.CaseMaterials;
@@ -37,7 +38,6 @@ import org.slf4j.Logger;
 
 final class StageMaterialDesk {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final String MINECRAFT = "minecraft:";
     private static final int EXPAND_DEPTH = 4;
 
     private StageMaterialDesk() {}
@@ -189,7 +189,7 @@ final class StageMaterialDesk {
     static String bare(String id) {
         int state = id.indexOf('[');
         String block = state < 0 ? id : id.substring(0, state);
-        return block.startsWith(MINECRAFT) ? block.substring(MINECRAFT.length()) : block;
+        return block.startsWith(NamespacedId.MINECRAFT) ? block.substring(NamespacedId.MINECRAFT.length()) : block;
     }
 
     static boolean placed(BlockState state, String block) {

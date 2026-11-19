@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -9,7 +10,6 @@ import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 public final class GatherDemand {
-    private static final String MINECRAFT = "minecraft:";
     private static final String STRIPPED = "stripped_";
     private static final List<String> WOOD_SUFFIXES =
             List.of("_log", "_wood", "_planks", "_sapling", "_leaves", "_roots");
@@ -93,7 +93,7 @@ public final class GatherDemand {
     }
 
     public static @Nullable String wood(String item) {
-        String name = item.startsWith(MINECRAFT) ? item.substring(MINECRAFT.length()) : item;
+        String name = item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
         for (String suffix : WOOD_SUFFIXES) {
             if (name.endsWith(suffix) && name.length() > suffix.length()) {
                 String species = name.substring(0, name.length() - suffix.length());

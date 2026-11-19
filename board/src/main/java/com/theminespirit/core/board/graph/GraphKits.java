@@ -1,12 +1,12 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.base.NamespacedId;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public final class GraphKits {
-    private static final String NAMESPACE = "minecraft:";
     private static final Map<String, String> TIER_ALIASES = Map.of("golden", "wooden", "netherite", "diamond");
 
     private GraphKits() {}
@@ -16,7 +16,8 @@ public final class GraphKits {
         Objects.requireNonNull(graph, "Граф не может быть null: по нему известны виды и уровни инструментов");
         Map<String, Integer> kit = new HashMap<>();
         for (String item : items) {
-            String name = item.startsWith(NAMESPACE) ? item.substring(NAMESPACE.length()) : item;
+            String name =
+                    item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
             int split = name.lastIndexOf('_');
             if (split <= 0) {
                 continue;

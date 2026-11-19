@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.LinkedHashMap;
@@ -13,7 +14,6 @@ import org.slf4j.LoggerFactory;
 final class GraphStockNote {
     private static final Logger LOGGER = LoggerFactory.getLogger(GraphStockNote.class);
     private static final String AXE = "_axe";
-    private static final String MINECRAFT = "minecraft:";
     private static final List<String> TIER_ORDER = List.of("wooden", "stone", "iron", "diamond", "netherite", "golden");
     private static final Map<String, String> TIER_NAMES = Map.of(
             "wooden", "деревянных",
@@ -121,7 +121,7 @@ final class GraphStockNote {
     }
 
     static String tier(String item) {
-        String id = item.startsWith(MINECRAFT) ? item.substring(MINECRAFT.length()) : item;
+        String id = item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
         int split = id.lastIndexOf('_');
         return split <= 0 ? id : id.substring(0, split);
     }
@@ -132,7 +132,7 @@ final class GraphStockNote {
     }
 
     private static boolean isAxe(String item) {
-        String id = item.startsWith(MINECRAFT) ? item.substring(MINECRAFT.length()) : item;
+        String id = item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
         return id.endsWith(AXE);
     }
 }

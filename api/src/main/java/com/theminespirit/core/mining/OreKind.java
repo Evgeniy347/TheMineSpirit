@@ -1,5 +1,6 @@
 package com.theminespirit.core.mining;
 
+import com.theminespirit.core.base.NamespacedId;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -21,7 +22,6 @@ public enum OreKind {
     QUARTZ("minecraft:nether_quartz_ore"),
     NETHERITE("minecraft:ancient_debris");
 
-    private static final String MINECRAFT_NAMESPACE = "minecraft:";
     private static final List<String> NAMES = Arrays.stream(values())
             .map(kind -> kind.name().toLowerCase(Locale.ROOT))
             .toList();
@@ -66,7 +66,7 @@ public enum OreKind {
     }
 
     private static String canonicalId(String blockId) {
-        return blockId.indexOf(':') < 0 ? MINECRAFT_NAMESPACE + blockId : blockId;
+        return blockId.indexOf(':') < 0 ? NamespacedId.MINECRAFT + blockId : blockId;
     }
 
     private static Set<String> collectAllBlocks() {

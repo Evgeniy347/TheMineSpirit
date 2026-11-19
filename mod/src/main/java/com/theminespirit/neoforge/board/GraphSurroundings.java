@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.graph.GraphNames;
@@ -36,7 +37,6 @@ public final class GraphSurroundings {
     static final String TIME_DAY = "time:day";
     static final String TIME_NIGHT = "time:night";
     private static final String TREE_PREFIX = "tree:";
-    private static final String NAMESPACE = "minecraft:";
     private static final int RADIUS = 32;
     private static final int STEP = 1;
     private static final int BELOW = 4;
@@ -239,7 +239,7 @@ public final class GraphSurroundings {
                     BlockState state = level.getBlockState(pos);
                     String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath();
                     blocks.add(id);
-                    TreeSpecies.ofLog(NAMESPACE + id)
+                    TreeSpecies.ofLog(NamespacedId.MINECRAFT + id)
                             .ifPresent(tree -> logs.computeIfAbsent(tree.id(), key -> new ArrayList<>())
                                     .add(new BlockCoord(pos.getX(), pos.getY(), pos.getZ())));
                     Set<String> tags = tagCache.computeIfAbsent(id, GraphNames::blockWorld);

@@ -2,6 +2,7 @@ package com.theminespirit.core.repair;
 
 import static com.theminespirit.core.Lookup.present;
 
+import com.theminespirit.core.base.NamespacedId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,15 +23,14 @@ public final class RepairMaterials {
             .sorted((first, second) -> Integer.compare(second.length(), first.length()))
             .toList();
 
-    private static final String MINECRAFT_PREFIX = "minecraft:";
-
     private RepairMaterials() {}
 
     public static Optional<String> materialFor(@Nullable String itemId) {
         if (itemId == null || itemId.isBlank()) {
             return Optional.empty();
         }
-        String path = itemId.startsWith(MINECRAFT_PREFIX) ? itemId.substring(MINECRAFT_PREFIX.length()) : itemId;
+        String path =
+                itemId.startsWith(NamespacedId.MINECRAFT) ? itemId.substring(NamespacedId.MINECRAFT.length()) : itemId;
         for (String prefix : PREFIXES_LONGEST_FIRST) {
             if (path.startsWith(prefix)) {
                 return Optional.of(present(BY_PREFIX, prefix, "Материалы ремонта"));

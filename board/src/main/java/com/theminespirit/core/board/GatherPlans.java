@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.plan.FallbackNode;
@@ -22,7 +23,6 @@ final class GatherPlans {
     private static final String ACQUIRE = "acquire";
     private static final String SPECIES = "species";
     private static final String RADIUS = "radius";
-    private static final String MINECRAFT = "minecraft:";
     private static final String AXE = "*_axe";
     private static final String CONTAINER = "container";
     private static final String WAREHOUSE = "warehouse";
@@ -148,14 +148,14 @@ final class GatherPlans {
     }
 
     private static Optional<TreeSpecies> treeOf(String item) {
-        String full = item.startsWith(MINECRAFT) ? item : MINECRAFT + item;
+        String full = item.startsWith(NamespacedId.MINECRAFT) ? item : NamespacedId.MINECRAFT + item;
         return TreeSpecies.ALL.stream()
                 .filter(tree -> tree.logId().equals(full))
                 .findFirst();
     }
 
     private static String pathOf(String item) {
-        return item.startsWith(MINECRAFT) ? item.substring(MINECRAFT.length()) : item;
+        return item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
     }
 
     private static TaskNode takeAxe() {

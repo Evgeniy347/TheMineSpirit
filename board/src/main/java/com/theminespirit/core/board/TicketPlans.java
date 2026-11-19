@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
@@ -52,7 +53,6 @@ public final class TicketPlans {
     private static final String TICKS = "ticks";
     private static final String CLEAR_AREA = "clear_area";
     private static final String WITHDRAW = "withdraw";
-    private static final String MINECRAFT = "minecraft:";
     private static final String DEFAULT_SCHEME = "stone_house";
     private static final String DEFAULT_LURE_ITEM = "wheat";
     private static final String FENCE_SCHEME = "fence";
@@ -207,7 +207,7 @@ public final class TicketPlans {
                         gotoPoint(new BlockCoord(x, target.target().y(), z)),
                         new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
                 takeFloor("minecraft:cobblestone"),
-                takeFloor(MINECRAFT + PlotLeveling.DEFAULT_BLOCK),
+                takeFloor(NamespacedId.MINECRAFT + PlotLeveling.DEFAULT_BLOCK),
                 new ScriptCall(
                         BUILD_SCHEMATIC,
                         Map.of(

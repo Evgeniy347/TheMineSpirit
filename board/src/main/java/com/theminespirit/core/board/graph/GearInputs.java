@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.inventory.JsonResource;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -23,7 +24,6 @@ public final class GearInputs {
     public static final String EQUIP_TASK = "equip_best";
     public static final String ARMOR_TASK = "craft_armor";
     public static final String TOOL_TASK = "craft_tool:";
-    private static final String NAMESPACE = "minecraft:";
     private static final List<String> ARMOR_SLOTS = List.of("HEAD", "CHEST", "LEGS", "FEET");
     private static final Map<String, String> ARMOR_SUFFIXES = Map.of(
             "helmet", "HEAD",
@@ -270,6 +270,6 @@ public final class GearInputs {
     }
 
     private static String shortId(String item) {
-        return item.startsWith(NAMESPACE) ? item.substring(NAMESPACE.length()) : item;
+        return item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
     }
 }

@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.PresetLibrary;
 import java.util.Map;
@@ -8,7 +9,6 @@ import java.util.TreeMap;
 import org.jspecify.annotations.Nullable;
 
 public final class UpgradePlan {
-    private static final String NAMESPACE = "minecraft:";
 
     private UpgradePlan() {}
 
@@ -45,6 +45,6 @@ public final class UpgradePlan {
     }
 
     private static String shortId(String item) {
-        return item.startsWith(NAMESPACE) ? item.substring(NAMESPACE.length()) : item;
+        return item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
     }
 }

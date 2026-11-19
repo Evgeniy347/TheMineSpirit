@@ -1,12 +1,12 @@
 package com.theminespirit.core.planner;
 
+import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.forestry.TreeSpecies;
 import java.util.Objects;
 import java.util.Optional;
 
 public final class GatherSources {
-    private static final String MINECRAFT = "minecraft:";
 
     private GatherSources() {}
 
@@ -29,6 +29,6 @@ public final class GatherSources {
     }
 
     private static String qualify(String item) {
-        return item.indexOf(':') < 0 ? MINECRAFT + item : item;
+        return item.indexOf(':') < 0 ? NamespacedId.MINECRAFT + item : item;
     }
 }

@@ -1,5 +1,6 @@
 package com.theminespirit.core.building;
 
+import com.theminespirit.core.base.NamespacedId;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -9,7 +10,6 @@ public final class WoodSpecies {
     public static final String OAK = "oak";
     public static final List<String> ALL =
             List.of(OAK, "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove", "cherry");
-    private static final String NAMESPACE = "minecraft:";
     private static final String OAK_PREFIX = "oak_";
     private static final String LOG_SUFFIX = "_log";
 
@@ -25,7 +25,7 @@ public final class WoodSpecies {
 
     public static Optional<String> speciesOf(String item) {
         Objects.requireNonNull(item, "Предмет не может быть null: породу берут из имени");
-        String name = item.startsWith(NAMESPACE) ? item.substring(NAMESPACE.length()) : item;
+        String name = item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
         return ALL.stream().filter(species -> name.startsWith(species + "_")).findFirst();
     }
 
@@ -38,20 +38,21 @@ public final class WoodSpecies {
     }
 
     private static String role(String block, String species) {
-        String name = block.startsWith(NAMESPACE) ? block.substring(NAMESPACE.length()) : block;
+        String name =
+                block.startsWith(NamespacedId.MINECRAFT) ? block.substring(NamespacedId.MINECRAFT.length()) : block;
         return name.substring(species.length() + 1);
     }
 
     public static String swap(String block, String species) {
         Objects.requireNonNull(block, "Блок не может быть null: заменять нечего");
         check(species);
-        boolean namespaced = block.startsWith(NAMESPACE);
-        String name = namespaced ? block.substring(NAMESPACE.length()) : block;
+        boolean namespaced = block.startsWith(NamespacedId.MINECRAFT);
+        String name = namespaced ? block.substring(NamespacedId.MINECRAFT.length()) : block;
         if (OAK.equals(species) || !name.startsWith(OAK_PREFIX)) {
             return block;
         }
         String swapped = species + "_" + name.substring(OAK_PREFIX.length());
-        return namespaced ? NAMESPACE + swapped : swapped;
+        return namespaced ? NamespacedId.MINECRAFT + swapped : swapped;
     }
 
     public static String of(Map<String, Integer> stock) {
@@ -129,12 +130,12 @@ public final class WoodSpecies {
     }
 
     private static int count(Map<String, Integer> stock, String item) {
-        String name = item.startsWith(NAMESPACE) ? item.substring(NAMESPACE.length()) : item;
-        return stock.getOrDefault(name, 0) + stock.getOrDefault(NAMESPACE + name, 0);
+        String name = item.startsWith(NamespacedId.MINECRAFT) ? item.substring(NamespacedId.MINECRAFT.length()) : item;
+        return stock.getOrDefault(name, 0) + stock.getOrDefault(NamespacedId.MINECRAFT + name, 0);
     }
 
     private static int logs(Map<String, Integer> stock, String species) {
         String log = species + LOG_SUFFIX;
-        return stock.getOrDefault(log, 0) + stock.getOrDefault(NAMESPACE + log, 0);
+        return stock.getOrDefault(log, 0) + stock.getOrDefault(NamespacedId.MINECRAFT + log, 0);
     }
 }
