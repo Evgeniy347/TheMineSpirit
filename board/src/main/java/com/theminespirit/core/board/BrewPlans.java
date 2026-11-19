@@ -73,7 +73,7 @@ final class BrewPlans {
     }
 
     private static TaskNode stand(TicketTarget target) {
-        return TicketPlans.placeInYard(NamespacedId.MINECRAFT + "brewing_stand", 1, target);
+        return TicketFarmPlans.placeInYard(NamespacedId.MINECRAFT + "brewing_stand", 1, target);
     }
 
     private static String product(@Nullable String craft) {

@@ -27,9 +27,9 @@ final class DefaultPlans {
     private static Map<BoardCase, PlanFactory> plans() {
         Map<BoardCase, PlanFactory> plans = new EnumMap<>(BoardCase.class);
         plans.put(BoardCase.FILL_CRATER, (boardCase, target, level) -> PitFillPlan.plan(target));
-        plans.put(BoardCase.REPAIR_FENCE, (boardCase, target, level) -> TicketPlans.repairFence(target));
-        plans.put(BoardCase.CAPTURE_ANIMAL, (boardCase, target, level) -> TicketPlans.captureAnimal(target));
-        plans.put(BoardCase.LURE_ANIMAL, (boardCase, target, level) -> TicketPlans.lureAnimal(target));
+        plans.put(BoardCase.REPAIR_FENCE, (boardCase, target, level) -> TicketFarmPlans.repairFence(target));
+        plans.put(BoardCase.CAPTURE_ANIMAL, (boardCase, target, level) -> TicketFarmPlans.captureAnimal(target));
+        plans.put(BoardCase.LURE_ANIMAL, (boardCase, target, level) -> TicketFarmPlans.lureAnimal(target));
         plans.put(BoardCase.SUPPLY_SITE, (boardCase, target, level) -> TicketStoragePlans.supplySite(target));
         plans.put(
                 BoardCase.GATHER_MATERIALS,
@@ -42,8 +42,8 @@ final class DefaultPlans {
         plans.put(BoardCase.COLLECT_DROPS, (boardCase, target, level) -> TicketPlans.collectDrops(target));
         plans.put(BoardCase.REPAIR_BUILDING, (boardCase, target, level) -> TicketPlans.repairBuilding(target));
         plans.put(BoardCase.REPAIR_TOOL, (boardCase, target, level) -> TicketPlans.repairTool(target));
-        plans.put(BoardCase.STOCK_CHESTS, (boardCase, target, level) -> TicketPlans.yard(target));
-        plans.put(BoardCase.CRAFTING_STATION, (boardCase, target, level) -> TicketPlans.tableNearSpirit(target));
+        plans.put(BoardCase.STOCK_CHESTS, (boardCase, target, level) -> TicketFarmPlans.yard(target));
+        plans.put(BoardCase.CRAFTING_STATION, (boardCase, target, level) -> TicketFarmPlans.tableNearSpirit(target));
         plans.put(
                 BoardCase.CRAFT_ANVIL,
                 (boardCase, target, level) -> TicketPlans.craft(NamespacedId.MINECRAFT + "anvil", 1, target));
@@ -55,7 +55,8 @@ final class DefaultPlans {
                 (boardCase, target, level) -> TicketPlans.craft(NamespacedId.MINECRAFT + "smoker", 1, target));
         plans.put(
                 BoardCase.CRAFT_FURNACE,
-                (boardCase, target, level) -> TicketPlans.placeInYard(NamespacedId.MINECRAFT + "furnace", 1, target));
+                (boardCase, target, level) ->
+                        TicketFarmPlans.placeInYard(NamespacedId.MINECRAFT + "furnace", 1, target));
         plans.put(BoardCase.CRAFT_TORCHES, (boardCase, target, level) -> TorchPlans.plan(target));
         plans.put(BoardCase.SMELT_CHARCOAL, (boardCase, target, level) -> TicketPlans.smeltCharcoal(target));
         for (BoardCase brew : List.of(
@@ -97,20 +98,20 @@ final class DefaultPlans {
                         target.craftItem() == null ? WoolRules.CRAFTED_WOOL : target.craftItem(),
                         target.count() > 0 ? target.count() : 1,
                         target));
-        plans.put(BoardCase.SHEAR_SHEEP, (boardCase, target, level) -> TicketPlans.shearSheep(target));
-        plans.put(BoardCase.HUNT_WILD_SHEEP, (boardCase, target, level) -> TicketPlans.huntWildSheep(target));
-        plans.put(BoardCase.HARVEST_HIVE, (boardCase, target, level) -> TicketPlans.harvestHive());
+        plans.put(BoardCase.SHEAR_SHEEP, (boardCase, target, level) -> TicketFarmPlans.shearSheep(target));
+        plans.put(BoardCase.HUNT_WILD_SHEEP, (boardCase, target, level) -> TicketFarmPlans.huntWildSheep(target));
+        plans.put(BoardCase.HARVEST_HIVE, (boardCase, target, level) -> TicketFarmPlans.harvestHive());
         plans.put(BoardCase.HARVEST_ORCHARD, (boardCase, target, level) -> OrchardPlans.harvest(target));
-        plans.put(BoardCase.PLACE_BEEHIVE, (boardCase, target, level) -> TicketPlans.placeBeehive(target));
-        plans.put(BoardCase.BUILD_FENCE, (boardCase, target, level) -> TicketPlans.buildFence(target, level));
+        plans.put(BoardCase.PLACE_BEEHIVE, (boardCase, target, level) -> TicketFarmPlans.placeBeehive(target));
+        plans.put(BoardCase.BUILD_FENCE, (boardCase, target, level) -> TicketFarmPlans.buildFence(target, level));
         plans.put(BoardCase.LIGHTING, (boardCase, target, level) -> TorchPlans.lighting(target));
         plans.put(BoardCase.BUILD_STREETS, (boardCase, target, level) -> RoutePlans.path(target));
         plans.put(
                 BoardCase.ENCHANT_SHELVES,
                 (boardCase, target, level) -> TicketPlans.craft(NamespacedId.MINECRAFT + "bookshelf", 4, target));
         plans.put(BoardCase.DISMANTLE_SHELTER, (boardCase, target, level) -> TicketPlans.dismantleShelter(target));
-        plans.put(BoardCase.BREED_ANIMALS, (boardCase, target, level) -> TicketPlans.breedAnimals(target));
-        plans.put(BoardCase.HERD_CULL, (boardCase, target, level) -> TicketPlans.herdCull(target));
+        plans.put(BoardCase.BREED_ANIMALS, (boardCase, target, level) -> TicketFarmPlans.breedAnimals(target));
+        plans.put(BoardCase.HERD_CULL, (boardCase, target, level) -> TicketFarmPlans.herdCull(target));
         plans.put(BoardCase.RELOCATE_BUILDING, (boardCase, target, level) -> TicketPlans.relocateBuilding(target));
         plans.put(BoardCase.RESTOCK_FOOD, (boardCase, target, level) -> TicketStoragePlans.restockFood(target));
         plans.put(BoardCase.TRANSFER_ITEM, (boardCase, target, level) -> TicketPlans.transferItem(target));

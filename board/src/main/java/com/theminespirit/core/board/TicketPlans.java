@@ -6,10 +6,7 @@ import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
-import com.theminespirit.core.building.SchematicPart;
 import com.theminespirit.core.building.api.WoodSpecies;
-import com.theminespirit.core.husbandry.api.FeedTable;
-import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.mining.api.OreKind;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
@@ -36,30 +33,30 @@ public final class TicketPlans {
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
     public static final String MINE_DESCENT_SCHEME = StageSites.MINE_DESCENT_SCHEME;
     public static final String MINE_DESCENT_ROTATION = StageSites.MINE_DESCENT_ROTATION;
-    private static final String BLOCK = "block";
-    private static final String ITEM = "item";
-    private static final String COUNT = "count";
-    private static final String CONTAINER = "container";
-    private static final String NEAREST = "nearest";
-    private static final String SPECIES = "species";
-    private static final String RADIUS = "radius";
-    private static final String TORCH = "minecraft:torch";
-    private static final String BUILD_SCHEMATIC = "build_schematic";
-    private static final String FILE = "file";
-    private static final String FILL = "fill";
-    private static final String ACQUIRE = "acquire";
-    private static final String CRAFT = "craft";
-    private static final String PLACE = "place";
-    private static final String WAIT = "wait";
-    private static final String TICKS = "ticks";
-    private static final String CLEAR_AREA = "clear_area";
-    private static final String WITHDRAW = "withdraw";
-    private static final String DEFAULT_SCHEME = "stone_house";
-    private static final String DEFAULT_LURE_ITEM = "wheat";
-    private static final String FENCE_SCHEME = "fence";
-    private static final String ENCHANT_ROOM_SCHEME = "enchant_room_v1";
-    private static final String ENCHANT_ROOM_SHELVES_SCHEME = "enchant_room_v2";
-    private static final String ENCHANT_ROOM_HALL_SCHEME = "enchant_room_v3";
+    static final String BLOCK = "block";
+    static final String ITEM = "item";
+    static final String COUNT = "count";
+    static final String CONTAINER = "container";
+    static final String NEAREST = "nearest";
+    static final String SPECIES = "species";
+    static final String RADIUS = "radius";
+    static final String TORCH = "minecraft:torch";
+    static final String BUILD_SCHEMATIC = "build_schematic";
+    static final String FILE = "file";
+    static final String FILL = "fill";
+    static final String ACQUIRE = "acquire";
+    static final String CRAFT = "craft";
+    static final String PLACE = "place";
+    static final String WAIT = "wait";
+    static final String TICKS = "ticks";
+    static final String CLEAR_AREA = "clear_area";
+    static final String WITHDRAW = "withdraw";
+    static final String DEFAULT_SCHEME = "stone_house";
+    static final String DEFAULT_LURE_ITEM = "wheat";
+    static final String FENCE_SCHEME = "fence";
+    static final String ENCHANT_ROOM_SCHEME = "enchant_room_v1";
+    static final String ENCHANT_ROOM_SHELVES_SCHEME = "enchant_room_v2";
+    static final String ENCHANT_ROOM_HALL_SCHEME = "enchant_room_v3";
 
     private TicketPlans() {}
 
@@ -71,7 +68,7 @@ public final class TicketPlans {
         return BoardConfig.current().plans().mineTunnelSize();
     }
 
-    private static PlanTuning plans() {
+    static PlanTuning plans() {
         return BoardConfig.current().plans();
     }
 
@@ -285,104 +282,6 @@ public final class TicketPlans {
         };
     }
 
-    static TaskNode repairFence(TicketTarget target) {
-        return FencePlans.repair(target);
-    }
-
-    static TaskNode captureAnimal(TicketTarget target) {
-        Species species = target.species() == null ? Species.COW : target.species();
-        return luredCapture(species, FeedTable.feedFor(species).get(0));
-    }
-
-    static TaskNode lureAnimal(TicketTarget target) {
-        Species species = target.species() == null ? Species.COW : target.species();
-        String lure = target.lureItem() == null ? DEFAULT_LURE_ITEM : target.lureItem();
-        return luredCapture(species, lure);
-    }
-
-    private static TaskNode luredCapture(Species species, String feed) {
-        return sequence(
-                new ScriptCall(
-                        WITHDRAW,
-                        Map.of(
-                                CONTAINER,
-                                NEAREST,
-                                ITEM,
-                                feed,
-                                COUNT,
-                                1,
-                                RADIUS,
-                                CatalogLimits.CONTAINER_RADIUS_DEFAULT)),
-                new ScriptCall(
-                        "capture",
-                        Map.of(
-                                SPECIES,
-                                species.name().toLowerCase(Locale.ROOT),
-                                RADIUS,
-                                CatalogLimits.CAPTURE_RADIUS_DEFAULT)));
-    }
-
-    static TaskNode buildFence(TicketTarget target, int level) {
-        int part = target.count();
-        String base = level >= 2 ? "wall_3" : FENCE_SCHEME;
-        String scheme = part >= 1 && part <= fenceParts() ? SchematicPart.name(base, part, fenceParts()) : base;
-        return schematic(scheme, target.target(), target);
-    }
-
-    static TaskNode placeInYard(String item, int count, TicketTarget target) {
-        return Leftovers.with(
-                sequence(
-                        gotoTarget(target),
-                        new ScriptCall(
-                                CRAFT,
-                                Map.of(
-                                        ITEM,
-                                        item,
-                                        COUNT,
-                                        count,
-                                        RADIUS,
-                                        CatalogLimits.STATION_RADIUS_DEFAULT,
-                                        PLACE,
-                                        true))),
-                target);
-    }
-
-    static TaskNode tableNearSpirit(TicketTarget target) {
-        return Leftovers.with(
-                new ScriptCall(
-                        CRAFT,
-                        Map.of(
-                                ITEM,
-                                "minecraft:crafting_table",
-                                COUNT,
-                                1,
-                                RADIUS,
-                                CatalogLimits.STATION_RADIUS_DEFAULT,
-                                PLACE,
-                                true)),
-                target);
-    }
-
-    static TaskNode yard(TicketTarget target) {
-        return Leftovers.with(
-                sequence(
-                        gotoTarget(target),
-                        new ScriptCall(
-                                CRAFT,
-                                Map.of(
-                                        ITEM,
-                                        "minecraft:chest",
-                                        COUNT,
-                                        2,
-                                        RADIUS,
-                                        CatalogLimits.STATION_RADIUS_DEFAULT,
-                                        PLACE,
-                                        true)),
-                        new ScriptCall(
-                                CRAFT, Map.of(ITEM, "minecraft:crafting_table", COUNT, 1, RADIUS, 1, PLACE, true))),
-                target);
-    }
-
     static TaskNode craft(String item, int count, TicketTarget target) {
         return sequence(
                 gotoTarget(target),
@@ -532,64 +431,6 @@ public final class TicketPlans {
         return sequence(gotoTarget(target), new ScriptCall("repair_tool", Map.of(ITEM, target.craftItem())));
     }
 
-    static TaskNode breedAnimals(TicketTarget target) {
-        Species species = target.species() == null ? Species.COW : target.species();
-        return new ScriptCall(
-                "breed",
-                Map.of(
-                        SPECIES,
-                        species.name().toLowerCase(Locale.ROOT),
-                        RADIUS,
-                        CatalogLimits.HERD_RADIUS_DEFAULT,
-                        "pairs",
-                        CatalogLimits.HERD_PAIRS_DEFAULT));
-    }
-
-    static TaskNode herdCull(TicketTarget target) {
-        Species species = target.species() == null ? Species.COW : target.species();
-        return new ScriptCall(
-                "cull",
-                Map.of(SPECIES, species.name().toLowerCase(Locale.ROOT), RADIUS, CatalogLimits.HERD_RADIUS_DEFAULT));
-    }
-
-    static TaskNode shearSheep(TicketTarget target) {
-        int count = target.count() > 0 ? target.count() : WoolRules.minPenSheep();
-        return sequence(
-                gotoTarget(target),
-                new ScriptCall(
-                        "shear",
-                        Map.of(
-                                RADIUS, WoolRules.shearRadius(),
-                                COUNT, Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
-    }
-
-    static TaskNode harvestHive() {
-        return new ScriptCall(
-                "harvest_hive", Map.of(RADIUS, HiveRules.hiveRadius(), COUNT, CatalogLimits.HIVE_COUNT_DEFAULT));
-    }
-
-    static TaskNode placeBeehive(TicketTarget target) {
-        BlockCoord point = target.target();
-        BlockCoord cell = new BlockCoord(point.x(), point.y() + 1, point.z());
-        return sequence(
-                craft(HiveRules.CRAFTED_BEEHIVE, 1, target),
-                new ScriptCall(
-                        "place_block",
-                        Map.of(BLOCK, HiveRules.CRAFTED_BEEHIVE, "x", cell.x(), "y", cell.y(), "z", cell.z())));
-    }
-
-    static TaskNode huntWildSheep(TicketTarget target) {
-        int count = target.count() > 0 ? target.count() : WoolRules.wildSheepPerDay();
-        return sequence(
-                gotoTarget(target),
-                new ScriptCall(
-                        "hunt",
-                        Map.of(
-                                SPECIES, Species.SHEEP.name().toLowerCase(Locale.ROOT),
-                                RADIUS, WoolRules.wildSheepRadius(),
-                                COUNT, Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
-    }
-
     static String bedItem(TicketTarget target) {
         if (target.craftItem() != null) {
             return target.craftItem();
@@ -708,20 +549,19 @@ public final class TicketPlans {
                         new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
     }
 
-    private static ScriptCall schematic(String scheme, TicketTarget target) {
+    static ScriptCall schematic(String scheme, TicketTarget target) {
         return schematic(scheme, target.target(), target, null);
     }
 
-    private static ScriptCall schematic(String scheme, TicketTarget target, @Nullable String previous) {
+    static ScriptCall schematic(String scheme, TicketTarget target, @Nullable String previous) {
         return schematic(scheme, target.target(), target, previous);
     }
 
-    private static ScriptCall schematic(String scheme, BlockCoord origin, TicketTarget target) {
+    static ScriptCall schematic(String scheme, BlockCoord origin, TicketTarget target) {
         return schematic(scheme, origin, target, null);
     }
 
-    private static ScriptCall schematic(
-            String scheme, BlockCoord origin, TicketTarget target, @Nullable String previous) {
+    static ScriptCall schematic(String scheme, BlockCoord origin, TicketTarget target, @Nullable String previous) {
         Map<String, Object> params = new LinkedHashMap<>();
         params.put(FILE, scheme);
         params.put("x", origin.x());
@@ -740,7 +580,7 @@ public final class TicketPlans {
         return gotoPoint(target.target());
     }
 
-    private static ScriptCall gotoPoint(BlockCoord point) {
+    static ScriptCall gotoPoint(BlockCoord point) {
         return new ScriptCall("goto", Map.of("x", point.x(), "y", point.y(), "z", point.z()));
     }
 
@@ -764,7 +604,7 @@ public final class TicketPlans {
                         true));
     }
 
-    private static TaskNode sequence(TaskNode... steps) {
+    static TaskNode sequence(TaskNode... steps) {
         List<TaskNode> list = new ArrayList<>(steps.length);
         for (TaskNode step : steps) {
             list.add(step);
