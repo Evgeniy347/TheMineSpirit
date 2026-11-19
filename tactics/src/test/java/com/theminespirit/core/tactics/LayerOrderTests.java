@@ -50,12 +50,4 @@ class LayerOrderTests {
                     "Слой не перебивает сам себя: " + layer + ", иначе арбитраж зациклился бы на одном слое");
         }
     }
-
-    @Test
-    void interruptedLayer_AfterPreemption_Resumes() {
-        assertTrue(
-                LayerOrder.INTERRUPTED_LAYER_RESUMES,
-                "Прерванный слой возобновляется после ухода перебившего: после боя дух продолжает задачу стратега, "
-                        + "а не теряет её");
-    }
 }

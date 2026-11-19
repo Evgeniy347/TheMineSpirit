@@ -37,7 +37,7 @@ class LeashAdapterProperties {
     @Property(tries = 200)
     void leashLeft_AnyTargetDistance_NeverExceedsPursuitRadius(
             @ForAll @DoubleRange(min = 0, max = 32) double distance) {
-        Situation situation = CoreFactCollector.withDefaultSettings().collect(context(distance));
+        Situation situation = new CoreFactCollector(TacticsAdapterSettings.loadDefault()).collect(context(distance));
         ModeParams params = CONFIG.modes().of(CombatMode.GUARD_AREA);
 
         ModeGeometry geometry = ModeGeometry.of(situation, params, Optional.empty());
@@ -53,7 +53,7 @@ class LeashAdapterProperties {
     void pick_TargetBeyondLeash_NeverDesignated(@ForAll @DoubleRange(min = 6.01, max = 32) double distance) {
         SituationContext context = context(distance);
         TacticalOutcome outcome = ENGINE.step(
-                CoreFactCollector.withDefaultSettings().collect(context),
+                new CoreFactCollector(TacticsAdapterSettings.loadDefault()).collect(context),
                 TacticsMemory.initial(CombatMode.GUARD_AREA, 0, 1),
                 1);
 

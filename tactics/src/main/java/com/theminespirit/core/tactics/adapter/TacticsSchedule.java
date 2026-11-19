@@ -30,8 +30,4 @@ public final class TacticsSchedule {
             lastEvent = now;
         }
     }
-
-    public boolean everEvaluated() {
-        return lastEvaluation != NEVER;
-    }
 }

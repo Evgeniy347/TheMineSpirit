@@ -91,16 +91,16 @@ final class AdapterFixtures {
     }
 
     static Situation collect(List<EnemyFact> enemies) {
-        return CoreFactCollector.withDefaultSettings().collect(context(enemies));
+        return new CoreFactCollector(TacticsAdapterSettings.loadDefault()).collect(context(enemies));
     }
 
     static Situation collect(List<EnemyFact> enemies, double armor) {
-        return CoreFactCollector.withDefaultSettings().collect(context(enemies, armor));
+        return new CoreFactCollector(TacticsAdapterSettings.loadDefault()).collect(context(enemies, armor));
     }
 
     static Situation tiredCollect(List<EnemyFact> enemies, double hpFraction, double armor) {
         SelfFacts self = tired(hpFraction, armor);
-        return CoreFactCollector.withDefaultSettings()
+        return new CoreFactCollector(TacticsAdapterSettings.loadDefault())
                 .collect(new SituationContext(self, enemies, env(TimeOfDay.DAY), orders(CombatMode.AGGRESSIVE), 0, 0));
     }
 

@@ -25,10 +25,6 @@ public record Forage(String containerFood, int prey, String preySpecies, boolean
         }
     }
 
-    public boolean hasWater() {
-        return water;
-    }
-
     public boolean hasRod() {
         return rod;
     }

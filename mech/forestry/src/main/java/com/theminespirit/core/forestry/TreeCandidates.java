@@ -43,10 +43,6 @@ public final class TreeCandidates {
         return live.size();
     }
 
-    public boolean isKnown(BlockCoord log) {
-        return known.contains(log);
-    }
-
     public Optional<BlockCoord> nearest(int fromX, int fromY, int fromZ) {
         return TreeChooser.next(fromX, fromY, fromZ, List.copyOf(live), Set.of());
     }

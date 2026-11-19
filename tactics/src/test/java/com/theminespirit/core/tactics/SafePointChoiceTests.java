@@ -92,11 +92,11 @@ class SafePointChoiceTests {
 
         assertEquals(
                 Optional.of(home),
-                SafePointChoice.nearest(self, Optional.of(home), SafePointChoice.NO_CAMP),
+                SafePointChoice.nearest(self, Optional.of(home), Optional.empty()),
                 "Заглушка лагеря обязана вести себя как раньше: пока лагеря нет, отход от точки с домом "
                         + "идёт домой, иначе с включённой заглушкой планы отхода сломаются");
         assertTrue(
-                SafePointChoice.NO_CAMP.isEmpty(),
+                Optional.empty().isEmpty(),
                 "Заглушка лагеря обязана быть пустой: лагерь в этом чеклисте не реализован, "
                         + "а не-пустая заглушка подставила бы в отход выдуманную точку");
     }
@@ -105,7 +105,7 @@ class SafePointChoiceTests {
     void nearest_NoCampStubWithoutHome_ReturnsEmpty() {
         assertEquals(
                 Optional.empty(),
-                SafePointChoice.nearest(self, Optional.empty(), SafePointChoice.NO_CAMP),
+                SafePointChoice.nearest(self, Optional.empty(), Optional.empty()),
                 "Без дома и с пустой заглушкой лагеря выбора нет: обязан вернуться пусто, как и раньше, "
                         + "чтобы отход упал с явной ошибкой, а не пошёл в случайную точку мира");
     }

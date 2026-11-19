@@ -18,7 +18,7 @@ class CoreFactCollectorTests {
     @ParameterizedTest(name = "{0}")
     @MethodSource("rows")
     void collect_Context_ProducesCanonicalSituation(Row row) {
-        Situation situation = CoreFactCollector.withDefaultSettings().collect(row.context());
+        Situation situation = new CoreFactCollector(TacticsAdapterSettings.loadDefault()).collect(row.context());
         String first =
                 situation.enemies().isEmpty() ? "" : situation.enemies().get(0).type();
 

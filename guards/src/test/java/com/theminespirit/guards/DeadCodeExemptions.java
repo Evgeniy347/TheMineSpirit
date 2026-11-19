@@ -46,17 +46,8 @@ final class DeadCodeExemptions {
                     "core/crafting/Stations.java|method|Stations#preferredSmeltingStation",
                     "Заготовка под открытую задачу: todo.md → «Кузнечество»"),
             new Exemption(
-                    "core/farming/Hydration.java|field|Hydration#MAX_LOOKUPS",
-                    "Заготовка под открытую задачу: todo.md → «Фермерство»"),
-            new Exemption(
-                    "core/forestry/TreeCandidates.java|method|TreeCandidates#isKnown",
-                    "Заготовка под открытую задачу: todo.md → «Лесничество»"),
-            new Exemption(
                     "core/husbandry/PenBounds.java|method|PenBounds#escapedOf",
                     "Заготовка под открытую задачу: todo.md → «контроль животных»"),
-            new Exemption(
-                    "core/intellect/Forage.java|method|Forage#hasWater",
-                    "Заготовка под открытую задачу: todo.md → «Рыболовство»"),
             new Exemption(
                     "core/inventory/BaseKit.java|method|BaseKit#isSatisfiedBy",
                     "Заготовка под открытую задачу: todo.md → «Инвентарь, ценности и поход»"),
@@ -67,41 +58,11 @@ final class DeadCodeExemptions {
                     "core/inventory/OverflowTuning.java|method|OverflowTuning#effectiveStackValue",
                     "Заготовка под открытую задачу: todo.md → «Инвентарь, ценности и поход»"),
             new Exemption(
-                    "core/perception/HazardFacts.java|method|HazardFacts#hasDrop",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exemption(
-                    "core/perception/HazardFacts.java|method|HazardFacts#hasLava",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exemption(
-                    "core/perception/HazardFacts.java|method|HazardFacts#hasWater",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exemption(
                     "core/board/pickup/PickupSpot.java|method|PickupSpot#forDrop",
                     "Заготовка под открытую задачу: todo.md → «Инвентарь, ценности и поход»"),
             new Exemption(
                     "core/social/TransferOrder.java|method|TransferOrder#fromWarehouse",
                     "Заготовка под открытую задачу: todo.md → «Экономика и логистика»"),
-            new Exemption(
-                    "core/tactics/api/LayerOrder.java|field|LayerOrder#INTERRUPTED_LAYER_RESUMES",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exemption(
-                    "core/tactics/SafePointChoice.java|field|SafePointChoice#NO_CAMP",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exemption(
-                    "core/tactics/SpiritTargets.java|method|SpiritTargets#attacksSpirits",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exemption(
-                    "core/tactics/TacticsEngine.java|method|TacticsEngine#totalRules",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exemption(
-                    "core/tactics/adapter/CoreFactCollector.java|method|CoreFactCollector#withDefaultSettings",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exemption(
-                    "core/tactics/adapter/RetreatTracker.java|method|RetreatTracker#progressTicks",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exemption(
-                    "core/tactics/adapter/TacticsSchedule.java|method|TacticsSchedule#everEvaluated",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
             new Exemption(
                     "core/navigation/NavCachedWorld.java|method|NavCachedWorld#cachedBytes",
                     "Счётчик памяти кэша для отчёта: docs/research/baritone-navigation.md"),

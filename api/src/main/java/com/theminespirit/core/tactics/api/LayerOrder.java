@@ -4,7 +4,6 @@ import java.util.List;
 
 public final class LayerOrder {
     public static final List<Layer> PRIORITY = List.of(Layer.POLICY, Layer.TACTICS, Layer.STRATEGY, Layer.IDLE);
-    public static final boolean INTERRUPTED_LAYER_RESUMES = true;
 
     private LayerOrder() {}
 

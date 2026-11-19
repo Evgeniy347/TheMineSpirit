@@ -26,17 +26,6 @@ public record RetreatTracker(RetreatMethod method, long sinceTick) {
         return method != RetreatMethod.NONE;
     }
 
-    public long progressTicks(long nowTick) {
-        if (!retreating()) {
-            return 0;
-        }
-        if (nowTick < sinceTick) {
-            throw new IllegalArgumentException("progressTicks: nowTick = " + nowTick + " меньше sinceTick = "
-                    + sinceTick + ": время не откатывается, проверьте порядок вызовов");
-        }
-        return nowTick - sinceTick;
-    }
-
     public RetreatTracker advance(TacticalOutcome outcome, long nowTick, int holdTicks) {
         if (outcome == null) {
             throw new IllegalArgumentException(

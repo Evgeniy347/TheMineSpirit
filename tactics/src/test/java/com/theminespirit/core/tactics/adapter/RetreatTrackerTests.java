@@ -118,21 +118,6 @@ class RetreatTrackerTests {
     }
 
     @Test
-    void progressTicks_Retreating_CountsFromStart() {
-        RetreatTracker tracker = new RetreatTracker(RetreatMethod.HOME, 40);
-
-        assertEquals(
-                15,
-                tracker.progressTicks(55),
-                "Прогресс отхода считается от тика старта: по нему решается, пора ли менять способ");
-    }
-
-    @Test
-    void progressTicks_Idle_IsZero() {
-        assertEquals(0, RetreatTracker.IDLE.progressTicks(123), "У простоя нет прогресса отхода: ноль в любом тике");
-    }
-
-    @Test
     void retreating_Idle_IsFalse() {
         assertFalse(
                 RetreatTracker.IDLE.retreating(),
@@ -163,9 +148,7 @@ class RetreatTrackerTests {
                 Arguments.of("outcome", (Executable) () -> RetreatTracker.IDLE.advance(null, 0, HOLD)),
                 Arguments.of("holdTicks", (Executable) () -> RetreatTracker.IDLE.advance(FIGHT, 0, 0)),
                 Arguments.of("nowTick", (Executable)
-                        () -> new RetreatTracker(RetreatMethod.HOME, 10).advance(FIGHT, 5, HOLD)),
-                Arguments.of(
-                        "nowTick", (Executable) () -> new RetreatTracker(RetreatMethod.HOME, 10).progressTicks(5)));
+                        () -> new RetreatTracker(RetreatMethod.HOME, 10).advance(FIGHT, 5, HOLD)));
     }
 
     private record Row(

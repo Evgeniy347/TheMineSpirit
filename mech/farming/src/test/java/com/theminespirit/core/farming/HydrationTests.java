@@ -87,9 +87,10 @@ class HydrationTests {
         assertFalse(
                 hydration.watered(GROUND),
                 "Далёкое озеро грядку не увлажняет: поиск обязан вернуть сухо, а не утонуть в размере озера");
+        int maxLookups = boxVolume();
         assertTrue(
-                water.lookups <= Hydration.MAX_LOOKUPS,
-                "Проверка обязана читать не более 9×9×2=" + Hydration.MAX_LOOKUPS + " клеток независимо от размера "
+                water.lookups <= maxLookups,
+                "Проверка обязана читать не более 9×9×2=" + maxLookups + " клеток независимо от размера "
                         + "озера: иначе озеро из тысяч клеток кладёт серверный тик. Обращений: " + water.lookups);
     }
 
@@ -114,8 +115,13 @@ class HydrationTests {
     void maxLookups_BoxVolume_Is162() {
         assertEquals(
                 162,
-                Hydration.MAX_LOOKUPS,
+                boxVolume(),
                 "Предел обращений обязан равняться объёму ящика 9×9×2: иначе тест масштаба проверяет не то число");
+    }
+
+    private static int boxVolume() {
+        int side = 2 * Hydration.RADIUS + 1;
+        return side * side * 2;
     }
 
     static boolean bruteForce(Set<BlockCoord> water, BlockCoord ground) {

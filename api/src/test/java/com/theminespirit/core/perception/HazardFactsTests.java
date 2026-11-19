@@ -41,9 +41,9 @@ class HazardFactsTests {
             String scene, List<HazardRef> hazards, boolean lava, boolean water, boolean drop, HazardRef nearest) {
         HazardFacts facts = new HazardFacts(hazards);
 
-        assertEquals(lava, facts.hasLava(), "hasLava в сцене «" + scene + "» обязан отражать наличие лавы");
-        assertEquals(water, facts.hasWater(), "hasWater в сцене «" + scene + "» обязан отражать наличие воды");
-        assertEquals(drop, facts.hasDrop(), "hasDrop в сцене «" + scene + "» обязан отражать наличие обрыва");
+        assertEquals(lava, present(facts, HazardType.LAVA), "Лава в сцене «" + scene + "» обязана быть в списке");
+        assertEquals(water, present(facts, HazardType.WATER), "Вода в сцене «" + scene + "» обязана быть в списке");
+        assertEquals(drop, present(facts, HazardType.DROP), "Обрыв в сцене «" + scene + "» обязан быть в списке");
         assertEquals(
                 nearest,
                 facts.nearest(),
@@ -114,5 +114,9 @@ class HazardFactsTests {
                 HazardFacts.MAX_REPORTED,
                 "отчёт sense_hazard ограничен 64 ближайшими опасностями: обрыв и озеро дают тысячи клеток, "
                         + "а ИИ нужны ближайшие; при смене числа пересмотри размер результата для планировщика");
+    }
+
+    private static boolean present(HazardFacts facts, HazardType type) {
+        return facts.hazards().stream().anyMatch(hazard -> hazard.type() == type);
     }
 }

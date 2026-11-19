@@ -26,6 +26,15 @@ class TacticsScaleTests {
         return builder.build();
     }
 
+    private static int totalRules() {
+        Rules rules = CONFIG.rules();
+        return rules.hard().size()
+                + rules.actions().size()
+                + rules.modeTransitions().size()
+                + rules.states().size()
+                + rules.retreat().entries().size();
+    }
+
     @Test
     void step_MaxEnemies_EvaluatesEachFactorOnceAndEachRuleAtMostOnce() {
         TacticsEngine engine = new TacticsEngine(CONFIG);
@@ -41,9 +50,10 @@ class TacticsScaleTests {
                 Factor.values().length,
                 engine.scorer().factorEvaluations(),
                 "Число вычислений факторов за вызов равно числу факторов, а не числу факторов × враги × варианты");
+        int totalRules = totalRules();
         assertTrue(
-                engine.ruleCounter().checks() <= engine.totalRules(),
-                "Обращений к таблицам правил за вызов не больше числа правил (" + engine.totalRules() + "), а было "
+                engine.ruleCounter().checks() <= totalRules,
+                "Обращений к таблицам правил за вызов не больше числа правил (" + totalRules + "), а было "
                         + engine.ruleCounter().checks() + ": правило проверяется не более одного раза");
     }
 

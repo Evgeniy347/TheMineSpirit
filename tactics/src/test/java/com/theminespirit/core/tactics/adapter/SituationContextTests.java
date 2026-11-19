@@ -70,7 +70,7 @@ class SituationContextTests {
 
     @Test
     void collect_NullContext_IsRejected() {
-        CoreFactCollector collector = CoreFactCollector.withDefaultSettings();
+        CoreFactCollector collector = new CoreFactCollector(TacticsAdapterSettings.loadDefault());
 
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,

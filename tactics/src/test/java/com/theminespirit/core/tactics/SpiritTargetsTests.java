@@ -43,7 +43,7 @@ class SpiritTargetsTests {
             })
     void attacksSpirits_VanillaHostileMonster_ReturnsTrue(String type) {
         assertTrue(
-                SpiritTargets.attacksSpirits(type),
+                SpiritTargets.conditionFor(type).isPresent(),
                 "Враждебный моб " + type + " обязан получать цель «дух»: иначе бой в игре начинается только от игрока, "
                         + "и тактика духов срабатывает вхолостую");
     }
@@ -73,7 +73,7 @@ class SpiritTargetsTests {
             })
     void attacksSpirits_NeutralBrainMobOrPeaceful_ReturnsFalse(String type) {
         assertFalse(
-                SpiritTargets.attacksSpirits(type),
+                SpiritTargets.conditionFor(type).isPresent(),
                 "Нейтральный, пиглин, иллагер, мирный " + type + " или моб, чью цель выбирает Brain (breeze, hoglin, "
                         + "warden, zoglin) и дракон с его фазами босса, не получает цель «дух»: добавленный в "
                         + "targetSelector goal игнорируется, а своя логика агрессии сломалась бы");
@@ -107,9 +107,8 @@ class SpiritTargetsTests {
 
     @Test
     void conditionFor_UnknownType_ReturnsEmpty() {
-        assertEquals(
-                Optional.empty(),
-                SpiritTargets.conditionFor("minecraft:never_seen"),
+        assertFalse(
+                SpiritTargets.conditionFor("minecraft:never_seen").isPresent(),
                 "Неизвестный тип не получает цель: белый список явный, и новый мод-моб не станет охотником за духами "
                         + "без решения владельца");
     }
@@ -176,7 +175,7 @@ class SpiritTargetsTests {
     @Test
     void attacksSpirits_UnknownType_ReturnsFalse() {
         assertFalse(
-                SpiritTargets.attacksSpirits("minecraft:never_seen"),
+                SpiritTargets.conditionFor("minecraft:never_seen").isPresent(),
                 "Неизвестный тип не получает цель: белый список явный, и новый мод-моб не станет охотником за духами "
                         + "без решения владельца");
     }
@@ -185,7 +184,7 @@ class SpiritTargetsTests {
     void attacksSpirits_NullType_Throws() {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
-                () -> SpiritTargets.attacksSpirits(null),
+                () -> SpiritTargets.conditionFor(null),
                 "Null-тип — ошибка вызова, а не «мирный моб»: молчаливый false спрятал бы дефект вызова");
 
         assertTrue(
@@ -197,7 +196,7 @@ class SpiritTargetsTests {
     void attacksSpirits_BlankType_Throws() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SpiritTargets.attacksSpirits("  "),
+                () -> SpiritTargets.conditionFor("  "),
                 "Пустой id — ошибка вызова: адаптер обязан передать id типа из реестра");
     }
 }

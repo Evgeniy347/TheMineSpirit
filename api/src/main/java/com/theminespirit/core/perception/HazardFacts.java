@@ -16,18 +16,6 @@ public record HazardFacts(List<HazardRef> hazards) {
         hazards = List.copyOf(hazards);
     }
 
-    public boolean hasLava() {
-        return has(HazardType.LAVA);
-    }
-
-    public boolean hasWater() {
-        return has(HazardType.WATER);
-    }
-
-    public boolean hasDrop() {
-        return has(HazardType.DROP);
-    }
-
     public @Nullable HazardRef nearest() {
         return hazards.stream().min(BY_PROXIMITY).orElse(null);
     }
@@ -43,9 +31,5 @@ public record HazardFacts(List<HazardRef> hazards) {
         }
         return new HazardFacts(
                 hazards.stream().sorted(BY_PROXIMITY).limit(limit).toList());
-    }
-
-    private boolean has(HazardType type) {
-        return hazards.stream().anyMatch(hazard -> hazard.type() == type);
     }
 }

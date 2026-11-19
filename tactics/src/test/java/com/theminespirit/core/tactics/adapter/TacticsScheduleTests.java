@@ -1,9 +1,7 @@
 package com.theminespirit.core.tactics.adapter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -54,15 +52,6 @@ class TacticsScheduleTests {
                 "Расписание («" + row.name() + "»): оценка раз в " + INTERVAL
                         + " тиков, урон вызывает её сразу, но не чаще раза в " + TacticsSchedule.HURT_MIN_GAP_TICKS
                         + " тиков; иначе тактика душит сервер или опаздывает");
-    }
-
-    @Test
-    void due_NeverEvaluated_ReportsNotEvaluatedYet() {
-        TacticsSchedule schedule = new TacticsSchedule(INTERVAL);
-
-        assertFalse(schedule.everEvaluated(), "Новое расписание ещё не оценивало: первый вызов обязан сработать сразу");
-        schedule.evaluated(5, false);
-        assertTrue(schedule.everEvaluated(), "После оценки расписание помнит, что она была");
     }
 
     @Test

@@ -56,10 +56,6 @@ public final class SpiritTargets {
 
     private SpiritTargets() {}
 
-    public static boolean attacksSpirits(String entityTypeId) {
-        return conditionFor(entityTypeId).isPresent();
-    }
-
     public static Optional<Condition> conditionFor(String entityTypeId) {
         if (entityTypeId == null || entityTypeId.isBlank()) {
             throw new IllegalArgumentException(

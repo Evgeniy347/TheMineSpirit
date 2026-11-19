@@ -47,7 +47,7 @@ class LeashAdapterTests {
         SituationContext context = new SituationContext(
                 AdapterFixtures.self(), List.of(enemy), AdapterFixtures.env(TimeOfDay.DAY), orders, 100, 100);
         return ENGINE.step(
-                CoreFactCollector.withDefaultSettings().collect(context),
+                new CoreFactCollector(TacticsAdapterSettings.loadDefault()).collect(context),
                 TacticsMemory.initial(CombatMode.GUARD_AREA, 0, 1),
                 1);
     }

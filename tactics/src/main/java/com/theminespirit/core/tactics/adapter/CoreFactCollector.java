@@ -14,10 +14,6 @@ public record CoreFactCollector(TacticsAdapterSettings settings) implements Fact
         }
     }
 
-    public static CoreFactCollector withDefaultSettings() {
-        return new CoreFactCollector(TacticsAdapterSettings.loadDefault());
-    }
-
     @Override
     public Situation collect(SituationContext context) {
         if (context == null) {

@@ -31,16 +31,6 @@ public final class TacticsEngine {
         return ruleCounter;
     }
 
-    public int totalRules() {
-        Rules rules = config.rules();
-        return rules.hard().size()
-                + rules.actions().size()
-                + rules.modeTransitions().size()
-                + rules.states().size()
-                + rules.retreat().entries().size()
-                + 1;
-    }
-
     public TacticalOutcome step(Situation situation, TacticsMemory memory, long nowTick) {
         if (nowTick < 0) {
             throw new IllegalArgumentException("nowTick = " + nowTick + ": номер тика не может быть отрицательным");

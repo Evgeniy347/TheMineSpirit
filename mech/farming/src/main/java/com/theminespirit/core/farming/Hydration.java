@@ -7,7 +7,6 @@ import java.util.Set;
 
 public final class Hydration {
     public static final int RADIUS = 4;
-    public static final int MAX_LOOKUPS = 9 * 9 * 2;
 
     private final Set<BlockCoord> waterCells;
 

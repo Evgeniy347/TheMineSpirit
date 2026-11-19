@@ -55,7 +55,7 @@ class CoreFactCollectorProperties {
                 context.ticksSinceHit(),
                 context.ticksSinceStrike());
 
-        Situation actual = CoreFactCollector.withDefaultSettings().collect(context);
+        Situation actual = new CoreFactCollector(TacticsAdapterSettings.loadDefault()).collect(context);
 
         assertEquals(
                 expected,
@@ -66,7 +66,7 @@ class CoreFactCollectorProperties {
 
     @Property(tries = 200)
     void collect_AnyEnemies_ReturnsCanonicalOrder(@ForAll("fewEnemies") List<EnemyFact> supplied) {
-        List<EnemyFact> actual = CoreFactCollector.withDefaultSettings()
+        List<EnemyFact> actual = new CoreFactCollector(TacticsAdapterSettings.loadDefault())
                 .collect(AdapterFixtures.context(supplied))
                 .enemies();
         List<EnemyFact> sorted = new ArrayList<>(actual);
@@ -82,7 +82,8 @@ class CoreFactCollectorProperties {
 
     @Property(tries = 200)
     void collect_MoreThanMax_PreservesCountWithinBounds(@ForAll("manyEnemies") List<EnemyFact> supplied) {
-        Situation situation = CoreFactCollector.withDefaultSettings().collect(AdapterFixtures.context(supplied));
+        Situation situation =
+                new CoreFactCollector(TacticsAdapterSettings.loadDefault()).collect(AdapterFixtures.context(supplied));
         List<EnemyFact> inRange = supplied.stream()
                 .filter(enemy -> enemy.pos().distanceTo(ORIGIN) <= AdapterFixtures.RADIUS)
                 .toList();
