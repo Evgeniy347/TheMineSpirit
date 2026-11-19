@@ -29,7 +29,10 @@ public record PlanTuning(
         int farmRadius,
         int farmCount,
         int containerRadius,
-        int craterFillRadius) {
+        int craterFillRadius,
+        int demolitionRadius,
+        int demolitionHeight,
+        int demolitionBatch) {
     private static final Set<String> FIELDS = Set.of(
             "mineFloorTake",
             "leftOreRadius",
@@ -53,9 +56,12 @@ public record PlanTuning(
             "farmRadius",
             "farmCount",
             "containerRadius",
-            "craterFillRadius");
+            "craterFillRadius",
+            "demolitionRadius",
+            "demolitionHeight",
+            "demolitionBatch");
     private static final PlanTuning DEFAULTS =
-            new PlanTuning(32, 4, 5, 3, 8, 4, 4, 4, 2, 4, 16, 4, 8, 16, 4, 3, 3, 16, 13, 8, 4, 8, 1);
+            new PlanTuning(32, 4, 5, 3, 8, 4, 4, 4, 2, 4, 16, 4, 8, 16, 4, 3, 3, 16, 13, 8, 4, 8, 1, 4, 2, 48);
 
     public PlanTuning {
         requirePositive(mineFloorTake, "mineFloorTake");
@@ -81,6 +87,9 @@ public record PlanTuning(
         requirePositive(farmCount, "farmCount");
         requirePositive(containerRadius, "containerRadius");
         requirePositive(craterFillRadius, "craterFillRadius");
+        requirePositive(demolitionRadius, "demolitionRadius");
+        requirePositive(demolitionHeight, "demolitionHeight");
+        requirePositive(demolitionBatch, "demolitionBatch");
     }
 
     static PlanTuning defaults() {
@@ -120,7 +129,10 @@ public record PlanTuning(
                 integer(node, "farmRadius", origin),
                 integer(node, "farmCount", origin),
                 integer(node, "containerRadius", origin),
-                integer(node, "craterFillRadius", origin));
+                integer(node, "craterFillRadius", origin),
+                integer(node, "demolitionRadius", origin),
+                integer(node, "demolitionHeight", origin),
+                integer(node, "demolitionBatch", origin));
     }
 
     private static int integer(JsonNode node, String field, String origin) {

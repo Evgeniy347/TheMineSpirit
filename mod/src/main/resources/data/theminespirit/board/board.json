@@ -218,7 +218,10 @@
     "farmRadius": 8,
     "farmCount": 4,
     "containerRadius": 8,
-    "craterFillRadius": 1
+    "craterFillRadius": 1,
+    "demolitionRadius": 4,
+    "demolitionHeight": 2,
+    "demolitionBatch": 48
   },
   "facts": {
     "animalRadius": 48,

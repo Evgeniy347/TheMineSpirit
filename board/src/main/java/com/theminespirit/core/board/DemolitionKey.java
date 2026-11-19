@@ -6,9 +6,6 @@ import java.util.Objects;
 
 public final class DemolitionKey {
     public static final String PREFIX = "demolish:";
-    public static final int RADIUS = 4;
-    public static final int HEIGHT = 2;
-    public static final int BATCH = 48;
 
     private DemolitionKey() {}
 
@@ -33,11 +30,13 @@ public final class DemolitionKey {
         }
         BlockCoord anchor = candidates.get(0);
         return candidates.stream()
-                .filter(at -> Math.abs(at.x() - anchor.x()) <= RADIUS
-                        && Math.abs(at.z() - anchor.z()) <= RADIUS
+                .filter(at -> Math.abs(at.x() - anchor.x())
+                                <= BoardConfig.current().plans().demolitionRadius()
+                        && Math.abs(at.z() - anchor.z())
+                                <= BoardConfig.current().plans().demolitionRadius()
                         && at.y() >= anchor.y()
-                        && at.y() <= anchor.y() + HEIGHT)
-                .limit(BATCH)
+                        && at.y() <= anchor.y() + BoardConfig.current().plans().demolitionHeight())
+                .limit(BoardConfig.current().plans().demolitionBatch())
                 .toList();
     }
 
@@ -45,15 +44,21 @@ public final class DemolitionKey {
         Objects.requireNonNull(stand, "Стенд уборки не может быть null: вокруг него собирают пакет");
         Objects.requireNonNull(cells, "Клетки дерева не могут быть null: пустое дерево не собирают");
         return cells.stream()
-                .allMatch(at -> Math.abs(at.x() - stand.x()) <= RADIUS && Math.abs(at.z() - stand.z()) <= RADIUS);
+                .allMatch(at -> Math.abs(at.x() - stand.x())
+                                <= BoardConfig.current().plans().demolitionRadius()
+                        && Math.abs(at.z() - stand.z())
+                                <= BoardConfig.current().plans().demolitionRadius());
     }
 
     public static List<BlockCoord> treePiece(List<BlockCoord> candidates, BlockCoord stand) {
         Objects.requireNonNull(candidates, "Кандидаты уборки не могут быть null: без них нет куска");
         Objects.requireNonNull(stand, "Стенд уборки не может быть null: вокруг него собирают пакет");
         return candidates.stream()
-                .filter(at -> Math.abs(at.x() - stand.x()) <= RADIUS && Math.abs(at.z() - stand.z()) <= RADIUS)
-                .limit(BATCH)
+                .filter(at -> Math.abs(at.x() - stand.x())
+                                <= BoardConfig.current().plans().demolitionRadius()
+                        && Math.abs(at.z() - stand.z())
+                                <= BoardConfig.current().plans().demolitionRadius())
+                .limit(BoardConfig.current().plans().demolitionBatch())
                 .toList();
     }
 }
