@@ -12,7 +12,6 @@ import com.theminespirit.core.town.TownSnapshot;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
@@ -51,7 +50,7 @@ final class GraphReporter {
             LOGGER.info("[graph] просьба стратегу: {}", text);
             if (current(graph, state, notice.building())) {
                 for (ServerPlayer player : level.players()) {
-                    player.sendSystemMessage(Component.literal(text));
+                    player.sendSystemMessage(ChatNames.display(text, graph));
                 }
             }
         }

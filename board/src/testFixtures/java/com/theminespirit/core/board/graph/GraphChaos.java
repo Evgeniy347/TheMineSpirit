@@ -61,6 +61,7 @@ final class GraphChaos {
                         id,
                         new SupplyGraph.Building(
                                 id,
+                                building.name(),
                                 building.boardCase(),
                                 building.stage(),
                                 scale(building.base(), random, spread),

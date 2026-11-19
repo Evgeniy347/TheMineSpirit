@@ -13,6 +13,7 @@
   },
   "buildings": {
     "more2_field_chest": {
+      "name": "Сундук у поля",
       "case": "STOCK_CHESTS",
       "stage": 1,
       "base": 56,
@@ -22,6 +23,7 @@
       "todo": "more2:carry_batch"
     },
     "more2_trail": {
+      "name": "Тропа",
       "case": "BUILD_STREETS",
       "stage": 1,
       "base": 53,

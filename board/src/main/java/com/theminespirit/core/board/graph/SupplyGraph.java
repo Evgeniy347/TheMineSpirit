@@ -45,6 +45,7 @@ public record SupplyGraph(
 
     public record Building(
             String id,
+            String name,
             BoardCase boardCase,
             int stage,
             int base,
@@ -222,6 +223,7 @@ public record SupplyGraph(
                     entry.getKey(),
                     new Building(
                             entry.getKey(),
+                            entry.getValue().path("name").asText(""),
                             BoardCase.valueOf(entry.getValue().path("case").asText()),
                             entry.getValue().path(STAGE).asInt(1),
                             entry.getValue().path(BASE).asInt(),
@@ -358,8 +360,6 @@ public record SupplyGraph(
                             + input + "', которого нет среди предметов графа");
                 }
             }
-        }
-        for (Building building : buildings.values()) {
             for (String required : building.requires()) {
                 if (!buildings.containsKey(required)) {
                     throw new IllegalStateException("Файл '" + origin + "': постройка " + building.id()

@@ -35,7 +35,7 @@ class GraphEventsTests {
                 true);
         GraphEvent template = new GraphEvent("building_damaged", List.of(task), Map.of(), List.of(), false);
         SupplyGraph.Building building = new SupplyGraph.Building(
-                "hut", BoardCase.REPAIR_BUILDING, 1, 50, null, Map.of(), List.of(), List.of(), false);
+                "hut", "Хижина", BoardCase.REPAIR_BUILDING, 1, 50, null, Map.of(), List.of(), List.of(), false);
 
         GraphEvent repaired = GraphEvent.withRepairs(Map.of("building_damaged", template), Map.of("hut", building))
                 .get(GraphWorldEvents.REPAIR + "hut");

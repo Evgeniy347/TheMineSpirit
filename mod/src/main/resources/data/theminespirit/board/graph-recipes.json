@@ -3199,20 +3199,7 @@
     "#wooden_slabs" : [ "oak_slab", "spruce_slab", "birch_slab", "jungle_slab", "acacia_slab", "dark_oak_slab", "crimson_slab", "warped_slab", "mangrove_slab", "bamboo_slab", "cherry_slab" ],
     "#wool" : [ "white_wool", "orange_wool", "magenta_wool", "light_blue_wool", "yellow_wool", "lime_wool", "pink_wool", "gray_wool", "light_gray_wool", "cyan_wool", "purple_wool", "blue_wool", "brown_wool", "green_wool", "red_wool", "black_wool" ]
   },
-  "buildings" : {
-    "blast_furnace" : {
-      "case" : "GATHER_MATERIALS",
-      "stage" : 1,
-      "base" : 0,
-      "optional" : true
-    },
-    "stonecutter" : {
-      "case" : "GATHER_MATERIALS",
-      "stage" : 1,
-      "base" : 0,
-      "optional" : true
-    }
-  },
+  "buildings" : { },
   "ways" : [ {
     "id" : "auto_acacia_boat",
     "case" : "GATHER_MATERIALS",

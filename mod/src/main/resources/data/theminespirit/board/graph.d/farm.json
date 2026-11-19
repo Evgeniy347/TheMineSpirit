@@ -47,6 +47,7 @@
   },
   "buildings": {
     "wheat_field": {
+      "name": "Домашняя грядка",
       "case": "BUILD_PLACED",
       "stage": 1,
       "base": 67,
@@ -58,6 +59,7 @@
       "implemented": true
     },
     "storage_space": {
+      "name": "Место склада",
       "case": "STOCK_CHESTS",
       "stage": 1,
       "base": 70,

@@ -2592,6 +2592,7 @@
   },
   "buildings": {
     "crafting_table": {
+      "name": "Верстак",
       "case": "CRAFTING_STATION",
       "stage": 1,
       "base": 108,
@@ -2600,6 +2601,7 @@
       }
     },
     "furnace": {
+      "name": "Печь",
       "case": "CRAFT_FURNACE",
       "stage": 1,
       "base": 86,
@@ -2611,6 +2613,7 @@
       ]
     },
     "clearing": {
+      "name": "Расчистка",
       "case": "CLEAR_GROUNDS",
       "stage": 1,
       "base": 78,
@@ -2626,6 +2629,7 @@
       ]
     },
     "exchange_chest": {
+      "name": "Сундук обмена",
       "case": "STOCK_CHESTS",
       "stage": 1,
       "base": 90,
@@ -2637,6 +2641,7 @@
       ]
     },
     "chests": {
+      "name": "Сундуки",
       "case": "STOCK_CHESTS",
       "stage": 1,
       "base": 78,
@@ -2648,6 +2653,7 @@
       ]
     },
     "mine": {
+      "name": "Спуск в шахту",
       "case": "BUILD_MINE",
       "stage": 1,
       "base": 78,
@@ -2658,6 +2664,7 @@
       ]
     },
     "lighting": {
+      "name": "Освещение",
       "case": "LIGHTING",
       "stage": 1,
       "base": 78,
@@ -2669,6 +2676,7 @@
       ]
     },
     "fence": {
+      "name": "Забор",
       "case": "BUILD_FENCE",
       "stage": 1,
       "base": 78,
@@ -2680,6 +2688,7 @@
       ]
     },
     "hut": {
+      "name": "Хижина",
       "case": "BUILD_HOUSE",
       "stage": 1,
       "base": 78,
@@ -2693,6 +2702,7 @@
       ]
     },
     "streets": {
+      "name": "Улицы",
       "case": "BUILD_STREETS",
       "stage": 1,
       "base": 62,
@@ -2704,6 +2714,7 @@
       ]
     },
     "warehouse": {
+      "name": "Склад",
       "case": "BUILD_WAREHOUSE",
       "stage": 2,
       "base": 92,
@@ -2713,6 +2724,7 @@
       }
     },
     "smithing_table": {
+      "name": "Стол кузнеца",
       "case": "CRAFT_SMITHING_TABLE",
       "stage": 2,
       "base": 74,
@@ -2722,6 +2734,7 @@
       }
     },
     "anvil": {
+      "name": "Наковальня",
       "case": "CRAFT_ANVIL",
       "stage": 2,
       "base": 74,
@@ -2730,6 +2743,7 @@
       }
     },
     "plaza": {
+      "name": "Площадь",
       "case": "BUILD_PLACED",
       "stage": 2,
       "base": 64,
@@ -2739,6 +2753,7 @@
       }
     },
     "family_house_a": {
+      "name": "Дом семьи",
       "case": "BUILD_PLACED",
       "stage": 2,
       "base": 82,
@@ -2749,6 +2764,7 @@
       }
     },
     "family_house_b": {
+      "name": "Дом семьи",
       "case": "BUILD_PLACED",
       "stage": 2,
       "base": 82,
@@ -2759,6 +2775,7 @@
       }
     },
     "family_house_c": {
+      "name": "Дом семьи",
       "case": "BUILD_PLACED",
       "stage": 2,
       "base": 82,
@@ -2769,6 +2786,7 @@
       }
     },
     "barn": {
+      "name": "Амбар",
       "case": "BUILD_PLACED",
       "stage": 2,
       "base": 74,
@@ -2779,6 +2797,7 @@
       }
     },
     "field": {
+      "name": "Пашня",
       "case": "BUILD_PLACED",
       "stage": 2,
       "base": 82,
@@ -2788,6 +2807,7 @@
       }
     },
     "well": {
+      "name": "Колодец",
       "case": "BUILD_PLACED",
       "stage": 2,
       "base": 64,
@@ -2796,6 +2816,7 @@
       }
     },
     "lumber_yard": {
+      "name": "Лесопилка",
       "case": "BUILD_PLACED",
       "stage": 2,
       "base": 74,
@@ -2806,6 +2827,7 @@
       }
     },
     "workshop": {
+      "name": "Мастерская",
       "case": "BUILD_PLACED",
       "stage": 2,
       "base": 74,
@@ -2816,6 +2838,7 @@
       }
     },
     "player_house": {
+      "name": "Дом игрока",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 953,
@@ -2826,6 +2849,7 @@
       }
     },
     "forge": {
+      "name": "Кузница",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 657,
@@ -2836,6 +2860,7 @@
       }
     },
     "bakery": {
+      "name": "Пекарня",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 657,
@@ -2846,6 +2871,7 @@
       }
     },
     "apiary": {
+      "name": "Пасека",
       "case": "PLACE_BEEHIVE",
       "stage": 3,
       "base": 516,
@@ -2854,6 +2880,7 @@
       }
     },
     "kennel": {
+      "name": "Псарня",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 436,
@@ -2864,6 +2891,7 @@
       }
     },
     "stable": {
+      "name": "Конюшня",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 436,
@@ -2874,6 +2902,7 @@
       }
     },
     "barracks": {
+      "name": "Казарма",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 579,
@@ -2885,6 +2914,7 @@
       }
     },
     "weaver": {
+      "name": "Ткацкая",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 516,
@@ -2895,6 +2925,7 @@
       }
     },
     "field_carrot": {
+      "name": "Морковное поле",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 74,
@@ -2905,6 +2936,7 @@
       "optional": true
     },
     "field_potato": {
+      "name": "Картофельное поле",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 74,
@@ -2915,6 +2947,7 @@
       "optional": true
     },
     "field_beetroot": {
+      "name": "Свекольное поле",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 74,
@@ -2925,6 +2958,7 @@
       "optional": true
     },
     "sugar_cane_bed": {
+      "name": "Грядка тростника",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 74,
@@ -2934,6 +2968,7 @@
       }
     },
     "melon_patch": {
+      "name": "Бахча дыни",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 436,
@@ -2943,6 +2978,7 @@
       }
     },
     "pumpkin_patch": {
+      "name": "Бахча тыквы",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 436,
@@ -2952,6 +2988,7 @@
       }
     },
     "cocoa_grove": {
+      "name": "Плантация какао",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 366,
@@ -2961,6 +2998,7 @@
       }
     },
     "berry_patch": {
+      "name": "Ягодник",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 55,
@@ -2970,6 +3008,7 @@
       }
     },
     "chicken_coop": {
+      "name": "Курятник",
       "case": "BUILD_PEN",
       "stage": 2,
       "base": 64,
@@ -2979,6 +3018,7 @@
       }
     },
     "brewing_stand": {
+      "name": "Варочная стойка",
       "case": "CRAFT_BREWING_STAND",
       "stage": 3,
       "base": 516,
@@ -2988,6 +3028,7 @@
       }
     },
     "enchanting_table": {
+      "name": "Стол зачарований",
       "case": "ENCHANT_ROOM",
       "stage": 3,
       "base": 516,
@@ -2998,6 +3039,7 @@
       }
     },
     "portal_hall": {
+      "name": "Зал портала",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 516,
@@ -3012,6 +3054,7 @@
       ]
     },
     "portal_lit": {
+      "name": "Зал портала",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 516,
@@ -3023,6 +3066,7 @@
       ]
     },
     "orchard_oak": {
+      "name": "Дубовый сад",
       "case": "BUILD_ORCHARD",
       "stage": 1,
       "base": 40,
@@ -3036,6 +3080,7 @@
       ]
     },
     "orchard_birch": {
+      "name": "Берёзовый сад",
       "case": "BUILD_ORCHARD",
       "stage": 1,
       "base": 70,
@@ -3047,6 +3092,7 @@
       "optional": true
     },
     "orchard_spruce": {
+      "name": "Еловый сад",
       "case": "BUILD_ORCHARD",
       "stage": 1,
       "base": 70,
@@ -3058,6 +3104,7 @@
       "optional": true
     },
     "orchard_jungle": {
+      "name": "Сад джунглей",
       "case": "BUILD_ORCHARD",
       "stage": 1,
       "base": 70,
@@ -3069,6 +3116,7 @@
       "optional": true
     },
     "orchard_acacia": {
+      "name": "Акациевый сад",
       "case": "BUILD_ORCHARD",
       "stage": 1,
       "base": 70,
@@ -3080,6 +3128,7 @@
       "optional": true
     },
     "orchard_dark_oak": {
+      "name": "Сад тёмного дуба",
       "case": "BUILD_ORCHARD",
       "stage": 1,
       "base": 70,
@@ -3091,6 +3140,7 @@
       "optional": true
     },
     "orchard_cherry": {
+      "name": "Вишнёвый сад",
       "case": "BUILD_ORCHARD",
       "stage": 1,
       "base": 70,
@@ -3102,6 +3152,7 @@
       "optional": true
     },
     "orchard_mangrove": {
+      "name": "Мангровый сад",
       "case": "BUILD_ORCHARD",
       "stage": 1,
       "base": 70,
@@ -3113,6 +3164,7 @@
       "optional": true
     },
     "mine_level_2": {
+      "name": "Шахта (уровень 2)",
       "case": "BUILD_MINE",
       "stage": 2,
       "base": 82,
@@ -3125,6 +3177,7 @@
       ]
     },
     "mine_level_3": {
+      "name": "Шахта (уровень 3)",
       "case": "BUILD_MINE",
       "stage": 2,
       "base": 82,
@@ -3137,6 +3190,7 @@
       ]
     },
     "mine_level_4": {
+      "name": "Шахта (уровень 4)",
       "case": "BUILD_MINE",
       "stage": 3,
       "base": 657,
@@ -3149,6 +3203,7 @@
       ]
     },
     "pen_cow": {
+      "name": "Загон: коровы",
       "case": "BUILD_PEN",
       "stage": 2,
       "base": 82,
@@ -3157,6 +3212,7 @@
       }
     },
     "pen_sheep": {
+      "name": "Загон: овцы",
       "case": "BUILD_PEN",
       "stage": 2,
       "base": 82,
@@ -3165,6 +3221,7 @@
       }
     },
     "pen_pig": {
+      "name": "Загон: свиньи",
       "case": "BUILD_PEN",
       "stage": 2,
       "base": 82,
@@ -3173,6 +3230,7 @@
       }
     },
     "smoker": {
+      "name": "Коптильня",
       "case": "CRAFT_SMOKER",
       "stage": 2,
       "base": 74,
@@ -3182,6 +3240,7 @@
       }
     },
     "campfire": {
+      "name": "Костёр",
       "case": "BUILD_HOUSE",
       "stage": 1,
       "base": 54,
@@ -3193,6 +3252,7 @@
       "optional": true
     },
     "family_house_1": {
+      "name": "Дом семьи",
       "case": "BUILD_HOUSE",
       "stage": 1,
       "base": 78,
@@ -3205,6 +3265,7 @@
       "optional": true
     },
     "family_house_2": {
+      "name": "Дом семьи",
       "case": "BUILD_HOUSE",
       "stage": 1,
       "base": 78,
@@ -3221,6 +3282,7 @@
       "optional": true
     },
     "family_house_3": {
+      "name": "Дом семьи",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 86,
@@ -3238,6 +3300,7 @@
       "optional": true
     },
     "family_house_4": {
+      "name": "Дом семьи",
       "case": "BUILD_HOUSE",
       "stage": 4,
       "base": 57,
@@ -3257,6 +3320,7 @@
       "optional": true
     },
     "player_house_1": {
+      "name": "Дом игрока",
       "case": "BUILD_HOUSE",
       "stage": 1,
       "base": 100,
@@ -3270,6 +3334,7 @@
       "optional": true
     },
     "player_house_2": {
+      "name": "Дом игрока",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 119,
@@ -3288,6 +3353,7 @@
       "optional": true
     },
     "player_house_3": {
+      "name": "Дом игрока",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 953,
@@ -3307,6 +3373,7 @@
       "optional": true
     },
     "player_house_4": {
+      "name": "Дом игрока",
       "case": "BUILD_HOUSE",
       "stage": 4,
       "base": 75,
@@ -3327,6 +3394,7 @@
       "optional": true
     },
     "warehouse_2": {
+      "name": "Склад",
       "case": "BUILD_WAREHOUSE",
       "stage": 2,
       "base": 102,
@@ -3340,6 +3408,7 @@
       ]
     },
     "warehouse_3": {
+      "name": "Склад",
       "case": "BUILD_WAREHOUSE",
       "stage": 3,
       "base": 804,
@@ -3354,6 +3423,7 @@
       ]
     },
     "warehouse_4": {
+      "name": "Склад",
       "case": "BUILD_WAREHOUSE",
       "stage": 4,
       "base": 63,
@@ -3368,6 +3438,7 @@
       ]
     },
     "barn_2": {
+      "name": "Амбар",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 75,
@@ -3383,6 +3454,7 @@
       "optional": true
     },
     "barn_3": {
+      "name": "Амбар",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 612,
@@ -3399,6 +3471,7 @@
       "optional": true
     },
     "field_2": {
+      "name": "Пашня",
       "case": "BUILD_HOUSE",
       "stage": 1,
       "base": 70,
@@ -3414,6 +3487,7 @@
       "optional": true
     },
     "field_3": {
+      "name": "Пашня",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 82,
@@ -3430,6 +3504,7 @@
       "optional": true
     },
     "pen_2": {
+      "name": "Загон",
       "case": "BUILD_PEN",
       "stage": 2,
       "base": 82,
@@ -3445,6 +3520,7 @@
       "optional": true
     },
     "pen_3": {
+      "name": "Загон",
       "case": "BUILD_PEN",
       "stage": 3,
       "base": 657,
@@ -3460,6 +3536,7 @@
       "optional": true
     },
     "pen_4": {
+      "name": "Загон",
       "case": "BUILD_PEN",
       "stage": 3,
       "base": 657,
@@ -3475,6 +3552,7 @@
       "optional": true
     },
     "plaza_2": {
+      "name": "Площадь",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 68,
@@ -3490,6 +3568,7 @@
       "optional": true
     },
     "plaza_3": {
+      "name": "Площадь",
       "case": "BUILD_HOUSE",
       "stage": 4,
       "base": 44,
@@ -3506,6 +3585,7 @@
       "optional": true
     },
     "workshop_2": {
+      "name": "Мастерская",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 75,
@@ -3522,6 +3602,7 @@
       "optional": true
     },
     "workshop_3": {
+      "name": "Мастерская",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 612,
@@ -3539,6 +3620,7 @@
       "optional": true
     },
     "forge_2": {
+      "name": "Кузница",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 82,
@@ -3555,6 +3637,7 @@
       "optional": true
     },
     "forge_3": {
+      "name": "Кузница",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 657,
@@ -3572,6 +3655,7 @@
       "optional": true
     },
     "apiary_2": {
+      "name": "Пасека",
       "case": "PLACE_BEEHIVE",
       "stage": 3,
       "base": 554,
@@ -3586,6 +3670,7 @@
       "optional": true
     },
     "kennel_2": {
+      "name": "Псарня",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 473,
@@ -3600,6 +3685,7 @@
       "optional": true
     },
     "stable_2": {
+      "name": "Конюшня",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 473,
@@ -3614,6 +3700,7 @@
       "optional": true
     },
     "stable_3": {
+      "name": "Конюшня",
       "case": "BUILD_HOUSE",
       "stage": 4,
       "base": 37,
@@ -3629,6 +3716,7 @@
       "optional": true
     },
     "well_2": {
+      "name": "Колодец",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 64,
@@ -3644,6 +3732,7 @@
       "optional": true
     },
     "lumber_yard_2": {
+      "name": "Лесопилка",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 75,
@@ -3659,6 +3748,7 @@
       "optional": true
     },
     "bakery_2": {
+      "name": "Пекарня",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 82,
@@ -3675,6 +3765,7 @@
       "optional": true
     },
     "bakery_3": {
+      "name": "Пекарня",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 657,
@@ -3691,6 +3782,7 @@
       "optional": true
     },
     "weaver_2": {
+      "name": "Ткацкая",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 554,
@@ -3706,6 +3798,7 @@
       "optional": true
     },
     "barracks_2": {
+      "name": "Казарма",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 75,
@@ -3721,6 +3814,7 @@
       "optional": true
     },
     "barracks_3": {
+      "name": "Казарма",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 612,
@@ -3737,6 +3831,7 @@
       "optional": true
     },
     "outpost_1": {
+      "name": "Аванпост",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 516,
@@ -3750,6 +3845,7 @@
       "estimate": true
     },
     "outpost_2": {
+      "name": "Аванпост",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 516,
@@ -3766,6 +3862,7 @@
       "estimate": true
     },
     "outpost_3": {
+      "name": "Аванпост",
       "case": "BUILD_HOUSE",
       "stage": 4,
       "base": 39,
@@ -3783,6 +3880,7 @@
       "estimate": true
     },
     "wall_2": {
+      "name": "Стена",
       "case": "BUILD_FENCE",
       "stage": 1,
       "base": 78,
@@ -3797,6 +3895,7 @@
       "estimate": true
     },
     "wall_3": {
+      "name": "Стена",
       "case": "BUILD_FENCE",
       "stage": 2,
       "base": 92,
@@ -3811,6 +3910,7 @@
       "estimate": true
     },
     "wall_4": {
+      "name": "Стена",
       "case": "BUILD_FENCE",
       "stage": 3,
       "base": 728,
@@ -3825,6 +3925,7 @@
       "estimate": true
     },
     "gate_1": {
+      "name": "Ворота",
       "case": "BUILD_FENCE",
       "stage": 1,
       "base": 78,
@@ -3837,6 +3938,7 @@
       "estimate": true
     },
     "gate_2": {
+      "name": "Ворота",
       "case": "BUILD_FENCE",
       "stage": 2,
       "base": 92,
@@ -3852,6 +3954,7 @@
       "estimate": true
     },
     "gate_3": {
+      "name": "Ворота",
       "case": "BUILD_FENCE",
       "stage": 3,
       "base": 728,
@@ -3867,6 +3970,7 @@
       "estimate": true
     },
     "gate_4": {
+      "name": "Ворота",
       "case": "BUILD_FENCE",
       "stage": 4,
       "base": 58,
@@ -3882,6 +3986,7 @@
       "estimate": true
     },
     "archer_tower_1": {
+      "name": "Башня лучников",
       "case": "BUILD_HOUSE",
       "stage": 1,
       "base": 54,
@@ -3893,6 +3998,7 @@
       "estimate": true
     },
     "archer_tower_2": {
+      "name": "Башня лучников",
       "case": "BUILD_HOUSE",
       "stage": 2,
       "base": 64,
@@ -3907,6 +4013,7 @@
       "estimate": true
     },
     "archer_tower_3": {
+      "name": "Башня лучников",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 516,
@@ -3922,6 +4029,7 @@
       "estimate": true
     },
     "bridge_1": {
+      "name": "Мост",
       "case": "BUILD_HOUSE",
       "stage": 1,
       "base": 54,
@@ -3933,6 +4041,7 @@
       "estimate": true
     },
     "bridge_2": {
+      "name": "Мост",
       "case": "BUILD_HOUSE",
       "stage": 3,
       "base": 516,
@@ -3947,6 +4056,7 @@
       "estimate": true
     },
     "lighthouse_1": {
+      "name": "Маяк",
       "case": "BUILD_HOUSE",
       "stage": 4,
       "base": 39,
@@ -3958,6 +4068,7 @@
       "estimate": true
     },
     "lighthouse_2": {
+      "name": "Маяк",
       "case": "BUILD_HOUSE",
       "stage": 4,
       "base": 39,
@@ -3973,6 +4084,7 @@
       "estimate": true
     },
     "pier_1": {
+      "name": "Причал",
       "case": "BUILD_HOUSE",
       "stage": 4,
       "base": 39,
@@ -3984,6 +4096,7 @@
       "estimate": true
     },
     "pier_2": {
+      "name": "Причал",
       "case": "BUILD_HOUSE",
       "stage": 4,
       "base": 39,
@@ -3999,6 +4112,7 @@
       "estimate": true
     },
     "composter": {
+      "name": "Компостер",
       "case": "CRAFTING_STATION",
       "stage": 2,
       "base": 74,
@@ -4007,6 +4121,7 @@
       }
     },
     "town_hall": {
+      "name": "Ратуша",
       "case": "BUILD_HOUSE",
       "stage": 4,
       "base": 51,
@@ -4021,6 +4136,7 @@
       "estimate": true
     },
     "tavern": {
+      "name": "Таверна",
       "case": "BUILD_HOUSE",
       "stage": 4,
       "base": 48,
@@ -4035,6 +4151,7 @@
       "estimate": true
     },
     "infirmary": {
+      "name": "Лазарет",
       "case": "BUILD_HOUSE",
       "stage": 4,
       "base": 48,
@@ -4049,6 +4166,7 @@
       "estimate": true
     },
     "training_yard": {
+      "name": "Тренировочный двор",
       "case": "BUILD_HOUSE",
       "stage": 4,
       "base": 46,
@@ -4061,6 +4179,7 @@
       "estimate": true
     },
     "enchant_room": {
+      "name": "Чаровальня",
       "case": "ENCHANT_ROOM",
       "stage": 4,
       "base": 51,
@@ -4074,6 +4193,7 @@
       }
     },
     "enchant_room_2": {
+      "name": "Чаровальня",
       "case": "ENCHANT_ROOM",
       "stage": 4,
       "base": 51,
@@ -4091,6 +4211,7 @@
       "optional": true
     },
     "enchant_room_3": {
+      "name": "Чаровальня",
       "case": "ENCHANT_ROOM",
       "stage": 4,
       "base": 51,
@@ -4108,6 +4229,7 @@
       "optional": true
     },
     "alchemy": {
+      "name": "Алхимическая лаборатория",
       "case": "BUILD_HOUSE",
       "stage": 4,
       "base": 48,
@@ -4123,6 +4245,7 @@
       "estimate": true
     },
     "library": {
+      "name": "Библиотека",
       "case": "BUILD_HOUSE",
       "stage": 4,
       "base": 48,
@@ -4136,6 +4259,7 @@
       "estimate": true
     },
     "path_desert": {
+      "name": "Дорога: пустыня",
       "case": "BUILD_STREETS",
       "stage": 1,
       "base": 47,
@@ -4147,6 +4271,7 @@
       "estimate": true
     },
     "path_plains": {
+      "name": "Дорога: равнина",
       "case": "BUILD_STREETS",
       "stage": 1,
       "base": 47,
@@ -4158,6 +4283,7 @@
       "estimate": true
     },
     "path_forest": {
+      "name": "Дорога: лес",
       "case": "BUILD_STREETS",
       "stage": 1,
       "base": 47,
@@ -4169,6 +4295,7 @@
       "estimate": true
     },
     "path_snowy": {
+      "name": "Дорога: снег",
       "case": "BUILD_STREETS",
       "stage": 1,
       "base": 47,
@@ -4180,6 +4307,7 @@
       "estimate": true
     },
     "route_desert": {
+      "name": "Маршрут: пустыня",
       "case": "BUILD_STREETS",
       "stage": 1,
       "base": 47,
@@ -4192,6 +4320,7 @@
       "world": "biome:desert"
     },
     "route_snow": {
+      "name": "Маршрут: снег",
       "case": "BUILD_STREETS",
       "stage": 1,
       "base": 47,
@@ -4204,6 +4333,7 @@
       "world": "biome:snowy"
     },
     "route_dirt": {
+      "name": "Маршрут: земля",
       "case": "BUILD_STREETS",
       "stage": 1,
       "base": 47,
@@ -4216,6 +4346,7 @@
       "world": "biome:plains"
     },
     "route_nether_fortress": {
+      "name": "Маршрут: адская крепость",
       "case": "BUILD_STREETS",
       "stage": 4,
       "base": 46,
@@ -4232,6 +4363,7 @@
       "world": "nether"
     },
     "route_blaze_spawner": {
+      "name": "Маршрут: спавнер ифритов",
       "case": "BUILD_STREETS",
       "stage": 4,
       "base": 46,
@@ -4248,6 +4380,7 @@
       "world": "nether"
     },
     "route_bastion": {
+      "name": "Маршрут: бастион",
       "case": "BUILD_STREETS",
       "stage": 4,
       "base": 46,
@@ -4264,6 +4397,7 @@
       "world": "nether"
     },
     "route_end_fortress": {
+      "name": "Маршрут: крепость Края",
       "case": "BUILD_STREETS",
       "stage": 4,
       "base": 46,
@@ -4275,6 +4409,20 @@
       "estimate": true,
       "implemented": false,
       "world": "end"
+    },
+    "blast_furnace": {
+      "name": "Доменная печь",
+      "case": "GATHER_MATERIALS",
+      "stage": 1,
+      "base": 0,
+      "optional": true
+    },
+    "stonecutter": {
+      "name": "Камнерез",
+      "case": "GATHER_MATERIALS",
+      "stage": 1,
+      "base": 0,
+      "optional": true
     }
   },
   "ways": [

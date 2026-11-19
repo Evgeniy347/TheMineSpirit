@@ -437,7 +437,7 @@ public final class RecipeImport {
             buildings.put(
                     id,
                     new SupplyGraph.Building(
-                            id, BoardCase.GATHER_MATERIALS, 1, 0, null, Map.of(), List.of(), List.of(), true));
+                            id, "", BoardCase.GATHER_MATERIALS, 1, 0, null, Map.of(), List.of(), List.of(), true));
         }
         return buildings;
     }
