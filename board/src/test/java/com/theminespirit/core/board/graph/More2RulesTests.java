@@ -54,16 +54,6 @@ class More2RulesTests {
     }
 
     @Test
-    void carry_FarWork_AsksForBatchOrChest() {
-        assertTrue(
-                More2Rules.events(signals(new More2Rules.Carry(49))).contains(More2Rules.LONG_CARRY),
-                "Дальше 48 — возить пачками");
-        assertFalse(
-                More2Rules.events(signals(new More2Rules.Carry(48))).contains(More2Rules.LONG_CARRY),
-                "48 блоков — ещё не дальний путь");
-    }
-
-    @Test
     void hazards_FireLavaAndFlow_AreReportedSeparately() {
         Set<String> fire = More2Rules.events(signals(new More2Rules.Hazards(1, 0, 0, 0)));
         Set<String> lava = More2Rules.events(signals(new More2Rules.Hazards(0, 1, 0, 0)));
@@ -143,7 +133,6 @@ class More2RulesTests {
                 IllegalArgumentException.class,
                 () -> new More2Rules.Food(-1, 0, 0),
                 "Отрицательный запас еды невозможен");
-        assertThrows(IllegalArgumentException.class, () -> new More2Rules.Carry(-1), "Отрицательная дорога невозможна");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new More2Rules.Animals(2, 3, 0, true),
@@ -154,7 +143,6 @@ class More2RulesTests {
         return new More2Rules.Signals(
                 food,
                 new More2Rules.Inventory(20, 5, false, false),
-                new More2Rules.Carry(0),
                 new More2Rules.Hazards(0, 0, 0, 0),
                 new More2Rules.Animals(0, 0, 0, false),
                 new More2Rules.Villagers(0),
@@ -167,20 +155,6 @@ class More2RulesTests {
         return new More2Rules.Signals(
                 new More2Rules.Food(0, 0, 0),
                 inventory,
-                new More2Rules.Carry(0),
-                new More2Rules.Hazards(0, 0, 0, 0),
-                new More2Rules.Animals(0, 0, 0, false),
-                new More2Rules.Villagers(0),
-                new More2Rules.Stage(1, 0, 0),
-                new More2Rules.Sleep(0, 0),
-                new More2Rules.Paths(0, 0));
-    }
-
-    private static More2Rules.Signals signals(More2Rules.Carry carry) {
-        return new More2Rules.Signals(
-                new More2Rules.Food(0, 0, 0),
-                new More2Rules.Inventory(20, 5, false, false),
-                carry,
                 new More2Rules.Hazards(0, 0, 0, 0),
                 new More2Rules.Animals(0, 0, 0, false),
                 new More2Rules.Villagers(0),
@@ -193,7 +167,6 @@ class More2RulesTests {
         return new More2Rules.Signals(
                 new More2Rules.Food(0, 0, 0),
                 new More2Rules.Inventory(20, 5, false, false),
-                new More2Rules.Carry(0),
                 hazards,
                 new More2Rules.Animals(0, 0, 0, false),
                 new More2Rules.Villagers(0),
@@ -206,7 +179,6 @@ class More2RulesTests {
         return new More2Rules.Signals(
                 new More2Rules.Food(0, 0, 0),
                 new More2Rules.Inventory(20, 5, false, false),
-                new More2Rules.Carry(0),
                 new More2Rules.Hazards(0, 0, 0, 0),
                 animals,
                 new More2Rules.Villagers(0),
@@ -219,7 +191,6 @@ class More2RulesTests {
         return new More2Rules.Signals(
                 new More2Rules.Food(0, 0, 0),
                 new More2Rules.Inventory(20, 5, false, false),
-                new More2Rules.Carry(0),
                 new More2Rules.Hazards(0, 0, 0, 0),
                 new More2Rules.Animals(0, 0, 0, false),
                 villagers,
@@ -232,7 +203,6 @@ class More2RulesTests {
         return new More2Rules.Signals(
                 new More2Rules.Food(0, 0, 0),
                 new More2Rules.Inventory(20, 5, false, false),
-                new More2Rules.Carry(0),
                 new More2Rules.Hazards(0, 0, 0, 0),
                 new More2Rules.Animals(0, 0, 0, false),
                 new More2Rules.Villagers(0),
@@ -245,7 +215,6 @@ class More2RulesTests {
         return new More2Rules.Signals(
                 new More2Rules.Food(0, 0, 0),
                 new More2Rules.Inventory(20, 5, false, false),
-                new More2Rules.Carry(0),
                 new More2Rules.Hazards(0, 0, 0, 0),
                 new More2Rules.Animals(0, 0, 0, false),
                 new More2Rules.Villagers(0),
@@ -258,7 +227,6 @@ class More2RulesTests {
         return new More2Rules.Signals(
                 new More2Rules.Food(0, 0, 0),
                 new More2Rules.Inventory(20, 5, false, false),
-                new More2Rules.Carry(0),
                 new More2Rules.Hazards(0, 0, 0, 0),
                 new More2Rules.Animals(0, 0, 0, false),
                 new More2Rules.Villagers(0),

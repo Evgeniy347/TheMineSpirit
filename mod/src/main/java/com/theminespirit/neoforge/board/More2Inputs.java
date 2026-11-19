@@ -67,7 +67,6 @@ final class More2Inputs {
         return new More2Rules.Signals(
                 food(state),
                 inventory(state, facts),
-                carry(facts),
                 hazards(level, facts, scan),
                 animals(level, state, scan.home()),
                 villagers(level, scan.home()),
@@ -99,16 +98,6 @@ final class More2Inputs {
                 || state.events().contains(TRANSFER_PENDING)
                 || !state.orders().isEmpty();
         return new More2Rules.Inventory(free, freeChestSlots, carries, work);
-    }
-
-    private static More2Rules.Carry carry(GraphFacts facts) {
-        int furthest = 0;
-        for (GraphFacts.Spirit spirit : facts.spirits().values()) {
-            for (GraphFacts.Chest chest : facts.chests()) {
-                furthest = Math.max(furthest, distance(spirit.position(), chest.position()));
-            }
-        }
-        return new More2Rules.Carry(furthest);
     }
 
     private static More2Rules.Hazards hazards(ServerLevel level, GraphFacts facts, FirstStepsRunner.StageScan scan) {
@@ -269,13 +258,6 @@ final class More2Inputs {
 
     private static AABB box(BlockPos center, int radius) {
         return new AABB(center).inflate(radius);
-    }
-
-    private static int distance(GraphFacts.Position first, GraphFacts.Position second) {
-        int dx = first.x() - second.x();
-        int dy = first.y() - second.y();
-        int dz = first.z() - second.z();
-        return (int) Math.sqrt((double) dx * dx + (double) dy * dy + (double) dz * dz);
     }
 
     private record Flow(int water, int lava) {}

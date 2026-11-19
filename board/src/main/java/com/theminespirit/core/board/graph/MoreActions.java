@@ -17,8 +17,6 @@ public final class MoreActions {
             Map.entry("more5_craft_build_material", BoardCase.GATHER_MATERIALS),
             Map.entry("more5_restore_block", BoardCase.ACTIVITY_BUILD),
             Map.entry("more5_bridge_route", BoardCase.ACTIVITY_BUILD),
-            Map.entry("more5_place_site_chest", BoardCase.ACTIVITY_BUILD),
-            Map.entry("more5_carry_to_site", BoardCase.SUPPLY_SITE),
             Map.entry("more5_light_mine", BoardCase.LIGHTING),
             Map.entry("more5_craft_mine_torch", BoardCase.CRAFT_TORCHES),
             Map.entry("more5_pickup_wood_drop", BoardCase.COLLECT_DROPS),

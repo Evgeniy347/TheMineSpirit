@@ -32,7 +32,6 @@ public final class StageBuilt {
         built.put("crafting_table", facts -> done(facts, BoardCase.CRAFTING_STATION) || facts.craftingStation());
         built.put("clearing", facts -> facts.groundsCleared() && facts.plotLevel());
         built.put("chests", SettlementFacts::yard);
-        built.put("exchange_chest", facts -> facts.chests() > 0);
         built.put("mine", SettlementFacts::mineEntrance);
         built.put("furnace", SettlementFacts::furnace);
         built.put("brewing_stand", facts -> done(facts, BoardCase.CRAFT_BREWING_STAND));

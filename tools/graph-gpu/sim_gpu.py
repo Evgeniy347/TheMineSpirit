@@ -303,7 +303,7 @@ MORE_SIGNALS = (
 )
 
 MORE2_EVENTS = (
-    "more2_food_low", "more2_inventory_full", "more2_inventory_space", "more2_long_carry",
+    "more2_food_low", "more2_inventory_full", "more2_inventory_space",
     "more2_fire_near_building", "more2_lava_near_building", "more2_hazard_flow",
     "more2_animal_outside", "more2_wild_herd", "more2_villager_near", "more2_villager_trade",
     "more2_stage_prep", "more2_bed_needed", "more2_path_needed",
@@ -318,7 +318,7 @@ MORE3_EVENTS = (
 MORE5_EVENTS = (
     "more5_crops_dark", "more5_saplings_dark", "more5_crops_dry",
     "more5_growth_unfed", "more5_fuel_low", "more5_build_shortage", "more5_mob_broken",
-    "more5_route_blocked", "more5_chest_far", "more5_mine_dark", "more5_wood_drops",
+    "more5_route_blocked", "more5_mine_dark", "more5_wood_drops",
 )
 
 MORE4_EVENTS = (

@@ -21,7 +21,6 @@ final class GraphStore {
     static final String SMELT_TAKE = "store:smelt:take";
     static final String CHESTS = "store:chests";
     static final String SORTED = "store:sorted";
-    private static final String EXCHANGE = "exchange_chest";
     private static final String FURNACE = "furnace";
     private static final String CHEST_BUILDING = "chests";
     private static final double DEFAULT_BASE = 50;
@@ -35,15 +34,6 @@ final class GraphStore {
     private GraphStore() {}
 
     static void roots(SupplyGraph graph, GraphState state, Push push) {
-        if (state.storageFreePercent() < graph.storage().minFreePercent()
-                && state.built(graph.storage().building()) != GraphState.Built.BUILT
-                && state.built("chests") != GraphState.Built.BUILT
-                && graph.buildings().containsKey(EXCHANGE)) {
-            push.push(
-                    null,
-                    "building:" + EXCHANGE,
-                    graph.buildings().get(EXCHANGE).base());
-        }
         if (!enabled(graph, MINIMUM)) {
             return;
         }

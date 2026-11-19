@@ -33,7 +33,6 @@
     "more5:build_supply": {"xmin": 0, "k": 1, "base": 15, "stage": 1},
     "more5:block_restored": {"xmin": 0, "k": 1, "base": 13, "stage": 1},
     "more5:route_opened": {"xmin": 0, "k": 1, "base": 12, "stage": 1},
-    "more5:site_chest": {"xmin": 0, "k": 1, "base": 13, "stage": 1},
     "more5:mine_lit": {"xmin": 0, "k": 1, "base": 12, "stage": 1},
     "more5:wood_drop": {"xmin": 0, "k": 1, "base": 11, "stage": 1},
     "more5:sapling_planted": {"xmin": 0, "k": 1, "base": 11, "stage": 1}
@@ -59,10 +58,6 @@
      "yield": 1, "weight": 0.557584767, "ticks": 120, "consumes": {}, "implemented": true, "todo": "more5_restore_block"},
     {"id": "more5_bridge_route", "case": "ACTIVITY_BUILD", "makes": "more5:route_opened",
      "yield": 1, "weight": 0.637239735, "ticks": 200, "consumes": {"#planks": 4}, "implemented": true, "todo": "more5_bridge_route"},
-    {"id": "more5_place_site_chest", "case": "STOCK_CHESTS", "makes": "more5:site_chest",
-     "yield": 1, "weight": 2.42379362, "ticks": 120, "consumes": {"#planks": 8}, "implemented": true, "todo": "more5_place_site_chest"},
-    {"id": "more5_carry_to_site", "case": "TRANSFER_ITEM", "makes": "more5:site_chest",
-     "yield": 1, "weight": 1.493416794, "ticks": 160, "consumes": {}, "implemented": true, "todo": "more5_carry_to_site"},
     {"id": "more5_light_mine", "case": "LIGHTING", "makes": "more5:mine_lit",
      "yield": 1, "weight": 1.202986556, "ticks": 100, "consumes": {"torch": 1}, "implemented": true, "todo": "more5_light_mine"},
     {"id": "more5_craft_mine_torch", "case": "CRAFT_TORCHES", "makes": "more5:mine_lit",
@@ -130,14 +125,6 @@
       ],
       "push": {"more5:route_opened": 10},
       "advice": ["bridge_or_walk_around_water_and_lava"]
-    },
-    "more5_chest_far": {
-      "tasks": [
-        {"id": "more5_place_site_chest", "case": "STOCK_CHESTS", "base": 55, "consumes": {"#planks": 8}, "implemented": true},
-        {"id": "more5_carry_to_site", "case": "TRANSFER_ITEM", "base": 48, "consumes": {}, "implemented": true}
-      ],
-      "push": {"more5:site_chest": 10},
-      "advice": ["put_a_temporary_chest_near_the_work_site"]
     },
     "more5_mine_dark": {
       "tasks": [

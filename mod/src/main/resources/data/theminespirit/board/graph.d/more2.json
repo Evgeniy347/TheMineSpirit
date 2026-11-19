@@ -12,16 +12,6 @@
     "more2:trail": {"xmin": 0, "k": 1, "base": 12, "stage": 1}
   },
   "buildings": {
-    "more2_field_chest": {
-      "name": "Сундук у поля",
-      "case": "STOCK_CHESTS",
-      "stage": 1,
-      "base": 56,
-      "materials": {"#planks": 8},
-      "optional": true,
-      "implemented": true,
-      "todo": "more2:carry_batch"
-    },
     "more2_trail": {
       "name": "Тропа",
       "case": "BUILD_STREETS",
@@ -93,14 +83,6 @@
       ],
       "push": {"store:transfer": 4},
       "advice": ["take_more_from_chest"]
-    },
-    "more2_long_carry": {
-      "tasks": [
-        {"id": "more5_place_site_chest", "case": "STOCK_CHESTS", "base": 44, "consumes": {"#planks": 8},
-         "implemented": true}
-      ],
-      "push": {"logistics": 6},
-      "advice": ["carry_in_batches_or_place_field_chest"]
     },
     "more2_fire_near_building": {
       "tasks": [

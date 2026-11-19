@@ -144,25 +144,6 @@ class DemandFoodChainScenarioTests {
     }
 
     @Test
-    void case18_SiteNeedsBuffer_PlanksAndSiteChestRaised() {
-        GraphWorld world = pair(stageTwo()).event("more5_chest_far");
-        world.with("oak_log", 0).with("oak_planks", 0);
-        GraphPlan plan = plan(world, facts(TWO));
-
-        GraphPlan.Task chest = task(plan, "event:more5_chest_far:more5_place_site_chest");
-        GraphPlan.Task planks = task(plan, "craft_oak_planks");
-        assertTrue(planks.feasible() || planks.raised(), "Досок нет — крафт досок поднят: " + ids(plan));
-        assertFalse(chest.feasible(), "Без досок буфер у стройки ждёт материал: " + ids(plan));
-
-        world.with("oak_planks", 64).with("oak_log", 32);
-        GraphPlan stocked = plan(world, facts(TWO));
-        assertTrue(
-                task(stocked, "event:more5_chest_far:more5_place_site_chest").feasible(),
-                "Доски есть — сундук у стройки выполним: " + ids(stocked));
-        assertTrue(stocked.task("craft_oak_planks").isEmpty(), "Досок хватает — крафт снят: " + ids(stocked));
-    }
-
-    @Test
     void case19_FieldDry_WaterBucketRaisedThroughBucketAndIron() {
         GraphWorld world = pair(stageTwo()).event("more5_crops_dry");
         world.with("water_bucket", 0).with("bucket", 0).with("iron_ingot", 0).with("raw_iron", 0);

@@ -2628,18 +2628,6 @@
         "temp_chest_for_dump"
       ]
     },
-    "exchange_chest": {
-      "name": "Сундук обмена",
-      "case": "STOCK_CHESTS",
-      "stage": 1,
-      "base": 90,
-      "materials": {
-        "#planks": 8
-      },
-      "requires": [
-        "crafting_table"
-      ]
-    },
     "chests": {
       "name": "Сундуки",
       "case": "STOCK_CHESTS",

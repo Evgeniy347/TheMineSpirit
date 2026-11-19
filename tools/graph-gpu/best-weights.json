@@ -1200,7 +1200,6 @@
       "more5:build_supply": 0.6438395973900619,
       "more5:block_restored": 0.6438395973900619,
       "more5:route_opened": 0.6438395973900619,
-      "more5:site_chest": 0.6438395973900619,
       "more5:mine_lit": 0.6438395973900619,
       "more5:wood_drop": 0.6438395973900619,
       "more5:sapling_planted": 0.6438395973900619,
@@ -1365,7 +1364,6 @@
       "stonecutter": 0.8739335481262756,
       "wheat_field": 0.8739335481262756,
       "storage_space": 0.8739335481262756,
-      "more2_field_chest": 0.8739335481262756,
       "more2_trail": 0.8739335481262756
     },
     "ways": {
@@ -1932,8 +1930,6 @@
       "more5_craft_build_material": 1.099800141688334,
       "more5_restore_block": 1.2856563863770378,
       "more5_bridge_route": 1.2856563863770378,
-      "more5_place_site_chest": 0.9442721313466288,
-      "more5_carry_to_site": 1.4741448954318825,
       "more5_light_mine": 0.7567489295528004,
       "more5_craft_mine_torch": 1.0,
       "more5_pickup_wood_drop": 0.6964954091488219,
@@ -1986,7 +1982,6 @@
       "more2_food_low": 1.0823419839733928,
       "more2_inventory_full": 1.0823419839733928,
       "more2_inventory_space": 1.0823419839733928,
-      "more2_long_carry": 1.0823419839733928,
       "more2_fire_near_building": 1.0823419839733928,
       "more2_lava_near_building": 1.0823419839733928,
       "more2_hazard_flow": 1.0823419839733928,
@@ -2022,7 +2017,6 @@
       "more5_build_shortage": 1.0769877166464,
       "more5_mob_broken": 1.0769877166464,
       "more5_route_blocked": 1.0769877166464,
-      "more5_chest_far": 1.0769877166464,
       "more5_mine_dark": 1.0769877166464,
       "more5_wood_drops": 1.0769877166464,
       "more6_spirits_short": 0.9497733811813422,
@@ -3156,7 +3150,6 @@
       "more5:build_supply": 10,
       "more5:block_restored": 8,
       "more5:route_opened": 8,
-      "more5:site_chest": 8,
       "more5:mine_lit": 8,
       "more5:wood_drop": 7,
       "more5:sapling_planted": 7,
@@ -3321,7 +3314,6 @@
       "stonecutter": 0,
       "wheat_field": 59,
       "storage_space": 61,
-      "more2_field_chest": 49,
       "more2_trail": 46
     },
     "ways": {
@@ -3888,8 +3880,6 @@
       "more5_craft_build_material": 1.193722278,
       "more5_restore_block": 0.716862417,
       "more5_bridge_route": 0.819271335,
-      "more5_place_site_chest": 2.288720768,
-      "more5_carry_to_site": 2.201512744,
       "more5_light_mine": 0.910358789,
       "more5_craft_mine_torch": 0.782647187,
       "more5_pickup_wood_drop": 0.775830869,
@@ -3994,9 +3984,6 @@
       },
       "more2_inventory_space": {
         "store_carry_transfer": 43
-      },
-      "more2_long_carry": {
-        "more5_place_site_chest": 48
       },
       "more2_fire_near_building": {
         "more2_put_out_fire": 97
@@ -4110,10 +4097,6 @@
       },
       "more5_route_blocked": {
         "more5_bridge_route": 65
-      },
-      "more5_chest_far": {
-        "more5_place_site_chest": 59,
-        "more5_carry_to_site": 52
       },
       "more5_mine_dark": {
         "more5_light_mine": 65,

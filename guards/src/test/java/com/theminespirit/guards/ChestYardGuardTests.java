@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 
 class ChestYardGuardTests {
     private static final Path TARGETS = Path.of("com/theminespirit/neoforge/board/GraphTargets.java");
-    private static final Path POST = Path.of("com/theminespirit/neoforge/board/ExchangeChestPost.java");
 
     @Test
     void sources_ChestRulesHold_NoViolations() {
@@ -37,28 +36,6 @@ class ChestYardGuardTests {
                 List.of("GraphTargets.java: станция ищется выше одного блока от земли"),
                 violations(Map.of(TARGETS, bad)),
                 "Сторож ослеп: станция над бугром снова поднимает базовую точку");
-    }
-
-    @Test
-    void patternSource_ExchangeChestCellFromCraftPoint_IsReported() {
-        String bad = "final class ExchangeChestPost { Object yard() { return WarehouseLocations.yardCells(level); }"
-                + " Optional<BlockCoord> cell(ServerLevel level) { return cell(level, post.craftPoint()); } }";
-
-        assertEquals(
-                List.of("ExchangeChestPost.java: клетка обменного сундука снова от точки, а не от ряда двора"),
-                violations(Map.of(POST, bad)),
-                "Сторож ослеп: обменный сундук вне ряда двора");
-    }
-
-    @Test
-    void patternSource_ExchangeChestIgnoresYard_IsReported() {
-        String bad =
-                "final class ExchangeChestPost { Optional<BlockCoord> cell(ServerLevel level) { return search(level); } }";
-
-        assertEquals(
-                List.of("ExchangeChestPost.java: клетка обменного сундука берётся не из WarehouseLocations.yardCells"),
-                violations(Map.of(POST, bad)),
-                "Сторож ослеп: обменный сундук без ряда двора");
     }
 
     @Test
@@ -100,17 +77,6 @@ class ChestYardGuardTests {
             }
             if (source.contains("STATION_HEIGHT = 4")) {
                 found.add("GraphTargets.java: станция ищется выше одного блока от земли");
-            }
-        }
-        String post = byName(sources, "ExchangeChestPost.java");
-        if (post != null) {
-            String source = SourceFiles.withoutTextBlocks(post);
-            if (source.contains("craftPoint()")) {
-                found.add("ExchangeChestPost.java: клетка обменного сундука снова от точки, а не от ряда двора");
-            }
-            if (!source.contains("WarehouseLocations.yardCells")) {
-                found.add(
-                        "ExchangeChestPost.java: клетка обменного сундука берётся не из WarehouseLocations.yardCells");
             }
         }
         return found;

@@ -2,7 +2,6 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.board.WarehouseRules;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
@@ -20,7 +19,6 @@ import net.minecraft.world.level.block.state.BlockState;
 final class GraphMorePost {
     private static final String SAPLINGS = "#saplings";
     private static final String APPLE = "apple";
-    private static final String CHEST = "chest";
     private static final String BRIDGE = "bridge";
     private static final String COBBLESTONE = "cobblestone";
     private static final int FUEL_BATCH = 8;
@@ -53,8 +51,6 @@ final class GraphMorePost {
             case "more5_craft_build_material" -> gatherBuild(post, ticket, true);
             case "more5_restore_block" -> restoreBlock(post, ticket);
             case "more5_bridge_route" -> bridgeRoute(post, ticket);
-            case "more5_place_site_chest" -> placeSiteChest(post, ticket);
-            case "more5_carry_to_site" -> carryToSite(post, ticket);
             case "more5_light_mine" ->
                 GraphMoreCarePost.light(post, ticket, post.scan.stage().mineEntrance());
             case "more5_craft_mine_torch" -> new GraphCrafting(post).torches(ticket, task);
@@ -133,32 +129,6 @@ final class GraphMorePost {
                 BoardCase.ACTIVITY_BUILD,
                 TicketTarget.at(workSite(post)).withSupply(planks, FUEL_BATCH).withBuilding(BRIDGE),
                 Map.of(planks, FUEL_BATCH));
-        return true;
-    }
-
-    private static boolean placeSiteChest(GraphPost post, GraphTickets.Ticket ticket) {
-        if (WarehouseRules.builtLevel(post.service.board().ledger()) > 0) {
-            return true;
-        }
-        submit(
-                post,
-                ticket,
-                BoardCase.ACTIVITY_BUILD,
-                TicketTarget.at(workSite(post)).withSupply(CHEST, 1),
-                Map.of());
-        return true;
-    }
-
-    private static boolean carryToSite(GraphPost post, GraphTickets.Ticket ticket) {
-        String wood = post.scan.wood();
-        String item = post.graph.items().containsKey(COBBLESTONE) ? COBBLESTONE : wood + "_planks";
-        BlockCoord site = workSite(post);
-        submit(
-                post,
-                ticket,
-                BoardCase.SUPPLY_SITE,
-                TicketTarget.at(site).withSupply(item, BUILD_BATCH).withDeposit(site),
-                Map.of(item, BUILD_BATCH));
         return true;
     }
 

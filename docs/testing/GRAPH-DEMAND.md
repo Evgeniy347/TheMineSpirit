@@ -25,7 +25,7 @@
 | 15 | запас блоков спасателей | `DemandSafetyChainScenarioTests.case15_TrappedInWater_RescueBlocksRaisedAndBridgeWaitsForPlanks` | покрыто |
 | 16 | щиты и факелы ночных караульных | `GraphPlannerTests.plan_Night_HalfGuardNoBedPush` | есть |
 | 17 | сундуки с мусором → разбор, а не новые сундуки | `StoreGraphTests.plan_MixedChest_PostsSort`, `GraphAllocationGroupCTests.case28_MixedChest_SortingRaised` | есть |
-| 18 | буфер у стройки/шахты | `DemandFoodChainScenarioTests.case18_SiteNeedsBuffer_PlanksAndSiteChestRaised` | покрыто |
+| 18 | буфер у стройки/шахты (снят: сундуки только по схемам) | — | очередь |
 | 19 | вода/канал/ведро для грядки | `DemandFoodChainScenarioTests.case19_FieldDry_WaterBucketRaisedThroughBucketAndIron` | покрыто |
 | 20 | набор выхода для шахты (еда, факелы, кирка) | `DemandFoodChainScenarioTests.case20_MiningKit_FoodTorchesPickaxeRaised` | покрыто |
 | 21 | снабжение игрока перед походом | `DemandWorkChainScenarioTests.case21_PlayerBeforeTrip_FoodAndToolSupplied` | покрыто |

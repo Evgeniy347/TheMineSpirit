@@ -532,18 +532,16 @@ def test_more2_nodes():
                  "more2:flow_blocked", "more2:animal_penned", "more2:village_safe",
                  "more2:stage_ready", "more2:bed_ready", "more2:trail"):
         assert item in graph.items, "Python-модель не видит новый узел области graphmore2: " + item
-    for building in ("more2_field_chest", "more2_trail"):
+    for building in ("more2_trail",):
         assert building in graph.buildings, "Python-модель не видит новую постройку области: " + building
         assert graph.implemented(building), "Постройка области graphmore2 связана с исполнением: " + building
-    for event in ("more2_food_low", "more2_inventory_full", "more2_inventory_space", "more2_long_carry",
+    for event in ("more2_food_low", "more2_inventory_full", "more2_inventory_space",
                   "more2_fire_near_building", "more2_lava_near_building", "more2_hazard_flow",
                   "more2_animal_outside", "more2_wild_herd", "more2_villager_near",
                   "more2_stage_prep", "more2_bed_needed", "more2_path_needed"):
         assert event in graph.events, "Python-модель не видит новое событие области: " + event
     transfer = graph.events["more2_inventory_space"]["tasks"][0]["id"]
-    field = graph.events["more2_long_carry"]["tasks"][0]["id"]
     assert transfer == "store_carry_transfer", "Перенос в руках ведёт к пути склада: " + transfer
-    assert field == "more5_place_site_chest", "Дальний перенос ведёт к полевому сундуку: " + field
     print("OK: узлы и события области graphmore2 читаются из фрагмента, дубли перенесены")
 
 
@@ -647,19 +645,18 @@ def test_more6_inputs():
 MORE5_EVENTS = ("more5_crops_dark", "more5_saplings_dark",
                 "more5_crops_dry", "more5_growth_unfed", "more5_fuel_low",
                 "more5_build_shortage", "more5_mob_broken", "more5_route_blocked",
-                "more5_chest_far", "more5_mine_dark", "more5_wood_drops")
+                "more5_mine_dark", "more5_wood_drops")
 MORE5_WAYS = ("more5_light_crops", "more5_light_saplings", "more5_water_crops",
               "more5_fertilize_growth", "more5_gather_fuel", "more5_make_charcoal",
               "more5_gather_build_material", "more5_craft_build_material",
-              "more5_restore_block", "more5_bridge_route",
-              "more5_place_site_chest", "more5_carry_to_site", "more5_light_mine",
+              "more5_restore_block", "more5_bridge_route", "more5_light_mine",
               "more5_craft_mine_torch", "more5_pickup_wood_drop", "more5_plant_sapling")
 MORE5_IMPLEMENTED = {
     "more5_light_crops",
     "more5_light_saplings", "more5_water_crops", "more5_fertilize_growth", "more5_gather_fuel",
     "more5_make_charcoal", "more5_gather_build_material",
     "more5_craft_build_material", "more5_restore_block", "more5_bridge_route",
-    "more5_place_site_chest", "more5_carry_to_site", "more5_light_mine",
+    "more5_light_mine",
     "more5_craft_mine_torch", "more5_pickup_wood_drop", "more5_plant_sapling",
 }
 
@@ -673,7 +670,7 @@ def test_more5_nodes():
         assert graph.implemented(way) == (way in MORE5_IMPLEMENTED),             "Путь области graphmore5 либо связан с действием, либо честно помечен заглушкой: " + way
     for item in ("more5:growth_lit", "more5:fuel_ready",
                  "more5:build_supply", "more5:block_restored", "more5:route_opened",
-                 "more5:site_chest", "more5:mine_lit", "more5:wood_drop"):
+                 "more5:mine_lit", "more5:wood_drop"):
         assert item in graph.items and graph.items[item].base > 0, \
             "Python-модель не видит узел области graphmore5: " + item
     assert "#more5_fuel" in graph.groups, "Python-модель не видит группу топлива области more5"

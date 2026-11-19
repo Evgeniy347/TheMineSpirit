@@ -207,19 +207,6 @@ class SiteLevelsTests {
     }
 
     @Test
-    void chestSpot_FlatSite_LiesOutsidePlan() {
-        BlockCoord spot = SiteLevels.chestSpot(SITE);
-
-        assertEquals(LEVEL, spot.y(), "Временный сундук стоит на уровне поселения: выше y его срежет расчистка");
-        assertFalse(
-                SITE.planCell(spot.x(), spot.y(), spot.z()),
-                "Временный сундук не встаёт в клетку постройки плана: иначе он мешает хижине и двору");
-        assertFalse(
-                SITE.ringPost(spot.x(), spot.z()),
-                "Временный сундук не встаёт в клетку столба ограды: столб и сундук делят одну клетку");
-    }
-
-    @Test
     void leveling_MixedColumns_CutAboveFillBelow() {
         List<ColumnMask.Cell> cells = freeCells(3);
         ColumnMask.Cell tall = cells.get(0);
@@ -272,11 +259,9 @@ class SiteLevelsTests {
     }
 
     private static List<ColumnMask.Cell> freeCells(int count) {
-        BlockCoord chest = SiteLevels.chestSpot(SITE);
         List<ColumnMask.Cell> found = SITE.zone().cells().stream()
                 .filter(cell -> !SITE.planCell(cell.x(), LEVEL, cell.z()))
                 .filter(cell -> !SITE.ringPost(cell.x(), cell.z()))
-                .filter(cell -> cell.x() != chest.x() || cell.z() != chest.z())
                 .limit(count)
                 .toList();
         assertEquals(count, found.size(), "На площадке мало свободных клеток для сцены выравнивания");
@@ -284,11 +269,9 @@ class SiteLevelsTests {
     }
 
     private static ColumnMask.Cell freeCell() {
-        BlockCoord chest = SiteLevels.chestSpot(SITE);
         return SITE.zone().cells().stream()
                 .filter(cell -> !SITE.planCell(cell.x(), LEVEL, cell.z()))
                 .filter(cell -> !SITE.ringPost(cell.x(), cell.z()))
-                .filter(cell -> cell.x() != chest.x() || cell.z() != chest.z())
                 .findFirst()
                 .orElseThrow();
     }

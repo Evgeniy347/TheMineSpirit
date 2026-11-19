@@ -15,7 +15,7 @@ class More5RulesTests {
 
     @Test
     void events_AllSignals_AddExpected() {
-        Set<String> events = More5Rules.events(new More5Rules.Signals(2, 3, 4, 5, 6, 12, true, 7, 8, 9, 10, 11, 12));
+        Set<String> events = More5Rules.events(new More5Rules.Signals(2, 3, 4, 5, 6, 12, true, 7, 8, 9, 11, 12));
 
         assertEquals(
                 Set.of(
@@ -27,7 +27,6 @@ class More5RulesTests {
                         "more5_build_shortage",
                         "more5_mob_broken",
                         "more5_route_blocked",
-                        "more5_chest_far",
                         "more5_mine_dark",
                         "more5_wood_drops"),
                 events,
@@ -36,19 +35,19 @@ class More5RulesTests {
 
     @Test
     void events_EmptySignals_AddNothing() {
-        Set<String> events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 0, 16, false, 0, 0, 0, 0, 0, 0));
+        Set<String> events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 0, 16, false, 0, 0, 0, 0, 0));
 
         assertEquals(Set.of(), events, "Пустой вход не ставит работ");
     }
 
     @Test
     void events_FuelEnough_NoFuelEvent() {
-        Set<String> events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 16, 16, true, 0, 0, 0, 0, 0, 0));
+        Set<String> events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 16, 16, true, 0, 0, 0, 0, 0));
 
         assertFalse(events.contains("more5_fuel_low"), "Полного запаса топлива хватает");
-        events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 15, 16, true, 0, 0, 0, 0, 0, 0));
+        events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 15, 16, true, 0, 0, 0, 0, 0));
         assertTrue(events.contains("more5_fuel_low"), "Недостача топлива при печи — событие");
-        events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 0, 16, false, 0, 0, 0, 0, 0, 0));
+        events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 0, 16, false, 0, 0, 0, 0, 0));
         assertFalse(events.contains("more5_fuel_low"), "Без печи топливо не тратят");
     }
 
@@ -56,11 +55,11 @@ class More5RulesTests {
     void signals_Negative_Rejected() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new More5Rules.Signals(-1, 0, 0, 0, 0, 16, false, 0, 0, 0, 0, 0, 0),
+                () -> new More5Rules.Signals(-1, 0, 0, 0, 0, 16, false, 0, 0, 0, 0, 0),
                 "Отрицательное число тёмных грядок не имеет смысла");
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new More5Rules.Signals(0, 0, 0, 0, 0, -1, false, 0, 0, 0, 0, 0, 0),
+                () -> new More5Rules.Signals(0, 0, 0, 0, 0, -1, false, 0, 0, 0, 0, 0),
                 "Отрицательная цель по топливу не имеет смысла");
     }
 
@@ -110,26 +109,6 @@ class More5RulesTests {
                 IllegalArgumentException.class,
                 () -> More5Rules.cutByFluid(List.of(true), 0),
                 "Нулевая ширина препятствия не имеет смысла");
-    }
-
-    @Test
-    void farSites_NoChestNear_Counted() {
-        GraphFacts.Position mine = new GraphFacts.Position(0, 64, 0);
-        GraphFacts.Position build = new GraphFacts.Position(40, 64, 0);
-        GraphFacts.Position near = new GraphFacts.Position(0, 64, 8);
-        GraphFacts.Position beside = new GraphFacts.Position(34, 64, 0);
-
-        assertEquals(0, More5Rules.farSites(List.of(), List.of(near), 24), "Нет работ — нет временного сундука");
-        assertEquals(
-                1,
-                More5Rules.farSites(List.of(mine, build), List.of(near), 24),
-                "Шахта у сундука, стройка далеко — один сундук нужен");
-        assertEquals(
-                2, More5Rules.farSites(List.of(mine, build), List.of(), 24), "Без сундуков все места работы далеко");
-        assertEquals(
-                0,
-                More5Rules.farSites(List.of(mine, build), List.of(near, beside), 24),
-                "Сундук у каждого места работы закрывает потребность");
     }
 
     @Test

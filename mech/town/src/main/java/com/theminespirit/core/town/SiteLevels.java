@@ -35,30 +35,20 @@ public final class SiteLevels {
 
     public static PlotLeveling leveling(StageSite site, IntBinaryOperator tops, Predicate<BlockCoord> planned) {
         Objects.requireNonNull(planned, "Признак плана не может быть null: без него расчистка срежет постройку");
-        BlockCoord chest = chestSpot(site);
-        Predicate<ColumnMask.Cell> skip = cell -> cell.x() == chest.x() && cell.z() == chest.z();
-        return new PlotLeveling(
-                extra(site, tops, skip, planned), fill(site, tops, skip, planned), PlotLeveling.DEFAULT_BLOCK);
+        return new PlotLeveling(extra(site, tops, planned), fill(site, tops, planned), PlotLeveling.DEFAULT_BLOCK);
     }
 
     public static List<PlotLeveling.Box> extra(StageSite site, IntBinaryOperator tops) {
-        return extra(site, tops, cell -> false, at -> building(site, at.x(), at.y(), at.z()));
+        return extra(site, tops, at -> building(site, at.x(), at.y(), at.z()));
     }
 
-    public static List<PlotLeveling.Box> extra(
-            StageSite site, IntBinaryOperator tops, Predicate<ColumnMask.Cell> skip) {
-        return extra(site, tops, skip, at -> building(site, at.x(), at.y(), at.z()));
-    }
-
-    private static List<PlotLeveling.Box> extra(
-            StageSite site, IntBinaryOperator tops, Predicate<ColumnMask.Cell> skip, Predicate<BlockCoord> planned) {
+    private static List<PlotLeveling.Box> extra(StageSite site, IntBinaryOperator tops, Predicate<BlockCoord> planned) {
         Objects.requireNonNull(tops, "Высоты колонок не могут быть null: без них лишнего над уровнем не найти");
-        Objects.requireNonNull(skip, "Пропускаемые колонки не могут быть null: нет таких — всегда false");
         Objects.requireNonNull(planned, "Признак плана не может быть null: постройки плана не срезают");
         int level = level(site);
         Map<Integer, Map<Integer, List<Integer>>> layers = new TreeMap<>();
         for (ColumnMask.Cell column : site.zone().cells()) {
-            if (skip.test(column) || site.mineColumn(column.x(), column.z())) {
+            if (site.mineColumn(column.x(), column.z())) {
                 continue;
             }
             int top = tops.applyAsInt(column.x(), column.z());
@@ -79,13 +69,12 @@ public final class SiteLevels {
         return List.copyOf(boxes);
     }
 
-    private static List<PlotLeveling.Box> fill(
-            StageSite site, IntBinaryOperator tops, Predicate<ColumnMask.Cell> skip, Predicate<BlockCoord> planned) {
+    private static List<PlotLeveling.Box> fill(StageSite site, IntBinaryOperator tops, Predicate<BlockCoord> planned) {
         Objects.requireNonNull(tops, "Высоты колонок не могут быть null: без них низин до уровня не найти");
         int level = level(site);
         Map<Integer, Map<Integer, List<Integer>>> layers = new TreeMap<>();
         for (ColumnMask.Cell column : site.zone().cells()) {
-            if (skip.test(column) || site.mineColumn(column.x(), column.z())) {
+            if (site.mineColumn(column.x(), column.z())) {
                 continue;
             }
             int top = tops.applyAsInt(column.x(), column.z());
@@ -133,16 +122,6 @@ public final class SiteLevels {
         return site.ring().posts().stream()
                 .filter(post -> fenceReady(site, post, tops))
                 .toList();
-    }
-
-    public static BlockCoord chestSpot(StageSite site) {
-        int walk = fenceY(site);
-        for (ColumnMask.Cell cell : site.level().cells()) {
-            if (!site.planCell(cell.x(), walk, cell.z()) && !site.ringPost(cell.x(), cell.z())) {
-                return new BlockCoord(cell.x(), walk, cell.z());
-            }
-        }
-        return site.workYard();
     }
 
     private static boolean building(StageSite site, int x, int y, int z) {

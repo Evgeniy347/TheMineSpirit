@@ -10,7 +10,6 @@ public final class More5Rules {
     public static final long BROKEN_WINDOW_TICKS = 12_000L;
     public static final String FUEL = "#more5_fuel";
     public static final int ROUTE_FLUID_WIDTH = 2;
-    public static final int CHEST_WORK_RADIUS = 24;
     public static final int MINE_DARK_MIN = 4;
     private static final int FUEL_FLOOR = 16;
     private static final int FUEL_PER_FURNACE = 8;
@@ -26,7 +25,6 @@ public final class More5Rules {
             int buildingShortage,
             int mobBrokenBlocks,
             int cutRoutes,
-            int farChests,
             int darkMineCells,
             int woodDrops) {
         public Signals {
@@ -40,7 +38,6 @@ public final class More5Rules {
                             Map.entry("нехватки стройматериалов", buildingShortage),
                             Map.entry("блоков, сломанных мобами", mobBrokenBlocks),
                             Map.entry("перерезанных путей", cutRoutes),
-                            Map.entry("далёких мест работы", farChests),
                             Map.entry("тёмных клеток шахты", darkMineCells),
                             Map.entry("дропов после рубки", woodDrops))
                     .entrySet()) {
@@ -65,7 +62,6 @@ public final class More5Rules {
         add(events, signals.buildingShortage() > 0, "more5_build_shortage");
         add(events, signals.mobBrokenBlocks() > 0, "more5_mob_broken");
         add(events, signals.cutRoutes() > 0, "more5_route_blocked");
-        add(events, signals.farChests() > 0, "more5_chest_far");
         add(events, signals.darkMineCells() > 0, "more5_mine_dark");
         add(events, signals.woodDrops() > 0, "more5_wood_drops");
         return Set.copyOf(events);
@@ -126,32 +122,6 @@ public final class More5Rules {
             }
         }
         return false;
-    }
-
-    public static int farSites(List<GraphFacts.Position> sites, List<GraphFacts.Position> chests, int radius) {
-        Objects.requireNonNull(sites, "Места работы не могут быть null: пустой список — работ нет");
-        Objects.requireNonNull(chests, "Сундуки не могут быть null: пустой список — сундуков нет");
-        if (radius < 0) {
-            throw new IllegalArgumentException("Радиус " + radius + " отрицателен: близость начинается с нуля");
-        }
-        long limit = (long) radius * radius;
-        int far = 0;
-        for (GraphFacts.Position site : sites) {
-            boolean near = false;
-            for (GraphFacts.Position chest : chests) {
-                long dx = (long) site.x() - chest.x();
-                long dy = (long) site.y() - chest.y();
-                long dz = (long) site.z() - chest.z();
-                if (dx * dx + dy * dy + dz * dz <= limit) {
-                    near = true;
-                    break;
-                }
-            }
-            if (!near) {
-                far++;
-            }
-        }
-        return far;
     }
 
     public static int woodDrops(Set<String> dropped, Set<String> saplings) {

@@ -6,7 +6,6 @@ import com.theminespirit.core.board.graph.More5Rules;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,10 +63,6 @@ final class More5World {
         int shortage = More5Rules.buildShortage(state.materials(), state.stock(), built(state));
         int broken = More5Store.get(level).recentBreaks(level.getGameTime()).size() + carriedBlocks(level, scan.home());
         int cut = cutRoutes(level, facts, scan.home());
-        int far = More5Rules.farSites(
-                workSites(state, facts),
-                facts.chests().stream().map(GraphFacts.Chest::position).toList(),
-                More5Rules.CHEST_WORK_RADIUS);
         int darkMine = More5Inputs.darkMineCells(darkAroundMine(level, facts));
         int wood = More5Rules.woodDrops(around.drops().keySet(), saplings(graph));
         return new More5Rules.Signals(
@@ -81,7 +76,6 @@ final class More5World {
                 shortage,
                 broken,
                 cut,
-                far,
                 darkMine,
                 wood);
     }
@@ -189,21 +183,6 @@ final class More5World {
             line.add(fluid);
         }
         return line;
-    }
-
-    private static List<GraphFacts.Position> workSites(GraphState state, GraphFacts facts) {
-        Set<GraphFacts.Position> sites = new LinkedHashSet<>();
-        GraphFacts.Building mine = facts.buildings().get(MINE);
-        if (mine != null && mine.position() != null) {
-            sites.add(mine.position());
-        }
-        for (String id : state.materials().keySet()) {
-            GraphFacts.Building building = facts.buildings().get(id);
-            if (building != null && building.position() != null) {
-                sites.add(building.position());
-            }
-        }
-        return List.copyOf(sites);
     }
 
     private static int darkAroundMine(ServerLevel level, GraphFacts facts) {

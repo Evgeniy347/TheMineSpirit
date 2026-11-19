@@ -8,13 +8,11 @@ public final class More2Rules {
     public static final double LOW_FOOD_DAYS = 2.0;
     public static final int FREE_SLOTS_FULL = 4;
     public static final int FREE_SLOTS_ROOM = 8;
-    public static final int LONG_CARRY_BLOCKS = 48;
     public static final int PATH_SPIRITS = 2;
 
     public static final String FOOD_LOW = "more2_food_low";
     public static final String INVENTORY_FULL = "more2_inventory_full";
     public static final String INVENTORY_SPACE = "more2_inventory_space";
-    public static final String LONG_CARRY = "more2_long_carry";
     public static final String FIRE_NEAR_BUILDING = "more2_fire_near_building";
     public static final String LAVA_NEAR_BUILDING = "more2_lava_near_building";
     public static final String HAZARD_FLOW = "more2_hazard_flow";
@@ -62,19 +60,6 @@ public final class More2Rules {
 
         public boolean room() {
             return workPending && freeChestSlots > 0 && freeSlots >= FREE_SLOTS_ROOM;
-        }
-    }
-
-    public record Carry(int distanceBlocks) {
-        public Carry {
-            if (distanceBlocks < 0) {
-                throw new IllegalArgumentException(
-                        "Дорога " + distanceBlocks + " не бывает отрицательной: рядом — ноль");
-            }
-        }
-
-        public boolean longHaul() {
-            return distanceBlocks > LONG_CARRY_BLOCKS;
         }
     }
 
@@ -182,7 +167,6 @@ public final class More2Rules {
     public record Signals(
             Food food,
             Inventory inventory,
-            Carry carry,
             Hazards hazards,
             Animals animals,
             Villagers villagers,
@@ -193,7 +177,6 @@ public final class More2Rules {
             Objects.requireNonNull(food, "Прогноз еды не может быть null: без расхода — Food(0, 0, 0)");
             Objects.requireNonNull(
                     inventory, "Место в руках не может быть null: пусто — Inventory(0, 0, false, false)");
-            Objects.requireNonNull(carry, "Дорога до склада не может быть null: рядом — Carry(0)");
             Objects.requireNonNull(hazards, "Очаги не могут быть null: чисто — Hazards(0, 0, 0, 0)");
             Objects.requireNonNull(animals, "Животные не могут быть null: пусто — Animals(0, 0, 0, false)");
             Objects.requireNonNull(villagers, "Жители не могут быть null: никого — Villagers(0)");
@@ -207,7 +190,6 @@ public final class More2Rules {
         return new Signals(
                 new Food(0, 0, 0),
                 new Inventory(0, 0, false, false),
-                new Carry(0),
                 new Hazards(0, 0, 0, 0),
                 new Animals(0, 0, 0, false),
                 new Villagers(0),
@@ -226,9 +208,6 @@ public final class More2Rules {
         }
         if (signals.inventory().room()) {
             events.add(INVENTORY_SPACE);
-        }
-        if (signals.carry().longHaul()) {
-            events.add(LONG_CARRY);
         }
         if (signals.hazards().fireNearBuilding()) {
             events.add(FIRE_NEAR_BUILDING);
