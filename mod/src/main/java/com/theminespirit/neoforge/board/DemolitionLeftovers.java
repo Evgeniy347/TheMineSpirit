@@ -17,7 +17,9 @@ final class DemolitionLeftovers {
     private DemolitionLeftovers() {}
 
     static boolean allowedByProtection(SpiritEntity spirit, BlockPos pos, BlockState state) {
-        return DemolitionVerdict.permissible(spirit.protectionGate().checkDemolish(pos, state), false);
+        return DemolitionVerdict.permissibleEither(
+                spirit.protectionGate().checkDemolish(pos, state),
+                spirit.protectionGate().checkExcavate(pos, state));
     }
 
     static @Nullable String reason(

@@ -13,4 +13,8 @@ public final class DemolitionVerdict {
         return decision instanceof BlockProtection.Refused refused
                 && (refused.policy() == PolicyId.PROTECTED_BLOCKS || refused.policy() == PolicyId.PROTECTED_ZONE);
     }
+
+    public static boolean permissibleEither(BlockProtection.Decision first, BlockProtection.Decision second) {
+        return permissible(first, false) || permissible(second, false);
+    }
 }

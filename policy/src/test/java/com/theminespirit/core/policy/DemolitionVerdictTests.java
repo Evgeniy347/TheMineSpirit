@@ -39,6 +39,18 @@ class DemolitionVerdictTests {
                 "Забор плана, план-клетка и постройка игрока признаны остатком заранее — их не учитывают в провале");
     }
 
+    @Test
+    void permissibleEither_OneProtected_Tolerated() {
+        assertTrue(
+                DemolitionVerdict.permissibleEither(
+                        new BlockProtection.Allowed(), new BlockProtection.Refused(PolicyId.PROTECTED_BLOCKS, "план")),
+                "Достаточно отказа одной из проверок (снос или прокоп): путь не может взять клетку ни тем, ни другим");
+        assertFalse(
+                DemolitionVerdict.permissibleEither(
+                        new BlockProtection.Allowed(), new BlockProtection.Refused(PolicyId.DROP, "опасно")),
+                "Опасность/инструмент в любой проверке — не повод закрыть снос без факта мира");
+    }
+
     private static boolean unsafe() {
         return DemolitionVerdict.permissible(new BlockProtection.Refused(PolicyId.DROP, "под ногами"), false);
     }
