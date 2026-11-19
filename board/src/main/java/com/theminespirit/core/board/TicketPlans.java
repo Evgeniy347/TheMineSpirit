@@ -119,11 +119,11 @@ public final class TicketPlans {
             case BUILD_HOUSE -> buildHouse(level, target);
             case BUILD_ORCHARD -> buildOrchard(target);
             case BUILD_WAREHOUSE -> buildWarehouseLevel(level, target);
-            default -> legacyPlan(boardCase, target, level);
+            default -> defaultPlan(boardCase, target, level);
         };
     }
 
-    private static TaskNode legacyPlan(BoardCase boardCase, TicketTarget target, int level) {
+    private static TaskNode defaultPlan(BoardCase boardCase, TicketTarget target, int level) {
         return switch (boardCase) {
             case FILL_CRATER -> PitFillPlan.plan(target);
             case REPAIR_FENCE -> repairFence(target);
