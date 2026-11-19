@@ -112,14 +112,28 @@ final class StageProgressWatch {
         if (target == null || target.work() == null) {
             return "разбор закрыт без факта мира: у задания нет списка блоков для сверки";
         }
+        StageSite site = target.work().site();
+        PlotPlanBlocks.Plan plan = PlotPlanBlocks.of(site);
         List<PlannedBlock> planned = target.work().blocks();
         List<BlockCoord> standing = new ArrayList<>();
+        int allowed = 0;
         for (PlannedBlock block : planned) {
             BlockCoord at = block.at();
             BlockState state = level.getBlockState(new BlockPos(at.x(), at.y(), at.z()));
-            if (!state.isAir() && state.getFluidState().isEmpty()) {
-                standing.add(at);
+            if (state.isAir() || !state.getFluidState().isEmpty()) {
+                continue;
             }
+            if (DemolitionLeftovers.reason(level, site, plan, at, state) != null) {
+                allowed++;
+                continue;
+            }
+            standing.add(at);
+        }
+        if (allowed > 0) {
+            LOGGER.info(
+                    "[plot] разбор: допущенные остатки {} — забор плана, план поселения или постройка игрока, "
+                            + "их этот путь не ломает",
+                    allowed);
         }
         return DemolishAudit.stillStanding(planned.size(), standing).orElse(null);
     }

@@ -89,7 +89,9 @@ final class WorldPost {
         }
         if (step == BoardCase.CLEAR_GROUNDS) {
             SettlementScan.Strays found = WorldAreaScan.cachedOrScan(post.level, post.scan.stage());
-            List<BlockCoord> extras = WorldAreaScan.raised(found);
+            List<BlockCoord> extras = WorldAreaScan.raised(found).stream()
+                    .filter(ClearableCells.of(post.level, post.scan.stage()))
+                    .toList();
             List<BlockCoord> holes = WorldAreaScan.holes(found);
             if (extras.isEmpty() && holes.isEmpty()) {
                 return false;
@@ -118,7 +120,7 @@ final class WorldPost {
         int priority = ticket.task().priority();
         return switch (ticket.node()) {
             case "backfill" -> holes(post, ticket, found, priority);
-            case "level_lot" -> lot(post, ticket, found, priority);
+            case "level_lot" -> MoundLots.post(post, ticket, found, priority, BATCH);
             case "restore_trace" -> {
                 boolean plan = PlanBreachPost.post(post, ticket);
                 boolean trace = traces(post, ticket, found, priority);
@@ -211,29 +213,6 @@ final class WorldPost {
             posted = true;
         }
         return posted;
-    }
-
-    private static boolean lot(GraphPost post, GraphTickets.Ticket ticket, SettlementScan.Strays found, int priority) {
-        if (found.mounds().isEmpty()) {
-            return false;
-        }
-        List<BlockCoord> extras =
-                found.mounds().stream().sorted(ORDER.reversed()).limit(BATCH).toList();
-        BlockCoord first = extras.get(0);
-        String id = "world:level_lot:" + key(first);
-        if (post.done(id) || post.open(id)) {
-            return true;
-        }
-        post.submit(
-                post.ticket(
-                        id,
-                        BoardCase.REPAIR_BUILDING,
-                        Optional.empty(),
-                        priority,
-                        ticket.id(),
-                        post.items(ticket.task())),
-                TicketTarget.at(first).withLeveling(LevelRepair.leveling(List.of(), extras)));
-        return true;
     }
 
     private static boolean traces(

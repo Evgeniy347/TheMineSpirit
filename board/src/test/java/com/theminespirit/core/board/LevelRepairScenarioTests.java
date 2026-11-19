@@ -132,13 +132,28 @@ class LevelRepairScenarioTests {
     }
 
     @Test
-    void progress_CutColumn_NotDoneWhileBottomStands() {
+    void plan_GapInColumn_NotCutAsOneBox() {
+        PlotLeveling leveling =
+                LevelRepair.leveling(List.of(), List.of(new BlockCoord(3, 70, 3), new BlockCoord(3, 75, 3)));
+
+        assertEquals(
+                List.of(new PlotLeveling.Box(3, 75, 3, 3, 75, 3), new PlotLeveling.Box(3, 70, 3, 3, 70, 3)),
+                leveling.cut(),
+                "Клетки колонки через разрыв (сундук или постройка) — два бокса: разрыв в срез не попадает");
+    }
+
+    @Test
+    void progress_CutColumn_CountsEachCutCell() {
         PlotLeveling leveling = LevelRepair.leveling(
                 List.of(), List.of(new BlockCoord(5, 70, 5), new BlockCoord(5, 71, 5), new BlockCoord(5, 72, 5)));
         Set<BlockCoord> empty = new HashSet<>(Set.of(new BlockCoord(5, 72, 5), new BlockCoord(5, 71, 5)));
         LevelRepair.Progress progress = LevelRepair.progress(leveling, empty::contains);
-        assertEquals(0, progress.done(), "Срезанный верх столба не закрывает работу: нижняя клетка ещё стоит");
-        assertEquals(1, progress.total(), "Колонка — одна работа выравнивания");
+        assertEquals(
+                2,
+                progress.done(),
+                "Срезаны две верхние клетки — прогресс обязан это показать: одна защищённая клетка внизу "
+                        + "не держит весь столб на нуле");
+        assertEquals(3, progress.total(), "Колонка из трёх клеток — три клетки работы выравнивания");
     }
 
     @Test

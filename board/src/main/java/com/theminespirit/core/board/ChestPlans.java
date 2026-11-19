@@ -55,13 +55,26 @@ public final class ChestPlans {
     }
 
     public static TaskNode demolish(ContainerSnapshot chest, List<BlockCoord> cells, @Nullable BlockCoord deposit) {
+        return demolish(chest, cells, deposit, List.of());
+    }
+
+    public static TaskNode demolish(
+            ContainerSnapshot chest, List<BlockCoord> cells, @Nullable BlockCoord deposit, List<BlockCoord> covers) {
         Objects.requireNonNull(chest, "Сундук не может быть null: его содержимое выносят до слома");
         Objects.requireNonNull(cells, "Клетки сундука не могут быть null: ломать нечего");
         if (cells.isEmpty()) {
             throw new IllegalArgumentException("У сноса сундука нет ни одной клетки: ломать нечего");
         }
+        Objects.requireNonNull(covers, "Крышки сундука не могут быть null: пустые — пустой список");
         String target = deposit == null ? WAREHOUSE : coord(deposit);
         List<TaskNode> steps = new ArrayList<>();
+        for (BlockCoord cover : covers) {
+            steps.add(PlanSteps.clearStrict(cover));
+        }
+        if (!covers.isEmpty()) {
+            steps.add(new ScriptCall(
+                    "collect_drops", Map.of(RADIUS, CatalogLimits.DROP_RADIUS_DEFAULT, "overflow", "return_to_base")));
+        }
         List<ChestClearance.Move> moves = ChestClearance.moves(chest);
         for (ChestClearance.Move move : moves) {
             for (int left = move.count(); left > 0; left -= CatalogLimits.COUNT_MAX) {

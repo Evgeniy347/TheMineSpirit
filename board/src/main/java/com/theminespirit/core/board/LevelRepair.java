@@ -12,11 +12,9 @@ import com.theminespirit.core.town.PlotLeveling;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Predicate;
 
 public final class LevelRepair {
@@ -58,14 +56,49 @@ public final class LevelRepair {
     }
 
     private static List<PlotLeveling.Box> columns(List<BlockCoord> cells, boolean topDown) {
-        Map<String, int[]> grouped = new LinkedHashMap<>();
+        Map<String, List<Integer>> grouped = new LinkedHashMap<>();
+        Map<String, int[]> positions = new LinkedHashMap<>();
         for (BlockCoord cell : cells) {
             String key = cell.x() + "," + cell.z();
-            int[] range = grouped.computeIfAbsent(key, ignored -> new int[] {cell.x(), cell.z(), cell.y(), cell.y()});
-            range[2] = Math.min(range[2], cell.y());
-            range[3] = Math.max(range[3], cell.y());
+            positions.computeIfAbsent(key, ignored -> new int[] {cell.x(), cell.z()});
+            grouped.computeIfAbsent(key, ignored -> new ArrayList<>()).add(cell.y());
         }
-        return columns(grouped, topDown);
+        List<PlotLeveling.Box> boxes = new ArrayList<>();
+        grouped.forEach((key, levels) -> {
+            int[] at = Objects.requireNonNull(positions.get(key), "Колонка без координат: список клеток неполон");
+            List<Integer> sorted = new ArrayList<>(levels);
+            sorted.sort(Integer::compareTo);
+            int runFrom = sorted.get(0);
+            int runTo = runFrom;
+            for (int index = 1; index < sorted.size(); index++) {
+                int y = sorted.get(index);
+                if (y == runTo) {
+                    continue;
+                }
+                if (y == runTo + 1) {
+                    runTo = y;
+                    continue;
+                }
+                boxes.add(column(at, runFrom, runTo));
+                runFrom = y;
+                runTo = y;
+            }
+            boxes.add(column(at, runFrom, runTo));
+        });
+        Comparator<PlotLeveling.Box> order = topDown
+                ? Comparator.comparingInt(PlotLeveling.Box::y2)
+                        .reversed()
+                        .thenComparingInt(PlotLeveling.Box::x1)
+                        .thenComparingInt(PlotLeveling.Box::z1)
+                : Comparator.comparingInt(PlotLeveling.Box::y1)
+                        .thenComparingInt(PlotLeveling.Box::x1)
+                        .thenComparingInt(PlotLeveling.Box::z1);
+        boxes.sort(order);
+        return List.copyOf(boxes);
+    }
+
+    private static PlotLeveling.Box column(int[] at, int from, int to) {
+        return new PlotLeveling.Box(at[0], from, at[1], at[0], to, at[1]);
     }
 
     private static List<PlotLeveling.Box> columns(Map<String, int[]> grouped, boolean topDown) {
@@ -93,30 +126,35 @@ public final class LevelRepair {
         int total = 0;
         int done = 0;
         for (PlotLeveling.Box box : leveling.cut()) {
-            total++;
-            if (corners(box).stream().allMatch(empty)) {
-                done++;
+            for (BlockCoord cell : cells(box)) {
+                total++;
+                if (empty.test(cell)) {
+                    done++;
+                }
             }
         }
         for (PlotLeveling.Box box : leveling.fill()) {
-            total++;
-            if (corners(box).stream().noneMatch(empty)) {
-                done++;
+            for (BlockCoord cell : cells(box)) {
+                total++;
+                if (!empty.test(cell)) {
+                    done++;
+                }
             }
         }
         return new Progress(done, total);
     }
 
-    private static List<BlockCoord> corners(PlotLeveling.Box box) {
-        Set<BlockCoord> points = new LinkedHashSet<>();
-        for (int x : new int[] {box.x1(), box.x2()}) {
-            for (int y : new int[] {box.y1(), box.y2()}) {
-                for (int z : new int[] {box.z1(), box.z2()}) {
+    private static List<BlockCoord> cells(PlotLeveling.Box box) {
+        List<BlockCoord> points =
+                new ArrayList<>((box.x2() - box.x1() + 1) * (box.y2() - box.y1() + 1) * (box.z2() - box.z1() + 1));
+        for (int x = box.x1(); x <= box.x2(); x++) {
+            for (int y = box.y1(); y <= box.y2(); y++) {
+                for (int z = box.z1(); z <= box.z2(); z++) {
                     points.add(new BlockCoord(x, y, z));
                 }
             }
         }
-        return List.copyOf(points);
+        return points;
     }
 
     public static TaskNode plan(TicketTarget target) {

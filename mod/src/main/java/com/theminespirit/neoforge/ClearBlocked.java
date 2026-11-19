@@ -7,6 +7,7 @@ import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.mining.UnreachableCells;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class ClearBlocked {
@@ -40,6 +42,10 @@ final class ClearBlocked {
         cells.reached(cell);
     }
 
+    void failed(BlockCoord cell) {
+        cells.noteFailure(cell);
+    }
+
     Sweep dropExcluded(List<BlockCoord> remaining) {
         List<ClearSummary.Leftover> leftover = new ArrayList<>();
         int excluded = 0;
@@ -54,6 +60,42 @@ final class ClearBlocked {
             remaining.remove(index);
         }
         return new Sweep(leftover, 0, 0, 0, excluded, 0);
+    }
+
+    Sweep dropProtected(List<BlockCoord> remaining, SpiritEntity spirit, boolean demolish) {
+        List<ClearSummary.Leftover> leftover = new ArrayList<>();
+        int protectedCount = 0;
+        for (int index = remaining.size() - 1; index >= 0; index--) {
+            BlockCoord cell = remaining.get(index);
+            BlockPos pos = new BlockPos(cell.x(), cell.y(), cell.z());
+            BlockState state = level.getBlockState(pos);
+            String reason = protectedReason(spirit, pos, state, demolish);
+            if (reason == null) {
+                continue;
+            }
+            protectedCount++;
+            leftover.add(new ClearSummary.Leftover(cell, blockAt(cell), reason, 0));
+            remaining.remove(index);
+        }
+        return new Sweep(leftover, 0, 0, 0, 0, protectedCount);
+    }
+
+    private static @Nullable String protectedReason(
+            SpiritEntity spirit, BlockPos pos, BlockState state, boolean demolish) {
+        if (!demolish && PlanCells.keep(spirit.level(), pos)) {
+            return "блок постройки плана поселения";
+        }
+        BlockProtection.Decision decision = BreakProtection.check(
+                spirit,
+                demolish ? BlockBreaker.Intent.DEMOLISH : BlockBreaker.Intent.EXCAVATE,
+                pos,
+                state,
+                false,
+                false);
+        if (decision instanceof BlockProtection.Refused refused) {
+            return "защищено: " + refused.reason();
+        }
+        return null;
     }
 
     Sweep dropPlanned(List<BlockCoord> remaining) {

@@ -80,6 +80,24 @@ class ChestPlansTests {
     }
 
     @Test
+    void demolish_CoverAboveChest_BreaksCoverBeforeWithdraw() {
+        BlockCoord cover = new BlockCoord(CHEST.x(), CHEST.y() + 1, CHEST.z());
+
+        List<ScriptCall> calls =
+                calls(ChestPlans.demolish(snapshot(new Stack("dirt", 0, 5, 64)), List.of(CHEST), null, List.of(cover)));
+
+        List<String> scripts = calls.stream().map(ScriptCall::script).toList();
+        assertEquals(
+                List.of("clear_area", "collect_drops", "withdraw", "deposit", "unload", "clear_area", "collect_drops"),
+                scripts,
+                "Блок над сундуком снимается до открытия: с закрытой крышкой вещи не забрать: " + scripts);
+        assertEquals(65, calls.get(0).params().get("y1"), "Снимают именно клетку над сундуком");
+        assertTrue(
+                scripts.indexOf("collect_drops") < scripts.indexOf("withdraw"),
+                "Дроп с крышки подбирают до похода в сундук: " + scripts);
+    }
+
+    @Test
     void demolish_EmptyChest_BreaksWithoutTransfers() {
         List<ScriptCall> calls = calls(ChestPlans.demolish(snapshot(), List.of(CHEST)));
 

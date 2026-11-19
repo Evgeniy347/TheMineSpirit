@@ -155,7 +155,7 @@ final class DemolitionCollect {
     private static Strays strays(Ctx ctx, List<BlockCoord> remove, List<String> notes) {
         Set<BlockCoord> floatingCells = new HashSet<>();
         ctx.findings().forEach(finding -> floatingCells.addAll(finding.cells()));
-        PlanStrays.Result strays = PlanStrays.collect(ctx.level(), ctx.unreachable(), SHOWN);
+        PlanStrays.Result strays = PlanStrays.collect(ctx.level(), ctx.unreachable(), ctx.site(), ctx.plan(), SHOWN);
         for (BlockCoord at : strays.remove()) {
             if (!floatingCells.contains(at)) {
                 remove.add(at);

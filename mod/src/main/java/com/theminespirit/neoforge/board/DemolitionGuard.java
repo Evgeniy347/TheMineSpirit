@@ -45,7 +45,7 @@ final class DemolitionGuard {
         if (PlacedBlocksData.get(level).isMarked(pos)) {
             return true;
         }
-        BlockProtection.Decision hard = PROTECTION.checkSettlement(blockId, false);
+        BlockProtection.Decision hard = PROTECTION.checkOwn(blockId, false);
         return hard instanceof BlockProtection.Refused || BuildingSeeds.adjacentToStructure(neighbours(level, pos));
     }
 

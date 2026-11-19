@@ -69,6 +69,7 @@ final class ClearAreaRun {
         }
         session.apply(session.blocked.dropExcluded(session.remaining));
         session.apply(session.blocked.dropPlanned(session.remaining));
+        session.apply(session.blocked.dropProtected(session.remaining, session.spirit, session.demolish));
         session.noteSkipped(session.felling.dropPartial(session.remaining));
         if (session.remaining.isEmpty()) {
             session.finish();
@@ -258,6 +259,7 @@ final class ClearAreaRun {
             if (BreakSight.retryable(refused.reason()) && session.retryOtherStand()) {
                 return;
             }
+            session.blocked.failed(session.currentTarget);
             session.releaseCurrent();
             session.state = ClearAreaSession.State.PICK;
             return;

@@ -3,9 +3,11 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.mining.UnreachableCells;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.SettlementScan;
+import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StrayGroups;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
 final class PlanStrays {
@@ -22,7 +24,8 @@ final class PlanStrays {
 
     private PlanStrays() {}
 
-    static Result collect(ServerLevel level, UnreachableCells unreachableCells, int shown) {
+    static Result collect(
+            ServerLevel level, UnreachableCells unreachableCells, StageSite site, PlotPlanBlocks.Plan plan, int shown) {
         if (!WorldAreaScan.demolishStrays()) {
             return Result.empty();
         }
@@ -34,15 +37,17 @@ final class PlanStrays {
         int guarded = 0;
         for (StrayGroups.Cell cell : strays) {
             BlockCoord at = cell.at();
-            if (unreachableCells.excluded(at) || !FloatingScan.reachable(level, at)) {
-                if (unreachable++ < shown) {
-                    notes.add(at + " — лишнее вне плана, но рядом нет стоянки");
+            String guardedReason = DemolitionLeftovers.reason(
+                    level, site, plan, at, level.getBlockState(new BlockPos(at.x(), at.y(), at.z())));
+            if (guardedReason != null) {
+                if (guarded++ < shown) {
+                    notes.add(at + " — " + guardedReason + ", не убираем");
                 }
                 continue;
             }
-            if (DemolitionGuard.protectedStray(level, at, cell.blockId())) {
-                if (guarded++ < shown) {
-                    notes.add(at + " — постройка игрока, не трогаем: " + cell.blockId());
+            if (unreachableCells.excluded(at) || !FloatingScan.reachable(level, at)) {
+                if (unreachable++ < shown) {
+                    notes.add(at + " — лишнее вне плана, но рядом нет стоянки");
                 }
                 continue;
             }

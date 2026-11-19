@@ -17,6 +17,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.StageWork;
+import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
@@ -118,10 +119,8 @@ public final class ChestDemolition {
                     }
                 }
                 case DRAIN -> {
-                    BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
-                    TaskNode plan = ContainerAccess.open(post.level, pos) instanceof ContainerAccess.Opened
-                            ? ChestPlans.demolish(chest, chestCells(post.level, at))
-                            : ChestPlans.breakOnly(chestCells(post.level, at));
+                    List<BlockCoord> occupied = chestCells(post.level, at);
+                    TaskNode plan = ChestPlans.demolish(chest, occupied, null, covers(post, occupied));
                     if (submit(post, ticket, at, plan, chest, decision)) {
                         return true;
                     }
@@ -215,6 +214,24 @@ public final class ChestDemolition {
                     at.x() + direction.getStepX(), at.y() + direction.getStepY(), at.z() + direction.getStepZ()));
         }
         return List.copyOf(cells);
+    }
+
+    private static List<BlockCoord> covers(GraphPost post, List<BlockCoord> cells) {
+        PlotPlanBlocks.Plan plan = PlotPlanBlocks.of(post.scan.stage());
+        List<BlockCoord> covers = new ArrayList<>();
+        for (BlockCoord cell : cells) {
+            BlockCoord above = new BlockCoord(cell.x(), cell.y() + 1, cell.z());
+            BlockPos pos = new BlockPos(above.x(), above.y(), above.z());
+            BlockState state = post.level.getBlockState(pos);
+            if (state.isAir() || plan.planned(above)) {
+                continue;
+            }
+            if (DemolitionGuard.protectedForDemolish(post.level, above, BlockStates.idOf(state), plan)) {
+                continue;
+            }
+            covers.add(above);
+        }
+        return List.copyOf(covers);
     }
 
     private static List<BlockCoord> emptyCells(ServerLevel level, Set<BlockCoord> cells) {
