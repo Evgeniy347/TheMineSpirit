@@ -6,7 +6,7 @@ import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DriftWatch;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritTaskView;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -20,14 +20,14 @@ final class TransferDriftWatch {
 
     private final DriftWatch drift = new DriftWatch();
 
-    void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits) {
+    void tick(ServerLevel level, BoardService service, List<? extends SpiritTaskView> spirits) {
         long now = level.getGameTime();
         for (BoardTicket ticket : List.copyOf(service.board().tickets())) {
             if (ticket.boardCase() != BoardCase.TRANSFER_ITEM || !open(service, ticket.id())) {
                 continue;
             }
             UUID carrier = ticket.assignee().orElse(null);
-            SpiritEntity spirit = find(spirits, carrier);
+            SpiritTaskView spirit = find(spirits, carrier);
             if (spirit == null || !DELIVER.equals(spirit.currentTaskScript().orElse(null))) {
                 continue;
             }
@@ -53,7 +53,7 @@ final class TransferDriftWatch {
         return status != null && TransferWatch.open(status);
     }
 
-    private static SpiritEntity find(List<SpiritEntity> spirits, UUID id) {
+    private static SpiritTaskView find(List<? extends SpiritTaskView> spirits, UUID id) {
         if (id == null) {
             return null;
         }
@@ -63,7 +63,7 @@ final class TransferDriftWatch {
                 .orElse(null);
     }
 
-    private static BlockCoord at(SpiritEntity spirit) {
+    private static BlockCoord at(SpiritTaskView spirit) {
         return new BlockCoord(
                 spirit.blockPosition().getX(),
                 spirit.blockPosition().getY(),
