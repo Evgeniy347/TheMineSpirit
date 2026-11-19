@@ -1,4 +1,4 @@
-package com.theminespirit.core.coordinator;
+package com.theminespirit.core.coordinator.work;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 

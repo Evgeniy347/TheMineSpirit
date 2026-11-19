@@ -3,9 +3,9 @@ package com.theminespirit.core.building;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.coordinator.WorkKind;
-import com.theminespirit.core.coordinator.WorkReservations;
-import com.theminespirit.core.coordinator.WorkTarget;
+import com.theminespirit.core.coordinator.work.WorkKind;
+import com.theminespirit.core.coordinator.work.WorkReservations;
+import com.theminespirit.core.coordinator.work.WorkTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;

@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.coordinator.WorkTarget;
+import com.theminespirit.core.coordinator.work.WorkTarget;
 import com.theminespirit.core.inventory.InventorySpace;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.mining.BreakSafety;

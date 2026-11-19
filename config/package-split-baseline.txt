@@ -2,7 +2,6 @@ com.theminespirit.core
 com.theminespirit.core.board
 com.theminespirit.core.board.graph
 com.theminespirit.core.building
-com.theminespirit.core.coordinator
 com.theminespirit.core.farming
 com.theminespirit.core.forestry
 com.theminespirit.core.husbandry

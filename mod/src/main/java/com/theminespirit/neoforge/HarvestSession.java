@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.SpiritReach;
-import com.theminespirit.core.coordinator.WorkKind;
+import com.theminespirit.core.coordinator.work.WorkKind;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.mining.SoilLayer;

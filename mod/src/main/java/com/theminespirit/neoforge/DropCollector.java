@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.board.pickup.DropRef;
-import com.theminespirit.core.coordinator.WorkTarget;
+import com.theminespirit.core.coordinator.work.WorkTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;

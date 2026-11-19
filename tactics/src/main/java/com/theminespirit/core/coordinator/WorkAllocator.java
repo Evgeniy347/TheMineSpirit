@@ -2,6 +2,8 @@ package com.theminespirit.core.coordinator;
 
 import static com.theminespirit.core.Lookup.present;
 
+import com.theminespirit.core.coordinator.work.WorkReservations;
+import com.theminespirit.core.coordinator.work.WorkTarget;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.Point;

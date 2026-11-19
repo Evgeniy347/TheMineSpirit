@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.coordinator.WorkKind;
+import com.theminespirit.core.coordinator.work.WorkKind;
 
 record HarvestSpec(
         HarvestTargets targets,

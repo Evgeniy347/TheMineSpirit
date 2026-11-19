@@ -9,7 +9,7 @@ import com.theminespirit.core.coordinator.HelpCall;
 import com.theminespirit.core.coordinator.SettlementGroups;
 import com.theminespirit.core.coordinator.SettlementKey;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
-import com.theminespirit.core.coordinator.WorkReservations;
+import com.theminespirit.core.coordinator.work.WorkReservations;
 import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.RallyTuning;
 import com.theminespirit.core.tactics.SafePointChoice;

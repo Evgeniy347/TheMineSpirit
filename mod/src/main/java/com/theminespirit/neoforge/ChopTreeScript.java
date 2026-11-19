@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.coordinator.WorkKind;
-import com.theminespirit.core.coordinator.WorkTarget;
+import com.theminespirit.core.coordinator.work.WorkKind;
+import com.theminespirit.core.coordinator.work.WorkTarget;
 import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;

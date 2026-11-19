@@ -1,4 +1,4 @@
-package com.theminespirit.core.coordinator;
+package com.theminespirit.core.coordinator.work;
 
 public enum WorkKind {
     CELL,
