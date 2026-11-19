@@ -4,12 +4,12 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class RestConfig {
     public static final String FILE_NAME = "theminespirit-rest.toml";
-    public static final int DEFAULT_PORT = 8765;
+    public static final int DEFAULT_PORT = RestDefaults.PORT;
     public static final int MIN_PORT = 1024;
     public static final int MAX_PORT = 65535;
-    public static final String DEFAULT_BIND_ADDRESS = "0.0.0.0";
-    public static final String DEFAULT_HEARTBEAT_FILE = "/opt/minecraft/logs/tick.heartbeat";
-    public static final String DEFAULT_DEBUG_LEASE_FILE = "/opt/minecraft/debug.lease";
+    public static final String DEFAULT_BIND_ADDRESS = RestDefaults.BIND_ADDRESS;
+    public static final String DEFAULT_HEARTBEAT_FILE = RestDefaults.HEARTBEAT_FILE;
+    public static final String DEFAULT_DEBUG_LEASE_FILE = RestDefaults.DEBUG_LEASE_FILE;
     public static final int DEFAULT_HANG_AFTER_SECONDS = 180;
     public static final int MIN_HANG_AFTER_SECONDS = 30;
     public static final int MAX_HANG_AFTER_SECONDS = 3600;
