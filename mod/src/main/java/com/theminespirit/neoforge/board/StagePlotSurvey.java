@@ -6,7 +6,6 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.core.town.SettlementPlot;
 import com.theminespirit.core.town.TownPlan;
-import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.IntBinaryOperator;
@@ -20,7 +19,7 @@ final class StagePlotSurvey {
     private StagePlotSurvey() {}
 
     static Optional<SettlementPlot> plotOf(
-            ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
+            ServerLevel level, BoardService service, List<? extends HomedSpirit> spirits, long now) {
         List<BlockCoord> homes = SettlementHome.homes(spirits);
         SettlementPlotStore store = SettlementPlotStore.get(level);
         BlockCoord center = SettlementPlot.center(homes);
