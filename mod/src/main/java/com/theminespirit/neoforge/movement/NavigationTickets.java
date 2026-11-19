@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 public final class NavigationTickets {
     // mc: уровень тикета = 33 - расстояние; для загрузки без тика сущностей хватает 2.
     private static final int TICKET_DISTANCE = 2;
-    private static final int RADIUS_CHUNKS = 1;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final TicketType<ChunkPos> NAV_TICKET =
             TicketType.create("theminespirit_nav", Comparator.comparingLong(ChunkPos::toLong));
@@ -43,7 +42,8 @@ public final class NavigationTickets {
                 spirit.blockPosition().getY(),
                 spirit.blockPosition().getZ());
         List<Chunk> missing = new ArrayList<>();
-        for (Chunk chunk : NavigationChunkRequests.corridor(from, target, Math.max(RADIUS_CHUNKS, radius))) {
+        for (Chunk chunk : NavigationChunkRequests.corridor(
+                from, target, Math.max(SpiritConfig.navTicketRadiusChunks(), radius))) {
             if (!level.isLoaded(new ChunkPos(chunk.x(), chunk.z()).getWorldPosition())) {
                 missing.add(chunk);
             }

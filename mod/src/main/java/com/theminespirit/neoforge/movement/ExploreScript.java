@@ -15,6 +15,7 @@ import com.theminespirit.core.script.ExploreParams;
 import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.LevelSafetyView;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +30,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 public final class ExploreScript implements ScriptInstance {
-    private static final int SURVEY_RADIUS = 2;
     private static final int SURVEY_DEPTH = 2;
     private static final int GROUND_SEARCH_DEPTH = 4;
-    private static final double PARTY_RADIUS = 32.0;
     private static final long TICKS_PER_DAY = 24_000L;
 
     private final SpiritEntity spirit;
@@ -175,8 +174,8 @@ public final class ExploreScript implements ScriptInstance {
         boolean water = false;
         boolean lava = false;
         for (int dy = -SURVEY_DEPTH; dy <= SURVEY_DEPTH; dy++) {
-            for (int dx = -SURVEY_RADIUS; dx <= SURVEY_RADIUS; dx++) {
-                for (int dz = -SURVEY_RADIUS; dz <= SURVEY_RADIUS; dz++) {
+            for (int dx = -SpiritConfig.surveyRadius(); dx <= SpiritConfig.surveyRadius(); dx++) {
+                for (int dz = -SpiritConfig.surveyRadius(); dz <= SpiritConfig.surveyRadius(); dz++) {
                     BlockPos pos = new BlockPos(point.x() + dx, point.y() + dy, point.z() + dz);
                     if (!spirit.level().isLoaded(pos)) {
                         continue;
@@ -205,7 +204,7 @@ public final class ExploreScript implements ScriptInstance {
 
     private LivingEntity nearestEnemy(BlockCoord point) {
         Vec3 center = new Vec3(point.x() + 0.5, point.y() + 0.5, point.z() + 0.5);
-        AABB box = new AABB(center, center).inflate(SURVEY_RADIUS + 1.0);
+        AABB box = new AABB(center, center).inflate(SpiritConfig.surveyRadius() + 1.0);
         return spirit
                 .level()
                 .getEntitiesOfClass(
@@ -259,7 +258,7 @@ public final class ExploreScript implements ScriptInstance {
         int nearby = spirit.level()
                 .getEntitiesOfClass(
                         SpiritEntity.class,
-                        spirit.getBoundingBox().inflate(PARTY_RADIUS),
+                        spirit.getBoundingBox().inflate(SpiritConfig.partyRadius()),
                         other -> !other.equals(spirit) && other.isAlive())
                 .size();
         return 1 + nearby;

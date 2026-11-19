@@ -10,6 +10,7 @@ import com.theminespirit.core.navigation.NavResult;
 import com.theminespirit.core.navigation.NavSettings;
 import com.theminespirit.core.navigation.NavWorld;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.SpiritConfig;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,7 +21,6 @@ import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 
 public final class RescueReach {
-    private static final int RADIUS = 2;
     private static final long VERDICT_TTL_TICKS = 1200;
     private static final long PROBE_TTL_TICKS = 1200;
     private static final int MAX_VERDICTS = 64;
@@ -50,7 +50,7 @@ public final class RescueReach {
                     key.from().y(),
                     key.from().z(),
                     new NavGoalNear(
-                            key.target().x(), key.target().y(), key.target().z(), RADIUS),
+                            key.target().x(), key.target().y(), key.target().z(), SpiritConfig.rescueReachRadius()),
                     NavFavoring.EMPTY);
         }
     }

@@ -11,6 +11,7 @@ import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.BlockLocator;
 import com.theminespirit.neoforge.BlockSets;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -28,7 +29,6 @@ public final class GotoBlockSession {
     }
 
     public static final int MAX_SLICES_PER_TICK = 4;
-    public static final int NEAR_RADIUS = 8;
     public static final double WALK_ARRIVAL = 2.0;
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -122,7 +122,7 @@ public final class GotoBlockSession {
                 .limit(count)
                 .toList();
         goal = new GoalComposite(ordered.stream()
-                .<Goal>map(candidate -> new GoalNear(candidate, NEAR_RADIUS))
+                .<Goal>map(candidate -> new GoalNear(candidate, SpiritConfig.nearRadius()))
                 .toList());
         state = State.WALK;
     }

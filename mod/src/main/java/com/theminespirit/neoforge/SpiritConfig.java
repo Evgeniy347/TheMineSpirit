@@ -22,6 +22,11 @@ public final class SpiritConfig {
     public static final int DEFAULT_BUILD_MAKE_WAY_RADIUS = 6;
     public static final int DEFAULT_FOLLOW_PICKUP_RADIUS = 4;
     public static final int DEFAULT_COMPANION_SEARCH_RADIUS = 64;
+    public static final int DEFAULT_SURVEY_RADIUS = 2;
+    public static final int DEFAULT_PARTY_RADIUS = 32;
+    public static final int DEFAULT_NEAR_RADIUS = 8;
+    public static final int DEFAULT_NAV_TICKET_RADIUS_CHUNKS = 1;
+    public static final int DEFAULT_RESCUE_REACH_RADIUS = 2;
 
     private static final ModConfigSpec SPEC;
     private static final ModConfigSpec.IntValue CHUNK_LOADING_RADIUS;
@@ -46,6 +51,11 @@ public final class SpiritConfig {
     private static final ModConfigSpec.IntValue BUILD_MAKE_WAY_RADIUS;
     private static final ModConfigSpec.IntValue FOLLOW_PICKUP_RADIUS;
     private static final ModConfigSpec.IntValue COMPANION_SEARCH_RADIUS;
+    private static final ModConfigSpec.IntValue SURVEY_RADIUS;
+    private static final ModConfigSpec.IntValue PARTY_RADIUS;
+    private static final ModConfigSpec.IntValue NEAR_RADIUS;
+    private static final ModConfigSpec.IntValue NAV_TICKET_RADIUS_CHUNKS;
+    private static final ModConfigSpec.IntValue RESCUE_REACH_RADIUS;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -143,6 +153,26 @@ public final class SpiritConfig {
                         "Радиус поиска соседних духов при сопровождении, в блоках.",
                         "Шире — дороже поиск, но спутники дальше не теряются.")
                 .defineInRange("companionSearchRadius", DEFAULT_COMPANION_SEARCH_RADIUS, 1, 256);
+        SURVEY_RADIUS = builder.comment(
+                        "Радиус осмотра вокруг клетки при разведке, в блоках.",
+                        "Шире — осмотр дольше и дороже по тикам.")
+                .defineInRange("surveyRadius", DEFAULT_SURVEY_RADIUS, 1, 8);
+        PARTY_RADIUS = builder.comment(
+                        "Радиус, в котором дух-разведчик ищет отряд, в блоках.",
+                        "Шире — отряд не теряется, но поиск дороже.")
+                .defineInRange("partyRadius", DEFAULT_PARTY_RADIUS, 1, 128);
+        NEAR_RADIUS = builder.comment(
+                        "Радиус, с какого места дух считает, что уже пришёл к блоку, в блоках.",
+                        "Шире — дух «доходит» до цели издалека и не касается нужного блока.")
+                .defineInRange("nearRadius", DEFAULT_NEAR_RADIUS, 1, 16);
+        NAV_TICKET_RADIUS_CHUNKS = builder.comment(
+                        "Радиус чанков, которые навигация держит тикетами вокруг похода.",
+                        "Шире — больше чанков нагружает сервер.")
+                .defineInRange("navTicketRadiusChunks", DEFAULT_NAV_TICKET_RADIUS_CHUNKS, 0, 8);
+        RESCUE_REACH_RADIUS = builder.comment(
+                        "Радиус, в котором дух проверяет досягаемость запертого, в блоках.",
+                        "Шире — спасение находится дальше от запертого.")
+                .defineInRange("rescueReachRadius", DEFAULT_RESCUE_REACH_RADIUS, 1, 8);
         builder.pop();
         SPEC = builder.build();
     }
@@ -236,6 +266,26 @@ public final class SpiritConfig {
 
     public static int companionSearchRadius() {
         return loaded(COMPANION_SEARCH_RADIUS, DEFAULT_COMPANION_SEARCH_RADIUS);
+    }
+
+    public static int surveyRadius() {
+        return loaded(SURVEY_RADIUS, DEFAULT_SURVEY_RADIUS);
+    }
+
+    public static int partyRadius() {
+        return loaded(PARTY_RADIUS, DEFAULT_PARTY_RADIUS);
+    }
+
+    public static int nearRadius() {
+        return loaded(NEAR_RADIUS, DEFAULT_NEAR_RADIUS);
+    }
+
+    public static int navTicketRadiusChunks() {
+        return loaded(NAV_TICKET_RADIUS_CHUNKS, DEFAULT_NAV_TICKET_RADIUS_CHUNKS);
+    }
+
+    public static int rescueReachRadius() {
+        return loaded(RESCUE_REACH_RADIUS, DEFAULT_RESCUE_REACH_RADIUS);
     }
 
     public static int moreCountMax() {
