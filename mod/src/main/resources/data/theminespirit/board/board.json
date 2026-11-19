@@ -221,7 +221,9 @@
     "craterFillRadius": 1,
     "demolitionRadius": 4,
     "demolitionHeight": 2,
-    "demolitionBatch": 48
+    "demolitionBatch": 48,
+    "fuelBatch": 8,
+    "buildBatch": 16
   },
   "facts": {
     "animalRadius": 48,

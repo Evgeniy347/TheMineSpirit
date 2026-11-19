@@ -32,7 +32,9 @@ public record PlanTuning(
         int craterFillRadius,
         int demolitionRadius,
         int demolitionHeight,
-        int demolitionBatch) {
+        int demolitionBatch,
+        int fuelBatch,
+        int buildBatch) {
     private static final Set<String> FIELDS = Set.of(
             "mineFloorTake",
             "leftOreRadius",
@@ -59,9 +61,11 @@ public record PlanTuning(
             "craterFillRadius",
             "demolitionRadius",
             "demolitionHeight",
-            "demolitionBatch");
+            "demolitionBatch",
+            "fuelBatch",
+            "buildBatch");
     private static final PlanTuning DEFAULTS =
-            new PlanTuning(32, 4, 5, 3, 8, 4, 4, 4, 2, 4, 16, 4, 8, 16, 4, 3, 3, 16, 13, 8, 4, 8, 1, 4, 2, 48);
+            new PlanTuning(32, 4, 5, 3, 8, 4, 4, 4, 2, 4, 16, 4, 8, 16, 4, 3, 3, 16, 13, 8, 4, 8, 1, 4, 2, 48, 8, 16);
 
     public PlanTuning {
         requirePositive(mineFloorTake, "mineFloorTake");
@@ -90,6 +94,8 @@ public record PlanTuning(
         requirePositive(demolitionRadius, "demolitionRadius");
         requirePositive(demolitionHeight, "demolitionHeight");
         requirePositive(demolitionBatch, "demolitionBatch");
+        requirePositive(fuelBatch, "fuelBatch");
+        requirePositive(buildBatch, "buildBatch");
     }
 
     static PlanTuning defaults() {
@@ -132,7 +138,9 @@ public record PlanTuning(
                 integer(node, "craterFillRadius", origin),
                 integer(node, "demolitionRadius", origin),
                 integer(node, "demolitionHeight", origin),
-                integer(node, "demolitionBatch", origin));
+                integer(node, "demolitionBatch", origin),
+                integer(node, "fuelBatch", origin),
+                integer(node, "buildBatch", origin));
     }
 
     private static int integer(JsonNode node, String field, String origin) {

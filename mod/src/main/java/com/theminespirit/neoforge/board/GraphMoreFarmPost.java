@@ -17,8 +17,6 @@ import net.minecraft.world.level.block.state.BlockState;
 
 final class GraphMoreFarmPost {
     private static final String MORE5_FUEL = "#more5_fuel";
-    private static final int FUEL_BATCH = 8;
-    private static final int BUILD_BATCH = 16;
     private static final int STATION_SCAN_DOWN = 3;
     private static final int STATION_SCAN_UP = 2;
     private static final Set<String> KEYS = Set.of(
@@ -67,8 +65,8 @@ final class GraphMoreFarmPost {
                 ticket,
                 BoardCase.ACTIVITY_SMELT,
                 TicketTarget.at(furnace.orElseThrow())
-                        .withSupply(item, FUEL_BATCH)
-                        .withCount(FUEL_BATCH),
+                        .withSupply(item, BoardConfig.current().plans().fuelBatch())
+                        .withCount(BoardConfig.current().plans().fuelBatch()),
                 Map.of(item, 1));
         return true;
     }
@@ -172,7 +170,11 @@ final class GraphMoreFarmPost {
             if (have >= entry.getValue().target()) {
                 continue;
             }
-            int count = Math.max(1, Math.min(entry.getValue().target() - have, BUILD_BATCH));
+            int count = Math.max(
+                    1,
+                    Math.min(
+                            entry.getValue().target() - have,
+                            BoardConfig.current().plans().buildBatch()));
             post.gather(ticket.id(), ticket.id(), ticket.task().priority(), item, count, post.craftPoint());
             return true;
         }

@@ -27,6 +27,7 @@ class DesignNumbersGuardTests {
             "neoforge/board/MoreInputs.java",
             "neoforge/board/StageWorldFacts.java",
             "neoforge/board/GraphTargets.java",
+            "neoforge/board/GraphMoreFarmPost.java",
             "neoforge/board/SettlementWood.java",
             "neoforge/board/More5World.java",
             "neoforge/board/GroundProbe.java",
