@@ -6,7 +6,6 @@ import com.theminespirit.core.board.graph.api.HerdCap;
 import com.theminespirit.core.inventory.api.JsonResource;
 import com.theminespirit.core.reload.api.TableSlot;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,10 +36,10 @@ public record SupplyGraph(
     public static final String RESOURCE = "data/theminespirit/board/graph.json";
     public static final String RECIPES = "data/theminespirit/board/graph-recipes.json";
     private static final TableSlot<SupplyGraph> SOURCE = new TableSlot<>(SupplyGraph::loadDefault);
-    private static final String BASE = "base";
-    private static final String STAGE = "stage";
-    private static final String KIT = "kit";
-    private static final String WAYS = "ways";
+    static final String BASE = "base";
+    static final String STAGE = "stage";
+    static final String KIT = "kit";
+    static final String WAYS = "ways";
 
     public record Item(String id, int xmin, double k, int base, int stage, boolean perSpirit) {}
 
@@ -162,8 +161,8 @@ public record SupplyGraph(
                                 entry.getValue().path(BASE).asInt(),
                                 entry.getValue().path(STAGE).asInt(1),
                                 entry.getValue().path("perSpirit").asBoolean(false))));
-        Map<String, Building> buildings = buildings(root);
-        List<Way> ways = ways(root);
+        Map<String, Building> buildings = SupplyGraphParser.buildings(root);
+        List<Way> ways = SupplyGraphParser.ways(root);
         List<Edge> edges = new ArrayList<>();
         for (JsonNode node : root.path("edges")) {
             edges.add(new Edge(
@@ -187,7 +186,7 @@ public record SupplyGraph(
                 tiers,
                 new Kit(
                         kitTiers,
-                        stageTiers(root.path(KIT)),
+                        SupplyGraphParser.stageTiers(root.path(KIT)),
                         root.path(KIT).path(BASE).asInt(),
                         root.path(KIT)
                                 .path("secondaryBase")
@@ -200,92 +199,15 @@ public record SupplyGraph(
                 buildings,
                 ways,
                 edges,
-                unimplemented(root),
+                SupplyGraphParser.unimplemented(root),
                 GraphEvent.withRepairs(GraphEvent.parse(root), buildings),
-                groups(root),
-                triggers(root),
+                SupplyGraphParser.groups(root),
+                SupplyGraphParser.triggers(root),
                 HerdCaps.parse(root, origin),
                 root.path("buildStartShare").asDouble(1.0),
                 GraphCosts.parse(root));
         graph.validate(origin);
         return graph;
-    }
-
-    private static Map<String, Building> buildings(JsonNode root) {
-        Map<String, Building> buildings = new LinkedHashMap<>();
-        root.path("buildings").properties().forEach(entry -> {
-            Map<String, Integer> materials = new LinkedHashMap<>();
-            entry.getValue()
-                    .path("materials")
-                    .properties()
-                    .forEach(
-                            item -> materials.put(item.getKey(), item.getValue().asInt()));
-            buildings.put(
-                    entry.getKey(),
-                    new Building(
-                            entry.getKey(),
-                            entry.getValue().path("name").asText(""),
-                            BoardCase.valueOf(entry.getValue().path("case").asText()),
-                            entry.getValue().path(STAGE).asInt(1),
-                            entry.getValue().path(BASE).asInt(),
-                            text(entry.getValue(), "tool"),
-                            materials,
-                            texts(entry.getValue().path("requires")),
-                            texts(entry.getValue().path("advice")),
-                            entry.getValue().path("optional").asBoolean(false)));
-        });
-        return buildings;
-    }
-
-    private static List<Way> ways(JsonNode root) {
-        List<Way> ways = new ArrayList<>();
-        for (JsonNode node : root.path(WAYS)) {
-            Map<String, Integer> consumes = new LinkedHashMap<>();
-            node.path("consumes")
-                    .properties()
-                    .forEach(entry ->
-                            consumes.put(entry.getKey(), entry.getValue().asInt()));
-            ways.add(new Way(
-                    node.path("id").asText(),
-                    BoardCase.valueOf(node.path("case").asText()),
-                    node.path("makes").asText(),
-                    node.path("yield").asInt(1),
-                    node.path("weight").asDouble(1.0),
-                    consumes,
-                    text(node, "tool"),
-                    text(node, "tier"),
-                    text(node, "building"),
-                    text(node, "world"),
-                    GraphEvent.counts(node.path("needs"))));
-        }
-        return ways;
-    }
-
-    private static Map<Integer, Map<String, String>> stageTiers(JsonNode kit) {
-        Map<Integer, Map<String, String>> stages = new LinkedHashMap<>();
-        kit.path("stageTiers").properties().forEach(entry -> {
-            Map<String, String> tiers = new LinkedHashMap<>();
-            entry.getValue()
-                    .properties()
-                    .forEach(tier -> tiers.put(tier.getKey(), tier.getValue().asText()));
-            stages.put(Integer.parseInt(entry.getKey()), tiers);
-        });
-        return stages;
-    }
-
-    private static Map<String, List<String>> groups(JsonNode root) {
-        Map<String, List<String>> groups = new LinkedHashMap<>();
-        root.path("groups").properties().forEach(entry -> groups.put(entry.getKey(), texts(entry.getValue())));
-        return groups;
-    }
-
-    private static List<Trigger> triggers(JsonNode root) {
-        List<Trigger> triggers = new ArrayList<>();
-        for (JsonNode node : root.path("triggers")) {
-            triggers.add(
-                    new Trigger(node.path("have").asText(), node.path("build").asText()));
-        }
-        return triggers;
     }
 
     public List<String> members(String node) {
@@ -294,23 +216,6 @@ public record SupplyGraph(
 
     public boolean isGroup(String node) {
         return groups.containsKey(node);
-    }
-
-    private static Set<String> unimplemented(JsonNode root) {
-        Set<String> ids = new HashSet<>();
-        for (String section : List.of("items", "buildings")) {
-            root.path(section).properties().forEach(entry -> {
-                if (!entry.getValue().path("implemented").asBoolean(true)) {
-                    ids.add(entry.getKey());
-                }
-            });
-        }
-        for (JsonNode node : root.path(WAYS)) {
-            if (!node.path("implemented").asBoolean(true)) {
-                ids.add(node.path("id").asText());
-            }
-        }
-        return ids;
     }
 
     public boolean implemented(String id) {
@@ -369,16 +274,5 @@ public record SupplyGraph(
             }
         }
         GraphChecks.requireKnownEdges(this, origin);
-    }
-
-    private static List<String> texts(JsonNode node) {
-        List<String> values = new ArrayList<>();
-        node.forEach(value -> values.add(value.asText()));
-        return values;
-    }
-
-    private static @Nullable String text(JsonNode node, String field) {
-        JsonNode value = node.get(field);
-        return value == null || value.isNull() ? null : value.asText();
     }
 }

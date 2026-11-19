@@ -9,7 +9,6 @@ core/board/TicketPlansTests.java	1232
 core/board/graph/GraphPlanner.java	483
 core/board/graph/GraphPlannerTests.java	919
 core/board/graph/RecipeImport.java	555
-core/board/graph/SupplyGraph.java	384
 core/building/BuildPlanner.java	838
 core/building/FillScenarioTests.java	323
 core/building/PresetLibraryTests.java	431
