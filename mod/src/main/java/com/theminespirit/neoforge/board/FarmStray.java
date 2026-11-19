@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphSiteFacts;
 import com.theminespirit.core.observation.BlockCoord;
@@ -18,7 +19,6 @@ import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 final class FarmStray {
-    private static final int RADIUS = 16;
     private static final int BELOW = 2;
     private static final int ABOVE = 2;
     private static final String BUILDER = "farm";
@@ -28,8 +28,12 @@ final class FarmStray {
     static List<BlockCoord> cells(ServerLevel level, StageSite site, TownPlan plan) {
         BlockCoord anchor = site.anchor();
         Map<String, BlockCoord> found = new LinkedHashMap<>();
-        for (int dx = -RADIUS; dx <= RADIUS; dx++) {
-            for (int dz = -RADIUS; dz <= RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().farmScanRadius();
+                dx <= BoardConfig.current().facts().farmScanRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().farmScanRadius();
+                    dz <= BoardConfig.current().facts().farmScanRadius();
+                    dz++) {
                 int x = anchor.x() + dx;
                 int z = anchor.z() + dz;
                 if (inside(plan.placements(), x, z)) {

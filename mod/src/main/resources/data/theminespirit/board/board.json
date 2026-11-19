@@ -240,6 +240,7 @@
     "stationRadius": 8,
     "fieldRadius": 24,
     "conflictRadius": 4,
-    "threatRadius": 16
+    "threatRadius": 16,
+    "farmScanRadius": 16
   }
 }

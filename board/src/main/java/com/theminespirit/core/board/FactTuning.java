@@ -28,7 +28,8 @@ public record FactTuning(
         int stationRadius,
         int fieldRadius,
         int conflictRadius,
-        int threatRadius) {
+        int threatRadius,
+        int farmScanRadius) {
     private static final Set<String> FIELDS = Set.of(
             "animalRadius",
             "penRadius",
@@ -51,9 +52,10 @@ public record FactTuning(
             "stationRadius",
             "fieldRadius",
             "conflictRadius",
-            "threatRadius");
+            "threatRadius",
+            "farmScanRadius");
     private static final FactTuning DEFAULTS =
-            new FactTuning(48, 12, 16, 48, 20, 3, 8, 8, 16, 24, 24, 4, 32, 48, 16, 8, 32, 24, 8, 24, 4, 16);
+            new FactTuning(48, 12, 16, 48, 20, 3, 8, 8, 16, 24, 24, 4, 32, 48, 16, 8, 32, 24, 8, 24, 4, 16, 16);
 
     public FactTuning {
         requirePositive(animalRadius, "animalRadius");
@@ -78,6 +80,7 @@ public record FactTuning(
         requirePositive(fieldRadius, "fieldRadius");
         requirePositive(conflictRadius, "conflictRadius");
         requirePositive(threatRadius, "threatRadius");
+        requirePositive(farmScanRadius, "farmScanRadius");
     }
 
     static FactTuning defaults() {
@@ -116,7 +119,8 @@ public record FactTuning(
                 integer(node, "stationRadius", origin),
                 integer(node, "fieldRadius", origin),
                 integer(node, "conflictRadius", origin),
-                integer(node, "threatRadius", origin));
+                integer(node, "threatRadius", origin),
+                integer(node, "farmScanRadius", origin));
     }
 
     private static int integer(JsonNode node, String field, String origin) {

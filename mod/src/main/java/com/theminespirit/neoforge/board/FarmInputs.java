@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.graph.FarmRules;
 import com.theminespirit.core.board.graph.GraphEvents;
 import com.theminespirit.core.board.graph.GraphState;
@@ -28,7 +29,6 @@ import net.minecraft.world.phys.AABB;
 import org.jspecify.annotations.Nullable;
 
 final class FarmInputs {
-    private static final int RADIUS = 16;
     private static final int BELOW = 2;
     private static final int ABOVE = 2;
 
@@ -118,8 +118,12 @@ final class FarmInputs {
         int ready = 0;
         int dry = 0;
         int empty = 0;
-        for (int dx = -RADIUS; dx <= RADIUS; dx++) {
-            for (int dz = -RADIUS; dz <= RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().farmScanRadius();
+                dx <= BoardConfig.current().facts().farmScanRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().farmScanRadius();
+                    dz <= BoardConfig.current().facts().farmScanRadius();
+                    dz++) {
                 for (int dy = -BELOW; dy <= ABOVE; dy++) {
                     BlockPos at = new BlockPos(home.x() + dx, home.y() + dy, home.z() + dz);
                     if (!level.isLoaded(at)) {
@@ -154,7 +158,8 @@ final class FarmInputs {
     }
 
     private static AABB box(BlockCoord home) {
-        return new AABB(new BlockPos(home.x(), home.y(), home.z())).inflate(RADIUS);
+        return new AABB(new BlockPos(home.x(), home.y(), home.z()))
+                .inflate(BoardConfig.current().facts().farmScanRadius());
     }
 
     private static BlockPos pos(BlockCoord position) {
