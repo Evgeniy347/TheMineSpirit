@@ -37,14 +37,6 @@ public final class PlotCellStructure {
         return structure(planned, mark);
     }
 
-    public static @Nullable String plannedId(ServerLevel level, BlockPos pos) {
-        StageSite site = site(level);
-        if (site == null) {
-            return null;
-        }
-        return plan(site).blocks().get(new BlockCoord(pos.getX(), pos.getY(), pos.getZ()));
-    }
-
     static boolean plannedChest(ServerLevel level, BlockCoord cell) {
         StageSite site = site(level);
         if (site == null) {

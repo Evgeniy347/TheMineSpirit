@@ -80,8 +80,7 @@ final class ProtectionDecide {
             return false;
         }
         PlacedBlocksData placed = PlacedBlocksData.get(server);
-        boolean marked = placed.isMarked(pos) || placed.isSpiritMarked(pos);
-        return PlotProtection.treeObstacle(true, marked, PlotCellStructure.plannedId(server, pos));
+        return PlotProtection.treeObstacle(true, placed.isMarked(pos) || placed.isSpiritMarked(pos));
     }
 
     private PlotOutcome plotCheck(Request request, Level level, BlockCoord coord) {

@@ -8,31 +8,24 @@ import org.junit.jupiter.api.Test;
 class PlotTreeProtectionTests {
 
     @Test
-    void treeObstacle_GrownTreeOnPlannedSaplingCell_IsObstacle() {
+    void treeObstacle_UnmarkedTrunk_IsObstacle() {
         assertTrue(
-                PlotProtection.treeObstacle(true, false, "minecraft:jungle_sapling"),
-                "Выросшее дерево на месте саженца — помеха плану: план ждёт саженец, а ствол срубают "
-                        + "и сажают саженец заново");
-    }
-
-    @Test
-    void treeObstacle_PlannedLogWall_IsNotObstacle() {
-        assertFalse(
-                PlotProtection.treeObstacle(true, false, "minecraft:jungle_log"),
-                "Бревно, которое держит стена по плану, деревом-помехой не считается: иначе рубка снимает постройку");
+                PlotProtection.treeObstacle(true, false),
+                "Природный ствол — помеха плану, а не его блок: его рубят в любом месте поселения и "
+                        + "сажают саженец заново");
     }
 
     @Test
     void treeObstacle_MarkedTrunk_IsNotObstacle() {
         assertFalse(
-                PlotProtection.treeObstacle(true, true, null),
+                PlotProtection.treeObstacle(true, true),
                 "Ствол, поставленный игроком или духом, — постройка, а не природное дерево: защита его не отдаёт");
     }
 
     @Test
-    void treeObstacle_NaturalTrunkOutsidePlan_IsObstacle() {
-        assertTrue(
-                PlotProtection.treeObstacle(true, false, null),
-                "Природное дерево вне плана рубится всегда: план деревья не защищает");
+    void treeObstacle_NotTreePart_IsNotObstacle() {
+        assertFalse(
+                PlotProtection.treeObstacle(false, false),
+                "Листва и прочие блоки не дерево-помеха: правило деревьев их не касается");
     }
 }
