@@ -34,7 +34,8 @@ public record FactTuning(
         int lifeScanRadius,
         int nearbyPlayerRadius,
         int dropScanRadius,
-        int areaScanRadius) {
+        int areaScanRadius,
+        int stationSearchRadius) {
     private static final Set<String> FIELDS = Set.of(
             "animalRadius",
             "penRadius",
@@ -63,9 +64,11 @@ public record FactTuning(
             "lifeScanRadius",
             "nearbyPlayerRadius",
             "dropScanRadius",
-            "areaScanRadius");
+            "areaScanRadius",
+            "stationSearchRadius");
     private static final FactTuning DEFAULTS = new FactTuning(
-            48, 12, 16, 48, 20, 3, 8, 8, 16, 24, 24, 4, 32, 48, 16, 8, 32, 24, 8, 24, 4, 16, 16, 32, 16, 16, 24, 16);
+            48, 12, 16, 48, 20, 3, 8, 8, 16, 24, 24, 4, 32, 48, 16, 8, 32, 24, 8, 24, 4, 16, 16, 32, 16, 16, 24, 16,
+            12);
 
     public FactTuning {
         requirePositive(animalRadius, "animalRadius");
@@ -96,6 +99,7 @@ public record FactTuning(
         requirePositive(nearbyPlayerRadius, "nearbyPlayerRadius");
         requirePositive(dropScanRadius, "dropScanRadius");
         requirePositive(areaScanRadius, "areaScanRadius");
+        requirePositive(stationSearchRadius, "stationSearchRadius");
     }
 
     static FactTuning defaults() {
@@ -140,7 +144,8 @@ public record FactTuning(
                 integer(node, "lifeScanRadius", origin),
                 integer(node, "nearbyPlayerRadius", origin),
                 integer(node, "dropScanRadius", origin),
-                integer(node, "areaScanRadius", origin));
+                integer(node, "areaScanRadius", origin),
+                integer(node, "stationSearchRadius", origin));
     }
 
     private static int integer(JsonNode node, String field, String origin) {

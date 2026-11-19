@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphPlan;
@@ -18,7 +19,6 @@ final class GraphMoreFarmPost {
     private static final String MORE5_FUEL = "#more5_fuel";
     private static final int FUEL_BATCH = 8;
     private static final int BUILD_BATCH = 16;
-    private static final int STATION_SCAN_RADIUS = 12;
     private static final int STATION_SCAN_DOWN = 3;
     private static final int STATION_SCAN_UP = 2;
     private static final Set<String> KEYS = Set.of(
@@ -85,8 +85,12 @@ final class GraphMoreFarmPost {
         BlockCoord yard = post.scan.stage().workYard();
         BlockCoord best = null;
         long bestDistance = Long.MAX_VALUE;
-        for (int dx = -STATION_SCAN_RADIUS; dx <= STATION_SCAN_RADIUS; dx++) {
-            for (int dz = -STATION_SCAN_RADIUS; dz <= STATION_SCAN_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().stationSearchRadius();
+                dx <= BoardConfig.current().facts().stationSearchRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().stationSearchRadius();
+                    dz <= BoardConfig.current().facts().stationSearchRadius();
+                    dz++) {
                 for (int dy = -STATION_SCAN_DOWN; dy <= STATION_SCAN_UP; dy++) {
                     BlockPos at = new BlockPos(yard.x() + dx, yard.y() + dy, yard.z() + dz);
                     if (!post.level.isLoaded(at)) {
@@ -117,8 +121,12 @@ final class GraphMoreFarmPost {
     }
 
     private static boolean craftingTable(GraphPost post, BlockCoord yard) {
-        for (int dx = -STATION_SCAN_RADIUS; dx <= STATION_SCAN_RADIUS; dx++) {
-            for (int dz = -STATION_SCAN_RADIUS; dz <= STATION_SCAN_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().stationSearchRadius();
+                dx <= BoardConfig.current().facts().stationSearchRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().stationSearchRadius();
+                    dz <= BoardConfig.current().facts().stationSearchRadius();
+                    dz++) {
                 for (int dy = -STATION_SCAN_DOWN; dy <= STATION_SCAN_UP; dy++) {
                     BlockPos at = new BlockPos(yard.x() + dx, yard.y() + dy, yard.z() + dz);
                     if (post.level.isLoaded(at) && post.level.getBlockState(at).is(Blocks.CRAFTING_TABLE)) {

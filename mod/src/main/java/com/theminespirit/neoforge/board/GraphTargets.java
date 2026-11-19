@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.MineDescentBottom;
 import com.theminespirit.core.board.WorkStand;
 import com.theminespirit.core.board.graph.FailureTargets;
@@ -18,7 +19,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CraftingTableBlock;
 
 public final class GraphTargets {
-    private static final int STATION_RADIUS = 12;
     private static final int STATION_HEIGHT = 1;
     private static final int NO_GROUND = Integer.MIN_VALUE;
 
@@ -126,8 +126,12 @@ public final class GraphTargets {
     private static Optional<BlockCoord> find(ServerLevel level, BlockCoord center, Class<? extends Block> wanted) {
         BlockCoord best = null;
         long bestDistance = Long.MAX_VALUE;
-        for (int dx = -STATION_RADIUS; dx <= STATION_RADIUS; dx++) {
-            for (int dz = -STATION_RADIUS; dz <= STATION_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().stationSearchRadius();
+                dx <= BoardConfig.current().facts().stationSearchRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().stationSearchRadius();
+                    dz <= BoardConfig.current().facts().stationSearchRadius();
+                    dz++) {
                 for (int dy = -STATION_HEIGHT; dy <= STATION_HEIGHT; dy++) {
                     BlockPos pos = new BlockPos(center.x() + dx, center.y() + dy, center.z() + dz);
                     if (!level.isLoaded(pos)) {

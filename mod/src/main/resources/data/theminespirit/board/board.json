@@ -246,6 +246,7 @@
     "lifeScanRadius": 16,
     "nearbyPlayerRadius": 16,
     "dropScanRadius": 24,
-    "areaScanRadius": 16
+    "areaScanRadius": 16,
+    "stationSearchRadius": 12
   }
 }
