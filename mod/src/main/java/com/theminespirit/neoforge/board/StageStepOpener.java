@@ -136,7 +136,7 @@ final class StageStepOpener {
         if (decision == StageAudit.Decision.OPEN) {
             return false;
         }
-        if (StageAudit.unbuilt(missing, gap.total(), BoardTuning.rebuildPercent())) {
+        if (StageAudit.unbuilt(gap.structuralShortage(), gap.total(), BoardTuning.rebuildPercent())) {
             PlotTrace.reportGap(level, caseValue, step.target(), step.wood(), missing, gap.total(), true);
             StageClose.reopen(service, caseValue, parts);
             return false;

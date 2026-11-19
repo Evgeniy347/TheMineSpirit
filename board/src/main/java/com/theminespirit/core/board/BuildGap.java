@@ -58,10 +58,12 @@ public final class BuildGap {
             List<String> missing,
             Set<BlockCoord> cells,
             Set<BlockCoord> unknownCells,
-            int unknown) {
+            int unknown,
+            Set<BlockCoord> lifted) {
         public Gap {
             cells = Set.copyOf(cells);
             unknownCells = Set.copyOf(unknownCells);
+            lifted = Set.copyOf(lifted);
             if (unknown < 0) {
                 throw new IllegalArgumentException(
                         "Неизвестных клеток " + unknown + ": в незагруженном чанке их не меньше нуля");
@@ -82,6 +84,10 @@ public final class BuildGap {
 
         public int shortage() {
             return total() - done();
+        }
+
+        public int structuralShortage() {
+            return shortage() - lifted.size();
         }
     }
 
@@ -142,6 +148,7 @@ public final class BuildGap {
         private final List<String> missing = new ArrayList<>();
         private final Set<BlockCoord> cells = new LinkedHashSet<>();
         private final Set<BlockCoord> unknownCells = new LinkedHashSet<>();
+        private final Set<BlockCoord> lifted = new LinkedHashSet<>();
         private int unknown;
 
         private Accumulator(String wood, Probe probe, Schemes schemes) {
@@ -188,10 +195,18 @@ public final class BuildGap {
             }
             String item = bare(WoodSpecies.swap(SchematicBlocks.itemOf(block), wood));
             String standing = probe.block(at);
-            boolean done = SchematicActions.isWalkway(block)
+            boolean walkway = SchematicActions.isWalkway(block);
+            boolean done = walkway
                     ? SchematicGround.walkwayPlaced(block, probe.rawBlock(at))
                     : BlockMatch.matches(standing, item);
+            if (!done && walkway && SchematicActions.isWalkway(probe.rawBlock(below(at)))) {
+                lifted.add(at);
+            }
             count(at, item, block, () -> done, " ожидается " + item + ", стоит " + standing);
+        }
+
+        private static BlockCoord below(BlockCoord at) {
+            return new BlockCoord(at.x(), at.y() - 1, at.z());
         }
 
         private void mine(MineLayout layout) {
@@ -246,7 +261,8 @@ public final class BuildGap {
                     List.copyOf(missing),
                     Set.copyOf(cells),
                     Set.copyOf(unknownCells),
-                    unknown);
+                    unknown,
+                    Set.copyOf(lifted));
         }
     }
 

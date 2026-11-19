@@ -3,6 +3,7 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.building.BlockMatch;
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.repair.RepairData;
 import java.util.ArrayList;
@@ -94,6 +95,10 @@ public final class RepairAudit {
             if (same(wanted, found) || soft.contains(wanted)) {
                 continue;
             }
+            if (SchematicActions.isWalkway(wanted) && SchematicActions.isWalkway(world.blockAt(below(cell)))) {
+                fixes.add(fix(cell, wanted, found, world, rules, firstSeen, now));
+                continue;
+            }
             missing++;
             fixes.add(fix(cell, wanted, found, world, rules, firstSeen, now));
         }
@@ -173,6 +178,10 @@ public final class RepairAudit {
 
     private static boolean same(String wanted, String found) {
         return wanted.equals(found) || BlockMatch.matches(found, wanted);
+    }
+
+    private static BlockCoord below(BlockCoord cell) {
+        return new BlockCoord(cell.x(), cell.y() - 1, cell.z());
     }
 
     private static String id(String block) {

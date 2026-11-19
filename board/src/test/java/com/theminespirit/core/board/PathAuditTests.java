@@ -1,6 +1,8 @@
 package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.MineLayout;
@@ -51,6 +53,96 @@ class PathAuditTests {
                 pathColumns().size(),
                 gap.placed().getOrDefault("dirt", 0),
                 "Все клетки тропы в поверхности — это готовая улица: " + gap.missingCells());
+    }
+
+    @Test
+    void streets_AllSunkPaths_DoNotCountAsUnbuilt() {
+        ScriptCall call = new ScriptCall(
+                "build_schematic", Map.of("file", "street5_straight", "x", FEET.x(), "y", FEET.y(), "z", FEET.z()));
+
+        BuildGap.Gap gap = BuildGap.trace(call, "oak", new AllSunkPathProbe(), new PresetSchemes());
+
+        assertEquals(10, gap.done(), "Гравийные края на месте — готова только часть улицы: " + gap.missing());
+        assertEquals(
+                15,
+                gap.shortage(),
+                "Все пятнадцать троп утоплены на блок ниже клетки плана — это работа по подъёму: " + gap.missing());
+        assertEquals(15, gap.lifted().size(), "Утопленные тропы в недостаче помечены как подъём: " + gap.lifted());
+        assertEquals(
+                0,
+                gap.structuralShortage(),
+                "За улицей нет ни одной потерянной клетки: вся недостача — перекос троп, а не дыры");
+        assertFalse(
+                StageAudit.unbuilt(gap.structuralShortage(), gap.total(), 50),
+                "Перекос тропы — ремонт, а не разрушение: улицу не перестраивают заново из-за поднятия троп");
+    }
+
+    @Test
+    void streets_EmptyPathCells_StillUnbuilt() {
+        ScriptCall call = new ScriptCall(
+                "build_schematic", Map.of("file", "street5_straight", "x", FEET.x(), "y", FEET.y(), "z", FEET.z()));
+
+        BuildGap.Gap gap = BuildGap.trace(call, "oak", new EmptyPathCellsProbe(), new PresetSchemes());
+
+        assertEquals(15, gap.shortage(), "Пятнадцати троп нет вовсе: " + gap.missing());
+        assertEquals(0, gap.lifted().size(), "Старой тропы ниже клетки нет — поднимать нечего: " + gap.lifted());
+        assertEquals(15, gap.structuralShortage(), "Все пятнадцать троп — настоящая недостача улицы");
+        assertTrue(
+                StageAudit.unbuilt(gap.structuralShortage(), gap.total(), 50),
+                "Пустая клетка тропы без старой тропы ниже — недостроенная улица, её этап переоткрывается");
+    }
+
+    private static final class AllSunkPathProbe implements BuildGap.Probe {
+        @Override
+        public String block(BlockCoord at) {
+            if (at.y() == FEET.y() - 1) {
+                return pathColumns().contains(new BlockCoord(at.x(), 0, at.z()))
+                        ? "minecraft:dirt"
+                        : "minecraft:gravel";
+            }
+            return "minecraft:air";
+        }
+
+        @Override
+        public String rawBlock(BlockCoord at) {
+            if (at.y() == FEET.y() - 2 && pathColumns().contains(new BlockCoord(at.x(), 0, at.z()))) {
+                return "minecraft:" + DIRT_PATH;
+            }
+            if (at.y() == FEET.y() - 1) {
+                return pathColumns().contains(new BlockCoord(at.x(), 0, at.z())) ? "minecraft:air" : "minecraft:gravel";
+            }
+            return "minecraft:stone";
+        }
+
+        @Override
+        public boolean passable(BlockCoord at) {
+            return false;
+        }
+    }
+
+    private static final class EmptyPathCellsProbe implements BuildGap.Probe {
+        @Override
+        public String block(BlockCoord at) {
+            if (at.y() == FEET.y() - 1) {
+                return pathColumns().contains(new BlockCoord(at.x(), 0, at.z()))
+                        ? "minecraft:dirt"
+                        : "minecraft:gravel";
+            }
+            return "minecraft:air";
+        }
+
+        @Override
+        public String rawBlock(BlockCoord at) {
+            if (at.y() == FEET.y() - 1) {
+                return pathColumns().contains(new BlockCoord(at.x(), 0, at.z())) ? "minecraft:air" : "minecraft:gravel";
+            }
+            return "minecraft:stone";
+        }
+
+        @Override
+        public boolean passable(BlockCoord at) {
+            return false;
+        }
     }
 
     private static final class FloatingPathProbe implements BuildGap.Probe {
@@ -132,7 +224,7 @@ class PathAuditTests {
                 .schematic();
         Set<BlockCoord> columns = new HashSet<>();
         for (Schematic.PlacedEntry entry : street.entries(FEET, BuildRotation.NONE)) {
-            if (DIRT_PATH.equals(entry.block())) {
+            if (DIRT_PATH.equals(SchematicBlocks.path(entry.block()))) {
                 columns.add(new BlockCoord(entry.pos().x(), 0, entry.pos().z()));
             }
         }

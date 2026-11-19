@@ -40,7 +40,8 @@ class StageSettleRepairTests {
                 List.of(MISSING + " ожидается oak_fence, стоит air"),
                 Set.of(STANDING, MISSING),
                 Set.of(),
-                0);
+                0,
+                Set.of());
 
         TicketTarget repair = StageSettle.repairTarget(BoardCase.BUILD_FENCE, target, gap);
 

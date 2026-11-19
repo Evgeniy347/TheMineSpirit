@@ -6,7 +6,6 @@ import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
-import com.theminespirit.core.building.SchematicGround;
 import com.theminespirit.core.building.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
@@ -139,13 +138,7 @@ final class SchematicSite {
         boolean block = current.is(wanted.getBlock())
                 || WoodSpecies.sameRole(BlockStates.idOf(current), BlockStates.idOf(wanted))
                 || EarthCover.covers(BlockStates.idOf(current), BlockStates.idOf(wanted));
-        if (block && sameSpecifiedState(current, wanted, entry.state())) {
-            return true;
-        }
-        if (!SchematicActions.isWalkway(entry.block()) || !current.isAir()) {
-            return false;
-        }
-        return SchematicGround.walkwayPlaced(entry.block(), BlockStates.idOf(current));
+        return block && sameSpecifiedState(current, wanted, entry.state());
     }
 
     boolean rightBlockWrongState(Schematic.PlacedEntry entry) {
