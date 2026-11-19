@@ -43,7 +43,8 @@ public final class ToolChoice {
     public enum DigMode {
         NORMAL,
         ESCAPING,
-        ESCAPING_WITH_HELPER
+        ESCAPING_WITH_HELPER,
+        PLANNED
     }
 
     public static Choice best(List<ToolOption> options) {
@@ -68,7 +69,8 @@ public final class ToolChoice {
         return pickaxeBlock
                 && !choice.dropsAllowed()
                 && options.stream().noneMatch(option -> option.itemId().endsWith(ToolsConfig.PICKAXE))
-                && mode != DigMode.ESCAPING;
+                && mode != DigMode.ESCAPING
+                && mode != DigMode.PLANNED;
     }
 
     public static Choice best(List<ToolOption> options, ToolReserve reserve, Collection<String> repairTiers) {

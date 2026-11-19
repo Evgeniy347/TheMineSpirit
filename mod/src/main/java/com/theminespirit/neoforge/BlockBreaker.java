@@ -180,9 +180,11 @@ public final class BlockBreaker {
         boolean pickaxeBlock =
                 targetState.requiresCorrectToolForDrops() && targetState.is(BlockTags.MINEABLE_WITH_PICKAXE);
         boolean helperWithPickaxe = PickaxeCheck.nearby(spirit, 16.0);
-        ToolChoice.DigMode digMode = !escaping
-                ? ToolChoice.DigMode.NORMAL
-                : helperWithPickaxe ? ToolChoice.DigMode.ESCAPING_WITH_HELPER : ToolChoice.DigMode.ESCAPING;
+        ToolChoice.DigMode digMode = intent == Intent.EXCAVATE
+                ? ToolChoice.DigMode.PLANNED
+                : !escaping
+                        ? ToolChoice.DigMode.NORMAL
+                        : helperWithPickaxe ? ToolChoice.DigMode.ESCAPING_WITH_HELPER : ToolChoice.DigMode.ESCAPING;
         if (ToolChoice.refusesHandDig(choice, options, pickaxeBlock, digMode)) {
             return refusals.refused(
                     target,

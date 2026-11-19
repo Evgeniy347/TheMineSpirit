@@ -259,4 +259,25 @@ class ToolChoiceTests {
                 choice.slot(),
                 "Каменная лопата с последним ударом выбирается для работы: камень тратят до поломки, а не берегут");
     }
+
+    @Test
+    void refusesHandDig_PlannedPickaxeBlockWithoutPick_Allows() {
+        Choice hand = new Choice(ToolChoice.HAND, ToolChoice.HAND_SPEED, false);
+
+        assertEquals(
+                false,
+                ToolChoice.refusesHandDig(hand, List.of(), true, ToolChoice.DigMode.PLANNED),
+                "плановый прокоп спуска останавливать нельзя: без кирки руда/сланец режутся руками без дропа, "
+                        + "иначе шахта стоит до кирки, которой у духа может не быть");
+    }
+
+    @Test
+    void refusesHandDig_NormalPickaxeBlockWithoutPick_Refuses() {
+        Choice hand = new Choice(ToolChoice.HAND, ToolChoice.HAND_SPEED, false);
+
+        assertEquals(
+                true,
+                ToolChoice.refusesHandDig(hand, List.of(), true, ToolChoice.DigMode.NORMAL),
+                "вне планового прокопа камень без кирки не копают: дроп теряется, руда портится");
+    }
 }
