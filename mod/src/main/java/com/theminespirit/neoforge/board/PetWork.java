@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.graph.api.HerdCap;
 import com.theminespirit.core.husbandry.PetRules;
 import com.theminespirit.core.husbandry.api.PetKind;
@@ -26,7 +27,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 
 final class PetWork {
-    private static final int RADIUS = 32;
     private static final double REACH_SQR = 9.0;
     private static final int FEEDS_TO_TRUST = 3;
     private static final int BREED_COOLDOWN = 1200;
@@ -211,12 +211,12 @@ final class PetWork {
 
     private static List<Animal> animals(ServerLevel level, BlockCoord home) {
         AABB box = new AABB(
-                home.x() - RADIUS,
-                home.y() - RADIUS,
-                home.z() - RADIUS,
-                home.x() + RADIUS,
-                home.y() + RADIUS,
-                home.z() + RADIUS);
+                home.x() - BoardConfig.current().facts().petWorkRadius(),
+                home.y() - BoardConfig.current().facts().petWorkRadius(),
+                home.z() - BoardConfig.current().facts().petWorkRadius(),
+                home.x() + BoardConfig.current().facts().petWorkRadius(),
+                home.y() + BoardConfig.current().facts().petWorkRadius(),
+                home.z() + BoardConfig.current().facts().petWorkRadius());
         return new ArrayList<>(level.getEntitiesOfClass(Animal.class, box));
     }
 

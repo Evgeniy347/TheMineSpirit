@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.base.NamespacedId;
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.OrchardPlot;
@@ -14,7 +15,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 
 final class TreeCenterLogs {
-    private static final int RADIUS = 16;
     private static final int BELOW = 4;
     private static final int ABOVE = 16;
 
@@ -29,8 +29,12 @@ final class TreeCenterLogs {
     }
 
     static void collect(ServerLevel level, BlockCoord center, Map<String, List<BlockCoord>> logs) {
-        for (int dx = -RADIUS; dx <= RADIUS; dx++) {
-            for (int dz = -RADIUS; dz <= RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().treeCenterRadius();
+                dx <= BoardConfig.current().facts().treeCenterRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().treeCenterRadius();
+                    dz <= BoardConfig.current().facts().treeCenterRadius();
+                    dz++) {
                 for (int dy = -BELOW; dy <= ABOVE; dy++) {
                     BlockPos pos = new BlockPos(center.x() + dx, center.y() + dy, center.z() + dz);
                     if (!level.isLoaded(pos)) {

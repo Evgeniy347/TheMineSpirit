@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.api.FluidKind;
 import com.theminespirit.neoforge.BlockLocator;
@@ -11,7 +12,6 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.block.Blocks;
 
 public final class FluidSources {
-    private static final int RADIUS = 16;
     private static final int SLICES = 16;
 
     private FluidSources() {}
@@ -19,7 +19,10 @@ public final class FluidSources {
     public static Optional<BlockCoord> nearest(ServerLevel level, BlockCoord home, FluidKind fluid) {
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
         BlockLocator.Search search = BlockLocator.search(
-                level, center, RADIUS, Set.of(fluid == FluidKind.WATER ? Blocks.WATER : Blocks.LAVA));
+                level,
+                center,
+                BoardConfig.current().facts().fluidSearchRadius(),
+                Set.of(fluid == FluidKind.WATER ? Blocks.WATER : Blocks.LAVA));
         while (!search.done()) {
             for (BlockPos found : search.step(SLICES)) {
                 if (source(level, found, fluid)) {

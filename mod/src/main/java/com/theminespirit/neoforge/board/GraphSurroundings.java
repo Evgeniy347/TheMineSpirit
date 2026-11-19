@@ -38,7 +38,6 @@ public final class GraphSurroundings {
     static final String TIME_DAY = "time:day";
     static final String TIME_NIGHT = "time:night";
     private static final String TREE_PREFIX = "tree:";
-    private static final int RADIUS = 32;
     private static final int STEP = 1;
     private static final int BELOW = 4;
     private static final int ABOVE = 12;
@@ -122,7 +121,7 @@ public final class GraphSurroundings {
                 level.getGameTime(),
                 () -> blocks(level, home, treeCenters));
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
-        AABB box = new AABB(center).inflate(RADIUS);
+        AABB box = new AABB(center).inflate(BoardConfig.current().facts().surroundingsRadius());
         Set<String> creatures = new HashSet<>();
         Map<String, BlockCoord> nearest = new HashMap<>(scan.nearest());
         marked(level, box, Animal.class, "animals", creatures, nearest, center);
@@ -231,8 +230,12 @@ public final class GraphSurroundings {
         Map<String, Set<String>> tagCache = new HashMap<>();
         Map<String, List<SurroundingTargets.Near>> candidates = new HashMap<>();
         Map<String, List<BlockCoord>> logs = new HashMap<>();
-        for (int dx = -RADIUS; dx <= RADIUS; dx += STEP) {
-            for (int dz = -RADIUS; dz <= RADIUS; dz += STEP) {
+        for (int dx = -BoardConfig.current().facts().surroundingsRadius();
+                dx <= BoardConfig.current().facts().surroundingsRadius();
+                dx += STEP) {
+            for (int dz = -BoardConfig.current().facts().surroundingsRadius();
+                    dz <= BoardConfig.current().facts().surroundingsRadius();
+                    dz += STEP) {
                 for (int dy = -BELOW; dy <= ABOVE; dy++) {
                     BlockPos pos = new BlockPos(home.x() + dx, home.y() + dy, home.z() + dz);
                     if (!level.isLoaded(pos)) {
@@ -282,7 +285,10 @@ public final class GraphSurroundings {
         int dx = center.x() - home.x();
         int dy = center.y() - home.y();
         int dz = center.z() - home.z();
-        return Math.abs(dx) <= RADIUS && Math.abs(dz) <= RADIUS && dy >= -BELOW && dy <= ABOVE;
+        return Math.abs(dx) <= BoardConfig.current().facts().surroundingsRadius()
+                && Math.abs(dz) <= BoardConfig.current().facts().surroundingsRadius()
+                && dy >= -BELOW
+                && dy <= ABOVE;
     }
 
     private static boolean decaying(BlockState state) {

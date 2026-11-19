@@ -43,7 +43,11 @@ public record FactTuning(
         int settlementScanRadius,
         int enemyScanRadius,
         int workPointRadius,
-        int furnaceSearchRadius) {
+        int furnaceSearchRadius,
+        int surroundingsRadius,
+        int petWorkRadius,
+        int fluidSearchRadius,
+        int treeCenterRadius) {
     private static final Set<String> FIELDS = Set.of(
             "animalRadius",
             "penRadius",
@@ -81,10 +85,14 @@ public record FactTuning(
             "settlementScanRadius",
             "enemyScanRadius",
             "workPointRadius",
-            "furnaceSearchRadius");
+            "furnaceSearchRadius",
+            "surroundingsRadius",
+            "petWorkRadius",
+            "fluidSearchRadius",
+            "treeCenterRadius");
     private static final FactTuning DEFAULTS = new FactTuning(
             48, 12, 16, 48, 20, 3, 8, 8, 16, 24, 24, 4, 32, 48, 16, 8, 32, 24, 8, 24, 4, 16, 16, 32, 16, 16, 24, 16, 12,
-            16, 16, 16, 16, 64, 16, 32, 4);
+            16, 16, 16, 16, 64, 16, 32, 4, 32, 32, 16, 16);
 
     public FactTuning {
         requirePositive(animalRadius, "animalRadius");
@@ -124,6 +132,10 @@ public record FactTuning(
         requirePositive(enemyScanRadius, "enemyScanRadius");
         requirePositive(workPointRadius, "workPointRadius");
         requirePositive(furnaceSearchRadius, "furnaceSearchRadius");
+        requirePositive(surroundingsRadius, "surroundingsRadius");
+        requirePositive(petWorkRadius, "petWorkRadius");
+        requirePositive(fluidSearchRadius, "fluidSearchRadius");
+        requirePositive(treeCenterRadius, "treeCenterRadius");
     }
 
     static FactTuning defaults() {
@@ -177,7 +189,11 @@ public record FactTuning(
                 integer(node, "settlementScanRadius", origin),
                 integer(node, "enemyScanRadius", origin),
                 integer(node, "workPointRadius", origin),
-                integer(node, "furnaceSearchRadius", origin));
+                integer(node, "furnaceSearchRadius", origin),
+                integer(node, "surroundingsRadius", origin),
+                integer(node, "petWorkRadius", origin),
+                integer(node, "fluidSearchRadius", origin),
+                integer(node, "treeCenterRadius", origin));
     }
 
     private static int integer(JsonNode node, String field, String origin) {

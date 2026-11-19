@@ -255,6 +255,10 @@
     "settlementScanRadius": 64,
     "enemyScanRadius": 16,
     "workPointRadius": 32,
-    "furnaceSearchRadius": 4
+    "furnaceSearchRadius": 4,
+    "surroundingsRadius": 32,
+    "petWorkRadius": 32,
+    "fluidSearchRadius": 16,
+    "treeCenterRadius": 16
   }
 }
