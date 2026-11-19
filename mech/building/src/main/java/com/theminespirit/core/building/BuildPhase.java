@@ -41,11 +41,7 @@ public final class BuildPhase {
     }
 
     public static int band(int heightAboveBottom) {
-        if (heightAboveBottom < 0) {
-            throw new IllegalArgumentException(
-                    "Высота " + heightAboveBottom + " ниже низа постройки: полоса считается от нижнего слоя схемы");
-        }
-        return heightAboveBottom / BAND_HEIGHT;
+        return Math.max(0, heightAboveBottom) / BAND_HEIGHT;
     }
 
     public static <T> List<T> current(List<T> unfinished, ToIntFunction<T> heightAboveBottom, Predicate<T> rough) {

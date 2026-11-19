@@ -39,6 +39,16 @@ class BuildPlannerTests {
     }
 
     @Test
+    void plan_OrchardGroundLayer_PlansWithoutBelowBottomError() {
+        BuildPlanner.Plan plan = plan("orchard_1", BuildPlanner.Portion.FILL);
+
+        assertTrue(
+                !plan.steps().isEmpty(),
+                "План сада обязан строиться: нижний слой схемы уходит на -1 и раньше валил расчёт высоты полосы, "
+                        + "ремонт сада откатывался на обычную стройку");
+    }
+
+    @Test
     void plan_FillPortion_TakesDecorOnlyOnLastTrip() {
         List<BuildPlanner.Trip> trips = trips(plan("family_house_3", BuildPlanner.Portion.FILL));
         for (BuildPlanner.Trip trip : trips.subList(0, trips.size() - 1)) {

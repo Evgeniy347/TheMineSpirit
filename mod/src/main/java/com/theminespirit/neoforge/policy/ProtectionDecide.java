@@ -55,6 +55,9 @@ final class ProtectionDecide {
             return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, carried.orElseThrow());
         }
         Level level = gate.spirit().level();
+        if (unprotectedTree(level, pos, request.state())) {
+            return new BlockProtection.Allowed();
+        }
         PlotOutcome plot = plotCheck(request, level, coord);
         if (plot.refused() != null) {
             return plot.refused();
@@ -72,20 +75,17 @@ final class ProtectionDecide {
         return decision;
     }
 
+    private static boolean unprotectedTree(Level level, BlockPos pos, BlockState state) {
+        if (!OrchardTrees.treePart(state) || !(level instanceof ServerLevel server)) {
+            return false;
+        }
+        PlacedBlocksData placed = PlacedBlocksData.get(server);
+        boolean marked = placed.isMarked(pos) || placed.isSpiritMarked(pos);
+        return PlotProtection.treeObstacle(true, marked, PlotCellStructure.plannedId(server, pos));
+    }
+
     private PlotOutcome plotCheck(Request request, Level level, BlockCoord coord) {
         BlockPos pos = request.pos();
-        BlockState state = request.state();
-        if (!request.tended() && OrchardTrees.treePart(state) && OrchardTrees.planned(level, coord)) {
-            return new PlotOutcome(
-                    false,
-                    false,
-                    false,
-                    new BlockProtection.Refused(
-                            PolicyId.PROTECTED_ZONE,
-                            "в " + pos.toShortString()
-                                    + " дерево или саженец сада плана: сад — часть плана, его не снимают "
-                                    + "снос, расчистка, выравнивание и фоновая рубка — только задание сада"));
-        }
         String dimension = level.dimension().location().toString();
         boolean inProtectedZone = PolicyConfig.zones().contains(dimension, coord);
         boolean unprotectArea = level instanceof ServerLevel server

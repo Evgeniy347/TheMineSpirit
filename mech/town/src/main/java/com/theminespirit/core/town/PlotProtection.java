@@ -45,6 +45,27 @@ public final class PlotProtection {
 
     private PlotProtection() {}
 
+    public static boolean treeObstacle(boolean treePart, boolean marked, @Nullable String plannedBlock) {
+        if (!treePart || marked) {
+            return false;
+        }
+        if (plannedBlock == null) {
+            return true;
+        }
+        String path = namespacePath(plannedBlock);
+        return !path.endsWith("_log") && !path.endsWith("_wood") && !path.endsWith("_leaves");
+    }
+
+    private static String namespacePath(String blockId) {
+        String path = blockId;
+        int colon = path.indexOf(':');
+        if (colon >= 0) {
+            path = path.substring(colon + 1);
+        }
+        int state = path.indexOf('[');
+        return state < 0 ? path : path.substring(0, state);
+    }
+
     public static Decision check(
             @Nullable StageSite site, BlockCoord cell, Action action, Ground ground, PlanBuilding ownBuilding) {
         return check(site, cell, action, ground, ownBuilding, true);
