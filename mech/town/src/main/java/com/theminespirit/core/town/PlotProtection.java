@@ -1,6 +1,7 @@
 package com.theminespirit.core.town;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.api.PlanBuilding;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 

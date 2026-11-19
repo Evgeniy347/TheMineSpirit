@@ -1,4 +1,4 @@
-package com.theminespirit.core.board.graph;
+package com.theminespirit.core.board.graph.api;
 
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;

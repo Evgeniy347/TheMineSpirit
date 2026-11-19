@@ -1,7 +1,7 @@
 package com.theminespirit.core.intellect;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import com.theminespirit.core.reload.api.TableSlot;
 import java.util.Set;
 import java.util.function.Supplier;

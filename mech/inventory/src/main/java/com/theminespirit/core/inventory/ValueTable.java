@@ -1,6 +1,7 @@
 package com.theminespirit.core.inventory;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.theminespirit.core.inventory.api.JsonResource;
 import com.theminespirit.core.observation.IdFilter;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;

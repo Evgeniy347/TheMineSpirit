@@ -1,12 +1,8 @@
 com.theminespirit.core
 com.theminespirit.core.board
-com.theminespirit.core.board.graph
 com.theminespirit.core.building
 com.theminespirit.core.farming
 com.theminespirit.core.forestry
 com.theminespirit.core.husbandry
-com.theminespirit.core.inventory
 com.theminespirit.core.mining
 com.theminespirit.core.movement
-com.theminespirit.core.town
-com.theminespirit.core.ui

@@ -3,6 +3,7 @@ package com.theminespirit.core.ui;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.rest.BoardListings;
 import com.theminespirit.core.rest.BoardTask;
+import com.theminespirit.core.ui.api.BoardTileGroup;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;

@@ -3,7 +3,7 @@ package com.theminespirit.core.intellect;
 import static com.theminespirit.core.Lookup.present;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import com.theminespirit.core.reload.api.TableSlot;
 import java.util.ArrayList;
 import java.util.EnumMap;

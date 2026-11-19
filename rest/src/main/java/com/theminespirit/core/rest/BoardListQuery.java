@@ -2,7 +2,7 @@ package com.theminespirit.core.rest;
 
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
-import com.theminespirit.core.ui.BoardTileGroup;
+import com.theminespirit.core.ui.api.BoardTileGroup;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;

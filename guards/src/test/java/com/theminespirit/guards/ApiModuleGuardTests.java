@@ -77,7 +77,7 @@ class ApiModuleGuardTests {
             "core/farming/CropKind.java",
             "core/farming/HarvestMethod.java",
             "core/forestry/TreeSpecies.java",
-            "core/inventory/JsonResource.java",
+            "core/inventory/api/JsonResource.java",
             "core/reload/api/TableHolder.java",
             "core/reload/api/TableStatus.java",
             "core/tactics/api/Point.java",

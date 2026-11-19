@@ -8,7 +8,7 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.LiveBoardFixture;
 import com.theminespirit.core.board.StockView;
-import com.theminespirit.core.ui.BoardTileGroup;
+import com.theminespirit.core.ui.api.BoardTileGroup;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;

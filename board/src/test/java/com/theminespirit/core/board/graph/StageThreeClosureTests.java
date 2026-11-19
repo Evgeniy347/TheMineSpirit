@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.graph.GraphState.Built;
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

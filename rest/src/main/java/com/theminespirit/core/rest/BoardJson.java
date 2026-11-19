@@ -2,7 +2,7 @@ package com.theminespirit.core.rest;
 
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
-import com.theminespirit.core.ui.BoardTileGroup;
+import com.theminespirit.core.ui.api.BoardTileGroup;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

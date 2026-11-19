@@ -3,6 +3,7 @@ package com.theminespirit.core.board.graph;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.graph.GraphState.Built;
+import com.theminespirit.core.board.graph.api.HerdCap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

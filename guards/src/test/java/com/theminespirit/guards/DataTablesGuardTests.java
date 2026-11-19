@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.building.PresetLibrary;
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.reload.api.TableDefinition;
 import java.io.IOException;

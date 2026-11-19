@@ -8,7 +8,7 @@ import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SchematicTextParser;
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

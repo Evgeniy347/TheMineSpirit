@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.policy.api.PolicyId;
-import com.theminespirit.core.town.PlanBuilding;
+import com.theminespirit.core.town.api.PlanBuilding;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

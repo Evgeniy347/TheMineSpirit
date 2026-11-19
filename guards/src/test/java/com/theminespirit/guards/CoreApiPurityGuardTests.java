@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 class CoreApiPurityGuardTests {
-    private static final Set<String> OWNERS = Set.of("core/inventory/JsonResource.java");
+    private static final Set<String> OWNERS = Set.of("core/inventory/api/JsonResource.java");
     private static final Pattern PUBLIC_JSON =
             Pattern.compile("(?m)^[ \\t]*public\\s+[^\\n;{]*\\b(?:JsonNode|ObjectNode)\\b");
     private static final String RULE = "Jackson снова в публичной сигнатуре ядра: замена библиотеки или "
@@ -42,7 +42,7 @@ class CoreApiPurityGuardTests {
         assertEquals(
                 List.of(),
                 problems(Map.of(
-                        "core/inventory/JsonResource.java",
+                        "core/inventory/api/JsonResource.java",
                         "    public static JsonNode parse(String json, String origin) {\n")),
                 "Сторож ложно срабатывает: JsonResource — владелец типа дерева, его сигнатуры осознанно работают с JsonNode");
     }

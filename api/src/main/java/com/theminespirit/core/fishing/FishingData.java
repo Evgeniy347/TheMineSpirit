@@ -1,7 +1,7 @@
 package com.theminespirit.core.fishing;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import java.util.Set;
 
 public record FishingData(int minWidth, int minDepth, int workWidth, int workDepth, int bucketCount, int smokerFish) {

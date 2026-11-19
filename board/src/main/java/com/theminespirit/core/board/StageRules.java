@@ -1,6 +1,6 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import com.theminespirit.core.reload.api.TableSlot;
 import java.util.Collections;
 import java.util.LinkedHashMap;

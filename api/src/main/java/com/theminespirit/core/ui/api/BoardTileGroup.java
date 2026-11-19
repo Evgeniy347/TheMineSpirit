@@ -1,4 +1,4 @@
-package com.theminespirit.core.ui;
+package com.theminespirit.core.ui.api;
 
 public enum BoardTileGroup {
     DONE,

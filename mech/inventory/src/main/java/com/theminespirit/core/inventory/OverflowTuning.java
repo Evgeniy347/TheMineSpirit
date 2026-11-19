@@ -1,6 +1,7 @@
 package com.theminespirit.core.inventory;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.theminespirit.core.inventory.api.JsonResource;
 import java.util.Objects;
 import java.util.Set;
 

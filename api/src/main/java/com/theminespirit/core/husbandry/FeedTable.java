@@ -5,7 +5,7 @@ import static com.theminespirit.core.Lookup.present;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Iterator;

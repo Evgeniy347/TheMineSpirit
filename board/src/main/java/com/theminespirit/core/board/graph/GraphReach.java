@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.board.graph.api.HerdCap;
 import com.theminespirit.core.night.NightLeash;
 import java.util.HashMap;
 import java.util.List;

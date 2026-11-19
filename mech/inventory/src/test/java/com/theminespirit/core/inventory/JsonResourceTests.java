@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.theminespirit.core.inventory.api.JsonResource;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

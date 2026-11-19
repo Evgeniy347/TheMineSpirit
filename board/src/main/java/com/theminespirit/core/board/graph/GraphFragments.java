@@ -3,7 +3,7 @@ package com.theminespirit.core.board.graph;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.JarURLConnection;

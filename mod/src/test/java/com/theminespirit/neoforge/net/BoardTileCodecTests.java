@@ -3,7 +3,7 @@ package com.theminespirit.neoforge.net;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.theminespirit.core.ui.BoardTile;
-import com.theminespirit.core.ui.BoardTileGroup;
+import com.theminespirit.core.ui.api.BoardTileGroup;
 import io.netty.buffer.Unpooled;
 import java.util.List;
 import java.util.Map;

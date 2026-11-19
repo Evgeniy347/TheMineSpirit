@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.BoardStatus;
-import com.theminespirit.core.ui.BoardTileGroup;
+import com.theminespirit.core.ui.api.BoardTileGroup;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;

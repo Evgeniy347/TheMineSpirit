@@ -1,7 +1,7 @@
 package com.theminespirit.core.building;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import java.util.Set;
 
 public record BuildData(SpiritReach reach, int placeIntervalTicks, int demoPlaceIntervalTicks) {

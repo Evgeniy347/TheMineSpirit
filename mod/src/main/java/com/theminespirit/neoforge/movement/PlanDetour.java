@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge.movement;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.town.PlanBuilding;
 import com.theminespirit.core.town.PlanBuildings;
 import com.theminespirit.core.town.StageSite;
+import com.theminespirit.core.town.api.PlanBuilding;
 import com.theminespirit.neoforge.BuildPlanOwner;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.SettlementPlotStore;

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.StageRules;
+import com.theminespirit.core.ui.api.BoardTileGroup;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;

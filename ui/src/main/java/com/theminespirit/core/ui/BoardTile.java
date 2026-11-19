@@ -1,6 +1,7 @@
 package com.theminespirit.core.ui;
 
 import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.ui.api.BoardTileGroup;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

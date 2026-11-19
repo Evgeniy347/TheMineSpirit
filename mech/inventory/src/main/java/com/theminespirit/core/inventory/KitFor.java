@@ -1,6 +1,7 @@
 package com.theminespirit.core.inventory;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.theminespirit.core.inventory.api.JsonResource;
 import com.theminespirit.core.plan.ConditionNode;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ParallelNode;

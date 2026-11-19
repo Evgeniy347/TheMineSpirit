@@ -3,7 +3,7 @@ package com.theminespirit.core.husbandry;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Locale;

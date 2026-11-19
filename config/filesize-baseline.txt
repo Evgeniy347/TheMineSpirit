@@ -9,7 +9,7 @@ core/board/TicketPlansTests.java	1231
 core/board/graph/GraphPlanner.java	483
 core/board/graph/GraphPlannerTests.java	919
 core/board/graph/RecipeImport.java	555
-core/board/graph/SupplyGraph.java	383
+core/board/graph/SupplyGraph.java	384
 core/building/BuildPlanner.java	837
 core/building/FillScenarioTests.java	323
 core/building/PresetLibraryTests.java	431
@@ -24,7 +24,7 @@ core/engine/TaskSnapshotCodec.java	549
 core/farming/FarmJobTests.java	355
 core/farming/FarmPlannerTests.java	338
 core/forestry/TreeShapeTests.java	351
-core/inventory/BaseKit.java	323
+core/inventory/BaseKit.java	324
 core/inventory/BaseKitTests.java	321
 core/inventory/OverflowPolicyTests.java	464
 core/inventory/ValueTableTests.java	339

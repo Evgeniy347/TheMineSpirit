@@ -183,7 +183,7 @@ class MechanicsModuleGuardTests {
                 import com.theminespirit.core.mining.ToolChoice;
                 class Forged {}
                 """);
-        Set<String> apiClasses = Set.of("com.theminespirit.core.inventory.JsonResource");
+        Set<String> apiClasses = Set.of("com.theminespirit.core.inventory.api.JsonResource");
 
         assertEquals(
                 List.of("core/inventory/Forged.java: com.theminespirit.core.mining.ToolChoice"),

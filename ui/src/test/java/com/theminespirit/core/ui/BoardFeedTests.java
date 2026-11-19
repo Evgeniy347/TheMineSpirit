@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.ui.api.BoardTileGroup;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

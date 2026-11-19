@@ -1,5 +1,6 @@
 package com.theminespirit.core.ui;
 
+import com.theminespirit.core.ui.api.BoardTileGroup;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

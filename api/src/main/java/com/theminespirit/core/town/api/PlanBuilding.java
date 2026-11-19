@@ -1,4 +1,4 @@
-package com.theminespirit.core.town;
+package com.theminespirit.core.town.api;
 
 public enum PlanBuilding {
     NONE,

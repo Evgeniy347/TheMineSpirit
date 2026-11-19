@@ -2,8 +2,8 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.mining.MineTunnel;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.town.PlanBuilding;
 import com.theminespirit.core.town.PlotProtection;
+import com.theminespirit.core.town.api.PlanBuilding;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.HashSet;
 import java.util.List;

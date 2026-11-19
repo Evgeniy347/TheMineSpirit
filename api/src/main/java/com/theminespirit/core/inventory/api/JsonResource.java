@@ -1,4 +1,4 @@
-package com.theminespirit.core.inventory;
+package com.theminespirit.core.inventory.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -111,7 +111,7 @@ public final class JsonResource {
         return node.asDouble();
     }
 
-    static List<JsonNode> items(JsonNode node) {
+    public static List<JsonNode> items(JsonNode node) {
         List<JsonNode> items = new ArrayList<>(node.size());
         for (int index = 0; index < node.size(); index++) {
             items.add(node.get(index));

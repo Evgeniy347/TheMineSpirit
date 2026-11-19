@@ -1,7 +1,7 @@
 package com.theminespirit.core.movement;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import com.theminespirit.core.movement.ProjectileTrajectory.Bounds;
 import com.theminespirit.core.movement.ProjectileTrajectory.Projectile;
 import com.theminespirit.core.movement.ProjectileTrajectory.Threat;

@@ -1,7 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;

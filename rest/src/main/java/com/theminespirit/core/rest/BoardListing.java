@@ -1,6 +1,6 @@
 package com.theminespirit.core.rest;
 
-import com.theminespirit.core.ui.BoardTileGroup;
+import com.theminespirit.core.ui.api.BoardTileGroup;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;

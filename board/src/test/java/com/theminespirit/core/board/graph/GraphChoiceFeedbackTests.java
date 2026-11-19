@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.GraphBlock.Need;
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import java.util.ArrayList;
 import java.util.List;
 import org.jspecify.annotations.Nullable;

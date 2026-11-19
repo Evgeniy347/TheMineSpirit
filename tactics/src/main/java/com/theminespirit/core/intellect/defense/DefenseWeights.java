@@ -1,6 +1,6 @@
 package com.theminespirit.core.intellect.defense;
 
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import com.theminespirit.core.reload.api.TableSlot;
 import com.theminespirit.core.tactics.ConfigNode;
 import java.util.EnumMap;

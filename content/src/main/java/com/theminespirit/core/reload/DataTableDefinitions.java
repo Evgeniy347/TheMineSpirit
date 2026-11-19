@@ -6,7 +6,7 @@ import com.theminespirit.core.board.graph.VitalNeeds;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicTextParser;
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import com.theminespirit.core.reload.api.TableDefinition;
 import com.theminespirit.core.reload.api.TableHolder;
 import com.theminespirit.core.tactics.TacticsConfig;

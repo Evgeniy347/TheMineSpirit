@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.graph.HerdCap;
+import com.theminespirit.core.board.graph.api.HerdCap;
 import com.theminespirit.core.husbandry.PetKind;
 import com.theminespirit.core.husbandry.PetRules;
 import com.theminespirit.core.observation.BlockCoord;

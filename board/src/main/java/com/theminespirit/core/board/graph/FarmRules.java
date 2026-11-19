@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.board.graph.api.HerdCap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;

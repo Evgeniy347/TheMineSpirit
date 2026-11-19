@@ -2,7 +2,7 @@ package com.theminespirit.core.intellect.defense;
 
 import static com.theminespirit.core.Lookup.present;
 
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import com.theminespirit.core.reload.api.TableSlot;
 import com.theminespirit.core.tactics.EnemyProfile;
 import com.theminespirit.core.tactics.api.InvalidFieldException;

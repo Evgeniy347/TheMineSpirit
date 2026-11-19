@@ -8,6 +8,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.rest.BoardListings;
 import com.theminespirit.core.rest.BoardTask;
+import com.theminespirit.core.ui.api.BoardTileGroup;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

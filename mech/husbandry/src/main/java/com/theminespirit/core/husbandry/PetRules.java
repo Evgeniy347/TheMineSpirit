@@ -1,7 +1,7 @@
 package com.theminespirit.core.husbandry;
 
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.graph.HerdCap;
+import com.theminespirit.core.board.graph.api.HerdCap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;

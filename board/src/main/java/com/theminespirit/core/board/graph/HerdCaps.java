@@ -1,6 +1,7 @@
 package com.theminespirit.core.board.graph;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.theminespirit.core.board.graph.api.HerdCap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

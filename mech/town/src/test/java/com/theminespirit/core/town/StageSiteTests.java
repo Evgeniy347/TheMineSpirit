@@ -9,6 +9,7 @@ import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicTextParser;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.api.PlanBuilding;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

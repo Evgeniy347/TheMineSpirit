@@ -2,7 +2,7 @@ package com.theminespirit.core.processing;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.intellect.IntellectTuning;
-import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.inventory.api.JsonResource;
 import com.theminespirit.core.reload.api.TableSlot;
 import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.Set;

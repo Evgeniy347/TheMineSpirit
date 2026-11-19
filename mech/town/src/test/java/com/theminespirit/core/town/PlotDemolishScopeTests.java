@@ -3,6 +3,7 @@ package com.theminespirit.core.town;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.api.PlanBuilding;
 import org.junit.jupiter.api.Test;
 
 class PlotDemolishScopeTests {
