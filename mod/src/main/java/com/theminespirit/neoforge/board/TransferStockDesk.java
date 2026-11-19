@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.inventory.BaseKit;
@@ -25,7 +26,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 
 final class TransferStockDesk {
-    private static final int CHEST_RADIUS = 16;
     private static final int CHEST_PROBES = 4;
 
     private TransferStockDesk() {}
@@ -99,7 +99,11 @@ final class TransferStockDesk {
         for (BlockCoord pos : SettlementChestStore.get(level).chests().nearest(home, CHEST_PROBES)) {
             int dx = pos.x() - home.x();
             int dz = pos.z() - home.z();
-            if (dx * dx + dz * dz > CHEST_RADIUS * CHEST_RADIUS || Math.abs(pos.y() - home.y()) > CHEST_RADIUS) {
+            if (dx * dx + dz * dz
+                            > BoardConfig.current().facts().chestSearchRadius()
+                                    * BoardConfig.current().facts().chestSearchRadius()
+                    || Math.abs(pos.y() - home.y())
+                            > BoardConfig.current().facts().chestSearchRadius()) {
                 return false;
             }
             if (ContainerAccess.allowed(level.getBlockState(new BlockPos(pos.x(), pos.y(), pos.z())))) {

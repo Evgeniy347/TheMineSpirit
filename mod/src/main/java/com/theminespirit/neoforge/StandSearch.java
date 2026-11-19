@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.WalkableStand;
 import com.theminespirit.core.board.WorkStand;
@@ -16,7 +17,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
 
 final class StandSearch {
-    private static final int SNAP_RANGE = 16;
     private static final int SNAP_MARGIN = 4;
     private static final int NO_GROUND = Integer.MIN_VALUE;
 
@@ -33,7 +33,10 @@ final class StandSearch {
         BlockCoord p = new BlockCoord(point.getX(), point.getY(), point.getZ());
         long dx = (long) p.x() - feet.x();
         long dz = (long) p.z() - feet.z();
-        if (dx * dx + dz * dz > (long) SNAP_RANGE * SNAP_RANGE || freeAt(level, p)) {
+        if (dx * dx + dz * dz
+                        > (long) BoardConfig.current().facts().standSnapRadius()
+                                * BoardConfig.current().facts().standSnapRadius()
+                || freeAt(level, p)) {
             return new Resolved(point, null);
         }
         int r = BoardTuning.workStandRadius() + SNAP_MARGIN;

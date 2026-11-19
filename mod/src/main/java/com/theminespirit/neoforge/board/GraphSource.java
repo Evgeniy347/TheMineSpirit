@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardActivities;
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.StockView;
@@ -31,7 +32,6 @@ import org.slf4j.Logger;
 
 public final class GraphSource {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final double HOSTILE_RADIUS = 16;
     private static final long DEEP_INTERVAL_TICKS = 1200;
 
     final GraphDecisionNote decisionLog = new GraphDecisionNote();
@@ -220,7 +220,9 @@ public final class GraphSource {
         Set<String> events = new HashSet<>();
         if (spirits.stream()
                 .anyMatch(spirit -> !level.getEntitiesOfClass(
-                                Monster.class, spirit.getBoundingBox().inflate(HOSTILE_RADIUS))
+                                Monster.class,
+                                spirit.getBoundingBox()
+                                        .inflate(BoardConfig.current().facts().hostileScanRadius()))
                         .isEmpty())) {
             events.add("hostile_nearby");
         }

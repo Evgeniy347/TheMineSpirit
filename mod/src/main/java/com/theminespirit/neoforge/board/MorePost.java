@@ -19,7 +19,6 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import org.jspecify.annotations.Nullable;
 
 final class MorePost {
-    private static final int HOME_RADIUS = 16;
     private static final int HOME_BELOW = 4;
     private static final int HOME_ABOVE = 16;
     private static final String COBBLESTONE = "minecraft:cobblestone";
@@ -116,7 +115,7 @@ final class MorePost {
         Optional<BlockCoord> door = MoreScan.find(
                 post.level,
                 home(post),
-                HOME_RADIUS,
+                BoardConfig.current().facts().homeSearchRadius(),
                 HOME_BELOW,
                 HOME_ABOVE,
                 (at, state) -> state.getBlock() instanceof DoorBlock
@@ -133,7 +132,7 @@ final class MorePost {
         Optional<BlockCoord> hopper = MoreScan.find(
                 post.level,
                 home(post),
-                HOME_RADIUS,
+                BoardConfig.current().facts().homeSearchRadius(),
                 HOME_BELOW,
                 HOME_ABOVE,
                 (at, state) -> state.getBlock() instanceof HopperBlock);

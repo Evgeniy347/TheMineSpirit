@@ -35,7 +35,11 @@ public record FactTuning(
         int nearbyPlayerRadius,
         int dropScanRadius,
         int areaScanRadius,
-        int stationSearchRadius) {
+        int stationSearchRadius,
+        int standSnapRadius,
+        int homeSearchRadius,
+        int hostileScanRadius,
+        int chestSearchRadius) {
     private static final Set<String> FIELDS = Set.of(
             "animalRadius",
             "penRadius",
@@ -65,10 +69,14 @@ public record FactTuning(
             "nearbyPlayerRadius",
             "dropScanRadius",
             "areaScanRadius",
-            "stationSearchRadius");
+            "stationSearchRadius",
+            "standSnapRadius",
+            "homeSearchRadius",
+            "hostileScanRadius",
+            "chestSearchRadius");
     private static final FactTuning DEFAULTS = new FactTuning(
-            48, 12, 16, 48, 20, 3, 8, 8, 16, 24, 24, 4, 32, 48, 16, 8, 32, 24, 8, 24, 4, 16, 16, 32, 16, 16, 24, 16,
-            12);
+            48, 12, 16, 48, 20, 3, 8, 8, 16, 24, 24, 4, 32, 48, 16, 8, 32, 24, 8, 24, 4, 16, 16, 32, 16, 16, 24, 16, 12,
+            16, 16, 16, 16);
 
     public FactTuning {
         requirePositive(animalRadius, "animalRadius");
@@ -100,6 +108,10 @@ public record FactTuning(
         requirePositive(dropScanRadius, "dropScanRadius");
         requirePositive(areaScanRadius, "areaScanRadius");
         requirePositive(stationSearchRadius, "stationSearchRadius");
+        requirePositive(standSnapRadius, "standSnapRadius");
+        requirePositive(homeSearchRadius, "homeSearchRadius");
+        requirePositive(hostileScanRadius, "hostileScanRadius");
+        requirePositive(chestSearchRadius, "chestSearchRadius");
     }
 
     static FactTuning defaults() {
@@ -145,7 +157,11 @@ public record FactTuning(
                 integer(node, "nearbyPlayerRadius", origin),
                 integer(node, "dropScanRadius", origin),
                 integer(node, "areaScanRadius", origin),
-                integer(node, "stationSearchRadius", origin));
+                integer(node, "stationSearchRadius", origin),
+                integer(node, "standSnapRadius", origin),
+                integer(node, "homeSearchRadius", origin),
+                integer(node, "hostileScanRadius", origin),
+                integer(node, "chestSearchRadius", origin));
     }
 
     private static int integer(JsonNode node, String field, String origin) {
