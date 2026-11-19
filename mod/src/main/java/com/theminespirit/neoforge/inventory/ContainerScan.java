@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.inventory;
 
 import com.theminespirit.core.script.ContainerTarget;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritView;
 import org.jspecify.annotations.Nullable;
 
 final class ContainerScan {
@@ -10,7 +10,7 @@ final class ContainerScan {
 
     private ContainerScan() {}
 
-    static Choice of(SpiritEntity spirit, ContainerTarget target, int radius) {
+    static Choice of(SpiritView spirit, ContainerTarget target, int radius) {
         if (target instanceof ContainerTarget.Auto) {
             return new Choice(null, new AutoContainerScan(spirit.level(), spirit.blockPosition(), radius));
         }

@@ -5,7 +5,7 @@ import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.SiteLevels;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SpiritDamageWatch;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritView;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
@@ -28,7 +28,7 @@ public final class More3Events {
     }
 
     private static void onDamage(LivingDamageEvent.Post event) {
-        if (!(event.getEntity() instanceof SpiritEntity spirit)
+        if (!(event.getEntity() instanceof SpiritView spirit)
                 || spirit.level().isClientSide()
                 || event.getNewDamage() <= 0) {
             return;
@@ -66,8 +66,7 @@ public final class More3Events {
     }
 
     private static void onDeath(LivingDeathEvent event) {
-        if (!(event.getEntity() instanceof SpiritEntity spirit)
-                || spirit.level().isClientSide()) {
+        if (!(event.getEntity() instanceof SpiritView spirit) || spirit.level().isClientSide()) {
             return;
         }
         if (!(spirit.level() instanceof ServerLevel level)) {

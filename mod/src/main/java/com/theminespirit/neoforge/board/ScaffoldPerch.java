@@ -2,7 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.movement.PerchLevel;
 import com.theminespirit.neoforge.DigOutScript;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritView;
 import com.theminespirit.neoforge.lease.LeaseData;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +15,7 @@ final class ScaffoldPerch {
 
     private ScaffoldPerch() {}
 
-    static boolean on(SpiritEntity spirit) {
+    static boolean on(SpiritView spirit) {
         if (!(spirit.level() instanceof ServerLevel server)) {
             return false;
         }

@@ -5,7 +5,7 @@ import com.theminespirit.core.policy.BodyFlags;
 import com.theminespirit.core.policy.LocalSurroundings;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritConfig;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritView;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
@@ -16,14 +16,14 @@ final class SurroundingsReader {
     private SurroundingsReader() {}
 
     static LocalSurroundings read(
-            SpiritEntity spirit, LevelSafetyView view, BodyFlags flags, Optional<BlockCoord> water) {
+            SpiritView spirit, LevelSafetyView view, BodyFlags flags, Optional<BlockCoord> water) {
         BlockPos feet = spirit.blockPosition();
         return LocalSurroundings.read(new BlockCoord(feet.getX(), feet.getY(), feet.getZ()), view, flags, water);
     }
 
     record WaterSearch(Optional<BlockCoord> cell, int reads) {}
 
-    static WaterSearch nearestWater(SpiritEntity spirit) {
+    static WaterSearch nearestWater(SpiritView spirit) {
         Level level = spirit.level();
         BlockPos feet = spirit.blockPosition();
         BlockPos best = null;
