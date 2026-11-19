@@ -124,4 +124,45 @@ class MineOresTests {
                 MineOres.decide("minecraft:stone", List.of()),
                 "порода в проходе ломается всегда — решает только наличие инструмента у ломки");
     }
+
+    @Test
+    void decideDescent_OrdinaryOreWithoutCorrectPick_MinesThrough() {
+        MineOres.Decision decision = MineOres.decideDescent("minecraft:copper_ore", List.of(WOODEN));
+
+        assertInstanceOf(
+                MineOres.Mine.class,
+                decision,
+                "спуск идёт насквозь через любую руду, кроме алмаза: обходы и остановки на меди оставлены "
+                        + "решением владельца 19.11; фактически " + decision);
+    }
+
+    @Test
+    void decideDescent_LuckOreWithoutFortuneOtherThanDiamond_MinesThrough() {
+        MineOres.Decision decision = MineOres.decideDescent("minecraft:lapis_ore", List.of(PLAIN_IRON));
+
+        assertInstanceOf(
+                MineOres.Mine.class,
+                decision,
+                "изумруд и лазурит в спуске прокапываются насквозь без Удачи: оставляют только алмаз; фактически "
+                        + decision);
+    }
+
+    @Test
+    void decideDescent_DiamondWithoutFortune_LeavesBlock() {
+        assertInstanceOf(
+                MineOres.Leave.class,
+                MineOres.decideDescent("minecraft:deepslate_diamond_ore", List.of(PLAIN_IRON)),
+                "алмаз без Удачи и Шёлка остаётся в стене и в спуске: терять его выход запрещено; фактически "
+                        + MineOres.decideDescent("minecraft:deepslate_diamond_ore", List.of(PLAIN_IRON)));
+    }
+
+    @Test
+    void decideDescent_DiamondWithFortune_MinesWithFortunePick() {
+        MineOres.Decision decision = MineOres.decideDescent("minecraft:diamond_ore", List.of(PLAIN_IRON, FORTUNE_TWO));
+
+        assertEquals(
+                OptionalInt.of(FORTUNE_TWO.slot()),
+                ((MineOres.Mine) decision).slot(),
+                "алмаз с Удачей в спуске берётся киркой с наибольшей Удачей; фактически " + decision);
+    }
 }

@@ -59,6 +59,18 @@ public final class MineOres {
         };
     }
 
+    public static Decision decideDescent(String blockId, List<Pick> picks) {
+        Decision decision = decide(blockId, picks);
+        if (decision instanceof Leave && !diamond(blockId)) {
+            return new Mine(OptionalInt.empty(), "проход спуска: руда " + blockId + " не алмаз, идём насквозь");
+        }
+        return decision;
+    }
+
+    private static boolean diamond(String blockId) {
+        return OreKind.ofBlock(blockId).filter(kind -> kind == OreKind.DIAMOND).isPresent();
+    }
+
     private static Decision ordinary(String blockId, List<Pick> picks) {
         if (picks.stream().anyMatch(Pick::correctForDrops)) {
             return new Mine(OptionalInt.empty(), "подходящей киркой");

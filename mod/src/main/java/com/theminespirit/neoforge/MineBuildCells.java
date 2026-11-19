@@ -138,7 +138,7 @@ final class MineBuildCells {
     }
 
     private boolean oreInFloor(BlockCoord floor, BlockState state) {
-        MineOres.Decision decision = MineOres.decide(BlockStates.idOf(state), picks(state));
+        MineOres.Decision decision = MineOres.decideDescent(BlockStates.idOf(state), picks(state));
         if (decision instanceof MineOres.Mine mine) {
             startBreak(floor, mine.slot());
             return false;
@@ -162,7 +162,7 @@ final class MineBuildCells {
             PlacedBlocksData.get(server).unmarkSpirit(toPos(cell));
         }
         BlockState state = level.getBlockState(toPos(cell));
-        MineOres.Decision decision = MineOres.decide(BlockStates.idOf(state), picks(state));
+        MineOres.Decision decision = MineOres.decideDescent(BlockStates.idOf(state), picks(state));
         if (decision instanceof MineOres.Leave leave) {
             remember(cell, state, leave.reason());
             closeAndDetour(column);
@@ -203,7 +203,7 @@ final class MineBuildCells {
         if (leftOres.contains(cell) || state.getDestroySpeed(level, toPos(cell)) < 0) {
             return true;
         }
-        return MineOres.decide(BlockStates.idOf(state), picks(state)) instanceof MineOres.Leave;
+        return MineOres.decideDescent(BlockStates.idOf(state), picks(state)) instanceof MineOres.Leave;
     }
 
     private void remember(BlockCoord cell, BlockState state, String reason) {

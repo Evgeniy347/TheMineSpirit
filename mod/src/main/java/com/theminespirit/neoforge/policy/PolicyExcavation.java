@@ -11,6 +11,7 @@ import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.BuildPlanOwner;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.ChestDemolition;
+import com.theminespirit.neoforge.board.MineSnapshots;
 import com.theminespirit.neoforge.board.PlotBreakLog;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import net.minecraft.core.BlockPos;
@@ -79,7 +80,7 @@ final class PolicyExcavation {
     static BlockProtection.Decision excavate(ProtectionGate gate, SpiritEntity spirit, BlockPos pos, BlockState state) {
         if (spirit.level() instanceof ServerLevel server) {
             PlacedBlocksData placed = PlacedBlocksData.get(server);
-            if (placed.isSpiritMarked(pos) || placed.isMarked(pos)) {
+            if ((placed.isSpiritMarked(pos) || placed.isMarked(pos)) && !mineVoid(server, pos)) {
                 PlotBreakLog.refused(
                         server,
                         pos,
@@ -101,5 +102,12 @@ final class PolicyExcavation {
                 PlanBuilding.MINE,
                 PlotProtection.Action.DIG,
                 PlotProtection.Ground.PLAN_EXCAVATE);
+    }
+
+    private static boolean mineVoid(ServerLevel server, BlockPos pos) {
+        BlockCoord cell = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
+        return MineSnapshots.geometry(server)
+                .map(mine -> mine.air().contains(cell))
+                .orElse(false);
     }
 }
