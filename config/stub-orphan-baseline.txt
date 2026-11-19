@@ -1,0 +1,13 @@
+core/farming/Hydration.java|field|Hydration#MAX_LOOKUPS
+core/forestry/TreeCandidates.java|method|TreeCandidates#isKnown
+core/intellect/Forage.java|method|Forage#hasWater
+core/perception/HazardFacts.java|method|HazardFacts#hasDrop
+core/perception/HazardFacts.java|method|HazardFacts#hasLava
+core/perception/HazardFacts.java|method|HazardFacts#hasWater
+core/tactics/LayerOrder.java|field|LayerOrder#INTERRUPTED_LAYER_RESUMES
+core/tactics/SafePointChoice.java|field|SafePointChoice#NO_CAMP
+core/tactics/SpiritTargets.java|method|SpiritTargets#attacksSpirits
+core/tactics/TacticsEngine.java|method|TacticsEngine#totalRules
+core/tactics/adapter/CoreFactCollector.java|method|CoreFactCollector#withDefaultSettings
+core/tactics/adapter/RetreatTracker.java|method|RetreatTracker#progressTicks
+core/tactics/adapter/TacticsSchedule.java|method|TacticsSchedule#everEvaluated

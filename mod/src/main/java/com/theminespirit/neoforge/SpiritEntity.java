@@ -592,10 +592,6 @@ public final class SpiritEntity extends PathfinderMob {
         return child;
     }
 
-    public void setChild(boolean child) {
-        this.child = child;
-    }
-
     public boolean isDemo() {
         return demo;
     }

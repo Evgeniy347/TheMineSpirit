@@ -10,17 +10,8 @@ final class DeadCodeExemptions {
                     "Генератор graph-recipes.json (export-задача): рецепты импортируются при генерации, "
                             + "в игре читается готовый файл; TestResults/task.md"),
             new Exemption(
-                    "neoforge/SpiritEntity.java|method|SpiritEntity#setChild",
-                    "Заготовка под открытую задачу: todo.md → «Дети»"),
-            new Exemption(
                     "neoforge/crafting/RecipeKnowledge.java|method|RecipeKnowledge#indexBuilds",
                     "Заготовка под открытую задачу: todo.md → «Кузнечество»"),
-            new Exemption(
-                    "neoforge/tactics/TacticsService.java|method|TacticsService#lastOutcome",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
-            new Exemption(
-                    "neoforge/tactics/TacticsService.java|method|TacticsService#retreatExecutor",
-                    "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
             new Exemption(
                     "core/board/Board.java|method|Board#casePauseTicks",
                     "Заготовка под открытую задачу: todo.md → «Распределение работ и сбор в поселении»"),

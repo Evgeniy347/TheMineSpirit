@@ -214,10 +214,6 @@ public final class TacticsService {
                 : PolicyExemptions.empty();
     }
 
-    public Optional<TacticalOutcome> lastOutcome() {
-        return Optional.ofNullable(outcome);
-    }
-
     public RetreatTracker retreat() {
         return retreat;
     }
@@ -228,10 +224,6 @@ public final class TacticsService {
 
     public CombatActuator combat() {
         return combat;
-    }
-
-    public RetreatExecutor retreatExecutor() {
-        return retreating;
     }
 
     public int stepCalls() {
