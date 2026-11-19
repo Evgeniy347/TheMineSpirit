@@ -8,6 +8,10 @@ import org.jspecify.annotations.Nullable;
 public final class BuildStandLevel {
     private BuildStandLevel() {}
 
+    public static int standBase(int lowestSchemeY, boolean groundLayer) {
+        return lowestSchemeY - (groundLayer ? 2 : 1);
+    }
+
     public static ReachPlanner.World atOrAbove(ReachPlanner.World world, Collection<BlockCoord> schemeCells) {
         Objects.requireNonNull(schemeCells, "Клетки схемы не могут быть null: по ним ищется низ постройки");
         int baseY = schemeCells.stream().mapToInt(BlockCoord::y).min().orElse(Integer.MAX_VALUE) - 1;

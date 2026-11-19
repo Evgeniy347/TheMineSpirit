@@ -223,6 +223,23 @@ class ReachPlannerTests {
     }
 
     @Test
+    void standBase_StructureStands_OneBelowBottom() {
+        assertEquals(
+                67,
+                BuildStandLevel.standBase(68, false),
+                "У дома пол на уровне участка: дух стоит на земле на клетку ниже низа схемы");
+    }
+
+    @Test
+    void standBase_GroundLayerBuilds_TwoBelowBottom() {
+        assertEquals(
+                66,
+                BuildStandLevel.standBase(68, true),
+                "У грядки и сада тропа лежит в нижнем слое: там, где земля ниже плана, дух входит в яму "
+                        + "на клетку глубже и поднимает тропу до уровня схемы");
+    }
+
+    @Test
     void allowed_StandBelowBase_IsRejectedAboveIsAccepted() {
         assertFalse(
                 BuildStandLevel.allowed(cell(0, 66, 0), 69),

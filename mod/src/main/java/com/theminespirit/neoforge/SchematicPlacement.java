@@ -185,8 +185,7 @@ final class SchematicPlacement {
             host.pit.escape(host.feet());
             return ScriptStatus.RUNNING;
         }
-        ReachPlanner.World stands =
-                BuildStandLevel.atOrAbove(base, host.site.origin().y() - 1);
+        ReachPlanner.World stands = BuildStandLevel.atOrAbove(base, host.site.standBase());
         Set<BlockCoord> occupied = SchematicWalkways.free(host.site.primaries(), host.site.schemeCells());
         Optional<Set<BlockCoord>> reachable = host.site.walkable(host.feet(), BuildSchematicScript.WALK_MARGIN);
         boolean walkKnown =

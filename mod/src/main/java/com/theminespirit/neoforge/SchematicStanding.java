@@ -57,7 +57,12 @@ final class SchematicStanding {
 
     BuildBox networkBox(int ring) {
         return BuildBox.of(
-                site.minX - ring, site.minY - 1, site.minZ - ring, site.maxX + ring, site.maxY + 2, site.maxZ + ring);
+                site.minX - ring,
+                site.standBase(),
+                site.minZ - ring,
+                site.maxX + ring,
+                site.maxY + 2,
+                site.maxZ + ring);
     }
 
     List<BlockCoord> doorCells() {
