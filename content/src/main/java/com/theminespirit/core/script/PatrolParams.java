@@ -2,6 +2,8 @@ package com.theminespirit.core.script;
 
 import com.theminespirit.core.movement.RoutePlan;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.script.api.CatalogLimits;
+import com.theminespirit.core.script.api.ScriptArgs;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

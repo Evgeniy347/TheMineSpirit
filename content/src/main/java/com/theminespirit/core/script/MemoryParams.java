@@ -3,6 +3,7 @@ package com.theminespirit.core.script;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.perception.MemoryCall;
 import com.theminespirit.core.perception.MemoryType;
+import com.theminespirit.core.script.api.ScriptArgs;
 import java.util.Map;
 import java.util.Objects;
 

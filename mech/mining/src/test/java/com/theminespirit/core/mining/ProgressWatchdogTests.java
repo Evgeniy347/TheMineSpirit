@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import org.junit.jupiter.api.Test;
 
 class ProgressWatchdogTests {

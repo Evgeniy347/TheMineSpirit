@@ -11,7 +11,7 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.api.UnplannableGoalException;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

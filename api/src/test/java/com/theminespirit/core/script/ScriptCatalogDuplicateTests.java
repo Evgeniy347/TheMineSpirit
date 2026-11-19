@@ -3,6 +3,8 @@ package com.theminespirit.core.script;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.script.api.ScriptCatalog;
+import com.theminespirit.core.script.api.ScriptSpec;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

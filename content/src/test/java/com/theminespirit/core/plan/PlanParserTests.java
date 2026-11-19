@@ -4,12 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.script.CatalogLimits;
-import com.theminespirit.core.script.ConditionCatalog;
-import com.theminespirit.core.script.ConditionSpec;
 import com.theminespirit.core.script.CoreScripts;
-import com.theminespirit.core.script.ParamSpec;
-import com.theminespirit.core.script.ScriptCatalog;
+import com.theminespirit.core.script.api.CatalogLimits;
+import com.theminespirit.core.script.api.ConditionCatalog;
+import com.theminespirit.core.script.api.ConditionSpec;
+import com.theminespirit.core.script.api.ParamSpec;
+import com.theminespirit.core.script.api.ScriptCatalog;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

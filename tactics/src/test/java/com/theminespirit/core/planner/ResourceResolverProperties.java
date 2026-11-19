@@ -11,7 +11,7 @@ import com.theminespirit.core.planner.api.FuelTable;
 import com.theminespirit.core.planner.api.Ingredient;
 import com.theminespirit.core.planner.api.ResourceKnowledge;
 import com.theminespirit.core.planner.api.UnplannableGoalException;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;

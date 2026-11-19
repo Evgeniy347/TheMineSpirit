@@ -3,7 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.mining.BreakSkipTally;
 import com.theminespirit.core.mining.ProgressWatchdog;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.Optional;
 
 final class HarvestCounters {

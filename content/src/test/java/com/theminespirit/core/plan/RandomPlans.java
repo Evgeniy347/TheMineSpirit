@@ -1,10 +1,10 @@
 package com.theminespirit.core.plan;
 
-import com.theminespirit.core.script.ConditionCatalog;
-import com.theminespirit.core.script.ConditionSpec;
 import com.theminespirit.core.script.CoreScripts;
-import com.theminespirit.core.script.ParamSpec;
-import com.theminespirit.core.script.ScriptCatalog;
+import com.theminespirit.core.script.api.ConditionCatalog;
+import com.theminespirit.core.script.api.ConditionSpec;
+import com.theminespirit.core.script.api.ParamSpec;
+import com.theminespirit.core.script.api.ScriptCatalog;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

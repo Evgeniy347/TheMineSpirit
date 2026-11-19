@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentDirection;
 import com.theminespirit.core.mining.SafeMineMode;
+import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 

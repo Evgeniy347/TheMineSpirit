@@ -1,5 +1,6 @@
 package com.theminespirit.core.script;
 
+import com.theminespirit.core.script.api.ScriptArgs;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;

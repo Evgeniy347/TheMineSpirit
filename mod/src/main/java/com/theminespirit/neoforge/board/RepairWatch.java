@@ -10,7 +10,7 @@ import com.theminespirit.core.repair.RepairCalculator;
 import com.theminespirit.core.repair.RepairCosts;
 import com.theminespirit.core.repair.RepairMaterials;
 import com.theminespirit.core.repair.RepairMethod;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.SpiritInventory;

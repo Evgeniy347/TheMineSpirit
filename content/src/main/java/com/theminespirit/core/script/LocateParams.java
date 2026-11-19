@@ -4,6 +4,7 @@ import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.perception.LocateQuery;
+import com.theminespirit.core.script.api.ScriptArgs;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

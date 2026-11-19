@@ -1,9 +1,9 @@
 package com.theminespirit.core.rest;
 
-import com.theminespirit.core.script.ParamSpec;
-import com.theminespirit.core.script.ScriptCatalog;
-import com.theminespirit.core.script.ScriptRequirement;
-import com.theminespirit.core.script.ScriptSpec;
+import com.theminespirit.core.script.api.ParamSpec;
+import com.theminespirit.core.script.api.ScriptCatalog;
+import com.theminespirit.core.script.api.ScriptRequirement;
+import com.theminespirit.core.script.api.ScriptSpec;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

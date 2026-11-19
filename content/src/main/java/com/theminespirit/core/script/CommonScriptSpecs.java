@@ -1,5 +1,8 @@
 package com.theminespirit.core.script;
 
+import com.theminespirit.core.script.api.CatalogLimits;
+import com.theminespirit.core.script.api.ParamSpec;
+
 final class CommonScriptSpecs {
     private CommonScriptSpecs() {}
 

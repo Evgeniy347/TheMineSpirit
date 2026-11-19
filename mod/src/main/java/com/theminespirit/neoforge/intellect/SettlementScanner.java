@@ -5,7 +5,7 @@ import com.theminespirit.core.husbandry.PenBounds;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.intellect.Forage;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.api.Point;
 import com.theminespirit.neoforge.SpiritEntity;

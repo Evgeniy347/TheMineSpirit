@@ -3,7 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.CastObsidianParams;
+import com.theminespirit.core.script.api.CastObsidianParams;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

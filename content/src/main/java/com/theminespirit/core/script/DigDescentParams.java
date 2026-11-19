@@ -3,6 +3,7 @@ package com.theminespirit.core.script;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentDirection;
 import com.theminespirit.core.mining.DescentPlan;
+import com.theminespirit.core.script.api.ScriptArgs;
 import java.util.Map;
 import java.util.Objects;
 

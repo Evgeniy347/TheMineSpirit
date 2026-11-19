@@ -12,7 +12,7 @@ import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.engine.TaskRunner;
 import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
-import com.theminespirit.core.script.ScriptSpec;
+import com.theminespirit.core.script.api.ScriptSpec;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

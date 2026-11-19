@@ -3,8 +3,8 @@ package com.theminespirit.core.rest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.script.ScriptCatalog;
-import com.theminespirit.core.script.ScriptSpec;
+import com.theminespirit.core.script.api.ScriptCatalog;
+import com.theminespirit.core.script.api.ScriptSpec;
 import com.theminespirit.core.tactics.HoldStatus;
 import com.theminespirit.core.tactics.adapter.DecisionFacts;
 import com.theminespirit.core.tactics.adapter.DecisionRecord;

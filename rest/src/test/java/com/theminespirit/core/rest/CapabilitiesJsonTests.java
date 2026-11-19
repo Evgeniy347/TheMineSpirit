@@ -7,9 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.script.CoreScripts;
-import com.theminespirit.core.script.ParamSpec;
-import com.theminespirit.core.script.ScriptCatalog;
-import com.theminespirit.core.script.ScriptSpec;
+import com.theminespirit.core.script.api.ParamSpec;
+import com.theminespirit.core.script.api.ScriptCatalog;
+import com.theminespirit.core.script.api.ScriptSpec;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

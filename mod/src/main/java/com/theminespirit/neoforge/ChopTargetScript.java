@@ -10,7 +10,7 @@ import com.theminespirit.core.forestry.TreeDetection;
 import com.theminespirit.core.forestry.TreeShape;
 import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.ChopTargetParams;
+import com.theminespirit.core.script.api.ChopTargetParams;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;

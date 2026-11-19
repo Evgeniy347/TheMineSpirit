@@ -1,5 +1,8 @@
 package com.theminespirit.core.script;
 
+import com.theminespirit.core.script.api.PortalScripts;
+import com.theminespirit.core.script.api.ScriptCatalog;
+import com.theminespirit.core.script.api.ScriptSpec;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -4,7 +4,7 @@ import com.theminespirit.core.building.PillarBase;
 import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.movement.CellCentering;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.lease.LeaseRun;
 import java.util.ArrayList;

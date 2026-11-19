@@ -6,7 +6,7 @@ import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.planner.AcquireSupplies;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.neoforge.crafting.ItemIds;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import java.util.ArrayList;

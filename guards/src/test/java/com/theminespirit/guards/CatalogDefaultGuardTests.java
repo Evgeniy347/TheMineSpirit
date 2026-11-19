@@ -3,8 +3,8 @@ package com.theminespirit.guards;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.theminespirit.core.script.CoreScripts;
-import com.theminespirit.core.script.ParamSpec;
-import com.theminespirit.core.script.ScriptSpec;
+import com.theminespirit.core.script.api.ParamSpec;
+import com.theminespirit.core.script.api.ScriptSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

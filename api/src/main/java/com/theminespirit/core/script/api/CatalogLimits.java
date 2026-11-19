@@ -1,4 +1,4 @@
-package com.theminespirit.core.script;
+package com.theminespirit.core.script.api;
 
 import com.theminespirit.core.observation.ScanRadius;
 

@@ -1,7 +1,7 @@
 package com.theminespirit.core.movement;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

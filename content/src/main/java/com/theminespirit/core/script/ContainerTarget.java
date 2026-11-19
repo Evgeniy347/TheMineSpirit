@@ -1,5 +1,6 @@
 package com.theminespirit.core.script;
 
+import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.Objects;
 
 public sealed interface ContainerTarget

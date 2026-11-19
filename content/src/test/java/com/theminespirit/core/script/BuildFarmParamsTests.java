@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmPlot;
+import com.theminespirit.core.script.api.CatalogLimits;
+import com.theminespirit.core.script.api.ParamSpec;
+import com.theminespirit.core.script.api.ScriptSpec;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 

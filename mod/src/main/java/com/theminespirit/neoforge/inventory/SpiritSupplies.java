@@ -6,7 +6,7 @@ import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.planner.AcquireSupplies;
 import com.theminespirit.core.policy.BlockProtection;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.neoforge.BlockLocator;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.crafting.ItemIds;

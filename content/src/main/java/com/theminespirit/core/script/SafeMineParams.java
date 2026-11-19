@@ -5,6 +5,8 @@ import com.theminespirit.core.mining.DescentDirection;
 import com.theminespirit.core.mining.DescentPlan;
 import com.theminespirit.core.mining.MiningTuning;
 import com.theminespirit.core.mining.SafeMineMode;
+import com.theminespirit.core.script.api.CatalogLimits;
+import com.theminespirit.core.script.api.ScriptArgs;
 import java.util.Map;
 import java.util.Objects;
 

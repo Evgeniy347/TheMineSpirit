@@ -19,7 +19,7 @@ import com.theminespirit.core.planner.BatchPlanException;
 import com.theminespirit.core.planner.BatchPlanner;
 import com.theminespirit.core.planner.FallbackPlanner;
 import com.theminespirit.core.planner.Goal;
-import com.theminespirit.core.script.ScriptCatalog;
+import com.theminespirit.core.script.api.ScriptCatalog;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

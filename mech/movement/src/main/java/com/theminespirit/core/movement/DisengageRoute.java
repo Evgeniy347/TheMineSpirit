@@ -1,6 +1,6 @@
 package com.theminespirit.core.movement;
 
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.tactics.api.Point;
 import com.theminespirit.core.tactics.api.adapter.RetreatSpacing;
 import java.util.Objects;

@@ -2,7 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
-import com.theminespirit.core.script.LightPortalParams;
+import com.theminespirit.core.script.api.LightPortalParams;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;

@@ -2,6 +2,7 @@ package com.theminespirit.core.script;
 
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.perception.PerceptionQuery;
+import com.theminespirit.core.script.api.ScriptArgs;
 import java.util.Map;
 import java.util.Objects;
 

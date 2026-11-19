@@ -8,6 +8,5 @@ com.theminespirit.core.husbandry
 com.theminespirit.core.inventory
 com.theminespirit.core.mining
 com.theminespirit.core.movement
-com.theminespirit.core.script
 com.theminespirit.core.town
 com.theminespirit.core.ui

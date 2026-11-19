@@ -4,7 +4,7 @@ import com.theminespirit.core.building.FillOrder;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.town.PlotLeveling;
 import java.util.ArrayList;
 import java.util.List;

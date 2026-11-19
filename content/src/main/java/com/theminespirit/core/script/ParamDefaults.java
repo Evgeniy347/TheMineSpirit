@@ -1,5 +1,8 @@
 package com.theminespirit.core.script;
 
+import com.theminespirit.core.script.api.ParamSpec;
+import com.theminespirit.core.script.api.ScriptCatalog;
+import com.theminespirit.core.script.api.ScriptSpec;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;

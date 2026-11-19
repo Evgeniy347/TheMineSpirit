@@ -1,6 +1,6 @@
 package com.theminespirit.core.rest;
 
-import com.theminespirit.core.script.ScriptCatalog;
+import com.theminespirit.core.script.api.ScriptCatalog;
 import java.util.ArrayList;
 import java.util.List;
 

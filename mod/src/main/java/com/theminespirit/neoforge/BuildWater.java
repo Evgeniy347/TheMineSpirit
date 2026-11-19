@@ -6,7 +6,7 @@ import com.theminespirit.core.building.BuildKey;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.script.FluidKind;
+import com.theminespirit.core.script.api.FluidKind;
 import com.theminespirit.neoforge.board.FluidSources;
 import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;

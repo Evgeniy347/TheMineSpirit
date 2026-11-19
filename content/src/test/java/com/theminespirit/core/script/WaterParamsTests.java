@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 

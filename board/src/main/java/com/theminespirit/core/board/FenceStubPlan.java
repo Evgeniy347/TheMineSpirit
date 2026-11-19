@@ -3,7 +3,7 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.script.BuildSchematicParams;
+import com.theminespirit.core.script.api.BuildSchematicParams;
 import com.theminespirit.core.town.StageSchemes;
 import java.util.LinkedHashMap;
 import java.util.Map;

@@ -1,14 +1,14 @@
-package com.theminespirit.core.script;
+package com.theminespirit.core.script.api;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-final class ScriptArgs {
+public final class ScriptArgs {
     private ScriptArgs() {}
 
-    static int requireInt(Map<String, Object> params, String name) {
+    public static int requireInt(Map<String, Object> params, String name) {
         Object value = require(params, name);
         if (!(value instanceof Integer integer)) {
             throw new IllegalArgumentException("Параметр '" + name + "' скрипта должен быть целым числом, а получено "
@@ -17,7 +17,7 @@ final class ScriptArgs {
         return integer;
     }
 
-    static String requireString(Map<String, Object> params, String name) {
+    public static String requireString(Map<String, Object> params, String name) {
         Object value = require(params, name);
         if (!(value instanceof String text)) {
             throw new IllegalArgumentException("Параметр '" + name + "' скрипта должен быть строкой, а получено "
@@ -26,7 +26,7 @@ final class ScriptArgs {
         return text;
     }
 
-    static Optional<Integer> optionalInt(Map<String, Object> params, String name) {
+    public static Optional<Integer> optionalInt(Map<String, Object> params, String name) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
         Object value = params.get(name);
         if (value == null) {
@@ -39,7 +39,7 @@ final class ScriptArgs {
         return Optional.of(integer);
     }
 
-    static String optionalString(Map<String, Object> params, String name, String defaultValue) {
+    public static String optionalString(Map<String, Object> params, String name, String defaultValue) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
         Object value = params.get(name);
         if (value == null) {
@@ -52,7 +52,7 @@ final class ScriptArgs {
         return text;
     }
 
-    static boolean requireBoolean(Map<String, Object> params, String name) {
+    public static boolean requireBoolean(Map<String, Object> params, String name) {
         Object value = require(params, name);
         if (!(value instanceof Boolean flag)) {
             throw new IllegalArgumentException("Параметр '" + name + "' скрипта должен быть true или false, а получено "
@@ -61,7 +61,7 @@ final class ScriptArgs {
         return flag;
     }
 
-    static boolean optionalBoolean(Map<String, Object> params, String name, boolean defaultValue) {
+    public static boolean optionalBoolean(Map<String, Object> params, String name, boolean defaultValue) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
         Object value = params.get(name);
         if (value == null) {
@@ -74,7 +74,7 @@ final class ScriptArgs {
         return flag;
     }
 
-    static List<String> requireStringList(Map<String, Object> params, String name) {
+    public static List<String> requireStringList(Map<String, Object> params, String name) {
         Object value = require(params, name);
         if (!(value instanceof List<?> list)) {
             throw stringListError(name, value);
@@ -87,7 +87,7 @@ final class ScriptArgs {
         return list.stream().map(String.class::cast).toList();
     }
 
-    static Optional<List<String>> optionalStringList(Map<String, Object> params, String name) {
+    public static Optional<List<String>> optionalStringList(Map<String, Object> params, String name) {
         Objects.requireNonNull(params, "params не может быть null: параметры скрипта приходят картой");
         Object value = params.get(name);
         if (value == null) {

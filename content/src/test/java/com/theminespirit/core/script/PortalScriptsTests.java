@@ -2,6 +2,8 @@ package com.theminespirit.core.script;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.theminespirit.core.script.api.CastObsidianParams;
+import com.theminespirit.core.script.api.LightPortalParams;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 

@@ -7,7 +7,7 @@ import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.NeedsOfPlan;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.social.TransferSource;
 import com.theminespirit.neoforge.SettlementChestStore;
 import com.theminespirit.neoforge.SpiritEntity;

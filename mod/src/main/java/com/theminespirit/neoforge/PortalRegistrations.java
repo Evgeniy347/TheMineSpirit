@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.script.CastObsidianParams;
-import com.theminespirit.core.script.LightPortalParams;
+import com.theminespirit.core.script.api.CastObsidianParams;
+import com.theminespirit.core.script.api.LightPortalParams;
 
 final class PortalRegistrations {
     private PortalRegistrations() {}

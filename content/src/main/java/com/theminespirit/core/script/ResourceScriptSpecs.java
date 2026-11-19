@@ -7,6 +7,11 @@ import com.theminespirit.core.mining.MiningTuning;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.mining.PickaxeTiers;
 import com.theminespirit.core.mining.SafeMineMode;
+import com.theminespirit.core.script.api.CatalogLimits;
+import com.theminespirit.core.script.api.ChopTargetParams;
+import com.theminespirit.core.script.api.ParamSpec;
+import com.theminespirit.core.script.api.ScriptRequirement;
+import com.theminespirit.core.script.api.ScriptSpec;
 import java.util.List;
 
 final class ResourceScriptSpecs {

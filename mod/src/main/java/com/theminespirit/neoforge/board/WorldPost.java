@@ -13,7 +13,7 @@ import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.route.RouteRetired;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.town.PitGroups;
 import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.SettlementScan;

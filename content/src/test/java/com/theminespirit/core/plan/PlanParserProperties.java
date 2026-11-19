@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.script.CoreScripts;
-import com.theminespirit.core.script.ScriptCatalog;
+import com.theminespirit.core.script.api.ScriptCatalog;
 import java.util.Map;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;

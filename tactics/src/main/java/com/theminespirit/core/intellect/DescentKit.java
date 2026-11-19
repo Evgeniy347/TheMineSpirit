@@ -3,7 +3,7 @@ package com.theminespirit.core.intellect;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.inventory.ValueTable;
 import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

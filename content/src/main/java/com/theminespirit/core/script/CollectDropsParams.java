@@ -2,6 +2,8 @@ package com.theminespirit.core.script;
 
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;
+import com.theminespirit.core.script.api.CatalogLimits;
+import com.theminespirit.core.script.api.ScriptArgs;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

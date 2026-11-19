@@ -6,7 +6,7 @@ import com.theminespirit.core.husbandry.HerdCensus;
 import com.theminespirit.core.husbandry.HerdSafety;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

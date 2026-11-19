@@ -6,7 +6,7 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.neoforge.lease.LeaseRun;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import java.util.ArrayList;

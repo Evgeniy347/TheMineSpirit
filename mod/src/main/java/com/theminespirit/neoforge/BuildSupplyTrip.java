@@ -13,7 +13,7 @@ import com.theminespirit.core.inventory.Slice;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.inventory.InventoryTables;
 import com.theminespirit.neoforge.inventory.StackMapper;

@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
+import com.theminespirit.core.script.api.ConditionCatalog;
 import com.theminespirit.core.task.TaskRegistry;
 import java.util.List;
 import java.util.Map;

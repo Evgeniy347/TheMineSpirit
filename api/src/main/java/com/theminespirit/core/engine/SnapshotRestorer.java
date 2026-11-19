@@ -2,8 +2,8 @@ package com.theminespirit.core.engine;
 
 import com.theminespirit.core.plan.PlanValidator;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.script.ConditionCatalog;
-import com.theminespirit.core.script.ScriptCatalog;
+import com.theminespirit.core.script.api.ConditionCatalog;
+import com.theminespirit.core.script.api.ScriptCatalog;
 import java.util.Objects;
 
 public final class SnapshotRestorer {

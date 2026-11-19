@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.FluidKind;
+import com.theminespirit.core.script.api.FluidKind;
 import com.theminespirit.neoforge.BlockLocator;
 import java.util.Optional;
 import java.util.Set;

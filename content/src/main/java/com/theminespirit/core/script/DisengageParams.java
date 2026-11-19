@@ -1,5 +1,7 @@
 package com.theminespirit.core.script;
 
+import com.theminespirit.core.script.api.CatalogLimits;
+import com.theminespirit.core.script.api.ScriptArgs;
 import com.theminespirit.core.tactics.TargetSelector;
 import java.util.Map;
 import java.util.Objects;

@@ -6,7 +6,7 @@ import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.movement.WaterCrossingPlanner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.BridgeParams;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.BlockPlacer;

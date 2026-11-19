@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.CoreScripts;
-import com.theminespirit.core.script.ScriptCatalog;
+import com.theminespirit.core.script.api.ScriptCatalog;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

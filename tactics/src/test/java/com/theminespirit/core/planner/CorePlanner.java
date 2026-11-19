@@ -2,8 +2,8 @@ package com.theminespirit.core.planner;
 
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.api.ResourceKnowledge;
-import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
+import com.theminespirit.core.script.api.ConditionCatalog;
 import java.util.Map;
 import java.util.Set;
 

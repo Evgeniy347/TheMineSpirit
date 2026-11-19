@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.script.FillBucketParams;
 import com.theminespirit.core.script.PourBucketParams;
+import com.theminespirit.core.script.api.FillBucketParams;
 
 final class BucketRegistrations {
     private BucketRegistrations() {}

@@ -5,7 +5,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets.Ticket;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.PortalScripts;
+import com.theminespirit.core.script.api.PortalScripts;
 import java.util.Map;
 import java.util.Optional;
 

@@ -1,4 +1,4 @@
-package com.theminespirit.core.script;
+package com.theminespirit.core.script.api;
 
 import java.util.List;
 import java.util.Locale;

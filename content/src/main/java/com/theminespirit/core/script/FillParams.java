@@ -1,6 +1,9 @@
 package com.theminespirit.core.script;
 
 import com.theminespirit.core.building.BuildBox;
+import com.theminespirit.core.script.api.BuildingCoords;
+import com.theminespirit.core.script.api.CatalogLimits;
+import com.theminespirit.core.script.api.ScriptArgs;
 import java.util.Map;
 import java.util.Objects;
 

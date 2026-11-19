@@ -12,7 +12,7 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.api.Ingredient;
-import com.theminespirit.core.script.BuildSchematicParams;
+import com.theminespirit.core.script.api.BuildSchematicParams;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;

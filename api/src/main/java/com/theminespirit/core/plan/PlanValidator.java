@@ -1,12 +1,12 @@
 package com.theminespirit.core.plan;
 
-import com.theminespirit.core.script.CatalogLimits;
-import com.theminespirit.core.script.ConditionCatalog;
-import com.theminespirit.core.script.ConditionSpec;
-import com.theminespirit.core.script.ParamSpec;
-import com.theminespirit.core.script.ParamType;
-import com.theminespirit.core.script.ScriptCatalog;
-import com.theminespirit.core.script.ScriptSpec;
+import com.theminespirit.core.script.api.CatalogLimits;
+import com.theminespirit.core.script.api.ConditionCatalog;
+import com.theminespirit.core.script.api.ConditionSpec;
+import com.theminespirit.core.script.api.ParamSpec;
+import com.theminespirit.core.script.api.ParamType;
+import com.theminespirit.core.script.api.ScriptCatalog;
+import com.theminespirit.core.script.api.ScriptSpec;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

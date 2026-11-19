@@ -1,6 +1,6 @@
 package com.theminespirit.core.planner.api;
 
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

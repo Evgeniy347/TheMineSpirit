@@ -14,7 +14,7 @@ import com.theminespirit.core.mining.GatherPolicy;
 import com.theminespirit.core.planner.api.GatherSources;
 import com.theminespirit.core.planner.api.Ingredient;
 import com.theminespirit.core.planner.api.ResourceKnowledge;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;

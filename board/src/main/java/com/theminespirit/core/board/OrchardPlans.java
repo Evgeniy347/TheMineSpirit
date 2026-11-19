@@ -3,7 +3,7 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.script.ChopTargetParams;
+import com.theminespirit.core.script.api.ChopTargetParams;
 import java.util.Map;
 import java.util.Objects;
 

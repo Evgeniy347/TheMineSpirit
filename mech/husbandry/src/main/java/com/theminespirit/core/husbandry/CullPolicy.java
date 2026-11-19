@@ -1,7 +1,7 @@
 package com.theminespirit.core.husbandry;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;

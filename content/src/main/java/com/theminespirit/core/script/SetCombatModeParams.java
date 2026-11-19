@@ -1,5 +1,6 @@
 package com.theminespirit.core.script;
 
+import com.theminespirit.core.script.api.ScriptArgs;
 import com.theminespirit.core.tactics.CombatMode;
 import java.util.List;
 import java.util.Locale;

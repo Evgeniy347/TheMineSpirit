@@ -9,7 +9,7 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;

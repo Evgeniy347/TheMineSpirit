@@ -12,7 +12,7 @@ import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.script.FluidKind;
+import com.theminespirit.core.script.api.FluidKind;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;

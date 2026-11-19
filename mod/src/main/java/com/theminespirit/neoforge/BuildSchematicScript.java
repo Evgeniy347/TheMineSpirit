@@ -22,7 +22,7 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.policy.RemovalLog;
-import com.theminespirit.core.script.BuildSchematicParams;
+import com.theminespirit.core.script.api.BuildSchematicParams;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.movement.PathNetworkService;
 import java.util.ArrayList;

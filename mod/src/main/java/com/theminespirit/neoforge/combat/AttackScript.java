@@ -4,7 +4,7 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.AttackParams;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.TargetSelector;
 import com.theminespirit.neoforge.ScriptTargetResolver;

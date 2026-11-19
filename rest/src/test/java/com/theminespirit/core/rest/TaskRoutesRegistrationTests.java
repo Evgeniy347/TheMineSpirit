@@ -2,8 +2,8 @@ package com.theminespirit.core.rest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;
+import com.theminespirit.core.script.api.ConditionCatalog;
 import com.theminespirit.core.task.TaskRegistry;
 import java.util.HashSet;
 import java.util.Set;

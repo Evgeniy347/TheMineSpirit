@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.script.ChopTargetParams;
 import com.theminespirit.core.script.ChopTreeParams;
 import com.theminespirit.core.script.StripLogParams;
+import com.theminespirit.core.script.api.ChopTargetParams;
 
 final class HarvestScripts {
     private HarvestScripts() {}

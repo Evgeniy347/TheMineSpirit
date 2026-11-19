@@ -1,6 +1,9 @@
 package com.theminespirit.core.script;
 
 import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.script.api.CatalogLimits;
+import com.theminespirit.core.script.api.ParamSpec;
+import com.theminespirit.core.script.api.ScriptSpec;
 import java.util.List;
 
 final class GatherScriptSpecs {

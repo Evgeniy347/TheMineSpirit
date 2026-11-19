@@ -2,6 +2,7 @@ package com.theminespirit.core.script;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.theminespirit.core.script.api.CatalogLimits;
 import org.junit.jupiter.api.Test;
 
 class CatalogLimitsTests {

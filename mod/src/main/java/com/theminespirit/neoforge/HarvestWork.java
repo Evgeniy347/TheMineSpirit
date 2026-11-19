@@ -8,7 +8,7 @@ import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.BreakSkipTally;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.script.CatalogLimits;
+import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import com.theminespirit.neoforge.inventory.StackMapper;
 import java.util.ArrayList;

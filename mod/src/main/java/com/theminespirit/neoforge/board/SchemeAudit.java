@@ -10,7 +10,7 @@ import com.theminespirit.core.building.SchemeFilter;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.script.BuildSchematicParams;
+import com.theminespirit.core.script.api.BuildSchematicParams;
 import com.theminespirit.neoforge.SchematicResources;
 import java.util.List;
 import java.util.Optional;
