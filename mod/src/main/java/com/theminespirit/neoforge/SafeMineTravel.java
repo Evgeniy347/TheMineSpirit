@@ -24,7 +24,6 @@ final class SafeMineTravel {
     }
 
     private static final double APPROACH_ARRIVAL = 0.6;
-    private static final int COLLECT_RADIUS = 4;
     private static final int FALL_SETTLE_TICKS = 8;
     private static final int FALL_WAIT_TICKS = 60;
 
@@ -101,7 +100,7 @@ final class SafeMineTravel {
                         spirit,
                         IdFilter.matchAll(),
                         step.stand(),
-                        COLLECT_RADIUS,
+                        SpiritConfig.collectRadius(),
                         PickupTuning.DEFAULT,
                         OverflowMode.BY_VALUE);
                 yield Step.COLLECT;

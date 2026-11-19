@@ -21,7 +21,6 @@ final class BrushScript implements ScriptInstance {
     private static final String SCUTE = "minecraft:armadillo_scute";
     private static final double ARRIVAL = 2.0;
     private static final double REACH = 3.0;
-    private static final int COLLECT_RADIUS = 4;
     private static final int BRUSH_DAMAGE = 16;
     private static final int TIMEOUT_TICKS = 2400;
 
@@ -143,7 +142,7 @@ final class BrushScript implements ScriptInstance {
                 spirit,
                 IdFilter.of(List.of(SCUTE)),
                 new BlockCoord(at.getX(), at.getY(), at.getZ()),
-                COLLECT_RADIUS,
+                SpiritConfig.collectRadius(),
                 PickupTuning.DEFAULT,
                 OverflowMode.forSpirit(spirit.isFollowingPlayer()));
         target = null;

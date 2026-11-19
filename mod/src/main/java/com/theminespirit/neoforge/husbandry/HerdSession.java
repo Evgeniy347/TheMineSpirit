@@ -50,7 +50,6 @@ public final class HerdSession {
 
     static final double APPROACH_ARRIVAL = 2.0;
     static final double REACH = 3.0;
-    static final int COLLECT_RADIUS = 3;
     final SpiritEntity spirit;
     final HerdJob job;
     final List<Species> wanted;

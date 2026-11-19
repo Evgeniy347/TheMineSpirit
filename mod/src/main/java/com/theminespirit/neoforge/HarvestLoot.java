@@ -23,15 +23,13 @@ final class HarvestLoot {
         FAILED
     }
 
-    private static final int COLLECT_RADIUS = 4;
-
     private final SpiritEntity spirit;
     private final HarvestSpec spec;
     private final HarvestSearch search;
     private final BlockBreaker breaker;
     private final HarvestRearm rearm;
     private final HarvestCounters counters;
-    private final DropRetries dropRetries = new DropRetries(COLLECT_RADIUS);
+    private final DropRetries dropRetries = new DropRetries(SpiritConfig.collectRadius());
 
     private DropCollector collector;
     private HarvestDeposit deposit;
@@ -137,7 +135,7 @@ final class HarvestLoot {
                 spirit,
                 IdFilter.matchAll(),
                 center,
-                COLLECT_RADIUS,
+                SpiritConfig.collectRadius(),
                 PickupTuning.DEFAULT,
                 OverflowMode.forSpirit(spirit.isFollowingPlayer()));
     }

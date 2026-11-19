@@ -23,7 +23,6 @@ final class ClearAreaRun {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final double APPROACH_ARRIVAL = 0.6;
     private static final int PROTECTED_LOGGED = 10;
-    private static final int COLLECT_RADIUS = 4;
     private static final int LONG_APPROACH = 60;
 
     private final ClearAreaSession session;
@@ -281,7 +280,7 @@ final class ClearAreaRun {
                         session.spirit,
                         IdFilter.matchAll(),
                         session.currentTarget,
-                        COLLECT_RADIUS,
+                        SpiritConfig.collectRadius(),
                         PickupTuning.DEFAULT,
                         OverflowMode.RETURN_TO_BASE);
                 session.state = ClearAreaSession.State.COLLECT;

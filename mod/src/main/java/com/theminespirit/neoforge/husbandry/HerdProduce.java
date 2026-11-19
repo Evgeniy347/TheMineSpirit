@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.husbandry;
 import com.theminespirit.core.husbandry.AnimalRef;
 import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.observation.IdFilter;
+import com.theminespirit.neoforge.SpiritConfig;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.world.entity.animal.Animal;
@@ -87,7 +88,8 @@ final class HerdProduce {
         session.done++;
         session.handledIds.add(session.currentId);
         String woolId = "minecraft:" + sheep.getColor().getName() + "_wool";
-        session.startCollect(IdFilter.of(List.of(woolId)), session.current.blockPosition(), HerdSession.COLLECT_RADIUS);
+        session.startCollect(
+                IdFilter.of(List.of(woolId)), session.current.blockPosition(), SpiritConfig.tightCollectRadius());
     }
 
     void milkOne() {

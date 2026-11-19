@@ -12,6 +12,8 @@ public final class SpiritConfig {
     public static final int DEFAULT_MORE_DROPS_MAX = 64;
     public static final int DEFAULT_MORE_BROKEN_MAX = 256;
     public static final int DEFAULT_MORE_COUNT_MAX = 64;
+    public static final int DEFAULT_COLLECT_RADIUS = 4;
+    public static final int DEFAULT_TIGHT_COLLECT_RADIUS = 3;
 
     private static final ModConfigSpec SPEC;
     private static final ModConfigSpec.IntValue CHUNK_LOADING_RADIUS;
@@ -26,6 +28,8 @@ public final class SpiritConfig {
     private static final ModConfigSpec.IntValue MORE_DROPS_MAX;
     private static final ModConfigSpec.IntValue MORE_BROKEN_MAX;
     private static final ModConfigSpec.IntValue MORE_COUNT_MAX;
+    private static final ModConfigSpec.IntValue COLLECT_RADIUS;
+    private static final ModConfigSpec.IntValue TIGHT_COLLECT_RADIUS;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -83,6 +87,14 @@ public final class SpiritConfig {
                         "Верхний предел количества предметов, которое дух учитывает за один заход.",
                         "Больше — скрипт обмена может просить чрезмерные пачки.")
                 .defineInRange("moreCountMax", DEFAULT_MORE_COUNT_MAX, 1, 256);
+        COLLECT_RADIUS = builder.comment(
+                        "Радиус сбора выпавших предметов после действия духа, в блоках.",
+                        "Шире — дух соберёт и чужой дроп рядом; уже — часть своего дропа останется лежать.")
+                .defineInRange("collectRadius", DEFAULT_COLLECT_RADIUS, 1, 16);
+        TIGHT_COLLECT_RADIUS = builder.comment(
+                        "Радиус сбора для мелких работ — грядка и животные: рядом стоят чужие вещи, их не трогаем.",
+                        "Шире — дух стаскивает дроп соседних работ.")
+                .defineInRange("tightCollectRadius", DEFAULT_TIGHT_COLLECT_RADIUS, 1, 16);
         builder.pop();
         SPEC = builder.build();
     }
@@ -136,6 +148,14 @@ public final class SpiritConfig {
 
     public static int moreBrokenMax() {
         return loaded(MORE_BROKEN_MAX, DEFAULT_MORE_BROKEN_MAX);
+    }
+
+    public static int collectRadius() {
+        return loaded(COLLECT_RADIUS, DEFAULT_COLLECT_RADIUS);
+    }
+
+    public static int tightCollectRadius() {
+        return loaded(TIGHT_COLLECT_RADIUS, DEFAULT_TIGHT_COLLECT_RADIUS);
     }
 
     public static int moreCountMax() {

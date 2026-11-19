@@ -17,5 +17,9 @@ class SpiritConfigDefaultsTests {
                 SpiritConfig.DEFAULT_MORE_DANGERS_MAX,
                 "книги сноса и опасностей одного размера: обе помнят следы правок мира");
         assertEquals(64, SpiritConfig.DEFAULT_MORE_COUNT_MAX, "предел пачки предметов — 64, как стак");
+        assertEquals(4, SpiritConfig.DEFAULT_COLLECT_RADIUS, "обычный сбор дропа — 4 блока");
+        assertTrue(
+                SpiritConfig.DEFAULT_TIGHT_COLLECT_RADIUS < SpiritConfig.DEFAULT_COLLECT_RADIUS,
+                "мелкие работы собирают ближе: рядом чужие вещи");
     }
 }

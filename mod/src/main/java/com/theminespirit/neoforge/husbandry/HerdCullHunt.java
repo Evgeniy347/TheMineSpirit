@@ -6,6 +6,7 @@ import com.theminespirit.core.husbandry.HerdSafety;
 import com.theminespirit.core.husbandry.SwordTier;
 import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.observation.IdFilter;
+import com.theminespirit.neoforge.SpiritConfig;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -98,7 +99,7 @@ final class HerdCullHunt {
             session.current = null;
             session.currentId = null;
             flock.refreshSnapshot(true);
-            session.startCollect(IdFilter.matchAll(), at, HerdSession.COLLECT_RADIUS);
+            session.startCollect(IdFilter.matchAll(), at, SpiritConfig.tightCollectRadius());
         } else {
             session.beginApproach(session.current);
         }

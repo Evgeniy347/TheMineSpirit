@@ -19,7 +19,6 @@ final class FarmLoot {
         FAILED
     }
 
-    private static final int COLLECT_RADIUS = 3;
     private static final PickupTuning PICK_PICKUP = new PickupTuning(
             PickupTuning.REFRESH_TICKS,
             FarmTuning.REACH,
@@ -54,7 +53,12 @@ final class FarmLoot {
         PickupTuning tuning = kind.harvestMethod() == HarvestMethod.PICK || column ? PICK_PICKUP : PickupTuning.DEFAULT;
         BlockCoord center = column ? FarmSearch.coordOf(spirit.blockPosition()) : cropPos != null ? cropPos : ground;
         collector = new DropCollector(
-                spirit, harvested, center, COLLECT_RADIUS, tuning, OverflowMode.forSpirit(spirit.isFollowingPlayer()));
+                spirit,
+                harvested,
+                center,
+                SpiritConfig.tightCollectRadius(),
+                tuning,
+                OverflowMode.forSpirit(spirit.isFollowingPlayer()));
     }
 
     Step tick() {
