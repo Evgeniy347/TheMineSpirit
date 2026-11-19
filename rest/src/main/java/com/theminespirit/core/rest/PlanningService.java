@@ -26,7 +26,7 @@ public final class PlanningService {
         this.planner = new FallbackPlanner(catalog, conditions);
     }
 
-    public TaskNode validatePlan(JsonNode plan) {
+    TaskNode validatePlan(JsonNode plan) {
         Objects.requireNonNull(plan, "plan не может быть null: сухой прогон проверяет присланный узел");
         try {
             return PlanParser.parse(plan.toString(), catalog, conditions);

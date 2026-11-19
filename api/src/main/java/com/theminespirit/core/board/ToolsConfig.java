@@ -54,7 +54,7 @@ public record ToolsConfig(List<String> set, String tier, List<String> repairTier
         return DEFAULTS;
     }
 
-    public static ToolsConfig fromJson(@Nullable JsonNode node, String origin) {
+    static ToolsConfig fromJson(@Nullable JsonNode node, String origin) {
         Objects.requireNonNull(origin, "Источник таблицы не может быть null: сообщение об ошибке называет файл");
         if (node == null || node.isNull()) {
             return DEFAULTS;

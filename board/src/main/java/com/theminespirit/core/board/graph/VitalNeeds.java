@@ -92,7 +92,7 @@ public final class VitalNeeds {
         return parse(JsonResource.parse(json, origin), origin);
     }
 
-    public static List<Need> parse(JsonNode root, String origin) {
+    static List<Need> parse(JsonNode root, String origin) {
         Objects.requireNonNull(root, "Таблица нужд не может быть null: без неё жизненный гейт не построить");
         List<Need> needs = new ArrayList<>();
         Map<String, String> seen = new LinkedHashMap<>();
