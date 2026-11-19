@@ -1,7 +1,6 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.board.api.BoardCase;
-import com.theminespirit.core.board.api.ConfigStamp;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -48,6 +47,7 @@ public final class Board {
     private final BoardDependencies dependencies;
     private final LongSupplier nowTicks;
     private final BoardEvents events;
+    private final TicketLifecycle lifecycle;
 
     public Board(LongSupplier nowTicks) {
         this(nowTicks, BoardEvents.NONE);
@@ -63,6 +63,25 @@ public final class Board {
         this.failures =
                 new BoardFailureDesk(blocked, tickets, statuses, claimAssignees, stuckSpirits, blockNotes, detachments);
         this.dependencies = new BoardDependencies(tickets, statuses, ledger);
+        this.lifecycle = new TicketLifecycle(
+                statuses,
+                tickets,
+                claimAssignees,
+                failTicks,
+                ticketFailures,
+                lastFailReasons,
+                waitNotes,
+                holds,
+                blocked,
+                casePauses,
+                stuckSpirits,
+                failHistory,
+                ledger,
+                events,
+                dependencies,
+                failures,
+                detachments,
+                nowTicks);
     }
 
     public long now() {
@@ -110,54 +129,11 @@ public final class Board {
     }
 
     public BoardOutcome submit(BoardTicket ticket) {
-        Objects.requireNonNull(ticket, "ticket не может быть null: доска хранит задание, " + "а не пустую заявку");
-        if (!SettlementStage.allows(ticket.boardCase(), ticket.level(), ledger.stage())) {
-            return BoardOutcome.STAGE_LOCKED;
-        }
-        long now = nowTicks.getAsLong();
-        BoardTicket existing = tickets.get(ticket.id());
-        if (existing != null) {
-            BoardStatus current = statuses.get(ticket.id());
-            boolean stage = StageTicket.stage(ticket.id());
-            boolean changed = BoardRules.changed(current, ticket, existing, stage);
-            boolean retry = current == BoardStatus.FAILED
-                    && !recentlyFailed(ticket.id(), now)
-                    && (stage || BoardRules.retriedFromWorld(ticket.boardCase()));
-            if (current == BoardStatus.BLOCKED) {
-                if (changed) {
-                    tickets.put(ticket.id(), ticket);
-                    events.transition(BoardLog.Event.SUBMITTED, ticket, null, now);
-                }
-                return BoardOutcome.DUPLICATE;
-            }
-            if (!changed && !retry) {
-                return BoardOutcome.DUPLICATE;
-            }
-            tickets.put(ticket.id(), ticket);
-            statuses.put(ticket.id(), BoardStatus.PENDING);
-            claimAssignees.remove(ticket.id());
-            if (changed) {
-                ticketFailures.remove(ticket.id());
-                lastFailReasons.remove(ticket.id());
-                blocked.clear(ticket.id());
-            }
-            events.transition(BoardLog.Event.SUBMITTED, ticket, null, now);
-            return BoardOutcome.ACCEPTED;
-        }
-        if (recentlyFailed(ticket.id(), now)) {
-            return BoardOutcome.BACKOFF;
-        }
-        tickets.put(ticket.id(), ticket);
-        statuses.put(ticket.id(), BoardStatus.PENDING);
-        events.transition(BoardLog.Event.SUBMITTED, ticket, null, now);
-        return BoardOutcome.ACCEPTED;
+        return lifecycle.submit(ticket);
     }
 
     public boolean recentlyFailed(String ticketId, long now) {
-        Objects.requireNonNull(ticketId, "ticketId не может быть null: откат считается по id задания");
-        BoardTiming.require(now);
-        Long failedAt = failTicks.get(ticketId);
-        return failedAt != null && now - failedAt < BoardTuning.failBackoffTicks();
+        return lifecycle.recentlyFailed(ticketId, now);
     }
 
     public List<BoardTicket> claimable(StockView stock, long now) {
@@ -197,65 +173,11 @@ public final class Board {
     }
 
     public BoardOutcome claim(String ticketId, UUID spirit, long now) {
-        Objects.requireNonNull(ticketId, "ticketId не может быть null: выдача идёт по id задания");
-        Objects.requireNonNull(spirit, "spirit не может быть null: выдача идёт конкретному духу");
-        BoardTiming.require(now);
-        BoardTicket ticket = tickets.get(ticketId);
-        if (ticket == null) {
-            return BoardOutcome.NOT_FOUND;
-        }
-        BoardStatus status = statuses.get(ticketId);
-        if (status == BoardStatus.DONE || status == BoardStatus.FAILED || status == BoardStatus.CANCELLED) {
-            return BoardOutcome.NOT_FOUND;
-        }
-        if (status == BoardStatus.BLOCKED) {
-            return BoardOutcome.BLOCKED;
-        }
-        if (holds.held(ticketId)) {
-            return BoardOutcome.GATE_BLOCKED;
-        }
-        if (!dependenciesDone(ticket)) {
-            return BoardOutcome.NOT_FOUND;
-        }
-        if (status == BoardStatus.ASSIGNED) {
-            if (spirit.equals(claimAssignees.get(ticketId))) {
-                return BoardOutcome.CLAIMED;
-            }
-            return BoardOutcome.TAKEN_BY_OTHER;
-        }
-        if (!availableTo(spirit, ticket, now)) {
-            return BoardOutcome.SPIRIT_PAUSED;
-        }
-        if (status == BoardStatus.WAITING_RESOURCES) {
-            return BoardOutcome.GATE_BLOCKED;
-        }
-        statuses.put(ticketId, BoardStatus.ASSIGNED);
-        claimAssignees.put(ticketId, spirit);
-        waitNotes.forget(ticketId);
-        holds.release(ticketId);
-        events.transition(BoardLog.Event.ASSIGNED, ticket, spirit, now);
-        return BoardOutcome.CLAIMED;
+        return lifecycle.claim(ticketId, spirit, now);
     }
 
     public boolean complete(String ticketId) {
-        Objects.requireNonNull(ticketId, "ticketId не может быть null: завершение идёт по id задания");
-        BoardTicket ticket = tickets.get(ticketId);
-        if (ticket == null || statuses.get(ticketId) != BoardStatus.ASSIGNED) {
-            return false;
-        }
-        UUID holder = holder(ticket);
-        if (holder != null) {
-            casePauses.reset(holder, ticket.boardCase());
-        }
-        RescuePlans.complete(stuckSpirits, ticket, holder, nowTicks.getAsLong());
-        statuses.put(ticketId, BoardStatus.DONE);
-        ledger.complete(ticket.boardCase(), ticket.level());
-        events.transition(BoardLog.Event.DONE, ticket, claimAssignees.get(ticketId), nowTicks.getAsLong());
-        ticketFailures.remove(ticketId);
-        lastFailReasons.remove(ticketId);
-        blocked.clear(ticketId);
-        holds.release(ticketId);
-        return true;
+        return lifecycle.complete(ticketId);
     }
 
     public boolean fail(String ticketId) {
@@ -271,31 +193,7 @@ public final class Board {
     }
 
     public boolean fail(String id, StockView s, @Nullable String why, GraphBlock.@Nullable Need need, boolean lost) {
-        Objects.requireNonNull(id, "ticketId не может быть null: провал идёт по id задания");
-        Objects.requireNonNull(s, "stock не может быть null: по нему фиксируются условия блокировки");
-        BoardTicket ticket = tickets.get(id);
-        if (ticket == null || statuses.get(id) != BoardStatus.ASSIGNED) {
-            return false;
-        }
-        long now = nowTicks.getAsLong();
-        statuses.put(id, BoardStatus.FAILED);
-        failTicks.put(id, now);
-        UUID holder = holder(ticket);
-        if (holder != null) {
-            noteCaseFailure(holder, ticket, now);
-            if (lost || need instanceof GraphBlock.Path) {
-                stuckSpirits.mark(holder, now, why == null ? "провал движения" : why, true);
-            }
-        }
-        String previous = why == null ? null : lastFailReasons.put(id, why);
-        failHistory.note(id, now, why);
-        if (why != null && why.equals(previous)) {
-            ticketFailures.put(id, BoardTuning.ticketFailLimit() - 1);
-        }
-        noteTicketFailure(ticket, now, s, need);
-        holds.release(id);
-        events.transition(BoardLog.Event.FAILED, ticket.withFailure(why), claimAssignees.get(id), now);
-        return true;
+        return lifecycle.fail(id, s, why, need, lost);
     }
 
     public StuckSpirits stuck() {
@@ -309,8 +207,7 @@ public final class Board {
 
     public boolean availableTo(UUID spirit, BoardTicket ticket, long now) {
         BoardTiming.require(now);
-        boolean rescue = ticket.boardCase() == BoardCase.RESCUE_SPIRIT;
-        return (rescue || !stuckSpirits.isStuck(spirit, now)) && casePauses.available(spirit, ticket, now);
+        return lifecycle.availableTo(spirit, ticket, now);
     }
 
     public boolean caseDetached(UUID spirit, BoardCase boardCase) {
@@ -358,17 +255,7 @@ public final class Board {
     }
 
     public boolean reopen(String ticketId) {
-        Objects.requireNonNull(ticketId, "ticketId не может быть null: переоткрытие идёт по id задания");
-        BoardTicket ticket = tickets.get(ticketId);
-        if (ticket == null || statuses.get(ticketId) != BoardStatus.DONE) {
-            return false;
-        }
-        tickets.remove(ticketId);
-        statuses.remove(ticketId);
-        claimAssignees.remove(ticketId);
-        ledger.reopen(ticket.boardCase(), ticket.level());
-        events.transition(BoardLog.Event.REOPENED, ticket, null, nowTicks.getAsLong());
-        return true;
+        return lifecycle.reopen(ticketId);
     }
 
     public boolean require(String ticketId, Map<String, Integer> requiredItems) {
@@ -603,30 +490,6 @@ public final class Board {
 
     private int evictOverflow(Set<String> liveCauses) {
         return PendingEvict.evict(tickets, statuses, this::cancel, liveCauses);
-    }
-
-    private void noteCaseFailure(UUID spirit, BoardTicket ticket, long now) {
-        if (!casePauses.noteFailure(spirit, ticket, now)) {
-            return;
-        }
-        detachments.add(new BoardLogEntry(
-                BoardLog.Event.DETACHED,
-                now,
-                ticket.id(),
-                ticket.boardCase(),
-                ticket.level(),
-                ticket.cause(),
-                ticket.priority(),
-                ticket.priority(),
-                List.of(),
-                spirit.toString(),
-                ConfigStamp.current(),
-                now));
-    }
-
-    private void noteTicketFailure(BoardTicket ticket, long now, StockView stock, GraphBlock.@Nullable Need need) {
-        int failuresSoFar = ticketFailures.merge(ticket.id(), 1, Integer::sum);
-        failures.noteFailure(ticket, failuresSoFar, now, stock, need);
     }
 
     private void unblockChanged(StockView stock, long now) {
