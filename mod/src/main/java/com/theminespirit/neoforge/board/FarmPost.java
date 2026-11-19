@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.Applicability;
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BreedingRules;
 import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.EatNeed;
@@ -37,7 +38,6 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class FarmPost {
-    private static final int HERD_RADIUS = 32;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final StateChangeLog HOE = new StateChangeLog();
 
@@ -285,7 +285,8 @@ final class FarmPost {
 
     private static @Nullable Species herdSpecies(ServerLevel level, BlockCoord home) {
         Vec3 center = new Vec3(home.x() + 0.5, home.y(), home.z() + 0.5);
-        for (Animal animal : HerdSurvey.query(level, center, HERD_RADIUS)) {
+        for (Animal animal :
+                HerdSurvey.query(level, center, BoardConfig.current().facts().herdSurveyRadius())) {
             Optional<Species> found = HerdSpecies.of(animal);
             if (found.isPresent()) {
                 return found.orElseThrow();

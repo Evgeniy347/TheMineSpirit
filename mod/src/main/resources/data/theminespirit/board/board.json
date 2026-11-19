@@ -241,6 +241,8 @@
     "fieldRadius": 24,
     "conflictRadius": 4,
     "threatRadius": 16,
-    "farmScanRadius": 16
+    "farmScanRadius": 16,
+    "herdSurveyRadius": 32,
+    "lifeScanRadius": 16
   }
 }

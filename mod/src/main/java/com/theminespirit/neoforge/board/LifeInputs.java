@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.LifeEvents;
 import com.theminespirit.core.reload.DataTables;
@@ -25,7 +26,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 
 public final class LifeInputs {
-    private static final double RADIUS = 16.0;
     private static final float FALL_RISK = 3.0F;
     private static final double FALLING_SPEED = -0.3;
     private static final float LOW_HEALTH = 0.35F;
@@ -86,12 +86,12 @@ public final class LifeInputs {
         double maxY = Double.NEGATIVE_INFINITY;
         double maxZ = Double.NEGATIVE_INFINITY;
         for (SpiritEntity spirit : spirits) {
-            minX = Math.min(minX, spirit.getX() - RADIUS);
-            minY = Math.min(minY, spirit.getY() - RADIUS);
-            minZ = Math.min(minZ, spirit.getZ() - RADIUS);
-            maxX = Math.max(maxX, spirit.getX() + RADIUS);
-            maxY = Math.max(maxY, spirit.getY() + RADIUS);
-            maxZ = Math.max(maxZ, spirit.getZ() + RADIUS);
+            minX = Math.min(minX, spirit.getX() - BoardConfig.current().facts().lifeScanRadius());
+            minY = Math.min(minY, spirit.getY() - BoardConfig.current().facts().lifeScanRadius());
+            minZ = Math.min(minZ, spirit.getZ() - BoardConfig.current().facts().lifeScanRadius());
+            maxX = Math.max(maxX, spirit.getX() + BoardConfig.current().facts().lifeScanRadius());
+            maxY = Math.max(maxY, spirit.getY() + BoardConfig.current().facts().lifeScanRadius());
+            maxZ = Math.max(maxZ, spirit.getZ() + BoardConfig.current().facts().lifeScanRadius());
         }
         return new AABB(minX, minY, minZ, maxX, maxY, maxZ);
     }

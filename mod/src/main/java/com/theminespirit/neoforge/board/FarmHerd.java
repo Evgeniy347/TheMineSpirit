@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BreedingRules;
 import com.theminespirit.core.board.HerdCap;
 import com.theminespirit.core.board.TicketTarget;
@@ -22,7 +23,6 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 final class FarmHerd {
-    private static final int HERD_RADIUS = 32;
 
     private FarmHerd() {}
 
@@ -165,7 +165,8 @@ final class FarmHerd {
     private static int count(ServerLevel level, BlockCoord home, Species species) {
         Vec3 center = new Vec3(home.x() + 0.5, home.y(), home.z() + 0.5);
         int count = 0;
-        for (Animal animal : HerdSurvey.query(level, center, HERD_RADIUS)) {
+        for (Animal animal :
+                HerdSurvey.query(level, center, BoardConfig.current().facts().herdSurveyRadius())) {
             if (animal.isRemoved() || !animal.isAlive()) {
                 continue;
             }
@@ -188,7 +189,8 @@ final class FarmHerd {
 
     private static @Nullable Animal wild(ServerLevel level, BlockCoord home, Species species) {
         Vec3 center = new Vec3(home.x() + 0.5, home.y(), home.z() + 0.5);
-        for (Animal animal : HerdSurvey.query(level, center, HERD_RADIUS)) {
+        for (Animal animal :
+                HerdSurvey.query(level, center, BoardConfig.current().facts().herdSurveyRadius())) {
             if (animal.isRemoved() || !animal.isAlive() || animal.isInLove()) {
                 continue;
             }
