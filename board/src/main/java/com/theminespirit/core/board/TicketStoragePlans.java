@@ -87,7 +87,7 @@ final class TicketStoragePlans {
                                         RADIUS,
                                         BoardConfig.current().plans().supplyContainerRadius())),
                         new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
-                TicketPlans.store(target, Leftovers.ITEMS.toArray(String[]::new))));
+                TicketWorkPlans.store(target, Leftovers.ITEMS.toArray(String[]::new))));
     }
 
     private static TaskNode gatherOnly(TicketTarget target) {

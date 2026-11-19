@@ -39,9 +39,9 @@ final class DefaultPlans {
         plans.put(
                 BoardCase.CLEAR_GROUNDS,
                 (boardCase, target, level) -> Leftovers.with(GroundsPlan.plan(target), target));
-        plans.put(BoardCase.COLLECT_DROPS, (boardCase, target, level) -> TicketPlans.collectDrops(target));
-        plans.put(BoardCase.REPAIR_BUILDING, (boardCase, target, level) -> TicketPlans.repairBuilding(target));
-        plans.put(BoardCase.REPAIR_TOOL, (boardCase, target, level) -> TicketPlans.repairTool(target));
+        plans.put(BoardCase.COLLECT_DROPS, (boardCase, target, level) -> TicketWorkPlans.collectDrops(target));
+        plans.put(BoardCase.REPAIR_BUILDING, (boardCase, target, level) -> TicketWorkPlans.repairBuilding(target));
+        plans.put(BoardCase.REPAIR_TOOL, (boardCase, target, level) -> TicketWorkPlans.repairTool(target));
         plans.put(BoardCase.STOCK_CHESTS, (boardCase, target, level) -> TicketFarmPlans.yard(target));
         plans.put(BoardCase.CRAFTING_STATION, (boardCase, target, level) -> TicketFarmPlans.tableNearSpirit(target));
         plans.put(
@@ -58,7 +58,7 @@ final class DefaultPlans {
                 (boardCase, target, level) ->
                         TicketFarmPlans.placeInYard(NamespacedId.MINECRAFT + "furnace", 1, target));
         plans.put(BoardCase.CRAFT_TORCHES, (boardCase, target, level) -> TorchPlans.plan(target));
-        plans.put(BoardCase.SMELT_CHARCOAL, (boardCase, target, level) -> TicketPlans.smeltCharcoal(target));
+        plans.put(BoardCase.SMELT_CHARCOAL, (boardCase, target, level) -> TicketWorkPlans.smeltCharcoal(target));
         for (BoardCase brew : List.of(
                 BoardCase.GRIND_BLAZE_POWDER,
                 BoardCase.BREW_POTION,
@@ -66,7 +66,7 @@ final class DefaultPlans {
                 BoardCase.CRAFT_BREWING_STAND)) {
             plans.put(brew, (boardCase, target, level) -> BrewPlans.plan(boardCase, target));
         }
-        plans.put(BoardCase.FISH, (boardCase, target, level) -> TicketPlans.fishWorkPoint(target));
+        plans.put(BoardCase.FISH, (boardCase, target, level) -> TicketWorkPlans.fishWorkPoint(target));
         for (BoardCase tool : List.of(
                 BoardCase.CRAFT_WOODEN_PICKAXE,
                 BoardCase.CRAFT_WOODEN_AXE,
@@ -109,7 +109,7 @@ final class DefaultPlans {
         plans.put(
                 BoardCase.ENCHANT_SHELVES,
                 (boardCase, target, level) -> TicketPlans.craft(NamespacedId.MINECRAFT + "bookshelf", 4, target));
-        plans.put(BoardCase.DISMANTLE_SHELTER, (boardCase, target, level) -> TicketPlans.dismantleShelter(target));
+        plans.put(BoardCase.DISMANTLE_SHELTER, (boardCase, target, level) -> TicketWorkPlans.dismantleShelter(target));
         plans.put(BoardCase.BREED_ANIMALS, (boardCase, target, level) -> TicketFarmPlans.breedAnimals(target));
         plans.put(BoardCase.HERD_CULL, (boardCase, target, level) -> TicketFarmPlans.herdCull(target));
         plans.put(BoardCase.RELOCATE_BUILDING, (boardCase, target, level) -> TicketPlans.relocateBuilding(target));

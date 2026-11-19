@@ -69,7 +69,7 @@ final class BrewPlans {
                 new ScriptCall(ACQUIRE, Map.of(ITEM, NamespacedId.MINECRAFT + "soul_sand", COUNT, 1)),
                 new ScriptCall(ACQUIRE, Map.of(ITEM, NamespacedId.MINECRAFT + "nether_wart", COUNT, 1)),
                 new ScriptCall("farm_nether_wart", Map.of(COUNT, count, RADIUS, CatalogLimits.FARM_RADIUS_DEFAULT)),
-                TicketPlans.store(target, NamespacedId.MINECRAFT + "nether_wart")));
+                TicketWorkPlans.store(target, NamespacedId.MINECRAFT + "nether_wart")));
     }
 
     private static TaskNode stand(TicketTarget target) {

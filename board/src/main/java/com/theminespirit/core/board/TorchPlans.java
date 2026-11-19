@@ -83,7 +83,7 @@ final class TorchPlans {
     }
 
     static TaskNode plan(TicketTarget target) {
-        int sticks = (TicketPlans.torchCount(target) + 3) / 4;
+        int sticks = (TicketWorkPlans.torchCount(target) + 3) / 4;
         return new SequenceNode(List.of(
                 TicketPlans.gotoTarget(target),
                 TicketPlans.takeFrom("minecraft:coal", sticks),
@@ -91,8 +91,8 @@ final class TorchPlans {
                 new FallbackNode(List.of(
                         new ScriptCall(ACQUIRE, Map.of(ITEM, "minecraft:stick", COUNT, sticks)),
                         new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
-                TicketPlans.craft(TORCH, TicketPlans.torchCount(target), target),
-                TicketPlans.store(
+                TicketPlans.craft(TORCH, TicketWorkPlans.torchCount(target), target),
+                TicketWorkPlans.store(
                         target,
                         LEFTOVERS.stream().filter(item -> !TORCH.equals(item)).toArray(String[]::new))));
     }
