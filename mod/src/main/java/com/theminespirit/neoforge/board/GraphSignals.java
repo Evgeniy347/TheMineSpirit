@@ -1,18 +1,18 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.graph.GraphCadence;
-import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import net.minecraft.world.entity.Entity;
 
 final class GraphSignals {
     private GraphSignals() {}
 
-    static Set<String> of(Set<String> events, List<SpiritEntity> spirits, BoardService service, long now) {
+    static Set<String> of(Set<String> events, List<? extends Entity> spirits, BoardService service, long now) {
         Set<String> alive = new HashSet<>();
         Set<String> stuck = new HashSet<>();
-        for (SpiritEntity spirit : spirits) {
+        for (Entity spirit : spirits) {
             if (spirit.isRemoved()) {
                 continue;
             }

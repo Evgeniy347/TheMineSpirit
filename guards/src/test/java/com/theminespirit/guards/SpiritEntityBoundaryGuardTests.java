@@ -6,7 +6,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class SpiritEntityBoundaryGuardTests {
-    private static final int MAX_FILES = 416;
+    private static final int MAX_FILES = 413;
 
     @Test
     void spiritEntity_ReferencesGrow_AreReported() {
