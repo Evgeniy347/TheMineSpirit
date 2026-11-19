@@ -45,8 +45,8 @@ public final class PlotProtection {
 
     private PlotProtection() {}
 
-    public static boolean treeObstacle(boolean treePart, boolean marked) {
-        return treePart && !marked;
+    public static boolean treeObstacle(boolean treePart, boolean builtTrunk) {
+        return treePart && !builtTrunk;
     }
 
     public static Decision check(

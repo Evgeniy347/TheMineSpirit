@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
@@ -80,7 +81,17 @@ final class ProtectionDecide {
             return false;
         }
         PlacedBlocksData placed = PlacedBlocksData.get(server);
-        return PlotProtection.treeObstacle(true, placed.isMarked(pos) || placed.isSpiritMarked(pos));
+        boolean marked = placed.isMarked(pos) || placed.isSpiritMarked(pos);
+        return PlotProtection.treeObstacle(true, marked && !canopy(level, pos));
+    }
+
+    private static boolean canopy(Level level, BlockPos pos) {
+        for (BlockPos near : BlockPos.betweenClosed(pos.offset(-2, 0, -2), pos.offset(2, 4, 2))) {
+            if (level.getBlockState(near).is(BlockTags.LEAVES)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private PlotOutcome plotCheck(Request request, Level level, BlockCoord coord) {
