@@ -30,7 +30,6 @@ final class TicketStoragePlans {
     private static final String COBBLESTONE = "cobblestone";
     private static final String DEFAULT_SUPPLY_ITEM = "dirt";
     private static final int DEFAULT_SUPPLY_COUNT = 64;
-    private static final int SUPPLY_CONTAINER_RADIUS = 8;
     private static final int RESTOCK_FOOD_COUNT = 48;
 
     private TicketStoragePlans() {}
@@ -49,7 +48,15 @@ final class TicketStoragePlans {
                 gotoPoint(deposit),
                 new ScriptCall(
                         "deposit",
-                        Map.of(CONTAINER, WAREHOUSE, ITEM, item, COUNT, batch, RADIUS, SUPPLY_CONTAINER_RADIUS))));
+                        Map.of(
+                                CONTAINER,
+                                WAREHOUSE,
+                                ITEM,
+                                item,
+                                COUNT,
+                                batch,
+                                RADIUS,
+                                BoardConfig.current().plans().supplyContainerRadius()))));
     }
 
     static TaskNode gatherMaterials(TicketTarget target) {
@@ -78,7 +85,7 @@ final class TicketStoragePlans {
                                         COUNT,
                                         batch,
                                         RADIUS,
-                                        SUPPLY_CONTAINER_RADIUS)),
+                                        BoardConfig.current().plans().supplyContainerRadius())),
                         new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
                 TicketPlans.store(target, Leftovers.ITEMS.toArray(String[]::new))));
     }

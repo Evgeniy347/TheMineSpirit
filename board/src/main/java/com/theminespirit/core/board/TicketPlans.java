@@ -33,12 +33,8 @@ import org.jspecify.annotations.Nullable;
 public final class TicketPlans {
     public static final Set<BoardCase> EXTERNAL_CASES = Set.of(BoardCase.EAT_TO_FULL);
     public static final String MINE_DESCENT_SCHEME = StageSites.MINE_DESCENT_SCHEME;
-    public static final int FENCE_PARTS = 4;
     public static final String MINE_DESCENT_ROTATION = StageSites.MINE_DESCENT_ROTATION;
-    public static final int MINE_TUNNEL_SIZE = 5;
-    private static final int MINE_FLOOR_TAKE = 32;
     private static final String BLOCK = "block";
-    private static final int LEFT_ORE_RADIUS = 4;
     private static final String ITEM = "item";
     private static final String COUNT = "count";
     private static final String CONTAINER = "container";
@@ -46,9 +42,6 @@ public final class TicketPlans {
     private static final String SPECIES = "species";
     private static final String RADIUS = "radius";
     private static final String TORCH = "minecraft:torch";
-    private static final int TORCHES_PER_CRAFT = 4;
-    private static final int CHARCOAL_LOGS = 4;
-    private static final int CHARCOAL_BATCH = 2;
     private static final String BUILD_SCHEMATIC = "build_schematic";
     private static final String FILE = "file";
     private static final String FILL = "fill";
@@ -62,16 +55,24 @@ public final class TicketPlans {
     private static final String MINECRAFT = "minecraft:";
     private static final String DEFAULT_SCHEME = "stone_house";
     private static final String DEFAULT_LURE_ITEM = "wheat";
-    private static final int DISMANTLE_RADIUS = 4;
     private static final String FENCE_SCHEME = "fence";
     private static final String ENCHANT_ROOM_SCHEME = "enchant_room_v1";
     private static final String ENCHANT_ROOM_SHELVES_SCHEME = "enchant_room_v2";
     private static final String ENCHANT_ROOM_HALL_SCHEME = "enchant_room_v3";
-    private static final int SUPPLY_CONTAINER_RADIUS = 8;
-    private static final int MINE_STEPS_SIZE = 3;
-    private static final int RELOCATE_CLEAR_RADIUS = 4;
 
     private TicketPlans() {}
+
+    public static int fenceParts() {
+        return BoardConfig.current().plans().fenceParts();
+    }
+
+    public static int mineTunnelSize() {
+        return BoardConfig.current().plans().mineTunnelSize();
+    }
+
+    private static PlanTuning plans() {
+        return BoardConfig.current().plans();
+    }
 
     public static Optional<String> craftItem(BoardCase boardCase) {
         Objects.requireNonNull(boardCase, "Кейс крафта не может быть null: без него неизвестен предмет");
@@ -234,7 +235,7 @@ public final class TicketPlans {
                                 COUNT,
                                 Math.max(1, Math.min(count, CatalogLimits.COUNT_MAX)),
                                 RADIUS,
-                                SUPPLY_CONTAINER_RADIUS)),
+                                plans().supplyContainerRadius())),
                 new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
@@ -248,9 +249,9 @@ public final class TicketPlans {
                                 ITEM,
                                 item,
                                 COUNT,
-                                MINE_FLOOR_TAKE,
+                                plans().mineFloorTake(),
                                 RADIUS,
-                                SUPPLY_CONTAINER_RADIUS)),
+                                plans().supplyContainerRadius())),
                 new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN))));
     }
 
@@ -268,7 +269,7 @@ public final class TicketPlans {
                                 "z",
                                 target.target().z(),
                                 "size",
-                                MINE_TUNNEL_SIZE));
+                                mineTunnelSize()));
             case 3 ->
                 sequence(
                         new ScriptCall(
@@ -281,24 +282,24 @@ public final class TicketPlans {
                                         "z",
                                         target.target().z(),
                                         "size",
-                                        MINE_STEPS_SIZE)),
+                                        plans().mineStepsSize())),
                         new ScriptCall(
                                 FILL,
                                 Map.of(
                                         BLOCK,
                                         "minecraft:cobblestone",
                                         "x1",
-                                        target.target().x() - MINE_STEPS_SIZE,
+                                        target.target().x() - plans().mineStepsSize(),
                                         "y1",
                                         target.target().y() - 1,
                                         "z1",
-                                        target.target().z() - MINE_STEPS_SIZE,
+                                        target.target().z() - plans().mineStepsSize(),
                                         "x2",
-                                        target.target().x() + MINE_STEPS_SIZE,
+                                        target.target().x() + plans().mineStepsSize(),
                                         "y2",
                                         target.target().y() - 1,
                                         "z2",
-                                        target.target().z() + MINE_STEPS_SIZE)));
+                                        target.target().z() + plans().mineStepsSize())));
             default ->
                 sequence(
                         gotoPoint(target.target()),
@@ -312,7 +313,7 @@ public final class TicketPlans {
                                         "z",
                                         target.target().z(),
                                         "size",
-                                        MINE_TUNNEL_SIZE)));
+                                        mineTunnelSize())));
         };
     }
 
@@ -389,7 +390,7 @@ public final class TicketPlans {
     private static TaskNode buildFence(TicketTarget target, int level) {
         int part = target.count();
         String base = level >= 2 ? "wall_3" : FENCE_SCHEME;
-        String scheme = part >= 1 && part <= FENCE_PARTS ? SchematicPart.name(base, part, FENCE_PARTS) : base;
+        String scheme = part >= 1 && part <= fenceParts() ? SchematicPart.name(base, part, fenceParts()) : base;
         return schematic(scheme, target.target(), target);
     }
 
@@ -468,14 +469,14 @@ public final class TicketPlans {
     }
 
     static int torchCount(TicketTarget target) {
-        int count = target.count() > 0 ? target.count() : TORCHES_PER_CRAFT;
+        int count = target.count() > 0 ? target.count() : plans().torchesPerCraft();
         return Math.min(count, CatalogLimits.COUNT_MAX);
     }
 
     private static TaskNode smeltCharcoal(TicketTarget target) {
         String log = target.supplyItem() == null ? "oak_log" : target.supplyItem();
-        int logs = target.supplyCount() > 0 ? target.supplyCount() : CHARCOAL_LOGS;
-        int charcoal = target.count() > 0 ? target.count() : CHARCOAL_BATCH;
+        int logs = target.supplyCount() > 0 ? target.supplyCount() : plans().charcoalLogs();
+        int charcoal = target.count() > 0 ? target.count() : plans().charcoalBatch();
         return sequence(
                 gotoTarget(target),
                 new ScriptCall(ACQUIRE, Map.of(ITEM, log, COUNT, Math.min(logs, CatalogLimits.COUNT_MAX))),
@@ -500,7 +501,7 @@ public final class TicketPlans {
                                     COUNT,
                                     CatalogLimits.COUNT_MAX,
                                     RADIUS,
-                                    SUPPLY_CONTAINER_RADIUS,
+                                    plans().supplyContainerRadius(),
                                     "leftover",
                                     true)),
                     new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
@@ -513,17 +514,17 @@ public final class TicketPlans {
                 CLEAR_AREA,
                 Map.of(
                         "x1",
-                        target.target().x() - DISMANTLE_RADIUS,
+                        target.target().x() - plans().dismantleRadius(),
                         "y1",
                         target.target().y(),
                         "z1",
-                        target.target().z() - DISMANTLE_RADIUS,
+                        target.target().z() - plans().dismantleRadius(),
                         "x2",
-                        target.target().x() + DISMANTLE_RADIUS,
+                        target.target().x() + plans().dismantleRadius(),
                         "y2",
                         target.target().y() + 2,
                         "z2",
-                        target.target().z() + DISMANTLE_RADIUS));
+                        target.target().z() + plans().dismantleRadius()));
     }
 
     private static TaskNode collectDrops(TicketTarget target) {
@@ -679,7 +680,7 @@ public final class TicketPlans {
         }
         return new SequenceNode(List.of(
                 gotoPoint(target.from()),
-                demolishBox(target.from(), RELOCATE_CLEAR_RADIUS),
+                demolishBox(target.from(), plans().relocateClearRadius()),
                 gotoPoint(target.to()),
                 new ScriptCall(
                         BUILD_SCHEMATIC,
@@ -738,7 +739,7 @@ public final class TicketPlans {
         return sequence(
                 gotoTarget(target),
                 GatherPlans.pickaxe(),
-                new ScriptCall("mine_vein", Map.of("ore", kind, COUNT, 1, RADIUS, LEFT_ORE_RADIUS)));
+                new ScriptCall("mine_vein", Map.of("ore", kind, COUNT, 1, RADIUS, plans().leftOreRadius())));
     }
 
     private static TaskNode transferItem(TicketTarget target) {

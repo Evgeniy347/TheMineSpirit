@@ -187,5 +187,19 @@
       "minecraft:chicken": 1,
       "minecraft:egg": 1
     }
+  },
+  "plans": {
+    "mineFloorTake": 32,
+    "leftOreRadius": 4,
+    "mineTunnelSize": 5,
+    "mineStepsSize": 3,
+    "supplyContainerRadius": 8,
+    "dismantleRadius": 4,
+    "relocateClearRadius": 4,
+    "charcoalLogs": 4,
+    "charcoalBatch": 2,
+    "torchesPerCraft": 4,
+    "torchBatch": 16,
+    "fenceParts": 4
   }
 }

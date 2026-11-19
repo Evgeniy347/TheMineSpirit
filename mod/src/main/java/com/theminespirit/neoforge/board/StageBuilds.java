@@ -95,7 +95,7 @@ public final class StageBuilds {
 
     static List<FencePart> fenceParts(ServerLevel level, StageSite site) {
         FenceLine ring = site.ring();
-        int count = TicketPlans.FENCE_PARTS;
+        int count = TicketPlans.fenceParts();
         List<List<WallPiece>> partLists = fencePartLists(site, count);
         int levelY = SiteLevels.level(site);
         int fenceY = SiteLevels.fenceY(site);

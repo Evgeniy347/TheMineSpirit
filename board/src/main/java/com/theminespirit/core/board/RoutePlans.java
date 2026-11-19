@@ -25,7 +25,6 @@ final class RoutePlans {
     private static final String CLEAR_AREA = "clear_area";
     private static final String DEPOSIT = "deposit";
     private static final String MINECRAFT = "minecraft:";
-    private static final int SUPPLY_CONTAINER_RADIUS = 8;
 
     private RoutePlans() {}
 
@@ -68,7 +67,7 @@ final class RoutePlans {
                             COUNT,
                             Math.min(Math.max(1, target.supplyCount()), CatalogLimits.COUNT_MAX),
                             RADIUS,
-                            SUPPLY_CONTAINER_RADIUS)));
+                            BoardConfig.current().plans().supplyContainerRadius())));
         }
         return new SequenceNode(steps);
     }

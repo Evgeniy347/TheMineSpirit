@@ -40,7 +40,7 @@ class MinePlotTests {
                     "Прямоугольник шахты " + plot + " не покрывает клетку спуска " + cell);
         }
         TownMapView.Bounds descent =
-                MineGeometry.of(layout, TicketPlans.MINE_TUNNEL_SIZE).descentBounds();
+                MineGeometry.of(layout, TicketPlans.mineTunnelSize()).descentBounds();
         assertEquals(
                 new TownMapView.Bounds(plot.x1(), plot.z1(), plot.x2(), plot.z2()),
                 descent,

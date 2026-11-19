@@ -19,7 +19,6 @@ final class TorchPlans {
     private static final String ACQUIRE = "acquire";
     private static final String CRAFT = "craft";
     private static final String RADIUS = "radius";
-    private static final int TORCHES_PER_CRAFT = 4;
     private static final String WAIT = "wait";
     private static final String BLOCK = "block";
     private static final List<BlockCoord> LIGHT_OFFSETS = List.of(
@@ -55,7 +54,8 @@ final class TorchPlans {
     }
 
     static List<TaskNode> supply(int torches) {
-        int crafts = (torches + TORCHES_PER_CRAFT - 1) / TORCHES_PER_CRAFT;
+        int perCraft = BoardConfig.current().plans().torchesPerCraft();
+        int crafts = (torches + perCraft - 1) / perCraft;
         return List.of(
                 new FallbackNode(List.of(
                         new ScriptCall(ACQUIRE, Map.of(ITEM, "minecraft:charcoal", COUNT, crafts)),

@@ -24,7 +24,8 @@ public record BoardConfig(
         Map<String, Map<String, Integer>> products,
         ToolsConfig tools,
         Map<String, Integer> wool,
-        Map<String, Integer> hive) {
+        Map<String, Integer> hive,
+        PlanTuning plans) {
     public static final String RESOURCE = "data/theminespirit/board/board.json";
 
     private static final TableSlot<BoardConfig> SOURCE = new TableSlot<>(BoardConfig::readFromClasspath);
@@ -64,6 +65,7 @@ public record BoardConfig(
         wool = Map.copyOf(wool);
         Objects.requireNonNull(hive, "Данные пчёл не могут быть null: пустую таблицу задают пустой картой, а не null");
         hive = Map.copyOf(hive);
+        Objects.requireNonNull(plans, "Размеры планов не могут быть null: без них план задания пустой, а дух встанет");
     }
 
     public BoardConfig(Map<String, Integer> priorities, Map<String, Integer> modifiers, Map<String, Long> intervals) {
@@ -77,7 +79,8 @@ public record BoardConfig(
                 Map.of(),
                 ToolsConfig.defaults(),
                 Map.of(),
-                Map.of());
+                Map.of(),
+                PlanTuning.defaults());
     }
 
     public static BoardConfig fromJson(String json, String origin) {
@@ -100,7 +103,9 @@ public record BoardConfig(
         ToolsConfig tools = ToolsConfig.fromJson(root.get("tools"), origin);
         Map<String, Integer> wool = integers(root.get("wool"), origin, "wool", WoolRules::woolKey, false);
         Map<String, Integer> hive = integers(root.get("hive"), origin, "hive", HiveRules::hiveKey, false);
-        return new BoardConfig(priorities, modifiers, intervals, levels, herd, immovable, products, tools, wool, hive);
+        PlanTuning plans = PlanTuning.fromJson(root.get("plans"), origin);
+        return new BoardConfig(
+                priorities, modifiers, intervals, levels, herd, immovable, products, tools, wool, hive, plans);
     }
 
     public static BoardConfig current() {

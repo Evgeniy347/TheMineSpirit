@@ -153,7 +153,7 @@ final class StageProgressWatch {
                 "[plot] {}: сегмент {} из {}, было {}% ({}/{}), стало {}% ({}/{})",
                 ticket.id(),
                 target.count(),
-                TicketPlans.FENCE_PARTS,
+                TicketPlans.fenceParts(),
                 percent(before),
                 before.done(),
                 before.total(),

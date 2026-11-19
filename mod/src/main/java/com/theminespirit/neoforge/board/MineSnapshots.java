@@ -28,7 +28,7 @@ public final class MineSnapshots {
     }
 
     public static Optional<MineGeometry> geometry(StageSite stage) {
-        return layout(stage).map(found -> MineGeometry.of(found, TicketPlans.MINE_TUNNEL_SIZE));
+        return layout(stage).map(found -> MineGeometry.of(found, TicketPlans.mineTunnelSize()));
     }
 
     private static Optional<MineLayout> layout(StageSite stage) {

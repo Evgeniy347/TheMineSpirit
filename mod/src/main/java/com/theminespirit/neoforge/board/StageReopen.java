@@ -45,7 +45,7 @@ final class StageReopen {
     private static int partsOf(BoardCase caseValue) {
         return switch (caseValue) {
             case CLEAR_GROUNDS -> GroundsPlan.CLEAR_PARTS;
-            case BUILD_FENCE -> TicketPlans.FENCE_PARTS;
+            case BUILD_FENCE -> TicketPlans.fenceParts();
             default -> 1;
         };
     }
