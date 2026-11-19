@@ -1,17 +1,11 @@
 package com.theminespirit.core.building;
 
-import static com.theminespirit.core.Lookup.present;
-
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import org.jspecify.annotations.Nullable;
 
 public final class SchematicRules {
     public enum RuleId {
@@ -95,10 +89,6 @@ public final class SchematicRules {
         }
     }
 
-    private static final String ANY_Y = ",*,";
-    private static final int ROOFED_HEIGHT = 3;
-    private static final int OPEN_HEIGHT = 2;
-
     private SchematicRules() {}
 
     public static List<Violation> check(Structure structure) {
@@ -111,28 +101,28 @@ public final class SchematicRules {
                         structure.type(),
                         body.crop(structure.schematic()),
                         body.local(structure.entry()));
-        Map<BlockCoord, String> grid = grid(walls.schematic());
+        Map<BlockCoord, String> grid = SchematicCells.of(walls.schematic());
         List<Violation> violations = new ArrayList<>();
-        checkClosedWalls(walls, grid, violations);
-        checkEntrance(walls, grid, violations);
+        SchematicShell.checkClosedWalls(walls, grid, violations);
+        SchematicShell.checkEntrance(walls, grid, violations);
         EntranceStep.problem(structure.schematic(), body, structure.entry())
                 .ifPresent(problem -> violations.add(new Violation(RuleId.ENTRANCE_STEP, problem)));
-        checkRoof(walls, grid, violations);
-        checkInnerHeight(walls, grid, violations);
+        SchematicShell.checkRoof(walls, grid, violations);
+        SchematicShell.checkInnerHeight(walls, grid, violations);
         int level = structure.level();
         if (structure.type() == BuildingType.HOUSING) {
-            checkWindow(walls, grid, violations);
-            checkDoor(walls, grid, violations);
+            SchematicFittings.checkWindow(walls, grid, violations);
+            SchematicFittings.checkDoor(walls, grid, violations);
             if (level > Preset.LEVEL_NONE) {
                 EntrancePorch.problem(structure.schematic(), body, structure.entry())
                         .ifPresent(problem -> violations.add(new Violation(RuleId.ENTRANCE_STEP, problem)));
-                checkLevelCeiling(walls, grid, level, violations);
+                SchematicShell.checkLevelCeiling(walls, grid, level, violations);
                 SchematicLevelRules.checkWindowSize(walls.schematic(), grid, level, violations);
             }
         }
-        checkLight(walls.schematic(), violations);
-        Map<BlockCoord, String> full = grid(structure.schematic());
-        checkPanes(full, violations);
+        SchematicFittings.checkLight(walls.schematic(), violations);
+        Map<BlockCoord, String> full = SchematicCells.of(structure.schematic());
+        SchematicFittings.checkPanes(full, violations);
         if (level > Preset.LEVEL_NONE
                 && (structure.type() == BuildingType.HOUSING || structure.type() == BuildingType.SOCIAL)) {
             SchematicLevelRules.checkDecor(structure.schematic(), full, level, violations);
@@ -145,470 +135,16 @@ public final class SchematicRules {
         SchematicRailing.check(structure, full, fullWalk, violations);
         DoorPassage.problem(structure.schematic(), SchematicWalk.walk(full, structure.schematic(), structure.entry()))
                 .ifPresent(problem -> violations.add(new Violation(RuleId.PASSAGE, problem)));
-        checkSupport(structure.schematic(), full, violations);
+        SchematicFittings.checkSupport(structure.schematic(), full, violations);
         if (violations.stream().noneMatch(violation -> violation.rule() == RuleId.SUPPORT)) {
-            checkMounting(structure.schematic(), full, violations);
+            SchematicFittings.checkMounting(structure.schematic(), full, violations);
         }
-        checkChests(full, violations);
+        SchematicFittings.checkChests(full, violations);
         DoorPairs.problem(structure.schematic())
                 .ifPresent(problem -> violations.add(new Violation(RuleId.DOUBLE_DOOR, problem)));
-        checkFireplace(walls, grid, violations);
+        SchematicShell.checkFireplace(walls, grid, violations);
         ChestPairs.problem(structure.schematic())
                 .ifPresent(problem -> violations.add(new Violation(RuleId.CHEST_PAIR, problem)));
         return List.copyOf(violations);
-    }
-
-    private static Map<BlockCoord, String> grid(Schematic schematic) {
-        Map<BlockCoord, String> grid = new LinkedHashMap<>();
-        for (Schematic.Entry entry : schematic.blocks()) {
-            grid.put(new BlockCoord(entry.dx(), entry.dy(), entry.dz()), entry.block());
-        }
-        return grid;
-    }
-
-    private static void checkClosedWalls(
-            Structure structure, Map<BlockCoord, String> grid, List<Violation> violations) {
-        Schematic schematic = structure.schematic();
-        Set<BlockCoord> opening = entranceCells(structure, grid);
-        int eave = Math.min(eave(schematic, grid), wallTop(schematic, grid));
-        for (int y = 0; y <= eave; y++) {
-            for (BlockCoord cell : perimeter(schematic, y)) {
-                if (grid.containsKey(cell) || opening.contains(cell)) {
-                    continue;
-                }
-                violations.add(new Violation(
-                        RuleId.CLOSED_WALLS,
-                        "периметр слоя y=" + y + " разомкнут в клетке ["
-                                + cell.x() + "," + cell.y() + "," + cell.z()
-                                + "], а это не проём входа: стена с дырой не держит"));
-                return;
-            }
-        }
-    }
-
-    private static int eave(Schematic schematic, Map<BlockCoord, String> grid) {
-        int eave = schematic.sizeY() - 1;
-        for (int x = 1; x < schematic.sizeX() - 1; x++) {
-            for (int z = 1; z < schematic.sizeZ() - 1; z++) {
-                int floor = lowestBlock(grid, x, schematic.sizeY(), z);
-                int ceiling = floor < 0 ? -1 : ceiling(grid, x, floor, schematic.sizeY(), z);
-                if (ceiling > 0) {
-                    eave = Math.min(eave, ceiling - 1);
-                }
-            }
-        }
-        return eave;
-    }
-
-    private static int wallTop(Schematic schematic, Map<BlockCoord, String> grid) {
-        for (int y = schematic.sizeY() - 1; y >= 0; y--) {
-            for (BlockCoord cell : perimeter(schematic, y)) {
-                String block = grid.get(cell);
-                if (block != null && SchematicBlocks.lightLevel(block, Map.of()) == 0) {
-                    return y;
-                }
-            }
-        }
-        return -1;
-    }
-
-    private static Set<BlockCoord> entranceCells(Structure structure, Map<BlockCoord, String> grid) {
-        BlockCoord entry = structure.entry();
-        Set<BlockCoord> cells = new LinkedHashSet<>();
-        cells.add(entry);
-        boolean upper = entry.y() + 1 < structure.schematic().sizeY();
-        if (upper) {
-            cells.add(new BlockCoord(entry.x(), entry.y() + 1, entry.z()));
-        }
-        Optional<SchematicBody.Normal> outward =
-                SchematicBody.of(structure.schematic(), entry).outwardNormal(entry);
-        if (outward.isEmpty()) {
-            return cells;
-        }
-        int alongX = outward.get().dz();
-        int alongZ = outward.get().dx();
-        for (int sign : new int[] {1, -1}) {
-            BlockCoord neighbor = new BlockCoord(entry.x() + alongX * sign, entry.y(), entry.z() + alongZ * sign);
-            if (grid.containsKey(neighbor)) {
-                continue;
-            }
-            cells.add(neighbor);
-            if (upper) {
-                cells.add(new BlockCoord(neighbor.x(), entry.y() + 1, neighbor.z()));
-            }
-        }
-        return cells;
-    }
-
-    private static Set<BlockCoord> perimeter(Schematic schematic, int y) {
-        Set<BlockCoord> cells = new LinkedHashSet<>();
-        for (int x = 0; x < schematic.sizeX(); x++) {
-            for (int z = 0; z < schematic.sizeZ(); z++) {
-                if (x == 0 || x == schematic.sizeX() - 1 || z == 0 || z == schematic.sizeZ() - 1) {
-                    cells.add(new BlockCoord(x, y, z));
-                }
-            }
-        }
-        return cells;
-    }
-
-    private static void checkEntrance(Structure structure, Map<BlockCoord, String> grid, List<Violation> violations) {
-        Schematic schematic = structure.schematic();
-        BlockCoord entry = structure.entry();
-        int[] normal = outwardNormal(entry, schematic);
-        if (normal == null) {
-            violations.add(new Violation(
-                    RuleId.ENTRANCE,
-                    "точка входа " + entry + " не на внешней грани: через внутреннюю клетку в постройку не войти"));
-            return;
-        }
-        for (int dy = 0; dy <= 1; dy++) {
-            int y = entry.y() + dy;
-            if (y >= schematic.sizeY()) {
-                continue;
-            }
-            String block = grid.get(new BlockCoord(entry.x(), y, entry.z()));
-            if (block != null && !SchematicBlocks.isEntranceBlock(block)) {
-                violations.add(new Violation(
-                        RuleId.ENTRANCE,
-                        "проём входа занят блоком '" + block + "' в клетке [" + entry.x() + "," + y + "," + entry.z()
-                                + "]: вход обязан быть 1×2 и проходимым"));
-                return;
-            }
-        }
-        if (entry.y() > 1) {
-            violations.add(new Violation(
-                    RuleId.ENTRANCE,
-                    "порог входа на высоте " + entry.y() + " над землёй: выше 1 блока в дом не подняться"));
-        }
-    }
-
-    private static int @Nullable [] outwardNormal(BlockCoord entry, Schematic schematic) {
-        if (entry.z() == 0) {
-            return new int[] {0, -1};
-        }
-        if (entry.z() == schematic.sizeZ() - 1) {
-            return new int[] {0, 1};
-        }
-        if (entry.x() == 0) {
-            return new int[] {-1, 0};
-        }
-        if (entry.x() == schematic.sizeX() - 1) {
-            return new int[] {1, 0};
-        }
-        return null;
-    }
-
-    private static void checkFireplace(Structure structure, Map<BlockCoord, String> grid, List<Violation> violations) {
-        Schematic schematic = structure.schematic();
-        for (Map.Entry<BlockCoord, String> cell : grid.entrySet()) {
-            BlockCoord pos = cell.getKey();
-            boolean perimeter = pos.x() == 0
-                    || pos.z() == 0
-                    || pos.x() == schematic.sizeX() - 1
-                    || pos.z() == schematic.sizeZ() - 1;
-            if (perimeter && SchematicBlocks.path(cell.getValue()).endsWith("campfire")) {
-                violations.add(new Violation(
-                        RuleId.FIREPLACE,
-                        "костёр камина в клетке [" + pos.x() + "," + pos.y() + "," + pos.z()
-                                + "] стоит в наружной стене: огонь виден снаружи дома — камин ставится внутрь на 1 блок, "
-                                + "а стена за ним остаётся целой"));
-                return;
-            }
-        }
-    }
-
-    private static void checkRoof(Structure structure, Map<BlockCoord, String> grid, List<Violation> violations) {
-        Schematic schematic = structure.schematic();
-        for (int x = 1; x < schematic.sizeX() - 1; x++) {
-            for (int z = 1; z < schematic.sizeZ() - 1; z++) {
-                int top = highestBlock(grid, x, schematic.sizeY(), z);
-                if (top >= 2 && covers(present(grid, new BlockCoord(x, top, z), "Сетка схемы"))) {
-                    continue;
-                }
-                violations.add(new Violation(
-                        RuleId.ROOF,
-                        "крыша не закрывает внутреннюю клетку [" + x + ANY_Y + z
-                                + "]: сверху над ней нет ни крыши, ни потолка — льёт дождь и светит солнце"));
-                return;
-            }
-        }
-    }
-
-    private static int highestBlock(Map<BlockCoord, String> grid, int x, int sizeY, int z) {
-        for (int y = sizeY - 1; y >= 0; y--) {
-            if (grid.containsKey(new BlockCoord(x, y, z))) {
-                return y;
-            }
-        }
-        return -1;
-    }
-
-    private static void checkInnerHeight(
-            Structure structure, Map<BlockCoord, String> grid, List<Violation> violations) {
-        Schematic schematic = structure.schematic();
-        for (int x = 1; x < schematic.sizeX() - 1; x++) {
-            for (int z = 1; z < schematic.sizeZ() - 1; z++) {
-                int floor = lowestBlock(grid, x, schematic.sizeY(), z);
-                if (floor < 0) {
-                    violations.add(new Violation(
-                            RuleId.INNER_HEIGHT,
-                            "у внутренней клетки [" + x + ANY_Y + z + "] нет пола: внутреннюю высоту не с чем мерить"));
-                    return;
-                }
-                if (occupied(grid, x, floor, z)) {
-                    continue;
-                }
-                int ceiling = ceiling(grid, x, floor, schematic.sizeY(), z);
-                int height = (ceiling < 0 ? schematic.sizeY() : ceiling) - floor - 1;
-                int required = ceiling < 0 ? OPEN_HEIGHT : ROOFED_HEIGHT;
-                if (height < required) {
-                    violations.add(
-                            new Violation(
-                                    RuleId.INNER_HEIGHT,
-                                    "внутренняя высота " + height + " в клетке [" + x + ANY_Y + z + "] меньше "
-                                            + required
-                                            + ": под крышей ниже 3 блоков тесно (владелец 19.10), без крыши ниже 2 — не пройти"));
-                    return;
-                }
-            }
-        }
-    }
-
-    private static void checkLevelCeiling(
-            Structure structure, Map<BlockCoord, String> grid, int level, List<Violation> violations) {
-        Schematic schematic = structure.schematic();
-        int required = SchematicLevelRules.ceilingFor(level);
-        for (int x = 1; x < schematic.sizeX() - 1; x++) {
-            for (int z = 1; z < schematic.sizeZ() - 1; z++) {
-                int floor = lowestBlock(grid, x, schematic.sizeY(), z);
-                if (floor < 0 || occupied(grid, x, floor, z)) {
-                    continue;
-                }
-                int ceiling = ceiling(grid, x, floor, schematic.sizeY(), z);
-                int height = (ceiling < 0 ? schematic.sizeY() : ceiling) - floor - 1;
-                if (ceiling >= 0 && height < required) {
-                    violations.add(new Violation(
-                            RuleId.LEVEL_CEILING,
-                            "высота внутри " + height + " в клетке [" + x + ANY_Y + z + "] меньше " + required
-                                    + " для жилья уровня " + level
-                                    + ": чем выше уровень, тем выше потолок (владелец 19.10)"));
-                    return;
-                }
-            }
-        }
-    }
-
-    private static boolean occupied(Map<BlockCoord, String> grid, int x, int floor, int z) {
-        String above = grid.get(new BlockCoord(x, floor + 1, z));
-        return above != null && (covers(above) || SchematicBlocks.isChest(above));
-    }
-
-    private static int ceiling(Map<BlockCoord, String> grid, int x, int floor, int sizeY, int z) {
-        for (int y = floor + 2; y < sizeY; y++) {
-            String block = grid.get(new BlockCoord(x, y, z));
-            if (block != null && covers(block)) {
-                return y;
-            }
-        }
-        return -1;
-    }
-
-    private static boolean covers(String block) {
-        if (SchematicBlocks.isChest(block)) {
-            return false;
-        }
-        String path = SchematicBlocks.path(block);
-        return SchematicBlocks.isFullBlock(block) || path.endsWith("_stairs") || path.endsWith("_slab");
-    }
-
-    private static int lowestBlock(Map<BlockCoord, String> grid, int x, int sizeY, int z) {
-        for (int y = 0; y < sizeY; y++) {
-            if (grid.containsKey(new BlockCoord(x, y, z))) {
-                return y;
-            }
-        }
-        return -1;
-    }
-
-    private static void checkWindow(Structure structure, Map<BlockCoord, String> grid, List<Violation> violations) {
-        Schematic schematic = structure.schematic();
-        for (Map.Entry<BlockCoord, String> entry : grid.entrySet()) {
-            BlockCoord cell = entry.getKey();
-            if (onPerimeter(cell, schematic) && SchematicBlocks.isWindow(entry.getValue())) {
-                return;
-            }
-        }
-        violations.add(new Violation(
-                RuleId.WINDOW, "у жилья нет ни одного окна в стене: комнату не проветрить " + "и не осветить днём"));
-    }
-
-    private static void checkDoor(Structure structure, Map<BlockCoord, String> grid, List<Violation> violations) {
-        BlockCoord entry = structure.entry();
-        String lower = grid.get(entry);
-        String upper = grid.get(new BlockCoord(entry.x(), entry.y() + 1, entry.z()));
-        if (lower != null && upper != null && SchematicBlocks.isDoor(lower) && SchematicBlocks.isDoor(upper)) {
-            return;
-        }
-        violations.add(new Violation(RuleId.DOOR, "в проёме входа нет двери: проём пуст или занят не дверью"));
-    }
-
-    private static void checkLight(Schematic schematic, List<Violation> violations) {
-        if (!SchematicLight.hasSource(schematic)) {
-            violations.add(new Violation(
-                    RuleId.LIGHT,
-                    "в постройке нет источника света: ночью внутри и у входа темно, появляются мобы — поставьте "
-                            + "факел или фонарь (у открытой постройки — по периметру или у входа)"));
-            return;
-        }
-        List<BlockCoord> dark = SchematicLight.darkCells(schematic);
-        if (!dark.isEmpty()) {
-            BlockCoord first = dark.get(0);
-            violations.add(new Violation(
-                    RuleId.LIGHT,
-                    "внутри постройки " + dark.size() + " тёмных клеток (блочный свет 0), первая ["
-                            + first.x() + "," + first.y() + "," + first.z()
-                            + "]: там ночью появляются мобы — добавьте факел или фонарь ближе"));
-        }
-    }
-
-    private static void checkPanes(Map<BlockCoord, String> grid, List<Violation> violations) {
-        for (Map.Entry<BlockCoord, String> entry : grid.entrySet()) {
-            if (!SchematicBlocks.path(entry.getValue()).endsWith("_pane")) {
-                continue;
-            }
-            BlockCoord cell = entry.getKey();
-            boolean alongX = connects(grid, cell, 1, 0) && connects(grid, cell, -1, 0);
-            boolean alongZ = connects(grid, cell, 0, 1) && connects(grid, cell, 0, -1);
-            if (!alongX && !alongZ) {
-                violations.add(new Violation(
-                        RuleId.PANE,
-                        "стеклянная панель [" + cell.x() + "," + cell.y() + "," + cell.z()
-                                + "] не примыкает с двух сторон к полному блоку или панели: останется дыра — "
-                                + "поставьте сюда полноценный блок стекла"));
-            }
-        }
-    }
-
-    private static boolean connects(Map<BlockCoord, String> grid, BlockCoord cell, int dx, int dz) {
-        String neighbor = grid.get(new BlockCoord(cell.x() + dx, cell.y(), cell.z() + dz));
-        return neighbor != null
-                && (SchematicBlocks.isFullBlock(neighbor)
-                        || SchematicBlocks.path(neighbor).endsWith("_pane"));
-    }
-
-    static boolean supportedIn(Map<BlockCoord, String> grid, BlockCoord cell, String block, Map<String, String> state) {
-        BlockSupport.World world = (x, y, z, face) -> {
-            if (y < 0) {
-                return true;
-            }
-            String near = grid.get(new BlockCoord(x, y, z));
-            return near != null
-                    && (SchematicBlocks.isFullBlock(near)
-                            || (face == BlockSupport.Face.DOWN && SchematicBlocks.holdsHanging(near)));
-        };
-        return supportedIn(grid, world, cell, block, state);
-    }
-
-    static boolean supportedIn(
-            Map<BlockCoord, String> grid,
-            BlockSupport.World world,
-            BlockCoord cell,
-            String block,
-            Map<String, String> state) {
-        if (cell.y() == 0 || upperHalfOfDoor(grid, cell, block)) {
-            return true;
-        }
-        return SchematicBlocks.isHanging(block, state)
-                ? BlockSupport.hasHangingSupport(world, cell.x(), cell.y(), cell.z())
-                : (BlockSupport.hasSupport(world, cell.x(), cell.y(), cell.z())
-                        || centerOnPost(block, grid.get(new BlockCoord(cell.x(), cell.y() - 1, cell.z()))));
-    }
-
-    private static void checkSupport(Schematic schematic, Map<BlockCoord, String> grid, List<Violation> violations) {
-        for (Schematic.Entry block : schematic.blocks()) {
-            BlockCoord cell = new BlockCoord(block.dx(), block.dy(), block.dz());
-            boolean supported = supportedIn(grid, cell, block.block(), block.state());
-            if (!supported) {
-                Map.Entry<BlockCoord, String> entry = Map.entry(cell, block.block());
-                violations.add(new Violation(
-                        RuleId.SUPPORT,
-                        "у блока '" + entry.getValue() + "' в клетке [" + cell.x() + "," + cell.y() + "," + cell.z()
-                                + "] нет опоры: блок повиснет или упадёт"));
-                return;
-            }
-        }
-    }
-
-    private static void checkMounting(Schematic schematic, Map<BlockCoord, String> grid, List<Violation> violations) {
-        for (Schematic.Entry entry : schematic.blocks()) {
-            BlockCoord cell = new BlockCoord(entry.dx(), entry.dy(), entry.dz());
-            BlockCoord mount = mountOf(entry, cell);
-            if (mount == null || mount.y() < 0) {
-                continue;
-            }
-            String holder = grid.get(mount);
-            if (holder == null || (!SchematicBlocks.isFullBlock(holder) && !centerOnPost(entry.block(), holder))) {
-                violations.add(new Violation(
-                        RuleId.SUPPORT,
-                        "блок '" + entry.block() + "' в клетке [" + cell.x() + ","
-                                + cell.y() + "," + cell.z() + "] крепится к клетке [" + mount.x() + "," + mount.y()
-                                + ","
-                                + mount.z() + "], а там " + (holder == null ? "пусто" : "'" + holder + "'")
-                                + ": факел или табличка без полного блока за ней отвалится"));
-                return;
-            }
-        }
-    }
-
-    private static @Nullable BlockCoord mountOf(Schematic.Entry entry, BlockCoord cell) {
-        return mountOf(entry.block(), entry.state(), cell);
-    }
-
-    static @Nullable BlockCoord mountOf(String block, Map<String, String> state, BlockCoord cell) {
-        if (SchematicBlocks.isWallMounted(block)) {
-            return switch (state.getOrDefault("facing", "")) {
-                case "north" -> new BlockCoord(cell.x(), cell.y(), cell.z() + 1);
-                case "south" -> new BlockCoord(cell.x(), cell.y(), cell.z() - 1);
-                case "east" -> new BlockCoord(cell.x() - 1, cell.y(), cell.z());
-                case "west" -> new BlockCoord(cell.x() + 1, cell.y(), cell.z());
-                default -> null;
-            };
-        }
-        if (SchematicBlocks.path(block).endsWith("torch")) {
-            return new BlockCoord(cell.x(), cell.y() - 1, cell.z());
-        }
-        return null;
-    }
-
-    private static boolean centerOnPost(String block, @Nullable String below) {
-        return below != null && SchematicBlocks.isCenterPost(below) && SchematicBlocks.standsOnCenter(block);
-    }
-
-    private static boolean upperHalfOfDoor(Map<BlockCoord, String> grid, BlockCoord cell, String block) {
-        return SchematicBlocks.isDoor(block)
-                && block.equals(grid.get(new BlockCoord(cell.x(), cell.y() - 1, cell.z())));
-    }
-
-    private static void checkChests(Map<BlockCoord, String> grid, List<Violation> violations) {
-        for (Map.Entry<BlockCoord, String> entry : grid.entrySet()) {
-            if (!SchematicBlocks.isChest(entry.getValue())) {
-                continue;
-            }
-            BlockCoord cell = entry.getKey();
-            String above = grid.get(new BlockCoord(cell.x(), cell.y() + 1, cell.z()));
-            if (above != null && SchematicBlocks.isFullBlock(above) && !SchematicBlocks.isChest(above)) {
-                violations.add(new Violation(
-                        RuleId.CHEST_OPENABLE,
-                        "над сундуком в клетке ["
-                                + cell.x() + "," + cell.y() + "," + cell.z() + "] стоит полный блок '" + above
-                                + "': сундук не открыть"));
-                return;
-            }
-        }
-    }
-
-    private static boolean onPerimeter(BlockCoord cell, Schematic schematic) {
-        return cell.x() == 0 || cell.x() == schematic.sizeX() - 1 || cell.z() == 0 || cell.z() == schematic.sizeZ() - 1;
     }
 }

@@ -16,7 +16,6 @@ core/building/PresetLibraryTests.java	431
 core/building/Schematic.java	364
 core/building/SchematicBlocks.java	348
 core/building/SchematicLevelRules.java	322
-core/building/SchematicRules.java	614
 core/building/SchematicTextParser.java	655
 core/engine/TaskRunnerRestoreTests.java	333
 core/engine/TaskRunnerTests.java	743

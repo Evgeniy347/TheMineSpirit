@@ -657,7 +657,7 @@ public final class BuildPlanner {
                 return false;
             }
         }
-        return SchematicRules.supportedIn(grid, sturdy, cell, entry.block(), entry.state());
+        return SchematicFittings.supportedIn(grid, sturdy, cell, entry.block(), entry.state());
     }
 
     private boolean sturdyFace(int x, int y, int z, BlockSupport.Face face) {
@@ -708,7 +708,7 @@ public final class BuildPlanner {
     }
 
     private @Nullable BlockCoord mountOf(Schematic.PlacedEntry entry, BlockCoord cell) {
-        BlockCoord local = SchematicRules.mountOf(entry.block(), entry.state(), new BlockCoord(0, 0, 0));
+        BlockCoord local = SchematicFittings.mountOf(entry.block(), entry.state(), new BlockCoord(0, 0, 0));
         if (local == null) {
             return null;
         }
