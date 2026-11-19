@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockBox;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.api.PolicyId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

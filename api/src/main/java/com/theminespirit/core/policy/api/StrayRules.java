@@ -1,4 +1,4 @@
-package com.theminespirit.core.policy;
+package com.theminespirit.core.policy.api;
 
 public interface StrayRules {
     boolean natural(String blockId);

@@ -1,4 +1,4 @@
-package com.theminespirit.core.policy;
+package com.theminespirit.core.policy.api;
 
 public enum PolicyId {
     LAVA_FIRE,

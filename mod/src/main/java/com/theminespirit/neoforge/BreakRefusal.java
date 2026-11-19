@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.policy.PolicyId;
+import com.theminespirit.core.policy.api.PolicyId;
 import com.theminespirit.core.town.PlotProtection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;

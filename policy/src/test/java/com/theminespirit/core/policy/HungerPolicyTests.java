@@ -3,6 +3,7 @@ package com.theminespirit.core.policy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.policy.api.PolicyId;
 import org.junit.jupiter.api.Test;
 
 class HungerPolicyTests {

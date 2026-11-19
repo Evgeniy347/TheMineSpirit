@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.policy.DropPolicy;
+import com.theminespirit.core.policy.api.DropPolicy;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;

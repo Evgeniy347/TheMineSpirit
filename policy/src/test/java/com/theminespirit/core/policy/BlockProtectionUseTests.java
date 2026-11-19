@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.theminespirit.core.policy.api.PolicyId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

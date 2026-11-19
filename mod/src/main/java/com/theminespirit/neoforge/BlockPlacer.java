@@ -4,7 +4,7 @@ import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
-import com.theminespirit.core.policy.PolicyId;
+import com.theminespirit.core.policy.api.PolicyId;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.board.SettlementPlotStore;

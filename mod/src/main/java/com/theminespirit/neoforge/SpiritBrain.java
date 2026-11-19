@@ -10,7 +10,7 @@ import com.theminespirit.core.engine.TaskRunner;
 import com.theminespirit.core.engine.TaskSnapshot;
 import com.theminespirit.core.incident.InventoryText;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.policy.PolicyExemptions;
+import com.theminespirit.core.policy.api.PolicyExemptions;
 import com.theminespirit.core.task.SpiritReading;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;

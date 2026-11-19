@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.api.PolicyExemptions;
+import com.theminespirit.core.policy.api.PolicyId;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;

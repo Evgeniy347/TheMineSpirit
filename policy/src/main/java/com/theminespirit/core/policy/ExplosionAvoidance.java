@@ -2,6 +2,7 @@ package com.theminespirit.core.policy;
 
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.api.PolicyId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

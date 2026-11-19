@@ -3,7 +3,7 @@ package com.theminespirit.core.engine;
 import com.theminespirit.core.plan.ParallelMode;
 import com.theminespirit.core.plan.ParallelNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.policy.PolicyExemptions;
+import com.theminespirit.core.policy.api.PolicyExemptions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

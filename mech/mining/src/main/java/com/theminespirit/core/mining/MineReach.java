@@ -1,7 +1,7 @@
 package com.theminespirit.core.mining;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.policy.DropPolicy;
+import com.theminespirit.core.policy.api.DropPolicy;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedHashSet;

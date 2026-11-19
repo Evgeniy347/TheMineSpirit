@@ -1,6 +1,7 @@
 package com.theminespirit.core.policy;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.api.PolicyId;
 import java.util.Objects;
 
 public final class ZonePolicy {

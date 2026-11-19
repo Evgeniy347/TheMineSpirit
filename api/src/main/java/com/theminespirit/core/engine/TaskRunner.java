@@ -1,7 +1,7 @@
 package com.theminespirit.core.engine;
 
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.policy.PolicyExemptions;
+import com.theminespirit.core.policy.api.PolicyExemptions;
 import java.util.Objects;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;

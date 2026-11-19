@@ -4,7 +4,7 @@ import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
-import com.theminespirit.core.policy.StrayRules;
+import com.theminespirit.core.policy.api.StrayRules;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;

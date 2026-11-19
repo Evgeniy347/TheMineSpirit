@@ -1,7 +1,7 @@
 package com.theminespirit.core.town;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.policy.StrayRules;
+import com.theminespirit.core.policy.api.StrayRules;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

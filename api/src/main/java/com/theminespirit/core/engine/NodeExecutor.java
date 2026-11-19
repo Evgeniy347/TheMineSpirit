@@ -7,7 +7,7 @@ import com.theminespirit.core.plan.RepeatNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.policy.PolicyExemptions;
+import com.theminespirit.core.policy.api.PolicyExemptions;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 

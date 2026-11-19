@@ -1,4 +1,4 @@
-package com.theminespirit.core.policy;
+package com.theminespirit.core.policy.api;
 
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.SafetyView;

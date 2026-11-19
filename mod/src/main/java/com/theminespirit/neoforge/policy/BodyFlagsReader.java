@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge.policy;
 
 import com.theminespirit.core.policy.BodyFlags;
-import com.theminespirit.core.policy.PolicyId;
 import com.theminespirit.core.policy.WaterTasks;
+import com.theminespirit.core.policy.api.PolicyId;
 import com.theminespirit.neoforge.SpiritBrain;
 import com.theminespirit.neoforge.SpiritEntity;
 

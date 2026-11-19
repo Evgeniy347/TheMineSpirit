@@ -1,5 +1,7 @@
 package com.theminespirit.core.policy;
 
+import com.theminespirit.core.policy.api.PolicyId;
+
 public final class HungerPolicy {
     private HungerPolicy() {}
 

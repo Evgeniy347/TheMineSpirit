@@ -3,6 +3,8 @@ package com.theminespirit.core.policy;
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.api.PolicyExemptions;
+import com.theminespirit.core.policy.api.PolicyId;
 import java.util.Optional;
 import java.util.Set;
 

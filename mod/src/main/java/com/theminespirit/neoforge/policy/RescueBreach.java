@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.policy;
 
 import com.theminespirit.core.policy.BlockProtection;
-import com.theminespirit.core.policy.PolicyId;
+import com.theminespirit.core.policy.api.PolicyId;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.PlotCellStructure;

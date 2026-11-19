@@ -1,5 +1,6 @@
 package com.theminespirit.core.policy;
 
+import com.theminespirit.core.policy.api.PolicyId;
 import com.theminespirit.core.town.PlanBuilding;
 import java.util.List;
 import java.util.Objects;

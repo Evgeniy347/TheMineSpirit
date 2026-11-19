@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.policy;
 
-import com.theminespirit.core.policy.PolicyExemptions;
-import com.theminespirit.core.policy.PolicyId;
+import com.theminespirit.core.policy.api.PolicyExemptions;
+import com.theminespirit.core.policy.api.PolicyId;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import net.minecraft.world.level.pathfinder.PathType;

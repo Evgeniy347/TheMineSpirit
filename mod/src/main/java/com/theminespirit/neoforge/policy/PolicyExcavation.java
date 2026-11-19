@@ -3,7 +3,7 @@ package com.theminespirit.neoforge.policy;
 import com.theminespirit.core.mining.MineObstruction;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
-import com.theminespirit.core.policy.PolicyId;
+import com.theminespirit.core.policy.api.PolicyId;
 import com.theminespirit.core.town.FenceDemolition;
 import com.theminespirit.core.town.PlanBuilding;
 import com.theminespirit.core.town.PlanBuildings;

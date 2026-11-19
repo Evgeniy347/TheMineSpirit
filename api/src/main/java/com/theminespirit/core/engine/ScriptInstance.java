@@ -1,6 +1,6 @@
 package com.theminespirit.core.engine;
 
-import com.theminespirit.core.policy.PolicyExemptions;
+import com.theminespirit.core.policy.api.PolicyExemptions;
 import java.util.Map;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;

@@ -3,6 +3,7 @@ package com.theminespirit.core.policy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.theminespirit.core.policy.api.PolicyId;
 import java.util.EnumSet;
 import java.util.Set;
 import org.junit.jupiter.api.Test;

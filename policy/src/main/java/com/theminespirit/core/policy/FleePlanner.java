@@ -4,6 +4,7 @@ import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.api.DropPolicy;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;

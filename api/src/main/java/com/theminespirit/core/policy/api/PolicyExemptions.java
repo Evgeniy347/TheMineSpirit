@@ -1,4 +1,4 @@
-package com.theminespirit.core.policy;
+package com.theminespirit.core.policy.api;
 
 import java.util.EnumSet;
 import java.util.Objects;

@@ -7,6 +7,7 @@ import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.api.BreakVeto;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

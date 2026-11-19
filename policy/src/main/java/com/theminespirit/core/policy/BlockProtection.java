@@ -2,6 +2,8 @@ package com.theminespirit.core.policy;
 
 import com.theminespirit.core.mining.GatherPolicy;
 import com.theminespirit.core.observation.IdFilter;
+import com.theminespirit.core.policy.api.PolicyId;
+import com.theminespirit.core.policy.api.StrayRules;
 import java.util.List;
 import java.util.Objects;
 
