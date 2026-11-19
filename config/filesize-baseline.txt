@@ -20,7 +20,6 @@ core/building/SchematicRules.java	614
 core/building/SchematicTextParser.java	655
 core/engine/TaskRunnerRestoreTests.java	333
 core/engine/TaskRunnerTests.java	743
-core/engine/TaskSnapshotCodec.java	549
 core/farming/FarmJobTests.java	356
 core/farming/FarmPlannerTests.java	339
 core/forestry/TreeShapeTests.java	352
