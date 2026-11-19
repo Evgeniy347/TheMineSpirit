@@ -5,7 +5,7 @@ import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ClaimGrace;
 import com.theminespirit.core.task.SpiritReading;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritTaskView;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -17,7 +17,7 @@ final class DisplacedClaims {
 
     private DisplacedClaims() {}
 
-    static void release(SpiritEntity spirit, BoardTicket ticket, Board board, Map<String, Long> issued) {
+    static void release(SpiritTaskView spirit, BoardTicket ticket, Board board, Map<String, Long> issued) {
         Map<String, Mark> marks = MARKS.computeIfAbsent(board, ignored -> new HashMap<>());
         long now = board.now();
         long generation = issued.getOrDefault(ticket.id(), SpiritReading.UNKNOWN_GENERATION);

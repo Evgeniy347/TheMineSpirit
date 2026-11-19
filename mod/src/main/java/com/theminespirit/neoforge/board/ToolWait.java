@@ -4,7 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.ToolSet;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritTaskView;
 import java.util.Map;
 import org.slf4j.Logger;
 
@@ -13,7 +13,7 @@ final class ToolWait {
 
     private ToolWait() {}
 
-    static void release(Board board, Map<String, Long> issued, SpiritEntity spirit, BoardTicket ticket) {
+    static void release(Board board, Map<String, Long> issued, SpiritTaskView spirit, BoardTicket ticket) {
         issued.remove(ticket.id());
         board.release(ticket.id());
         LOGGER.warn(
