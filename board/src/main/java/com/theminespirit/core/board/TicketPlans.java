@@ -114,6 +114,11 @@ public final class TicketPlans {
         return DefaultPlans.plan(boardCase, target, level);
     }
 
+    public static BlockCoord mineDescentOrigin(TicketTarget target) {
+        Objects.requireNonNull(target, "Цель задания не может быть null: спуск ставится по плану или в цели");
+        return target.work() == null ? target.target() : target.work().site().mineEntrance();
+    }
+
     static TaskNode takeFrom(String item, int count) {
         return new FallbackNode(List.of(
                 new ScriptCall(

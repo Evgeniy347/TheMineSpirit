@@ -14,7 +14,6 @@ import com.theminespirit.core.town.PlotLeveling;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 final class TicketStructurePlans {
@@ -83,7 +82,7 @@ final class TicketStructurePlans {
     }
 
     private static TaskNode mineDescent(TicketTarget target) {
-        BlockCoord origin = mineDescentOrigin(target);
+        BlockCoord origin = TicketPlans.mineDescentOrigin(target);
         int x = origin.x();
         int z = origin.z();
         return sequence(
@@ -105,11 +104,6 @@ final class TicketStructurePlans {
                                 z,
                                 "rotation",
                                 MINE_DESCENT_ROTATION)));
-    }
-
-    public static BlockCoord mineDescentOrigin(TicketTarget target) {
-        Objects.requireNonNull(target, "Цель задания не может быть null: спуск ставится по плану или в цели");
-        return target.work() == null ? target.target() : target.work().site().mineEntrance();
     }
 
     static TaskNode buildPenLevel(int level, TicketTarget target) {
