@@ -1,7 +1,9 @@
 package com.theminespirit.core.mining;
 
+import com.theminespirit.core.observation.BlockCoord;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public final class MineObstruction {
     private static final Set<String> COMMON = Set.of(
@@ -35,6 +37,10 @@ public final class MineObstruction {
         Objects.requireNonNull(blockId, "Id блока не может быть null: по нему решается, мешает ли он спуску");
         String path = path(blockId);
         return COMMON.contains(path) || ORES.contains(path);
+    }
+
+    public static boolean underWork(@Nullable BlockCoord working, BlockCoord blocker) {
+        return working != null && working.equals(blocker);
     }
 
     private static String path(String blockId) {

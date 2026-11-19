@@ -5,12 +5,11 @@ import com.theminespirit.core.building.BlockSight;
 import com.theminespirit.core.mining.MineObstruction;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.Point;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 final class MineObstacleClear {
@@ -19,7 +18,7 @@ final class MineObstacleClear {
     private final SpiritEntity spirit;
     private final Level level;
     private final BlockBreaker breaker;
-    private final Set<BlockCoord> tried = new HashSet<>();
+    private @Nullable BlockCoord breaking;
 
     MineObstacleClear(SpiritEntity spirit, Level level, BlockBreaker breaker) {
         this.spirit = spirit;
@@ -32,14 +31,23 @@ final class MineObstacleClear {
         Optional<BlockCoord> blocker =
                 BlockSight.firstBlocker(new Point(eye.x, eye.y, eye.z), cell, new LoadedTerrain(level), coord -> false);
         if (blocker.isEmpty()) {
+            breaking = null;
             return false;
         }
         BlockCoord at = blocker.orElseThrow();
         BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
-        if (!MineObstruction.clearable(BlockStates.idOf(level.getBlockState(pos))) || !tried.add(at)) {
+        if (!MineObstruction.clearable(BlockStates.idOf(level.getBlockState(pos)))) {
+            breaking = null;
             return false;
         }
-        LOGGER.info("Шахта: дух {} убирает помеху спуску {} перед клеткой {}", spirit.getStringUUID(), at, cell);
-        return breaker.beginExcavate(pos) instanceof BlockBreaker.Started;
+        if (MineObstruction.underWork(breaking, at)) {
+            return true;
+        }
+        if (breaker.beginExcavate(pos) instanceof BlockBreaker.Started) {
+            breaking = at;
+            LOGGER.info("Шахта: дух {} убирает помеху спуску {} перед клеткой {}", spirit.getStringUUID(), at, cell);
+            return true;
+        }
+        return false;
     }
 }
