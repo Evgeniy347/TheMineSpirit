@@ -222,6 +222,8 @@
     "homeRadius": 32,
     "looseRadius": 24,
     "stationRadius": 8,
-    "fieldRadius": 24
+    "fieldRadius": 24,
+    "conflictRadius": 4,
+    "threatRadius": 16
   }
 }

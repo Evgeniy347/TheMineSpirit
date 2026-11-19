@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.inventory.WarehouseCategories;
 import java.util.Collection;
 import java.util.HashSet;
@@ -20,7 +21,6 @@ public final class More3Rules {
     public static final String PLAYER_SLEEP = "player_sleep";
     public static final String STAGE_SLOW = "stage_slow";
     private static final String OTHER_CATEGORY = "прочее";
-    private static final int CONFLICT_RADIUS = 4;
     private static final int SLOW_FACTOR = 2;
     private static final int SLOW_SLACK = 200;
     private static final WarehouseCategories CATEGORIES = WarehouseCategories.load();
@@ -155,7 +155,9 @@ public final class More3Rules {
         int dx = one.x() - two.x();
         int dy = one.y() - two.y();
         int dz = one.z() - two.z();
-        return dx * dx + dy * dy + dz * dz <= CONFLICT_RADIUS * CONFLICT_RADIUS;
+        return dx * dx + dy * dy + dz * dz
+                <= BoardConfig.current().facts().conflictRadius()
+                        * BoardConfig.current().facts().conflictRadius();
     }
 
     private static void add(Set<String> events, boolean present, String name) {

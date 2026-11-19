@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.coordinator;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.coordinator.SpiritRole;
 import com.theminespirit.core.coordinator.SpiritRoles;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
@@ -20,7 +21,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
 public final class SpiritSnapshotReader {
-    private static final double THREAT_RADIUS = 16.0;
 
     private SpiritSnapshotReader() {}
 
@@ -38,7 +38,7 @@ public final class SpiritSnapshotReader {
         SpiritRole role = roleOf(spirit);
         CombatMode mode = spirit.tactics().combatMode();
         Level level = spirit.level();
-        AABB box = spirit.getBoundingBox().inflate(THREAT_RADIUS);
+        AABB box = spirit.getBoundingBox().inflate(BoardConfig.current().facts().threatRadius());
         List<LivingEntity> near =
                 level.getEntitiesOfClass(LivingEntity.class, box, entity -> !entity.equals(spirit) && entity.isAlive());
         int threatsNear = 0;
@@ -46,7 +46,8 @@ public final class SpiritSnapshotReader {
         for (LivingEntity entity : near) {
             if ((entity instanceof Enemy || entity instanceof Mob)
                     && !(entity instanceof SpiritEntity)
-                    && entity.distanceTo(spirit) <= THREAT_RADIUS) {
+                    && entity.distanceTo(spirit)
+                            <= BoardConfig.current().facts().threatRadius()) {
                 threatsNear++;
             }
             if (entity instanceof Mob mob && spirit.equals(mob.getTarget())) {

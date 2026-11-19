@@ -67,6 +67,7 @@ class FactTuningTests {
                 + "\"bedRadius\":20,\"hazardRadius\":3,\"flowRadius\":8,\"dropRadius\":8,"
                 + "\"decayRadius\":16,\"playerRadius\":24,\"portalRadius\":24,\"hazardScanRadius\":4,"
                 + "\"petRadius\":32,\"spaceRadius\":48,\"growRadius\":16,\"mineRadius\":8,"
-                + "\"homeRadius\":32,\"looseRadius\":24,\"stationRadius\":8,\"fieldRadius\":24}";
+                + "\"homeRadius\":32,\"looseRadius\":24,\"stationRadius\":8,\"fieldRadius\":24,"
+                + "\"conflictRadius\":4,\"threatRadius\":16}";
     }
 }

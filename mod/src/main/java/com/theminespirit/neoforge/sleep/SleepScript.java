@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.sleep;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
@@ -24,7 +25,6 @@ public final class SleepScript implements ScriptInstance {
     static final String NO_FREE_BED = "кровать не найдена: в поселении нет свободной кровати";
 
     private static final double ARRIVAL = 1.25;
-    private static final double THREAT_RADIUS = 16.0;
 
     private final SpiritEntity spirit;
     private final Approach approach;
@@ -132,7 +132,7 @@ public final class SleepScript implements ScriptInstance {
     }
 
     private boolean threatNear() {
-        AABB box = spirit.getBoundingBox().inflate(THREAT_RADIUS);
+        AABB box = spirit.getBoundingBox().inflate(BoardConfig.current().facts().threatRadius());
         return !spirit.level()
                 .getEntitiesOfClass(
                         LivingEntity.class,

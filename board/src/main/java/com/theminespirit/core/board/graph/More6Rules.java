@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.board.BoardConfig;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -11,7 +12,6 @@ public final class More6Rules {
     public static final int WEAK_HEALTH = 12;
     public static final int ARMOR_DURABILITY = 20;
     public static final int FAR_BLOCKS = 48;
-    public static final int THREAT_RADIUS = 16;
     public static final int IDLE_TICKS = 200;
     public static final int LOOSE_ITEMS = 4;
     public static final int REPEAT_BUILDINGS = 3;
@@ -268,7 +268,8 @@ public final class More6Rules {
 
     private static boolean threatNear(GraphFacts.Position position, Collection<GraphFacts.Threat> threats) {
         for (GraphFacts.Threat threat : threats) {
-            if (distance(position, threat.position()) <= THREAT_RADIUS) {
+            if (distance(position, threat.position())
+                    <= BoardConfig.current().facts().threatRadius()) {
                 return true;
             }
         }
