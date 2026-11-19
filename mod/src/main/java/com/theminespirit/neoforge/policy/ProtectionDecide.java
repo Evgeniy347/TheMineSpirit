@@ -79,23 +79,8 @@ final class ProtectionDecide {
         if (!OrchardTrees.treePart(state) || !(level instanceof ServerLevel server)) {
             return false;
         }
-        return PlotProtection.treeObstacle(true, woodenPlan(PlotCellStructure.plannedId(server, pos)));
-    }
-
-    private static boolean woodenPlan(@Nullable String planned) {
-        if (planned == null) {
-            return false;
-        }
-        String path = planned;
-        int state = path.indexOf('[');
-        if (state >= 0) {
-            path = path.substring(0, state);
-        }
-        int colon = path.indexOf(':');
-        if (colon >= 0) {
-            path = path.substring(colon + 1);
-        }
-        return path.endsWith("_log") || path.endsWith("_wood") || path.endsWith("_leaves") || path.endsWith("_sapling");
+        PlacedBlocksData placed = PlacedBlocksData.get(server);
+        return PlotProtection.treeObstacle(true, placed.isMarked(pos) || placed.isSpiritMarked(pos));
     }
 
     private PlotOutcome plotCheck(Request request, Level level, BlockCoord coord) {
