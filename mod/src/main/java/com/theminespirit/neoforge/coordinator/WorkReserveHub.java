@@ -7,6 +7,7 @@ import com.theminespirit.core.coordinator.WorkAssignment;
 import com.theminespirit.core.coordinator.work.WorkReservations;
 import com.theminespirit.core.coordinator.work.WorkTarget;
 import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritView;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,7 +42,7 @@ public final class WorkReserveHub {
         return leasesFor(spirit.level()).release(target, spirit.getUUID());
     }
 
-    public static int releaseAll(SpiritEntity spirit) {
+    public static int releaseAll(SpiritView spirit) {
         requireSpirit(spirit);
         return leasesFor(spirit.level()).releaseAll(spirit.getUUID());
     }
@@ -65,7 +66,7 @@ public final class WorkReserveHub {
                 : Optional.of(assignments.get(0).target());
     }
 
-    private static void requireSpirit(SpiritEntity spirit) {
+    private static void requireSpirit(SpiritView spirit) {
         if (spirit == null) {
             throw new IllegalArgumentException("spirit не может быть null: без духа бронь некому выдать");
         }

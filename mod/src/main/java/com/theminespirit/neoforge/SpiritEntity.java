@@ -70,7 +70,7 @@ import net.minecraft.world.phys.AABB;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
-public final class SpiritEntity extends PathfinderMob implements TerminalCrafter, HomedSpirit, SpiritView {
+public final class SpiritEntity extends PathfinderMob implements TerminalCrafter, HomedSpirit, SpiritTaskView {
     public static final String DEFAULT_NAME = "spirit";
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -263,6 +263,7 @@ public final class SpiritEntity extends PathfinderMob implements TerminalCrafter
         return tactics;
     }
 
+    @Override
     public String displayName() {
         return hasCustomName() ? getCustomName().getString() : DEFAULT_NAME;
     }
@@ -557,10 +558,12 @@ public final class SpiritEntity extends PathfinderMob implements TerminalCrafter
         return inventory;
     }
 
+    @Override
     public void startTask(TaskNode plan) {
         brain().start(plan);
     }
 
+    @Override
     public boolean runsBackgroundTask() {
         return backgroundGeneration != SpiritReading.UNKNOWN_GENERATION
                 && backgroundGeneration == taskGeneration()
@@ -571,6 +574,7 @@ public final class SpiritEntity extends PathfinderMob implements TerminalCrafter
         return spiritBrain == null ? SpiritReading.UNKNOWN_GENERATION : spiritBrain.generation();
     }
 
+    @Override
     public void cancelTask() {
         brain().cancel();
     }
@@ -583,6 +587,7 @@ public final class SpiritEntity extends PathfinderMob implements TerminalCrafter
         return spiritBrain == null ? Optional.empty() : spiritBrain.plan();
     }
 
+    @Override
     public Optional<String> currentActivity() {
         Optional<TaskNode> plan = currentPlan();
         if (plan.isEmpty()) {
@@ -618,6 +623,7 @@ public final class SpiritEntity extends PathfinderMob implements TerminalCrafter
         return spiritBrain == null ? Optional.empty() : spiritBrain.suspendReason();
     }
 
+    @Override
     public Optional<String> currentTaskScript() {
         return spiritBrain == null ? Optional.empty() : spiritBrain.currentScript();
     }

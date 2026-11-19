@@ -10,7 +10,7 @@ import com.theminespirit.core.board.HolderRelease;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.ConfigStamp;
 import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritTaskView;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.HashSet;
 import java.util.List;
@@ -36,9 +36,9 @@ final class BoardCrewDesk {
         this.targets = Objects.requireNonNull(targets, "targets не может быть null: цель нужна для сверки ремонта");
     }
 
-    void watch(List<SpiritEntity> spirits) {
+    void watch(List<? extends SpiritTaskView> spirits) {
         Set<UUID> live = new HashSet<>();
-        for (SpiritEntity spirit : spirits) {
+        for (SpiritTaskView spirit : spirits) {
             if (!spirit.isRemoved()) {
                 live.add(spirit.getUUID());
             }
@@ -60,9 +60,9 @@ final class BoardCrewDesk {
         }
     }
 
-    void releaseDeadHolders(ServerLevel level, List<SpiritEntity> spirits, long now) {
+    void releaseDeadHolders(ServerLevel level, List<? extends SpiritTaskView> spirits, long now) {
         Set<UUID> live = new HashSet<>();
-        for (SpiritEntity spirit : spirits) {
+        for (SpiritTaskView spirit : spirits) {
             live.add(spirit.getUUID());
         }
         for (BoardTicket ticket : board.tickets()) {
@@ -98,11 +98,11 @@ final class BoardCrewDesk {
         }
     }
 
-    void cancel(BoardTicket ticket, @Nullable UUID leader, List<SpiritEntity> spirits) {
+    void cancel(BoardTicket ticket, @Nullable UUID leader, List<? extends SpiritTaskView> spirits) {
         if (ticket.executors().isEmpty()) {
             return;
         }
-        for (SpiritEntity spirit : spirits) {
+        for (SpiritTaskView spirit : spirits) {
             if (spirit.isRemoved() || spirit.getUUID().equals(leader)) {
                 continue;
             }

@@ -10,7 +10,7 @@ import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritTaskView;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.Map;
 import java.util.Objects;
@@ -35,7 +35,7 @@ final class JobLaunch {
                 : TicketPlanPick.plan(ticket.boardCase(), ticket.level(), target);
     }
 
-    static void start(SpiritEntity spirit, String ticketId, TaskNode plan) {
+    static void start(SpiritTaskView spirit, String ticketId, TaskNode plan) {
         Objects.requireNonNull(spirit, "Дух не может быть null: задание стартует у конкретного духа");
         Objects.requireNonNull(plan, "План не может быть null: духу нечего исполнять");
         String prior = spirit.currentActivity().orElse(null);
@@ -52,7 +52,7 @@ final class JobLaunch {
         }
     }
 
-    static void dropUnclaimed(SpiritEntity spirit, String ticketId, BoardOutcome outcome) {
+    static void dropUnclaimed(SpiritTaskView spirit, String ticketId, BoardOutcome outcome) {
         spirit.cancelTask();
         WorkReserveHub.releaseAll(spirit);
         LOGGER.error(
