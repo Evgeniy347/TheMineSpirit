@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.MorePlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
@@ -18,7 +19,6 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import org.jspecify.annotations.Nullable;
 
 final class MorePost {
-    private static final int PLAYER_RADIUS = 16;
     private static final int HOME_RADIUS = 16;
     private static final int HOME_BELOW = 4;
     private static final int HOME_ABOVE = 16;
@@ -91,7 +91,9 @@ final class MorePost {
     private static @Nullable ServerPlayer player(GraphPost post) {
         BlockPos home = MoreScan.pos(home(post));
         return post.level.players().stream()
-                .filter(candidate -> candidate.blockPosition().distSqr(home) <= (long) PLAYER_RADIUS * PLAYER_RADIUS)
+                .filter(candidate -> candidate.blockPosition().distSqr(home)
+                        <= (long) BoardConfig.current().facts().nearbyPlayerRadius()
+                                * BoardConfig.current().facts().nearbyPlayerRadius())
                 .findFirst()
                 .orElse(null);
     }

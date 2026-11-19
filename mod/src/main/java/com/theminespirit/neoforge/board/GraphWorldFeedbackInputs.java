@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphFeedback;
 import com.theminespirit.core.observation.BlockCoord;
@@ -14,7 +15,6 @@ import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
 
 final class GraphWorldFeedbackInputs {
-    private static final int PLAYER_RADIUS = 16;
 
     private GraphWorldFeedbackInputs() {}
 
@@ -36,7 +36,8 @@ final class GraphWorldFeedbackInputs {
 
     private static GraphFeedback.Player player(ServerLevel level, List<SpiritEntity> spirits, BlockCoord home) {
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
-        long limit = (long) PLAYER_RADIUS * PLAYER_RADIUS;
+        long limit = (long) BoardConfig.current().facts().nearbyPlayerRadius()
+                * BoardConfig.current().facts().nearbyPlayerRadius();
         for (ServerPlayer player : level.players()) {
             BlockPos at = player.blockPosition();
             boolean near = spirits.isEmpty()

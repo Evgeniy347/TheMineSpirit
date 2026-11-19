@@ -68,6 +68,6 @@ class FactTuningTests {
                 + "\"decayRadius\":16,\"playerRadius\":24,\"portalRadius\":24,\"hazardScanRadius\":4,"
                 + "\"petRadius\":32,\"spaceRadius\":48,\"growRadius\":16,\"mineRadius\":8,"
                 + "\"homeRadius\":32,\"looseRadius\":24,\"stationRadius\":8,\"fieldRadius\":24,"
-                + "\"conflictRadius\":4,\"threatRadius\":16,\"farmScanRadius\":16,\"herdSurveyRadius\":32,\"lifeScanRadius\":16}";
+                + "\"conflictRadius\":4,\"threatRadius\":16,\"farmScanRadius\":16,\"herdSurveyRadius\":32,\"lifeScanRadius\":16,\"nearbyPlayerRadius\":16,\"dropScanRadius\":24,\"areaScanRadius\":16}";
     }
 }

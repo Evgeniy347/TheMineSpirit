@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BoardState;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
@@ -29,11 +30,9 @@ import net.minecraft.world.phys.AABB;
 import org.jspecify.annotations.Nullable;
 
 final class MoreInputs {
-    private static final int DROP_RADIUS = 24;
     private static final int DROP_WARN_TICKS = 1200;
     private static final int DROP_DESPAWN_TICKS = 6000;
     private static final int DARK_LEVEL = 8;
-    private static final int SCAN_RADIUS = 16;
     private static final int SCAN_BELOW = 4;
     private static final int SCAN_ABOVE = 16;
     private static final int FAILURE_REPEATS = 2;
@@ -164,7 +163,9 @@ final class MoreInputs {
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
         int total = 0;
         int expiring = 0;
-        for (ItemEntity drop : level.getEntitiesOfClass(ItemEntity.class, new AABB(center).inflate(DROP_RADIUS))) {
+        for (ItemEntity drop : level.getEntitiesOfClass(
+                ItemEntity.class,
+                new AABB(center).inflate(BoardConfig.current().facts().dropScanRadius()))) {
             if (drop.isRemoved()) {
                 continue;
             }
@@ -184,8 +185,12 @@ final class MoreInputs {
         int doors = 0;
         int hoppers = 0;
         int ore = 0;
-        for (int dx = -SCAN_RADIUS; dx <= SCAN_RADIUS; dx++) {
-            for (int dz = -SCAN_RADIUS; dz <= SCAN_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().areaScanRadius();
+                dx <= BoardConfig.current().facts().areaScanRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().areaScanRadius();
+                    dz <= BoardConfig.current().facts().areaScanRadius();
+                    dz++) {
                 for (int dy = -SCAN_BELOW; dy <= SCAN_ABOVE; dy++) {
                     BlockPos at = new BlockPos(home.x() + dx, home.y() + dy, home.z() + dz);
                     if (!level.isLoaded(at)) {

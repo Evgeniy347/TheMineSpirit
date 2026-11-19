@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.GroundsPlan;
 import com.theminespirit.core.board.SettlementFacts;
@@ -22,7 +23,6 @@ import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.Blocks;
 
 final class StageWorldFacts {
-    private static final int SCAN_RADIUS = 16;
     private static final int LAYOUT_SLACK_DIVISOR = 50;
     private static final String FIRST_PREFIX = "first:";
     private static final Set<BoardCase> EXACT_STEPS =
@@ -57,9 +57,15 @@ final class StageWorldFacts {
         boolean furnace = false;
         Set<BlockPos> seen = new HashSet<>();
         for (BlockPos start : factOrigins(home, stage)) {
-            for (int dx = -SCAN_RADIUS; dx <= SCAN_RADIUS; dx++) {
-                for (int dz = -SCAN_RADIUS; dz <= SCAN_RADIUS; dz++) {
-                    if (dx * dx + dz * dz > SCAN_RADIUS * SCAN_RADIUS) {
+            for (int dx = -BoardConfig.current().facts().areaScanRadius();
+                    dx <= BoardConfig.current().facts().areaScanRadius();
+                    dx++) {
+                for (int dz = -BoardConfig.current().facts().areaScanRadius();
+                        dz <= BoardConfig.current().facts().areaScanRadius();
+                        dz++) {
+                    if (dx * dx + dz * dz
+                            > BoardConfig.current().facts().areaScanRadius()
+                                    * BoardConfig.current().facts().areaScanRadius()) {
                         continue;
                     }
                     BlockPos pos = start.offset(dx, 0, dz);

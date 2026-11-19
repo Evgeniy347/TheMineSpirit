@@ -243,6 +243,9 @@
     "threatRadius": 16,
     "farmScanRadius": 16,
     "herdSurveyRadius": 32,
-    "lifeScanRadius": 16
+    "lifeScanRadius": 16,
+    "nearbyPlayerRadius": 16,
+    "dropScanRadius": 24,
+    "areaScanRadius": 16
   }
 }

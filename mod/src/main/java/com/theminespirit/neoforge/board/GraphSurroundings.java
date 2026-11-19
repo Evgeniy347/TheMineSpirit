@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.base.NamespacedId;
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphNames;
@@ -41,7 +42,6 @@ public final class GraphSurroundings {
     private static final int STEP = 1;
     private static final int BELOW = 4;
     private static final int ABOVE = 12;
-    private static final int DROP_RADIUS = 24;
     private static final long SCAN_TTL_TICKS = 600;
     private static final TickCache<Scan> SCANS = new TickCache<>(SCAN_TTL_TICKS);
 
@@ -206,7 +206,9 @@ public final class GraphSurroundings {
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
         Map<String, BlockCoord> found = new HashMap<>();
         Map<String, Double> distances = new HashMap<>();
-        for (ItemEntity drop : level.getEntitiesOfClass(ItemEntity.class, new AABB(center).inflate(DROP_RADIUS))) {
+        for (ItemEntity drop : level.getEntitiesOfClass(
+                ItemEntity.class,
+                new AABB(center).inflate(BoardConfig.current().facts().dropScanRadius()))) {
             if (drop.isRemoved()) {
                 continue;
             }
