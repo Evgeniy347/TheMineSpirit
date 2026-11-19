@@ -137,18 +137,7 @@ final class MineBuildCells {
                 startBreak(floor, OptionalInt.empty());
                 yield false;
             }
-            case ORE -> oreInFloor(floor, state);
         };
-    }
-
-    private boolean oreInFloor(BlockCoord floor, BlockState state) {
-        MineOres.Decision decision = MineOres.decideDescent(BlockStates.idOf(state), picks(state));
-        if (decision instanceof MineOres.Mine mine) {
-            startBreak(floor, mine.slot());
-            return false;
-        }
-        remember(floor, state, ((MineOres.Leave) decision).reason());
-        return true;
     }
 
     boolean cellReady(MineColumn column, BlockCoord cell) {

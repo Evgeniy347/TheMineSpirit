@@ -46,10 +46,11 @@ class MineFloorTests {
     }
 
     @Test
-    void decide_OreInFloor_GoesToOreRule() {
+    void decide_OreInFloor_KeepsAsSupport() {
         assertEquals(
-                MineFloor.Action.ORE,
-                MineFloor.decide(new MineFloor.Seen("minecraft:diamond_ore", false, false, false, true)),
-                "руда в полу решается правилом руды: обычную добыть, на удачу — оставить");
+                MineFloor.Action.KEEP,
+                MineFloor.decide(new MineFloor.Seen("minecraft:copper_ore", false, false, false, true)),
+                "руда в полу и стенке — уже твёрдая опора спуска: её не перекладывают булыжником, иначе дух "
+                        + "ищет недостижимую стоянку у стенки и проходка стоит");
     }
 }

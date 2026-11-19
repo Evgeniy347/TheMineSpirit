@@ -7,8 +7,7 @@ public final class MineFloor {
     public enum Action {
         KEEP,
         PLACE,
-        REPLACE,
-        ORE
+        REPLACE
     }
 
     public record Seen(String blockId, boolean air, boolean fluid, boolean replaceable, boolean solidBelow) {
@@ -26,9 +25,6 @@ public final class MineFloor {
         Objects.requireNonNull(seen, "Клетка пола не может быть null");
         if (seen.air() || seen.fluid() || seen.replaceable()) {
             return Action.PLACE;
-        }
-        if (MineOres.kindOf(seen.blockId()) != MineOres.Kind.NONE) {
-            return Action.ORE;
         }
         if (FALLING.contains(path(seen.blockId())) && !seen.solidBelow()) {
             return Action.REPLACE;
