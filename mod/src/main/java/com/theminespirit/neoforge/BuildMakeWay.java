@@ -14,7 +14,6 @@ import net.minecraft.world.phys.AABB;
 import org.slf4j.Logger;
 
 final class BuildMakeWay {
-    private static final int RADIUS = 6;
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private BuildMakeWay() {}
@@ -58,7 +57,7 @@ final class BuildMakeWay {
     }
 
     static Optional<BlockCoord> outsideStand(SchematicSite site, BlockCoord from) {
-        for (int ring = 1; ring <= RADIUS; ring++) {
+        for (int ring = 1; ring <= SpiritConfig.buildMakeWayRadius(); ring++) {
             for (int dx = -ring; dx <= ring; dx++) {
                 for (int dz = -ring; dz <= ring; dz++) {
                     if (Math.max(Math.abs(dx), Math.abs(dz)) != ring) {

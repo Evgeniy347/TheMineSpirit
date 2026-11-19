@@ -10,7 +10,6 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 final class StandWalk {
-    static final int RADIUS = 3;
     private static final int MAX_STANDS = 8;
     private static final double ARRIVAL = 0.6;
 
@@ -30,7 +29,8 @@ final class StandWalk {
     }
 
     List<BlockCoord> stands(BlockCoord cell) {
-        return RollbackReach.climbStands(cell, GraphTargets.rollbackGround(level), RADIUS).stream()
+        return RollbackReach.climbStands(cell, GraphTargets.rollbackGround(level), SpiritConfig.standWalkRadius())
+                .stream()
                 .filter(candidate -> candidate.x() != cell.x() || candidate.z() != cell.z())
                 .limit(MAX_STANDS)
                 .toList();

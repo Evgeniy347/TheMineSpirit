@@ -17,6 +17,11 @@ public final class SpiritConfig {
     public static final int DEFAULT_STORAGE_SEARCH_RADIUS = 8;
     public static final int DEFAULT_WATER_SEARCH_RADIUS = 6;
     public static final int DEFAULT_FORAGE_WATER_RADIUS = 8;
+    public static final int DEFAULT_STAND_WALK_RADIUS = 3;
+    public static final int DEFAULT_WALL_ESCAPE_RADIUS = 2;
+    public static final int DEFAULT_BUILD_MAKE_WAY_RADIUS = 6;
+    public static final int DEFAULT_FOLLOW_PICKUP_RADIUS = 4;
+    public static final int DEFAULT_COMPANION_SEARCH_RADIUS = 64;
 
     private static final ModConfigSpec SPEC;
     private static final ModConfigSpec.IntValue CHUNK_LOADING_RADIUS;
@@ -36,6 +41,11 @@ public final class SpiritConfig {
     private static final ModConfigSpec.IntValue STORAGE_SEARCH_RADIUS;
     private static final ModConfigSpec.IntValue WATER_SEARCH_RADIUS;
     private static final ModConfigSpec.IntValue FORAGE_WATER_RADIUS;
+    private static final ModConfigSpec.IntValue STAND_WALK_RADIUS;
+    private static final ModConfigSpec.IntValue WALL_ESCAPE_RADIUS;
+    private static final ModConfigSpec.IntValue BUILD_MAKE_WAY_RADIUS;
+    private static final ModConfigSpec.IntValue FOLLOW_PICKUP_RADIUS;
+    private static final ModConfigSpec.IntValue COMPANION_SEARCH_RADIUS;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -113,6 +123,26 @@ public final class SpiritConfig {
                         "Радиус поиска воды при выборе места сбора, в блоках.",
                         "Шире — сбор считается обеспеченным водой даже на сухом краю поселения.")
                 .defineInRange("forageWaterRadius", DEFAULT_FORAGE_WATER_RADIUS, 1, 32);
+        STAND_WALK_RADIUS = builder.comment(
+                        "Радиус поиска стоянок при откате и обходе, в блоках.",
+                        "Шире — дух ищет стоянку дальше от цели и дольше думает.")
+                .defineInRange("standWalkRadius", DEFAULT_STAND_WALK_RADIUS, 1, 12);
+        WALL_ESCAPE_RADIUS = builder.comment(
+                        "Радиус осмотра запертого духа вокруг себя при побеге из ямы, в блоках.",
+                        "Шире — дух видит выход через толстую стену.")
+                .defineInRange("wallEscapeRadius", DEFAULT_WALL_ESCAPE_RADIUS, 1, 8);
+        BUILD_MAKE_WAY_RADIUS = builder.comment(
+                        "Сколько колец вокруг постройки дух расчищает, чтобы подойти, в блоках.",
+                        "Шире — больше сноса чужого леса вокруг стройки.")
+                .defineInRange("buildMakeWayRadius", DEFAULT_BUILD_MAKE_WAY_RADIUS, 1, 16);
+        FOLLOW_PICKUP_RADIUS = builder.comment(
+                        "Радиус сбора дропа, когда дух сопровождает игрока, в блоках.",
+                        "Шире — дух отвлекается на дроп дальше от игрока.")
+                .defineInRange("followPickupRadius", DEFAULT_FOLLOW_PICKUP_RADIUS, 1, 16);
+        COMPANION_SEARCH_RADIUS = builder.comment(
+                        "Радиус поиска соседних духов при сопровождении, в блоках.",
+                        "Шире — дороже поиск, но спутники дальше не теряются.")
+                .defineInRange("companionSearchRadius", DEFAULT_COMPANION_SEARCH_RADIUS, 1, 256);
         builder.pop();
         SPEC = builder.build();
     }
@@ -186,6 +216,26 @@ public final class SpiritConfig {
 
     public static int forageWaterRadius() {
         return loaded(FORAGE_WATER_RADIUS, DEFAULT_FORAGE_WATER_RADIUS);
+    }
+
+    public static int standWalkRadius() {
+        return loaded(STAND_WALK_RADIUS, DEFAULT_STAND_WALK_RADIUS);
+    }
+
+    public static int wallEscapeRadius() {
+        return loaded(WALL_ESCAPE_RADIUS, DEFAULT_WALL_ESCAPE_RADIUS);
+    }
+
+    public static int buildMakeWayRadius() {
+        return loaded(BUILD_MAKE_WAY_RADIUS, DEFAULT_BUILD_MAKE_WAY_RADIUS);
+    }
+
+    public static int followPickupRadius() {
+        return loaded(FOLLOW_PICKUP_RADIUS, DEFAULT_FOLLOW_PICKUP_RADIUS);
+    }
+
+    public static int companionSearchRadius() {
+        return loaded(COMPANION_SEARCH_RADIUS, DEFAULT_COMPANION_SEARCH_RADIUS);
     }
 
     public static int moreCountMax() {

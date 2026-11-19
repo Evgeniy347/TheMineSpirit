@@ -14,7 +14,6 @@ import net.minecraft.world.phys.AABB;
 import org.slf4j.Logger;
 
 final class WallEscape {
-    static final int RADIUS = 2;
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private WallEscape() {}
@@ -41,9 +40,9 @@ final class WallEscape {
 
     private static List<BlockCoord> around(BlockPos feet) {
         List<BlockCoord> cells = new ArrayList<>();
-        for (int dy = -1; dy <= RADIUS; dy++) {
-            for (int dx = -RADIUS; dx <= RADIUS; dx++) {
-                for (int dz = -RADIUS; dz <= RADIUS; dz++) {
+        for (int dy = -1; dy <= SpiritConfig.wallEscapeRadius(); dy++) {
+            for (int dx = -SpiritConfig.wallEscapeRadius(); dx <= SpiritConfig.wallEscapeRadius(); dx++) {
+                for (int dz = -SpiritConfig.wallEscapeRadius(); dz <= SpiritConfig.wallEscapeRadius(); dz++) {
                     cells.add(new BlockCoord(feet.getX() + dx, feet.getY() + dy, feet.getZ() + dz));
                 }
             }

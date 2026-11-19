@@ -18,9 +18,7 @@ import net.minecraft.world.phys.Vec3;
 
 final class FollowScript implements ScriptInstance {
     private static final double MOVE_SPEED = 1.0;
-    private static final int PICKUP_RADIUS = 4;
     private static final int PICKUP_COOLDOWN_TICKS = PickupTuning.REFRESH_TICKS;
-    private static final double COMPANION_SEARCH_RADIUS = 64.0;
 
     private final SpiritEntity spirit;
     private final FollowParams params;
@@ -108,7 +106,7 @@ final class FollowScript implements ScriptInstance {
                 && pickupCenter != null
                 && (long) (pos.getX() - pickupCenter.x()) * (pos.getX() - pickupCenter.x())
                                 + (long) (pos.getZ() - pickupCenter.z()) * (pos.getZ() - pickupCenter.z())
-                        > PICKUP_RADIUS * PICKUP_RADIUS) {
+                        > (long) SpiritConfig.followPickupRadius() * SpiritConfig.followPickupRadius()) {
             pickup.cancel();
             pickup = null;
         }
@@ -118,7 +116,7 @@ final class FollowScript implements ScriptInstance {
                     spirit,
                     IdFilter.matchAll(),
                     pickupCenter,
-                    PICKUP_RADIUS,
+                    SpiritConfig.followPickupRadius(),
                     PickupTuning.DEFAULT,
                     OverflowMode.BY_VALUE);
         }
@@ -143,7 +141,7 @@ final class FollowScript implements ScriptInstance {
                 return null;
             }
             List<SpiritEntity> nearby = serverLevel.getEntitiesOfClass(
-                    SpiritEntity.class, spirit.getBoundingBox().inflate(COMPANION_SEARCH_RADIUS));
+                    SpiritEntity.class, spirit.getBoundingBox().inflate(SpiritConfig.companionSearchRadius()));
             companion = nearby.stream()
                     .filter(other ->
                             !other.equals(spirit) && other.getStringUUID().equals(params.target()))
