@@ -6,7 +6,6 @@ import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.LevelSafetyView;
-import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.movement.NetworkLevelView;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,13 +23,13 @@ final class HomeStand {
     private HomeStand() {}
 
     static BlockCoord of(
-            ServerLevel level, StageSite stage, List<SpiritEntity> spirits, Optional<BlockCoord> remembered) {
+            ServerLevel level, StageSite stage, List<? extends HomedSpirit> spirits, Optional<BlockCoord> remembered) {
         BlockCoord center = SettlementHome.center(SettlementHome.homes(spirits)).orElse(stage.anchor());
         return at(level, center, spirits, remembered);
     }
 
     static BlockCoord at(
-            ServerLevel level, BlockCoord home, List<SpiritEntity> spirits, Optional<BlockCoord> remembered) {
+            ServerLevel level, BlockCoord home, List<? extends HomedSpirit> spirits, Optional<BlockCoord> remembered) {
         LevelSafetyView view = new LevelSafetyView(level);
         Optional<BlockCoord> reachable = reachable(level, home, spirits, remembered);
         if (reachable.isPresent()) {
@@ -52,13 +51,16 @@ final class HomeStand {
     }
 
     static Optional<BlockCoord> reachable(
-            ServerLevel level, BlockCoord center, List<SpiritEntity> spirits, Optional<BlockCoord> remembered) {
+            ServerLevel level,
+            BlockCoord center,
+            List<? extends HomedSpirit> spirits,
+            Optional<BlockCoord> remembered) {
         if (spirits.isEmpty()) {
             return Optional.empty();
         }
         NetworkLevelView world = new NetworkLevelView(level);
         List<Set<BlockCoord>> components = new ArrayList<>();
-        for (SpiritEntity spirit : nearby(center, spirits)) {
+        for (HomedSpirit spirit : nearby(center, spirits)) {
             BlockCoord feet = feet(spirit);
             if (components.stream().anyMatch(component -> component.contains(feet))) {
                 continue;
@@ -98,7 +100,7 @@ final class HomeStand {
         return Optional.ofNullable(bestCell);
     }
 
-    private static List<SpiritEntity> nearby(BlockCoord center, List<SpiritEntity> spirits) {
+    private static List<? extends HomedSpirit> nearby(BlockCoord center, List<? extends HomedSpirit> spirits) {
         return spirits.stream()
                 .filter(spirit -> within(center, feet(spirit)))
                 .sorted(Comparator.comparingInt(spirit -> distance(center, feet(spirit))))
@@ -111,7 +113,7 @@ final class HomeStand {
                 && Math.abs(cell.z() - center.z()) <= REACH;
     }
 
-    private static BlockCoord feet(SpiritEntity spirit) {
+    private static BlockCoord feet(HomedSpirit spirit) {
         BlockPos position = spirit.blockPosition();
         return new BlockCoord(position.getX(), position.getY(), position.getZ());
     }
