@@ -185,6 +185,9 @@ if (project != rootProject) {
             ':mech:movement'  : 0.80,
             ':mech:small'     : 0.80,
             ':mech:town'      : 0.80,
+            // lib: отчёт :mod охватывает классы зависимых модулей, а клиентский UI тестами не
+            // покрывается; порог держит текущую долю (0.117) и не даёт ей падать.
+            ':mod'            : 0.11,
     ]
     def coverageMinimum = coverageMinimums[project.path]
 
