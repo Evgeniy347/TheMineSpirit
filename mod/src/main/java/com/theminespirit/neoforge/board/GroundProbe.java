@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.TerrainGrid;
 import com.theminespirit.neoforge.PlotGround;
@@ -12,14 +13,13 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 public final class GroundProbe {
-    private static final int SCAN_DEPTH = 48;
 
     private GroundProbe() {}
 
     public static int feet(ServerLevel level, int x, int z, int fallback) {
         BlockPos.MutableBlockPos pos =
                 new BlockPos.MutableBlockPos(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
-        for (int step = 0; step < SCAN_DEPTH; step++) {
+        for (int step = 0; step < BoardConfig.current().facts().groundProbeDepth(); step++) {
             pos.move(0, -1, 0);
             if (!level.isLoaded(pos)) {
                 return fallback;
@@ -34,7 +34,7 @@ public final class GroundProbe {
     public static int waterTop(ServerLevel level, int x, int z, int fallback) {
         int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(x, top, z);
-        for (int step = 0; step < SCAN_DEPTH; step++) {
+        for (int step = 0; step < BoardConfig.current().facts().groundProbeDepth(); step++) {
             pos.move(0, -1, 0);
             if (!level.isLoaded(pos)) {
                 return fallback;
@@ -93,7 +93,7 @@ public final class GroundProbe {
     private static int surveyFeet(ServerLevel level, int x, int z, int fallback) {
         BlockPos.MutableBlockPos pos =
                 new BlockPos.MutableBlockPos(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
-        for (int step = 0; step < SCAN_DEPTH; step++) {
+        for (int step = 0; step < BoardConfig.current().facts().groundProbeDepth(); step++) {
             pos.move(0, -1, 0);
             if (!level.isLoaded(pos)) {
                 return fallback;

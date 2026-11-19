@@ -47,7 +47,15 @@ public record FactTuning(
         int surroundingsRadius,
         int petWorkRadius,
         int fluidSearchRadius,
-        int treeCenterRadius) {
+        int treeCenterRadius,
+        int woodScanRadius,
+        int woodWideScanRadius,
+        int woodScanHeight,
+        int routeMaxDistance,
+        int groundProbeDepth,
+        int craterRimScanDepth,
+        int stationReachRadius) {
+
     private static final Set<String> FIELDS = Set.of(
             "animalRadius",
             "penRadius",
@@ -89,10 +97,17 @@ public record FactTuning(
             "surroundingsRadius",
             "petWorkRadius",
             "fluidSearchRadius",
-            "treeCenterRadius");
+            "treeCenterRadius",
+            "woodScanRadius",
+            "woodWideScanRadius",
+            "woodScanHeight",
+            "routeMaxDistance",
+            "groundProbeDepth",
+            "craterRimScanDepth",
+            "stationReachRadius");
     private static final FactTuning DEFAULTS = new FactTuning(
             48, 12, 16, 48, 20, 3, 8, 8, 16, 24, 24, 4, 32, 48, 16, 8, 32, 24, 8, 24, 4, 16, 16, 32, 16, 16, 24, 16, 12,
-            16, 16, 16, 16, 64, 16, 32, 4, 32, 32, 16, 16);
+            16, 16, 16, 16, 64, 16, 32, 4, 32, 32, 16, 16, 24, 48, 8, 64, 48, 24, 48);
 
     public FactTuning {
         requirePositive(animalRadius, "animalRadius");
@@ -136,6 +151,13 @@ public record FactTuning(
         requirePositive(petWorkRadius, "petWorkRadius");
         requirePositive(fluidSearchRadius, "fluidSearchRadius");
         requirePositive(treeCenterRadius, "treeCenterRadius");
+        requirePositive(woodScanRadius, "woodScanRadius");
+        requirePositive(woodWideScanRadius, "woodWideScanRadius");
+        requirePositive(woodScanHeight, "woodScanHeight");
+        requirePositive(routeMaxDistance, "routeMaxDistance");
+        requirePositive(groundProbeDepth, "groundProbeDepth");
+        requirePositive(craterRimScanDepth, "craterRimScanDepth");
+        requirePositive(stationReachRadius, "stationReachRadius");
     }
 
     static FactTuning defaults() {
@@ -193,7 +215,14 @@ public record FactTuning(
                 integer(node, "surroundingsRadius", origin),
                 integer(node, "petWorkRadius", origin),
                 integer(node, "fluidSearchRadius", origin),
-                integer(node, "treeCenterRadius", origin));
+                integer(node, "treeCenterRadius", origin),
+                integer(node, "woodScanRadius", origin),
+                integer(node, "woodWideScanRadius", origin),
+                integer(node, "woodScanHeight", origin),
+                integer(node, "routeMaxDistance", origin),
+                integer(node, "groundProbeDepth", origin),
+                integer(node, "craterRimScanDepth", origin),
+                integer(node, "stationReachRadius", origin));
     }
 
     private static int integer(JsonNode node, String field, String origin) {

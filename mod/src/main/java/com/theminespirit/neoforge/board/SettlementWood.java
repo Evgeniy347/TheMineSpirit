@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.SettlementPlot;
@@ -17,12 +18,9 @@ import org.slf4j.LoggerFactory;
 
 public final class SettlementWood {
     private static final String LOG_SUFFIX = "_log";
-    private static final int SCAN_RADIUS = 24;
-    private static final int SCAN_HEIGHT = 8;
     private static final int BIOME_WEIGHT = 1;
     private static final int NEARBY_WEIGHT = 3;
     private static final int STOCK_MIN = 16;
-    private static final int WIDE_SCAN_RADIUS = 48;
     private static final int WIDE_SCAN_STEP = 4;
     private static final Logger LOGGER = LoggerFactory.getLogger(SettlementWood.class);
     private static final Map<BlockCoord, Map<String, Integer>> NEARBY = new ConcurrentHashMap<>();
@@ -49,9 +47,9 @@ public final class SettlementWood {
         Objects.requireNonNull(stock, "Запас не может быть null: пустой задают пустой картой");
         Map<String, Integer> nearby = NEARBY.get(home);
         if (nearby == null) {
-            nearby = nearby(level, home, SCAN_RADIUS, 2);
+            nearby = nearby(level, home, BoardConfig.current().facts().woodScanRadius(), 2);
             if (!WoodSpecies.hasLogs(nearby)) {
-                nearby = nearby(level, home, WIDE_SCAN_RADIUS, WIDE_SCAN_STEP);
+                nearby = nearby(level, home, BoardConfig.current().facts().woodWideScanRadius(), WIDE_SCAN_STEP);
             }
             if (WoodSpecies.hasLogs(nearby)) {
                 NEARBY.put(home, Map.copyOf(nearby));
@@ -120,15 +118,18 @@ public final class SettlementWood {
     }
 
     static Map<String, Integer> around(ServerLevel level, BlockCoord place) {
-        Map<String, Integer> logs = nearby(level, place, SCAN_RADIUS, 2);
-        return WoodSpecies.hasLogs(logs) ? logs : nearby(level, place, WIDE_SCAN_RADIUS, WIDE_SCAN_STEP);
+        Map<String, Integer> logs =
+                nearby(level, place, BoardConfig.current().facts().woodScanRadius(), 2);
+        return WoodSpecies.hasLogs(logs)
+                ? logs
+                : nearby(level, place, BoardConfig.current().facts().woodWideScanRadius(), WIDE_SCAN_STEP);
     }
 
     private static Map<String, Integer> nearby(ServerLevel level, BlockCoord home, int radius, int step) {
         Map<String, Integer> logs = new HashMap<>();
         for (int dx = -radius; dx <= radius; dx += step) {
             for (int dz = -radius; dz <= radius; dz += step) {
-                for (int dy = 0; dy <= SCAN_HEIGHT; dy++) {
+                for (int dy = 0; dy <= BoardConfig.current().facts().woodScanHeight(); dy++) {
                     BlockPos pos = new BlockPos(home.x() + dx, home.y() + dy, home.z() + dz);
                     String id = BuiltInRegistries.BLOCK
                             .getKey(level.getBlockState(pos).getBlock())

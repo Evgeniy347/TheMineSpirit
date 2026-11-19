@@ -27,7 +27,6 @@ final class More5World {
     private static final int GROW_LIGHT = 9;
     private static final int MINE_BELOW = 16;
     private static final int DARK_LIGHT = 8;
-    private static final int ROUTE_MAX_DISTANCE = 64;
     private static final String SAPLINGS = "#saplings";
     private static final String BONE_MEAL = "bone_meal";
     private static final String MINE = "mine";
@@ -152,7 +151,9 @@ final class More5World {
             long dx = (long) resource.position().x() - home.x();
             long dy = (long) resource.position().y() - home.y();
             long dz = (long) resource.position().z() - home.z();
-            if (dx * dx + dy * dy + dz * dz > (long) ROUTE_MAX_DISTANCE * ROUTE_MAX_DISTANCE) {
+            if (dx * dx + dy * dy + dz * dz
+                    > (long) BoardConfig.current().facts().routeMaxDistance()
+                            * BoardConfig.current().facts().routeMaxDistance()) {
                 continue;
             }
             if (More5Rules.cutByFluid(fluidLine(level, home, resource.position()), More5Rules.ROUTE_FLUID_WIDTH)) {

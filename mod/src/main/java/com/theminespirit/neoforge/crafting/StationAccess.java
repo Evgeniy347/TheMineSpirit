@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.crafting;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.crafting.WorkCorner;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.StageSite;
@@ -23,7 +24,6 @@ final class StationAccess {
     }
 
     private static final Supply NO_SUPPLY = spirit -> false;
-    private static final int SETTLEMENT_REACH = 48;
     private static final int SETTLEMENT_SEARCH = 23;
 
     private final SpiritEntity spirit;
@@ -92,7 +92,9 @@ final class StationAccess {
         }
         if (!settlementSearched && settlementFinder == null) {
             Optional<BlockPos> center = settlementCenter()
-                    .filter(at -> at.distSqr(spirit.blockPosition()) <= SETTLEMENT_REACH * SETTLEMENT_REACH);
+                    .filter(at -> at.distSqr(spirit.blockPosition())
+                            <= BoardConfig.current().facts().stationReachRadius()
+                                    * BoardConfig.current().facts().stationReachRadius());
             if (center.isPresent()) {
                 settlementFinder = new StationFinder(spirit.level(), center.get(), SETTLEMENT_SEARCH, type);
             } else {

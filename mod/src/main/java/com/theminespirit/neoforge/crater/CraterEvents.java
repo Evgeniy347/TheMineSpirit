@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.crater;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.building.Crater;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritConfig;
@@ -22,7 +23,6 @@ import org.slf4j.Logger;
 public final class CraterEvents {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int RIM_SAMPLES = 16;
-    private static final int RIM_SCAN_DEPTH = 24;
 
     private CraterEvents() {}
 
@@ -101,8 +101,12 @@ public final class CraterEvents {
 
     private static int surfaceTop(ServerLevel level, int x, int z, int aroundY) {
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
-        int top = Math.min(level.getMaxBuildHeight() - 1, aroundY + RIM_SCAN_DEPTH);
-        int bottom = Math.max(level.getMinBuildHeight(), aroundY - RIM_SCAN_DEPTH);
+        int top = Math.min(
+                level.getMaxBuildHeight() - 1,
+                aroundY + BoardConfig.current().facts().craterRimScanDepth());
+        int bottom = Math.max(
+                level.getMinBuildHeight(),
+                aroundY - BoardConfig.current().facts().craterRimScanDepth());
         for (int y = top; y >= bottom; y--) {
             cursor.set(x, y, z);
             BlockState state = level.getBlockState(cursor);
