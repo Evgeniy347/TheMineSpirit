@@ -4,7 +4,7 @@ import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.movement.SelfEscape;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.planner.ResourceKnowledge;
+import com.theminespirit.core.planner.api.ResourceKnowledge;
 import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.StageWork;
 import java.util.List;

@@ -15,6 +15,7 @@ import com.theminespirit.core.plan.PlanValidator;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.planner.api.ResourceKnowledge;
 import com.theminespirit.core.policy.PolicyExemptions;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.script.ConditionCatalog;

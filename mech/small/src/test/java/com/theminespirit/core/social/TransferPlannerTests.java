@@ -8,7 +8,7 @@ import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.inventory.ValueTable;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.planner.Ingredient;
+import com.theminespirit.core.planner.api.Ingredient;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;

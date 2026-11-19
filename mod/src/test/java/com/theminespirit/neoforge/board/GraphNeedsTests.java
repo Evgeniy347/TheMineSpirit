@@ -16,7 +16,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.planner.Ingredient;
+import com.theminespirit.core.planner.api.Ingredient;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.crafting.FuelLoad.Portion;
-import com.theminespirit.core.planner.FuelPlanner;
-import com.theminespirit.core.planner.FuelPlanner.FuelRequirement;
-import com.theminespirit.core.planner.FuelTable;
-import com.theminespirit.core.planner.ResourceKnowledge;
+import com.theminespirit.core.planner.api.FuelPlanner;
+import com.theminespirit.core.planner.api.FuelPlanner.FuelRequirement;
+import com.theminespirit.core.planner.api.FuelTable;
+import com.theminespirit.core.planner.api.ResourceKnowledge;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;

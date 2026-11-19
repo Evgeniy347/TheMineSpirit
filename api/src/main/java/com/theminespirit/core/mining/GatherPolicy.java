@@ -1,6 +1,6 @@
 package com.theminespirit.core.mining;
 
-import com.theminespirit.core.planner.CraftedItems;
+import com.theminespirit.core.planner.api.CraftedItems;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;

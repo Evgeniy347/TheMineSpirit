@@ -1,6 +1,6 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.planner.Ingredient;
+import com.theminespirit.core.planner.api.Ingredient;
 import java.util.List;
 import java.util.Map;
 

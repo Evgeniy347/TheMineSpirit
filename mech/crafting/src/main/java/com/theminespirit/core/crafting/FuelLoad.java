@@ -1,7 +1,7 @@
 package com.theminespirit.core.crafting;
 
-import com.theminespirit.core.planner.FuelTable;
-import com.theminespirit.core.planner.ResourceKnowledge;
+import com.theminespirit.core.planner.api.FuelTable;
+import com.theminespirit.core.planner.api.ResourceKnowledge;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

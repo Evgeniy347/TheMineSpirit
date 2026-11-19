@@ -11,7 +11,7 @@ import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.planner.Ingredient;
+import com.theminespirit.core.planner.api.Ingredient;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;

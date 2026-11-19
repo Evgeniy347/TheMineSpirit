@@ -1,5 +1,7 @@
 package com.theminespirit.core.planner;
 
+import com.theminespirit.core.planner.api.Ingredient;
+import com.theminespirit.core.planner.api.ResourceKnowledge;
 import com.theminespirit.core.script.CatalogLimits;
 import java.util.HashMap;
 import java.util.List;

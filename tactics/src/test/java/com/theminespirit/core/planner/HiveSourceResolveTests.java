@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.planner.api.ResourceKnowledge;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;

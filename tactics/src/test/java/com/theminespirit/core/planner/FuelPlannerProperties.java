@@ -3,6 +3,11 @@ package com.theminespirit.core.planner;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.theminespirit.core.planner.api.FuelPlanner;
+import com.theminespirit.core.planner.api.FuelTable;
+import com.theminespirit.core.planner.api.Ingredient;
+import com.theminespirit.core.planner.api.ResourceKnowledge;
+import com.theminespirit.core.planner.api.UnplannableGoalException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;

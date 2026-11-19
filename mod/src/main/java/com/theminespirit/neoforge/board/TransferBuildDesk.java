@@ -9,7 +9,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TransferCarriers;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.planner.Ingredient;
+import com.theminespirit.core.planner.api.Ingredient;
 import com.theminespirit.core.social.TransferOrder;
 import com.theminespirit.core.social.TransferPlanner;
 import com.theminespirit.neoforge.OwnWood;

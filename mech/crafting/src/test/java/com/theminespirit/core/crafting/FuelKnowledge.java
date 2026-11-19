@@ -1,7 +1,7 @@
 package com.theminespirit.core.crafting;
 
-import com.theminespirit.core.planner.Ingredient;
-import com.theminespirit.core.planner.ResourceKnowledge;
+import com.theminespirit.core.planner.api.Ingredient;
+import com.theminespirit.core.planner.api.ResourceKnowledge;
 import java.util.List;
 
 final class FuelKnowledge implements ResourceKnowledge {

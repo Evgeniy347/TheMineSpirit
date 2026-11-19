@@ -3,6 +3,7 @@ package com.theminespirit.core.planner;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.planner.api.ResourceKnowledge;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

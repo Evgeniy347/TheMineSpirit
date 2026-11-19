@@ -8,7 +8,7 @@ import com.theminespirit.core.plan.PlanValidationException;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.FallbackPlanner;
 import com.theminespirit.core.planner.Goal;
-import com.theminespirit.core.planner.UnplannableGoalException;
+import com.theminespirit.core.planner.api.UnplannableGoalException;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.ScriptCatalog;
 import java.util.Map;

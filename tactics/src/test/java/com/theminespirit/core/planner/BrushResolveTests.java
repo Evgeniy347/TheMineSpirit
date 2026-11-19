@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.planner.api.Ingredient;
+import com.theminespirit.core.planner.api.ResourceKnowledge;
+import com.theminespirit.core.planner.api.UnplannableGoalException;
 import com.theminespirit.core.script.BrushParams;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.CoreScripts;

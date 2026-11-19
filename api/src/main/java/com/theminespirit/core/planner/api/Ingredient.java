@@ -1,4 +1,4 @@
-package com.theminespirit.core.planner;
+package com.theminespirit.core.planner.api;
 
 public record Ingredient(String item, int count) {
     public Ingredient {

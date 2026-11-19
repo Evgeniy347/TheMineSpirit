@@ -3,6 +3,7 @@ package com.theminespirit.core.planner;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.theminespirit.core.planner.api.FuelTable;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;

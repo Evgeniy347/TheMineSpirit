@@ -4,7 +4,7 @@ import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.NeedsOfPlan;
 import com.theminespirit.core.inventory.OverflowPolicy;
 import com.theminespirit.core.inventory.Stack;
-import com.theminespirit.core.planner.ResourceKnowledge;
+import com.theminespirit.core.planner.api.ResourceKnowledge;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.board.BoardRegistry;
 import java.util.List;

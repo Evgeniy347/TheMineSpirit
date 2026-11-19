@@ -14,7 +14,7 @@ import com.theminespirit.core.board.TransferCarriers;
 import com.theminespirit.core.board.TransferTicket;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.planner.Ingredient;
+import com.theminespirit.core.planner.api.Ingredient;
 import com.theminespirit.core.social.TransferOrder;
 import com.theminespirit.core.social.TransferPlanner;
 import com.theminespirit.core.social.TransferSource;

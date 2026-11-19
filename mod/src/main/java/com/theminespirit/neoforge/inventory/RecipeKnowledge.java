@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.inventory;
 
-import com.theminespirit.core.planner.Ingredient;
-import com.theminespirit.core.planner.ResourceKnowledge;
+import com.theminespirit.core.planner.api.Ingredient;
+import com.theminespirit.core.planner.api.ResourceKnowledge;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

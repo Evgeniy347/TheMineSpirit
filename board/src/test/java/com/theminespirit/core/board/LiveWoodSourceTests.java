@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.planner.CraftedItems;
+import com.theminespirit.core.planner.api.CraftedItems;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

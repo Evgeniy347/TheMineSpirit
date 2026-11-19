@@ -3,6 +3,7 @@ package com.theminespirit.core.planner;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.plan.PlanValidationException;
 import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.planner.api.UnplannableGoalException;
 import com.theminespirit.core.script.ConditionCatalog;
 import com.theminespirit.core.script.ScriptCatalog;
 import java.util.ArrayList;

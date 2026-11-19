@@ -8,7 +8,7 @@ import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicTextParser;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.planner.Ingredient;
+import com.theminespirit.core.planner.api.Ingredient;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

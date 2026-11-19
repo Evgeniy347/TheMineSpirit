@@ -1,4 +1,4 @@
-package com.theminespirit.core.planner;
+package com.theminespirit.core.planner.api;
 
 import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.farming.CropKind;

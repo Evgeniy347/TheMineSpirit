@@ -12,7 +12,7 @@ import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.planner.Ingredient;
+import com.theminespirit.core.planner.api.Ingredient;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.neoforge.crafting.RecipeKnowledge;
 import java.util.LinkedHashMap;

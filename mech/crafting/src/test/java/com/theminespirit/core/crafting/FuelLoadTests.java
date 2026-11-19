@@ -3,7 +3,7 @@ package com.theminespirit.core.crafting;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.theminespirit.core.crafting.FuelLoad.Portion;
-import com.theminespirit.core.planner.ResourceKnowledge;
+import com.theminespirit.core.planner.api.ResourceKnowledge;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

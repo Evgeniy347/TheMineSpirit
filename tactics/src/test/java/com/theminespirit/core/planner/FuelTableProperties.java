@@ -2,6 +2,7 @@ package com.theminespirit.core.planner;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.planner.api.FuelTable;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
