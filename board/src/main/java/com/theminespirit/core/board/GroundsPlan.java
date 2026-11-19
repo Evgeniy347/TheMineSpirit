@@ -19,11 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 public final class GroundsPlan {
-    public static final int CLEAR_GRID = 3;
-    public static final int CLEAR_PARTS = CLEAR_GRID * CLEAR_GRID;
-    public static final int CLEAR_HEIGHT = 3;
-    private static final int FREE_RADIUS = 16;
-    private static final int FREE_DIRT_REACH = 13;
+    public static final int CLEAR_PARTS = BoardConfig.current().plans().clearGrid()
+            * BoardConfig.current().plans().clearGrid();
     private static final int DIRT_SOURCE_GAP = 4;
     private static final int CUT_SLACK = 12;
     private static final int FILL_SLACK = 40;
@@ -43,29 +40,34 @@ public final class GroundsPlan {
         }
 
         int part(int x, int z) {
-            return 1 + band(x - x1, x2 - x1 + 1) + CLEAR_GRID * band(z - z1, z2 - z1 + 1);
+            return 1
+                    + band(x - x1, x2 - x1 + 1)
+                    + BoardConfig.current().plans().clearGrid() * band(z - z1, z2 - z1 + 1);
         }
 
         private static int band(int offset, int size) {
-            int width = Math.max(1, (size + CLEAR_GRID - 1) / CLEAR_GRID);
-            return Math.max(0, Math.min(CLEAR_GRID - 1, offset / width));
+            int width = Math.max(
+                    1,
+                    (size + BoardConfig.current().plans().clearGrid() - 1)
+                            / BoardConfig.current().plans().clearGrid());
+            return Math.max(0, Math.min(BoardConfig.current().plans().clearGrid() - 1, offset / width));
         }
     }
 
     public static Frame frame(TicketTarget target) {
         StageWork work = target.work();
         return work == null
-                ? Frame.around(target.target(), FREE_RADIUS)
+                ? Frame.around(target.target(), BoardConfig.current().plans().freeRadius())
                 : Frame.of(work.site().level(), work.site().anchor().y());
     }
 
     public static BlockCoord dirtSource(TicketTarget target, int part) {
         StageWork work = target.work();
         Frame outer = work == null
-                ? Frame.around(target.target(), FREE_DIRT_REACH)
+                ? Frame.around(target.target(), BoardConfig.current().plans().freeDirtReach())
                 : Frame.of(work.site().enclosure(), work.site().anchor().y());
-        int col = (part - 1) % CLEAR_GRID - 1;
-        int row = (part - 1) / CLEAR_GRID - 1;
+        int col = (part - 1) % BoardConfig.current().plans().clearGrid() - 1;
+        int row = (part - 1) / BoardConfig.current().plans().clearGrid() - 1;
         int x = col < 0
                 ? outer.x1() - DIRT_SOURCE_GAP
                 : col > 0 ? outer.x2() + DIRT_SOURCE_GAP : mid(outer.x1(), outer.x2());
@@ -151,18 +153,18 @@ public final class GroundsPlan {
     private static List<PlotLeveling.Box> chunks(TicketTarget target, Frame frame) {
         StageWork work = target.work();
         int y1 = frame.y();
-        int y2 = frame.y() + CLEAR_HEIGHT;
+        int y2 = frame.y() + BoardConfig.current().plans().clearHeight();
         if (work != null) {
             return List.of();
         }
         List<PlotLeveling.Box> chunks = new ArrayList<>();
-        int band = (frame.x2() - frame.x1() + 1) / CLEAR_GRID;
-        for (int row = 0; row < CLEAR_GRID; row++) {
-            for (int col = 0; col < CLEAR_GRID; col++) {
+        int band = (frame.x2() - frame.x1() + 1) / BoardConfig.current().plans().clearGrid();
+        for (int row = 0; row < BoardConfig.current().plans().clearGrid(); row++) {
+            for (int col = 0; col < BoardConfig.current().plans().clearGrid(); col++) {
                 int x = frame.x1() + col * band;
                 int z = frame.z1() + row * band;
-                int lastX = col == CLEAR_GRID - 1 ? frame.x2() : x + band - 1;
-                int lastZ = row == CLEAR_GRID - 1 ? frame.z2() : z + band - 1;
+                int lastX = col == BoardConfig.current().plans().clearGrid() - 1 ? frame.x2() : x + band - 1;
+                int lastZ = row == BoardConfig.current().plans().clearGrid() - 1 ? frame.z2() : z + band - 1;
                 chunks.add(new PlotLeveling.Box(x, y1, z, lastX, y2, lastZ));
             }
         }
@@ -212,8 +214,11 @@ public final class GroundsPlan {
             int chosen = home;
             int bestDistance = Integer.MAX_VALUE;
             for (int part = 1; part <= CLEAR_PARTS; part++) {
-                int distance = Math.abs((part - 1) % CLEAR_GRID - (home - 1) % CLEAR_GRID)
-                        + Math.abs((part - 1) / CLEAR_GRID - (home - 1) / CLEAR_GRID);
+                int distance = Math.abs((part - 1)
+                                        % BoardConfig.current().plans().clearGrid()
+                                - (home - 1) % BoardConfig.current().plans().clearGrid())
+                        + Math.abs((part - 1) / BoardConfig.current().plans().clearGrid()
+                                - (home - 1) / BoardConfig.current().plans().clearGrid());
                 if (load[part] <= least + slack && distance < bestDistance) {
                     chosen = part;
                     bestDistance = distance;

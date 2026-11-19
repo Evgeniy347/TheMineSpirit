@@ -15,8 +15,6 @@ import java.util.Objects;
 public final class ExpeditionMinePlan {
     public static final String SCHEME = "mine_tunnel_v1";
     public static final String ROTATION = "counterclockwise_90";
-    public static final int ORE_COUNT = 8;
-    public static final int ORE_RADIUS = 16;
     public static final String RETURN_HOME = "return_home";
 
     private ExpeditionMinePlan() {}
@@ -39,7 +37,15 @@ public final class ExpeditionMinePlan {
                                 origin.z(),
                                 "rotation",
                                 ROTATION)),
-                new ScriptCall("mine_vein", Map.of("ore", "any", "count", ORE_COUNT, "radius", ORE_RADIUS)),
+                new ScriptCall(
+                        "mine_vein",
+                        Map.of(
+                                "ore",
+                                "any",
+                                "count",
+                                BoardConfig.current().plans().oreCount(),
+                                "radius",
+                                BoardConfig.current().plans().oreRadius())),
                 new ScriptCall(RETURN_HOME, Map.of())));
     }
 

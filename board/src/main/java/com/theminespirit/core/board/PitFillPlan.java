@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 final class PitFillPlan {
-    private static final int CRATER_FILL_RADIUS = 1;
     private static final String ITEM = "item";
     private static final String COUNT = "count";
     private static final String BLOCK = "block";
@@ -59,17 +58,17 @@ final class PitFillPlan {
                         BLOCK,
                         DIRT,
                         "x1",
-                        target.target().x() - CRATER_FILL_RADIUS,
+                        target.target().x() - BoardConfig.current().plans().craterFillRadius(),
                         "y1",
                         bottom,
                         "z1",
-                        target.target().z() - CRATER_FILL_RADIUS,
+                        target.target().z() - BoardConfig.current().plans().craterFillRadius(),
                         "x2",
-                        target.target().x() + CRATER_FILL_RADIUS,
+                        target.target().x() + BoardConfig.current().plans().craterFillRadius(),
                         "y2",
                         target.target().y(),
                         "z2",
-                        target.target().z() + CRATER_FILL_RADIUS));
+                        target.target().z() + BoardConfig.current().plans().craterFillRadius()));
     }
 
     private static int craterBlocksEstimate(int radius) {

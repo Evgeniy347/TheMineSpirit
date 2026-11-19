@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Optional;
 
 final class GatherPlans {
-    private static final int LOGS_PER_TREE = 4;
     private static final int PLANKS_PER_LOG = 4;
     private static final String PLANKS_SUFFIX = "_planks";
     private static final int LEAVES_PER_SAPLING = 20;
@@ -55,7 +54,10 @@ final class GatherPlans {
         if (tree.isEmpty()) {
             return Optional.empty();
         }
-        int trees = Math.min(CatalogLimits.COUNT_MAX, (batch + LOGS_PER_TREE - 1) / LOGS_PER_TREE);
+        int trees = Math.min(
+                CatalogLimits.COUNT_MAX,
+                (batch + BoardConfig.current().plans().logsPerTree() - 1)
+                        / BoardConfig.current().plans().logsPerTree());
         ScriptCall acquire = new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, batch, "fresh", true));
         return Optional.of(chopping(target, tree.get(), trees, acquire));
     }
@@ -103,7 +105,12 @@ final class GatherPlans {
             return Optional.empty();
         }
         int logs = Math.max(1, (batch + PLANKS_PER_LOG - 1) / PLANKS_PER_LOG);
-        int trees = Math.min(CatalogLimits.COUNT_MAX, Math.max(1, (logs + LOGS_PER_TREE - 1) / LOGS_PER_TREE));
+        int trees = Math.min(
+                CatalogLimits.COUNT_MAX,
+                Math.max(
+                        1,
+                        (logs + BoardConfig.current().plans().logsPerTree() - 1)
+                                / BoardConfig.current().plans().logsPerTree()));
         ScriptCall acquire = new ScriptCall(ACQUIRE, Map.of(ITEM, item, COUNT, batch, "fresh", true));
         return Optional.of(chopping(target, tree.get(), trees, acquire));
     }

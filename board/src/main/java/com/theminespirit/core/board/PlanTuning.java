@@ -18,7 +18,18 @@ public record PlanTuning(
         int charcoalBatch,
         int torchesPerCraft,
         int torchBatch,
-        int fenceParts) {
+        int fenceParts,
+        int oreCount,
+        int oreRadius,
+        int logsPerTree,
+        int clearGrid,
+        int clearHeight,
+        int freeRadius,
+        int freeDirtReach,
+        int farmRadius,
+        int farmCount,
+        int containerRadius,
+        int craterFillRadius) {
     private static final Set<String> FIELDS = Set.of(
             "mineFloorTake",
             "leftOreRadius",
@@ -31,8 +42,20 @@ public record PlanTuning(
             "charcoalBatch",
             "torchesPerCraft",
             "torchBatch",
-            "fenceParts");
-    private static final PlanTuning DEFAULTS = new PlanTuning(32, 4, 5, 3, 8, 4, 4, 4, 2, 4, 16, 4);
+            "fenceParts",
+            "oreCount",
+            "oreRadius",
+            "logsPerTree",
+            "clearGrid",
+            "clearHeight",
+            "freeRadius",
+            "freeDirtReach",
+            "farmRadius",
+            "farmCount",
+            "containerRadius",
+            "craterFillRadius");
+    private static final PlanTuning DEFAULTS =
+            new PlanTuning(32, 4, 5, 3, 8, 4, 4, 4, 2, 4, 16, 4, 8, 16, 4, 3, 3, 16, 13, 8, 4, 8, 1);
 
     public PlanTuning {
         requirePositive(mineFloorTake, "mineFloorTake");
@@ -47,6 +70,17 @@ public record PlanTuning(
         requirePositive(torchesPerCraft, "torchesPerCraft");
         requirePositive(torchBatch, "torchBatch");
         requirePositive(fenceParts, "fenceParts");
+        requirePositive(oreCount, "oreCount");
+        requirePositive(oreRadius, "oreRadius");
+        requirePositive(logsPerTree, "logsPerTree");
+        requirePositive(clearGrid, "clearGrid");
+        requirePositive(clearHeight, "clearHeight");
+        requirePositive(freeRadius, "freeRadius");
+        requirePositive(freeDirtReach, "freeDirtReach");
+        requirePositive(farmRadius, "farmRadius");
+        requirePositive(farmCount, "farmCount");
+        requirePositive(containerRadius, "containerRadius");
+        requirePositive(craterFillRadius, "craterFillRadius");
     }
 
     static PlanTuning defaults() {
@@ -75,7 +109,18 @@ public record PlanTuning(
                 integer(node, "charcoalBatch", origin),
                 integer(node, "torchesPerCraft", origin),
                 integer(node, "torchBatch", origin),
-                integer(node, "fenceParts", origin));
+                integer(node, "fenceParts", origin),
+                integer(node, "oreCount", origin),
+                integer(node, "oreRadius", origin),
+                integer(node, "logsPerTree", origin),
+                integer(node, "clearGrid", origin),
+                integer(node, "clearHeight", origin),
+                integer(node, "freeRadius", origin),
+                integer(node, "freeDirtReach", origin),
+                integer(node, "farmRadius", origin),
+                integer(node, "farmCount", origin),
+                integer(node, "containerRadius", origin),
+                integer(node, "craterFillRadius", origin));
     }
 
     private static int integer(JsonNode node, String field, String origin) {

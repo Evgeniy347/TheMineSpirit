@@ -66,9 +66,14 @@ class MorePlansTests {
         ScriptCall plant = script(plan.steps().get(1), 0);
         assertEquals("plant_crop", plant.script(), "Еда на поле — посадка культуры");
         assertEquals("wheat", plant.params().get("crop"), "Культура задаётся id");
-        assertEquals(MorePlans.FARM_RADIUS, plant.params().get("radius"), "Радиус поиска поля ограничен");
         assertEquals(
-                MorePlans.FARM_COUNT, plant.params().get("count"), "За один подход сажают ограниченное число клеток");
+                BoardConfig.current().plans().farmRadius(),
+                plant.params().get("radius"),
+                "Радиус поиска поля ограничен");
+        assertEquals(
+                BoardConfig.current().plans().farmCount(),
+                plant.params().get("count"),
+                "За один подход сажают ограниченное число клеток");
     }
 
     @Test

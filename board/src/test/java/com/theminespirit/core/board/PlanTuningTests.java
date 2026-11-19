@@ -15,7 +15,9 @@ class PlanTuningTests {
                         "{\"mineFloorTake\":32,\"leftOreRadius\":4,\"mineTunnelSize\":5,\"mineStepsSize\":3,"
                                 + "\"supplyContainerRadius\":8,\"dismantleRadius\":4,\"relocateClearRadius\":4,"
                                 + "\"charcoalLogs\":4,\"charcoalBatch\":2,\"torchesPerCraft\":4,\"torchBatch\":16,"
-                                + "\"fenceParts\":4}",
+                                + "\"fenceParts\":4,\"oreCount\":8,\"oreRadius\":16,\"logsPerTree\":4,"
+                                + "\"clearGrid\":3,\"clearHeight\":3,\"freeRadius\":16,\"freeDirtReach\":13,"
+                                + "\"farmRadius\":8,\"farmCount\":4,\"containerRadius\":8,\"craterFillRadius\":1}",
                         "board.json"),
                 "board.json");
         assertEquals(
@@ -75,6 +77,8 @@ class PlanTuningTests {
         return "{\"mineFloorTake\":32,\"leftOreRadius\":4,\"mineTunnelSize\":5,\"mineStepsSize\":3,"
                 + "\"supplyContainerRadius\":8,\"dismantleRadius\":4,\"relocateClearRadius\":4,"
                 + "\"charcoalLogs\":4,\"charcoalBatch\":2,\"torchesPerCraft\":4,\"torchBatch\":16,"
-                + "\"fenceParts\":4}";
+                + "\"fenceParts\":4,\"oreCount\":8,\"oreRadius\":16,\"logsPerTree\":4,"
+                + "\"clearGrid\":3,\"clearHeight\":3,\"freeRadius\":16,\"freeDirtReach\":13,"
+                + "\"farmRadius\":8,\"farmCount\":4,\"containerRadius\":8,\"craterFillRadius\":1}";
     }
 }

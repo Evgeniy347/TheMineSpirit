@@ -15,9 +15,6 @@ public final class MorePlans {
     public static final String GOTO = "goto";
     public static final String WAIT = "wait";
     public static final int WAIT_TICKS = 20;
-    public static final int FARM_RADIUS = 8;
-    public static final int FARM_COUNT = 4;
-    public static final int CONTAINER_RADIUS = 8;
     public static final int KEEP_DISTANCE = 5;
     public static final String SAFE_MINE_MODE = "staircase";
     public static final String SAFE_MINE_DIRECTION = "south";
@@ -66,7 +63,15 @@ public final class MorePlans {
         Objects.requireNonNull(crop, "Культура не может быть null: без неё дух не знает, что сажать");
         return sequence(
                 gotoPoint(at),
-                new ScriptCall("plant_crop", Map.of("crop", crop, "radius", FARM_RADIUS, "count", FARM_COUNT)));
+                new ScriptCall(
+                        "plant_crop",
+                        Map.of(
+                                "crop",
+                                crop,
+                                "radius",
+                                BoardConfig.current().plans().farmRadius(),
+                                "count",
+                                BoardConfig.current().plans().farmCount())));
     }
 
     public static TaskNode closeDoor(BlockCoord door) {
@@ -118,7 +123,7 @@ public final class MorePlans {
                         "count",
                         count,
                         "radius",
-                        CONTAINER_RADIUS,
+                        BoardConfig.current().plans().containerRadius(),
                         "leftover",
                         false));
     }
