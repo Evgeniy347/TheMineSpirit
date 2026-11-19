@@ -251,6 +251,10 @@
     "standSnapRadius": 16,
     "homeSearchRadius": 16,
     "hostileScanRadius": 16,
-    "chestSearchRadius": 16
+    "chestSearchRadius": 16,
+    "settlementScanRadius": 64,
+    "enemyScanRadius": 16,
+    "workPointRadius": 32,
+    "furnaceSearchRadius": 4
   }
 }

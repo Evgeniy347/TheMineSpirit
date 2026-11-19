@@ -18,7 +18,6 @@ import net.minecraft.world.level.block.Blocks;
 final class FishingSite {
     private static final int STATION_BUDGET = 4096;
     private static final int STATION_SLICES = 16;
-    private static final int WORK_POINT_RADIUS = 32;
     private static final double WORK_POINT_AVOID = 3.0;
     private static final Set<Block> SMOKERS = Set.of(Blocks.SMOKER);
 
@@ -40,7 +39,8 @@ final class FishingSite {
 
     static Optional<BlockCoord> workPoint(ServerLevel level, BlockCoord home) {
         FishingData data = DataTables.INSTANCE.fishing().current();
-        return FishingWorkPointPicker.pick(level, home, data, WORK_POINT_RADIUS, List.of(), WORK_POINT_AVOID)
+        return FishingWorkPointPicker.pick(
+                        level, home, data, BoardConfig.current().facts().workPointRadius(), List.of(), WORK_POINT_AVOID)
                 .map(FishingSpots.Spot::stand);
     }
 }

@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;
@@ -11,7 +12,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.entity.living.LivingDestroyBlockEvent;
 
 public final class More5Events {
-    private static final double SETTLEMENT_RADIUS = 64.0;
 
     private More5Events() {}
 
@@ -30,7 +30,9 @@ public final class More5Events {
             return;
         }
         BlockPos pos = event.getPos();
-        if (level.getEntitiesOfClass(SpiritEntity.class, new AABB(pos).inflate(SETTLEMENT_RADIUS))
+        if (level.getEntitiesOfClass(
+                        SpiritEntity.class,
+                        new AABB(pos).inflate(BoardConfig.current().facts().settlementScanRadius()))
                 .isEmpty()) {
             return;
         }

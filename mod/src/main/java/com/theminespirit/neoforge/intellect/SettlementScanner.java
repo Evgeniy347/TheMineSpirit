@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.intellect;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.husbandry.PenBounds;
 import com.theminespirit.core.husbandry.api.Species;
@@ -30,7 +31,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 
 public final class SettlementScanner {
-    public static final double ENEMY_RADIUS = 16.0;
 
     public record Scan(List<EnemyFact> enemies, Forage forage) {
         public Scan {
@@ -73,12 +73,12 @@ public final class SettlementScanner {
         double maxY = Double.NEGATIVE_INFINITY;
         double maxZ = Double.NEGATIVE_INFINITY;
         for (SpiritEntity spirit : alive) {
-            minX = Math.min(minX, spirit.getX() - ENEMY_RADIUS);
-            minY = Math.min(minY, spirit.getY() - ENEMY_RADIUS);
-            minZ = Math.min(minZ, spirit.getZ() - ENEMY_RADIUS);
-            maxX = Math.max(maxX, spirit.getX() + ENEMY_RADIUS);
-            maxY = Math.max(maxY, spirit.getY() + ENEMY_RADIUS);
-            maxZ = Math.max(maxZ, spirit.getZ() + ENEMY_RADIUS);
+            minX = Math.min(minX, spirit.getX() - BoardConfig.current().facts().enemyScanRadius());
+            minY = Math.min(minY, spirit.getY() - BoardConfig.current().facts().enemyScanRadius());
+            minZ = Math.min(minZ, spirit.getZ() - BoardConfig.current().facts().enemyScanRadius());
+            maxX = Math.max(maxX, spirit.getX() + BoardConfig.current().facts().enemyScanRadius());
+            maxY = Math.max(maxY, spirit.getY() + BoardConfig.current().facts().enemyScanRadius());
+            maxZ = Math.max(maxZ, spirit.getZ() + BoardConfig.current().facts().enemyScanRadius());
         }
         List<LivingEntity> near = level.getEntitiesOfClass(
                 LivingEntity.class, new AABB(minX, minY, minZ, maxX, maxY, maxZ), SettlementScanner::visible);

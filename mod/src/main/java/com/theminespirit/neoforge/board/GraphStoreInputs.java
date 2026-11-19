@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphFactsUpdates;
 import com.theminespirit.core.board.graph.GraphSiteFacts;
@@ -19,7 +20,6 @@ import org.jspecify.annotations.Nullable;
 
 final class GraphStoreInputs {
     private static final String FURNACE = "furnace";
-    private static final int FURNACE_RADIUS = 4;
     private static final int SLOT_INPUT = 0;
     private static final int SLOT_FUEL = 1;
     private static final int SLOT_OUTPUT = 2;
@@ -55,9 +55,15 @@ final class GraphStoreInputs {
         BlockPos center = new BlockPos(position.x(), position.y(), position.z());
         AbstractFurnaceBlockEntity nearest = null;
         double best = Double.MAX_VALUE;
-        for (int dx = -FURNACE_RADIUS; dx <= FURNACE_RADIUS; dx++) {
-            for (int dy = -FURNACE_RADIUS; dy <= FURNACE_RADIUS; dy++) {
-                for (int dz = -FURNACE_RADIUS; dz <= FURNACE_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().furnaceSearchRadius();
+                dx <= BoardConfig.current().facts().furnaceSearchRadius();
+                dx++) {
+            for (int dy = -BoardConfig.current().facts().furnaceSearchRadius();
+                    dy <= BoardConfig.current().facts().furnaceSearchRadius();
+                    dy++) {
+                for (int dz = -BoardConfig.current().facts().furnaceSearchRadius();
+                        dz <= BoardConfig.current().facts().furnaceSearchRadius();
+                        dz++) {
                     BlockPos at = center.offset(dx, dy, dz);
                     if (!level.isLoaded(at)) {
                         continue;
