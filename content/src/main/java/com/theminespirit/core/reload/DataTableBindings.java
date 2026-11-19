@@ -2,10 +2,10 @@ package com.theminespirit.core.reload;
 
 import com.theminespirit.core.base.RespawnRules;
 import com.theminespirit.core.board.BoardConfig;
-import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.DemandRules;
 import com.theminespirit.core.board.LevelingRules;
 import com.theminespirit.core.board.StageRules;
+import com.theminespirit.core.board.api.ConfigStamp;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.board.graph.VitalNeeds;
 import com.theminespirit.core.building.PresetLibrary;

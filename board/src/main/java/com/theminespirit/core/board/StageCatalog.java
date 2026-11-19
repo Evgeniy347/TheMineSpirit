@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.building.DemoBuildings;
 import com.theminespirit.core.observation.BlockCoord;

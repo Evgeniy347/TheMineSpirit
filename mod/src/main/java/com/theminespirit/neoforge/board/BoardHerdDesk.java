@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.HerdCycles;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.husbandry.SpeciesIds;
 import com.theminespirit.core.husbandry.api.FeedTable;
 import com.theminespirit.core.husbandry.api.Species;

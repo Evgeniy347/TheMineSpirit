@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;

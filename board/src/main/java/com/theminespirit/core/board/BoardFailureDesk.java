@@ -1,5 +1,7 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.board.api.ConfigStamp;
 import com.theminespirit.core.board.graph.GraphFailureMemory;
 import java.util.List;
 import java.util.Map;

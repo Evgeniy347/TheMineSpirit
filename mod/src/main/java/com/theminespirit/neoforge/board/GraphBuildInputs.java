@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.WarehouseApproval;
 import com.theminespirit.core.board.WarehouseRules;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.board.graph.StageBuilt;
 import com.theminespirit.core.board.graph.SupplyGraph;

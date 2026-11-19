@@ -1,12 +1,12 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.FailureRepeat;
 import com.theminespirit.core.board.RescuePlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.log.LogCause;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.log.SpiritWorldLog;

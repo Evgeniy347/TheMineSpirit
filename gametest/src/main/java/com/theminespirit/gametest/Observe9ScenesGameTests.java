@@ -1,8 +1,8 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.adapter.DecisionRecord;

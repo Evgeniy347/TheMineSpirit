@@ -3,7 +3,7 @@ package com.theminespirit.neoforge.board;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.engine.FailureFact;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;

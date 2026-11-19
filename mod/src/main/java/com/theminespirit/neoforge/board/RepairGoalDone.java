@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.town.StageWork;
 import net.minecraft.server.level.ServerLevel;
 import org.jspecify.annotations.Nullable;

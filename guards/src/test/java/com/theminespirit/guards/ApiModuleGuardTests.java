@@ -19,11 +19,11 @@ class ApiModuleGuardTests {
             Pattern.compile("^\\s*import\\s+(?:static\\s+)?([\\w.*]+)\\s*;", Pattern.MULTILINE);
     private static final List<String> ALLOWED_PREFIXES = List.of("java.", "com.fasterxml.", "org.jspecify.");
     private static final List<String> CONTRACTS = List.of(
-            "core/board/BoardCase.java",
-            "core/board/ConfigStamp.java",
-            "core/board/Point.java",
-            "core/board/ToolsConfig.java",
-            "core/board/ToolFate.java",
+            "core/board/api/BoardCase.java",
+            "core/board/api/ConfigStamp.java",
+            "core/board/api/Point.java",
+            "core/board/api/ToolsConfig.java",
+            "core/board/api/ToolFate.java",
             "core/observation/BlockCoord.java",
             "core/observation/IdFilter.java",
             "core/observation/ScanRadius.java",

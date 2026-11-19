@@ -1,6 +1,6 @@
 package com.theminespirit.core.mining;
 
-import com.theminespirit.core.board.ToolsConfig;
+import com.theminespirit.core.board.api.ToolsConfig;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;

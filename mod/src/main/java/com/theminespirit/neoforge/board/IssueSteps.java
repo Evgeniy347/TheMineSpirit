@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.log.Perf;
 import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.neoforge.SpiritEntity;

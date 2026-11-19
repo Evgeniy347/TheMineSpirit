@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.GapLog;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.List;
 import java.util.Map;

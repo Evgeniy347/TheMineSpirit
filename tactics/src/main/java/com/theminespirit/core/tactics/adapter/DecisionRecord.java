@@ -1,6 +1,6 @@
 package com.theminespirit.core.tactics.adapter;
 
-import com.theminespirit.core.board.ConfigStamp;
+import com.theminespirit.core.board.api.ConfigStamp;
 import com.theminespirit.core.tactics.Decision;
 import com.theminespirit.core.tactics.HoldStatus;
 import java.util.List;

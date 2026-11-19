@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
@@ -12,6 +11,7 @@ import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TransferCarriers;
 import com.theminespirit.core.board.TransferTicket;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.planner.api.Ingredient;

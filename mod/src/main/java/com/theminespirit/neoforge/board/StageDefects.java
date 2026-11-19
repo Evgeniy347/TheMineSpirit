@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.StageView;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.town.StageSite;
 import java.util.ArrayList;
 import java.util.List;

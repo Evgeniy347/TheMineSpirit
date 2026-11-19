@@ -1,6 +1,6 @@
 package com.theminespirit.core.husbandry;
 
-import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.api.HerdCap;
 import com.theminespirit.core.husbandry.api.PetKind;
 import java.util.LinkedHashSet;

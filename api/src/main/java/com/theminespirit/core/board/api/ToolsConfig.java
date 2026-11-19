@@ -1,14 +1,10 @@
-package com.theminespirit.core.board;
+package com.theminespirit.core.board.api;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.base.NamespacedId;
-import com.theminespirit.core.inventory.api.JsonResource;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import org.jspecify.annotations.Nullable;
 
 public record ToolsConfig(List<String> set, String tier, List<String> repairTiers) {
     public static final String PICKAXE = "_pickaxe";
@@ -17,7 +13,6 @@ public record ToolsConfig(List<String> set, String tier, List<String> repairTier
     public static final List<String> TIERS = List.of("wooden", "stone", "golden", "iron", "diamond", "netherite");
     public static final List<String> TARGET_TIERS = List.of("stone", "iron", "diamond");
 
-    private static final Set<String> FIELDS = Set.of("set", "tier", "repairTiers");
     private static final ToolsConfig DEFAULTS =
             new ToolsConfig(List.of("pickaxe", "axe", "shovel"), "stone", List.of("iron", "diamond"));
 
@@ -52,30 +47,6 @@ public record ToolsConfig(List<String> set, String tier, List<String> repairTier
 
     public static ToolsConfig defaults() {
         return DEFAULTS;
-    }
-
-    static ToolsConfig fromJson(@Nullable JsonNode node, String origin) {
-        Objects.requireNonNull(origin, "Источник таблицы не может быть null: сообщение об ошибке называет файл");
-        if (node == null || node.isNull()) {
-            return DEFAULTS;
-        }
-        if (!node.isObject()) {
-            throw new IllegalStateException(
-                    "Файл '" + origin + "': поле 'tools' — не объект, ожидается " + "«set → tier → repairTiers»");
-        }
-        JsonResource.checkFields(node, FIELDS, origin, "поля 'tools'");
-        List<String> set =
-                node.has("set") ? JsonResource.strings(node.get("set"), origin, "поля 'tools.set'") : DEFAULTS.set();
-        String tier =
-                node.has("tier") ? JsonResource.text(node.get("tier"), origin, "поля 'tools.tier'") : DEFAULTS.tier();
-        List<String> repairTiers = node.has("repairTiers")
-                ? JsonResource.strings(node.get("repairTiers"), origin, "поля 'tools.repairTiers'")
-                : DEFAULTS.repairTiers();
-        try {
-            return new ToolsConfig(set, tier, repairTiers);
-        } catch (IllegalArgumentException error) {
-            throw new IllegalStateException("Файл '" + origin + "': " + error.getMessage(), error);
-        }
     }
 
     public ToolFate fate(String itemId, boolean damagedEnoughToRepair) {

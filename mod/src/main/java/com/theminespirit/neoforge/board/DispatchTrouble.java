@@ -1,13 +1,13 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.TransferCarriers;
 import com.theminespirit.core.board.VitalGate;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;

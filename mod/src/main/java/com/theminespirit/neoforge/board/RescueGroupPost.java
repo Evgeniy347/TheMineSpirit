@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.RescueGroups;
 import com.theminespirit.core.board.RescuePlans;
 import com.theminespirit.core.board.StuckSpirits;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.movement.ToolBreakCost;

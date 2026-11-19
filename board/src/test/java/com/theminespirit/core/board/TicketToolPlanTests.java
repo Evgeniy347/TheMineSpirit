@@ -2,6 +2,7 @@ package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;

@@ -2,7 +2,6 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.base.NamespacedId;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.MaterialSource;
@@ -10,6 +9,7 @@ import com.theminespirit.core.board.SchematicMaterials;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.building.BlockMatch;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;

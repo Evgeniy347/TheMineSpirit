@@ -2,7 +2,7 @@ package com.theminespirit.core.board.graph;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.base.NamespacedId;
-import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.inventory.api.JsonResource;
 import java.util.ArrayList;
 import java.util.Comparator;

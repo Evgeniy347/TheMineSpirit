@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.base.NamespacedId;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;

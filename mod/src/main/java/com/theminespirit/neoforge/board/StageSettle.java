@@ -1,10 +1,10 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.SchemeBuild;

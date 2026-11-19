@@ -14,10 +14,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DispatchRound;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.List;
 import java.util.Map;

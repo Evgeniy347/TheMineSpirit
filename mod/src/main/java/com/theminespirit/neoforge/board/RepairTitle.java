@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.TownEntry;
 

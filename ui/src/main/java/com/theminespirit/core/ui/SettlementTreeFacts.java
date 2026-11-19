@@ -1,6 +1,6 @@
 package com.theminespirit.core.ui;
 
-import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.api.BoardCase;
 import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;

@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.VitalGate;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.VitalNeeds;
 import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.movement.EscapeRestore;

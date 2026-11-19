@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.SettlementLevel;
+import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.board.api.ConfigStamp;
 import com.theminespirit.core.town.SettlementPlot;
 import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;

@@ -2,8 +2,8 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.ActivityTickets;
 import com.theminespirit.core.board.BoardActivities;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.ActivityPlans;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;

@@ -3,7 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.CraterNeed;
 import com.theminespirit.core.board.CraterProfiles;
-import com.theminespirit.core.board.Point;
+import com.theminespirit.core.board.api.Point;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;

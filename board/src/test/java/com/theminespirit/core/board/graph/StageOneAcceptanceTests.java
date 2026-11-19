@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardScenario;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTuning;
@@ -12,6 +11,7 @@ import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.StageTicket;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.plan.FallbackNode;

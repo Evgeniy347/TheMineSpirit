@@ -1,4 +1,4 @@
-package com.theminespirit.core;
+package com.theminespirit.neoforge.net;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

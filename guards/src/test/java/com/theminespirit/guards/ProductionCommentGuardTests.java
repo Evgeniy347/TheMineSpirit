@@ -195,7 +195,7 @@ class ProductionCommentGuardTests {
         List<String> scanned = List.of(
                 "mod/src/main/java/com/theminespirit/TheMineSpirit.java",
                 "src/test/java/com/theminespirit/guards/SampleTests.java",
-                "api/src/main/java/com/theminespirit/core/board/BoardCase.java",
+                "api/src/main/java/com/theminespirit/core/board/api/BoardCase.java",
                 "api/src/test/java/com/theminespirit/core/board/BoardCaseTests.java",
                 "build.gradle",
                 "settings.gradle.kts",

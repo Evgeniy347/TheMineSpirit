@@ -1,10 +1,10 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.GroundsPlan;
 import com.theminespirit.core.board.SettlementFacts;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.PlotLeveling;
 import com.theminespirit.core.town.StageSite;

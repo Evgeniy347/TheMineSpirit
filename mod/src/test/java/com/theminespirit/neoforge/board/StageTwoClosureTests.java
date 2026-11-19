@@ -4,13 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStages;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.StageGate;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
 import java.nio.charset.StandardCharsets;
 import java.util.List;

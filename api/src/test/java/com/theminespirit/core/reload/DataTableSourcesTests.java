@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.base.RespawnRules;
-import com.theminespirit.core.board.ConfigStamp;
+import com.theminespirit.core.board.api.ConfigStamp;
 import com.theminespirit.core.husbandry.api.FeedTable;
 import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.observation.ObservationLimits;

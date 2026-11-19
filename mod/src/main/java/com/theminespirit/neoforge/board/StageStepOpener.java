@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
@@ -13,6 +12,7 @@ import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;

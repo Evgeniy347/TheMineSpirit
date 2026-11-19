@@ -1,12 +1,12 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.UpgradePlan;
 import com.theminespirit.core.board.WarehouseOrder;
 import com.theminespirit.core.board.WarehouseRules;
 import com.theminespirit.core.board.WarehouseSpot;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Optional;

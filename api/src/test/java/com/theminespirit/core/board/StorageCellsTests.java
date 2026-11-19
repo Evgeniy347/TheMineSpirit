@@ -3,6 +3,7 @@ package com.theminespirit.core.board;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
+import com.theminespirit.core.board.api.StorageCells;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Set;
 import org.junit.jupiter.api.Test;

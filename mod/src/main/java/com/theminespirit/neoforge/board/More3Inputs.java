@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTiming;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.More3Rules;

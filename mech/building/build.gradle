@@ -7,4 +7,8 @@ description = 'Постройки, схемы и геометрия стройк
 dependencies {
     // lib: тесты схем проверяют живые снимки через neoforge-код :mod; боевой модуль от него не зависит.
     testImplementation project(':mod')
+    testImplementation project(':board')
+    testImplementation project(':content')
+    testImplementation project(':mech:mining')
+    testImplementation project(':mech:inventory')
 }

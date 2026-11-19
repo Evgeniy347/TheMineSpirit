@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import org.slf4j.Logger;

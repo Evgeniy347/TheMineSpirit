@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.StageAudit;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.town.StageSite;
 import java.util.ArrayList;
 import java.util.List;

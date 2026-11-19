@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.base.NamespacedId;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.FenceStubPlan;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphKits;
 import com.theminespirit.core.board.graph.GraphTickets;

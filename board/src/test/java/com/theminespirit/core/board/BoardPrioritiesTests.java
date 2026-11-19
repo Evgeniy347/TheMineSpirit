@@ -3,6 +3,7 @@ package com.theminespirit.core.board;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.reload.DataTables;
 import java.util.List;
 import net.jqwik.api.Arbitraries;

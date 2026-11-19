@@ -1,12 +1,12 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.BuildingLevels;
 import com.theminespirit.core.board.DemandChange;
 import com.theminespirit.core.board.DemandRules;
 import com.theminespirit.core.board.WoolRules;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;

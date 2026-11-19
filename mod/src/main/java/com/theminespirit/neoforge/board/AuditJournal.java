@@ -2,8 +2,8 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.AuditDiff;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BuildGap;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.HashMap;
 import java.util.List;

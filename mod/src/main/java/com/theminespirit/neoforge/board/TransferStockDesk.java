@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.inventory.BaseKit;
 import com.theminespirit.core.inventory.KitFor;
 import com.theminespirit.core.inventory.NeedsOfPlan;

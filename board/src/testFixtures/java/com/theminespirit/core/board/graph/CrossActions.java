@@ -1,7 +1,6 @@
 package com.theminespirit.core.board.graph;
 
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.EatNeed;
@@ -10,6 +9,7 @@ import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolGate;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;

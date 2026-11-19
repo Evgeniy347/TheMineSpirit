@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
@@ -9,9 +8,10 @@ import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.ChestPlans;
-import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.WarehouseRules;
+import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.board.api.ConfigStamp;
 import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;

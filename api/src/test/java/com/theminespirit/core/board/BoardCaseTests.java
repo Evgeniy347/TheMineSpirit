@@ -2,6 +2,7 @@ package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.theminespirit.core.board.api.BoardCase;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;

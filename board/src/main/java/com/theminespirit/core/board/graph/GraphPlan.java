@@ -1,8 +1,8 @@
 package com.theminespirit.core.board.graph;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTuning;
+import com.theminespirit.core.board.api.BoardCase;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

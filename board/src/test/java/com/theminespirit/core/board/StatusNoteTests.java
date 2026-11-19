@@ -2,6 +2,7 @@ package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.api.BoardCase;
 import org.junit.jupiter.api.Test;
 
 class StatusNoteTests {

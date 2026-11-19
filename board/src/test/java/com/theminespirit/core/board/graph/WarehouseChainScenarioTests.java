@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.ChestClearance;
 import com.theminespirit.core.board.SettlementStage;
 import com.theminespirit.core.board.TicketPlans;
@@ -14,6 +13,7 @@ import com.theminespirit.core.board.UpgradePlan;
 import com.theminespirit.core.board.WarehouseApproval;
 import com.theminespirit.core.board.WarehouseOrder;
 import com.theminespirit.core.board.WarehouseRules;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.observation.BlockCoord;

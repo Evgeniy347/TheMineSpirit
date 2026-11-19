@@ -1,6 +1,6 @@
 package com.theminespirit.core.board.graph;
 
-import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.api.BoardCase;
 import java.util.Map;
 
 final class VitalPaths {

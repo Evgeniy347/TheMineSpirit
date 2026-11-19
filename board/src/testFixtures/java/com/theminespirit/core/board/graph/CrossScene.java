@@ -1,7 +1,7 @@
 package com.theminespirit.core.board.graph;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.EatNeed;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;

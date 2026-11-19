@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BuildingWood;
 import com.theminespirit.core.board.BuildingWoods;
-import com.theminespirit.core.board.ConfigStamp;
+import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.board.api.ConfigStamp;
 import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;

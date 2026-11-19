@@ -3,7 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardActivities;
 import com.theminespirit.core.board.BoardLog;
-import com.theminespirit.core.board.ConfigStamp;
+import com.theminespirit.core.board.api.ConfigStamp;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.SpiritEntity;
 import net.minecraft.core.BlockPos;

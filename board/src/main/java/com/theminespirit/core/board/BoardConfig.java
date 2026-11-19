@@ -1,6 +1,8 @@
 package com.theminespirit.core.board;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.board.api.ToolsConfig;
 import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.inventory.api.JsonResource;
 import com.theminespirit.core.reload.api.TableSlot;
@@ -100,7 +102,7 @@ public record BoardConfig(
         Map<String, Integer> herd = integers(root.get("herd"), origin, "herd", HerdCap::herdKey, false);
         List<String> immovable = caseList(root.get("immovable"), origin, "immovable");
         Map<String, Map<String, Integer>> products = productMap(root.get("products"), origin, "products");
-        ToolsConfig tools = ToolsConfig.fromJson(root.get("tools"), origin);
+        ToolsConfig tools = ToolsConfigJson.fromJson(root.get("tools"), origin);
         Map<String, Integer> wool = integers(root.get("wool"), origin, "wool", WoolRules::woolKey, false);
         Map<String, Integer> hive = integers(root.get("hive"), origin, "hive", HiveRules::hiveKey, false);
         PlanTuning plans = PlanTuning.fromJson(root.get("plans"), origin);

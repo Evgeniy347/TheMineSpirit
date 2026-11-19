@@ -1,2 +1,0 @@
-com.theminespirit.core
-com.theminespirit.core.board

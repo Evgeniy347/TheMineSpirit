@@ -1,13 +1,13 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.ExpeditionRule;
 import com.theminespirit.core.board.GraphBlock;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.StockView;
-import com.theminespirit.core.board.ToolFate;
-import com.theminespirit.core.board.ToolsConfig;
+import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.board.api.ToolFate;
+import com.theminespirit.core.board.api.ToolsConfig;
 import com.theminespirit.core.board.graph.ChestReach;
 import com.theminespirit.core.board.graph.GraphBuildingMaterials;
 import com.theminespirit.core.board.graph.GraphFacts;

@@ -1,10 +1,10 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.FarmWaterCell;
 import com.theminespirit.core.board.FluidPlans;
 import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.GraphTickets;

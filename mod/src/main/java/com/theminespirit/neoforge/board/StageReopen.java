@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.GroundsPlan;
 import com.theminespirit.core.board.TicketPlans;
+import com.theminespirit.core.board.api.BoardCase;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;

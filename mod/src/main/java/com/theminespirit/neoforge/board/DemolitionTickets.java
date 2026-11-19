@@ -1,13 +1,13 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DemolitionKey;
 import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.PlannedBlock;

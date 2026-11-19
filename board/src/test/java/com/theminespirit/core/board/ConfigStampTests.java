@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.theminespirit.core.board.api.ConfigStamp;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.reload.api.TableHolder;
 import com.theminespirit.core.reload.api.TableStatus;

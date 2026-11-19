@@ -1,17 +1,17 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BuildingLevels;
-import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.RepairPlan;
 import com.theminespirit.core.board.RepairReopen;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.board.api.ConfigStamp;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.StageSites;
 import com.theminespirit.core.town.StageWork;

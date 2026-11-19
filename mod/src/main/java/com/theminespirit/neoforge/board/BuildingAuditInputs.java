@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.RepairAudit;
 import com.theminespirit.core.board.StageCatalog;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.observation.BlockCoord;

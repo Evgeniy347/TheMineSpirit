@@ -1,4 +1,4 @@
-package com.theminespirit.core.board;
+package com.theminespirit.core.board.api;
 
 public enum BoardCase {
     ACTIVITY_ARM,

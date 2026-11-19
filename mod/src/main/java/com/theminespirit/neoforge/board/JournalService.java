@@ -7,7 +7,7 @@ import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardTicket;
-import com.theminespirit.core.board.ConfigStamp;
+import com.theminespirit.core.board.api.ConfigStamp;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;

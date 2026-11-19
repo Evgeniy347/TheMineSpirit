@@ -1,13 +1,13 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.BuildingLevels;
 import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.StageConfirmation;
 import com.theminespirit.core.board.StageGate;
 import com.theminespirit.core.board.StageWorld;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphStageGate;
 import com.theminespirit.core.town.StageSite;

@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.board.api.BoardCase;
 import java.util.Objects;
 
 public interface StageWorld {

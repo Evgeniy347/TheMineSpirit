@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.route.QuarryStatus;
 import com.theminespirit.core.board.route.RouteMarker;
 import com.theminespirit.core.board.route.RouteResource;

@@ -2,7 +2,6 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.Applicability;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BreedingRules;
 import com.theminespirit.core.board.CaseMaterials;
 import com.theminespirit.core.board.EatNeed;
@@ -10,6 +9,7 @@ import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.ActivityPlans;
 import com.theminespirit.core.board.graph.FarmRules;
 import com.theminespirit.core.board.graph.FarmWays;

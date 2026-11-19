@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.neoforge.SpiritBrain;
 import com.theminespirit.neoforge.SpiritEntity;

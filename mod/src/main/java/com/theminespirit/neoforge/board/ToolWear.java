@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.ToolFate;
-import com.theminespirit.core.board.ToolsConfig;
+import com.theminespirit.core.board.api.ToolFate;
+import com.theminespirit.core.board.api.ToolsConfig;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.repair.RepairCalculator;
 import com.theminespirit.core.repair.RepairData;

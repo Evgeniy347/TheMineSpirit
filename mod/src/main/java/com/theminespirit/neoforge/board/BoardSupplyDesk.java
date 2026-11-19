@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
@@ -12,6 +11,7 @@ import com.theminespirit.core.board.StockParts;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.SupplyGate;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.SpiritEntity;

@@ -8,7 +8,7 @@ import static com.theminespirit.core.board.graph.GraphCaseFixtures.tickets;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import com.theminespirit.core.plan.ScriptCall;
 import java.util.List;

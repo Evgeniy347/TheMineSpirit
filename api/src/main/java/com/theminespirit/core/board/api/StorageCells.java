@@ -1,4 +1,4 @@
-package com.theminespirit.core.board;
+package com.theminespirit.core.board.api;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Set;

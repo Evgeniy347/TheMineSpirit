@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.base.NamespacedId;
+import com.theminespirit.core.board.api.BoardCase;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;

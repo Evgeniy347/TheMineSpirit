@@ -1,4 +1,4 @@
-package com.theminespirit.core.board;
+package com.theminespirit.core.board.api;
 
 import com.theminespirit.core.reload.api.TableHolder;
 import java.util.Objects;

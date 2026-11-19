@@ -2,9 +2,9 @@ package com.theminespirit.core.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.StageRules;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.ui.api.BoardTileGroup;
 import java.io.IOException;
 import java.io.InputStream;

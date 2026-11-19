@@ -2,10 +2,10 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.StageCatalog;
-import com.theminespirit.core.board.StorageCells;
 import com.theminespirit.core.board.WarehouseChests;
 import com.theminespirit.core.board.WarehouseOrder;
 import com.theminespirit.core.board.WarehouseRules;
+import com.theminespirit.core.board.api.StorageCells;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.StageSite;

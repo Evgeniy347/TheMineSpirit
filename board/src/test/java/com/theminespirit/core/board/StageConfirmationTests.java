@@ -3,6 +3,7 @@ package com.theminespirit.core.board;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.theminespirit.core.board.api.BoardCase;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.Test;

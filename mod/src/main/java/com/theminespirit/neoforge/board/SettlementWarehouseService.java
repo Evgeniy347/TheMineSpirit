@@ -1,14 +1,14 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardLedger;
 import com.theminespirit.core.board.BoardLog;
-import com.theminespirit.core.board.ConfigStamp;
 import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.board.UpgradePlan;
 import com.theminespirit.core.board.WarehouseOrder;
 import com.theminespirit.core.board.WarehouseRules;
+import com.theminespirit.core.board.api.BoardCase;
+import com.theminespirit.core.board.api.ConfigStamp;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.rest.ApiException;

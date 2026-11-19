@@ -1,7 +1,7 @@
 package com.theminespirit.core.board.graph;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.SettlementFacts;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.Collections;
 import java.util.LinkedHashMap;

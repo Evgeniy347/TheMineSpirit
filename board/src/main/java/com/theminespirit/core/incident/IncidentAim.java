@@ -1,8 +1,8 @@
 package com.theminespirit.core.incident;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.coordinator.work.WorkKind;
 import com.theminespirit.core.coordinator.work.WorkTarget;
 import java.util.Collection;

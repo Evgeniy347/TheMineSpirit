@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.movement.PitExitPlanner;
 import com.theminespirit.core.movement.SelfEscape;
 import com.theminespirit.core.observation.BlockCoord;

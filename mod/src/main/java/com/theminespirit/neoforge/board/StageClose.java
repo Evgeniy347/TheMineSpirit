@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.api.BoardCase;
 import org.slf4j.Logger;
 
 final class StageClose {

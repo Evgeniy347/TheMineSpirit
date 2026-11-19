@@ -2,9 +2,9 @@ package com.theminespirit.neoforge.rest;
 
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardActivities;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardHeld;
 import com.theminespirit.core.board.BoardTicket;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.WorldObservation;
 import com.theminespirit.core.rest.ApiException;

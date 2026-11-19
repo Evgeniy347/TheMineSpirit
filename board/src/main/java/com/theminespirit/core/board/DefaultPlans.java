@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.base.NamespacedId;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.Collections;
 import java.util.EnumMap;

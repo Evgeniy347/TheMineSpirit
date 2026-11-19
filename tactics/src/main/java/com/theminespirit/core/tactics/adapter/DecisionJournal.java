@@ -1,6 +1,6 @@
 package com.theminespirit.core.tactics.adapter;
 
-import com.theminespirit.core.board.ConfigStamp;
+import com.theminespirit.core.board.api.ConfigStamp;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;

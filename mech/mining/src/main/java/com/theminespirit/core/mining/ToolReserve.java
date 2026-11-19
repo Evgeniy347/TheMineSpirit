@@ -1,7 +1,7 @@
 package com.theminespirit.core.mining;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.theminespirit.core.board.ToolsConfig;
+import com.theminespirit.core.board.api.ToolsConfig;
 import com.theminespirit.core.inventory.api.JsonResource;
 import java.util.Collection;
 import java.util.Objects;

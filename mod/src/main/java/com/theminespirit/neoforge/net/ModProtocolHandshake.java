@@ -2,7 +2,6 @@ package com.theminespirit.neoforge.net;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.ModProtocol;
 import java.util.function.Consumer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;

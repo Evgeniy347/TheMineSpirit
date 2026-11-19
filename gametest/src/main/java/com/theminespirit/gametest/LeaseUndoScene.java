@@ -1,8 +1,8 @@
 package com.theminespirit.gametest;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.lease.Lease;
 import com.theminespirit.core.board.lease.LeaseCell;
 import com.theminespirit.core.board.lease.LeaseStatus;

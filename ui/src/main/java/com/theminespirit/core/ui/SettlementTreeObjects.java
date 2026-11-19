@@ -1,8 +1,8 @@
 package com.theminespirit.core.ui;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.StageRules;
+import com.theminespirit.core.board.api.BoardCase;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;

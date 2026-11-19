@@ -22,13 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DispatchRound;
 import com.theminespirit.core.board.EatNeed;
 import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.board.VitalGate;
+import com.theminespirit.core.board.api.BoardCase;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

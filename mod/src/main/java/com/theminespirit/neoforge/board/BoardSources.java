@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.GraphBlock;
@@ -9,6 +8,7 @@ import com.theminespirit.core.board.SourceFailureLog;
 import com.theminespirit.core.board.SourceGuard;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphDecisions;
 import com.theminespirit.core.board.graph.GraphFailureMemory;
 import com.theminespirit.core.board.graph.GraphNotes;

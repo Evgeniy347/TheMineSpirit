@@ -7,12 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.ActivityTickets;
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.BoardTiming;
 import com.theminespirit.core.board.StockView;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.plan.ScriptCall;
 import java.util.List;
 import java.util.Map;

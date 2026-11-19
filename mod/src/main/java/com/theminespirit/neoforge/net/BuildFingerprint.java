@@ -2,7 +2,6 @@ package com.theminespirit.neoforge.net;
 
 import com.theminespirit.TheMineSpirit;
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.ModVersion;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;

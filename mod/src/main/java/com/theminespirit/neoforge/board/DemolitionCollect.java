@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.DemolitionKey;
 import com.theminespirit.core.board.DemolitionScope;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.mining.UnreachableCells;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.FloatingBlocks;

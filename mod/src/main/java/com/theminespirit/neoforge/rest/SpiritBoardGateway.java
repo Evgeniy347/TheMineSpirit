@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.rest;
 
 import com.theminespirit.core.board.Board;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardJournal;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardOutcome;
@@ -12,6 +11,7 @@ import com.theminespirit.core.board.BoardTiming;
 import com.theminespirit.core.board.RelocatePlan;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.rest.ApiException;
 import com.theminespirit.core.rest.BoardCounts;
 import com.theminespirit.core.rest.BoardGateway;

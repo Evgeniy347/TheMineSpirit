@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.WoolRules;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.FarmWays;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.intellect.FishingNeeds;

@@ -1,10 +1,10 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BlockedCells;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.LevelRepair;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;

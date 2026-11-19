@@ -2,7 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.theminespirit.core.board.BoardCase;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import java.util.List;

@@ -3,6 +3,8 @@ package com.theminespirit.core.board;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
+import com.theminespirit.core.board.api.ToolFate;
+import com.theminespirit.core.board.api.ToolsConfig;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.reload.api.TableHolder;
 import com.theminespirit.core.reload.api.TableStatus;

@@ -3,10 +3,10 @@ package com.theminespirit.core.incident;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardRules;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.coordinator.work.WorkKind;
 import com.theminespirit.core.coordinator.work.WorkTarget;
 import com.theminespirit.core.observation.BlockCoord;

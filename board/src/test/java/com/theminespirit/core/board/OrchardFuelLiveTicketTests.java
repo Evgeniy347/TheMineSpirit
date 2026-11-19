@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.api.Ingredient;
 import com.theminespirit.core.town.StageSite;

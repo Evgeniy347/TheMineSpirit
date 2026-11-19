@@ -1,4 +1,4 @@
-package com.theminespirit.core;
+package com.theminespirit.neoforge.net;
 
 import java.util.Objects;
 

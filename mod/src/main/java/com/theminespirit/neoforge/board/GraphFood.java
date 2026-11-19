@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.hunger.SpiritHunger;
 import com.theminespirit.core.intellect.FoodRation;
 import com.theminespirit.core.intellect.IntellectTuning;

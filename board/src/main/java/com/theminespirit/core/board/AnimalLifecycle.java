@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.husbandry.api.FeedTable;
 import com.theminespirit.core.husbandry.api.Species;
 import java.util.List;

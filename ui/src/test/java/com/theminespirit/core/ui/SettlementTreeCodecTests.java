@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.StageRules;
+import com.theminespirit.core.board.api.BoardCase;
 import java.util.Arrays;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

@@ -1,9 +1,9 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.route.RouteResource;
 import com.theminespirit.core.board.route.RouteTrailBook;
 import com.theminespirit.core.engine.RunStatus;

@@ -1,7 +1,7 @@
 package com.theminespirit.core.board.graph;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.StageCatalog;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.ArrayList;
 import java.util.HashSet;

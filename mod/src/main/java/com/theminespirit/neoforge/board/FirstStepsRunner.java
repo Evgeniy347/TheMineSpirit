@@ -1,6 +1,5 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.MaterialSource;
 import com.theminespirit.core.board.MineDescentBottom;
@@ -9,6 +8,7 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.building.MineLayout;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.api.WoodSpecies;
