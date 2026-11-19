@@ -2,6 +2,7 @@ package com.theminespirit.core.husbandry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.List;

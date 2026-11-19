@@ -2,6 +2,7 @@ package com.theminespirit.core.building;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import org.junit.jupiter.api.Test;

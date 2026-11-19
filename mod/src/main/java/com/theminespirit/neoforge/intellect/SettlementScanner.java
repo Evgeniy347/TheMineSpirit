@@ -2,7 +2,7 @@ package com.theminespirit.neoforge.intellect;
 
 import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.husbandry.PenBounds;
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.intellect.Forage;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.api.CatalogLimits;

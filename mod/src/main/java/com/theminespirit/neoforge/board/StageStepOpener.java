@@ -13,7 +13,7 @@ import com.theminespirit.core.board.ResourceGate;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.StockNeed;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.StageWork;
 import java.util.HashMap;

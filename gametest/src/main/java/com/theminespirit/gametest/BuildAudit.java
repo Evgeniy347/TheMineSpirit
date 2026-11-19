@@ -1,8 +1,8 @@
 package com.theminespirit.gametest;
 
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.BlockItems;
 import com.theminespirit.neoforge.BlockStates;

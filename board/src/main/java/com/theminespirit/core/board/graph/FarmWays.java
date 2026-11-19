@@ -1,7 +1,7 @@
 package com.theminespirit.core.board.graph;
 
-import com.theminespirit.core.husbandry.PetKind;
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.PetKind;
+import com.theminespirit.core.husbandry.api.Species;
 import java.util.Locale;
 import org.jspecify.annotations.Nullable;
 

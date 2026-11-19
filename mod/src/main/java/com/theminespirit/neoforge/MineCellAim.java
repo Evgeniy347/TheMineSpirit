@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.building.BlockSight;
+import com.theminespirit.core.building.api.BlockSight;
 import com.theminespirit.core.mining.MineColumn;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.api.Point;

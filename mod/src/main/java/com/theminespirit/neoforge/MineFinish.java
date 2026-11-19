@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.mining.MineColumn;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;

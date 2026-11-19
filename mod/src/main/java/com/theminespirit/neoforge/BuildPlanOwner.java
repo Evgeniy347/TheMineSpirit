@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.building.BuildBox;
+import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ConditionNode;
 import com.theminespirit.core.plan.FallbackNode;

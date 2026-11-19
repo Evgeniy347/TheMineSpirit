@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.forestry.TreeGroup;
-import com.theminespirit.core.forestry.TreeView;
+import com.theminespirit.core.forestry.api.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.HashMap;
 import java.util.HashSet;

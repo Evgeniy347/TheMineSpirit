@@ -4,7 +4,7 @@ import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.board.BoardCase;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.graph.GraphNames;
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Comparator;

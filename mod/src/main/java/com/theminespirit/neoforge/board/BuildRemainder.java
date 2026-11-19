@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardCase;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.plan.TaskNode;
 import java.util.EnumSet;
 import java.util.HashMap;

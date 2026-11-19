@@ -2,12 +2,12 @@ package com.theminespirit.gametest;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.DemoBuildings;
 import com.theminespirit.core.building.DemoPlacement;
 import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.observation.BlockCoord;

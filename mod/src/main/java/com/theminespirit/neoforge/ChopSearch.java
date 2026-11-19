@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeCandidates;
+import com.theminespirit.core.forestry.api.ChopTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.core.script.ChopTreeParams;

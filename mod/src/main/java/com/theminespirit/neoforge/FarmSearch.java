@@ -1,10 +1,10 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.SpiritReach;
-import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmJob;
 import com.theminespirit.core.farming.FarmPlanner;
 import com.theminespirit.core.farming.FarmPlot;
+import com.theminespirit.core.farming.api.CropKind;
 import com.theminespirit.core.mining.TargetBuffer;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;

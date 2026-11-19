@@ -3,8 +3,8 @@ package com.theminespirit.core.script;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.theminespirit.core.building.BuildBox;
-import com.theminespirit.core.building.BuildRotation;
+import com.theminespirit.core.building.api.BuildBox;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.script.api.BuildSchematicParams;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

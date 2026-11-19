@@ -1,11 +1,11 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.base.NamespacedId;
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchemeFilter;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.BuildRotation;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;

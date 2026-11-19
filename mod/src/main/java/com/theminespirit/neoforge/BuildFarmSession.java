@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmPlot;
+import com.theminespirit.core.farming.api.CropKind;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;

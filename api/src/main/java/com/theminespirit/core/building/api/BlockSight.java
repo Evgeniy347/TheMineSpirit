@@ -1,4 +1,4 @@
-package com.theminespirit.core.building;
+package com.theminespirit.core.building.api;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.perception.Terrain;

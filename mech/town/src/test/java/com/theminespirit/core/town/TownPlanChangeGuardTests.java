@@ -6,11 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.RepairAudit;
 import com.theminespirit.core.board.StageRules;
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SchematicTextParser;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.inventory.api.JsonResource;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.repair.RepairData;

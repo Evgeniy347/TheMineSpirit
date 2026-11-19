@@ -3,7 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.perception.Finding;

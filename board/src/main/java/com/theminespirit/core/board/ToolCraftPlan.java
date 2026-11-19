@@ -2,7 +2,7 @@ package com.theminespirit.core.board;
 
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.SupplyGraph;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;

@@ -1,10 +1,10 @@
 package com.theminespirit.neoforge.demo;
 
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.DemoBuildings;
 import com.theminespirit.core.building.DemoPlacement;
 import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.neoforge.BlockItems;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.theminespirit.core.building;
+package com.theminespirit.core.building.api;
 
 public interface FillArea {
     int x1();

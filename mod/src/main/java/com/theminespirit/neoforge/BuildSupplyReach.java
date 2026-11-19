@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.StandPathGate;
+import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Optional;
 import java.util.Set;

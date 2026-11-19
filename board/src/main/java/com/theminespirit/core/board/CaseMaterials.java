@@ -3,7 +3,7 @@ package com.theminespirit.core.board;
 import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.plan.ConditionNode;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ParallelNode;

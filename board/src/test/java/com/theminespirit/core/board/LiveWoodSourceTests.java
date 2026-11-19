@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.theminespirit.core.forestry.ChopTuning;
+import com.theminespirit.core.forestry.api.ChopTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.planner.api.CraftedItems;
 import java.io.IOException;

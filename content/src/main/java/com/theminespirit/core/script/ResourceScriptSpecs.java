@@ -1,6 +1,6 @@
 package com.theminespirit.core.script;
 
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentDirection;
 import com.theminespirit.core.mining.MiningTuning;

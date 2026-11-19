@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.base.NamespacedId;
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.OrchardPlot;
 import com.theminespirit.core.town.StageSite;

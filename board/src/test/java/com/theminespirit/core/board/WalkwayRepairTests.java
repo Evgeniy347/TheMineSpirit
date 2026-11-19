@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.repair.RepairData;
 import java.util.HashMap;

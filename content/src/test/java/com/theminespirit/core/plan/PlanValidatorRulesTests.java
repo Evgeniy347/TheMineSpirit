@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.theminespirit.core.farming.CropKind;
+import com.theminespirit.core.farming.api.CropKind;
 import com.theminespirit.core.mining.OreKind;
 import com.theminespirit.core.script.CoreScripts;
 import com.theminespirit.core.script.api.ParamSpec;

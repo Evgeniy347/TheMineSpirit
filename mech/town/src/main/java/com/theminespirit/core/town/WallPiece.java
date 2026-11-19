@@ -1,6 +1,6 @@
 package com.theminespirit.core.town;
 
-import com.theminespirit.core.building.BuildRotation;
+import com.theminespirit.core.building.api.BuildRotation;
 import java.util.Objects;
 
 public record WallPiece(String scheme, BuildRotation rotation, int x, int z, int from, int length) {

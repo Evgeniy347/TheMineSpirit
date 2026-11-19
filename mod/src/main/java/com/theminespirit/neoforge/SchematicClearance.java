@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BlockMatch;
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SchematicUpgrade;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.forestry.TreeSpan;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.StageSite;

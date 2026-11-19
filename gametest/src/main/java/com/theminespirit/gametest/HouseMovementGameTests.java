@@ -1,9 +1,9 @@
 package com.theminespirit.gametest;
 
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.DemoBuildings;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;

@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.building.BuildBox;
+import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.BreakSkipTally;
 import com.theminespirit.core.mining.MiningSafety;

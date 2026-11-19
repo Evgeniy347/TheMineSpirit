@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.farming.api.CropKind;
+import com.theminespirit.core.farming.api.HarvestMethod;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Optional;

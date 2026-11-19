@@ -1,7 +1,7 @@
 package com.theminespirit.core.town;
 
-import com.theminespirit.core.forestry.ChopTuning;
-import com.theminespirit.core.forestry.TreeView;
+import com.theminespirit.core.forestry.api.ChopTuning;
+import com.theminespirit.core.forestry.api.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.policy.api.StrayRules;

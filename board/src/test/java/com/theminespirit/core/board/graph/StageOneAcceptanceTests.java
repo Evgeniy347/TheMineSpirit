@@ -13,7 +13,7 @@ import com.theminespirit.core.board.StageTicket;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphState.Built;
-import com.theminespirit.core.building.BuildRotation;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;

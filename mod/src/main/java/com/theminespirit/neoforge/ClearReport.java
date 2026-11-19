@@ -2,7 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.ClearSummary;
-import com.theminespirit.core.building.BuildBox;
+import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Map;
 import org.slf4j.Logger;

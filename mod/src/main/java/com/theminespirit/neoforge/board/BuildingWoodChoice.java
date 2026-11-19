@@ -6,7 +6,7 @@ import com.theminespirit.core.board.BoardLog;
 import com.theminespirit.core.board.BuildingWood;
 import com.theminespirit.core.board.BuildingWoods;
 import com.theminespirit.core.board.ConfigStamp;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ColumnMask;

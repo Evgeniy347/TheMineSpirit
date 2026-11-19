@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.theminespirit.core.forestry.api.ChopTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Set;

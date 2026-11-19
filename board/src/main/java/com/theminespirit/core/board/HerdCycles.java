@@ -1,6 +1,6 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.Species;
 import java.util.EnumMap;
 import java.util.Locale;
 import java.util.Map;

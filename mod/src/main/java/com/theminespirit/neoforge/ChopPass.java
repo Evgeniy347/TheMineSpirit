@@ -3,7 +3,7 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.forestry.ChopPlan;
 import com.theminespirit.core.forestry.Tree;
-import com.theminespirit.core.forestry.TreeView;
+import com.theminespirit.core.forestry.api.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import java.util.List;

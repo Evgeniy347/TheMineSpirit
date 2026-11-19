@@ -1,10 +1,10 @@
 package com.theminespirit.neoforge.husbandry;
 
 import com.theminespirit.core.husbandry.AnimalRef;
-import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.HerdCensus;
 import com.theminespirit.core.husbandry.HerdSafety;
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.FeedTable;
+import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.ArrayList;

@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.Species;
 import java.util.Map;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;

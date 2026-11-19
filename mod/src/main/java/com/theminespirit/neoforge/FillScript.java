@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.building.BuildBox;
+import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;

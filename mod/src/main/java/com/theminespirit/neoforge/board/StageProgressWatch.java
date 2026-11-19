@@ -9,7 +9,7 @@ import com.theminespirit.core.board.LevelRepair;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.PlotLeveling;

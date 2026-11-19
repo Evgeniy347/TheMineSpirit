@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.script.ChopTreeParams;
 
 final class ChopTreeText {

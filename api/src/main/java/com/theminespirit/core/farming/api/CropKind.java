@@ -1,4 +1,4 @@
-package com.theminespirit.core.farming;
+package com.theminespirit.core.farming.api;
 
 import com.theminespirit.core.base.NamespacedId;
 import java.util.Arrays;

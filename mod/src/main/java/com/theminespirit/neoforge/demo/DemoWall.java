@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge.demo;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.building.BuildBox;
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.DemoBuildings;
 import com.theminespirit.core.building.DemoPlacement;
 import com.theminespirit.core.building.Preset;
+import com.theminespirit.core.building.api.BuildBox;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.ColumnMask;

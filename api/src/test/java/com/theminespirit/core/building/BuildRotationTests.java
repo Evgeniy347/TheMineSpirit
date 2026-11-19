@@ -3,6 +3,7 @@ package com.theminespirit.core.building;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.theminespirit.core.building.api.BuildRotation;
 import org.junit.jupiter.api.Test;
 
 class BuildRotationTests {

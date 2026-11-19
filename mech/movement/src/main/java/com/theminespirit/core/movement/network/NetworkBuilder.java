@@ -1,6 +1,6 @@
 package com.theminespirit.core.movement.network;
 
-import com.theminespirit.core.building.BuildBox;
+import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.movement.BodyStep;

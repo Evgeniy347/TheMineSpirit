@@ -11,7 +11,7 @@ import com.theminespirit.core.board.graph.VitalNeeds;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.hunger.HungerRules;
-import com.theminespirit.core.husbandry.FeedTable;
+import com.theminespirit.core.husbandry.api.FeedTable;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.InventoryNormTable;
 import com.theminespirit.core.intellect.OutsideRules;

@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.SpiritReach;
+import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;

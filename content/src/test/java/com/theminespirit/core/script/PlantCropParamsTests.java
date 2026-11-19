@@ -3,7 +3,7 @@ package com.theminespirit.core.script;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.theminespirit.core.farming.CropKind;
+import com.theminespirit.core.farming.api.CropKind;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 

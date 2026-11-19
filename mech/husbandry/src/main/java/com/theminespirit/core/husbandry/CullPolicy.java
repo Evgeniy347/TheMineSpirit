@@ -1,5 +1,6 @@
 package com.theminespirit.core.husbandry;
 
+import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.ArrayList;

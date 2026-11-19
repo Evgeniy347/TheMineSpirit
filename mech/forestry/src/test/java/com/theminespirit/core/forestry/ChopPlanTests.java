@@ -3,6 +3,7 @@ package com.theminespirit.core.forestry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.theminespirit.core.forestry.api.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.List;

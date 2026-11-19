@@ -2,6 +2,7 @@ package com.theminespirit.core.forestry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import java.util.Optional;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;

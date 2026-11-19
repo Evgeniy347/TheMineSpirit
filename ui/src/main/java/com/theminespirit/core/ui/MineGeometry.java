@@ -1,7 +1,7 @@
 package com.theminespirit.core.ui;
 
-import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.MineLayout;
+import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Comparator;
 import java.util.List;

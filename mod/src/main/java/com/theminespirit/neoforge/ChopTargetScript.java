@@ -8,7 +8,7 @@ import com.theminespirit.core.forestry.NotATree;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.TreeDetection;
 import com.theminespirit.core.forestry.TreeShape;
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.api.ChopTargetParams;
 import java.util.Optional;

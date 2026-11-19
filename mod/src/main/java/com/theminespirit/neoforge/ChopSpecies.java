@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.forestry.Tree;
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;

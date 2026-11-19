@@ -1,7 +1,7 @@
 package com.theminespirit.core.script.api;
 
-import com.theminespirit.core.building.BuildRotation;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.BuildRotation;
+import com.theminespirit.core.building.api.WoodSpecies;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

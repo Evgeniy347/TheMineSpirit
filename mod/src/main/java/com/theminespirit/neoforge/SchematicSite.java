@@ -1,14 +1,14 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.building.BuildBox;
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.BuildStandLevel;
 import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SchematicGround;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.BuildBox;
+import com.theminespirit.core.building.api.BuildRotation;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.HashMap;

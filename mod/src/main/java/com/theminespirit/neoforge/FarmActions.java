@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmJob;
+import com.theminespirit.core.farming.api.CropKind;
 import com.theminespirit.core.mining.ToolReserve;
 import java.util.List;
 import java.util.Objects;

@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.movement;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.building.BuildBox;
+import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.movement.network.NetworkAreas;
 import com.theminespirit.core.movement.network.NetworkBuilder;
 import com.theminespirit.core.movement.network.NetworkRoute;

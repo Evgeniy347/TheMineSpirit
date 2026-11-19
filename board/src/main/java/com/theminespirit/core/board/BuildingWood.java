@@ -1,7 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.base.NamespacedId;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import java.util.Map;
 import java.util.Objects;
 

@@ -1,6 +1,6 @@
 package com.theminespirit.core.script;
 
-import com.theminespirit.core.farming.CropKind;
+import com.theminespirit.core.farming.api.CropKind;
 import com.theminespirit.core.mining.PickaxeTiers;
 import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.script.api.ParamSpec;

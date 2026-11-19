@@ -1,6 +1,6 @@
 package com.theminespirit.core.town;
 
-import com.theminespirit.core.building.FillArea;
+import com.theminespirit.core.building.api.FillArea;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Collection;

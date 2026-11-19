@@ -5,7 +5,7 @@ import com.theminespirit.core.building.PathGround;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
-import com.theminespirit.core.forestry.ChopTuning;
+import com.theminespirit.core.forestry.api.ChopTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.ScanTuning;
 import com.theminespirit.core.town.PlotProtection;

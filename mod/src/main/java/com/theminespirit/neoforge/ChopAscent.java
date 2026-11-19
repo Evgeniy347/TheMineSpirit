@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.Tree;
-import com.theminespirit.core.forestry.TreeView;
+import com.theminespirit.core.forestry.api.ChopTuning;
+import com.theminespirit.core.forestry.api.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import net.minecraft.core.BlockPos;

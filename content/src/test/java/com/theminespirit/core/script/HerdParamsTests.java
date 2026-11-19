@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.script.api.ParamSpec;
 import com.theminespirit.core.script.api.ScriptCatalog;

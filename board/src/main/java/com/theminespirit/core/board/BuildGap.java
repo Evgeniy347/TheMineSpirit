@@ -6,7 +6,7 @@ import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.SchematicGround;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.mining.MineOres;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ConditionNode;

@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildReservations;
+import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;

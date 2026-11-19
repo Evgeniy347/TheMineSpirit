@@ -1,7 +1,7 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.husbandry.FeedTable;
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.FeedTable;
+import com.theminespirit.core.husbandry.api.Species;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;

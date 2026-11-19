@@ -3,7 +3,7 @@ package com.theminespirit.core.script;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.perception.LocateQuery;
 import com.theminespirit.core.perception.LocateType;
 import java.util.List;

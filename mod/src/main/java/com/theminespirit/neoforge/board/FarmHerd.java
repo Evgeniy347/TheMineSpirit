@@ -7,7 +7,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.WoolRules;
 import com.theminespirit.core.board.graph.FarmWays;
 import com.theminespirit.core.board.graph.GraphTickets;
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.husbandry.HerdSpecies;
 import com.theminespirit.neoforge.husbandry.HerdSurvey;

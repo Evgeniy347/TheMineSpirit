@@ -1,8 +1,8 @@
 package com.theminespirit.core.town;
 
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.api.BuildRotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

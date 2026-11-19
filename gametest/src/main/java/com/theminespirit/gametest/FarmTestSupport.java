@@ -8,7 +8,7 @@ import static com.theminespirit.gametest.FarmTestSupport.SETTLE_TICKS;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.farming.CropKind;
+import com.theminespirit.core.farming.api.CropKind;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.FarmSession;

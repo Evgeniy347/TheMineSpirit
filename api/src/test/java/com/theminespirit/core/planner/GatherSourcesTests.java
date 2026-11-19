@@ -3,8 +3,8 @@ package com.theminespirit.core.planner;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.farming.CropKind;
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.farming.api.CropKind;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.planner.api.GatherSources;
 import org.junit.jupiter.api.Test;
 

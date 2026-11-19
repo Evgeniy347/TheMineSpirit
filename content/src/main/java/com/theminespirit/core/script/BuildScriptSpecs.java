@@ -1,7 +1,7 @@
 package com.theminespirit.core.script;
 
-import com.theminespirit.core.building.WoodSpecies;
-import com.theminespirit.core.farming.CropKind;
+import com.theminespirit.core.building.api.WoodSpecies;
+import com.theminespirit.core.farming.api.CropKind;
 import com.theminespirit.core.script.api.BuildSchematicParams;
 import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.script.api.ParamSpec;

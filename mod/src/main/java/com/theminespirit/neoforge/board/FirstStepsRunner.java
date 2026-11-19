@@ -11,7 +11,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolSet;
 import com.theminespirit.core.building.MineLayout;
 import com.theminespirit.core.building.Schematic;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;

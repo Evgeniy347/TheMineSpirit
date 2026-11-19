@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.BuildResult;
+import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.engine.ScriptInstance;
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.mining.ApproachFailureTracker;
 import com.theminespirit.core.mining.BreakSkipTally;
 import com.theminespirit.core.observation.BlockCoord;

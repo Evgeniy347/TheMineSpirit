@@ -1,6 +1,6 @@
 package com.theminespirit.core.town;
 
-import com.theminespirit.core.building.BuildRotation;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Objects;

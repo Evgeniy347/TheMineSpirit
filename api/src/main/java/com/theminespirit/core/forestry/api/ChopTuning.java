@@ -1,4 +1,4 @@
-package com.theminespirit.core.forestry;
+package com.theminespirit.core.forestry.api;
 
 public final class ChopTuning {
     public static final int MAX_LOGS = 128;

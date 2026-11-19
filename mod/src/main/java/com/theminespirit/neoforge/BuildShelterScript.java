@@ -1,10 +1,10 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.BuildTuning;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.ShelterMaterials;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;

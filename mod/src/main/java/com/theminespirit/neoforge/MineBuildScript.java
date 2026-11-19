@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.MineLayout;
 import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;

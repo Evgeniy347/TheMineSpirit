@@ -3,8 +3,8 @@ package com.theminespirit.core.script;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.farming.CropKind;
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.farming.api.CropKind;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentDirection;
 import com.theminespirit.core.mining.MiningTuning;

@@ -1,9 +1,9 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.MineLayout;
 import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.PresetLibrary;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Comparator;
 import java.util.Objects;

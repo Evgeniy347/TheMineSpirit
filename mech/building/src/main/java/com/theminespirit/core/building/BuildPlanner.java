@@ -1,5 +1,6 @@
 package com.theminespirit.core.building;
 
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;

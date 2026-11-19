@@ -1,6 +1,6 @@
 package com.theminespirit.core.script;
 
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.observation.ScanRadius;
 import com.theminespirit.core.perception.MemoryType;
 import com.theminespirit.core.script.api.CatalogLimits;

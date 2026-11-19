@@ -1,4 +1,4 @@
-package com.theminespirit.core.building;
+package com.theminespirit.core.building.api;
 
 import com.theminespirit.core.base.NamespacedId;
 import java.util.List;

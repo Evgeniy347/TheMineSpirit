@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.crafting;
 
 import com.theminespirit.core.board.HiveRules;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.crafting.IngredientSpec;
 import com.theminespirit.core.crafting.RecipeChooser;
 import com.theminespirit.core.crafting.RecipeCurator;

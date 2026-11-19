@@ -1,7 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.base.NamespacedId;
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.Map;

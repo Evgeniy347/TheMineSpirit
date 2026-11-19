@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.building.FillOrder;
 import com.theminespirit.core.building.SchemeFilter;
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ConditionNode;
 import com.theminespirit.core.plan.FallbackNode;

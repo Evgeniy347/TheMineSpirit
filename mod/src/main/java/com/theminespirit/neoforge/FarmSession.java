@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmJob;
 import com.theminespirit.core.farming.FarmPlot;
 import com.theminespirit.core.farming.FarmTally;
+import com.theminespirit.core.farming.api.CropKind;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Map;
 import net.minecraft.core.BlockPos;

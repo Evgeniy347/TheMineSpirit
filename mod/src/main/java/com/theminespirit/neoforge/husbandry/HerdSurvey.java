@@ -2,7 +2,7 @@ package com.theminespirit.neoforge.husbandry;
 
 import com.theminespirit.core.husbandry.AnimalRef;
 import com.theminespirit.core.husbandry.PenBounds;
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Objects;

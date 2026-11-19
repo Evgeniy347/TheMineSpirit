@@ -1,6 +1,6 @@
 package com.theminespirit.core.town;
 
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import java.util.Optional;
 
 public final class OrchardSites {

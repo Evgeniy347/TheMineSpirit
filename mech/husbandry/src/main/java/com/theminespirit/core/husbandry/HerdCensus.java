@@ -1,5 +1,6 @@
 package com.theminespirit.core.husbandry;
 
+import com.theminespirit.core.husbandry.api.Species;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;

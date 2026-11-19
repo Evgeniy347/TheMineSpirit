@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.forestry.TreeSight;
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.LevelTreeView;
 import com.theminespirit.neoforge.TreeBlocks;

@@ -6,10 +6,10 @@ import static com.theminespirit.gametest.FarmTestSupport.name;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.farming.Above;
-import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.CropState;
 import com.theminespirit.core.farming.FarmTile;
 import com.theminespirit.core.farming.Ground;
+import com.theminespirit.core.farming.api.CropKind;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.CropRegistry;
 import java.util.Optional;

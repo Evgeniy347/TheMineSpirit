@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmJob;
 import com.theminespirit.core.farming.FarmPlot;
+import com.theminespirit.core.farming.api.CropKind;
 
 final class FarmSessions {
     private static final int UNLIMITED = Integer.MAX_VALUE;

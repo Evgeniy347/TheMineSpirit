@@ -1,9 +1,9 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.building.BlockMatch;
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicActions;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.repair.RepairData;
 import java.util.ArrayList;

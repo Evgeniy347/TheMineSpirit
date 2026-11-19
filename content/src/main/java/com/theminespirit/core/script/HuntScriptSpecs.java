@@ -1,6 +1,6 @@
 package com.theminespirit.core.script;
 
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.script.api.ParamSpec;
 import com.theminespirit.core.script.api.ScriptSpec;

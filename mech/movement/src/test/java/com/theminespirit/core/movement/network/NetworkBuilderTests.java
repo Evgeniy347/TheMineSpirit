@@ -4,7 +4,7 @@ import static com.theminespirit.core.movement.network.GridWorld.cell;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.building.BuildBox;
+import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.movement.BodyStep;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;

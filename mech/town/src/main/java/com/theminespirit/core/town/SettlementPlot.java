@@ -1,6 +1,6 @@
 package com.theminespirit.core.town;
 
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Arrays;
 import java.util.Collection;

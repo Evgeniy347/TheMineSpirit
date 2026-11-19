@@ -1,12 +1,12 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.forestry.AreaReplant;
-import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.ReplantData;
 import com.theminespirit.core.forestry.ReplantPlan;
 import com.theminespirit.core.forestry.ReplantSite;
-import com.theminespirit.core.forestry.TreeSpecies;
-import com.theminespirit.core.forestry.TreeView;
+import com.theminespirit.core.forestry.api.ChopTuning;
+import com.theminespirit.core.forestry.api.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.reload.DataTables;

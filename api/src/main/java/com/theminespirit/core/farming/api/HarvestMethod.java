@@ -1,4 +1,4 @@
-package com.theminespirit.core.farming;
+package com.theminespirit.core.farming.api;
 
 public enum HarvestMethod {
     BREAK,

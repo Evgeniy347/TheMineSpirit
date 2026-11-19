@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptStatus;
-import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmTuning;
-import com.theminespirit.core.farming.HarvestMethod;
+import com.theminespirit.core.farming.api.CropKind;
+import com.theminespirit.core.farming.api.HarvestMethod;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;

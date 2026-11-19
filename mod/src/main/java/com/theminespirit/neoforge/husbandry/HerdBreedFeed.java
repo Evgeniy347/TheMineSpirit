@@ -2,8 +2,8 @@ package com.theminespirit.neoforge.husbandry;
 
 import com.theminespirit.core.husbandry.AnimalRef;
 import com.theminespirit.core.husbandry.BreedPlanner;
-import com.theminespirit.core.husbandry.FeedTable;
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.FeedTable;
+import com.theminespirit.core.husbandry.api.Species;
 import java.util.List;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.animal.Animal;

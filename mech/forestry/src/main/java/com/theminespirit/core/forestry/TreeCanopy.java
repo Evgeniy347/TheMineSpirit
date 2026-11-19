@@ -1,5 +1,6 @@
 package com.theminespirit.core.forestry;
 
+import com.theminespirit.core.forestry.api.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayDeque;
 import java.util.ArrayList;

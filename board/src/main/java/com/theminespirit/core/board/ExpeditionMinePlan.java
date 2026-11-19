@@ -1,9 +1,9 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;

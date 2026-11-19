@@ -2,7 +2,7 @@ package com.theminespirit.core.board.graph;
 
 import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.building.EarthCover;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;

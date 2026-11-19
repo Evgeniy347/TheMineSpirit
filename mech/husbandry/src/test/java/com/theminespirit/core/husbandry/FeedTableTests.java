@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.husbandry.api.FeedTable;
+import com.theminespirit.core.husbandry.api.Species;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;

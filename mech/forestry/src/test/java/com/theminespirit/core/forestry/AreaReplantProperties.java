@@ -2,6 +2,7 @@ package com.theminespirit.core.forestry;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.forestry.api.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import net.jqwik.api.Arbitraries;

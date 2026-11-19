@@ -11,7 +11,7 @@ import com.theminespirit.core.board.PersistBatch;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.SupplyGate;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.coordinator.WorkReserveHub;
 import java.util.HashMap;

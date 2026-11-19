@@ -1,6 +1,6 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.movement.SelfEscape;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.TaskNode;

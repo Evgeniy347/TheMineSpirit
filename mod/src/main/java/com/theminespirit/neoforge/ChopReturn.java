@@ -2,7 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.forestry.Tree;
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import org.slf4j.Logger;
 
 final class ChopReturn {

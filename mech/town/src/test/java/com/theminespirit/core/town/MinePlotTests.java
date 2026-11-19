@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.TicketTarget;
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.MineLayout;
 import com.theminespirit.core.building.Preset;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.ui.MineGeometry;

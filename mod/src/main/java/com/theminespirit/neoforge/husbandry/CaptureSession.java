@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge.husbandry;
 
 import com.theminespirit.core.engine.ScriptInstance;
-import com.theminespirit.core.husbandry.FeedTable;
 import com.theminespirit.core.husbandry.PenBounds;
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.FeedTable;
+import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.neoforge.Approach;

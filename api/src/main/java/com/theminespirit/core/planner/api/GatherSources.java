@@ -1,8 +1,8 @@
 package com.theminespirit.core.planner.api;
 
 import com.theminespirit.core.base.NamespacedId;
-import com.theminespirit.core.farming.CropKind;
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.farming.api.CropKind;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import java.util.Objects;
 import java.util.Optional;
 

@@ -1,4 +1,4 @@
-package com.theminespirit.core.forestry;
+package com.theminespirit.core.forestry.api;
 
 import com.theminespirit.core.observation.BlockCoord;
 

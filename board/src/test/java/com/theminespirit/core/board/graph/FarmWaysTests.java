@@ -3,8 +3,8 @@ package com.theminespirit.core.board.graph;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import com.theminespirit.core.husbandry.PetKind;
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.PetKind;
+import com.theminespirit.core.husbandry.api.Species;
 import org.junit.jupiter.api.Test;
 
 class FarmWaysTests {

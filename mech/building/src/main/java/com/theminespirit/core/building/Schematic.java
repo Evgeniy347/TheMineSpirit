@@ -1,5 +1,6 @@
 package com.theminespirit.core.building;
 
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.api.CatalogLimits;
 import java.util.ArrayList;

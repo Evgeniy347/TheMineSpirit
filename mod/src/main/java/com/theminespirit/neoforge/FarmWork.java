@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.farming.Above;
-import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmJob;
 import com.theminespirit.core.farming.FarmTile;
-import com.theminespirit.core.farming.HarvestMethod;
 import com.theminespirit.core.farming.SeedPolicy;
+import com.theminespirit.core.farming.api.CropKind;
+import com.theminespirit.core.farming.api.HarvestMethod;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Map;
 import java.util.Optional;

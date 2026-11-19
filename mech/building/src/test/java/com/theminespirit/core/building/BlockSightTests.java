@@ -2,6 +2,7 @@ package com.theminespirit.core.building;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.theminespirit.core.building.api.BlockSight;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.perception.Terrain;
 import com.theminespirit.core.perception.TerrainView;

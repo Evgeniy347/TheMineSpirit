@@ -2,8 +2,8 @@ package com.theminespirit.core.board;
 
 import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.building.EarthCover;
-import com.theminespirit.core.building.FillArea;
 import com.theminespirit.core.building.FillOrder;
+import com.theminespirit.core.building.api.FillArea;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;

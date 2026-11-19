@@ -2,6 +2,7 @@ package com.theminespirit.core.farming;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.theminespirit.core.farming.api.CropKind;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;

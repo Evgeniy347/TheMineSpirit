@@ -1,6 +1,6 @@
 package com.theminespirit.core.script;
 
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.reload.DataTables;
 import java.util.ArrayList;
 import java.util.List;

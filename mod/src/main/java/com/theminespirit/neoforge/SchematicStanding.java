@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.building.BuildBox;
 import com.theminespirit.core.building.RetreatPath;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;

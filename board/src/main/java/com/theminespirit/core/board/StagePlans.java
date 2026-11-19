@@ -4,7 +4,7 @@ import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.SchematicActions;
 import com.theminespirit.core.building.SchematicBlocks;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;

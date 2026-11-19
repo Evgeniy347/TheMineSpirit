@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge.husbandry;
 
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.Species;
 import java.util.Optional;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.Chicken;

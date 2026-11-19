@@ -2,7 +2,7 @@ package com.theminespirit.core.board;
 
 import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.building.SchematicActions;
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;

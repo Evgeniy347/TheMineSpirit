@@ -1,5 +1,6 @@
 package com.theminespirit.core.farming;
 
+import com.theminespirit.core.farming.api.CropKind;
 import java.util.Objects;
 
 public record CropState(CropKind kind, int age) {

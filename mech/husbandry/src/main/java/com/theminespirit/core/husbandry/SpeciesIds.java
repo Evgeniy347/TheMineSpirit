@@ -1,5 +1,6 @@
 package com.theminespirit.core.husbandry;
 
+import com.theminespirit.core.husbandry.api.Species;
 import java.util.Locale;
 
 public final class SpeciesIds {

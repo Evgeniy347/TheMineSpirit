@@ -1,7 +1,7 @@
 package com.theminespirit.core.script;
 
-import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmPlot;
+import com.theminespirit.core.farming.api.CropKind;
 import com.theminespirit.core.script.api.BuildingCoords;
 import com.theminespirit.core.script.api.ScriptArgs;
 import java.util.Locale;

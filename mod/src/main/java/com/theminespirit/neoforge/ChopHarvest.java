@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.Tree;
-import com.theminespirit.core.forestry.TreeSpecies;
-import com.theminespirit.core.forestry.TreeView;
+import com.theminespirit.core.forestry.api.ChopTuning;
+import com.theminespirit.core.forestry.api.TreeSpecies;
+import com.theminespirit.core.forestry.api.TreeView;
 import com.theminespirit.core.pickup.OverflowMode;
 import com.theminespirit.core.pickup.PickupTuning;
 import java.util.List;

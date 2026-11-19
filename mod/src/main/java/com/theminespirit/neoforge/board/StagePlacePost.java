@@ -5,7 +5,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolGate;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.building.SchematicGround;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.PlotLeveling;

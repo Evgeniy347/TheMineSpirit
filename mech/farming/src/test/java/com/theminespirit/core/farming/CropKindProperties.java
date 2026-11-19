@@ -3,6 +3,8 @@ package com.theminespirit.core.farming;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.farming.api.CropKind;
+import com.theminespirit.core.farming.api.HarvestMethod;
 import java.util.Optional;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;

@@ -3,8 +3,8 @@ package com.theminespirit.core.script;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.theminespirit.core.farming.CropKind;
 import com.theminespirit.core.farming.FarmPlot;
+import com.theminespirit.core.farming.api.CropKind;
 import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.script.api.ParamSpec;
 import com.theminespirit.core.script.api.ScriptSpec;

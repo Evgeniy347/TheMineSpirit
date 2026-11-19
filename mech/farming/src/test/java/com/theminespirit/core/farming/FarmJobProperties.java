@@ -2,6 +2,7 @@ package com.theminespirit.core.farming;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
+import com.theminespirit.core.farming.api.CropKind;
 import java.util.Optional;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;

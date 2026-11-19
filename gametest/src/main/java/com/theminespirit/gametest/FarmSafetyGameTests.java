@@ -12,7 +12,7 @@ import static com.theminespirit.gametest.FarmTestSupport.spawnWith;
 
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.engine.RunStatus;
-import com.theminespirit.core.farming.CropKind;
+import com.theminespirit.core.farming.api.CropKind;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.neoforge.SpiritEntity;

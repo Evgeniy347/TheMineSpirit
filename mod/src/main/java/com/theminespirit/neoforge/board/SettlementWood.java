@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.SettlementPlot;
 import java.util.HashMap;

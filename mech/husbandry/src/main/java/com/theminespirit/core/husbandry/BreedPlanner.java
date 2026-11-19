@@ -1,5 +1,7 @@
 package com.theminespirit.core.husbandry;
 
+import com.theminespirit.core.husbandry.api.FeedTable;
+import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Comparator;

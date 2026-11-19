@@ -12,7 +12,7 @@ import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.ToolGate;
 import com.theminespirit.core.building.SchematicBlocks;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;

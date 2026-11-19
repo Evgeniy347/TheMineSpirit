@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge.demo;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.building.BuildBox;
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.BuildingType;
+import com.theminespirit.core.building.api.BuildBox;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;

@@ -1,5 +1,7 @@
 package com.theminespirit.core.farming;
 
+import com.theminespirit.core.farming.api.CropKind;
+import com.theminespirit.core.farming.api.HarvestMethod;
 import com.theminespirit.core.mining.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;

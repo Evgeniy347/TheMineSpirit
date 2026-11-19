@@ -1,11 +1,11 @@
 package com.theminespirit.core.town;
 
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicBlocks;
-import com.theminespirit.core.building.WoodSpecies;
+import com.theminespirit.core.building.api.BuildRotation;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.BitSet;

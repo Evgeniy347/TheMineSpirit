@@ -3,6 +3,7 @@ package com.theminespirit.core.building;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafetyView;

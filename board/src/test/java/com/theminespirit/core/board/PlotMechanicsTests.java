@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicUpgrade;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.forestry.ChopPlan;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.observation.BlockCoord;

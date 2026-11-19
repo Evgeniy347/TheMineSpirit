@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.base.NamespacedId;
-import com.theminespirit.core.farming.CropKind;
+import com.theminespirit.core.farming.api.CropKind;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;

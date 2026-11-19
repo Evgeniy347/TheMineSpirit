@@ -1,10 +1,10 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.forestry.ChopTuning;
 import com.theminespirit.core.forestry.NotATree;
 import com.theminespirit.core.forestry.TreeDetection;
 import com.theminespirit.core.forestry.TreeShape;
-import com.theminespirit.core.forestry.TreeSpecies;
+import com.theminespirit.core.forestry.api.ChopTuning;
+import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.mining.GatherPolicy;
 import com.theminespirit.core.mining.StoneSource;
 import com.theminespirit.core.observation.BlockCoord;

@@ -1,5 +1,6 @@
 package com.theminespirit.core.building;
 
+import com.theminespirit.core.building.api.WoodSpecies;
 import java.util.Objects;
 
 public final class BlockMatch {

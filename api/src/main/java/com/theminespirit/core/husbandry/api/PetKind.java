@@ -1,4 +1,4 @@
-package com.theminespirit.core.husbandry;
+package com.theminespirit.core.husbandry.api;
 
 import java.util.Arrays;
 import java.util.Locale;

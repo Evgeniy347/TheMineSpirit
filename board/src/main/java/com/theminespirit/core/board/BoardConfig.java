@@ -1,7 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.theminespirit.core.husbandry.Species;
+import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.inventory.api.JsonResource;
 import com.theminespirit.core.reload.api.TableSlot;
 import java.util.ArrayList;

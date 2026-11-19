@@ -2,9 +2,9 @@ package com.theminespirit.core.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.theminespirit.core.building.BuildRotation;
 import com.theminespirit.core.building.MineLayout;
 import com.theminespirit.core.building.Preset;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.town.PlotLeveling;

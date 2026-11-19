@@ -2,7 +2,7 @@ package com.theminespirit.neoforge;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.building.BuildBox;
+import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import org.junit.jupiter.api.Test;

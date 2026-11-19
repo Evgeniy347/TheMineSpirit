@@ -2,7 +2,7 @@ package com.theminespirit.live;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.theminespirit.core.forestry.TreeView;
+import com.theminespirit.core.forestry.api.TreeView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.FloatingBlocks;
 import com.theminespirit.core.town.StrayRule;
