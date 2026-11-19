@@ -125,7 +125,9 @@
     "standSearchHeight": 8,
     "stillWatchRadius": 24,
     "rescueRelapseRadius": 8,
-    "workStandRadius": 3
+    "workStandRadius": 3,
+    "fenceWatchRadius": 32,
+    "craterBlocksEstimateRadius": 3
   },
   "levels": {
     "BUILD_MINE": 4,

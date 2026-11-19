@@ -27,7 +27,7 @@ final class PitFillPlan {
         }
         int blocks = target.craterBlocks() > 0
                 ? target.craterBlocks()
-                : craterBlocksEstimate(BoardTuning.CRATER_BLOCKS_ESTIMATE_RADIUS);
+                : craterBlocksEstimate(BoardTuning.craterBlocksEstimateRadius());
         int depth = Math.max(1, Math.min(blocks, CatalogLimits.WORLD_Y_MAX - CatalogLimits.WORLD_Y_MIN));
         int bottom = Math.max(CatalogLimits.WORLD_Y_MIN, target.target().y() - depth + 1);
         return new SequenceNode(List.of(

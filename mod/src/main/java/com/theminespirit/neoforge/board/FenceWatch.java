@@ -71,7 +71,7 @@ public final class FenceWatch {
     }
 
     private static boolean nearSettlement(ServerLevel level, BlockPos pos) {
-        long limit = (long) BoardTuning.FENCE_WATCH_RADIUS * BoardTuning.FENCE_WATCH_RADIUS;
+        long limit = (long) BoardTuning.fenceWatchRadius() * BoardTuning.fenceWatchRadius();
         for (Entity entity : level.getAllEntities()) {
             if (!(entity instanceof HomedSpirit spirit) || spirit.isRemoved()) {
                 continue;

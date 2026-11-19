@@ -88,6 +88,8 @@ public final class BoardTuning {
             "rebuildPercent",
             "logSummaryTicks",
             "leaseSuspendTimeoutTicks",
+            "fenceWatchRadius",
+            "craterBlocksEstimateRadius",
             "standSearchRadius",
             "standSearchHeight",
             "stillWatchRadius",
@@ -110,6 +112,14 @@ public final class BoardTuning {
 
     public static int craterTerritoryRadius() {
         return (int) interval("craterTerritoryRadius", CRATER_TERRITORY_RADIUS);
+    }
+
+    public static int craterBlocksEstimateRadius() {
+        return (int) Math.max(1, interval("craterBlocksEstimateRadius", CRATER_BLOCKS_ESTIMATE_RADIUS));
+    }
+
+    public static int fenceWatchRadius() {
+        return (int) Math.max(1, interval("fenceWatchRadius", FENCE_WATCH_RADIUS));
     }
 
     public static int maxPending() {
