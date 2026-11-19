@@ -4,6 +4,7 @@ import com.theminespirit.core.building.BuildSupplies;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.neoforge.BlockItems;
 import com.theminespirit.neoforge.BlockLocator;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -15,7 +16,6 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 
 public final class SpiritBuildSupplies implements BuildSupplies {
-    private static final int CHEST_RADIUS = 8;
 
     private final SpiritEntity spirit;
 
@@ -40,7 +40,10 @@ public final class SpiritBuildSupplies implements BuildSupplies {
             return List.of();
         }
         BlockLocator.Search search = BlockLocator.search(
-                spirit.level(), spirit.blockPosition(), CHEST_RADIUS, ContainerAccess.allowedBlocks());
+                spirit.level(),
+                spirit.blockPosition(),
+                SpiritConfig.storageSearchRadius(),
+                ContainerAccess.allowedBlocks());
         List<BlockPos> found = new ArrayList<>();
         while (!search.done()) {
             found.addAll(search.step(4));
@@ -71,7 +74,7 @@ public final class SpiritBuildSupplies implements BuildSupplies {
                             "count",
                             take,
                             "radius",
-                            CHEST_RADIUS)));
+                            SpiritConfig.storageSearchRadius())));
             rest -= take;
         }
         return List.copyOf(steps);

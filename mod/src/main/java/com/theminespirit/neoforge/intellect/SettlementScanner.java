@@ -8,6 +8,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.api.Point;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.husbandry.HerdSpecies;
 import java.util.ArrayList;
@@ -30,7 +31,6 @@ import net.minecraft.world.phys.AABB;
 
 public final class SettlementScanner {
     public static final double ENEMY_RADIUS = 16.0;
-    public static final int FORAGE_WATER_RADIUS = 8;
 
     public record Scan(List<EnemyFact> enemies, Forage forage) {
         public Scan {
@@ -127,8 +127,8 @@ public final class SettlementScanner {
 
     private static boolean waterNear(ServerLevel level, SpiritEntity spirit) {
         BlockPos center = spirit.blockPosition();
-        for (int dx = -FORAGE_WATER_RADIUS; dx <= FORAGE_WATER_RADIUS; dx++) {
-            for (int dz = -FORAGE_WATER_RADIUS; dz <= FORAGE_WATER_RADIUS; dz++) {
+        for (int dx = -SpiritConfig.forageWaterRadius(); dx <= SpiritConfig.forageWaterRadius(); dx++) {
+            for (int dz = -SpiritConfig.forageWaterRadius(); dz <= SpiritConfig.forageWaterRadius(); dz++) {
                 for (int dy = -1; dy <= 1; dy++) {
                     if (level.getFluidState(center.offset(dx, dy, dz)).is(FluidTags.WATER)) {
                         return true;

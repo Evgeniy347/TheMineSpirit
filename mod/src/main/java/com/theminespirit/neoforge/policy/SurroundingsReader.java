@@ -4,6 +4,7 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BodyFlags;
 import com.theminespirit.core.policy.LocalSurroundings;
 import com.theminespirit.neoforge.LevelSafetyView;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
@@ -11,7 +12,6 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
 
 final class SurroundingsReader {
-    static final int WATER_SEARCH_RADIUS = 6;
 
     private SurroundingsReader() {}
 
@@ -29,8 +29,8 @@ final class SurroundingsReader {
         BlockPos best = null;
         double bestDistance = Double.MAX_VALUE;
         int reads = 0;
-        for (int dx = -WATER_SEARCH_RADIUS; dx <= WATER_SEARCH_RADIUS; dx++) {
-            for (int dz = -WATER_SEARCH_RADIUS; dz <= WATER_SEARCH_RADIUS; dz++) {
+        for (int dx = -SpiritConfig.waterSearchRadius(); dx <= SpiritConfig.waterSearchRadius(); dx++) {
+            for (int dz = -SpiritConfig.waterSearchRadius(); dz <= SpiritConfig.waterSearchRadius(); dz++) {
                 for (int dy = -1; dy <= 1; dy++) {
                     BlockPos pos = feet.offset(dx, dy, dz);
                     reads++;

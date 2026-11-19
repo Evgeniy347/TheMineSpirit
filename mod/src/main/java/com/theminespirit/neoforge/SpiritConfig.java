@@ -14,6 +14,9 @@ public final class SpiritConfig {
     public static final int DEFAULT_MORE_COUNT_MAX = 64;
     public static final int DEFAULT_COLLECT_RADIUS = 4;
     public static final int DEFAULT_TIGHT_COLLECT_RADIUS = 3;
+    public static final int DEFAULT_STORAGE_SEARCH_RADIUS = 8;
+    public static final int DEFAULT_WATER_SEARCH_RADIUS = 6;
+    public static final int DEFAULT_FORAGE_WATER_RADIUS = 8;
 
     private static final ModConfigSpec SPEC;
     private static final ModConfigSpec.IntValue CHUNK_LOADING_RADIUS;
@@ -30,6 +33,9 @@ public final class SpiritConfig {
     private static final ModConfigSpec.IntValue MORE_COUNT_MAX;
     private static final ModConfigSpec.IntValue COLLECT_RADIUS;
     private static final ModConfigSpec.IntValue TIGHT_COLLECT_RADIUS;
+    private static final ModConfigSpec.IntValue STORAGE_SEARCH_RADIUS;
+    private static final ModConfigSpec.IntValue WATER_SEARCH_RADIUS;
+    private static final ModConfigSpec.IntValue FORAGE_WATER_RADIUS;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -95,6 +101,18 @@ public final class SpiritConfig {
                         "Радиус сбора для мелких работ — грядка и животные: рядом стоят чужие вещи, их не трогаем.",
                         "Шире — дух стаскивает дроп соседних работ.")
                 .defineInRange("tightCollectRadius", DEFAULT_TIGHT_COLLECT_RADIUS, 1, 16);
+        STORAGE_SEARCH_RADIUS = builder.comment(
+                        "Радиус поиска сундуков и складов вокруг точки, в блоках.",
+                        "Шире — дух читает чужие склады и тратит тик на лишние контейнеры.")
+                .defineInRange("storageSearchRadius", DEFAULT_STORAGE_SEARCH_RADIUS, 1, 64);
+        WATER_SEARCH_RADIUS = builder.comment(
+                        "Радиус поиска воды вокруг блока для полива и ведра, в блоках.",
+                        "Шире — дух видит воду сквозь стены дальше и чаще берётся за дальний источник.")
+                .defineInRange("waterSearchRadius", DEFAULT_WATER_SEARCH_RADIUS, 1, 32);
+        FORAGE_WATER_RADIUS = builder.comment(
+                        "Радиус поиска воды при выборе места сбора, в блоках.",
+                        "Шире — сбор считается обеспеченным водой даже на сухом краю поселения.")
+                .defineInRange("forageWaterRadius", DEFAULT_FORAGE_WATER_RADIUS, 1, 32);
         builder.pop();
         SPEC = builder.build();
     }
@@ -156,6 +174,18 @@ public final class SpiritConfig {
 
     public static int tightCollectRadius() {
         return loaded(TIGHT_COLLECT_RADIUS, DEFAULT_TIGHT_COLLECT_RADIUS);
+    }
+
+    public static int storageSearchRadius() {
+        return loaded(STORAGE_SEARCH_RADIUS, DEFAULT_STORAGE_SEARCH_RADIUS);
+    }
+
+    public static int waterSearchRadius() {
+        return loaded(WATER_SEARCH_RADIUS, DEFAULT_WATER_SEARCH_RADIUS);
+    }
+
+    public static int forageWaterRadius() {
+        return loaded(FORAGE_WATER_RADIUS, DEFAULT_FORAGE_WATER_RADIUS);
     }
 
     public static int moreCountMax() {

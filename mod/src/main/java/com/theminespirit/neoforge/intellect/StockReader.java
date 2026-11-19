@@ -6,6 +6,7 @@ import com.theminespirit.core.intellect.NutritionTable;
 import com.theminespirit.core.intellect.StockCatalog;
 import com.theminespirit.core.intellect.StockLots;
 import com.theminespirit.core.tactics.api.Point;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.inventory.StackMapper;
@@ -22,7 +23,6 @@ import net.minecraft.world.level.block.Block;
 
 public final class StockReader {
     public static final int STOCK_CONTAINER_BUDGET = 8;
-    public static final int STOCK_RADIUS = 8;
     public static final int STOCK_HEIGHT = 4;
 
     private StockReader() {}
@@ -61,9 +61,13 @@ public final class StockReader {
         BlockPos center = centerOf(members, home);
         Set<Block> allowed = ContainerAccess.allowedBlocks();
         if (center != null) {
-            for (int dx = -STOCK_RADIUS; dx <= STOCK_RADIUS && containers < STOCK_CONTAINER_BUDGET; dx++) {
+            for (int dx = -SpiritConfig.storageSearchRadius();
+                    dx <= SpiritConfig.storageSearchRadius() && containers < STOCK_CONTAINER_BUDGET;
+                    dx++) {
                 for (int dy = -STOCK_HEIGHT; dy <= STOCK_HEIGHT && containers < STOCK_CONTAINER_BUDGET; dy++) {
-                    for (int dz = -STOCK_RADIUS; dz <= STOCK_RADIUS && containers < STOCK_CONTAINER_BUDGET; dz++) {
+                    for (int dz = -SpiritConfig.storageSearchRadius();
+                            dz <= SpiritConfig.storageSearchRadius() && containers < STOCK_CONTAINER_BUDGET;
+                            dz++) {
                         reads++;
                         BlockPos pos = center.offset(dx, dy, dz);
                         if (!level.isLoaded(pos)) {
