@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.reload.TableDefinition;
+import com.theminespirit.core.reload.api.TableDefinition;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

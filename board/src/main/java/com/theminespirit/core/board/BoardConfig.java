@@ -3,7 +3,7 @@ package com.theminespirit.core.board;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.husbandry.Species;
 import com.theminespirit.core.inventory.JsonResource;
-import com.theminespirit.core.reload.TableSlot;
+import com.theminespirit.core.reload.api.TableSlot;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;

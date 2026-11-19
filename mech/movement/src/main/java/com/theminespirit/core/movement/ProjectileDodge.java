@@ -6,7 +6,7 @@ import com.theminespirit.core.movement.ProjectileTrajectory.Bounds;
 import com.theminespirit.core.movement.ProjectileTrajectory.Projectile;
 import com.theminespirit.core.movement.ProjectileTrajectory.Threat;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.reload.TableSlot;
+import com.theminespirit.core.reload.api.TableSlot;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;

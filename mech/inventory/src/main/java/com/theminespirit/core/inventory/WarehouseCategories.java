@@ -1,7 +1,7 @@
 package com.theminespirit.core.inventory;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.theminespirit.core.reload.TableSlot;
+import com.theminespirit.core.reload.api.TableSlot;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;

@@ -1,4 +1,4 @@
-package com.theminespirit.core.reload;
+package com.theminespirit.core.reload.api;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -65,7 +65,7 @@ public final class TableHolder<T> {
                 .status();
     }
 
-    static String hashOf(String content) {
+    public static String hashOf(String content) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] bytes = digest.digest(content.getBytes(StandardCharsets.UTF_8));

@@ -26,6 +26,8 @@ import com.theminespirit.core.movement.ProjectileDodge;
 import com.theminespirit.core.movement.WalkOutRules;
 import com.theminespirit.core.observation.ObservationLimits;
 import com.theminespirit.core.processing.ProcessingRules;
+import com.theminespirit.core.reload.api.TableDefinition;
+import com.theminespirit.core.reload.api.TableHolder;
 import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;

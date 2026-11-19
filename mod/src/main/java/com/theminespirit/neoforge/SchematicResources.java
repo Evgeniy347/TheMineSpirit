@@ -7,7 +7,7 @@ import com.theminespirit.core.building.SchematicPart;
 import com.theminespirit.core.building.SchematicTextParser;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.reload.TableHolder;
+import com.theminespirit.core.reload.api.TableHolder;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;

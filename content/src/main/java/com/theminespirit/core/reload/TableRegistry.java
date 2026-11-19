@@ -1,5 +1,10 @@
 package com.theminespirit.core.reload;
 
+import com.theminespirit.core.reload.api.ContentSource;
+import com.theminespirit.core.reload.api.LoadedContent;
+import com.theminespirit.core.reload.api.TableDefinition;
+import com.theminespirit.core.reload.api.TableHolder;
+import com.theminespirit.core.reload.api.TableStatus;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

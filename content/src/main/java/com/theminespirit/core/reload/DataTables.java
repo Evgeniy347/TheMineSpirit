@@ -36,6 +36,8 @@ import com.theminespirit.core.observation.ObservationLimits;
 import com.theminespirit.core.pickup.MagnetRules;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.processing.ProcessingRules;
+import com.theminespirit.core.reload.api.ContentSource;
+import com.theminespirit.core.reload.api.TableHolder;
 import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;

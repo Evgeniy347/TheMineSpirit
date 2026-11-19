@@ -13,6 +13,7 @@ import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentLevels;
 import com.theminespirit.core.pickup.MagnetRules;
 import com.theminespirit.core.processing.ProcessingRules;
+import com.theminespirit.core.reload.api.TableHolder;
 import com.theminespirit.core.repair.RepairData;
 import java.util.Map;
 

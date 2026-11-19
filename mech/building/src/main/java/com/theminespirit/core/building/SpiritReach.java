@@ -1,7 +1,7 @@
 package com.theminespirit.core.building;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.reload.TableSlot;
+import com.theminespirit.core.reload.api.TableSlot;
 import java.util.Objects;
 import java.util.function.Supplier;
 

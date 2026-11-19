@@ -6,6 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.reload.api.ContentSource;
+import com.theminespirit.core.reload.api.LoadedContent;
+import com.theminespirit.core.reload.api.TableDefinition;
+import com.theminespirit.core.reload.api.TableHolder;
+import com.theminespirit.core.reload.api.TableStatus;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;

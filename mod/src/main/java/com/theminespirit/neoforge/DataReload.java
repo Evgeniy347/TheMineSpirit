@@ -2,11 +2,11 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
-import com.theminespirit.core.reload.ContentSource;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.reload.LoadedContent;
 import com.theminespirit.core.reload.TableRegistry;
-import com.theminespirit.core.reload.TableStatus;
+import com.theminespirit.core.reload.api.ContentSource;
+import com.theminespirit.core.reload.api.LoadedContent;
+import com.theminespirit.core.reload.api.TableStatus;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;

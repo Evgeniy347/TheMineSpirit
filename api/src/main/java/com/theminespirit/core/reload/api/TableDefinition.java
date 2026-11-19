@@ -1,4 +1,4 @@
-package com.theminespirit.core.reload;
+package com.theminespirit.core.reload.api;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +58,7 @@ public record TableDefinition<T>(String id, List<String> resourcePaths, Parser<T
         T parse(String json, String origin);
     }
 
-    Optional<List<LoadedContent>> read(ContentSource source) {
+    public Optional<List<LoadedContent>> read(ContentSource source) {
         List<LoadedContent> contents = new ArrayList<>(resourcePaths.size());
         for (String path : resourcePaths) {
             Optional<LoadedContent> loaded = source.read(path);

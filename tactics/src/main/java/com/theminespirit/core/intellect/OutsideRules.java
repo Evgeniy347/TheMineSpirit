@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.inventory.ValueTable;
 import com.theminespirit.core.observation.IdFilter;
-import com.theminespirit.core.reload.TableSlot;
+import com.theminespirit.core.reload.api.TableSlot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

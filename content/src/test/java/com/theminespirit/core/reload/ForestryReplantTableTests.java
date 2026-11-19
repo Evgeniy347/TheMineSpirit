@@ -3,6 +3,11 @@ package com.theminespirit.core.reload;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.theminespirit.core.forestry.ReplantData;
+import com.theminespirit.core.reload.api.ContentSource;
+import com.theminespirit.core.reload.api.LoadedContent;
+import com.theminespirit.core.reload.api.TableDefinition;
+import com.theminespirit.core.reload.api.TableHolder;
+import com.theminespirit.core.reload.api.TableStatus;
 import java.time.Clock;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

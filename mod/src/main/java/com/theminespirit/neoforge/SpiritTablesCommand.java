@@ -4,8 +4,8 @@ import static net.minecraft.commands.Commands.literal;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.reload.TableHolder;
-import com.theminespirit.core.reload.TableStatus;
+import com.theminespirit.core.reload.api.TableHolder;
+import com.theminespirit.core.reload.api.TableStatus;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import net.minecraft.commands.CommandSourceStack;

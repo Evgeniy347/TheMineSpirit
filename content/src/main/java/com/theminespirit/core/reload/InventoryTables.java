@@ -12,6 +12,7 @@ import com.theminespirit.core.mining.DropTable;
 import com.theminespirit.core.mining.ToolReserve;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.ProtectionConfig;
+import com.theminespirit.core.reload.api.TableHolder;
 import java.util.concurrent.atomic.AtomicInteger;
 
 record InventoryTables(

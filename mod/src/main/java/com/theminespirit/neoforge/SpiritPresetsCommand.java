@@ -6,7 +6,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.reload.TableStatus;
+import com.theminespirit.core.reload.api.TableStatus;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 

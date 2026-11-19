@@ -78,8 +78,8 @@ class ApiModuleGuardTests {
             "core/farming/HarvestMethod.java",
             "core/forestry/TreeSpecies.java",
             "core/inventory/JsonResource.java",
-            "core/reload/TableHolder.java",
-            "core/reload/TableStatus.java",
+            "core/reload/api/TableHolder.java",
+            "core/reload/api/TableStatus.java",
             "core/tactics/Point.java",
             "core/Lookup.java");
 

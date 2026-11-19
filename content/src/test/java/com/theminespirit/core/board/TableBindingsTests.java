@@ -11,7 +11,7 @@ import com.theminespirit.core.intellect.OutsideRules;
 import com.theminespirit.core.intellect.defense.DefenseProfile;
 import com.theminespirit.core.processing.ProcessingRules;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.reload.TableHolder;
+import com.theminespirit.core.reload.api.TableHolder;
 import com.theminespirit.core.repair.RepairData;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;

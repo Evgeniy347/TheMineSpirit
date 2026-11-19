@@ -7,6 +7,8 @@ import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
 import com.theminespirit.core.building.SchematicTextParser;
 import com.theminespirit.core.inventory.JsonResource;
+import com.theminespirit.core.reload.api.TableDefinition;
+import com.theminespirit.core.reload.api.TableHolder;
 import com.theminespirit.core.tactics.TacticsConfig;
 import java.util.LinkedHashMap;
 import java.util.List;

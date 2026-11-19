@@ -5,11 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.building.Schematic;
-import com.theminespirit.core.reload.ContentSource;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.reload.LoadedContent;
-import com.theminespirit.core.reload.TableHolder;
-import com.theminespirit.core.reload.TableStatus;
+import com.theminespirit.core.reload.api.ContentSource;
+import com.theminespirit.core.reload.api.LoadedContent;
+import com.theminespirit.core.reload.api.TableHolder;
+import com.theminespirit.core.reload.api.TableStatus;
 import java.time.Clock;
 import java.util.List;
 import java.util.Map;

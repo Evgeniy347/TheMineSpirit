@@ -3,8 +3,8 @@ package com.theminespirit.core.building;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.theminespirit.core.inventory.JsonResource;
-import com.theminespirit.core.reload.LoadedContent;
-import com.theminespirit.core.reload.TableStatus;
+import com.theminespirit.core.reload.api.LoadedContent;
+import com.theminespirit.core.reload.api.TableStatus;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package com.theminespirit.core.reload;
+package com.theminespirit.core.reload.api;
 
 import java.time.Instant;
 import java.util.Objects;

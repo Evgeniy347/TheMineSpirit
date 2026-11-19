@@ -9,6 +9,7 @@ import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.building.BuildData;
 import com.theminespirit.core.building.PresetLibrary;
 import com.theminespirit.core.building.Schematic;
+import com.theminespirit.core.reload.api.TableHolder;
 import com.theminespirit.core.town.TownRules;
 import java.util.Map;
 

@@ -4,6 +4,7 @@ import com.theminespirit.core.movement.PersonalSpace;
 import com.theminespirit.core.movement.ProjectileDodge;
 import com.theminespirit.core.movement.WalkOutRules;
 import com.theminespirit.core.observation.ObservationLimits;
+import com.theminespirit.core.reload.api.TableHolder;
 
 record MovementTables(
         TableHolder<PersonalSpace> personalSpace,

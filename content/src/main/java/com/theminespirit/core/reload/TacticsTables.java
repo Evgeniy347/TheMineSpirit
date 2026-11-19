@@ -3,6 +3,7 @@ package com.theminespirit.core.reload;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.intellect.defense.DefenseProfile;
 import com.theminespirit.core.intellect.defense.DefenseProfileParser;
+import com.theminespirit.core.reload.api.TableHolder;
 import com.theminespirit.core.tactics.TacticsConfig;
 import com.theminespirit.core.tactics.adapter.TacticsAdapterSettings;
 

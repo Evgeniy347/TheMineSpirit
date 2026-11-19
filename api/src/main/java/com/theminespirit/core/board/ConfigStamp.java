@@ -1,6 +1,6 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.reload.TableHolder;
+import com.theminespirit.core.reload.api.TableHolder;
 import java.util.Objects;
 import java.util.function.Supplier;
 

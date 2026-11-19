@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.board.ConfigStamp;
-import com.theminespirit.core.reload.TableHolder;
-import com.theminespirit.core.reload.TableStatus;
+import com.theminespirit.core.reload.api.TableHolder;
+import com.theminespirit.core.reload.api.TableStatus;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.Situation;

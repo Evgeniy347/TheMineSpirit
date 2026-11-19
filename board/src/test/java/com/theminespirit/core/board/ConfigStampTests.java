@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.core.reload.TableHolder;
-import com.theminespirit.core.reload.TableStatus;
+import com.theminespirit.core.reload.api.TableHolder;
+import com.theminespirit.core.reload.api.TableStatus;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;

@@ -1,6 +1,6 @@
 package com.theminespirit.core.tactics;
 
-import com.theminespirit.core.reload.TableSlot;
+import com.theminespirit.core.reload.api.TableSlot;
 import java.util.function.Supplier;
 
 public record TacticsConfig(EnemyProfiles enemies, ScoreWeights weights, Rules rules, Modes modes) {
