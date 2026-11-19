@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.graph.FarmRules;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphState;
@@ -30,8 +31,6 @@ final class More7Inputs {
     private static final int FIELD_RADIUS = 24;
     private static final int FIELD_BELOW = 4;
     private static final int FIELD_ABOVE = 4;
-    private static final int ANIMAL_RADIUS = 48;
-    private static final int PEN_RADIUS = 12;
     private static final String PEN_PREFIX = "pen_";
 
     private More7Inputs() {}
@@ -108,7 +107,9 @@ final class More7Inputs {
                 .toList();
         Map<String, Integer> species = new LinkedHashMap<>();
         for (Animal animal : level.getEntitiesOfClass(
-                Animal.class, new AABB(new BlockPos(home.x(), home.y(), home.z())).inflate(ANIMAL_RADIUS))) {
+                Animal.class,
+                new AABB(new BlockPos(home.x(), home.y(), home.z()))
+                        .inflate(BoardConfig.current().facts().animalRadius()))) {
             String kind = species(animal);
             if (kind == null || animal.isRemoved() || !insidePen(animal.blockPosition(), pens)) {
                 continue;
@@ -131,7 +132,9 @@ final class More7Inputs {
     private static boolean insidePen(BlockPos at, List<GraphFacts.Position> pens) {
         return pens.stream().anyMatch(pen -> {
             BlockPos center = new BlockPos(pen.x(), pen.y(), pen.z());
-            return at.distSqr(center) <= (double) PEN_RADIUS * PEN_RADIUS;
+            return at.distSqr(center)
+                    <= (double) BoardConfig.current().facts().penRadius()
+                            * BoardConfig.current().facts().penRadius();
         });
     }
 

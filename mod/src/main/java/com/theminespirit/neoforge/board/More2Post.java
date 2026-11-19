@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.MorePlans;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.WoolRules;
@@ -20,8 +21,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 final class More2Post {
-    private static final int ANIMAL_RADIUS = 48;
-    private static final int VILLAGER_RADIUS = 48;
     private static final String MORE2_TRAIL = "more2_trail";
 
     private More2Post() {}
@@ -88,7 +87,8 @@ final class More2Post {
 
     private static Species herdSpecies(GraphPost post, BlockCoord home) {
         Vec3 center = new Vec3(home.x() + 0.5, home.y(), home.z() + 0.5);
-        for (Animal animal : HerdSurvey.query(post.level, center, ANIMAL_RADIUS)) {
+        for (Animal animal : HerdSurvey.query(
+                post.level, center, BoardConfig.current().facts().animalRadius())) {
             if (animal.isRemoved() || !animal.isAlive()) {
                 continue;
             }
@@ -103,9 +103,13 @@ final class More2Post {
     private static boolean guardVillager(GraphPost post, GraphTickets.Ticket ticket) {
         BlockCoord home = home(post);
         BlockPos center = MoreScan.pos(home);
-        Optional<Villager> villager =
-                post.level.getEntitiesOfClass(Villager.class, new AABB(center).inflate(VILLAGER_RADIUS)).stream()
-                        .findFirst();
+        Optional<Villager> villager = post
+                .level
+                .getEntitiesOfClass(
+                        Villager.class,
+                        new AABB(center).inflate(BoardConfig.current().facts().villagerRadius()))
+                .stream()
+                .findFirst();
         if (villager.isEmpty()) {
             return false;
         }

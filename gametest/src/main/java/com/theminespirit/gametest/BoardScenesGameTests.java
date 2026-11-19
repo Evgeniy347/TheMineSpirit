@@ -126,7 +126,8 @@ public final class BoardScenesGameTests {
                 base.tools(),
                 base.wool(),
                 base.hive(),
-                base.plans()));
+                base.plans(),
+                base.facts()));
     }
 
     private static void restoreUndoNoProgressWhenFinished(GameTestHelper helper, SpiritRun run) {

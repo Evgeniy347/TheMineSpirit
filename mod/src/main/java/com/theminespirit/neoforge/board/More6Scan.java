@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.More6Rules;
 import com.theminespirit.core.observation.BlockCoord;
@@ -19,7 +20,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
 final class More6Scan {
-    private static final int BED_RADIUS = 20;
     private static final int BED_VERTICAL = 6;
     private static final int LOOSE_RADIUS = 24;
     private static final int WATER_BELOW = 4;
@@ -36,8 +36,12 @@ final class More6Scan {
     static int beds(ServerLevel level, BlockCoord home) {
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
         int placed = 0;
-        for (int dx = -BED_RADIUS; dx <= BED_RADIUS; dx++) {
-            for (int dz = -BED_RADIUS; dz <= BED_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().bedRadius();
+                dx <= BoardConfig.current().facts().bedRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().bedRadius();
+                    dz <= BoardConfig.current().facts().bedRadius();
+                    dz++) {
                 for (int dy = -BED_VERTICAL; dy <= BED_VERTICAL; dy++) {
                     BlockPos at = center.offset(dx, dy, dz);
                     if (level.isLoaded(at) && level.getBlockState(at).getBlock() instanceof BedBlock) {

@@ -27,7 +27,8 @@ public record BoardConfig(
         ToolsConfig tools,
         Map<String, Integer> wool,
         Map<String, Integer> hive,
-        PlanTuning plans) {
+        PlanTuning plans,
+        FactTuning facts) {
     public static final String RESOURCE = "data/theminespirit/board/board.json";
 
     private static final TableSlot<BoardConfig> SOURCE = new TableSlot<>(BoardConfig::readFromClasspath);
@@ -68,6 +69,7 @@ public record BoardConfig(
         Objects.requireNonNull(hive, "Данные пчёл не могут быть null: пустую таблицу задают пустой картой, а не null");
         hive = Map.copyOf(hive);
         Objects.requireNonNull(plans, "Размеры планов не могут быть null: без них план задания пустой, а дух встанет");
+        Objects.requireNonNull(facts, "Радиусы фактов не могут быть null: без них сканирование мира молчит");
     }
 
     public BoardConfig(Map<String, Integer> priorities, Map<String, Integer> modifiers, Map<String, Long> intervals) {
@@ -82,7 +84,8 @@ public record BoardConfig(
                 ToolsConfig.defaults(),
                 Map.of(),
                 Map.of(),
-                PlanTuning.defaults());
+                PlanTuning.defaults(),
+                FactTuning.defaults());
     }
 
     public static BoardConfig fromJson(String json, String origin) {
@@ -106,8 +109,9 @@ public record BoardConfig(
         Map<String, Integer> wool = integers(root.get("wool"), origin, "wool", WoolRules::woolKey, false);
         Map<String, Integer> hive = integers(root.get("hive"), origin, "hive", HiveRules::hiveKey, false);
         PlanTuning plans = PlanTuning.fromJson(root.get("plans"), origin);
+        FactTuning facts = FactTuning.fromJson(root.get("facts"), origin);
         return new BoardConfig(
-                priorities, modifiers, intervals, levels, herd, immovable, products, tools, wool, hive, plans);
+                priorities, modifiers, intervals, levels, herd, immovable, products, tools, wool, hive, plans, facts);
     }
 
     public static BoardConfig current() {

@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphState;
@@ -21,14 +22,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
 final class More2Inputs {
-    private static final int ANIMAL_RADIUS = 48;
-    private static final int PEN_RADIUS = 12;
-    private static final int WILD_RADIUS = 16;
-    private static final int VILLAGER_RADIUS = 48;
-    private static final int BED_RADIUS = 20;
     private static final int BED_VERTICAL = 6;
-    private static final int HAZARD_RADIUS = 3;
-    private static final int FLOW_RADIUS = 8;
     private static final int SLOTS = 36;
     private static final String MINE = "mine";
     private static final String BED = "bed";
@@ -126,9 +120,15 @@ final class More2Inputs {
     private static int[] nearBuilding(ServerLevel level, GraphFacts.Position position) {
         int[] counts = new int[2];
         BlockPos center = new BlockPos(position.x(), position.y(), position.z());
-        for (int dx = -HAZARD_RADIUS; dx <= HAZARD_RADIUS; dx++) {
-            for (int dy = -HAZARD_RADIUS; dy <= HAZARD_RADIUS; dy++) {
-                for (int dz = -HAZARD_RADIUS; dz <= HAZARD_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().hazardRadius();
+                dx <= BoardConfig.current().facts().hazardRadius();
+                dx++) {
+            for (int dy = -BoardConfig.current().facts().hazardRadius();
+                    dy <= BoardConfig.current().facts().hazardRadius();
+                    dy++) {
+                for (int dz = -BoardConfig.current().facts().hazardRadius();
+                        dz <= BoardConfig.current().facts().hazardRadius();
+                        dz++) {
                     BlockPos at = center.offset(dx, dy, dz);
                     if (!level.isLoaded(at)) {
                         continue;
@@ -150,9 +150,15 @@ final class More2Inputs {
         int lava = 0;
         for (GraphFacts.Position center : centers) {
             BlockPos at = new BlockPos(center.x(), center.y(), center.z());
-            for (int dx = -FLOW_RADIUS; dx <= FLOW_RADIUS; dx++) {
-                for (int dy = -FLOW_RADIUS; dy <= FLOW_RADIUS; dy++) {
-                    for (int dz = -FLOW_RADIUS; dz <= FLOW_RADIUS; dz++) {
+            for (int dx = -BoardConfig.current().facts().flowRadius();
+                    dx <= BoardConfig.current().facts().flowRadius();
+                    dx++) {
+                for (int dy = -BoardConfig.current().facts().flowRadius();
+                        dy <= BoardConfig.current().facts().flowRadius();
+                        dy++) {
+                    for (int dz = -BoardConfig.current().facts().flowRadius();
+                            dz <= BoardConfig.current().facts().flowRadius();
+                            dz++) {
                         BlockPos pos = at.offset(dx, dy, dz);
                         if (!level.isLoaded(pos)) {
                             continue;
@@ -184,7 +190,8 @@ final class More2Inputs {
         int total = 0;
         int penned = 0;
         int wild = 0;
-        for (Animal animal : level.getEntitiesOfClass(Animal.class, box(center, ANIMAL_RADIUS))) {
+        for (Animal animal : level.getEntitiesOfClass(
+                Animal.class, box(center, BoardConfig.current().facts().animalRadius()))) {
             if (animal.isRemoved()) {
                 continue;
             }
@@ -192,7 +199,9 @@ final class More2Inputs {
             BlockPos at = animal.blockPosition();
             if (insidePen(at, pens)) {
                 penned++;
-            } else if (at.distSqr(center) > (double) WILD_RADIUS * WILD_RADIUS) {
+            } else if (at.distSqr(center)
+                    > (double) BoardConfig.current().facts().wildRadius()
+                            * BoardConfig.current().facts().wildRadius()) {
                 wild++;
             }
         }
@@ -201,7 +210,9 @@ final class More2Inputs {
 
     private static More2Rules.Villagers villagers(ServerLevel level, BlockCoord home) {
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
-        return new More2Rules.Villagers(level.getEntitiesOfClass(Villager.class, box(center, VILLAGER_RADIUS))
+        return new More2Rules.Villagers(level.getEntitiesOfClass(
+                        Villager.class,
+                        box(center, BoardConfig.current().facts().villagerRadius()))
                 .size());
     }
 
@@ -216,9 +227,13 @@ final class More2Inputs {
     private static More2Rules.Sleep sleep(ServerLevel level, GraphState state, BlockCoord home) {
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
         int placed = 0;
-        for (int dx = -BED_RADIUS; dx <= BED_RADIUS; dx++) {
+        for (int dx = -BoardConfig.current().facts().bedRadius();
+                dx <= BoardConfig.current().facts().bedRadius();
+                dx++) {
             for (int dy = -BED_VERTICAL; dy <= BED_VERTICAL; dy++) {
-                for (int dz = -BED_RADIUS; dz <= BED_RADIUS; dz++) {
+                for (int dz = -BoardConfig.current().facts().bedRadius();
+                        dz <= BoardConfig.current().facts().bedRadius();
+                        dz++) {
                     BlockPos at = center.offset(dx, dy, dz);
                     if (level.isLoaded(at) && level.getBlockState(at).getBlock() instanceof BedBlock) {
                         placed++;
@@ -252,7 +267,9 @@ final class More2Inputs {
     private static boolean insidePen(BlockPos at, List<GraphFacts.Position> pens) {
         return pens.stream().anyMatch(pen -> {
             BlockPos center = new BlockPos(pen.x(), pen.y(), pen.z());
-            return at.distSqr(center) <= (double) PEN_RADIUS * PEN_RADIUS;
+            return at.distSqr(center)
+                    <= (double) BoardConfig.current().facts().penRadius()
+                            * BoardConfig.current().facts().penRadius();
         });
     }
 

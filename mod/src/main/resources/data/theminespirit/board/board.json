@@ -201,5 +201,14 @@
     "torchesPerCraft": 4,
     "torchBatch": 16,
     "fenceParts": 4
+  },
+  "facts": {
+    "animalRadius": 48,
+    "penRadius": 12,
+    "wildRadius": 16,
+    "villagerRadius": 48,
+    "bedRadius": 20,
+    "hazardRadius": 3,
+    "flowRadius": 8
   }
 }
