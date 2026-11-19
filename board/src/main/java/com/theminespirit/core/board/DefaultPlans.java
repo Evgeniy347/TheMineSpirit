@@ -112,10 +112,12 @@ final class DefaultPlans {
         plans.put(BoardCase.DISMANTLE_SHELTER, (boardCase, target, level) -> TicketWorkPlans.dismantleShelter(target));
         plans.put(BoardCase.BREED_ANIMALS, (boardCase, target, level) -> TicketFarmPlans.breedAnimals(target));
         plans.put(BoardCase.HERD_CULL, (boardCase, target, level) -> TicketFarmPlans.herdCull(target));
-        plans.put(BoardCase.RELOCATE_BUILDING, (boardCase, target, level) -> TicketPlans.relocateBuilding(target));
+        plans.put(
+                BoardCase.RELOCATE_BUILDING,
+                (boardCase, target, level) -> TicketStructurePlans.relocateBuilding(target));
         plans.put(BoardCase.RESTOCK_FOOD, (boardCase, target, level) -> TicketStoragePlans.restockFood(target));
         plans.put(BoardCase.TRANSFER_ITEM, (boardCase, target, level) -> TicketPlans.transferItem(target));
-        plans.put(BoardCase.MINE_LEFT_ORE, (boardCase, target, level) -> TicketPlans.mineLeftOre(target));
+        plans.put(BoardCase.MINE_LEFT_ORE, (boardCase, target, level) -> TicketStructurePlans.mineLeftOre(target));
         return Collections.unmodifiableMap(plans);
     }
 

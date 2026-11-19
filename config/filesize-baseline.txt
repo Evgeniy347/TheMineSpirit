@@ -4,7 +4,6 @@ core/board/BoardConfigTests.java	403
 core/board/BoardLogTests.java	424
 core/board/BoardTests.java	967
 core/board/BoardTicketTests.java	402
-core/board/TicketPlans.java	464
 core/board/TicketPlansTests.java	1232
 core/board/graph/GraphPlanner.java	483
 core/board/graph/GraphPlannerTests.java	919
