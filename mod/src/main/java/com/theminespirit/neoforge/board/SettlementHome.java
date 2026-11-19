@@ -2,7 +2,6 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.SettlementPlot;
-import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,7 +15,7 @@ final class SettlementHome {
         return Optional.of(SettlementPlot.center(homes));
     }
 
-    static List<BlockCoord> homes(List<SpiritEntity> spirits) {
+    static List<BlockCoord> homes(List<? extends HomedSpirit> spirits) {
         return spirits.stream().flatMap(spirit -> spirit.home().stream()).toList();
     }
 }
