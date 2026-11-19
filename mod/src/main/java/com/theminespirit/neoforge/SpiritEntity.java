@@ -70,7 +70,7 @@ import net.minecraft.world.phys.AABB;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
-public final class SpiritEntity extends PathfinderMob implements TerminalCrafter, HomedSpirit {
+public final class SpiritEntity extends PathfinderMob implements TerminalCrafter, HomedSpirit, SpiritView {
     public static final String DEFAULT_NAME = "spirit";
 
     private static final Logger LOGGER = LogUtils.getLogger();

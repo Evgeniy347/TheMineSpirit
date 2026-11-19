@@ -9,7 +9,7 @@ import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.husbandry.api.Species;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.PlotLeveling;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritView;
 import com.theminespirit.neoforge.husbandry.HerdSpecies;
 import com.theminespirit.neoforge.husbandry.HerdSurvey;
 import java.util.Map;
@@ -161,7 +161,7 @@ final class More2Post {
     }
 
     private static BlockCoord trailEnd(GraphPost post, BlockCoord from) {
-        for (SpiritEntity spirit : post.spirits) {
+        for (SpiritView spirit : post.spirits) {
             BlockPos at = spirit.blockPosition();
             if (at.distSqr(MoreScan.pos(from)) > 8L * 8L) {
                 return MoreScan.coord(at);
