@@ -1,13 +1,9 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.SpiritView;
 import java.util.Optional;
-import net.minecraft.core.BlockPos;
 
-public interface HomedSpirit {
+public interface HomedSpirit extends SpiritView {
     Optional<BlockCoord> home();
-
-    boolean isRemoved();
-
-    BlockPos blockPosition();
 }

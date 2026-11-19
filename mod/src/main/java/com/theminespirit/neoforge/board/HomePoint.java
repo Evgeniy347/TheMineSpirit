@@ -2,7 +2,6 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.StageSite;
-import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,7 +13,7 @@ public final class HomePoint {
 
     private HomePoint() {}
 
-    public static Optional<BlockCoord> of(SpiritEntity spirit) {
+    public static Optional<BlockCoord> of(HomedSpirit spirit) {
         Optional<BlockCoord> own = spirit.home();
         if (own.isEmpty()) {
             return spirit.level() instanceof ServerLevel level ? of(level, List.of(spirit)) : own;
@@ -30,7 +29,7 @@ public final class HomePoint {
                         () -> Optional.of(HomeStand.at(level, home, List.of(spirit), Optional.empty())));
     }
 
-    public static Optional<BlockCoord> of(ServerLevel level, List<SpiritEntity> spirits) {
+    public static Optional<BlockCoord> of(ServerLevel level, List<? extends HomedSpirit> spirits) {
         SettlementPlotStore store = SettlementPlotStore.get(level);
         Optional<BlockCoord> center = SettlementHome.center(SettlementHome.homes(spirits));
         Optional<BlockCoord> stand;

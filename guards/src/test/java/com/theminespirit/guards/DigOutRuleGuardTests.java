@@ -208,7 +208,7 @@ class DigOutRuleGuardTests {
                         + "известной только когда есть дом духа или живой этап. Как надо: Optional.empty и "
                         + "явный пропуск у вызывающего");
         assertTrue(
-                point.contains("Optional<BlockCoord> of(ServerLevel level, List<SpiritEntity> spirits)"),
+                point.contains("Optional<BlockCoord> of(ServerLevel level, List<? extends HomedSpirit> spirits)"),
                 "Отсутствие дома обязано быть видно в типе: без Optional вызывающий снова получит координату "
                         + "из воздуха");
     }
