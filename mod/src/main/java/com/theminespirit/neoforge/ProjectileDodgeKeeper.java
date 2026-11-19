@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.movement.ProjectileDodge;
 import com.theminespirit.core.movement.ProjectileDodge.Position;
 import com.theminespirit.core.movement.ProjectileTrajectory;

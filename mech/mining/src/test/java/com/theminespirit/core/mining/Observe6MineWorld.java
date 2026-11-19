@@ -1,5 +1,7 @@
 package com.theminespirit.core.mining;
 
+import com.theminespirit.core.mining.api.Cell;
+
 final class Observe6MineWorld {
     private static final int X0 = -200;
     private static final int Y0 = 61;

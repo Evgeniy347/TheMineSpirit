@@ -1,7 +1,7 @@
 package com.theminespirit.core.policy.api;
 
-import com.theminespirit.core.mining.BreakSafety;
-import com.theminespirit.core.mining.SafetyView;
+import com.theminespirit.core.mining.api.BreakSafety;
+import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Objects;
 import java.util.OptionalInt;

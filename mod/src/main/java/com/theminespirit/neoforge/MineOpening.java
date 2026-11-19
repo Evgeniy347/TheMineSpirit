@@ -2,7 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.mining.MineApproach;
 import com.theminespirit.core.mining.MineColumn;
-import com.theminespirit.core.mining.SafetyView;
+import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.HashMap;

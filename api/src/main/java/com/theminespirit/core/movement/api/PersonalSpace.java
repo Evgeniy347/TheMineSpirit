@@ -1,4 +1,4 @@
-package com.theminespirit.core.movement;
+package com.theminespirit.core.movement.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.theminespirit.core.inventory.api.JsonResource;

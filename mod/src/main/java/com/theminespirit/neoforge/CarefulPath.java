@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.movement.DropProfile;
-import com.theminespirit.core.movement.RouteDescent;
+import com.theminespirit.core.movement.api.DropProfile;
+import com.theminespirit.core.movement.api.RouteDescent;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.world.level.pathfinder.Path;

@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.theminespirit.core.mining.GatherPolicy;
+import com.theminespirit.core.mining.api.GatherPolicy;
 import com.theminespirit.core.planner.api.CraftedItems;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

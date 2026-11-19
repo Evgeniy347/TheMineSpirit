@@ -1,5 +1,6 @@
 package com.theminespirit.core.mining;
 
+import com.theminespirit.core.mining.api.Cell;
 import com.theminespirit.core.perception.Terrain;
 
 public final class MineTerrain {

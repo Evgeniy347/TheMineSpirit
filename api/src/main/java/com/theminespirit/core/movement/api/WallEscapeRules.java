@@ -1,4 +1,4 @@
-package com.theminespirit.core.movement;
+package com.theminespirit.core.movement.api;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Comparator;

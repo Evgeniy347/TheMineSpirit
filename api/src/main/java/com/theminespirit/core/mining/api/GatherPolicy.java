@@ -1,4 +1,4 @@
-package com.theminespirit.core.mining;
+package com.theminespirit.core.mining.api;
 
 import com.theminespirit.core.planner.api.CraftedItems;
 import java.util.List;

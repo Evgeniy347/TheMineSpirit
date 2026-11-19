@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.movement.LookAngles;
+import com.theminespirit.core.movement.api.LookAngles;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 

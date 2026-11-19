@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.board.lease.LeaseBook;
-import com.theminespirit.core.mining.ClearScaffold;
+import com.theminespirit.core.mining.api.ClearScaffold;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.lease.LeaseData;
 import java.util.ArrayList;

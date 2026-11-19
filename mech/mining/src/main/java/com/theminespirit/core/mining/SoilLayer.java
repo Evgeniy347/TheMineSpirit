@@ -1,5 +1,6 @@
 package com.theminespirit.core.mining;
 
+import com.theminespirit.core.mining.api.Cell;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;

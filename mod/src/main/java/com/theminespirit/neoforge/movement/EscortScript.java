@@ -3,7 +3,7 @@ package com.theminespirit.neoforge.movement;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
-import com.theminespirit.core.movement.PathRefreshPolicy;
+import com.theminespirit.core.movement.api.PathRefreshPolicy;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.EscortParams;
 import com.theminespirit.core.tactics.CombatDirective;

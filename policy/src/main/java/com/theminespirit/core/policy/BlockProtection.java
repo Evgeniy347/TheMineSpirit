@@ -1,6 +1,6 @@
 package com.theminespirit.core.policy;
 
-import com.theminespirit.core.mining.GatherPolicy;
+import com.theminespirit.core.mining.api.GatherPolicy;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.policy.api.PolicyId;
 import com.theminespirit.core.policy.api.StrayRules;

@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge.policy;
 
-import com.theminespirit.core.mining.BreakSafety;
+import com.theminespirit.core.mining.api.BreakSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.SettlementBreak;

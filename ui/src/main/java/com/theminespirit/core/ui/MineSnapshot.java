@@ -2,7 +2,7 @@ package com.theminespirit.core.ui;
 
 import com.theminespirit.core.building.SchematicBlocks;
 import com.theminespirit.core.building.api.BuildBox;
-import com.theminespirit.core.mining.MineOres;
+import com.theminespirit.core.mining.api.MineOres;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.List;

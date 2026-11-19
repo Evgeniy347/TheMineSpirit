@@ -1,9 +1,9 @@
 package com.theminespirit.core.movement.network;
 
 import com.theminespirit.core.building.api.BuildBox;
-import com.theminespirit.core.mining.MiningSafety;
-import com.theminespirit.core.mining.SafetyView;
-import com.theminespirit.core.movement.BodyStep;
+import com.theminespirit.core.mining.api.MiningSafety;
+import com.theminespirit.core.mining.api.SafetyView;
+import com.theminespirit.core.movement.api.BodyStep;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayDeque;
 import java.util.ArrayList;

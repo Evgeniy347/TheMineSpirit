@@ -2,7 +2,7 @@ package com.theminespirit.neoforge.movement;
 
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
-import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.movement.WanderPolicy;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.WanderParams;

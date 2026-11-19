@@ -1,6 +1,6 @@
 package com.theminespirit.core.route;
 
-import com.theminespirit.core.mining.Cell;
+import com.theminespirit.core.mining.api.Cell;
 
 public final class RouteCell {
     public static final int AIR = 0;

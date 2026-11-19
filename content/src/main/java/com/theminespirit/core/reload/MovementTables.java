@@ -1,8 +1,8 @@
 package com.theminespirit.core.reload;
 
-import com.theminespirit.core.movement.PersonalSpace;
 import com.theminespirit.core.movement.ProjectileDodge;
 import com.theminespirit.core.movement.WalkOutRules;
+import com.theminespirit.core.movement.api.PersonalSpace;
 import com.theminespirit.core.observation.ObservationLimits;
 import com.theminespirit.core.reload.api.TableHolder;
 

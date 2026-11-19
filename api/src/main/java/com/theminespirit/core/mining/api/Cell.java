@@ -1,4 +1,4 @@
-package com.theminespirit.core.mining;
+package com.theminespirit.core.mining.api;
 
 public enum Cell {
     SOLID,

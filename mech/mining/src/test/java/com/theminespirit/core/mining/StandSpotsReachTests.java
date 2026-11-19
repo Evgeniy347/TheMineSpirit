@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.building.SpiritReach;
+import com.theminespirit.core.mining.api.Cell;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import org.junit.jupiter.api.Test;

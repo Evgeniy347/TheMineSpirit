@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.mining.ClearScaffold;
+import com.theminespirit.core.mining.api.ClearScaffold;
 import com.theminespirit.core.observation.BlockCoord;
 import java.io.IOException;
 import java.util.ArrayList;

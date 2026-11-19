@@ -2,7 +2,6 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.engine.ScriptInstance;
-import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentDirection;
 import com.theminespirit.core.mining.DescentLevels;
@@ -11,7 +10,8 @@ import com.theminespirit.core.mining.DescentStop;
 import com.theminespirit.core.mining.DescentWidenPlan;
 import com.theminespirit.core.mining.DescentWidenStep;
 import com.theminespirit.core.mining.MineDigOrder;
-import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.mining.api.BreakSafety;
+import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.HashMap;

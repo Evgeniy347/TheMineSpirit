@@ -4,7 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildReservations;
 import com.theminespirit.core.building.api.BuildBox;
 import com.theminespirit.core.engine.ScriptInstance;
-import com.theminespirit.core.mining.SafetyView;
+import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.PlotProtection;
 import java.util.ArrayList;

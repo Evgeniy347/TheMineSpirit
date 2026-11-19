@@ -1,4 +1,4 @@
-package com.theminespirit.core.movement;
+package com.theminespirit.core.movement.api;
 
 import java.util.List;
 import java.util.Objects;

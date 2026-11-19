@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BuildReservations;
-import com.theminespirit.core.mining.BreakSafety;
-import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.mining.api.BreakSafety;
+import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import net.minecraft.core.BlockPos;

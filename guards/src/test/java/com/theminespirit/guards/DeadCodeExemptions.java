@@ -155,7 +155,7 @@ final class DeadCodeExemptions {
 
     static final List<Probe> SCALE_PROBES = List.of(
             new Probe(
-                    "core/mining/GatherPolicy.java|method|GatherPolicy#forbiddenExactIds",
+                    "core/mining/api/GatherPolicy.java|method|GatherPolicy#forbiddenExactIds",
                     "check_ForbiddenTable_MatchesProduction",
                     "список точных запретов gather обязан существовать в реестре блоков: опечатка ослепляет политику"),
             new Probe(

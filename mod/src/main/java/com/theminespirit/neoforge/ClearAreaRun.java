@@ -2,11 +2,11 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.CaveStand;
-import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.BreakSkipTally;
 import com.theminespirit.core.mining.ClearOrder;
 import com.theminespirit.core.mining.MiningPlanner;
-import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.mining.api.BreakSafety;
+import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;

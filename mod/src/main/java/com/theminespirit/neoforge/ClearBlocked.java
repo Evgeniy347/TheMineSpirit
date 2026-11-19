@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.api.BuildBox;
-import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.BreakSkipTally;
-import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.StandSpots;
 import com.theminespirit.core.mining.UnreachableCells;
+import com.theminespirit.core.mining.api.BreakSafety;
+import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.neoforge.board.SettlementPlotStore;

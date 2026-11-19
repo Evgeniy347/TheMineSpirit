@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.mining.GatherPolicy;
+import com.theminespirit.core.mining.api.GatherPolicy;
 import com.theminespirit.core.policy.api.PolicyId;
 import java.util.ArrayList;
 import java.util.Collections;

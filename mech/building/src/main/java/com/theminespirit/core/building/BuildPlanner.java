@@ -1,10 +1,10 @@
 package com.theminespirit.core.building;
 
 import com.theminespirit.core.building.api.BuildRotation;
-import com.theminespirit.core.mining.Cell;
-import com.theminespirit.core.mining.MiningSafety;
-import com.theminespirit.core.mining.SafetyView;
-import com.theminespirit.core.movement.BodyStep;
+import com.theminespirit.core.mining.api.Cell;
+import com.theminespirit.core.mining.api.MiningSafety;
+import com.theminespirit.core.mining.api.SafetyView;
+import com.theminespirit.core.movement.api.BodyStep;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayDeque;
 import java.util.ArrayList;

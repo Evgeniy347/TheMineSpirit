@@ -4,7 +4,7 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.intellect.OutsideGate;
-import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.movement.ExploreRoute;
 import com.theminespirit.core.night.NightLeash;
 import com.theminespirit.core.observation.BlockCoord;

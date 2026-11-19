@@ -2,6 +2,7 @@ package com.theminespirit.core.movement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.theminespirit.core.movement.api.GotoTuning;
 import org.junit.jupiter.api.Test;
 
 class GotoTuningTests {

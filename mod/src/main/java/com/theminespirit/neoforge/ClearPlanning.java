@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.mining.MiningPlanner;
-import com.theminespirit.core.mining.SafetyView;
+import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Set;

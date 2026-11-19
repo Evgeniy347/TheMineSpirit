@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.mining.Cell;
-import com.theminespirit.core.mining.SafetyView;
+import com.theminespirit.core.mining.api.Cell;
+import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.Objects;
 import net.minecraft.core.BlockPos;

@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.mining.MiningSafety;
-import com.theminespirit.core.movement.PersonalSpace;
+import com.theminespirit.core.mining.api.MiningSafety;
+import com.theminespirit.core.movement.api.PersonalSpace;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
 import java.util.ArrayList;

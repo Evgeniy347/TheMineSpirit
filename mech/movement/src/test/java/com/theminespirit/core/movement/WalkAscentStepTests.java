@@ -2,6 +2,7 @@ package com.theminespirit.core.movement;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.movement.api.CellCentering;
 import com.theminespirit.core.observation.BlockCoord;
 import org.junit.jupiter.api.Test;
 

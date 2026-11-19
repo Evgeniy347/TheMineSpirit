@@ -2,6 +2,9 @@ package com.theminespirit.core.mining;
 
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.building.api.BlockSight;
+import com.theminespirit.core.mining.api.Cell;
+import com.theminespirit.core.mining.api.MiningSafety;
+import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.api.adapter.Visibility;
 import java.util.ArrayList;

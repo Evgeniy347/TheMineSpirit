@@ -8,7 +8,7 @@ import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.graph.GraphNames;
 import com.theminespirit.core.board.graph.GraphPlan;
 import com.theminespirit.core.board.graph.GraphTickets;
-import com.theminespirit.core.mining.LeftOreRules;
+import com.theminespirit.core.mining.api.LeftOreRules;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.OrchardPlot;
 import com.theminespirit.core.town.StageSite;

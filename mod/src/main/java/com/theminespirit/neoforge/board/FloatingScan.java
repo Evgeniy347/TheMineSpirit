@@ -2,8 +2,8 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.lease.LeaseCell;
 import com.theminespirit.core.forestry.TreeGroup;
-import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.StandSpots;
+import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.reload.DataTables;

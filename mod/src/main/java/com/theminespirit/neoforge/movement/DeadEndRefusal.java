@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.movement;
 
-import com.theminespirit.core.movement.GotoTuning;
 import com.theminespirit.core.movement.LineObstacle;
+import com.theminespirit.core.movement.api.GotoTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.LevelSafetyView;

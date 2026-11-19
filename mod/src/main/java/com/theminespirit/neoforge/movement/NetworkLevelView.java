@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.movement;
 
-import com.theminespirit.core.mining.Cell;
-import com.theminespirit.core.mining.SafetyView;
+import com.theminespirit.core.mining.api.Cell;
+import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.movement.Passage;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.LevelSafetyView;

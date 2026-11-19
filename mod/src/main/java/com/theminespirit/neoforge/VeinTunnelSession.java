@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.MineTunnel;
-import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.mining.api.BreakSafety;
+import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Comparator;

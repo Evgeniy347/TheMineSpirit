@@ -3,6 +3,7 @@ package com.theminespirit.core.movement;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.movement.api.RouteDescent;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

@@ -2,6 +2,8 @@ package com.theminespirit.core.mining;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.theminespirit.core.mining.api.Cell;
+import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

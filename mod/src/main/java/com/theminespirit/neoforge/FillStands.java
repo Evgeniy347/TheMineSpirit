@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.SpiritReach;
-import com.theminespirit.core.mining.MiningSafety;
-import com.theminespirit.core.mining.SafetyView;
+import com.theminespirit.core.mining.api.MiningSafety;
+import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.StageStands;
 import com.theminespirit.neoforge.board.SettlementPlotStore;

@@ -2,7 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
-import com.theminespirit.core.movement.PathRefreshPolicy;
+import com.theminespirit.core.movement.api.PathRefreshPolicy;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;

@@ -4,7 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.mining.MineAimFlow;
 import com.theminespirit.core.mining.MineCellPlan;
 import com.theminespirit.core.mining.MineColumn;
-import com.theminespirit.core.mining.SafetyView;
+import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Objects;

@@ -9,7 +9,7 @@ import com.theminespirit.core.building.SchematicPart;
 import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.husbandry.api.FeedTable;
 import com.theminespirit.core.husbandry.api.Species;
-import com.theminespirit.core.mining.OreKind;
+import com.theminespirit.core.mining.api.OreKind;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;

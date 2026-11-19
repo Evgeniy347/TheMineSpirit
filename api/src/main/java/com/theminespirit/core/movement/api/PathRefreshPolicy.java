@@ -1,4 +1,4 @@
-package com.theminespirit.core.movement;
+package com.theminespirit.core.movement.api;
 
 public final class PathRefreshPolicy {
     public static final double TARGET_MOVE_TOLERANCE = 1.0;

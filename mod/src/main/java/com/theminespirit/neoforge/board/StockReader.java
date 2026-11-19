@@ -7,7 +7,7 @@ import com.theminespirit.core.board.StockScan;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.inventory.ContainerSnapshot;
 import com.theminespirit.core.inventory.Stack;
-import com.theminespirit.core.mining.LeftOreRules;
+import com.theminespirit.core.mining.api.LeftOreRules;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.neoforge.SettlementChestStore;

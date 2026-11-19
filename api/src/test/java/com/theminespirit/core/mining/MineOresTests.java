@@ -3,6 +3,7 @@ package com.theminespirit.core.mining;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+import com.theminespirit.core.mining.api.MineOres;
 import java.util.List;
 import java.util.OptionalInt;
 import org.junit.jupiter.api.Test;

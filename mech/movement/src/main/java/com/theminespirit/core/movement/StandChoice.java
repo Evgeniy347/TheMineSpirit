@@ -1,7 +1,7 @@
 package com.theminespirit.core.movement;
 
-import com.theminespirit.core.mining.MiningSafety;
-import com.theminespirit.core.mining.SafetyView;
+import com.theminespirit.core.mining.api.MiningSafety;
+import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Comparator;

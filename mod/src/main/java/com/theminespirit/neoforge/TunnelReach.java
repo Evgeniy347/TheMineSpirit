@@ -1,9 +1,9 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.engine.FailureFact;
-import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.MineTunnel;
-import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.mining.api.BreakSafety;
+import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.core.town.api.PlanBuilding;

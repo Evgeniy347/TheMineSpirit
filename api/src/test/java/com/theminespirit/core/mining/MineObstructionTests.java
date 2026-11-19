@@ -3,6 +3,7 @@ package com.theminespirit.core.mining;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.mining.api.MineObstruction;
 import com.theminespirit.core.observation.BlockCoord;
 import org.junit.jupiter.api.Test;
 

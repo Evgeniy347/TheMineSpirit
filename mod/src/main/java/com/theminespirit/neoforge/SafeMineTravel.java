@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.mining.Cell;
 import com.theminespirit.core.mining.SafeMineStep;
+import com.theminespirit.core.mining.api.Cell;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.pickup.OverflowMode;

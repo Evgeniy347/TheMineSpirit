@@ -1,4 +1,4 @@
-package com.theminespirit.core.movement;
+package com.theminespirit.core.movement.api;
 
 public final class GotoTuning {
     public static final int TICKS_PER_BLOCK = 40;

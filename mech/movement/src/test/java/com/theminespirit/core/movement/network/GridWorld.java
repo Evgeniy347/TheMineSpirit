@@ -1,7 +1,7 @@
 package com.theminespirit.core.movement.network;
 
-import com.theminespirit.core.mining.Cell;
-import com.theminespirit.core.mining.SafetyView;
+import com.theminespirit.core.mining.api.Cell;
+import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.HashSet;
 import java.util.Set;

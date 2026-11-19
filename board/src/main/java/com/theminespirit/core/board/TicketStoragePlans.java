@@ -1,7 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.building.SchematicActions;
-import com.theminespirit.core.mining.OreKind;
+import com.theminespirit.core.mining.api.OreKind;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
 import com.theminespirit.core.plan.ScriptCall;

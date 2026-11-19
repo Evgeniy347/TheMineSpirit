@@ -2,7 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.StandSearch;
 import com.theminespirit.core.building.RetreatPath;
-import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.LevelSafetyView;

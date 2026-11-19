@@ -2,7 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.api.BlockSight;
-import com.theminespirit.core.mining.MineObstruction;
+import com.theminespirit.core.mining.api.MineObstruction;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.api.Point;
 import java.util.Optional;

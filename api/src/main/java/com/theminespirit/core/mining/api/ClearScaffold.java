@@ -1,4 +1,4 @@
-package com.theminespirit.core.mining;
+package com.theminespirit.core.mining.api;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.theminespirit.core.mining;
+package com.theminespirit.core.mining.api;
 
 import java.util.Objects;
 import java.util.Optional;

@@ -5,7 +5,7 @@ import com.theminespirit.core.building.ReachPlanner;
 import com.theminespirit.core.building.ReachStands;
 import com.theminespirit.core.building.RetreatPath;
 import com.theminespirit.core.building.SpiritReach;
-import com.theminespirit.core.mining.MiningSafety;
+import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.movement.NetworkLevelView;
 import com.theminespirit.neoforge.movement.PathNetworkService;

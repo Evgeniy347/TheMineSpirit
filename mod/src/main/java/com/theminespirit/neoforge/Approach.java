@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.movement.GotoTuning;
-import com.theminespirit.core.movement.PathRefreshPolicy;
 import com.theminespirit.core.movement.StuckWatcher;
+import com.theminespirit.core.movement.api.GotoTuning;
+import com.theminespirit.core.movement.api.PathRefreshPolicy;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.movement.DeadEndRefusal;
 import com.theminespirit.neoforge.movement.PassageWalk;

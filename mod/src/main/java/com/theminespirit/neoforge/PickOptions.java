@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.mining.MineOres;
 import com.theminespirit.core.mining.ToolChoice;
+import com.theminespirit.core.mining.api.MineOres;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.Holder;

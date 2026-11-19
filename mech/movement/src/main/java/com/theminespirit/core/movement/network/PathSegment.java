@@ -1,6 +1,6 @@
 package com.theminespirit.core.movement.network;
 
-import com.theminespirit.core.movement.BodyStep;
+import com.theminespirit.core.movement.api.BodyStep;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Objects;

@@ -1,5 +1,9 @@
 package com.theminespirit.core.mining;
 
+import com.theminespirit.core.mining.api.BreakSafety;
+import com.theminespirit.core.mining.api.Cell;
+import com.theminespirit.core.mining.api.MiningSafety;
+import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.Collections;

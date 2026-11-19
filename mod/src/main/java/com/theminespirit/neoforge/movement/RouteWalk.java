@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.movement;
 
-import com.theminespirit.core.movement.DropProfile;
 import com.theminespirit.core.movement.WalkAscent;
+import com.theminespirit.core.movement.api.DropProfile;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.RemovalLog;
 import com.theminespirit.core.route.Route;

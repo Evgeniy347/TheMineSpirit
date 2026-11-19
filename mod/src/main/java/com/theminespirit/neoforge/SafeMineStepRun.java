@@ -1,11 +1,11 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BuildReservations;
-import com.theminespirit.core.mining.BreakSafety;
 import com.theminespirit.core.mining.MineDigOrder;
-import com.theminespirit.core.mining.MiningSafety;
 import com.theminespirit.core.mining.SafeMinePlan;
 import com.theminespirit.core.mining.SafeMineStep;
+import com.theminespirit.core.mining.api.BreakSafety;
+import com.theminespirit.core.mining.api.MiningSafety;
 import com.theminespirit.core.observation.BlockCoord;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;

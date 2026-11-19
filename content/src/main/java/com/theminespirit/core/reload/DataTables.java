@@ -31,7 +31,7 @@ import com.theminespirit.core.mining.DescentData;
 import com.theminespirit.core.mining.DescentLevels;
 import com.theminespirit.core.mining.DropTable;
 import com.theminespirit.core.mining.ToolReserve;
-import com.theminespirit.core.movement.PersonalSpace;
+import com.theminespirit.core.movement.api.PersonalSpace;
 import com.theminespirit.core.observation.ObservationLimits;
 import com.theminespirit.core.pickup.MagnetRules;
 import com.theminespirit.core.policy.BlockProtection;

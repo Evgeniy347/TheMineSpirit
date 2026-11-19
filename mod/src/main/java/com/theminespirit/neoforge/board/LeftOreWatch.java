@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.board;
 
-import com.theminespirit.core.mining.LeftOreRules;
-import com.theminespirit.core.mining.MineOres;
+import com.theminespirit.core.mining.api.LeftOreRules;
+import com.theminespirit.core.mining.api.MineOres;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.MineOreLedger;

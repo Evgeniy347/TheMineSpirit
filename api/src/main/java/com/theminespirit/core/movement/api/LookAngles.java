@@ -1,4 +1,4 @@
-package com.theminespirit.core.movement;
+package com.theminespirit.core.movement.api;
 
 public record LookAngles(float yaw, float pitch) {
     public static LookAngles toward(double dx, double dy, double dz) {

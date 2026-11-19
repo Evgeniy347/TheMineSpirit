@@ -10,7 +10,7 @@ import com.theminespirit.core.crafting.RecipeReachability;
 import com.theminespirit.core.crafting.RecipeSpec;
 import com.theminespirit.core.crafting.Stations;
 import com.theminespirit.core.mining.DropTable;
-import com.theminespirit.core.mining.GatherPolicy;
+import com.theminespirit.core.mining.api.GatherPolicy;
 import com.theminespirit.core.planner.api.GatherSources;
 import com.theminespirit.core.planner.api.Ingredient;
 import com.theminespirit.core.planner.api.ResourceKnowledge;

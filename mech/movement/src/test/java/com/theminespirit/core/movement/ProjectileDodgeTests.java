@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.mining.Cell;
-import com.theminespirit.core.mining.MiningSafety;
-import com.theminespirit.core.mining.SafetyView;
+import com.theminespirit.core.mining.api.Cell;
+import com.theminespirit.core.mining.api.MiningSafety;
+import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.movement.ProjectileDodge.Dodge;
 import com.theminespirit.core.movement.ProjectileDodge.Position;
 import com.theminespirit.core.movement.ProjectileDodge.Request;

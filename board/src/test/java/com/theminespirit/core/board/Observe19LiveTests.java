@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.theminespirit.core.mining.LeftOreRules;
+import com.theminespirit.core.mining.api.LeftOreRules;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;

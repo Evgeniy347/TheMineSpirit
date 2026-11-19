@@ -1,8 +1,8 @@
 package com.theminespirit.core.policy;
 
-import com.theminespirit.core.mining.Cell;
-import com.theminespirit.core.mining.MiningSafety;
-import com.theminespirit.core.mining.SafetyView;
+import com.theminespirit.core.mining.api.Cell;
+import com.theminespirit.core.mining.api.MiningSafety;
+import com.theminespirit.core.mining.api.SafetyView;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.api.DropPolicy;
 import java.util.ArrayDeque;

@@ -1,5 +1,6 @@
 package com.theminespirit.core.movement;
 
+import com.theminespirit.core.movement.api.CellCentering;
 import com.theminespirit.core.observation.BlockCoord;
 
 public final class WalkAscent {

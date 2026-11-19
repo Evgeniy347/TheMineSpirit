@@ -1,7 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.board.graph.GraphNames;
-import com.theminespirit.core.mining.LeftOreRules;
+import com.theminespirit.core.mining.api.LeftOreRules;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
