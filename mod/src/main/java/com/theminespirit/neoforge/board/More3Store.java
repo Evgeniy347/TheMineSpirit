@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.graph.More3Rules;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.SpiritConfig;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,8 +29,6 @@ public final class More3Store extends SavedData {
     private static final String DEATHS = "Deaths";
     private static final String LAST = "Last";
     private static final String EXPIRES = "Expires";
-    private static final int MAX_DANGERS = 256;
-    private static final int MAX_DROPS = 64;
     private static final SavedData.Factory<More3Store> FACTORY =
             new SavedData.Factory<>(More3Store::new, More3Store::load);
 
@@ -107,7 +106,7 @@ public final class More3Store extends SavedData {
                         (before == null ? 0 : before.deaths()) + 1,
                         now));
         drops.add(new DeathDrop(drop.x(), drop.y(), drop.z(), now + More3Rules.DROP_LIFETIME_TICKS));
-        while (drops.size() > MAX_DROPS) {
+        while (drops.size() > SpiritConfig.moreDropsMax()) {
             drops.remove(0);
         }
         setDirty();
@@ -162,7 +161,7 @@ public final class More3Store extends SavedData {
     private void prune(long now) {
         long from = now - More3Rules.DANGER_WINDOW_TICKS;
         dangers.values().removeIf(danger -> danger.lastTick() < from);
-        while (dangers.size() > MAX_DANGERS) {
+        while (dangers.size() > SpiritConfig.moreDangersMax()) {
             dangers.remove(dangers.keySet().iterator().next());
         }
     }

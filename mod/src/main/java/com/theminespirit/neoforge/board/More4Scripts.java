@@ -19,7 +19,6 @@ import net.minecraft.world.item.ItemStack;
 final class More4Scripts {
     static final String NEAREST = "nearest";
     static final int CONTAINER_RADIUS = 8;
-    static final int MAX_COUNT = 64;
 
     private More4Scripts() {}
 

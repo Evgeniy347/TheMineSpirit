@@ -3,6 +3,7 @@ package com.theminespirit.neoforge.board;
 import com.theminespirit.core.ModIdentity;
 import com.theminespirit.core.board.graph.More5Rules;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.SpiritConfig;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,7 +23,6 @@ public final class More5Store extends SavedData {
     private static final String Z = "Z";
     private static final String BLOCK = "Block";
     private static final String LAST = "Last";
-    private static final int MAX_BROKEN = 256;
     private static final SavedData.Factory<More5Store> FACTORY =
             new SavedData.Factory<>(More5Store::new, More5Store::load);
 
@@ -60,7 +60,7 @@ public final class More5Store extends SavedData {
     private void prune(long now) {
         long from = now - More5Rules.BROKEN_WINDOW_TICKS;
         broken.values().removeIf(entry -> entry.lastTick() < from);
-        while (broken.size() > MAX_BROKEN) {
+        while (broken.size() > SpiritConfig.moreBrokenMax()) {
             broken.remove(broken.keySet().iterator().next());
         }
     }

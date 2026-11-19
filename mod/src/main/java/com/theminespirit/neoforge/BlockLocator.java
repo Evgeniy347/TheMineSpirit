@@ -19,7 +19,6 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 
 public final class BlockLocator {
-    private static final int SEARCH_Y_RADIUS = 64;
 
     private BlockLocator() {}
 
@@ -44,8 +43,8 @@ public final class BlockLocator {
             this.center = center;
             this.centerCoord = new BlockCoord(center.getX(), center.getY(), center.getZ());
             this.blocks = blocks;
-            int minY = Math.max(level.getMinBuildHeight(), centerCoord.y() - SEARCH_Y_RADIUS);
-            int maxY = Math.min(level.getMaxBuildHeight() - 1, centerCoord.y() + SEARCH_Y_RADIUS);
+            int minY = Math.max(level.getMinBuildHeight(), centerCoord.y() - SpiritConfig.searchYRadius());
+            int maxY = Math.min(level.getMaxBuildHeight() - 1, centerCoord.y() + SpiritConfig.searchYRadius());
             this.cursor = LoadedWorld.cursor(BlockBox.cube(centerCoord, radius).clampY(minY, maxY), centerCoord);
         }
 

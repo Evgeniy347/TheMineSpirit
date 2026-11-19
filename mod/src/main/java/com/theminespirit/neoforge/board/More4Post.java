@@ -15,6 +15,7 @@ import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.town.SiteLevels;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -195,7 +196,7 @@ final class More4Post {
                 continue;
             }
             String item = rare.orElseThrow();
-            int count = Math.min(More4Scripts.MAX_COUNT, items.getOrDefault(item, 1));
+            int count = Math.min(SpiritConfig.moreCountMax(), items.getOrDefault(item, 1));
             TaskNode task = new ScriptCall(
                     "deposit",
                     Map.of(

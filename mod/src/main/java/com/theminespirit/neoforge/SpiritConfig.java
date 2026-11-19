@@ -7,6 +7,11 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public final class SpiritConfig {
     public static final int AUTO_CHUNK_LOADING_RADIUS = ChunkLoadingRadius.AUTO;
     public static final int MAX_CHUNK_LOADING_RADIUS = 32;
+    public static final int DEFAULT_SEARCH_Y_RADIUS = 64;
+    public static final int DEFAULT_MORE_DANGERS_MAX = 256;
+    public static final int DEFAULT_MORE_DROPS_MAX = 64;
+    public static final int DEFAULT_MORE_BROKEN_MAX = 256;
+    public static final int DEFAULT_MORE_COUNT_MAX = 64;
 
     private static final ModConfigSpec SPEC;
     private static final ModConfigSpec.IntValue CHUNK_LOADING_RADIUS;
@@ -16,6 +21,11 @@ public final class SpiritConfig {
     private static final ModConfigSpec.IntValue CRATER_HOME_RADIUS;
     private static final ModConfigSpec.IntValue NAV_CHUNK_BUDGET;
     private static final ModConfigSpec.IntValue NAV_CHUNK_PER_SECOND;
+    private static final ModConfigSpec.IntValue SEARCH_Y_RADIUS;
+    private static final ModConfigSpec.IntValue MORE_DANGERS_MAX;
+    private static final ModConfigSpec.IntValue MORE_DROPS_MAX;
+    private static final ModConfigSpec.IntValue MORE_BROKEN_MAX;
+    private static final ModConfigSpec.IntValue MORE_COUNT_MAX;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -53,6 +63,26 @@ public final class SpiritConfig {
                         "Сколько чанков в секунду на сервер навигация может подгружать для расчётов пути.",
                         "Пока чанк грузится, расчёт ждёт; «неизвестно» не считается воздухом.")
                 .defineInRange("navChunkPerSecond", 16, 1, 256);
+        SEARCH_Y_RADIUS = builder.comment(
+                        "Насколько вверх и вниз от центра поиск блоков смотрит при поиске руды и места.",
+                        "Ванильный мир — 384 блока высотой; шире искать нельзя.")
+                .defineInRange("searchYRadius", DEFAULT_SEARCH_Y_RADIUS, 1, 384);
+        MORE_DANGERS_MAX = builder.comment(
+                        "Сколько опасных точек поселения хранит книга опасностей до вытеснения старых.",
+                        "Меньше — старые угрозы забываются быстрее и духи перестают их обходить.")
+                .defineInRange("moreDangersMax", DEFAULT_MORE_DANGERS_MAX, 1, 4096);
+        MORE_DROPS_MAX = builder.comment(
+                        "Сколько выпавших предметов помнит книга добычи до вытеснения старых.",
+                        "Меньше — старые дропы теряются и дух не забирает их.")
+                .defineInRange("moreDropsMax", DEFAULT_MORE_DROPS_MAX, 1, 1024);
+        MORE_BROKEN_MAX = builder.comment(
+                        "Сколько сломанных блоков помнит книга сноса до вытеснения старых.",
+                        "Меньше — старые поломки забываются и дух может их не восстановить.")
+                .defineInRange("moreBrokenMax", DEFAULT_MORE_BROKEN_MAX, 1, 4096);
+        MORE_COUNT_MAX = builder.comment(
+                        "Верхний предел количества предметов, которое дух учитывает за один заход.",
+                        "Больше — скрипт обмена может просить чрезмерные пачки.")
+                .defineInRange("moreCountMax", DEFAULT_MORE_COUNT_MAX, 1, 256);
         builder.pop();
         SPEC = builder.build();
     }
@@ -90,5 +120,29 @@ public final class SpiritConfig {
     public static int radiusFor(ServerLevel level) {
         return ChunkLoadingRadius.effective(
                 CHUNK_LOADING_RADIUS.get(), level.getServer().getPlayerList().getSimulationDistance());
+    }
+
+    public static int searchYRadius() {
+        return loaded(SEARCH_Y_RADIUS, DEFAULT_SEARCH_Y_RADIUS);
+    }
+
+    public static int moreDangersMax() {
+        return loaded(MORE_DANGERS_MAX, DEFAULT_MORE_DANGERS_MAX);
+    }
+
+    public static int moreDropsMax() {
+        return loaded(MORE_DROPS_MAX, DEFAULT_MORE_DROPS_MAX);
+    }
+
+    public static int moreBrokenMax() {
+        return loaded(MORE_BROKEN_MAX, DEFAULT_MORE_BROKEN_MAX);
+    }
+
+    public static int moreCountMax() {
+        return loaded(MORE_COUNT_MAX, DEFAULT_MORE_COUNT_MAX);
+    }
+
+    private static int loaded(ModConfigSpec.IntValue value, int fallback) {
+        return SPEC.isLoaded() ? value.get() : fallback;
     }
 }
