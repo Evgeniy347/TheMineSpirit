@@ -21,10 +21,8 @@ import net.minecraft.world.phys.AABB;
 
 final class More6Scan {
     private static final int BED_VERTICAL = 6;
-    private static final int LOOSE_RADIUS = 24;
     private static final int WATER_BELOW = 4;
     private static final int WATER_ABOVE = 4;
-    private static final int STATION_RADIUS = 8;
     private static final int STATION_DOWN = 3;
     private static final int STATION_UP = 2;
     private static final int FUEL_SLOT = 1;
@@ -55,7 +53,11 @@ final class More6Scan {
 
     static int looseItems(ServerLevel level, BlockCoord home) {
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
-        return level.getEntitiesOfClass(ItemEntity.class, new AABB(center).inflate(LOOSE_RADIUS)).stream()
+        return level
+                .getEntitiesOfClass(
+                        ItemEntity.class,
+                        new AABB(center).inflate(BoardConfig.current().facts().looseRadius()))
+                .stream()
                 .filter(item -> !item.isRemoved() && !item.getItem().isEmpty())
                 .toList()
                 .size();
@@ -76,8 +78,12 @@ final class More6Scan {
         BlockPos center = new BlockPos(yard.x(), yard.y(), yard.z());
         Set<String> found = new HashSet<>();
         int unfuelled = 0;
-        for (int dx = -STATION_RADIUS; dx <= STATION_RADIUS; dx++) {
-            for (int dz = -STATION_RADIUS; dz <= STATION_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().stationRadius();
+                dx <= BoardConfig.current().facts().stationRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().stationRadius();
+                    dz <= BoardConfig.current().facts().stationRadius();
+                    dz++) {
                 for (int dy = -STATION_DOWN; dy <= STATION_UP; dy++) {
                     BlockPos at = center.offset(dx, dy, dz);
                     if (!level.isLoaded(at)) {

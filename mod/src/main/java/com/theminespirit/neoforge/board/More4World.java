@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphKits;
 import com.theminespirit.core.board.graph.GraphState;
@@ -27,13 +28,8 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 
 final class More4World {
-    private static final int PLAYER_RADIUS = 24;
-    private static final int PORTAL_RADIUS = 24;
     private static final int PORTAL_BELOW = 10;
     private static final int PORTAL_ABOVE = 10;
-    private static final int HAZARD_RADIUS = 4;
-    private static final int PET_RADIUS = 32;
-    private static final int SPACE_RADIUS = 48;
     private static final int SPACE_STEP = 4;
     private static final int SPACE_EDGE = 2;
 
@@ -58,7 +54,8 @@ final class More4World {
 
     private static More4Rules.Players players(ServerLevel level, List<SpiritEntity> spirits, BlockCoord home) {
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
-        long limit = (long) PLAYER_RADIUS * PLAYER_RADIUS;
+        long limit = (long) BoardConfig.current().facts().playerRadius()
+                * BoardConfig.current().facts().playerRadius();
         int near = 0;
         int hungry = 0;
         int broken = 0;
@@ -95,8 +92,12 @@ final class More4World {
 
     static Optional<BlockCoord> portalPoint(ServerLevel level, BlockCoord home) {
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
-        for (int dx = -PORTAL_RADIUS; dx <= PORTAL_RADIUS; dx++) {
-            for (int dz = -PORTAL_RADIUS; dz <= PORTAL_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().portalRadius();
+                dx <= BoardConfig.current().facts().portalRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().portalRadius();
+                    dz <= BoardConfig.current().facts().portalRadius();
+                    dz++) {
                 for (int dy = -PORTAL_BELOW; dy <= PORTAL_ABOVE; dy++) {
                     BlockPos at = center.offset(dx, dy, dz);
                     if (level.isLoaded(at) && level.getBlockState(at).is(Blocks.NETHER_PORTAL)) {
@@ -129,9 +130,15 @@ final class More4World {
     }
 
     private static boolean hazard(ServerLevel level, BlockPos at) {
-        for (int dx = -HAZARD_RADIUS; dx <= HAZARD_RADIUS; dx++) {
-            for (int dy = -HAZARD_RADIUS; dy <= HAZARD_RADIUS; dy++) {
-                for (int dz = -HAZARD_RADIUS; dz <= HAZARD_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().hazardScanRadius();
+                dx <= BoardConfig.current().facts().hazardScanRadius();
+                dx++) {
+            for (int dy = -BoardConfig.current().facts().hazardScanRadius();
+                    dy <= BoardConfig.current().facts().hazardScanRadius();
+                    dy++) {
+                for (int dz = -BoardConfig.current().facts().hazardScanRadius();
+                        dz <= BoardConfig.current().facts().hazardScanRadius();
+                        dz++) {
                     BlockPos pos = at.offset(dx, dy, dz);
                     if (!level.isLoaded(pos)) {
                         continue;
@@ -186,8 +193,12 @@ final class More4World {
         BlockCoord home = scan.home();
         ColumnMask enclosure = scan.stage().enclosure();
         int free = 0;
-        for (int dx = -SPACE_RADIUS; dx <= SPACE_RADIUS; dx += SPACE_STEP) {
-            for (int dz = -SPACE_RADIUS; dz <= SPACE_RADIUS; dz += SPACE_STEP) {
+        for (int dx = -BoardConfig.current().facts().spaceRadius();
+                dx <= BoardConfig.current().facts().spaceRadius();
+                dx += SPACE_STEP) {
+            for (int dz = -BoardConfig.current().facts().spaceRadius();
+                    dz <= BoardConfig.current().facts().spaceRadius();
+                    dz += SPACE_STEP) {
                 int x = home.x() + dx;
                 int z = home.z() + dz;
                 if (enclosure.contains(x, z) || !level.isLoaded(new BlockPos(x, home.y(), z))) {
@@ -228,7 +239,9 @@ final class More4World {
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
         int tamed = 0;
         int untamed = 0;
-        for (Animal animal : level.getEntitiesOfClass(Animal.class, new AABB(center).inflate(PET_RADIUS))) {
+        for (Animal animal : level.getEntitiesOfClass(
+                Animal.class,
+                new AABB(center).inflate(BoardConfig.current().facts().petRadius()))) {
             if (animal.isRemoved()) {
                 continue;
             }

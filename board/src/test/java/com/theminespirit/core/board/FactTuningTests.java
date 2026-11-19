@@ -64,6 +64,9 @@ class FactTuningTests {
 
     private static String allFieldsJson() {
         return "{\"animalRadius\":48,\"penRadius\":12,\"wildRadius\":16,\"villagerRadius\":48,"
-                + "\"bedRadius\":20,\"hazardRadius\":3,\"flowRadius\":8}";
+                + "\"bedRadius\":20,\"hazardRadius\":3,\"flowRadius\":8,\"dropRadius\":8,"
+                + "\"decayRadius\":16,\"playerRadius\":24,\"portalRadius\":24,\"hazardScanRadius\":4,"
+                + "\"petRadius\":32,\"spaceRadius\":48,\"growRadius\":16,\"mineRadius\":8,"
+                + "\"homeRadius\":32,\"looseRadius\":24,\"stationRadius\":8,\"fieldRadius\":24}";
     }
 }

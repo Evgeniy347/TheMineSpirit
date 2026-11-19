@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BoardLogEntry;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BoardTiming;
@@ -27,8 +28,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
 final class More3Inputs {
-    private static final int DROP_RADIUS = 8;
-    private static final int DECAY_RADIUS = 16;
     private static final int DECAY_BELOW = 4;
     private static final int DECAY_ABOVE = 8;
     private static final int TRAMPLED_NEIGHBOURS = 2;
@@ -120,7 +119,8 @@ final class More3Inputs {
     }
 
     private static boolean itemsAt(ServerLevel level, BlockCoord at) {
-        AABB box = new AABB(new BlockPos(at.x(), at.y(), at.z())).inflate(DROP_RADIUS);
+        AABB box = new AABB(new BlockPos(at.x(), at.y(), at.z()))
+                .inflate(BoardConfig.current().facts().dropRadius());
         return level.getEntitiesOfClass(ItemEntity.class, box).stream()
                 .anyMatch(item -> !item.isRemoved() && !item.getItem().isEmpty());
     }
@@ -191,8 +191,12 @@ final class More3Inputs {
         int sand = 0;
         int gravel = 0;
         int trampled = 0;
-        for (int dx = -DECAY_RADIUS; dx <= DECAY_RADIUS; dx++) {
-            for (int dz = -DECAY_RADIUS; dz <= DECAY_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().decayRadius();
+                dx <= BoardConfig.current().facts().decayRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().decayRadius();
+                    dz <= BoardConfig.current().facts().decayRadius();
+                    dz++) {
                 for (int dy = -DECAY_BELOW; dy <= DECAY_ABOVE; dy++) {
                     BlockPos at = new BlockPos(home.x() + dx, home.y() + dy, home.z() + dz);
                     if (!level.isLoaded(at)) {

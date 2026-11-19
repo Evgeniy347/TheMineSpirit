@@ -28,7 +28,6 @@ import net.minecraft.world.phys.AABB;
 import org.jspecify.annotations.Nullable;
 
 final class More7Inputs {
-    private static final int FIELD_RADIUS = 24;
     private static final int FIELD_BELOW = 4;
     private static final int FIELD_ABOVE = 4;
     private static final String PEN_PREFIX = "pen_";
@@ -74,8 +73,12 @@ final class More7Inputs {
         int farmland = 0;
         int planted = 0;
         int ready = 0;
-        for (int dx = -FIELD_RADIUS; dx <= FIELD_RADIUS; dx++) {
-            for (int dz = -FIELD_RADIUS; dz <= FIELD_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().fieldRadius();
+                dx <= BoardConfig.current().facts().fieldRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().fieldRadius();
+                    dz <= BoardConfig.current().facts().fieldRadius();
+                    dz++) {
                 for (int dy = -FIELD_BELOW; dy <= FIELD_ABOVE; dy++) {
                     BlockPos at = new BlockPos(home.x() + dx, home.y() + dy, home.z() + dz);
                     if (!level.isLoaded(at)) {

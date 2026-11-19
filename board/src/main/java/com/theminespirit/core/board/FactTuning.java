@@ -13,10 +13,43 @@ public record FactTuning(
         int villagerRadius,
         int bedRadius,
         int hazardRadius,
-        int flowRadius) {
+        int flowRadius,
+        int dropRadius,
+        int decayRadius,
+        int playerRadius,
+        int portalRadius,
+        int hazardScanRadius,
+        int petRadius,
+        int spaceRadius,
+        int growRadius,
+        int mineRadius,
+        int homeRadius,
+        int looseRadius,
+        int stationRadius,
+        int fieldRadius) {
     private static final Set<String> FIELDS = Set.of(
-            "animalRadius", "penRadius", "wildRadius", "villagerRadius", "bedRadius", "hazardRadius", "flowRadius");
-    private static final FactTuning DEFAULTS = new FactTuning(48, 12, 16, 48, 20, 3, 8);
+            "animalRadius",
+            "penRadius",
+            "wildRadius",
+            "villagerRadius",
+            "bedRadius",
+            "hazardRadius",
+            "flowRadius",
+            "dropRadius",
+            "decayRadius",
+            "playerRadius",
+            "portalRadius",
+            "hazardScanRadius",
+            "petRadius",
+            "spaceRadius",
+            "growRadius",
+            "mineRadius",
+            "homeRadius",
+            "looseRadius",
+            "stationRadius",
+            "fieldRadius");
+    private static final FactTuning DEFAULTS =
+            new FactTuning(48, 12, 16, 48, 20, 3, 8, 8, 16, 24, 24, 4, 32, 48, 16, 8, 32, 24, 8, 24);
 
     public FactTuning {
         requirePositive(animalRadius, "animalRadius");
@@ -26,6 +59,19 @@ public record FactTuning(
         requirePositive(bedRadius, "bedRadius");
         requirePositive(hazardRadius, "hazardRadius");
         requirePositive(flowRadius, "flowRadius");
+        requirePositive(dropRadius, "dropRadius");
+        requirePositive(decayRadius, "decayRadius");
+        requirePositive(playerRadius, "playerRadius");
+        requirePositive(portalRadius, "portalRadius");
+        requirePositive(hazardScanRadius, "hazardScanRadius");
+        requirePositive(petRadius, "petRadius");
+        requirePositive(spaceRadius, "spaceRadius");
+        requirePositive(growRadius, "growRadius");
+        requirePositive(mineRadius, "mineRadius");
+        requirePositive(homeRadius, "homeRadius");
+        requirePositive(looseRadius, "looseRadius");
+        requirePositive(stationRadius, "stationRadius");
+        requirePositive(fieldRadius, "fieldRadius");
     }
 
     static FactTuning defaults() {
@@ -49,7 +95,20 @@ public record FactTuning(
                 integer(node, "villagerRadius", origin),
                 integer(node, "bedRadius", origin),
                 integer(node, "hazardRadius", origin),
-                integer(node, "flowRadius", origin));
+                integer(node, "flowRadius", origin),
+                integer(node, "dropRadius", origin),
+                integer(node, "decayRadius", origin),
+                integer(node, "playerRadius", origin),
+                integer(node, "portalRadius", origin),
+                integer(node, "hazardScanRadius", origin),
+                integer(node, "petRadius", origin),
+                integer(node, "spaceRadius", origin),
+                integer(node, "growRadius", origin),
+                integer(node, "mineRadius", origin),
+                integer(node, "homeRadius", origin),
+                integer(node, "looseRadius", origin),
+                integer(node, "stationRadius", origin),
+                integer(node, "fieldRadius", origin));
     }
 
     private static int integer(JsonNode node, String field, String origin) {

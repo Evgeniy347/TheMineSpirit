@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphState;
 import com.theminespirit.core.board.graph.More5Rules;
@@ -21,15 +22,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
 final class More5World {
-    private static final int GROW_RADIUS = 16;
     private static final int GROW_BELOW = 2;
     private static final int GROW_ABOVE = 3;
     private static final int GROW_LIGHT = 9;
-    private static final int MINE_RADIUS = 8;
     private static final int MINE_BELOW = 16;
     private static final int DARK_LIGHT = 8;
     private static final int ROUTE_MAX_DISTANCE = 64;
-    private static final int HOME_RADIUS = 32;
     private static final String SAPLINGS = "#saplings";
     private static final String BONE_MEAL = "bone_meal";
     private static final String MINE = "mine";
@@ -92,8 +90,12 @@ final class More5World {
         int darkSaplings = 0;
         int dryCrops = 0;
         int unfed = 0;
-        for (int dx = -GROW_RADIUS; dx <= GROW_RADIUS; dx++) {
-            for (int dz = -GROW_RADIUS; dz <= GROW_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().growRadius();
+                dx <= BoardConfig.current().facts().growRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().growRadius();
+                    dz <= BoardConfig.current().facts().growRadius();
+                    dz++) {
                 for (int dy = -GROW_BELOW; dy <= GROW_ABOVE; dy++) {
                     BlockPos at = new BlockPos(home.x() + dx, home.y() + dy, home.z() + dz);
                     if (!level.isLoaded(at)) {
@@ -130,7 +132,9 @@ final class More5World {
     private static int carriedBlocks(ServerLevel level, BlockCoord home) {
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
         int carried = 0;
-        for (EnderMan enderman : level.getEntitiesOfClass(EnderMan.class, new AABB(center).inflate(HOME_RADIUS))) {
+        for (EnderMan enderman : level.getEntitiesOfClass(
+                EnderMan.class,
+                new AABB(center).inflate(BoardConfig.current().facts().homeRadius()))) {
             if (enderman.isRemoved()) {
                 continue;
             }
@@ -193,8 +197,12 @@ final class More5World {
         BlockPos center = new BlockPos(
                 mine.position().x(), mine.position().y(), mine.position().z());
         int dark = 0;
-        for (int dx = -MINE_RADIUS; dx <= MINE_RADIUS; dx++) {
-            for (int dz = -MINE_RADIUS; dz <= MINE_RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().mineRadius();
+                dx <= BoardConfig.current().facts().mineRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().mineRadius();
+                    dz <= BoardConfig.current().facts().mineRadius();
+                    dz++) {
                 for (int dy = -MINE_BELOW; dy <= 0; dy++) {
                     BlockPos at = center.offset(dx, dy, dz);
                     if (!level.isLoaded(at) || !level.getBlockState(at).isAir()) {
