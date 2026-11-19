@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -18,7 +19,7 @@ public final class EmbeddedSpace {
 
     private EmbeddedSpace() {}
 
-    public static boolean inside(SpiritEntity spirit) {
+    public static boolean inside(Entity spirit) {
         Level level = spirit.level();
         BlockPos feet = spirit.blockPosition();
         if (PassageWalk.passageAt(level, new BlockCoord(feet.getX(), feet.getY(), feet.getZ())) != null) {
@@ -27,7 +28,7 @@ public final class EmbeddedSpace {
         return inside(spirit.getBoundingBox(), level.getBlockState(feet).getCollisionShape(level, feet), feet);
     }
 
-    public static List<BlockPos> blocking(SpiritEntity spirit) {
+    public static List<BlockPos> blocking(Entity spirit) {
         Level level = spirit.level();
         AABB body = spirit.getBoundingBox();
         int minX = Mth.floor(body.minX + EDGE);
