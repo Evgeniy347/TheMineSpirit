@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.perception.Terrain;
 import com.theminespirit.core.tactics.EnvFacts;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;

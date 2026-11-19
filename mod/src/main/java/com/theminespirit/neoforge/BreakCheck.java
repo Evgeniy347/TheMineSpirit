@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.policy.BlockProtection;
-import com.theminespirit.core.tactics.adapter.Visibility;
+import com.theminespirit.core.tactics.api.adapter.Visibility;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;

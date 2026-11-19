@@ -1,6 +1,6 @@
 package com.theminespirit.core.intellect;
 
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;

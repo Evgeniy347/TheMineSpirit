@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 

@@ -3,7 +3,7 @@ package com.theminespirit.core.intellect.defense;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;

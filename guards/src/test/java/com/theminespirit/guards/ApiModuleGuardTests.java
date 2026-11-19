@@ -65,8 +65,8 @@ class ApiModuleGuardTests {
             "core/coordinator/work/WorkReservations.java",
             "core/movement/GotoTuning.java",
             "core/movement/BodyStep.java",
-            "core/tactics/adapter/Visibility.java",
-            "core/tactics/adapter/RetreatSpacing.java",
+            "core/tactics/api/adapter/Visibility.java",
+            "core/tactics/api/adapter/RetreatSpacing.java",
             "core/planner/api/CraftedItems.java",
             "core/planner/api/Ingredient.java",
             "core/planner/api/ResourceKnowledge.java",
@@ -80,7 +80,7 @@ class ApiModuleGuardTests {
             "core/inventory/JsonResource.java",
             "core/reload/api/TableHolder.java",
             "core/reload/api/TableStatus.java",
-            "core/tactics/Point.java",
+            "core/tactics/api/Point.java",
             "core/Lookup.java");
 
     @Test

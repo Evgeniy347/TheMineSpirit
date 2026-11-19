@@ -1,5 +1,7 @@
 package com.theminespirit.core.tactics;
 
+import com.theminespirit.core.tactics.api.FactChecks;
+
 public record FactorScales(
         ArmorModel armor,
         double minDps,

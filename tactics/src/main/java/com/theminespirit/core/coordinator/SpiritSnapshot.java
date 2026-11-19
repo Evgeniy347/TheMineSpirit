@@ -2,7 +2,7 @@ package com.theminespirit.core.coordinator;
 
 import com.theminespirit.core.coordinator.work.WorkTarget;
 import com.theminespirit.core.tactics.CombatMode;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.Optional;
 import java.util.UUID;
 

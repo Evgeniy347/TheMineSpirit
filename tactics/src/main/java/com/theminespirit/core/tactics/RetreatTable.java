@@ -1,5 +1,6 @@
 package com.theminespirit.core.tactics;
 
+import com.theminespirit.core.tactics.api.FactChecks;
 import java.util.List;
 
 public record RetreatTable(List<RetreatEntry> entries, Condition callHelp, RallyTuning rally) {

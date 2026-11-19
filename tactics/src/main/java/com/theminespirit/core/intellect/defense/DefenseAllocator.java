@@ -4,7 +4,7 @@ import com.theminespirit.core.coordinator.DefenseAssignment;
 import com.theminespirit.core.coordinator.SectorAssigner;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.EnemyProfiles;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;

@@ -2,9 +2,9 @@ package com.theminespirit.core.tactics.adapter;
 
 import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.CombatMode;
-import com.theminespirit.core.tactics.FactChecks;
 import com.theminespirit.core.tactics.RetreatMethod;
 import com.theminespirit.core.tactics.TargetSelector;
+import com.theminespirit.core.tactics.api.FactChecks;
 import java.util.Objects;
 import java.util.Optional;
 

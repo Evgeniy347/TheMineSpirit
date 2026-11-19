@@ -5,7 +5,7 @@ import com.theminespirit.core.intellect.FoodNorm;
 import com.theminespirit.core.intellect.NutritionTable;
 import com.theminespirit.core.intellect.StockCatalog;
 import com.theminespirit.core.intellect.StockLots;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.inventory.StackMapper;

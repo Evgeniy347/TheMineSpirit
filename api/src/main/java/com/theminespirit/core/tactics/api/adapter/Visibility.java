@@ -1,4 +1,4 @@
-package com.theminespirit.core.tactics.adapter;
+package com.theminespirit.core.tactics.api.adapter;
 
 public enum Visibility {
     CLEAR,

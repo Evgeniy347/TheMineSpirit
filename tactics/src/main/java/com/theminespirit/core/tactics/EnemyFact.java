@@ -1,5 +1,8 @@
 package com.theminespirit.core.tactics;
 
+import com.theminespirit.core.tactics.api.FactChecks;
+import com.theminespirit.core.tactics.api.Point;
+
 public record EnemyFact(
         String type,
         String id,

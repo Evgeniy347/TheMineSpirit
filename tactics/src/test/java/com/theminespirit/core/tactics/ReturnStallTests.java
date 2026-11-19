@@ -3,6 +3,7 @@ package com.theminespirit.core.tactics;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.tactics.api.Point;
 import org.junit.jupiter.api.Test;
 
 class ReturnStallTests {

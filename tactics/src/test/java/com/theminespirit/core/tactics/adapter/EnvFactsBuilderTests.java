@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.tactics.EnvFacts;
-import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.TimeOfDay;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 

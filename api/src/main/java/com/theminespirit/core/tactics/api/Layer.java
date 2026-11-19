@@ -1,4 +1,4 @@
-package com.theminespirit.core.tactics;
+package com.theminespirit.core.tactics.api;
 
 public enum Layer {
     POLICY,

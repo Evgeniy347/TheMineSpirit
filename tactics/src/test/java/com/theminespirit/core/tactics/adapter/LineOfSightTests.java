@@ -3,7 +3,8 @@ package com.theminespirit.core.tactics.adapter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.theminespirit.core.perception.Terrain;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
+import com.theminespirit.core.tactics.api.adapter.Visibility;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;

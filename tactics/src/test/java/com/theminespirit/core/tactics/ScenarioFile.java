@@ -1,5 +1,6 @@
 package com.theminespirit.core.tactics;
 
+import com.theminespirit.core.tactics.api.Point;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;

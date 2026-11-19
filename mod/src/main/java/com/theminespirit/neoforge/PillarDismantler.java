@@ -2,7 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.board.lease.LeaseStatus;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.tactics.adapter.Visibility;
+import com.theminespirit.core.tactics.api.adapter.Visibility;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.lease.LeaseRun;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;

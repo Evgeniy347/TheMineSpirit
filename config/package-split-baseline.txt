@@ -9,7 +9,5 @@ com.theminespirit.core.inventory
 com.theminespirit.core.mining
 com.theminespirit.core.movement
 com.theminespirit.core.script
-com.theminespirit.core.tactics
-com.theminespirit.core.tactics.adapter
 com.theminespirit.core.town
 com.theminespirit.core.ui

@@ -1,5 +1,7 @@
 package com.theminespirit.core.tactics;
 
+import com.theminespirit.core.tactics.api.FactChecks;
+import com.theminespirit.core.tactics.api.Point;
 import org.jspecify.annotations.Nullable;
 
 public record Orders(

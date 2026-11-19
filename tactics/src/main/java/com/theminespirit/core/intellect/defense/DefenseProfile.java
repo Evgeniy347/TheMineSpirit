@@ -5,7 +5,7 @@ import static com.theminespirit.core.Lookup.present;
 import com.theminespirit.core.inventory.JsonResource;
 import com.theminespirit.core.reload.api.TableSlot;
 import com.theminespirit.core.tactics.EnemyProfile;
-import com.theminespirit.core.tactics.InvalidFieldException;
+import com.theminespirit.core.tactics.api.InvalidFieldException;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;

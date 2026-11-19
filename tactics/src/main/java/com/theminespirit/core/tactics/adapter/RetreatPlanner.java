@@ -2,8 +2,9 @@ package com.theminespirit.core.tactics.adapter;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.EnemyFact;
-import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.RetreatMethod;
+import com.theminespirit.core.tactics.api.Point;
+import com.theminespirit.core.tactics.api.adapter.RetreatSpacing;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;

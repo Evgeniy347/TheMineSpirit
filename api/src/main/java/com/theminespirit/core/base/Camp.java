@@ -1,6 +1,6 @@
 package com.theminespirit.core.base;
 
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 
 public record Camp(Point center, double radius, int owner, long setAt) {
     public Camp {

@@ -3,7 +3,7 @@ package com.theminespirit.core.mining;
 import com.theminespirit.core.building.BlockSight;
 import com.theminespirit.core.building.SpiritReach;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.tactics.adapter.Visibility;
+import com.theminespirit.core.tactics.api.adapter.Visibility;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;

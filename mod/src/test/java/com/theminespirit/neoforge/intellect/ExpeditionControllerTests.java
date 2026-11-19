@@ -9,7 +9,7 @@ import com.theminespirit.core.inventory.Stack;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

@@ -1,5 +1,7 @@
 package com.theminespirit.core.tactics;
 
+import com.theminespirit.core.tactics.api.FactChecks;
+
 public record ArmorModel(double perPoint, double cap) {
     public ArmorModel {
         FactChecks.range("ArmorModel.perPoint", perPoint, 0, 1);

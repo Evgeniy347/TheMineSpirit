@@ -2,7 +2,7 @@ package com.theminespirit.core.coordinator;
 
 import com.theminespirit.core.coordinator.work.WorkReservations;
 import com.theminespirit.core.coordinator.work.WorkTarget;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

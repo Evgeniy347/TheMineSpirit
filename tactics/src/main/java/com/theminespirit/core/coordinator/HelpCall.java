@@ -1,6 +1,6 @@
 package com.theminespirit.core.coordinator;
 
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.UUID;
 
 public record HelpCall(UUID caller, Point pos, long raisedAt) {

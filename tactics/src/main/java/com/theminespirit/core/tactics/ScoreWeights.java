@@ -2,6 +2,7 @@ package com.theminespirit.core.tactics;
 
 import static com.theminespirit.core.Lookup.present;
 
+import com.theminespirit.core.tactics.api.FactChecks;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;

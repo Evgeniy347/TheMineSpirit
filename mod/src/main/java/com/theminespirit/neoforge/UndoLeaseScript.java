@@ -12,7 +12,7 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.tactics.adapter.Visibility;
+import com.theminespirit.core.tactics.api.adapter.Visibility;
 import com.theminespirit.neoforge.lease.LeaseData;
 import com.theminespirit.neoforge.lease.LeaseRun;
 import com.theminespirit.neoforge.lease.LeaseStates;

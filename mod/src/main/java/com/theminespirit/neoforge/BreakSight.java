@@ -2,8 +2,8 @@ package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.BlockSight;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.tactics.Point;
-import com.theminespirit.core.tactics.adapter.Visibility;
+import com.theminespirit.core.tactics.api.Point;
+import com.theminespirit.core.tactics.api.adapter.Visibility;
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;

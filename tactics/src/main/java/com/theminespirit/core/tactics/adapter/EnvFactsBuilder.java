@@ -1,8 +1,8 @@
 package com.theminespirit.core.tactics.adapter;
 
 import com.theminespirit.core.tactics.EnvFacts;
-import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.TimeOfDay;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.Optional;
 
 public final class EnvFactsBuilder {

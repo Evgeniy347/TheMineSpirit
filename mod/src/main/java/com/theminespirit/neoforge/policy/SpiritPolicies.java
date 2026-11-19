@@ -19,7 +19,7 @@ import com.theminespirit.core.policy.WorkZone;
 import com.theminespirit.core.policy.ZonePolicy;
 import com.theminespirit.core.policy.api.PolicyExemptions;
 import com.theminespirit.core.policy.api.PolicyId;
-import com.theminespirit.core.tactics.Layer;
+import com.theminespirit.core.tactics.api.Layer;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.PositionTrace;
 import com.theminespirit.neoforge.SpiritBrain;

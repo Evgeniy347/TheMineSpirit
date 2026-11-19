@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge.defense;
 
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;

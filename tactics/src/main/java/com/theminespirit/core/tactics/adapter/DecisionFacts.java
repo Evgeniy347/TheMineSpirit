@@ -1,9 +1,9 @@
 package com.theminespirit.core.tactics.adapter;
 
 import com.theminespirit.core.tactics.EnemyFact;
-import com.theminespirit.core.tactics.FactChecks;
 import com.theminespirit.core.tactics.SelfFacts;
 import com.theminespirit.core.tactics.Situation;
+import com.theminespirit.core.tactics.api.FactChecks;
 import java.util.List;
 import java.util.Locale;
 

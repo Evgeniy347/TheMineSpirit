@@ -1,5 +1,6 @@
 package com.theminespirit.core.tactics;
 
+import com.theminespirit.core.tactics.api.Point;
 import java.util.Objects;
 import java.util.Optional;
 

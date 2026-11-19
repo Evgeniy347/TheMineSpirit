@@ -7,7 +7,7 @@ import com.theminespirit.core.intellect.Forage;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.CatalogLimits;
 import com.theminespirit.core.tactics.EnemyFact;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.husbandry.HerdSpecies;
 import java.util.ArrayList;

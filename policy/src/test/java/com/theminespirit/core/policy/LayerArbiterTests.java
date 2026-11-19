@@ -3,7 +3,7 @@ package com.theminespirit.core.policy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.theminespirit.core.policy.api.PolicyId;
-import com.theminespirit.core.tactics.Layer;
+import com.theminespirit.core.tactics.api.Layer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

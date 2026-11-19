@@ -4,10 +4,10 @@ import com.theminespirit.core.tactics.CombatDirective;
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.DirectiveOwner;
 import com.theminespirit.core.tactics.DirectiveOwnership;
-import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.RetreatMethod;
 import com.theminespirit.core.tactics.adapter.RetreatTracker;
 import com.theminespirit.core.tactics.adapter.StoredTactics;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.Optional;
 import net.minecraft.world.entity.LivingEntity;
 

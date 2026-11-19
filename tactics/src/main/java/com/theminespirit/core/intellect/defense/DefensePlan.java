@@ -1,7 +1,7 @@
 package com.theminespirit.core.intellect.defense;
 
 import com.theminespirit.core.coordinator.DefenseAssignment;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;

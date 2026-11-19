@@ -1,5 +1,7 @@
 package com.theminespirit.core.tactics;
 
+import com.theminespirit.core.tactics.api.FactChecks;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.theminespirit.core.coordinator;
 
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

@@ -8,7 +8,7 @@ import com.theminespirit.core.forestry.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.script.StripLogParams;
-import com.theminespirit.core.tactics.adapter.Visibility;
+import com.theminespirit.core.tactics.api.adapter.Visibility;
 import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.blocks.BlockReach;
 import java.util.ArrayDeque;

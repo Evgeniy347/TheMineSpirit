@@ -1,7 +1,7 @@
 package com.theminespirit.neoforge.defense;
 
 import com.theminespirit.core.intellect.defense.DefenderCapability;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Optional;
 

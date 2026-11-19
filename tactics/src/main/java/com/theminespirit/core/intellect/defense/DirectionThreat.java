@@ -1,7 +1,7 @@
 package com.theminespirit.core.intellect.defense;
 
 import com.theminespirit.core.tactics.EnemyFact;
-import com.theminespirit.core.tactics.FactChecks;
+import com.theminespirit.core.tactics.api.FactChecks;
 
 public record DirectionThreat(double bearing, double strength, int enemies) {
     public DirectionThreat {

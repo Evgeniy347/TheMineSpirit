@@ -1,4 +1,4 @@
-package com.theminespirit.core.tactics.adapter;
+package com.theminespirit.core.tactics.api.adapter;
 
 public final class RetreatSpacing {
     public static final double HOME_ARRIVAL = 2.0;

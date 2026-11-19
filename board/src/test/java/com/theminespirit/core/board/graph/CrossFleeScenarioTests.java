@@ -27,7 +27,7 @@ import com.theminespirit.core.board.SpiritView;
 import com.theminespirit.core.movement.DisengageRoute;
 import com.theminespirit.core.sleep.SleepFacts;
 import com.theminespirit.core.sleep.SleepRule;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

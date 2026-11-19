@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.EnemyProfile;
 import com.theminespirit.core.tactics.EnemyProfiles;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;

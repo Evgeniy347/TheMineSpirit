@@ -1,8 +1,8 @@
 package com.theminespirit.core.tactics.adapter;
 
-import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.TacticalOutcome;
 import com.theminespirit.core.tactics.TacticsMemory;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;

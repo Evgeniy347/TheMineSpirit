@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge.tactics;
 
 import com.theminespirit.core.policy.BlockProtection;
-import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.adapter.RetreatPlan;
+import com.theminespirit.core.tactics.api.Point;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Optional;

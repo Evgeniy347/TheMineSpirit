@@ -1,6 +1,6 @@
 package com.theminespirit.core.intellect.defense;
 
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;

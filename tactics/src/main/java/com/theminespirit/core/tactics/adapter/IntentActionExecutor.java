@@ -1,10 +1,10 @@
 package com.theminespirit.core.tactics.adapter;
 
 import com.theminespirit.core.tactics.EnemyFact;
-import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.RetreatMethod;
 import com.theminespirit.core.tactics.TacticalAction;
 import com.theminespirit.core.tactics.TacticalOutcome;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.Comparator;
 import java.util.List;
 import org.jspecify.annotations.Nullable;

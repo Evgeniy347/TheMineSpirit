@@ -1,4 +1,4 @@
-package com.theminespirit.core.tactics;
+package com.theminespirit.core.tactics.api;
 
 public record Point(double x, double y, double z) {
     public Point {

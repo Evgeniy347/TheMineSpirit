@@ -82,7 +82,7 @@ final class DeadCodeExemptions {
                     "core/social/TransferOrder.java|method|TransferOrder#fromWarehouse",
                     "Заготовка под открытую задачу: todo.md → «Экономика и логистика»"),
             new Exemption(
-                    "core/tactics/LayerOrder.java|field|LayerOrder#INTERRUPTED_LAYER_RESUMES",
+                    "core/tactics/api/LayerOrder.java|field|LayerOrder#INTERRUPTED_LAYER_RESUMES",
                     "Заготовка под открытую задачу: todo.md → «Тактический интеллект»"),
             new Exemption(
                     "core/tactics/SafePointChoice.java|field|SafePointChoice#NO_CAMP",

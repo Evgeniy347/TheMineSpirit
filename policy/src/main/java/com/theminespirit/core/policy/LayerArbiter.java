@@ -1,7 +1,7 @@
 package com.theminespirit.core.policy;
 
-import com.theminespirit.core.tactics.Layer;
-import com.theminespirit.core.tactics.LayerOrder;
+import com.theminespirit.core.tactics.api.Layer;
+import com.theminespirit.core.tactics.api.LayerOrder;
 import java.util.Objects;
 
 public final class LayerArbiter {

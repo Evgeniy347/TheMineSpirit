@@ -1,6 +1,6 @@
 package com.theminespirit.core.tactics.adapter;
 
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 
 public sealed interface RetreatPlan {
     record Walk(Point target, double arrival, boolean shooting) implements RetreatPlan {

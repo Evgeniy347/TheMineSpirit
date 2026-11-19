@@ -2,7 +2,8 @@ package com.theminespirit.core.tactics.adapter;
 
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.perception.Terrain;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
+import com.theminespirit.core.tactics.api.adapter.Visibility;
 import java.util.Optional;
 
 public final class LineOfSight {

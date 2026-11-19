@@ -1,4 +1,4 @@
-package com.theminespirit.core.tactics;
+package com.theminespirit.core.tactics.api;
 
 import java.util.List;
 
@@ -22,11 +22,11 @@ public final class InvalidFieldException extends IllegalArgumentException {
         return reason;
     }
 
-    String owner() {
+    public String owner() {
         return owner;
     }
 
-    List<String> path() {
+    public List<String> path() {
         return List.of(path.split("[.]"));
     }
 }

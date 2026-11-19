@@ -1,7 +1,7 @@
 package com.theminespirit.core.intellect;
 
 import com.theminespirit.core.night.NightLeash;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 

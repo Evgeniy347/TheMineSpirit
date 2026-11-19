@@ -5,12 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.tactics.CombatMode;
-import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.RetreatMethod;
 import com.theminespirit.core.tactics.TacticalAction;
 import com.theminespirit.core.tactics.TacticalOption;
 import com.theminespirit.core.tactics.TacticalOutcome;
 import com.theminespirit.core.tactics.TacticalState;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 

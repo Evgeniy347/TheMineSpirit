@@ -6,11 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.tactics.CombatMode;
 import com.theminespirit.core.tactics.DecisionSource;
-import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.RetreatMethod;
 import com.theminespirit.core.tactics.TacticalOption;
 import com.theminespirit.core.tactics.TacticalState;
 import com.theminespirit.core.tactics.TacticsMemory;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;

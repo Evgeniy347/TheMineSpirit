@@ -1,5 +1,7 @@
 package com.theminespirit.core.tactics;
 
+import com.theminespirit.core.tactics.api.FactChecks;
+
 public record RallyTuning(int rallyRadius, int callRadius, int callMinEnemies, int callIntervalTicks, int helpRadius) {
     public static final int MAX_RADIUS = 256;
     public static final int MAX_MIN_ENEMIES = Situation.MAX_ENEMIES;

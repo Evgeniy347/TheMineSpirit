@@ -6,7 +6,7 @@ import com.theminespirit.core.coordinator.work.WorkReservations;
 import com.theminespirit.core.coordinator.work.WorkTarget;
 import com.theminespirit.core.intellect.IntellectTuning;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;

@@ -3,7 +3,7 @@ package com.theminespirit.core.coordinator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.theminespirit.core.tactics.CombatMode;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

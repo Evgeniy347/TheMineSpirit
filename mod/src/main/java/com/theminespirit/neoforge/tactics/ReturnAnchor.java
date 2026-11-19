@@ -4,7 +4,7 @@ import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.mining.AnchorSpot;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.AnchorReturn;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import com.theminespirit.neoforge.LevelSafetyView;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Optional;

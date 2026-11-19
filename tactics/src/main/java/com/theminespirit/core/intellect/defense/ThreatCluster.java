@@ -1,7 +1,7 @@
 package com.theminespirit.core.intellect.defense;
 
 import com.theminespirit.core.tactics.EnemyFact;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.List;
 
 record ThreatCluster(double bearing, int count, double weight, Point centroid, List<EnemyFact> enemies) {

@@ -1,8 +1,8 @@
 package com.theminespirit.neoforge.tactics;
 
 import com.mojang.logging.LogUtils;
-import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.ReturnStall;
+import com.theminespirit.core.tactics.api.Point;
 import com.theminespirit.neoforge.Approach;
 import com.theminespirit.neoforge.DigOutScript;
 import com.theminespirit.neoforge.SpiritEntity;

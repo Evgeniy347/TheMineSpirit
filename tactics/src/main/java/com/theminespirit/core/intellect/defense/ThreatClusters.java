@@ -3,7 +3,7 @@ package com.theminespirit.core.intellect.defense;
 import com.theminespirit.core.tactics.EnemyFact;
 import com.theminespirit.core.tactics.EnemyProfile;
 import com.theminespirit.core.tactics.EnemyProfiles;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;

@@ -1,8 +1,8 @@
 package com.theminespirit.core.tactics.adapter;
 
 import com.theminespirit.core.tactics.EnemyFact;
-import com.theminespirit.core.tactics.Point;
 import com.theminespirit.core.tactics.Situation;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.List;
 
 public record CoreFactCollector(TacticsAdapterSettings settings) implements FactCollector {

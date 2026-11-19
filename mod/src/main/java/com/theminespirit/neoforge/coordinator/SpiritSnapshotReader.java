@@ -6,7 +6,7 @@ import com.theminespirit.core.coordinator.SpiritSnapshot;
 import com.theminespirit.core.coordinator.WorkTargets;
 import com.theminespirit.core.coordinator.work.WorkTarget;
 import com.theminespirit.core.tactics.CombatMode;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.HashSet;
 import java.util.List;

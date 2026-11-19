@@ -1,5 +1,7 @@
 package com.theminespirit.core.tactics;
 
+import com.theminespirit.core.tactics.api.FactChecks;
+
 public record EnvFacts(
         double lavaNear,
         double dropHeight,

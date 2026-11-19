@@ -3,6 +3,8 @@ package com.theminespirit.core.tactics;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.tactics.api.Layer;
+import com.theminespirit.core.tactics.api.LayerOrder;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

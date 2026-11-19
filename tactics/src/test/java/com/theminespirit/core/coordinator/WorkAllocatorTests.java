@@ -9,7 +9,7 @@ import com.theminespirit.core.coordinator.work.WorkReservations;
 import com.theminespirit.core.coordinator.work.WorkTarget;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.tactics.CombatMode;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

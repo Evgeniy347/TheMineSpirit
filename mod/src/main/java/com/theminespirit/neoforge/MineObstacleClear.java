@@ -4,7 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BlockSight;
 import com.theminespirit.core.mining.MineObstruction;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.tactics.Point;
+import com.theminespirit.core.tactics.api.Point;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
