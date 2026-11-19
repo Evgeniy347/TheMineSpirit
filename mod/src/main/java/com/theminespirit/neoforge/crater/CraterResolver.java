@@ -3,14 +3,14 @@ package com.theminespirit.neoforge.crater;
 import com.theminespirit.core.building.Crater;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.FillCraterParams;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritView;
 import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 
 public final class CraterResolver {
     private CraterResolver() {}
 
-    public static Crater resolve(SpiritEntity spirit, FillCraterParams params) {
+    public static Crater resolve(SpiritView spirit, FillCraterParams params) {
         ServerLevel level = (ServerLevel) spirit.level();
         CraterStore store = CraterStore.get(level);
         Optional<Crater> found = switch (params) {

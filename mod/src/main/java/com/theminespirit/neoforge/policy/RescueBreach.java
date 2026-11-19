@@ -3,7 +3,7 @@ package com.theminespirit.neoforge.policy;
 import com.theminespirit.core.policy.BlockProtection;
 import com.theminespirit.core.policy.api.PolicyId;
 import com.theminespirit.core.town.StageSite;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritView;
 import com.theminespirit.neoforge.board.PlotCellStructure;
 import com.theminespirit.neoforge.board.SettlementPlotStore;
 import net.minecraft.core.BlockPos;
@@ -25,7 +25,7 @@ public final class RescueBreach {
                 && !(state.getBlock() instanceof BedBlock);
     }
 
-    static BlockProtection.Decision permit(SpiritEntity spirit, BlockPos pos, BlockState state) {
+    static BlockProtection.Decision permit(SpiritView spirit, BlockPos pos, BlockState state) {
         if (!(spirit.level() instanceof ServerLevel server)) {
             return new BlockProtection.Refused(PolicyId.PROTECTED_ZONE, "не серверный мир");
         }
@@ -39,7 +39,7 @@ public final class RescueBreach {
         return new BlockProtection.Allowed();
     }
 
-    static BlockProtection.Decision allow(SpiritEntity spirit, BlockPos pos, BlockState state) {
+    static BlockProtection.Decision allow(SpiritView spirit, BlockPos pos, BlockState state) {
         BlockProtection.Decision decision = permit(spirit, pos, state);
         if (decision instanceof BlockProtection.Allowed
                 && spirit.level() instanceof ServerLevel server

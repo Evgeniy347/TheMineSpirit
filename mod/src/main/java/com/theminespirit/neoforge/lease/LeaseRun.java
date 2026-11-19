@@ -6,7 +6,7 @@ import com.theminespirit.core.board.lease.LeaseSession;
 import com.theminespirit.core.board.lease.LeaseStatus;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.BlockStates;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritView;
 import java.util.List;
 import java.util.Objects;
 import net.minecraft.core.BlockPos;
@@ -26,7 +26,7 @@ public final class LeaseRun {
         this.session = session;
     }
 
-    public static LeaseRun open(SpiritEntity spirit, String purpose) {
+    public static LeaseRun open(SpiritView spirit, String purpose) {
         Objects.requireNonNull(spirit, "Дух не может быть null: аренда принадлежит ему");
         if (!(spirit.level() instanceof ServerLevel level) || level.isClientSide()) {
             throw new IllegalStateException("Аренду временной правки открывают только на сервере: на клиенте мира нет");
@@ -37,7 +37,7 @@ public final class LeaseRun {
         return new LeaseRun(data, session);
     }
 
-    public static @Nullable LeaseRun ownedAt(SpiritEntity spirit, BlockPos pos) {
+    public static @Nullable LeaseRun ownedAt(SpiritView spirit, BlockPos pos) {
         if (!(spirit.level() instanceof ServerLevel level)) {
             return null;
         }
@@ -49,7 +49,7 @@ public final class LeaseRun {
                 .orElse(null);
     }
 
-    public static @Nullable LeaseRun ownedAnywhereAt(SpiritEntity spirit, BlockPos pos) {
+    public static @Nullable LeaseRun ownedAnywhereAt(SpiritView spirit, BlockPos pos) {
         if (!(spirit.level() instanceof ServerLevel level)) {
             return null;
         }

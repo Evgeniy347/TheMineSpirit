@@ -2,7 +2,7 @@ package com.theminespirit.neoforge.inventory;
 
 import com.theminespirit.core.inventory.ContainerOpenHold;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritView;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,7 @@ public final class ContainerOpenService {
         instance = service;
     }
 
-    public static void hold(SpiritEntity spirit, BlockPos pos) {
+    public static void hold(SpiritView spirit, BlockPos pos) {
         if (spirit.level() instanceof ServerLevel level) {
             instance().touch(level, pos.immutable(), spirit.getUUID());
         }
