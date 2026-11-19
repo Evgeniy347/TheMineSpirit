@@ -30,8 +30,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 public final class ExploreScript implements ScriptInstance {
-    private static final int SURVEY_DEPTH = 2;
-    private static final int GROUND_SEARCH_DEPTH = 4;
     private static final long TICKS_PER_DAY = 24_000L;
 
     private final SpiritEntity spirit;
@@ -157,7 +155,7 @@ public final class ExploreScript implements ScriptInstance {
     }
 
     private boolean beginPoint(BlockCoord point) {
-        for (int drop = 0; drop <= GROUND_SEARCH_DEPTH; drop++) {
+        for (int drop = 0; drop <= MovementConfig.groundSearchDepth(); drop++) {
             BlockCoord stand = new BlockCoord(point.x(), point.y() - drop, point.z());
             if (MiningSafety.canStand(stand, safety) && TravelCheck.refusal(spirit, stand) == null) {
                 approach.begin(
@@ -173,7 +171,7 @@ public final class ExploreScript implements ScriptInstance {
         boolean tree = false;
         boolean water = false;
         boolean lava = false;
-        for (int dy = -SURVEY_DEPTH; dy <= SURVEY_DEPTH; dy++) {
+        for (int dy = -MovementConfig.surveyDepth(); dy <= MovementConfig.surveyDepth(); dy++) {
             for (int dx = -SpiritConfig.surveyRadius(); dx <= SpiritConfig.surveyRadius(); dx++) {
                 for (int dz = -SpiritConfig.surveyRadius(); dz <= SpiritConfig.surveyRadius(); dz++) {
                     BlockPos pos = new BlockPos(point.x() + dx, point.y() + dy, point.z() + dz);

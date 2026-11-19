@@ -25,6 +25,7 @@ import com.theminespirit.neoforge.experience.SpiritExperienceEvents;
 import com.theminespirit.neoforge.inventory.ContainerOpenService;
 import com.theminespirit.neoforge.lease.LeaseLifecycle;
 import com.theminespirit.neoforge.log.LogLifecycle;
+import com.theminespirit.neoforge.movement.MovementConfig;
 import com.theminespirit.neoforge.movement.PathNetworkService;
 import com.theminespirit.neoforge.net.BoardViewChannel;
 import com.theminespirit.neoforge.net.BuildFingerprint;
@@ -62,6 +63,7 @@ public final class TheMineSpirit {
         modEventBus.addListener(SettlementChunkTickets::registerControllers);
         modContainer.registerConfig(ModConfig.Type.SERVER, SpiritConfig.spec());
         modContainer.registerConfig(ModConfig.Type.SERVER, RestConfig.spec(), RestConfig.FILE_NAME);
+        MovementConfig.register(modContainer);
         NeoForge.EVENT_BUS.addListener(SpiritCommands::register);
         NeoForge.EVENT_BUS.addListener(DataReload::register);
         DoorWatchService.register();

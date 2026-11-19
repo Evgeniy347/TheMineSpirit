@@ -14,7 +14,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 
 public final class CrossWaterScript implements ScriptInstance {
-    private static final int SWIM_DEPTH = 2;
 
     private final SpiritEntity spirit;
     private final CrossWaterParams params;
@@ -79,7 +78,7 @@ public final class CrossWaterScript implements ScriptInstance {
         BlockPos feet = spirit.blockPosition();
         int floorY = feet.getY() - 1;
         int width = waterWidth(new BlockCoord(feet.getX(), floorY, feet.getZ()), target);
-        if (width == 0 || deepest < SWIM_DEPTH) {
+        if (width == 0 || deepest < MovementConfig.swimDepth()) {
             delegate = new GotoScript(spirit, new GotoParams(params.x(), params.y(), params.z()));
             return;
         }
@@ -126,7 +125,7 @@ public final class CrossWaterScript implements ScriptInstance {
 
     private int depthAt(int x, int top, int z) {
         int depth = 0;
-        while (depth < SWIM_DEPTH && isWater(x, top - depth, z)) {
+        while (depth < MovementConfig.swimDepth() && isWater(x, top - depth, z)) {
             depth++;
         }
         return depth;

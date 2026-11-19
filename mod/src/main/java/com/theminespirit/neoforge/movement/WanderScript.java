@@ -17,7 +17,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 
 public final class WanderScript implements ScriptInstance {
-    public static final int GROUND_SEARCH_DEPTH = 4;
 
     private static final String SEED_KEY = "seed";
     private static final String ATTEMPT_KEY = "attempt";
@@ -122,7 +121,7 @@ public final class WanderScript implements ScriptInstance {
 
     private boolean chooseNextPoint() {
         BlockCoord drawn = WanderPolicy.next(seed, origin, radius, attempt++);
-        for (int drop = 0; drop <= GROUND_SEARCH_DEPTH; drop++) {
+        for (int drop = 0; drop <= MovementConfig.groundSearchDepth(); drop++) {
             BlockCoord stand = new BlockCoord(drawn.x(), drawn.y() - drop, drawn.z());
             if (MiningSafety.canStand(stand, safety) && TravelCheck.refusal(spirit, stand) == null) {
                 approach.begin(
