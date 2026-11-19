@@ -11,7 +11,7 @@ import com.theminespirit.core.board.graph.More3Rules;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.SiteLevels;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritView;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -42,7 +42,7 @@ final class More3Inputs {
             GraphState state,
             ServerLevel level,
             BoardService service,
-            List<SpiritEntity> spirits,
+            List<? extends SpiritView> spirits,
             SupplyGraph graph,
             GraphSurroundings.Around around,
             FirstStepsRunner.StageScan scan) {

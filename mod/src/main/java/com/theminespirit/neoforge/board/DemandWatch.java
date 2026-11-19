@@ -8,7 +8,7 @@ import com.theminespirit.core.board.DemandRules;
 import com.theminespirit.core.board.WoolRules;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritView;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
@@ -20,7 +20,7 @@ final class DemandWatch {
 
     DemandWatch() {}
 
-    void tick(ServerLevel level, BoardService service, List<SpiritEntity> spirits, long now) {
+    void tick(ServerLevel level, BoardService service, List<? extends SpiritView> spirits, long now) {
         BoardLedger ledger = service.board().ledger();
         DemandRules rules = DataTables.INSTANCE.demand().current();
         ChestSpaceWatch.Space space = ChestSpaceWatch.space(level);

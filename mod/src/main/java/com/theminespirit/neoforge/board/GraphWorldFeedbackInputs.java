@@ -5,7 +5,7 @@ import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphFeedback;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritView;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -18,7 +18,8 @@ final class GraphWorldFeedbackInputs {
 
     private GraphWorldFeedbackInputs() {}
 
-    static GraphFeedback of(ServerLevel level, List<SpiritEntity> spirits, BlockCoord home, BoardService service) {
+    static GraphFeedback of(
+            ServerLevel level, List<? extends SpiritView> spirits, BlockCoord home, BoardService service) {
         return new GraphFeedback(
                 GraphFeedback.Clock.of(level.getDayTime()),
                 player(level, spirits, home),
@@ -34,7 +35,7 @@ final class GraphWorldFeedbackInputs {
                                         .failureHalfLife()));
     }
 
-    private static GraphFeedback.Player player(ServerLevel level, List<SpiritEntity> spirits, BlockCoord home) {
+    private static GraphFeedback.Player player(ServerLevel level, List<? extends SpiritView> spirits, BlockCoord home) {
         BlockPos center = new BlockPos(home.x(), home.y(), home.z());
         long limit = (long) BoardConfig.current().facts().nearbyPlayerRadius()
                 * BoardConfig.current().facts().nearbyPlayerRadius();
