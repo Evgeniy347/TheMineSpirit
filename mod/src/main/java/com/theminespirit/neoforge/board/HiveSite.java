@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.HiveRules;
 import com.theminespirit.core.board.StockView;
 import com.theminespirit.core.observation.BlockCoord;
@@ -16,8 +17,6 @@ import net.minecraft.world.level.block.BeehiveBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 final class HiveSite {
-    private static final int HIVE_VERTICAL_RADIUS = 8;
-    private static final int FLOWER_VERTICAL_RADIUS = 4;
 
     private HiveSite() {}
 
@@ -65,8 +64,8 @@ final class HiveSite {
         BlockPos found = null;
         double best = Double.MAX_VALUE;
         for (BlockPos pos : BlockPos.betweenClosed(
-                origin.offset(-radius, -HIVE_VERTICAL_RADIUS, -radius),
-                origin.offset(radius, HIVE_VERTICAL_RADIUS, radius))) {
+                origin.offset(-radius, -BoardConfig.current().facts().hiveVerticalRadius(), -radius),
+                origin.offset(radius, BoardConfig.current().facts().hiveVerticalRadius(), radius))) {
             BlockState state = level.getBlockState(pos);
             if (!(state.getBlock() instanceof BeehiveBlock)
                     || !state.hasProperty(BeehiveBlock.HONEY_LEVEL)
@@ -116,8 +115,8 @@ final class HiveSite {
         BlockPos origin = new BlockPos(home.x(), home.y(), home.z());
         List<BlockPos> flowers = new ArrayList<>();
         for (BlockPos pos : BlockPos.betweenClosed(
-                origin.offset(-radius, -FLOWER_VERTICAL_RADIUS, -radius),
-                origin.offset(radius, FLOWER_VERTICAL_RADIUS, radius))) {
+                origin.offset(-radius, -BoardConfig.current().facts().flowerVerticalRadius(), -radius),
+                origin.offset(radius, BoardConfig.current().facts().flowerVerticalRadius(), radius))) {
             if (level.getBlockState(pos).is(BlockTags.FLOWERS)) {
                 flowers.add(pos.immutable());
             }
@@ -141,8 +140,8 @@ final class HiveSite {
     private static boolean hiveNear(ServerLevel level, BlockCoord home, int radius) {
         BlockPos origin = new BlockPos(home.x(), home.y(), home.z());
         for (BlockPos pos : BlockPos.betweenClosed(
-                origin.offset(-radius, -HIVE_VERTICAL_RADIUS, -radius),
-                origin.offset(radius, HIVE_VERTICAL_RADIUS, radius))) {
+                origin.offset(-radius, -BoardConfig.current().facts().hiveVerticalRadius(), -radius),
+                origin.offset(radius, BoardConfig.current().facts().hiveVerticalRadius(), radius))) {
             if (level.getBlockState(pos).getBlock() instanceof BeehiveBlock) {
                 return true;
             }

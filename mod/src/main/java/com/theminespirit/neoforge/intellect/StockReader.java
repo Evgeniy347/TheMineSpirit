@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.intellect;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BoardReserve;
 import com.theminespirit.core.intellect.FoodNorm;
 import com.theminespirit.core.intellect.NutritionTable;
@@ -23,7 +24,6 @@ import net.minecraft.world.level.block.Block;
 
 public final class StockReader {
     public static final int STOCK_CONTAINER_BUDGET = 8;
-    public static final int STOCK_HEIGHT = 4;
 
     private StockReader() {}
 
@@ -64,7 +64,9 @@ public final class StockReader {
             for (int dx = -SpiritConfig.storageSearchRadius();
                     dx <= SpiritConfig.storageSearchRadius() && containers < STOCK_CONTAINER_BUDGET;
                     dx++) {
-                for (int dy = -STOCK_HEIGHT; dy <= STOCK_HEIGHT && containers < STOCK_CONTAINER_BUDGET; dy++) {
+                for (int dy = -BoardConfig.current().facts().stockScanHeight();
+                        dy <= BoardConfig.current().facts().stockScanHeight() && containers < STOCK_CONTAINER_BUDGET;
+                        dy++) {
                     for (int dz = -SpiritConfig.storageSearchRadius();
                             dz <= SpiritConfig.storageSearchRadius() && containers < STOCK_CONTAINER_BUDGET;
                             dz++) {

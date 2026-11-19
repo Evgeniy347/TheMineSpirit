@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.crafting;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.crafting.CraftTuning;
 import com.theminespirit.core.crafting.SmeltTiming;
 import com.theminespirit.neoforge.SpiritEntity;
@@ -22,8 +23,6 @@ public final class CampfireSession {
     }
 
     public record Job(Item input, int inputToFeed, Item output, int cookTicks, int collectedSoFar, int wantedTotal) {}
-
-    private static final double DROP_RADIUS = 2.0;
 
     private final SpiritEntity spirit;
     private final Level level;
@@ -133,7 +132,7 @@ public final class CampfireSession {
     }
 
     private void collectDrops() {
-        AABB box = new AABB(pos).inflate(DROP_RADIUS);
+        AABB box = new AABB(pos).inflate(BoardConfig.current().facts().campfireDropRadius());
         for (ItemEntity entity : level.getEntitiesOfClass(ItemEntity.class, box)) {
             ItemStack stack = entity.getItem();
             if (!stack.is(output)) {

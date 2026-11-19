@@ -266,6 +266,10 @@
     "routeMaxDistance": 64,
     "groundProbeDepth": 48,
     "craterRimScanDepth": 24,
-    "stationReachRadius": 48
+    "stationReachRadius": 48,
+    "stockScanHeight": 4,
+    "campfireDropRadius": 2,
+    "hiveVerticalRadius": 8,
+    "flowerVerticalRadius": 4
   }
 }

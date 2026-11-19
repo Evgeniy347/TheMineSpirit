@@ -2,6 +2,7 @@ package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.base.NamespacedId;
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.StockParts;
 import com.theminespirit.core.board.StockScan;
 import com.theminespirit.core.board.StockView;
@@ -37,7 +38,6 @@ import org.slf4j.Logger;
 
 public final class StockReader {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int SCAN_HEIGHT = 4;
     private static final String POTION_PREFIX = "potion_";
     private static final String SPLASH_PREFIX = "splash_potion_";
 
@@ -70,7 +70,11 @@ public final class StockReader {
             }
         }
         StockScan.Result found = StockScan.containers(
-                rotate(centers), SpiritConfig.storageSearchRadius(), SCAN_HEIGHT, blockBudget, blocks(level));
+                rotate(centers),
+                SpiritConfig.storageSearchRadius(),
+                BoardConfig.current().facts().stockScanHeight(),
+                blockBudget,
+                blocks(level));
         int reads = 0;
         for (BlockCoord pos : StockScan.knownFirst(ChestSnapshots.positions(level), found.containers())) {
             if (reads >= containerBudget) {
