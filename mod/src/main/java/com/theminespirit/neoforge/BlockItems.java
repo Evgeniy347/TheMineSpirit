@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.building.EarthCover;
 import java.util.Objects;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
@@ -42,5 +43,24 @@ public final class BlockItems {
             }
         }
         return total;
+    }
+
+    public static int countEarthIn(Container inventory, String blockId) {
+        Objects.requireNonNull(inventory, "Инвентарь не может быть null: без него нечего считать");
+        int total = 0;
+        for (String id : EarthCover.ids(blockId)) {
+            total += countIn(inventory, id);
+        }
+        return total;
+    }
+
+    public static String availableFor(Container inventory, String blockId) {
+        Objects.requireNonNull(inventory, "Инвентарь не может быть null: по нему видно, из чего ставить");
+        for (String id : EarthCover.ids(blockId)) {
+            if (countIn(inventory, id) > 0) {
+                return id;
+            }
+        }
+        return blockId;
     }
 }

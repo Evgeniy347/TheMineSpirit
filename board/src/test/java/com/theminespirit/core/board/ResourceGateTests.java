@@ -215,6 +215,44 @@ class ResourceGateTests {
     }
 
     @Test
+    void missing_GrassInStock_CoversDirtNeed() {
+        StockNeed need = new StockNeed(Map.of("minecraft:dirt", 528));
+        StockView stock = new StockView(Map.of("minecraft:grass_block", 1575));
+
+        assertEquals(
+                Map.of(),
+                ResourceGate.missing(need, stock),
+                "Дёрн на складе закрывает нужду в земле: это один предмет, и задание не должно ждать добычи земли "
+                        + "при полутора тысячах травы в сундуках");
+        assertEquals(
+                GateOutcome.READY,
+                ResourceGate.gate(need, stock),
+                "Гейт обязан пускать задание, когда земляная нужда покрыта дёрном");
+    }
+
+    @Test
+    void missing_DirtInStock_CoversGrassNeed() {
+        StockNeed need = new StockNeed(Map.of("grass_block", 10));
+        StockView stock = new StockView(Map.of("minecraft:dirt", 40));
+
+        assertEquals(
+                Map.of(),
+                ResourceGate.missing(need, stock),
+                "Земля закрывает нужду в дёрне: взаимозамена работает в обе стороны");
+    }
+
+    @Test
+    void missing_EarthInStock_CountedTogether() {
+        StockNeed need = new StockNeed(Map.of("dirt", 200));
+        StockView stock = new StockView(Map.of("dirt", 100, "grass_block", 150));
+
+        assertEquals(
+                Map.of(),
+                ResourceGate.missing(need, stock),
+                "Склад считает землю и дёрн вместе: по отдельности 100 < 200, вместе 250 ≥ 200");
+    }
+
+    @Test
     void missing_ActionPlacedDirtPath_DoesNotWaitForStock() {
         StockNeed need = new StockNeed(Map.of("dirt_path", 20, "torch", 4));
         StockView stock = new StockView(Map.of());

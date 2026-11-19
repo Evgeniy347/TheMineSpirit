@@ -2,6 +2,7 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.ChestShare;
+import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.planner.AcquireSupplies;
@@ -47,9 +48,8 @@ public final class SettlementSupplies implements AcquireSupplies {
 
     @Override
     public List<ScriptCall> withdraw(String item, int maxCount) {
-        IdFilter filter = IdFilter.of(List.of(item));
         List<BlockPos> chests = new ArrayList<>();
-        List<Integer> counts = new ArrayList<>();
+        List<Container> containers = new ArrayList<>();
         Set<BlockPos> seen = new HashSet<>();
         for (BlockPos pos : BuildSupplyTrip.containers(spirit)) {
             BlockPos other = BuildSupplyTrip.otherHalf(spirit, pos);
@@ -57,7 +57,7 @@ public final class SettlementSupplies implements AcquireSupplies {
                     && (other.equals(pos) || seen.add(other))
                     && ContainerAccess.open(spirit.level(), pos) instanceof ContainerAccess.Opened opened) {
                 chests.add(pos);
-                counts.add(count(opened.container(), filter));
+                containers.add(opened.container());
             }
         }
         if (chests.isEmpty()) {
@@ -70,33 +70,44 @@ public final class SettlementSupplies implements AcquireSupplies {
                     near.size());
             return near;
         }
-        List<Integer> takes = ChestShare.takes(counts, keep, Math.max(0, maxCount));
-        int fromChests = takes.stream().mapToInt(Integer::intValue).sum();
-        LOGGER.info(
-                "[plot] {}: {} не хватает {}, из сундуков {} (минимум {} из {} не трогается), добычей {}",
-                spirit.displayName(),
-                item,
-                maxCount,
-                fromChests,
-                keep,
-                counts.stream().mapToInt(Integer::intValue).sum(),
-                Math.max(0, maxCount - fromChests));
         List<ScriptCall> steps = new ArrayList<>();
-        for (int index = 0; index < chests.size(); index++) {
-            BlockPos pos = chests.get(index);
-            for (int left = takes.get(index); left > 0; left -= CatalogLimits.COUNT_MAX) {
-                steps.add(new ScriptCall(
-                        "withdraw",
-                        Map.of(
-                                "container",
-                                pos.getX() + "," + pos.getY() + "," + pos.getZ(),
-                                "item",
-                                item,
-                                "count",
-                                Math.min(left, CatalogLimits.COUNT_MAX),
-                                "radius",
-                                CatalogLimits.CONTAINER_RADIUS_DEFAULT)));
+        int left = maxCount;
+        for (String id : EarthCover.ids(item)) {
+            if (left <= 0) {
+                break;
             }
+            IdFilter filter = IdFilter.of(List.of(id));
+            List<Integer> counts = containers.stream()
+                    .map(container -> count(container, filter))
+                    .toList();
+            List<Integer> takes = ChestShare.takes(counts, keep, left);
+            int fromChests = takes.stream().mapToInt(Integer::intValue).sum();
+            LOGGER.info(
+                    "[plot] {}: {} не хватает {}, из сундуков {} (минимум {} из {} не трогается), добычей {}",
+                    spirit.displayName(),
+                    id,
+                    left,
+                    fromChests,
+                    keep,
+                    counts.stream().mapToInt(Integer::intValue).sum(),
+                    Math.max(0, left - fromChests));
+            for (int index = 0; index < chests.size(); index++) {
+                BlockPos pos = chests.get(index);
+                for (int take = takes.get(index); take > 0; take -= CatalogLimits.COUNT_MAX) {
+                    steps.add(new ScriptCall(
+                            "withdraw",
+                            Map.of(
+                                    "container",
+                                    pos.getX() + "," + pos.getY() + "," + pos.getZ(),
+                                    "item",
+                                    id,
+                                    "count",
+                                    Math.min(take, CatalogLimits.COUNT_MAX),
+                                    "radius",
+                                    CatalogLimits.CONTAINER_RADIUS_DEFAULT)));
+                }
+            }
+            left -= fromChests;
         }
         return steps;
     }

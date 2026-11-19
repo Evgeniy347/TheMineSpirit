@@ -211,7 +211,7 @@ public final class FillSession {
             case NO_MATERIAL -> {
                 tally.failed();
                 releaseAndAdvance();
-                int have = tally.placedCount() + BlockItems.countIn(spirit.getInventory(), blockId);
+                int have = tally.placedCount() + BlockItems.countEarthIn(spirit.getInventory(), blockId);
                 tally.supplies(have, Math.max(order.size() - tally.prebuiltCount() - have, 0));
                 report.fail("не хватило материала '" + blockId + "': нужно " + order.size() + ", есть " + have
                         + "; поставлено " + tally.placedCount() + " из " + order.size());

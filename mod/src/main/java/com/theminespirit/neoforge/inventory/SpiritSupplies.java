@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.inventory;
 
+import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.observation.IdFilter;
 import com.theminespirit.core.plan.ScriptCall;
@@ -49,8 +50,12 @@ public final class SpiritSupplies implements AcquireSupplies {
     @Override
     public int inInventory(String item) {
         Objects.requireNonNull(item, "Предмет не может быть null: по нему считается инвентарь духа");
-        IdFilter filter = IdFilter.of(List.of(item));
-        return count(spirit.getInventory(), filter) + mainHandCount(filter);
+        int total = 0;
+        for (String id : EarthCover.ids(item)) {
+            IdFilter filter = IdFilter.of(List.of(id));
+            total += count(spirit.getInventory(), filter) + mainHandCount(filter);
+        }
+        return total;
     }
 
     @Override
@@ -80,7 +85,6 @@ public final class SpiritSupplies implements AcquireSupplies {
         if (maxCount <= 0) {
             return List.of();
         }
-        IdFilter filter = IdFilter.of(List.of(item));
         BlockPos center = spirit.blockPosition();
         BlockLocator.Search search =
                 BlockLocator.search(spirit.level(), center, radius, ContainerAccess.allowedBlocks());
@@ -93,6 +97,7 @@ public final class SpiritSupplies implements AcquireSupplies {
         List<ScriptCall> steps = new ArrayList<>();
         Set<Container> seen = Collections.newSetFromMap(new IdentityHashMap<>());
         String dimension = spirit.level().dimension().location().toString();
+        List<String> ids = EarthCover.ids(item);
         int left = maxCount;
         for (BlockPos pos : found) {
             if (left <= 0) {
@@ -112,19 +117,24 @@ public final class SpiritSupplies implements AcquireSupplies {
             if (!seen.add(opened.container())) {
                 continue;
             }
-            int available = count(opened.container(), filter);
-            if (available <= 0) {
-                continue;
+            for (String id : ids) {
+                if (left <= 0) {
+                    break;
+                }
+                int available = count(opened.container(), IdFilter.of(List.of(id)));
+                if (available <= 0) {
+                    continue;
+                }
+                int take = Math.min(left, available);
+                steps.add(new ScriptCall(
+                        "withdraw",
+                        Map.of(
+                                "container", pos.getX() + "," + pos.getY() + "," + pos.getZ(),
+                                "item", id,
+                                "count", take,
+                                "radius", radius)));
+                left -= take;
             }
-            int take = Math.min(left, available);
-            steps.add(new ScriptCall(
-                    "withdraw",
-                    Map.of(
-                            "container", pos.getX() + "," + pos.getY() + "," + pos.getZ(),
-                            "item", item,
-                            "count", take,
-                            "radius", radius)));
-            left -= take;
         }
         return steps;
     }

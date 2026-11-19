@@ -1,5 +1,6 @@
 package com.theminespirit.core.building;
 
+import java.util.List;
 import java.util.Objects;
 
 public final class EarthCover {
@@ -26,5 +27,27 @@ public final class EarthCover {
             return block;
         }
         return "minecraft:" + DIRT;
+    }
+
+    public static String normalized(String item) {
+        Objects.requireNonNull(item, "Предмет земли не может быть null: без него не свести дёрн с землёй");
+        String path = SchematicBlocks.path(item);
+        return GRASS.equals(path) ? DIRT : path;
+    }
+
+    public static boolean same(String first, String second) {
+        Objects.requireNonNull(first, "Первый предмет сверки не может быть null: иначе не с чем сравнивать");
+        Objects.requireNonNull(second, "Второй предмет сверки не может быть null: иначе не с чем сравнивать");
+        return normalized(first).equals(normalized(second));
+    }
+
+    public static List<String> ids(String item) {
+        Objects.requireNonNull(item, "Предмет земли не может быть null: без него не выбрать, что брать");
+        if (!earth(item)) {
+            return List.of(item);
+        }
+        int colon = item.indexOf(':');
+        String prefix = colon < 0 ? "minecraft:" : item.substring(0, colon + 1);
+        return List.of(prefix + DIRT, prefix + GRASS);
     }
 }

@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.building.BuildTuning;
+import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
@@ -65,6 +66,11 @@ final class PlaceBlockScript implements ScriptInstance {
             return fail("дух исчез во время постановки блока");
         }
         if (level.getBlockState(toPos(target)).is(wanted.getBlock())) {
+            placed = 1;
+            outcome = ScriptStatus.SUCCEEDED;
+            return outcome;
+        }
+        if (EarthCover.earth(blockId) && EarthCover.earth(BlockStates.idOf(level.getBlockState(toPos(target))))) {
             placed = 1;
             outcome = ScriptStatus.SUCCEEDED;
             return outcome;

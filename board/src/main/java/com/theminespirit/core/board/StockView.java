@@ -1,6 +1,6 @@
 package com.theminespirit.core.board;
 
-import com.theminespirit.core.building.SchematicBlocks;
+import com.theminespirit.core.building.EarthCover;
 import java.util.Map;
 import java.util.Objects;
 
@@ -20,10 +20,9 @@ public record StockView(Map<String, Integer> available) {
 
     public int count(String itemId) {
         Objects.requireNonNull(itemId, "Предмет запаса не может быть null: без него нечего считать");
-        String wanted = SchematicBlocks.path(itemId);
         int total = 0;
         for (Map.Entry<String, Integer> entry : available.entrySet()) {
-            if (SchematicBlocks.path(entry.getKey()).equals(wanted)) {
+            if (EarthCover.same(entry.getKey(), itemId)) {
                 total += entry.getValue();
             }
         }

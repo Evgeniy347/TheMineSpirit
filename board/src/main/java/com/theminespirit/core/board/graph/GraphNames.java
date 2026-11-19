@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.graph;
 
+import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.building.WoodSpecies;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,6 +49,9 @@ public final class GraphNames {
         String name = item.startsWith(NAMESPACE) ? item.substring(NAMESPACE.length()) : item;
         if (MANGROVE_PROPAGULE.equals(name)) {
             return MANGROVE_SAPLING;
+        }
+        if (EarthCover.GRASS.equals(name)) {
+            return EarthCover.DIRT;
         }
         if (WoodSpecies.speciesOf(name).isPresent()) {
             return name;

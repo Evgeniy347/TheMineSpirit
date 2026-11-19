@@ -98,6 +98,11 @@ public final class BlockPlacer {
                     ? farmland(spirit, level, target)
                     : PathTrample.trample(spirit, target);
         }
+        String material = BlockItems.availableFor(spirit.getInventory(), blockId);
+        if (!material.equals(blockId)) {
+            blockId = material;
+            state = BlockStates.stateFor(material);
+        }
         Begin guard = placementGuard(level, target, state, supportRequired);
         if (guard != null) {
             return guard;

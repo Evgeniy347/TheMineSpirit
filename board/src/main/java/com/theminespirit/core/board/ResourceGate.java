@@ -12,6 +12,11 @@ public final class ResourceGate {
         return missing(need, stock).isEmpty() ? GateOutcome.READY : GateOutcome.WAITING;
     }
 
+    public static boolean needsStock(String item) {
+        Objects.requireNonNull(item, "Предмет не может быть null: по нему решают, ждать ли склад");
+        return !SchematicActions.isActionPlaced(item);
+    }
+
     public static Map<String, Integer> missing(StockNeed need, StockView stock) {
         Objects.requireNonNull(need, "need не может быть null: гейт без нужды не проверить");
         Objects.requireNonNull(stock, "stock не может быть null: гейт без снимка запасов не проверить");

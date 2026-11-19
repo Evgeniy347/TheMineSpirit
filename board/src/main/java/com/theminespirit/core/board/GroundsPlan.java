@@ -1,5 +1,6 @@
 package com.theminespirit.core.board;
 
+import com.theminespirit.core.building.EarthCover;
 import com.theminespirit.core.building.FillArea;
 import com.theminespirit.core.building.FillOrder;
 import com.theminespirit.core.observation.BlockCoord;
@@ -227,7 +228,10 @@ public final class GroundsPlan {
     private static List<String> dropFilter(PlotLeveling leveling) {
         String dirt = MINECRAFT + PlotLeveling.DEFAULT_BLOCK;
         String block = leveling.block().contains(":") ? leveling.block() : MINECRAFT + leveling.block();
-        return block.equals(dirt) ? List.of(dirt) : List.of(dirt, block);
+        if (EarthCover.earth(block)) {
+            return EarthCover.ids(dirt);
+        }
+        return List.of(dirt, block);
     }
 
     static Map<String, Object> boxParams(FillArea box, Map<String, Object> extra) {
