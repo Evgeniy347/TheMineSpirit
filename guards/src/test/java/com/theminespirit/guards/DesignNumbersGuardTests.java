@@ -17,15 +17,39 @@ class DesignNumbersGuardTests {
             "core/board/TorchPlans.java",
             "core/board/RoutePlans.java",
             "core/board/TicketStoragePlans.java",
-            "neoforge/board/GraphCrafting.java");
+            "neoforge/board/GraphCrafting.java",
+            "neoforge/board/FarmHerd.java",
+            "neoforge/board/FarmPost.java",
+            "neoforge/board/LifeInputs.java",
+            "neoforge/board/GraphWorldFeedbackInputs.java",
+            "neoforge/board/MorePost.java",
+            "neoforge/board/GraphSurroundings.java",
+            "neoforge/board/MoreInputs.java",
+            "neoforge/board/StageWorldFacts.java",
+            "neoforge/board/GraphTargets.java",
+            "neoforge/board/SettlementWood.java",
+            "neoforge/board/More5World.java",
+            "neoforge/board/GroundProbe.java",
+            "neoforge/crater/CraterEvents.java",
+            "neoforge/crafting/StationAccess.java",
+            "neoforge/board/More3Post.java",
+            "neoforge/board/QuarryWorld.java",
+            "neoforge/board/StageBuilds.java",
+            "neoforge/board/PitRescue.java",
+            "neoforge/board/GraphSource.java",
+            "neoforge/board/TransferStockDesk.java",
+            "neoforge/board/FishingSite.java",
+            "neoforge/board/GraphStoreInputs.java",
+            "neoforge/board/More5Events.java",
+            "neoforge/intellect/SettlementScanner.java");
     private static final Pattern NUMBER_CONSTANT =
             Pattern.compile("(?m)^\\s*(?:public|private|protected)?\\s*static\\s+final\\s+(?:int|long)\\s+"
                     + "([A-Z0-9_]*(?:RADIUS|SIZE|TAKE|STEPS|BATCH|PARTS|LOGS)[A-Z0-9_]*)\\s*=\\s*-?\\d");
     private static final String RULE = "Число плана снова стало Java-константой: баланс меняется только "
             + "пересборкой мода, а копия в другом классе расходится при правке (ревью 19.11, P1-3). Как надо: "
-            + "значение — в data/theminespirit/board/board.json → «plans» (PlanTuning), код читает через "
-            + "BoardConfig.current().plans(). Переносить числа разрешено только из Java в данные; расширять "
-            + "список MIGRATED в этом стороже — вместе с переносом очередного класса.";
+            + "планы — в board.json → «plans» (PlanTuning) и «facts» (FactTuning) через BoardConfig.current(), "
+            + "радиусы `:mod` — в «intervals»/SpiritConfig/MovementConfig. Переносить числа разрешено только из "
+            + "Java в данные; расширять список MIGRATED в этом стороже — вместе с переносом очередного класса.";
 
     @Test
     void designNumber_InMigratedClass_IsReported() {
