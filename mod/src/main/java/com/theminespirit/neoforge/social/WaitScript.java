@@ -5,18 +5,18 @@ import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.script.WaitParams;
 import com.theminespirit.core.social.WaitCounter;
-import com.theminespirit.neoforge.SpiritEntity;
+import com.theminespirit.neoforge.SpiritView;
 import java.util.Map;
 import java.util.Optional;
 
 public final class WaitScript implements ScriptInstance {
-    private final SpiritEntity spirit;
+    private final SpiritView spirit;
     private final int targetTicks;
     private WaitCounter counter;
     private String failureReason;
     private ScriptResult result;
 
-    public WaitScript(SpiritEntity spirit, WaitParams params) {
+    public WaitScript(SpiritView spirit, WaitParams params) {
         this.spirit = spirit;
         this.targetTicks = params.ticks();
     }
