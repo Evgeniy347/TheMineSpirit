@@ -207,7 +207,7 @@ final class More4Post {
                             "count",
                             count,
                             "radius",
-                            More4Scripts.CONTAINER_RADIUS));
+                            SpiritConfig.storageSearchRadius()));
             return ActivityLaunch.launchOn(post, spirit, BoardCase.ACTIVITY_UNLOAD, "deposit", task);
         }
         return false;
@@ -215,7 +215,7 @@ final class More4Post {
 
     private static boolean sortRare(GraphPost post) {
         TaskNode task = new ScriptCall(
-                "sort_chest", Map.of("container", More4Scripts.NEAREST, "radius", More4Scripts.CONTAINER_RADIUS));
+                "sort_chest", Map.of("container", More4Scripts.NEAREST, "radius", SpiritConfig.storageSearchRadius()));
         return ActivityLaunch.launch(post, BoardCase.ACTIVITY_UNLOAD, "sort_chest", task);
     }
 

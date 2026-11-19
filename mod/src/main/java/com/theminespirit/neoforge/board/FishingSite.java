@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.fishing.FishingData;
 import com.theminespirit.core.fishing.FishingSpots;
 import com.theminespirit.core.observation.BlockCoord;
@@ -15,7 +16,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
 final class FishingSite {
-    private static final int STATION_RADIUS = 8;
     private static final int STATION_BUDGET = 4096;
     private static final int STATION_SLICES = 16;
     private static final int WORK_POINT_RADIUS = 32;
@@ -25,8 +25,11 @@ final class FishingSite {
     private FishingSite() {}
 
     static boolean smokerNear(ServerLevel level, BlockCoord home) {
-        BlockLocator.Search search =
-                BlockLocator.search(level, new BlockPos(home.x(), home.y(), home.z()), STATION_RADIUS, SMOKERS);
+        BlockLocator.Search search = BlockLocator.search(
+                level,
+                new BlockPos(home.x(), home.y(), home.z()),
+                BoardConfig.current().facts().stationRadius(),
+                SMOKERS);
         while (!search.done() && search.examinedPositions() < STATION_BUDGET) {
             if (!search.step(STATION_SLICES).isEmpty()) {
                 return true;

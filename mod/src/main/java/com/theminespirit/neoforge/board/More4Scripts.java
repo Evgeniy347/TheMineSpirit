@@ -4,6 +4,7 @@ import com.theminespirit.core.base.NamespacedId;
 import com.theminespirit.core.board.graph.GraphKits;
 import com.theminespirit.core.board.graph.SupplyGraph;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -18,7 +19,6 @@ import net.minecraft.world.item.ItemStack;
 
 final class More4Scripts {
     static final String NEAREST = "nearest";
-    static final int CONTAINER_RADIUS = 8;
 
     private More4Scripts() {}
 
@@ -58,7 +58,7 @@ final class More4Scripts {
         params.put("container", NEAREST);
         params.put("item", item);
         params.put("count", 1);
-        params.put("radius", CONTAINER_RADIUS);
+        params.put("radius", SpiritConfig.storageSearchRadius());
         return Map.copyOf(params);
     }
 

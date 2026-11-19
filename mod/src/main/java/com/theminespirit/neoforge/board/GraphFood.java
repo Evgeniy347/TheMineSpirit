@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.mojang.logging.LogUtils;
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.board.StockView;
@@ -28,7 +29,6 @@ import org.slf4j.Logger;
 
 final class GraphFood {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int STATION_RADIUS = 8;
     private static final int STATION_BUDGET = 4096;
     private static final int STATION_SLICES = 16;
     private static final Set<Block> COOKING_STATIONS = Set.of(Blocks.SMOKER, Blocks.FURNACE, Blocks.CAMPFIRE);
@@ -115,7 +115,10 @@ final class GraphFood {
 
     private static boolean cookingStationNear(ServerLevel level, BlockCoord center) {
         BlockLocator.Search search = BlockLocator.search(
-                level, new BlockPos(center.x(), center.y(), center.z()), STATION_RADIUS, COOKING_STATIONS);
+                level,
+                new BlockPos(center.x(), center.y(), center.z()),
+                BoardConfig.current().facts().stationRadius(),
+                COOKING_STATIONS);
         while (!search.done() && search.examinedPositions() < STATION_BUDGET) {
             if (!search.step(STATION_SLICES).isEmpty()) {
                 return true;

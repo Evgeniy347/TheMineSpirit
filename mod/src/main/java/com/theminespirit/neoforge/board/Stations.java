@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.board;
 
+import com.theminespirit.core.board.BoardConfig;
 import com.theminespirit.core.board.TicketPlans;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.observation.BlockCoord;
@@ -13,7 +14,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 
 final class Stations {
-    private static final int RADIUS = 8;
     private static final int DOWN = 3;
     private static final int UP = 2;
 
@@ -27,8 +27,12 @@ final class Stations {
         }
         BlockCoord near = stage.workYard();
         List<BlockCoord> found = new ArrayList<>();
-        for (int dx = -RADIUS; dx <= RADIUS; dx++) {
-            for (int dz = -RADIUS; dz <= RADIUS; dz++) {
+        for (int dx = -BoardConfig.current().facts().stationRadius();
+                dx <= BoardConfig.current().facts().stationRadius();
+                dx++) {
+            for (int dz = -BoardConfig.current().facts().stationRadius();
+                    dz <= BoardConfig.current().facts().stationRadius();
+                    dz++) {
                 for (int dy = -DOWN; dy <= UP; dy++) {
                     BlockCoord at = new BlockCoord(near.x() + dx, near.y() + dy, near.z() + dz);
                     if (isTable(level, at)) {

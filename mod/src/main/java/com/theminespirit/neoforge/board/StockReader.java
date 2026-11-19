@@ -11,6 +11,7 @@ import com.theminespirit.core.mining.api.LeftOreRules;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.ColumnMask;
 import com.theminespirit.neoforge.SettlementChestStore;
+import com.theminespirit.neoforge.SpiritConfig;
 import com.theminespirit.neoforge.SpiritEntity;
 import com.theminespirit.neoforge.inventory.ContainerAccess;
 import com.theminespirit.neoforge.inventory.StackMapper;
@@ -36,7 +37,6 @@ import org.slf4j.Logger;
 
 public final class StockReader {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int CONTAINER_RADIUS = 8;
     private static final int SCAN_HEIGHT = 4;
     private static final String POTION_PREFIX = "potion_";
     private static final String SPLASH_PREFIX = "splash_potion_";
@@ -69,8 +69,8 @@ public final class StockReader {
                 add(carried, spirit.getMainHandItem());
             }
         }
-        StockScan.Result found =
-                StockScan.containers(rotate(centers), CONTAINER_RADIUS, SCAN_HEIGHT, blockBudget, blocks(level));
+        StockScan.Result found = StockScan.containers(
+                rotate(centers), SpiritConfig.storageSearchRadius(), SCAN_HEIGHT, blockBudget, blocks(level));
         int reads = 0;
         for (BlockCoord pos : StockScan.knownFirst(ChestSnapshots.positions(level), found.containers())) {
             if (reads >= containerBudget) {
