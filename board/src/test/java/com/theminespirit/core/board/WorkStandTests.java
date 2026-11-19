@@ -74,7 +74,8 @@ class WorkStandTests {
         assertEquals(
                 Optional.empty(),
                 WorkStand.near(new BlockCoord(0, 0, 0), walled),
-                "Нет свободной клетки в радиусе " + WorkStand.RADIUS + " — стоянки нет, задание не ставится в стену");
+                "Нет свободной клетки в радиусе " + BoardTuning.workStandRadius()
+                        + " — стоянки нет, задание не ставится в стену");
     }
 
     private static WorkStand.Ground ground(int feet, Set<BlockCoord> occupied) {

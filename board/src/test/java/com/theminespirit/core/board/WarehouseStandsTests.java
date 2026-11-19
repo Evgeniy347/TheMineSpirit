@@ -128,7 +128,9 @@ class WarehouseStandsTests {
     private static void assertReach(World world, PathNetwork network, BlockCoord stand) {
         int dx = Math.abs(stand.x() - CHEST.x());
         int dz = Math.abs(stand.z() - CHEST.z());
-        assertTrue(dx <= WorkStand.RADIUS && dz <= WorkStand.RADIUS, "стоянка " + stand + " рядом с сундуком");
+        assertTrue(
+                dx <= BoardTuning.workStandRadius() && dz <= BoardTuning.workStandRadius(),
+                "стоянка " + stand + " рядом с сундуком");
         assertTrue(Math.abs(stand.y() - CHEST.y()) <= 1, "стоянка " + stand + " на полу склада");
         assertTrue(MiningSafety.canStand(stand, world), "стоянка " + stand + " проходима");
         assertTrue(SpiritReach.reachable(stand, CHEST), "стоянка " + stand + " в досягаемости сундука");

@@ -13,7 +13,6 @@ import org.jspecify.annotations.Nullable;
 public final class StuckSpirits {
     private static final int MAX_CHANGES = 64;
     private static final long RESCUE_RELAPSE_TICKS = 12_000;
-    private static final int RESCUE_RELAPSE_RADIUS = 8;
 
     public record Stuck(@Nullable BlockCoord at, long since, boolean noPath) {
         public Stuck(@Nullable BlockCoord at, long since) {
@@ -164,7 +163,9 @@ public final class StuckSpirits {
         int dx = Math.abs(known.at().x() - at.x());
         int dy = Math.abs(known.at().y() - at.y());
         int dz = Math.abs(known.at().z() - at.z());
-        return dx <= RESCUE_RELAPSE_RADIUS && dy <= RESCUE_RELAPSE_RADIUS && dz <= RESCUE_RELAPSE_RADIUS;
+        return dx <= BoardTuning.rescueRelapseRadius()
+                && dy <= BoardTuning.rescueRelapseRadius()
+                && dz <= BoardTuning.rescueRelapseRadius();
     }
 
     public List<Change> drainChanges() {
@@ -229,7 +230,9 @@ public final class StuckSpirits {
         int dx = Math.abs(known.at().x() - at.x());
         int dy = Math.abs(known.at().y() - at.y());
         int dz = Math.abs(known.at().z() - at.z());
-        if (dx > RESCUE_RELAPSE_RADIUS * 2 || dy > RESCUE_RELAPSE_RADIUS * 2 || dz > RESCUE_RELAPSE_RADIUS * 2) {
+        if (dx > BoardTuning.rescueRelapseRadius() * 2
+                || dy > BoardTuning.rescueRelapseRadius() * 2
+                || dz > BoardTuning.rescueRelapseRadius() * 2) {
             rescues.remove(spirit);
         }
     }

@@ -1,5 +1,6 @@
 package com.theminespirit.core.board.pickup;
 
+import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.WorkStand;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
@@ -9,7 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class LeafDropStand {
-    private static final int RADIUS = WorkStand.RADIUS;
+    private static final int RADIUS = BoardTuning.workStandRadius();
 
     private LeafDropStand() {}
 

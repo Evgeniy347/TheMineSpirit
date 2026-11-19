@@ -86,13 +86,14 @@ class StillWatchLiveTests {
         UUID spirit = UUID.fromString(bots.get("bots").get(0).get("id").asText());
         StillWatch watch = new StillWatch();
         BlockCoord first = coord(bots.get("bots").get(0).get("position"));
-        BlockCoord moved = new BlockCoord(first.x() + StillWatch.AREA_RADIUS + 1, first.y(), first.z());
+        BlockCoord moved = new BlockCoord(first.x() + BoardTuning.stillWatchRadius() + 1, first.y(), first.z());
 
         assertFalse(watch.still(spirit, first, 0, WINDOW), "Первый замер не застой");
         assertFalse(watch.still(spirit, first, WINDOW - 1, WINDOW), "До окна спасения нет");
         assertFalse(
                 watch.still(spirit, moved, WINDOW, WINDOW),
-                "Дух вышел из области " + StillWatch.AREA_RADIUS + " блоков: окно неподвижности начинается заново, "
+                "Дух вышел из области " + BoardTuning.stillWatchRadius()
+                        + " блоков: окно неподвижности начинается заново, "
                         + "иначе спасение сработает на идущем духе");
         assertTrue(
                 watch.still(spirit, moved, WINDOW * 2, WINDOW),

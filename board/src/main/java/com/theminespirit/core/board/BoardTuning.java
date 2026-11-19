@@ -56,6 +56,12 @@ public final class BoardTuning {
 
     public static final int REBUILD_PERCENT = 50;
 
+    public static final int STAND_SEARCH_RADIUS = 12;
+    public static final int STAND_SEARCH_HEIGHT = 8;
+    public static final int STILL_WATCH_RADIUS = 24;
+    public static final int RESCUE_RELAPSE_RADIUS = 8;
+    public static final int WORK_STAND_RADIUS = 3;
+
     public static final Set<String> INTERVAL_KEYS = Set.of(
             "boardIntervalTicks",
             "dispatchRetryTicks",
@@ -81,7 +87,12 @@ public final class BoardTuning {
             "transferMaxCount",
             "rebuildPercent",
             "logSummaryTicks",
-            "leaseSuspendTimeoutTicks");
+            "leaseSuspendTimeoutTicks",
+            "standSearchRadius",
+            "standSearchHeight",
+            "stillWatchRadius",
+            "rescueRelapseRadius",
+            "workStandRadius");
 
     private BoardTuning() {}
 
@@ -185,6 +196,26 @@ public final class BoardTuning {
 
     public static int rebuildPercent() {
         return (int) Math.min(interval("rebuildPercent", REBUILD_PERCENT), MAX_PRIORITY);
+    }
+
+    public static int standSearchRadius() {
+        return (int) interval("standSearchRadius", STAND_SEARCH_RADIUS);
+    }
+
+    public static int standSearchHeight() {
+        return (int) interval("standSearchHeight", STAND_SEARCH_HEIGHT);
+    }
+
+    public static int stillWatchRadius() {
+        return (int) interval("stillWatchRadius", STILL_WATCH_RADIUS);
+    }
+
+    public static int rescueRelapseRadius() {
+        return (int) interval("rescueRelapseRadius", RESCUE_RELAPSE_RADIUS);
+    }
+
+    public static int workStandRadius() {
+        return (int) interval("workStandRadius", WORK_STAND_RADIUS);
     }
 
     private static long interval(String key, long fallback) {

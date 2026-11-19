@@ -1,6 +1,6 @@
 package com.theminespirit.neoforge;
 
-import com.theminespirit.core.board.WorkStand;
+import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,9 +26,9 @@ final class StandClaims {
                 continue;
             }
             BlockCoord cell = entry.getValue().cell();
-            if (Math.abs(cell.x() - around.x()) <= WorkStand.RADIUS + 1
-                    && Math.abs(cell.z() - around.z()) <= WorkStand.RADIUS + 1
-                    && Math.abs(cell.y() - around.y()) <= WorkStand.RADIUS) {
+            if (Math.abs(cell.x() - around.x()) <= BoardTuning.workStandRadius() + 1
+                    && Math.abs(cell.z() - around.z()) <= BoardTuning.workStandRadius() + 1
+                    && Math.abs(cell.y() - around.y()) <= BoardTuning.workStandRadius()) {
                 cells.add(cell);
             }
         }

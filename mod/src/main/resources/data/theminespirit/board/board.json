@@ -120,7 +120,12 @@
     "transferMaxCount": 64,
     "rebuildPercent": 50,
     "logSummaryTicks": 6000,
-    "leaseSuspendTimeoutTicks": 6000
+    "leaseSuspendTimeoutTicks": 6000,
+    "standSearchRadius": 12,
+    "standSearchHeight": 8,
+    "stillWatchRadius": 24,
+    "rescueRelapseRadius": 8,
+    "workStandRadius": 3
   },
   "levels": {
     "BUILD_MINE": 4,

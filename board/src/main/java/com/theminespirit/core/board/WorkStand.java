@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 public final class WorkStand {
-    public static final int RADIUS = 3;
     private static final int STEP = 1;
 
     private WorkStand() {}
@@ -43,8 +42,8 @@ public final class WorkStand {
         Objects.requireNonNull(ground, "Рельеф не может быть null: высоту стоянки берут по текущему миру");
         Objects.requireNonNull(reachable, "Проверка пути не может быть null: иначе стоянка снова будет за преградой");
         List<int[]> offsets = new ArrayList<>();
-        for (int dx = -RADIUS; dx <= RADIUS; dx++) {
-            for (int dz = -RADIUS; dz <= RADIUS; dz++) {
+        for (int dx = -BoardTuning.workStandRadius(); dx <= BoardTuning.workStandRadius(); dx++) {
+            for (int dz = -BoardTuning.workStandRadius(); dz <= BoardTuning.workStandRadius(); dz++) {
                 offsets.add(new int[] {dx, dz});
             }
         }

@@ -7,7 +7,6 @@ import java.util.Objects;
 import java.util.UUID;
 
 public final class StillWatch {
-    public static final int AREA_RADIUS = 24;
 
     private record Area(BlockCoord min, BlockCoord max, long since) {}
 
@@ -33,7 +32,7 @@ public final class StillWatch {
                 Math.max(last.max().x(), feet.x()),
                 Math.max(last.max().y(), feet.y()),
                 Math.max(last.max().z(), feet.z()));
-        if (span(min, max) > AREA_RADIUS) {
+        if (span(min, max) > BoardTuning.stillWatchRadius()) {
             marks.put(spirit, new Area(feet, feet, now));
             return false;
         }

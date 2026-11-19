@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.board.BoardTuning;
 import com.theminespirit.core.board.WalkableStand;
 import com.theminespirit.core.board.WorkStand;
 import com.theminespirit.core.building.RetreatPath;
@@ -34,7 +35,7 @@ final class StandSearch {
         if (dx * dx + dz * dz > (long) SNAP_RANGE * SNAP_RANGE || freeAt(level, p)) {
             return new Resolved(point, null);
         }
-        int r = WorkStand.RADIUS + SNAP_MARGIN;
+        int r = BoardTuning.workStandRadius() + SNAP_MARGIN;
         int minX = Math.min(feet.x(), p.x()) - r;
         int maxX = Math.max(feet.x(), p.x()) + r;
         int minY = Math.min(feet.y(), p.y()) - r;
@@ -80,12 +81,12 @@ final class StandSearch {
         for (Object found : level.getEntitiesOfClass(
                 SpiritEntity.class,
                 new AABB(
-                        around.x() - WorkStand.RADIUS,
+                        around.x() - BoardTuning.workStandRadius(),
                         around.y() - 4,
-                        around.z() - WorkStand.RADIUS,
-                        around.x() + WorkStand.RADIUS,
+                        around.z() - BoardTuning.workStandRadius(),
+                        around.x() + BoardTuning.workStandRadius(),
                         around.y() + 4,
-                        around.z() + WorkStand.RADIUS))) {
+                        around.z() + BoardTuning.workStandRadius()))) {
             SpiritEntity other = (SpiritEntity) found;
             if (other.getUUID().equals(spirit.getUUID())) {
                 continue;
