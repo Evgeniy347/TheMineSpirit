@@ -253,14 +253,29 @@ tasks.named('slowTest') {
     finalizedBy tasks.named('slowTestCostReport')
 }
 
-tasks.named('jacocoTestReport', JacocoReport) {
-    dependsOn tasks.named('test')
-    reports {
-        csv.required = false
-        xml.required = true
-        xml.outputLocation = file('TestResults/coverage/jacoco.xml')
-        html.required = true
-        html.outputLocation = file('TestResults/coverage/html')
+// lib: корневой модуль тестов не имеет, поэтому отчёт и пороги собираются по модулям.
+gradle.projectsEvaluated {
+    def coverageProjects = subprojects.findAll { it.plugins.hasPlugin('java') }
+    tasks.named('jacocoTestReport', JacocoReport) {
+        dependsOn coverageProjects.collect { "${it.path}:test" }
+        executionData.setFrom(coverageProjects.collect { it.file('build/jacoco/test.exec') })
+        classDirectories.setFrom(coverageProjects.collect { it.sourceSets.main.output })
+        sourceDirectories.setFrom(coverageProjects.collect { it.sourceSets.main.allSource.sourceDirectories })
+        reports {
+            csv.required = false
+            xml.required = true
+            xml.outputLocation = file('TestResults/coverage/jacoco.xml')
+            html.required = true
+            html.outputLocation = file('TestResults/coverage/html')
+        }
+    }
+    tasks.register('coverageVerify') {
+        group = 'verification'
+        description = 'Пороги покрытия чистых модулей (входит в check, см. build-logic)'
+        dependsOn coverageProjects.collect { "${it.path}:jacocoTestCoverageVerification" }
+    }
+    tasks.named('check') {
+        dependsOn tasks.named('coverageVerify')
     }
 }
 

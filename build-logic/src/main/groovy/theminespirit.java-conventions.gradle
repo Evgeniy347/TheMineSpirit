@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id 'java-test-fixtures'
+    id 'jacoco'
     id 'com.diffplug.spotless'
     id 'net.ltgt.errorprone'
     id 'checkstyle'
@@ -164,5 +165,58 @@ if (project != rootProject) {
         reports.html.outputLocation = rootProject.file("TestResults/${project.name}/html")
         reports.junitXml.outputLocation = rootProject.file("TestResults/${project.name}/xml")
         systemProperty 'theminespirit.testCost.csv', "TestResults/${project.name}/test-cost.csv"
+    }
+
+    def coverageMinimums = [
+            ':api'            : 0.60,
+            ':board'          : 0.80,
+            ':tactics'        : 0.60,
+            ':content'        : 0.85,
+            ':policy'         : 0.85,
+            ':rest'           : 0.75,
+            ':ui'             : 0.75,
+            ':mech:building'  : 0.80,
+            ':mech:crafting'  : 0.85,
+            ':mech:farming'   : 0.85,
+            ':mech:forestry'  : 0.85,
+            ':mech:husbandry' : 0.80,
+            ':mech:inventory' : 0.80,
+            ':mech:mining'    : 0.80,
+            ':mech:movement'  : 0.80,
+            ':mech:small'     : 0.80,
+            ':mech:town'      : 0.80,
+    ]
+    def coverageMinimum = coverageMinimums[project.path]
+
+    tasks.named('jacocoTestReport', JacocoReport) {
+        dependsOn tasks.named('test')
+        reports {
+            csv.required = false
+            xml.required = true
+            xml.outputLocation = rootProject.file("TestResults/coverage/${project.name}.xml")
+            html.required = true
+            html.outputLocation = rootProject.file("TestResults/coverage/html/${project.name}")
+        }
+    }
+
+    tasks.named('jacocoTestCoverageVerification', JacocoCoverageVerification) {
+        dependsOn tasks.named('test')
+        enabled = coverageMinimum != null
+        if (coverageMinimum != null) {
+            violationRules {
+                rule {
+                    limit {
+                        counter = 'LINE'
+                        value = 'COVEREDRATIO'
+                        minimum = coverageMinimum
+                    }
+                }
+            }
+        }
+    }
+    if (coverageMinimum != null) {
+        tasks.named('check') {
+            dependsOn tasks.named('jacocoTestCoverageVerification')
+        }
     }
 }

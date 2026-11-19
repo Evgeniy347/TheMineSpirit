@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 class FileSizeGuardTests {
     private static final int LIMIT = 300;
+    private static final int BASELINE_LIMIT = 58;
     private static final Path BASELINE = Path.of("config", "filesize-baseline.txt");
 
     @Test
@@ -80,6 +81,41 @@ class FileSizeGuardTests {
                 List.of("a/Long.java (300): исправлен — убери запись из списка"),
                 problems(Map.of("a/Long.java", 300), Map.of("a/Long.java", 320)),
                 "Сторож ослеп: исправленный файл обязан уйти из списка исключений");
+    }
+
+    @Test
+    void baseline_CountOverLimit_IsReported() {
+        assertEquals(
+                List.of(
+                        "config/filesize-baseline.txt: 59 записей при пределе 58 — исправленный файл убирается из списка"),
+                countProblems(59),
+                "Сторож ослеп: базлайн длиннее предела обязан попасть в нарушители");
+    }
+
+    @Test
+    void baseline_CountAtLimit_IsAccepted() {
+        assertEquals(
+                List.of(), countProblems(BASELINE_LIMIT), "Сторож ложно срабатывает: базлайн ровно в предел допустим");
+    }
+
+    @Test
+    void baseline_RealCount_DoesNotExceedLimit() {
+        int entries = baseline().size();
+        assertTrue(
+                entries <= BASELINE_LIMIT,
+                "Файлов сверх 300 строк снова " + entries + " при пределе " + BASELINE_LIMIT + ": список "
+                        + "исключений перестал уменьшаться, и правило «класс делает одно дело» (docs/CONVENTIONS.md) "
+                        + "для этих файлов приостановлено навсегда. Как надо: раздели один файл по зонам "
+                        + "ответственности в текущей задаче и убери его запись из config/filesize-baseline.txt; "
+                        + "новые записи в список не добавляются.");
+    }
+
+    private static List<String> countProblems(int entries) {
+        if (entries <= BASELINE_LIMIT) {
+            return List.of();
+        }
+        return List.of("config/filesize-baseline.txt: " + entries + " записей при пределе " + BASELINE_LIMIT
+                + " — исправленный файл убирается из списка");
     }
 
     private static Map<String, Integer> sizes() {

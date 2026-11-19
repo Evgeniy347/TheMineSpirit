@@ -149,4 +149,6 @@
   цикл не возвращаются. Ручной полный прогон: `./gradlew check -Ptheminespirit.analyzers=on`.
 - Стили: Spotless (palantir-java-format) — формат каждого коммита; Checkstyle (`config/checkstyle/checkstyle.xml`) —
   стиль и пределы; PMD (`config/pmd/*.xml`) — errorprone/bestpractices; SpotBugs — байткод (null, синхронизация, потоки).
-- Покрытие — `./gradlew jacocoTestReport` (`TestResults/coverage/`), отчёт, не гейт.
+- Покрытие — `./gradlew jacocoTestReport` (`TestResults/coverage/jacoco.xml` и `TestResults/coverage/html/<модуль>`);
+  пороги строк — `./gradlew coverageVerify` (входит в `check` и ночной прогон). `mod` — только отчёт: адаптер
+  меряется GameTest, у него порога нет.
