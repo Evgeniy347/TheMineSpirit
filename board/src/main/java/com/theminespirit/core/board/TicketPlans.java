@@ -124,73 +124,7 @@ public final class TicketPlans {
     }
 
     private static TaskNode defaultPlan(BoardCase boardCase, TicketTarget target, int level) {
-        return switch (boardCase) {
-            case FILL_CRATER -> PitFillPlan.plan(target);
-            case REPAIR_FENCE -> repairFence(target);
-            case CAPTURE_ANIMAL -> captureAnimal(target);
-            case LURE_ANIMAL -> lureAnimal(target);
-            case SUPPLY_SITE -> TicketStoragePlans.supplySite(target);
-            case GATHER_MATERIALS ->
-                target.leveling() == null ? TicketStoragePlans.gatherMaterials(target) : RoutePlans.dig(target);
-            case CLEAR_GROUNDS -> Leftovers.with(GroundsPlan.plan(target), target);
-            case COLLECT_DROPS -> collectDrops(target);
-            case REPAIR_BUILDING -> repairBuilding(target);
-            case REPAIR_TOOL -> repairTool(target);
-            case STOCK_CHESTS -> yard(target);
-            case CRAFTING_STATION -> tableNearSpirit(target);
-            case CRAFT_ANVIL -> craft("minecraft:anvil", 1, target);
-            case CRAFT_SMITHING_TABLE -> craft("minecraft:smithing_table", 1, target);
-            case CRAFT_SMOKER -> craft("minecraft:smoker", 1, target);
-            case CRAFT_FURNACE -> placeInYard("minecraft:furnace", 1, target);
-            case CRAFT_TORCHES -> TorchPlans.plan(target);
-            case SMELT_CHARCOAL -> smeltCharcoal(target);
-            case GRIND_BLAZE_POWDER, BREW_POTION, HARVEST_NETHER_WART, CRAFT_BREWING_STAND ->
-                BrewPlans.plan(boardCase, target);
-            case FISH -> fishWorkPoint(target);
-            case CRAFT_WOODEN_PICKAXE,
-                    CRAFT_WOODEN_AXE,
-                    CRAFT_WOODEN_SHOVEL,
-                    CRAFT_STONE_PICKAXE,
-                    CRAFT_STONE_AXE,
-                    CRAFT_STONE_SHOVEL,
-                    CRAFT_STONE_SWORD,
-                    CRAFT_IRON_PICKAXE,
-                    CRAFT_IRON_AXE,
-                    CRAFT_IRON_SHOVEL,
-                    CRAFT_IRON_SWORD,
-                    CRAFT_DIAMOND_PICKAXE,
-                    CRAFT_DIAMOND_AXE,
-                    CRAFT_DIAMOND_SHOVEL,
-                    CRAFT_DIAMOND_SWORD -> ToolCraftPlan.of(boardCase, target);
-            case CRAFT_SHEARS -> craft(WoolRules.CRAFTED_SHEARS, 1, target);
-            case CRAFT_BED -> craft(bedItem(target), target.count() > 0 ? target.count() : 1, target);
-            case WEAVE_WOOL ->
-                craft(
-                        target.craftItem() == null ? WoolRules.CRAFTED_WOOL : target.craftItem(),
-                        target.count() > 0 ? target.count() : 1,
-                        target);
-            case SHEAR_SHEEP -> shearSheep(target);
-            case HUNT_WILD_SHEEP -> huntWildSheep(target);
-            case HARVEST_HIVE -> harvestHive();
-            case HARVEST_ORCHARD -> OrchardPlans.harvest(target);
-            case PLACE_BEEHIVE -> placeBeehive(target);
-            case BUILD_FENCE -> buildFence(target, level);
-            case LIGHTING -> TorchPlans.lighting(target);
-            case BUILD_STREETS -> RoutePlans.path(target);
-            case ENCHANT_SHELVES -> craft("minecraft:bookshelf", 4, target);
-            case DISMANTLE_SHELTER -> dismantleShelter(target);
-            case BREED_ANIMALS -> breedAnimals(target);
-            case HERD_CULL -> herdCull(target);
-            case RELOCATE_BUILDING -> relocateBuilding(target);
-            case RESTOCK_FOOD -> TicketStoragePlans.restockFood(target);
-            case TRANSFER_ITEM -> transferItem(target);
-            case MINE_LEFT_ORE -> mineLeftOre(target);
-            default ->
-                throw new IllegalArgumentException("Кейс " + boardCase
-                        + " не имеет плана на доске: выдача задания без плана оставила бы духа "
-                        + "без задачи — новый кейс обязан прийти со своей строкой плана "
-                        + "или записью в EXTERNAL_CASES");
-        };
+        return DefaultPlans.plan(boardCase, target, level);
     }
 
     public static BlockCoord mineDescentOrigin(TicketTarget target) {
@@ -350,16 +284,16 @@ public final class TicketPlans {
         };
     }
 
-    private static TaskNode repairFence(TicketTarget target) {
+    static TaskNode repairFence(TicketTarget target) {
         return FencePlans.repair(target);
     }
 
-    private static TaskNode captureAnimal(TicketTarget target) {
+    static TaskNode captureAnimal(TicketTarget target) {
         Species species = target.species() == null ? Species.COW : target.species();
         return luredCapture(species, FeedTable.feedFor(species).get(0));
     }
 
-    private static TaskNode lureAnimal(TicketTarget target) {
+    static TaskNode lureAnimal(TicketTarget target) {
         Species species = target.species() == null ? Species.COW : target.species();
         String lure = target.lureItem() == null ? DEFAULT_LURE_ITEM : target.lureItem();
         return luredCapture(species, lure);
@@ -387,7 +321,7 @@ public final class TicketPlans {
                                 CatalogLimits.CAPTURE_RADIUS_DEFAULT)));
     }
 
-    private static TaskNode buildFence(TicketTarget target, int level) {
+    static TaskNode buildFence(TicketTarget target, int level) {
         int part = target.count();
         String base = level >= 2 ? "wall_3" : FENCE_SCHEME;
         String scheme = part >= 1 && part <= fenceParts() ? SchematicPart.name(base, part, fenceParts()) : base;
@@ -412,7 +346,7 @@ public final class TicketPlans {
                 target);
     }
 
-    private static TaskNode tableNearSpirit(TicketTarget target) {
+    static TaskNode tableNearSpirit(TicketTarget target) {
         return Leftovers.with(
                 new ScriptCall(
                         CRAFT,
@@ -428,7 +362,7 @@ public final class TicketPlans {
                 target);
     }
 
-    private static TaskNode yard(TicketTarget target) {
+    static TaskNode yard(TicketTarget target) {
         return Leftovers.with(
                 sequence(
                         gotoTarget(target),
@@ -454,7 +388,7 @@ public final class TicketPlans {
                 new ScriptCall(CRAFT, Map.of(ITEM, item, COUNT, count, RADIUS, CatalogLimits.STATION_RADIUS_DEFAULT)));
     }
 
-    private static TaskNode fishWorkPoint(TicketTarget target) {
+    static TaskNode fishWorkPoint(TicketTarget target) {
         return sequence(
                 gotoTarget(target),
                 new ScriptCall(
@@ -473,7 +407,7 @@ public final class TicketPlans {
         return Math.min(count, CatalogLimits.COUNT_MAX);
     }
 
-    private static TaskNode smeltCharcoal(TicketTarget target) {
+    static TaskNode smeltCharcoal(TicketTarget target) {
         String log = target.supplyItem() == null ? "oak_log" : target.supplyItem();
         int logs = target.supplyCount() > 0 ? target.supplyCount() : plans().charcoalLogs();
         int charcoal = target.count() > 0 ? target.count() : plans().charcoalBatch();
@@ -509,7 +443,7 @@ public final class TicketPlans {
         return new SequenceNode(steps);
     }
 
-    private static TaskNode dismantleShelter(TicketTarget target) {
+    static TaskNode dismantleShelter(TicketTarget target) {
         return new ScriptCall(
                 CLEAR_AREA,
                 Map.of(
@@ -527,7 +461,7 @@ public final class TicketPlans {
                         target.target().z() + plans().dismantleRadius()));
     }
 
-    private static TaskNode collectDrops(TicketTarget target) {
+    static TaskNode collectDrops(TicketTarget target) {
         Map<String, Object> params = target.dropItems().isEmpty()
                 ? Map.of(RADIUS, CatalogLimits.DROP_RADIUS_DEFAULT)
                 : Map.of(RADIUS, CatalogLimits.DROP_RADIUS_DEFAULT, "filter", target.dropItems());
@@ -577,7 +511,7 @@ public final class TicketPlans {
         return sequence(gotoTarget(target), schematic(scheme, target, previous));
     }
 
-    private static TaskNode repairBuilding(TicketTarget target) {
+    static TaskNode repairBuilding(TicketTarget target) {
         if (target.schemeFile() == null && target.leveling() != null) {
             return LevelRepair.plan(target);
         }
@@ -589,7 +523,7 @@ public final class TicketPlans {
         return sequence(gotoTarget(target), schematic(target.schemeFile(), target));
     }
 
-    private static TaskNode repairTool(TicketTarget target) {
+    static TaskNode repairTool(TicketTarget target) {
         if (target.craftItem() == null) {
             throw new IllegalArgumentException("Задание ремонта инструмента без предмета: скрипт repair_tool "
                     + "чинит конкретный изношенный предмет, без имени чинить нечего");
@@ -597,7 +531,7 @@ public final class TicketPlans {
         return sequence(gotoTarget(target), new ScriptCall("repair_tool", Map.of(ITEM, target.craftItem())));
     }
 
-    private static TaskNode breedAnimals(TicketTarget target) {
+    static TaskNode breedAnimals(TicketTarget target) {
         Species species = target.species() == null ? Species.COW : target.species();
         return new ScriptCall(
                 "breed",
@@ -610,14 +544,14 @@ public final class TicketPlans {
                         CatalogLimits.HERD_PAIRS_DEFAULT));
     }
 
-    private static TaskNode herdCull(TicketTarget target) {
+    static TaskNode herdCull(TicketTarget target) {
         Species species = target.species() == null ? Species.COW : target.species();
         return new ScriptCall(
                 "cull",
                 Map.of(SPECIES, species.name().toLowerCase(Locale.ROOT), RADIUS, CatalogLimits.HERD_RADIUS_DEFAULT));
     }
 
-    private static TaskNode shearSheep(TicketTarget target) {
+    static TaskNode shearSheep(TicketTarget target) {
         int count = target.count() > 0 ? target.count() : WoolRules.minPenSheep();
         return sequence(
                 gotoTarget(target),
@@ -628,12 +562,12 @@ public final class TicketPlans {
                                 COUNT, Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
     }
 
-    private static TaskNode harvestHive() {
+    static TaskNode harvestHive() {
         return new ScriptCall(
                 "harvest_hive", Map.of(RADIUS, HiveRules.hiveRadius(), COUNT, CatalogLimits.HIVE_COUNT_DEFAULT));
     }
 
-    private static TaskNode placeBeehive(TicketTarget target) {
+    static TaskNode placeBeehive(TicketTarget target) {
         BlockCoord point = target.target();
         BlockCoord cell = new BlockCoord(point.x(), point.y() + 1, point.z());
         return sequence(
@@ -643,7 +577,7 @@ public final class TicketPlans {
                         Map.of(BLOCK, HiveRules.CRAFTED_BEEHIVE, "x", cell.x(), "y", cell.y(), "z", cell.z())));
     }
 
-    private static TaskNode huntWildSheep(TicketTarget target) {
+    static TaskNode huntWildSheep(TicketTarget target) {
         int count = target.count() > 0 ? target.count() : WoolRules.wildSheepPerDay();
         return sequence(
                 gotoTarget(target),
@@ -655,14 +589,14 @@ public final class TicketPlans {
                                 COUNT, Math.min(count, CatalogLimits.HERD_COUNT_MAX))));
     }
 
-    private static String bedItem(TicketTarget target) {
+    static String bedItem(TicketTarget target) {
         if (target.craftItem() != null) {
             return target.craftItem();
         }
         return WoolRules.CRAFTED_BED;
     }
 
-    private static TaskNode relocateBuilding(TicketTarget target) {
+    static TaskNode relocateBuilding(TicketTarget target) {
         if (target.from() == null || target.to() == null) {
             throw new IllegalArgumentException(
                     "Перенос без from/to: снос идёт в from, " + "стройка — в to, без обеих точек план не собрать");
@@ -732,7 +666,7 @@ public final class TicketPlans {
         };
     }
 
-    private static TaskNode mineLeftOre(TicketTarget target) {
+    static TaskNode mineLeftOre(TicketTarget target) {
         String ore = target.supplyItem();
         OreKind found = ore == null ? OreKind.ANY : OreKind.ofBlock(ore).orElse(OreKind.ANY);
         String kind = found.name().toLowerCase(Locale.ROOT);
@@ -742,7 +676,7 @@ public final class TicketPlans {
                 new ScriptCall("mine_vein", Map.of("ore", kind, COUNT, 1, RADIUS, plans().leftOreRadius())));
     }
 
-    private static TaskNode transferItem(TicketTarget target) {
+    static TaskNode transferItem(TicketTarget target) {
         if (target.transferTo() == null) {
             throw new IllegalArgumentException("Передача без получателя: deliver не знает, кому нести груз, "
                     + "а withdraw — чей инвентарь пополнять");
