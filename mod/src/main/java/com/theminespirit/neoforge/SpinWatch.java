@@ -5,6 +5,7 @@ import com.theminespirit.core.log.LogCause;
 import com.theminespirit.core.movement.SpinDetector;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.neoforge.log.SpiritWorldLog;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,8 +40,14 @@ public final class SpinWatch {
         String next = path == null || path.isDone() ? "-" : shortCoord(path.getNextNodePos());
         String layer = "-".equals(next) ? "RouteWalk" : "ванильный";
         String nav = path == null ? "нет" : path.isDone() ? "конец" : "идёт";
+        String look = String.format(
+                Locale.ROOT,
+                "%.1f,%.1f,%.1f",
+                mob.getLookControl().getWantedX(),
+                mob.getLookControl().getWantedY(),
+                mob.getLookControl().getWantedZ());
         LOGGER.info(
-                "[spin] дух {} ({}): {}, вид={}, слой={}, script={}, возраст={} тиков, nav={}, target={}, next={}",
+                "[spin] дух {} ({}): {}, вид={}, слой={}, script={}, возраст={} тиков, nav={}, look={}, target={}, next={}",
                 mob.getName().getString(),
                 owner,
                 spin.text(),
@@ -49,6 +56,7 @@ public final class SpinWatch {
                 script,
                 tick - age.since(),
                 nav,
+                look,
                 shortCoord(target),
                 next);
         if (mob.level() instanceof ServerLevel server) {
