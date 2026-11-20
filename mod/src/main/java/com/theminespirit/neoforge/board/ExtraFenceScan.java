@@ -19,6 +19,7 @@ final class ExtraFenceScan {
     private static final int BELOW = 1;
     private static final int ABOVE = 2;
     private static final int NOTE_LIMIT = 2;
+    private static final int STUB_FAILURES = 3;
 
     private ExtraFenceScan() {}
 
@@ -59,7 +60,7 @@ final class ExtraFenceScan {
                         placed.isMarked(pos));
                 if (!FenceDemolition.stub(BlockStates.idOf(state), facts)
                         || fences.contains(at)
-                        || ctx.unreachable().excluded(at)
+                        || hidden(ctx.unreachable().failureCount(at))
                         || !FloatingScan.reachable(level, at)) {
                     continue;
                 }
@@ -69,6 +70,10 @@ final class ExtraFenceScan {
                 }
             }
         }
+    }
+
+    static boolean hidden(int failures) {
+        return failures >= STUB_FAILURES;
     }
 
     private static Set<Long> orchardKeys(StageSite site) {

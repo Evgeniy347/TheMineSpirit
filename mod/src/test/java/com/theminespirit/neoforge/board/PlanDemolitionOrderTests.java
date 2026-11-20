@@ -1,6 +1,8 @@
 package com.theminespirit.neoforge.board;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
@@ -17,6 +19,15 @@ class PlanDemolitionOrderTests {
                 List.of(fence, highDirt),
                 PlanDemolition.order(List.of(highDirt, fence), Set.of(fence)),
                 "Столб-заглушка обязан идти в уборку первым: иначе задача на снос забора ждёт тысячи чужих клеток");
+    }
+
+    @Test
+    void hidden_StubFailures_ThirdHides() {
+        assertFalse(ExtraFenceScan.hidden(0), "Новый столб виден уборке сразу");
+        assertFalse(
+                ExtraFenceScan.hidden(2), "После двух срывов столб получает ещё одну попытку: срыв мог быть случайным");
+        assertTrue(
+                ExtraFenceScan.hidden(3), "После трёх срывов столб уходит из сказа, чтобы уборка не крутилась вечно");
     }
 
     @Test
