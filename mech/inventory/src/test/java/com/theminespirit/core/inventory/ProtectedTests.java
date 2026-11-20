@@ -24,7 +24,7 @@ class ProtectedTests {
                 0,
                 protection.giveAway(1),
                 "Пустой слот отдавать нечего: защита не падает с NPE на null, а считает слот защищённым "
-                        + "пустотой. При смене giveAway проверь список с null");
+                        + "пустотой, иначе проверка упадёт с NPE. При смене giveAway проверь список с null");
         assertEquals(
                 0,
                 protection.giveAway(2),
