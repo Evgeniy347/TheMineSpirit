@@ -27,18 +27,21 @@ class ChopPlanRestTests {
         Tree tree = assertInstanceOf(
                 Tree.class,
                 TreeShape.detect(new BlockCoord(1, 1, 1), grid),
-                "Дуб с толстым основанием и ветками — дерево: иначе его не рубят вовсе");
+                "Дуб с толстым основанием и ветками — дерево, иначе его не рубят вовсе и участок зарастает. При "
+                        + "смене TreeShape проверь строку плана ниже в тесте");
         ChopPlan plan = ChopPlan.of(tree, STAND);
         assertEquals(
                 grid.logs(),
                 Set.copyOf(plan.order()),
-                "План рубки дуба с толстым основанием берёт все брёвна — и ветки, и четыре нижних над землёй: "
-                        + "иначе остаётся пенёк (INC-90)");
+                "План рубки дуба с толстым основанием берёт все брёвна — и ветки, и четыре нижних над землёй, "
+                        + "иначе остаётся пенёк (INC-90). При смене ChopPlan.of проверь нижний слой ниже в тесте");
         List<BlockCoord> bottom =
                 plan.order().subList(plan.order().size() - 4, plan.order().size());
         assertTrue(
                 bottom.stream().allMatch(log -> log.y() == 1),
-                "Нижний слой толстого ствола рубится последним, сверху вниз: " + bottom);
+                "Нижний слой толстого ствола рубится последним, сверху вниз: " + bottom + ", иначе нижний слой "
+                        + "рубится первым и ствол падает раньше времени. При смене сортировки проверь множество "
+                        + "выше в тесте");
     }
 
     @Test
@@ -47,7 +50,8 @@ class ChopPlanRestTests {
         Tree tree = assertInstanceOf(
                 Tree.class,
                 TreeShape.detect(new BlockCoord(1, 1, 1), grid),
-                "Дуб с толстым основанием и ветками — дерево: иначе его не рубят вовсе");
+                "Дуб с толстым основанием и ветками — дерево, иначе его не рубят вовсе и участок зарастает. При "
+                        + "смене TreeShape проверь строку плана ниже в тесте");
         ChopPlan plan = ChopPlan.of(tree, STAND);
         Set<BlockCoord> left = Set.of(new BlockCoord(1, 1, 1), new BlockCoord(2, 1, 0), new BlockCoord(3, 3, 2));
         plan.order().stream().filter(log -> !left.contains(log)).forEach(log -> grid.air(log.x(), log.y(), log.z()));
@@ -56,11 +60,13 @@ class ChopPlanRestTests {
                 List.of(new BlockCoord(3, 3, 2), new BlockCoord(2, 1, 0), new BlockCoord(1, 1, 1)),
                 rest.order(),
                 "Со второй стоянки добиваются все оставшиеся брёвна — ветка и нижние у земли, сверху вниз: "
-                        + "оставшееся после первого прохода не может молча стать пеньком (INC-90)");
+                        + "оставшееся после первого прохода не может молча стать пеньком (INC-90), иначе рубка "
+                        + "считается законченной. При смене ChopPlan.rest проверь строку срубленного ниже в тесте");
         left.forEach(log -> grid.air(log.x(), log.y(), log.z()));
         assertEquals(
                 List.of(),
                 plan.rest(grid, STAND).order(),
-                "Срубленное дерево не даёт остатка: вторая стоянка нужна, только если что-то осталось");
+                "Срубленное дерево не даёт остатка: вторая стоянка нужна, только если что-то осталось, иначе дух "
+                        + "возвращается к пустому пню. При смене ChopPlan.rest проверь строку выше в тесте");
     }
 }
