@@ -63,8 +63,9 @@ class ExplosionAvoidanceProperties {
         assertEquals(
                 allKept,
                 verdict instanceof PolicyVerdict.Clear,
-                "Рефлекс нужен ровно тогда, когда хотя бы одна угроза ближе своего расстояния держания (7, 10, 9, +3 при набухании). Угрозы: "
-                        + facts);
+                "Рефлекс нужен ровно тогда, когда хотя бы одна угроза ближе своего расстояния держания "
+                        + "(крипер 7, заряженный 13, TNT 9, +3 при набухании), иначе дух стоит в зоне взрыва. Угрозы: "
+                        + facts + ". При смене evaluate сверь эти границы и порядок перебора угроз");
     }
 
     @Property(tries = 200)
@@ -79,7 +80,8 @@ class ExplosionAvoidanceProperties {
             assertTrue(
                     distance(flee.cell(), fact.pos()) >= distance(self, fact.pos()),
                     "После плана расстояние до угрозы не меньше исходного: иначе дух бежит к взрыву. Угроза: " + fact
-                            + ", цель: " + flee.cell());
+                            + ", цель: " + flee.cell()
+                            + ". При смене Flee-планирования проверь, что выбранная клетка не приближает духа к угрозе");
         }
     }
 
@@ -96,7 +98,8 @@ class ExplosionAvoidanceProperties {
             assertTrue(
                     worstSlack(flee.cell(), facts) >= Math.min(0, worstSlack(self, facts)),
                     "С несколькими угрозами цель либо держит все расстояния, либо не хуже старта по самой близкой угрозе. Угрозы: "
-                            + facts + ", цель: " + flee.cell());
+                            + facts + ", цель: " + flee.cell()
+                            + ". При смене оценки нескольких угроз проверь ближайшую: цель не должна ухудшать её запас");
         }
     }
 }

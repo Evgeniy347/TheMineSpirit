@@ -65,34 +65,50 @@ class ProtectionConfigTests {
                 IllegalStateException.class,
                 () -> ProtectionConfig.parse(content, ORIGIN),
                 "Файл «" + name
-                        + "» обязан отклоняться при загрузке: тихая подмена конфигурации оставила бы блоки без защиты");
+                        + "» обязан отклоняться при загрузке: тихая подмена конфигурации оставила бы блоки без защиты. "
+                        + "При смене parse проверь каждую строку таблицы brokenFiles");
 
         assertTrue(
                 error.getMessage().contains(ORIGIN) && error.getMessage().contains(expectedPart),
                 "Ошибка файла «" + name + "» называет файл и проблему «" + expectedPart + "». Фактическое: "
-                        + error.getMessage());
+                        + error.getMessage() + ". При смене префикса ошибки проверь, что имя файла остаётся в тексте");
     }
 
     @Test
     void parse_ValidFile_BuildsProtectionWithGivenThreshold() {
         BlockProtection protection = ProtectionConfig.parse(json("[\"*_door\"]", "[\"stone\"]", "3"), ORIGIN);
 
-        assertEquals(3, protection.buildingThreshold(), "Порог берётся из файла");
+        assertEquals(
+                3,
+                protection.buildingThreshold(),
+                "Порог берётся из файла, а не из константы кода, иначе данные не управляют защитой. "
+                        + "При смене parse проверь произвольное значение порога");
         assertTrue(
                 protection.checkOwn("minecraft:oak_door", false) instanceof BlockProtection.Refused,
-                "Шаблон deny с пространством имён minecraft: обязан запрещать дверь");
+                "Шаблон deny с пространством имён minecraft: обязан запрещать дверь, иначе защита смотрит на "
+                        + "имя без namespace. При смене сверь префикс minecraft:");
         assertTrue(
                 protection.checkOwn("minecraft:stone", false) instanceof BlockProtection.Allowed,
-                "Блок вне шаблона deny обязан оставаться разрешённым");
+                "Блок вне шаблона deny обязан оставаться разрешённым, иначе защита блокирует всё подряд. "
+                        + "При смене сопоставления проверь литерал, не попавший ни в один список");
     }
 
     @Test
     void parse_StrayPolicy_DefaultsToDemolishInsideFence() {
         BlockProtection protection = ProtectionConfig.parse(json("[\"*_door\"]", "[\"stone\"]", "3"), ORIGIN);
 
-        assertTrue(protection.demolishStrays(), "по умолчанию лишнее внутри ограды сносят");
-        assertTrue(protection.straysInsideFenceOnly(), "по умолчанию вне ограды не сносят");
-        assertTrue(protection.stray("minecraft:oak_fence"), "забор из списка strays — рукотворное лишнее");
+        assertTrue(
+                protection.demolishStrays(),
+                "по умолчанию лишнее внутри ограды сносят, иначе мусор копится в поселении. "
+                        + "При смене значений по умолчанию проверь демонтаж без явного поля в файле");
+        assertTrue(
+                protection.straysInsideFenceOnly(),
+                "по умолчанию вне ограды не сносят, иначе дух трогает чужой мир и портит чужие постройки. "
+                        + "При смене значений по умолчанию проверь область сноса без явного поля");
+        assertTrue(
+                protection.stray("minecraft:oak_fence"),
+                "забор из списка strays — рукотворное лишнее, иначе он держит защиты и не снимается. "
+                        + "При смене списка strays проверь шаблон *_fence");
     }
 
     @Test
@@ -103,8 +119,14 @@ class ProtectionConfigTests {
 
         BlockProtection protection = ProtectionConfig.parse(text, ORIGIN);
 
-        assertTrue(!protection.demolishStrays(), "политика сноса — параметр, а не жёстко зашитое поведение");
-        assertTrue(!protection.straysInsideFenceOnly(), "область сноса — параметр конфига");
+        assertTrue(
+                !protection.demolishStrays(),
+                "политика сноса — параметр, а не жёстко зашитое поведение, иначе конфиг не действует. "
+                        + "При смене parse проверь явное demolishStrays=false");
+        assertTrue(
+                !protection.straysInsideFenceOnly(),
+                "область сноса — параметр конфига, иначе сервер не сможет разрешить снос вне ограды. "
+                        + "При смене parse проверь явное straysInsideFenceOnly=false");
     }
 
     @Test
@@ -112,10 +134,14 @@ class ProtectionConfigTests {
         BlockProtection protection = ProtectionConfig.readClasspath();
 
         assertEquals(
-                6, protection.buildingThreshold(), "Поставляемый protection.json читается без ошибок и несёт порог 6");
+                6,
+                protection.buildingThreshold(),
+                "Поставляемый protection.json читается без ошибок и несёт порог 6, иначе защита на сервере "
+                        + "работает не по данным. При смене файла сверь buildingThreshold");
         assertEquals(
                 4096,
                 protection.maxUnprotectVolume(),
-                "Поставляемый protection.json несёт предел объёма разрешённой области 4096");
+                "Поставляемый protection.json несёт предел объёма разрешённой области 4096, иначе снятие "
+                        + "защиты потеряет ограничение. При смене файла сверь maxUnprotectVolume");
     }
 }

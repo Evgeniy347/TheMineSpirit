@@ -25,13 +25,15 @@ class Observe10ProtectionTests {
                 BlockProtection.Refused.class,
                 protection.checkOwn("minecraft:wall_torch", false, false),
                 "protection.json обязан держать '*torch' в deny: тест повторяет живой отказ observe10, "
-                        + "а не выдуманный список");
+                        + "а не выдуманный список. При смене protection.json проверь правило '*torch' в deny");
         assertTrue(
                 torch.get("inPlan").asBoolean(),
-                "Живой факел шахты лежит в клетке плана: иначе тест проверяет не тот случай observe10");
+                "Живой факел шахты лежит в клетке плана: иначе тест проверяет не тот случай observe10. "
+                        + "При смене фикстуры plan-torch.json проверь признак inPlan");
         assertTrue(
                 torch.get("placedByPlayer").asBoolean(),
-                "Живой факел записан в наборе блоков игрока: именно этот признак уводил решение в DEFAULT");
+                "Живой факел записан в наборе блоков игрока: именно этот признак уводил решение в DEFAULT. "
+                        + "При смене фикстуры проверь, что placedByPlayer остаётся true");
 
         BlockProtection.Decision decision = SettlementBreak.decide(
                 protection,
@@ -49,7 +51,7 @@ class Observe10ProtectionTests {
                 decision,
                 "Факел в клетке плана шахты обязан ломаться: иначе wall_torch держит спуск на 75% "
                         + "(observe10: 20 отказов, правка minetorch не сработала). Перепроверьте порядок "
-                        + "SettlementBreak.of: план важнее метки «поставил игрок»");
+                        + "SettlementBreak.of: план важнее метки «поставил игрок», иначе спуск шахты стоит на месте");
     }
 
     @Test
@@ -72,6 +74,7 @@ class Observe10ProtectionTests {
                 BlockProtection.Refused.class,
                 decision,
                 "Шаг в план не должен открывать чужие постройки: поставленное игроком вне клеток плана "
-                        + "по-прежнему защищено");
+                        + "по-прежнему защищено. При смене SettlementBreak проверь, что экстраполяция «в плане» "
+                        + "не распространяется на блоки вне клеток плана");
     }
 }

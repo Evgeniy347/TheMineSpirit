@@ -36,7 +36,8 @@ class WaterTasksTests {
                 WaterTasks.allowsSwimming(script) == allowed,
                 "Скрипт «" + script + "»: плавать разрешено только работам, которые сами ведут духа водой "
                         + "(swim/cross_water/fish/dig_out). Остальные работы в воде обязаны выходить на сушу, "
-                        + "иначе дух кружит в озере (observe17 A2/N5); ожидалось " + allowed);
+                        + "иначе дух кружит в озере (observe17 A2/N5); ожидалось " + allowed
+                        + ". При смене списка водных работ сверь точные имена swim/cross_water/fish/dig_out");
     }
 
     @Test
@@ -48,7 +49,8 @@ class WaterTasksTests {
                                 new ScriptCall("dig_out", Map.of("x", 1, "y", 2, "z", 3)),
                                 new ScriptCall("goto", Map.of("x", 1, "y", 2, "z", 3))))),
                 "План спасения ещё не начат (скрипта нет), но первым шагом копает выход: водный рефлекс обязан "
-                        + "уступить, иначе он держит духа в воде и задача спасения не стартует никогда");
+                        + "уступить, иначе он держит духа в воде и задача спасения не стартует никогда. "
+                        + "При смене разбора плана проверь первый шаг SequenceNode");
     }
 
     @Test
@@ -59,7 +61,8 @@ class WaterTasksTests {
                         new FallbackNode(List.of(
                                 new SequenceNode(List.of(new ScriptCall("dig_out", Map.of()))),
                                 new ScriptCall("dig_out", Map.of())))),
-                "Запасной путь спасения тоже копает выход: пустой скрипт не должен прятать первый шаг плана");
+                "Запасной путь спасения тоже копает выход: пустой скрипт не должен прятать первый шаг плана. "
+                        + "При смене разбора FallbackNode проверь вложенную SequenceNode с dig_out");
     }
 
     @Test
@@ -67,14 +70,15 @@ class WaterTasksTests {
         assertFalse(
                 WaterTasks.allowsSwimming("goto", new SequenceNode(List.of(new ScriptCall("dig_out", Map.of())))),
                 "Уже идёт обычный шаг: план с dig_out впереди не отменяет выход из воды — иначе дух плавает, "
-                        + "пока не утонет");
+                        + "пока не утонет. При смене приоритета проверь, что текущий скрипт сильнее будущего плана");
     }
 
     @Test
     void allowsSwimming_PlanWithoutWaterWork_IsFalse() {
         assertFalse(
                 WaterTasks.allowsSwimming(null, new ScriptCall("close_door", Map.of())),
-                "Обычная работа в воде не даёт права плавать: дух обязан выйти на сушу");
+                "Обычная работа в воде не даёт права плавать: дух обязан выйти на сушу, иначе тонет посреди "
+                        + "задачи. При смене проверки плана проверь ScriptCall с неводной работой");
     }
 
     @ParameterizedTest(name = "скрипт «{0}»")
@@ -83,7 +87,8 @@ class WaterTasksTests {
         assertFalse(
                 WaterTasks.allowsSwimming(script),
                 "«" + script + "» не водная работа: разрешение на плавание даётся только точному имени "
-                        + "swim/cross_water/fish, иначе любая задача снова уводит духа в воду");
+                        + "swim/cross_water/fish, иначе любая задача снова уводит духа в воду. "
+                        + "При смене сравнения проверь регистр, пробелы и похожие имена");
     }
 
     static Stream<String> nearScripts() {

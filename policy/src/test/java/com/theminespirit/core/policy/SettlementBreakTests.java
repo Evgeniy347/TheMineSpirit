@@ -11,7 +11,8 @@ class SettlementBreakTests {
                 SettlementBreak.Check.SETTLEMENT,
                 SettlementBreak.of(SettlementBreak.Origin.SPIRIT, SettlementBreak.Place.PLOT),
                 "Свой забор прежней раскладки на участке вне клеток плана — остаток: его убирают, а не держат чёрным "
-                        + "списком (INC-72: jungle_fence у (-160,71,-497))");
+                        + "списком (INC-72: jungle_fence у (-160,71,-497)). При смене of проверь пару "
+                        + "SPIRIT+PLOT — она обязана давать SETTLEMENT, а не OWN");
     }
 
     @Test
@@ -19,7 +20,8 @@ class SettlementBreakTests {
         assertEquals(
                 SettlementBreak.Check.OWN,
                 SettlementBreak.of(SettlementBreak.Origin.SPIRIT, SettlementBreak.Place.PLAN),
-                "Своё в клетке постройки плана — как своё: его держит запрет по плану");
+                "Своё в клетке постройки плана — как своё: его держит запрет по плану, иначе дух начнёт "
+                        + "вынимать блоки из собственной постройки. При смене of проверь пару SPIRIT+PLAN");
     }
 
     @Test
@@ -27,7 +29,9 @@ class SettlementBreakTests {
         assertEquals(
                 SettlementBreak.Check.DEFAULT,
                 SettlementBreak.of(SettlementBreak.Origin.PLAYER, SettlementBreak.Place.PLOT),
-                "Поставленное игроком защищено и на участке поселения");
+                "Поставленное игроком защищено и на участке поселения, иначе уборка снесёт чужую постройку. "
+                        + "При смене of проверь пару PLAYER+PLOT");
+        ;
     }
 
     @Test
@@ -37,7 +41,8 @@ class SettlementBreakTests {
                 SettlementBreak.of(SettlementBreak.Origin.PLAYER, SettlementBreak.Place.PLAN),
                 "Метка «поставил игрок» не сильнее плана: факел спуска шахты лежал в наборе игрока и уходил "
                         + "в чёрный список защиты, хотя его клетка — план (observe10: wall_torch 20 раз "
-                        + "держал шахту на 75%)");
+                        + "держал шахту на 75%). При смене приоритета проверь пару PLAYER+PLAN: план обязан "
+                        + "перебивать метку игрока");
     }
 
     @Test
@@ -47,10 +52,11 @@ class SettlementBreakTests {
                 SettlementBreak.place(false, true),
                 "Клетка плана за оградой участка — всё равно план: своя стенка или факел спуска шахты уходили "
                         + "в чёрный список защиты, если участок кончался раньше шахты (observe8: wall_torch держал "
-                        + "шахту на 75%)");
+                        + "шахту на 75%). При смене place проверь, что план важнее границы участка");
         assertEquals(
                 SettlementBreak.Place.OFF_PLOT,
                 SettlementBreak.place(false, false),
-                "Вне участка и вне плана — по-прежнему чужая земля: послабление только для клеток плана");
+                "Вне участка и вне плана — по-прежнему чужая земля: послабление только для клеток плана, "
+                        + "иначе дух начнёт рыть чужую территорию. При смене place проверь пару false+false");
     }
 }

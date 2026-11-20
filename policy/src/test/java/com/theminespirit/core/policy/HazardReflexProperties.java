@@ -72,7 +72,7 @@ class HazardReflexProperties {
             assertTrue(
                     MiningSafety.canStand(flee.cell(), leftOrigin(surroundings)),
                     "Клетка бегства обязана проходить canStand (с поправкой на покидаемую клетку духа): иначе дух убежит из лавы в огонь или в воздух. Причина: "
-                            + reflex.reason());
+                            + reflex.reason() + ". При смене выбора клетки проверь пол, место для головы и соседей");
         }
     }
 
@@ -91,14 +91,17 @@ class HazardReflexProperties {
             assertEquals(
                     Cell.PASSABLE,
                     surroundings.cellAt(cell),
-                    "Клетка выхода из воды обязана быть проходимой, а не водой: " + cell);
+                    "Клетка выхода из воды обязана быть проходимой, а не водой: " + cell
+                            + ". При смене ExitWater проверь, что вода не выдаётся за сушу");
             assertEquals(
                     Cell.PASSABLE,
                     surroundings.cellAt(head),
-                    "Над клеткой выхода обязано быть место для головы: " + cell);
+                    "Над клеткой выхода обязано быть место для головы: " + cell
+                            + ", иначе дух не встанет на сушу. При смене проверки выхода сверь клетку головы");
             assertTrue(
                     MiningSafety.canStandOn(surroundings.cellAt(floor)),
-                    "Под клеткой выхода обязан быть годный пол — твёрдый или сыпучий: " + cell);
+                    "Под клеткой выхода обязан быть годный пол — твёрдый или сыпучий: " + cell
+                            + ", иначе дух упадёт обратно в воду. При смене canStandOn проверь песок как пол");
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dz = -1; dz <= 1; dz++) {
                     for (BlockCoord ring : new BlockCoord[] {
@@ -109,7 +112,7 @@ class HazardReflexProperties {
                         assertFalse(
                                 around == Cell.LAVA || around == Cell.FIRE || around == Cell.HAZARD,
                                 "Рядом с клеткой выхода из воды нет лавы, огня и опасных блоков: " + ring + " = "
-                                        + around);
+                                        + around + ". При смене проверки соседей сверь кольцо 3×3 на обоих слоях");
                     }
                 }
             }
@@ -127,7 +130,8 @@ class HazardReflexProperties {
         assertEquals(
                 new PolicyVerdict.Clear(),
                 verdict,
-                "Без лавы, огня, опасных блоков, воды и горения рефлексу нечего делать: ложное срабатывание уводит духа с работы");
+                "Без лавы, огня, опасных блоков, воды и горения рефлексу нечего делать: ложное срабатывание уводит "
+                        + "духа с работы. При смене evaluate проверь безопасную палитру с любым флагом тела");
     }
 
     @Property(tries = 200)
@@ -140,10 +144,12 @@ class HazardReflexProperties {
         if (verdict instanceof PolicyVerdict.Reflex reflex) {
             assertFalse(
                     reflex.action() instanceof ReflexAction.ExitWater,
-                    "Исключение WATER обязано снимать выход из воды: " + reflex);
+                    "Исключение WATER обязано снимать выход из воды: " + reflex
+                            + ". При смене PolicyExemptions проверь, что ExitWater не возвращается ни в одном снимке");
             assertFalse(
                     reflex.policy() == PolicyId.WATER,
-                    "Исключение WATER обязано снимать рефлексы политики воды: " + reflex);
+                    "Исключение WATER обязано снимать рефлексы политики воды: " + reflex
+                            + ", иначе плавающая рыба-задание прерывается выходом на берег. При смене сверь PolicyId.WATER");
         }
     }
 
@@ -161,6 +167,7 @@ class HazardReflexProperties {
         assertEquals(
                 first,
                 second,
-                "Вердикт зависит только от снимка и исключений: иначе два тика подряд спорят о том, куда бежать");
+                "Вердикт зависит только от снимка и исключений: иначе два тика подряд спорят о том, куда бежать. "
+                        + "При смене evaluate проверь, что в решении нет случайности и общего изменяемого состояния");
     }
 }

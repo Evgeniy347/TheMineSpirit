@@ -46,7 +46,8 @@ class A2HutProtectionLiveTests {
                     refused || BuildingSeeds.adjacentToStructure(neighbours),
                     "Живая постройка игрока в " + at + " (" + blockId + "): уборка обязана оставить её — "
                             + "в observe14 убрали 2 oak_stairs из крыльца и хижина просела 99→97%, а печь "
-                            + "висела защищённой и не давала закрыть задание");
+                            + "висела защищённой и не давала закрыть задание. При смене SettlementBreak.decide "
+                            + "проверь хижину n24b: печь, крыльцо и крыша остаются до задания сноса");
         }
     }
 
@@ -59,10 +60,12 @@ class A2HutProtectionLiveTests {
                 new BlockProtection.Allowed(),
                 decision,
                 "Одинокая доска в чистом поле не постройка: висящий остаток обязан убираться, иначе уборка "
-                        + "перестаёт чистить мир");
+                        + "перестаёт чистить мир. При смене проверки построек проверь одинокую доску в поле: "
+                        + "уборка обязана её снимать");
         assertTrue(
                 !BuildingSeeds.adjacentToStructure(neighbours("-100,70,-400")),
-                "Рядом с одинокой доской нет станции/сундука: её нельзя записывать в чужую постройку");
+                "Рядом с одинокой доской нет станции/сундука: её нельзя записывать в чужую постройку. "
+                        + "При смене BuildingSeeds проверь, что одна доска без соседей не считается постройкой");
     }
 
     private SettlementBreak.Facts facts(String blockId) {
@@ -90,7 +93,11 @@ class A2HutProtectionLiveTests {
 
     private static Map<String, String> read() throws IOException {
         Path fixture = Path.of("src/test/resources/live/n24b-hut-plan/hut-blocks.json");
-        assertTrue(Files.isRegularFile(fixture), "Живая фикстура блоков хижины не найдена: тест без неё слеп");
+        assertTrue(
+                Files.isRegularFile(fixture),
+                "Живая фикстура блоков хижины не найдена: тест без неё слеп и молча проверяет воздух, "
+                        + "иначе зелёный прогон ничего не докажет. При смене пути проверь файл "
+                        + "src/test/resources/live/n24b-hut-plan/hut-blocks.json");
         try (var stream = Files.newInputStream(fixture)) {
             JsonNode root = MAPPER.readTree(stream);
             Map<String, String> values = new LinkedHashMap<>();

@@ -20,14 +20,15 @@ class SelfRescueTests {
         assertTrue(
                 SelfRescue.mayBreakAtFeet(FEET, FEET),
                 "Блок, внутри которого застрял дух, ломается при спасении: иначе забор из чёрного списка "
-                        + "оставляет его замурованным навсегда");
+                        + "оставляет его замурованным навсегда. При смене mayBreakAtFeet проверь клетку ног — она всегда разрешена");
     }
 
     @Test
     void mayBreakAtFeet_NeighbourBlock_NotAllowed() {
         assertFalse(
                 SelfRescue.mayBreakAtFeet(new BlockCoord(-187, 67, -516), FEET),
-                "Исключение только для клетки под духом: соседние блоки постройки защищены как прежде");
+                "Исключение только для клетки под духом: соседние блоки постройки защищены как прежде, "
+                        + "иначе спасение разберёт стену. При смене mayBreakAtFeet проверь соседнюю клетку");
     }
 
     @Test
@@ -45,7 +46,8 @@ class SelfRescueTests {
                     name + " observe25 стоял в яме внутри плана "
                             + trapped.get("plan").asText()
                             + " и не мог выбраться: " + trapped.get("block").asText() + " в " + plan
-                            + " — его клетка выхода, разбор разрешён с возвратом блока");
+                            + " — его клетка выхода, разбор разрешён с возвратом блока. При смене mayBreakEscaping "
+                            + "проверь оба живых случая observe25: spirit3 и spirit6 обязаны выходить");
         }
     }
 
@@ -56,7 +58,7 @@ class SelfRescueTests {
         assertTrue(
                 SelfRescue.mayBreakEscaping(aboveHead, FEET),
                 "клетку над головой (" + aboveHead + ") разбирают при выходе: иначе дух в яме не распрямится "
-                        + "и не шагнёт на край (observe25 B2)");
+                        + "и не шагнёт на край (observe25 B2). При смене ESCAPE_HEIGHT проверь верхнюю границу кармана");
     }
 
     @Test
@@ -66,7 +68,8 @@ class SelfRescueTests {
         assertFalse(
                 SelfRescue.mayBreakEscaping(abovePocket, FEET),
                 "выше клетки над головой (" + abovePocket + ") карман выхода кончается: это уже блок плана, "
-                        + "его не трогают, иначе спасение разбирает постройку");
+                        + "его не трогают, иначе спасение разбирает постройку. При смене высоты проверь клетку "
+                        + "выше кармана");
     }
 
     @Test
@@ -75,7 +78,8 @@ class SelfRescueTests {
 
         assertFalse(
                 SelfRescue.mayBreakEscaping(twoAhead, FEET),
-                "Карман выхода не растягивается на всю постройку: дальше двух клеток от духа план защищён как прежде");
+                "Карман выхода не растягивается на всю постройку: дальше двух клеток от духа план защищён как прежде. "
+                        + "При смене радиуса кармана проверь клетку через две от духа");
     }
 
     private static BlockCoord coord(JsonNode node) {

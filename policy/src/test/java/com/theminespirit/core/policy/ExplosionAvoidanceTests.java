@@ -88,23 +88,30 @@ class ExplosionAvoidanceTests {
                     new PolicyVerdict.Clear(),
                     verdict,
                     "Строка «" + name + "»: угроза дальше расстояния держания " + expectedHold
-                            + ", дух не должен бежать");
+                            + ", дух не должен бежать, иначе сходит с работы без причины. "
+                            + "При смене evaluate проверь границу держания и диагонали");
             return;
         }
         PolicyVerdict.Reflex reflex = assertInstanceOf(
                 PolicyVerdict.Reflex.class,
                 verdict,
-                "Строка «" + name + "»: угроза ближе " + expectedHold + ", ждали рефлекс");
+                "Строка «" + name + "»: угроза ближе " + expectedHold + ", ждали рефлекс, иначе дух стоит в зоне "
+                        + "взрыва. При смене таблицы rows проверь каждый тип угрозы и границу радиуса");
         assertEquals(
-                PolicyId.EXPLOSIVE, reflex.policy(), "Строка «" + name + "»: рефлекс принадлежит политике EXPLOSIVE");
+                PolicyId.EXPLOSIVE,
+                reflex.policy(),
+                "Строка «" + name + "»: рефлекс принадлежит политике EXPLOSIVE, иначе лог и исключения ищут "
+                        + "чужую причину. При смене evaluate проверь PolicyId у каждой опасной строки");
         ReflexAction.Flee flee = assertInstanceOf(
                 ReflexAction.Flee.class,
                 reflex.action(),
-                "Строка «" + name + "»: в открытой комнате бегство возможно, причина: " + reflex.reason());
+                "Строка «" + name + "»: в открытой комнате бегство возможно, иначе дух остановится в тупике, "
+                        + "которого нет. Причина: " + reflex.reason() + ". При смене плана проверь выбор Flee");
         assertTrue(
                 distance(flee.cell(), fact.pos()) >= expectedHold,
-                "Строка «" + name + "»: после бегства расстояние до угрозы не меньше " + expectedHold + ". Цель: "
-                        + flee.cell());
+                "Строка «" + name + "»: после бегства расстояние до угрозы не меньше " + expectedHold
+                        + ", иначе дух бежит вдоль радиуса и всё равно получает урон. Цель: " + flee.cell()
+                        + ". При смене выбора клетки проверь запас до угрозы");
     }
 
     @Test
@@ -114,7 +121,8 @@ class ExplosionAvoidanceTests {
         assertTrue(
                 ExplosionAvoidance.CHARGED_CREEPER_HOLD >= damageRadius + 1.0,
                 "Заряженный крипер бьёт на 2 × 6 = 12 блоков; держание " + ExplosionAvoidance.CHARGED_CREEPER_HOLD
-                        + " меньше радиуса с запасом в 1 блок, дух простоял бы в зоне урона и не побежал. Если меняешь число осознанно, сверь радиус взрыва в игре");
+                        + " меньше радиуса с запасом в 1 блок, дух простоял бы в зоне урона и не побежал. "
+                        + "При смене константы проверь радиус взрыва в игре");
     }
 
     @Test
@@ -124,7 +132,8 @@ class ExplosionAvoidanceTests {
         assertTrue(
                 ExplosionAvoidance.SCAN_RADIUS >= largestHold,
                 "Радиус опроса угроз " + ExplosionAvoidance.SCAN_RADIUS + " меньше наибольшего держания " + largestHold
-                        + ": набухающий заряженный крипер не попал бы в список, и рефлекс не сработал бы. Перепроверь ThreatScanner.RADIUS");
+                        + ": набухающий заряженный крипер не попал бы в список, и рефлекс не сработал бы. "
+                        + "При смене константы проверь ThreatScanner.RADIUS");
     }
 
     @Test
@@ -134,14 +143,20 @@ class ExplosionAvoidanceTests {
 
         PolicyVerdict verdict = ExplosionAvoidance.evaluate(SELF, List.of(west, east), openRoom());
 
-        PolicyVerdict.Reflex reflex =
-                assertInstanceOf(PolicyVerdict.Reflex.class, verdict, "Два крипера в пяти блоках — рефлекс обязателен");
+        PolicyVerdict.Reflex reflex = assertInstanceOf(
+                PolicyVerdict.Reflex.class,
+                verdict,
+                "Два крипера в пяти блоках — рефлекс обязателен, иначе дух стоит между зонами урона. "
+                        + "При смене evaluate проверь угрозы с двух сторон");
         ReflexAction.Flee flee = assertInstanceOf(
-                ReflexAction.Flee.class, reflex.action(), "Выход вбок есть, причина: " + reflex.reason());
+                ReflexAction.Flee.class,
+                reflex.action(),
+                "Выход вбок есть, иначе бегство невозможно. Причина: " + reflex.reason()
+                        + ". При смене плана проверь перпендикулярное направление");
         assertTrue(
                 distance(flee.cell(), west.pos()) >= 7.0 && distance(flee.cell(), east.pos()) >= 7.0,
                 "Бежать нужно так, чтобы выдержать 7 блоков до обоих, а не убежать от одного в лапы другого. Цель: "
-                        + flee.cell());
+                        + flee.cell() + ". При смене выбора клетки проверь запас до каждой угрозы");
     }
 
     @Test
@@ -151,11 +166,15 @@ class ExplosionAvoidanceTests {
 
         PolicyVerdict verdict = ExplosionAvoidance.evaluate(SELF, List.of(near, far), openRoom());
 
-        ReflexAction.Flee flee =
-                assertInstanceOf(ReflexAction.Flee.class, ((PolicyVerdict.Reflex) verdict).action(), "Выход есть");
+        ReflexAction.Flee flee = assertInstanceOf(
+                ReflexAction.Flee.class,
+                ((PolicyVerdict.Reflex) verdict).action(),
+                "Выход есть, иначе дух останется в зоне ближней угрозы. При смене evaluate проверь две угрозы, "
+                        + "одну ближе держания, другую дальше");
         assertTrue(
                 distance(flee.cell(), near.pos()) >= 7.0 && distance(flee.cell(), far.pos()) >= 7.0,
-                "Дальний крипер тоже держится на 7: бегство от ближнего не должно вести к нему. Цель: " + flee.cell());
+                "Дальний крипер тоже держится на 7: бегство от ближнего не должно вести к нему. Цель: " + flee.cell()
+                        + ". При смене плана проверь учёт всех угроз, а не только нарушенной");
     }
 
     @Test
@@ -167,12 +186,16 @@ class ExplosionAvoidanceTests {
                 List.of(new ThreatFact(ThreatType.CREEPER, corridor.marker('1'), false)),
                 corridor);
 
-        PolicyVerdict.Reflex reflex =
-                assertInstanceOf(PolicyVerdict.Reflex.class, verdict, "Крипер в двух блоках — рефлекс обязателен");
+        PolicyVerdict.Reflex reflex = assertInstanceOf(
+                PolicyVerdict.Reflex.class,
+                verdict,
+                "Крипер в двух блоках — рефлекс обязателен, иначе дух остаётся рядом со взрывом. "
+                        + "При смене evaluate проверь тупик с угрозой у выхода");
         assertEquals(
                 new ReflexAction.StopMoving(),
                 reflex.action(),
-                "Дух в тупике, крипер у выхода: пройти мимо нельзя, стоять лучше, чем идти в крипера");
+                "Дух в тупике, крипер у выхода: пройти мимо нельзя, стоять лучше, чем идти в крипера, "
+                        + "иначе дух сам входит в радиус взрыва. При смене плана проверь тупик без выхода");
     }
 
     @Test
@@ -186,13 +209,20 @@ class ExplosionAvoidanceTests {
                 walled.marker('@'), List.of(new ThreatFact(ThreatType.CREEPER, walled.marker('1'), false)), walled);
 
         PolicyVerdict.Reflex reflex = assertInstanceOf(
-                PolicyVerdict.Reflex.class, verdict, "Взрыв крипера рушит стену: два блока камня не защита");
+                PolicyVerdict.Reflex.class,
+                verdict,
+                "Взрыв крипера рушит стену: два блока камня не защита, иначе дух стоит за стеной вместо бегства. "
+                        + "При смене evaluate проверь угрозу за стеной");
         ReflexAction.Flee flee = assertInstanceOf(
-                ReflexAction.Flee.class, reflex.action(), "Вдоль стены бежать можно, причина: " + reflex.reason());
+                ReflexAction.Flee.class,
+                reflex.action(),
+                "Вдоль стены бежать можно, иначе дух остаётся у стены. Причина: " + reflex.reason()
+                        + ". При смене плана проверь обход препятствия");
         assertEquals(
                 new BlockCoord(11, 1, 0),
                 flee.cell(),
-                "Коридор слишком короткий для 7 блоков (до x=11 расстояние 5.4): дух уходит в самую дальнюю клетку вдоль стены, восточную раньше западной");
+                "Коридор слишком короткий для 7 блоков (до x=11 расстояние 5.4): дух уходит в самую дальнюю клетку вдоль стены, восточную раньше западной, "
+                        + "иначе выбор клетки будет случайным. При смене порядка обхода проверь x=11");
     }
 
     @Test
@@ -201,17 +231,25 @@ class ExplosionAvoidanceTests {
                 ExplosionAvoidance.evaluate(SELF, List.of(fact(ThreatType.CREEPER, 2, 0, true)), openRoom());
 
         PolicyVerdict.Reflex reflex = assertInstanceOf(
-                PolicyVerdict.Reflex.class, verdict, "Набухающий крипер в двух блоках — рефлекс обязателен");
+                PolicyVerdict.Reflex.class,
+                verdict,
+                "Набухающий крипер в двух блоках — рефлекс обязателен, иначе дух ждёт взрыва. "
+                        + "При смене evaluate проверь флаг набухания");
         assertTrue(
                 reflex.reason().startsWith("срочно, угроза набухает: CREEPER"),
-                "Набухание помечено в причине как срочное: по логу видно, что дух бежал от готового взорваться. Причина: "
-                        + reflex.reason());
+                "Набухание помечено в причине как срочное: по логу видно, что дух бежал от готового взорваться, "
+                        + "иначе причину не отличить от обычной угрозы. Причина: " + reflex.reason()
+                        + ". При смене текста проверь префикс «срочно»");
     }
 
     @Test
     void evaluate_NoThreats_IsClear() {
         PolicyVerdict verdict = ExplosionAvoidance.evaluate(SELF, List.of(), openRoom());
 
-        assertEquals(new PolicyVerdict.Clear(), verdict, "Без угроз рефлекса нет");
+        assertEquals(
+                new PolicyVerdict.Clear(),
+                verdict,
+                "Без угроз рефлекса нет, иначе дух бежит от пустоты и теряет рабочий тик поселения. "
+                        + "При смене evaluate проверь пустой список угроз");
     }
 }
