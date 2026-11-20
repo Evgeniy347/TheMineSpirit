@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.SchematicBlocks;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -14,6 +15,29 @@ public final class BlockStates {
     private static final String DEFAULT_NAMESPACE = "minecraft";
 
     private BlockStates() {}
+
+    public static Map<String, String> properties(String block) {
+        Objects.requireNonNull(block, "Строка блока не может быть null: без неё свойств не прочитать");
+        int start = block.indexOf('[');
+        if (start < 0) {
+            return Map.of();
+        }
+        if (!block.endsWith("]")) {
+            throw new IllegalArgumentException(
+                    "Состояние блока '" + block + "' без закрывающей скобки: ожидалось id[свойство=значение,…]");
+        }
+        Map<String, String> properties = new LinkedHashMap<>();
+        for (String pair : block.substring(start + 1, block.length() - 1).split(",", -1)) {
+            int equals = pair.indexOf('=');
+            if (equals <= 0) {
+                throw new IllegalArgumentException("Свойство '" + pair + "' блока '" + block
+                        + "' не в виде имя=значение: состояние блока не прочитать");
+            }
+            properties.put(
+                    pair.substring(0, equals).trim(), pair.substring(equals + 1).trim());
+        }
+        return properties;
+    }
 
     public static Block blockFor(String blockId) {
         Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, что ставить");

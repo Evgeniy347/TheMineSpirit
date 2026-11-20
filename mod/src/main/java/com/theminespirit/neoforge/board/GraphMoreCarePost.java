@@ -58,7 +58,8 @@ final class GraphMoreCarePost {
     }
 
     static boolean light(GraphPost post, GraphTickets.Ticket ticket, BlockCoord at) {
-        GraphMorePost.submit(post, ticket, BoardCase.LIGHTING, TicketTarget.at(at), Map.of(TORCH, 1));
+        BlockCoord point = new BlockCoord(at.x(), post.scan.stage().anchor().y(), at.z());
+        GraphMorePost.submit(post, ticket, BoardCase.LIGHTING, TicketTarget.at(point), Map.of(TORCH, 1));
         return true;
     }
 

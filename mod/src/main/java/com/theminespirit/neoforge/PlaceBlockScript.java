@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.building.BuildResult;
 import com.theminespirit.core.building.BuildState;
 import com.theminespirit.core.building.BuildTuning;
@@ -13,7 +14,6 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.PlaceBlockParams;
 import com.theminespirit.core.town.PlotProtection;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,8 +22,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 final class PlaceBlockScript implements ScriptInstance {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private final SpiritEntity spirit;
     private final Level level;
     private final String blockId;
@@ -32,6 +35,7 @@ final class PlaceBlockScript implements ScriptInstance {
     private final LevelSafetyView safety;
     private final BlockPlacer placer;
     private final Approach approach;
+    private final TorchPlacement.@Nullable Spot torch;
 
     private boolean approached;
     private boolean standRequired;
@@ -50,8 +54,10 @@ final class PlaceBlockScript implements ScriptInstance {
         this.level = spirit.level();
         int state = params.block().indexOf('[');
         this.blockId = state < 0 ? params.block() : params.block().substring(0, state);
-        this.target = new BlockCoord(params.x(), params.y(), params.z());
-        this.wanted = BlockStates.stateFor(blockId, properties(params.block(), state));
+        BlockCoord wantedCell = new BlockCoord(params.x(), params.y(), params.z());
+        this.torch = TorchPlacement.resolve(level, blockId, wantedCell);
+        this.target = torch == null ? wantedCell : torch.cell();
+        this.wanted = BlockStates.stateFor(blockId, BlockStates.properties(params.block()));
         this.safety = new LevelSafetyView(level);
         this.placer = new BlockPlacer(spirit, PlotProtection.Ground.PLAN_BUILD);
         this.approach = new Approach(spirit);
@@ -64,6 +70,14 @@ final class PlaceBlockScript implements ScriptInstance {
         }
         if (spirit.isRemoved()) {
             return fail("дух исчез во время постановки блока");
+        }
+        if (torch != null && torch.stop() != null) {
+            if (torch.failure()) {
+                return fail(torch.stop() + "; поставлено 0 из 1");
+            }
+            LOGGER.info("[torch] {}: пропуск {}: {}", spirit.getName().getString(), target, torch.stop());
+            outcome = ScriptStatus.SUCCEEDED;
+            return outcome;
         }
         if (level.getBlockState(toPos(target)).is(wanted.getBlock())) {
             placed = 1;
@@ -82,7 +96,7 @@ final class PlaceBlockScript implements ScriptInstance {
             return clearingTick();
         }
         BlockPos targetPos = toPos(target);
-        if (clearable(level.getBlockState(targetPos))) {
+        if (torch == null && clearable(level.getBlockState(targetPos))) {
             ScriptStatus stopped = excavate(targetPos);
             if (stopped != null) {
                 return stopped;
@@ -201,27 +215,6 @@ final class PlaceBlockScript implements ScriptInstance {
 
     private static boolean clearable(BlockState state) {
         return !state.isAir() && !state.canBeReplaced() && state.getFluidState().isEmpty();
-    }
-
-    private static Map<String, String> properties(String block, int start) {
-        Map<String, String> properties = new LinkedHashMap<>();
-        if (start < 0) {
-            return properties;
-        }
-        if (!block.endsWith("]")) {
-            throw new IllegalArgumentException(
-                    "Состояние блока '" + block + "' без закрывающей скобки: ожидалось " + "id[свойство=значение,…]");
-        }
-        for (String pair : block.substring(start + 1, block.length() - 1).split(",", -1)) {
-            int equals = pair.indexOf('=');
-            if (equals <= 0) {
-                throw new IllegalArgumentException("Свойство '" + pair + "' блока '" + block
-                        + "' не в виде имя=значение: состояние блока не прочитать");
-            }
-            properties.put(
-                    pair.substring(0, equals).trim(), pair.substring(equals + 1).trim());
-        }
-        return properties;
     }
 
     private ScriptStatus fail(String reason) {
