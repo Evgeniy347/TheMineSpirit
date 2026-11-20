@@ -25,6 +25,7 @@ public final class SpiritNavigation extends GroundPathNavigation {
     private @Nullable BlockPos futileTarget;
     private long futileUntil = Long.MIN_VALUE;
     private long noPathLogTick = Long.MIN_VALUE;
+    private long rebuildLogTick = Long.MIN_VALUE;
 
     public SpiritNavigation(Mob mob, Level level) {
         super(mob, level);
@@ -63,6 +64,9 @@ public final class SpiritNavigation extends GroundPathNavigation {
                 path != null && !path.isDone())) {
             return true;
         }
+        if (want.equals(last)) {
+            logRebuild(want, path);
+        }
         requestedTarget = want;
         long now = mob.level().getGameTime();
         if (want.equals(futileTarget) && PathReuse.waiting(now, futileUntil)) {
@@ -97,6 +101,21 @@ public final class SpiritNavigation extends GroundPathNavigation {
                 path.getNodeCount(),
                 path.getEndNode() == null ? "-" : path.getEndNode().asBlockPos().toShortString(),
                 mob.blockPosition().toShortString());
+    }
+
+    private void logRebuild(BlockPos want, @Nullable Path path) {
+        long now = mob.level().getGameTime();
+        if (now - rebuildLogTick < NO_PATH_LOG_TICKS) {
+            return;
+        }
+        rebuildLogTick = now;
+        LOGGER.info(
+                "[nav] дух {}: перестройка к прежней цели {} — путь {}, узлы {}, done {}",
+                mob.getName().getString(),
+                want.toShortString(),
+                path == null ? "нет" : "есть",
+                path == null ? 0 : path.getNodeCount(),
+                path == null ? "-" : String.valueOf(path.isDone()));
     }
 
     private void logNoPath(BlockPos want, int floorLevel) {
