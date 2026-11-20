@@ -11,7 +11,6 @@ core/building/PresetLibraryTests.java	431
 core/engine/TaskRunnerRestoreTests.java	333
 core/engine/TaskRunnerTests.java	743
 core/inventory/OverflowPolicyTests.java	464
-core/inventory/ValueTableTests.java	339
 core/observation/WorldObservationTests.java	463
 core/plan/PlanValidatorRulesTests.java	359
 core/planner/AcquireScriptTests.java	1000
