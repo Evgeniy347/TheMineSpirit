@@ -31,9 +31,21 @@ class TestCostReporterTests {
 
         List<String> report = TestCostReporter.report(lines, thresholds());
 
-        assertTrue(report.get(1).contains("b — 500 мс CPU"), "первый в топе — самый долгий: " + report.get(1));
-        assertTrue(report.get(2).contains("c — 300 мс CPU"), "второй — средний: " + report.get(2));
-        assertTrue(report.get(3).contains("a — 100 мс CPU"), "третий — самый быстрый: " + report.get(3));
+        assertTrue(
+                report.get(1).contains("b — 500 мс CPU"),
+                "Топ отчёта начинается с самого долгого теста: иначе оптимизируют случайный класс, а бюджет "
+                        + "200 с CPU уходит на второстепенное. При смене сортировки в TestCostReporter.report "
+                        + "проверь testCostReport на живом TestResults/unit/test-cost.csv: b, c, a по убыванию CPU");
+        assertTrue(
+                report.get(2).contains("c — 300 мс CPU"),
+                "Второй в топе — средний по стоимости: иначе отчёт сваливается в произвольный порядок и "
+                        + "долгий тест прячется за быстрым. При смене сортировки проверь ту же тройку b, c, a "
+                        + "на реальном test-cost.csv после ближайшего полного unit-прогона");
+        assertTrue(
+                report.get(3).contains("a — 100 мс CPU"),
+                "Третий в топе — самый быстрый из троих: иначе отчёт не даёт выбрать, что оптимизировать "
+                        + "первым, и правило «процессор тестов ≤ 200 с» теряет измеримость. При смене сортировки "
+                        + "проверь order b, c, a в testCostReport вместе с соседними проверками порядка");
     }
 
     @Test
@@ -42,10 +54,16 @@ class TestCostReporterTests {
 
         List<String> report = TestCostReporter.report(lines, thresholds());
 
-        assertFalse(report.stream().anyMatch(text -> text.contains("5000 мс")), "строка с warmup в пороги не идёт");
+        assertFalse(
+                report.stream().anyMatch(text -> text.contains("5000 мс")),
+                "Строка с warmup в пороги не идёт: прогрев JVM — не стоимость теста, иначе отчёт навсегда "
+                        + "краснеет на первом классе и реальный долг перестаёт быть виден. При смене фильтра "
+                        + "warmup в TestCostReporter.report проверь CSV, где единственная строка warmup=true");
         assertTrue(
                 report.stream().anyMatch(text -> text.contains("(нет)")),
-                "без строк в порогах отчёт говорит «(нет)»: " + report);
+                "Без строк в порогах отчёт печатает «(нет)», а не пустоту: иначе читатель не отличит "
+                        + "«всё в норме» от сломанного отчёта и не заметит протухшие пороги. При смене формата "
+                        + "секции порогов проверь пустой CSV: в разделе порогов стоит «(нет)»");
     }
 
     @Test
@@ -54,10 +72,14 @@ class TestCostReporterTests {
 
         assertFalse(
                 report.stream().anyMatch(text -> text.contains("499") && text.contains("ДОЛГИЙ")),
-                "499 мс ниже порога 500 — не ДОЛГИЙ: " + report);
+                "499 мс ниже порога 500 — метки ДОЛГИЙ нет: иначе одна миллисекунда отделяет нормальный тест "
+                        + "от тревоги и порог перестаёт быть границей. При смене сравнения с slow-порогом проверь "
+                        + "соседний report_Cpu500_MarkedSlow: 499 без метки, 500 с меткой");
         assertTrue(
                 report.stream().anyMatch(text -> text.contains("a — 499 мс CPU (порог 100 мс)")),
-                "499 мс выше warn 100 — строка с порогом: " + report);
+                "499 мс выше warn 100 — строка с порогом в отчёте: иначе приближение к пределу не видно и долг "
+                        + "копится молча. При смене форматирования строки в TestCostReporter проверь текст "
+                        + "«a — 499 мс CPU (порог 100 мс)» на этом же входе");
     }
 
     @Test
@@ -66,7 +88,9 @@ class TestCostReporterTests {
 
         assertTrue(
                 report.stream().anyMatch(text -> text.contains("a — 500 мс CPU (ДОЛГИЙ, порог 500 мс)")),
-                "500 мс — граница МЕДЛЕННЫЙ: " + report);
+                "500 мс — граница ДОЛГИЙ, порог включается при достижении: иначе тест ровно в лимит считается "
+                        + "нормальным и долг снова копится молча. При смене сравнения в TestCostReporter проверь "
+                        + "соседний report_Cpu499_NotMarkedSlow: 499 без метки, 500 с меткой");
     }
 
     @Test
@@ -77,7 +101,9 @@ class TestCostReporterTests {
                 report.stream()
                         .anyMatch(text -> text.contains("a — 300 мс CPU (ДОЛГИЙ, порог 1000 мс)")
                                 || text.contains("a — 300 мс CPU (порог 300 мс)")),
-                "jqwik-строка 300 мс выше total warn 300: " + report);
+                "Свойство jqwik сравнивается с total-порогами, а не с одиночными: иначе 300 мс свойства "
+                        + "читаются как один медленный тест и лимит tries перестаёт иметь цену. При смене выбора "
+                        + "порога по kind в TestCostReporter.report проверь CSV, где kind=jqwik и cpu 300");
     }
 
     @Test
@@ -89,6 +115,12 @@ class TestCostReporterTests {
                 "pkg.Class,b,jqwik,300,400,0,true",
                 "broken,line"));
 
-        assertEquals(2, lines.size(), "заголовок, пустая строка и битая строка пропускаются");
+        assertEquals(
+                2,
+                lines.size(),
+                "Заголовок, пустая и битая строки тест-cost.csv пропускаются: иначе первый класс считается "
+                        + "тестом «class», а битая запись роняет весь отчёт и ночной прогон. При смене "
+                        + "TestCostReporter.parse проверь CSV с шапкой, пустой строкой и строкой из двух полей: "
+                        + "остаются ровно две записи");
     }
 }

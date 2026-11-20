@@ -80,7 +80,9 @@ class FarmTileTests {
             assertEquals(
                     new FarmTile(ground, above, crop),
                     new FarmTile(ground, above, crop),
-                    "Допустимая клетка обязана создаваться (" + reason + "): иначе планировщик не увидит грядку");
+                    "Допустимая клетка обязана создаваться (" + reason + "): иначе планировщик не увидит грядку, "
+                            + "работа поля встанет и дух простоит цикл. При смене инварианта FarmTile проверь "
+                            + "строки constructorRows с valid=false");
             return;
         }
 
@@ -88,6 +90,7 @@ class FarmTileTests {
                 IllegalArgumentException.class,
                 () -> new FarmTile(ground, above, crop),
                 "Нарушение инварианта обязано отвергаться (" + reason + "): иначе планировщик увидит урожай там, "
-                        + "где его нет, или пропустит зрелый посев");
+                        + "где его нет, или пропустит зрелый посев. При смене FarmTile проверь строки valid=true "
+                        + "выше и живой осмотр поля после посадки");
     }
 }

@@ -16,8 +16,9 @@ class WaterCellsTests {
         assertEquals(
                 LIMIT,
                 WaterCells.MAX_CELLS,
-                "Предел воды 20 000 клеток задан в задаче 21 п. 10: он защищает тик от разбора озера; "
-                        + "меняя число осознанно, поправь и ожидание здесь");
+                "Предел воды 20 000 клеток задан в задаче 21 п. 10: он защищает тик от разбора озера, иначе "
+                        + "ферма встаёт на одном озере и остальные работы ждут. При смене WaterCells.MAX_CELLS "
+                        + "проверь add_ExactlyLimitDistinctCells и add_OneMoreThanLimit");
     }
 
     @Test
@@ -27,8 +28,16 @@ class WaterCellsTests {
             water.add(new BlockCoord(i, 0, 0));
         }
 
-        assertFalse(water.exceeded(), "Ровно 20 000 клеток ещё допустимы: отказ раньше предела режет годные озёра");
-        assertEquals(LIMIT, water.cells().size(), "Все 20 000 клеток обязаны остаться во множестве воды");
+        assertFalse(
+                water.exceeded(),
+                "Ровно 20 000 клеток ещё допустимы: отказ раньше предела режет годные озёра, иначе ферма "
+                        + "остаётся без полива. При смене проверки exceed в WaterCells.add проверь соседний тест "
+                        + "с лишней клеткой");
+        assertEquals(
+                LIMIT,
+                water.cells().size(),
+                "Все 20 000 клеток обязаны остаться во множестве воды: иначе часть озера теряется и полив идёт "
+                        + "по неполной карте. При смене WaterCells.cells проверь cells_AfterExceeded_Throws");
     }
 
     @Test
@@ -38,7 +47,10 @@ class WaterCellsTests {
             water.add(new BlockCoord(i, 0, 0));
         }
 
-        assertTrue(water.exceeded(), "20 001 клетка воды обязана дать отказ: иначе предел не защищает тик");
+        assertTrue(
+                water.exceeded(),
+                "20 001 клетка воды обязана дать отказ: иначе предел не защищает тик и ферма встаёт на огромном "
+                        + "озере. При смене проверки в WaterCells.add проверь границу LIMIT и LIMIT+1");
     }
 
     @Test
@@ -48,8 +60,16 @@ class WaterCellsTests {
             water.add(new BlockCoord(1, 2, 3));
         }
 
-        assertFalse(water.exceeded(), "Повторы одной клетки не растят множество: предел считает разные клетки");
-        assertEquals(1, water.cells().size(), "Одна клетка воды — одна запись во множестве");
+        assertFalse(
+                water.exceeded(),
+                "Повторы одной клетки не растят множество: предел считает разные клетки, иначе озеро из одной "
+                        + "клетки ложно переполнит счётчик. При смене WaterCells.add проверь размер cells() в "
+                        + "этом тесте");
+        assertEquals(
+                1,
+                water.cells().size(),
+                "Одна клетка воды — одна запись во множестве: иначе повторные чтения раздувают карту и предел "
+                        + "срабатывает раньше времени. При смене WaterCells.add проверь соседний тест с повторами");
     }
 
     @Test
@@ -62,13 +82,17 @@ class WaterCellsTests {
         assertThrows(
                 IllegalStateException.class,
                 water::cells,
-                "Неполное множество воды дало бы тихий ложный «сухо»: после превышения чтение обязано падать");
+                "Неполное множество воды дало бы тихий ложный «сухо»: после превышения чтение обязано падать, "
+                        + "иначе дух копает ямы без воды. При смене WaterCells.cells проверь "
+                        + "add_OneMoreThanLimit_IsExceeded");
     }
 
     @Test
     void refusal_Text_NamesRadiusAdvice() {
         assertTrue(
                 WaterCells.REFUSAL.contains("воды слишком много") && WaterCells.REFUSAL.contains("radius"),
-                "Отказ обязан сказать стратегу, что именно уменьшать: параметр radius");
+                "Отказ обязан сказать стратегу, что именно уменьшать — параметр radius, иначе он снова пришлёт "
+                        + "тот же запрос и цикл встанет. При смене WaterCells.REFUSAL проверь строку отказа в "
+                        + "логе фермы и отчёт стратегу");
     }
 }

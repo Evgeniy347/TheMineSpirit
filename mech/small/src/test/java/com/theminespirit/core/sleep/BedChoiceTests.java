@@ -25,7 +25,8 @@ class BedChoiceTests {
         assertEquals(
                 Optional.of(FAR),
                 chosen,
-                "Своя кровать предпочтительнее ближней чужой: дух ложится на привычное место");
+                "Своя кровать предпочтительнее ближней чужой: дух ложится на привычное место, иначе теряет свою "
+                        + "кровать. При смене BedChoice.choose проверь строку занятой ниже в тесте");
     }
 
     @Test
@@ -36,7 +37,8 @@ class BedChoiceTests {
         assertEquals(
                 Optional.of(NEAR),
                 chosen,
-                "Занятая своя кровать не берётся: дух ищет свободную, а не ложится поверх соседа");
+                "Занятая своя кровать не берётся: дух ищет свободную, а не ложится поверх соседа, иначе двое спят в "
+                        + "одной. При смене choose проверь строку границы ниже в тесте");
     }
 
     @Test
@@ -48,7 +50,8 @@ class BedChoiceTests {
         assertEquals(
                 Optional.of(NEAR),
                 chosen,
-                "Своя кровать за границей поселения не берётся ночью: за границу дух не выходит");
+                "Своя кровать за границей поселения не берётся ночью: за границу дух не выходит, иначе поводок "
+                        + "нарушен. При смене проверки радиуса проверь строку снесённой ниже в тесте");
     }
 
     @Test
@@ -58,7 +61,8 @@ class BedChoiceTests {
         assertEquals(
                 Optional.of(NEAR),
                 chosen,
-                "Снесённая своя кровать не выбирается: помнится только та, что стоит в мире");
+                "Снесённая своя кровать не выбирается: помнится только та, что стоит в мире, иначе дух идёт в "
+                        + "пустоту. При смене choose проверь строку без своей ниже в тесте");
     }
 
     @Test
@@ -66,7 +70,11 @@ class BedChoiceTests {
         Optional<BlockCoord> chosen =
                 BedChoice.choose(Optional.empty(), List.of(FAR, NEAR), Set.of(), FROM, HOME, RADIUS);
 
-        assertEquals(Optional.of(NEAR), chosen, "Без своей кровати берётся ближайшая свободная в поселении");
+        assertEquals(
+                Optional.of(NEAR),
+                chosen,
+                "Без своей кровати берётся ближайшая свободная в поселении, иначе дух стоит без сна. При смене choose "
+                        + "проверь строку занятой ниже в тесте");
     }
 
     @Test
@@ -74,7 +82,11 @@ class BedChoiceTests {
         Optional<BlockCoord> chosen =
                 BedChoice.choose(Optional.empty(), List.of(NEAR, FAR), Set.of(NEAR), FROM, HOME, RADIUS);
 
-        assertEquals(Optional.of(FAR), chosen, "Занятую кровать не берут: двое духов не ложатся в одну кровать");
+        assertEquals(
+                Optional.of(FAR),
+                chosen,
+                "Занятую кровать не берут: двое духов не ложатся в одну кровать, иначе ночь не проходит. При смене "
+                        + "проверки занятости проверь строку всех занятых ниже в тесте");
     }
 
     @Test
@@ -82,7 +94,10 @@ class BedChoiceTests {
         Optional<BlockCoord> chosen =
                 BedChoice.choose(Optional.empty(), List.of(NEAR, FAR), Set.of(NEAR, FAR), FROM, HOME, RADIUS);
 
-        assertTrue(chosen.isEmpty(), "Все кровати заняты — выбора нет: дух остаётся без места, а не ложится к соседу");
+        assertTrue(
+                chosen.isEmpty(),
+                "Все кровати заняты — выбора нет: дух остаётся без места, а не ложится к соседу, иначе кровать "
+                        + "делится. При смене choose проверь строку за границей ниже в тесте");
     }
 
     @Test
@@ -91,7 +106,10 @@ class BedChoiceTests {
         Optional<BlockCoord> chosen =
                 BedChoice.choose(Optional.empty(), List.of(farOutside), Set.of(), FROM, HOME, RADIUS);
 
-        assertTrue(chosen.isEmpty(), "Кровати за границей поселения ночью не выбираются: иначе дух уйдёт за поводок");
+        assertTrue(
+                chosen.isEmpty(),
+                "Кровати за границей поселения ночью не выбираются, иначе дух уйдёт за поводок. При смене проверки "
+                        + "радиуса проверь строку null ниже в тесте");
     }
 
     @Test
@@ -99,7 +117,8 @@ class BedChoiceTests {
         assertThrows(
                 NullPointerException.class,
                 () -> BedChoice.choose(Optional.empty(), List.of(NEAR), Set.of(), FROM, null, RADIUS),
-                "Без дома нет границы поселения: ошибка обязана быть явной, а не молчаливым выбором");
+                "Без дома нет границы поселения: ошибка обязана быть явной, а не молчаливым выбором, иначе дух "
+                        + "уходит без границы. При смене choose проверь строку радиуса ниже в тесте");
     }
 
     @Test
@@ -107,6 +126,7 @@ class BedChoiceTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BedChoice.choose(Optional.empty(), List.of(NEAR), Set.of(), FROM, HOME, 0),
-                "Радиус меньше 1 не оставил бы ни одной кровати своей: отказ обязан быть явной ошибкой");
+                "Радиус меньше 1 не оставил бы ни одной кровати своей: отказ обязан быть явной ошибкой, иначе выбор "
+                        + "пуст молча. При смене проверки радиуса проверь строку выше в тесте");
     }
 }

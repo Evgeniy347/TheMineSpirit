@@ -72,6 +72,7 @@ mech/forestry/com/theminespirit/core/forestry/ChopPlanTests.java
 mech/forestry/com/theminespirit/core/forestry/ChopStandsTests.java
 mech/forestry/com/theminespirit/core/forestry/ChopTuningTests.java
 mech/forestry/com/theminespirit/core/forestry/ForestryScenarioTests.java
+mech/forestry/com/theminespirit/core/forestry/ForestryWorldTests.java # живые снимки и распределение двух духов вынесены, чтобы сюита и файлы держались в пределе размера
 mech/forestry/com/theminespirit/core/forestry/HangingTreeShapeTests.java
 mech/forestry/com/theminespirit/core/forestry/LeafObstaclesTests.java
 mech/forestry/com/theminespirit/core/forestry/LiveJungleVineTests.java
@@ -89,6 +90,7 @@ mech/forestry/com/theminespirit/core/forestry/TreeGrid.java
 mech/forestry/com/theminespirit/core/forestry/TreeGroupTests.java
 mech/forestry/com/theminespirit/core/forestry/TreeShapeProperties.java
 mech/forestry/com/theminespirit/core/forestry/TreeShapeStumpTests.java
+mech/forestry/com/theminespirit/core/forestry/TreeShapeRejectTests.java # разбор отказов отделён от распознавания, чтобы файлы не превышали предел размера
 mech/forestry/com/theminespirit/core/forestry/TreeShapeTests.java
 mech/forestry/com/theminespirit/core/forestry/TreeSpanTests.java
 mech/mining/com/theminespirit/core/mining/AnchorSpotTests.java

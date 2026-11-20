@@ -38,8 +38,9 @@ class FarmStandSpotsProperties {
                         distance <= FarmTuning.REACH,
                         "Каждая стоянка обязана лежать в досягаемости исполнителя (" + FarmTuning.REACH
                                 + " от глаз до центра цели, как проверяет сессия): иначе BlockBreaker отвергнет "
-                                + "ломку и цель не обработается. Стоянка " + stand + ", цель " + target
-                                + ", расстояние " + distance);
+                                + "ломку и цель не обработается. При смене FarmTuning.REACH проверь "
+                                + "FarmStandSpotsTests.of_OpenGround_MaxStandOffsetIsSqrtEleven. Стоянка " + stand
+                                + ", цель " + target + ", расстояние " + distance);
             }
         }
         Assume.that(checked > 0);
@@ -61,8 +62,10 @@ class FarmStandSpotsProperties {
             assertTrue(
                     distance <= FarmTuning.REACH,
                     "Стоянка, выбранная планировщиком, обязана быть в досягаемости исполнителя (" + FarmTuning.REACH
-                            + " от глаз до центра цели): иначе сессия не сможет обработать выбранную клетку. "
-                            + "Стоянка " + next.stand() + ", цель " + next.target() + ", расстояние " + distance);
+                            + " от глаз до центра цели): иначе сессия не сможет обработать выбранную клетку и "
+                            + "цикл фермы встанет. При смене FarmPlanner.next проверь "
+                            + "FarmStandSpotsTests.of_DirtStand_IsPreferredOverStrictlyCloserFarmland. Стоянка "
+                            + next.stand() + ", цель " + next.target() + ", расстояние " + distance);
         }
     }
 

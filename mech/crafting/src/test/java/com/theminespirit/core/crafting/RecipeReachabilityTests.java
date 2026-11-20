@@ -14,11 +14,16 @@ class RecipeReachabilityTests {
 
         RecipeReachability reach = new RecipeReachability(index, "b7"::equals);
 
-        assertTrue(reach.canObtain("b0"), "Цепочка из крафтов до добываемого b7 обязана быть достижимой");
+        assertTrue(
+                reach.canObtain("b0"),
+                "Цепочка из крафтов до добываемого b7 обязана быть достижимой: иначе план добычи не находит путь и "
+                        + "дух не начинает работу. При смене RecipeReachability.canObtain проверь "
+                        + "canObtain_RecipeCycle_ReturnsFalseWithoutHanging");
         assertTrue(
                 index.lookupProbes() < 200,
                 "Повторный разбор одной и той же ветки рецептов обязан кэшироваться: иначе живой планировщик "
-                        + "зависает на кирпичах и ступенях (observe18 B5), а поисков было " + index.lookupProbes());
+                        + "зависает на кирпичах и ступенях (observe18 B5). При смене кэша в RecipeReachability "
+                        + "проверь этот счётчик на том же мире, поисков было " + index.lookupProbes());
     }
 
     @Test
@@ -28,7 +33,9 @@ class RecipeReachabilityTests {
 
         assertFalse(
                 new RecipeReachability(index, item -> false).canObtain("a"),
-                "Рецепт, который делает предмет из самого себя, не делает его достижимым");
+                "Рецепт, который делает предмет из самого себя, не делает его достижимым: иначе планировщик "
+                        + "зациклится на цикле и дождётся тайм-аута. При смене RecipeReachability.canObtain проверь "
+                        + "строку b0 выше в этом классе");
     }
 
     private static List<RecipeSpec> chain(int depth, int branches) {

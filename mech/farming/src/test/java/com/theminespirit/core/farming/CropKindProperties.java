@@ -20,7 +20,8 @@ class CropKindProperties {
                 Optional.of(kind),
                 CropKind.ofBlock(kind.blockId()),
                 "Обратное сопоставление обязано держаться для блока вида " + kind
-                        + ": иначе распознавание посева и поиск цели расходятся");
+                        + ": иначе распознавание посева и поиск цели расходятся, и дух не находит грядку. При "
+                        + "смене CropKind.ofBlock проверь attributes_EveryPlantableKind_MatchesVanillaTable");
     }
 
     @Property
@@ -32,7 +33,8 @@ class CropKindProperties {
         assertTrue(
                 kind.blockId().matches("minecraft:[a-z_]+"),
                 "id блока обязан идти по шаблону minecraft:[a-z_]+: LevelFarmView ищет вид по id из реестра, "
-                        + "а заглавные буквы или дефис сломают сопоставление. Фактический: " + kind.blockId());
+                        + "иначе заглавные буквы или дефис сломают сопоставление и посев не найдётся. При смене "
+                        + "blockId проверь ofBlock_BlockIdOfKind_ReturnsThatKind. Фактический: " + kind.blockId());
     }
 
     @Property
@@ -49,8 +51,9 @@ class CropKindProperties {
                     expected,
                     new CropState(kind, age).isMature(),
                     "Зрелость вида " + kind + " метода " + kind.harvestMethod()
-                            + " обязана совпадать с правилом: PICK с 2, BREAK_COLUMN всегда, BREAK на maxAge. Возраст: "
-                            + age);
+                            + " обязана совпадать с правилом: PICK с 2, BREAK_COLUMN всегда, BREAK на maxAge; "
+                            + "иначе harvest собирает незрелое или пропускает спелое и цикл фермы рвётся. При "
+                            + "смене правила зрелости проверь CropKindTests и MelonCocoaTests. Возраст: " + age);
         }
     }
 }

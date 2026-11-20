@@ -18,8 +18,13 @@ class RepairCalculatorProperties {
         int result = RepairCalculator.grindstoneResult(durabilityA, durabilityB, maxDurability);
         assertTrue(
                 result <= maxDurability,
-                "результат ремонта " + result + " превышает максимальную прочность " + maxDurability);
-        assertTrue(result >= 0, "результат ремонта " + result + " отрицателен");
+                "результат ремонта " + result + " превышает максимальную прочность " + maxDurability + ", иначе "
+                        + "предмет чинится выше максимума и ломает инвентарь. При смене RepairCalculator."
+                        + "grindstoneResult проверь строку отрицательного ниже в тесте");
+        assertTrue(
+                result >= 0,
+                "результат ремонта " + result + " отрицателен, иначе прочность уходит в минус и предмет ломается "
+                        + "сразу. При смене grindstoneResult проверь строку выше в тесте");
     }
 
     @Property
@@ -30,8 +35,13 @@ class RepairCalculatorProperties {
         int result = RepairCalculator.anvilResult(durability, maxDurability, percent);
         assertTrue(
                 result <= maxDurability,
-                "результат ремонта наковальней " + result + " превышает максимальную прочность " + maxDurability);
-        assertTrue(result >= 0, "результат ремонта наковальней " + result + " отрицателен");
+                "результат ремонта наковальней " + result + " превышает максимальную прочность " + maxDurability
+                        + ", иначе наковальня переполняет прочность. При смене anvilResult проверь строку "
+                        + "отрицательного ниже в тесте");
+        assertTrue(
+                result >= 0,
+                "результат ремонта наковальней " + result + " отрицателен, иначе прочность уходит в минус. При "
+                        + "смене anvilResult проверь строку выше в тесте");
     }
 
     @Property
@@ -42,7 +52,8 @@ class RepairCalculatorProperties {
                 RepairCalculator.chooseMethod(
                         RepairCosts.defaults(),
                         new RepairCalculator.Availability(materialAvailable, secondToolAvailable, true, true)),
-                "зачарованный предмет не должен попадать в точило ни при каких флагах: чары потерялись бы");
+                "зачарованный предмет не должен попадать в точило ни при каких флагах: чары потерялись бы, иначе дух "
+                        + "портит enchantment. При смене chooseMethod проверь строку крепкого ниже в тесте");
     }
 
     @Property
@@ -56,7 +67,8 @@ class RepairCalculatorProperties {
                 RepairCalculator.chooseMethod(
                         new RepairCosts(1, xpWeight, 10),
                         new RepairCalculator.Availability(materialAvailable, secondToolAvailable, enchanted, false)),
-                "крепкий предмет не чинится ни одним способом: ресурс тратился бы впустую");
+                "крепкий предмет не чинится ни одним способом: ресурс тратился бы впустую, иначе ремонт крепкого "
+                        + "предмета. При смене Availability проверь строку дешевле ниже в тесте");
     }
 
     @Property
@@ -69,7 +81,8 @@ class RepairCalculatorProperties {
         assertEquals(
                 cheaper,
                 method,
-                "при обоих способах выбран " + method + ", а дешевле " + cheaper
-                        + ": доска и скрипт обязаны брать тот же способ, что и расчёт стоимости");
+                "при обоих способах выбран " + method + ", а дешевле " + cheaper + ": доска и скрипт обязаны брать "
+                        + "тот же способ, что и расчёт стоимости, иначе расход не совпадает. При смене chooseMethod "
+                        + "проверь строку выше в тесте");
     }
 }

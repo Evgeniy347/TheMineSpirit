@@ -22,9 +22,20 @@ class CraftPlanTests {
     void of_EightPlanksFromLogs_TwoCraftsConsumeTwoLogs() {
         CraftPlan plan = CraftPlan.of(PLANKS_FROM_LOG, 8, Map.of("oak_log", 2));
 
-        assertEquals(2, plan.crafts(), "8 досок при выходе 4 — ровно 2 крафта: лишний крафт сожжёт бревно зря");
-        assertEquals(Map.of("oak_log", 2), plan.required(), "2 крафта по бревну обязаны расходовать 2 бревна");
-        assertTrue(plan.feasible(), "С двумя брёвнами в наличии план обязан быть выполним");
+        assertEquals(
+                2,
+                plan.crafts(),
+                "8 досок при выходе 4 — ровно 2 крафта: лишний крафт сожжёт бревно зря, иначе запас дерева тает. "
+                        + "При смене CraftPlan.of проверь строку required ниже в тесте");
+        assertEquals(
+                Map.of("oak_log", 2),
+                plan.required(),
+                "2 крафта по бревну обязаны расходовать 2 бревна, иначе отказ называет неверную нехватку. При смене "
+                        + "расчёта в CraftPlan.of проверь строку crafts выше в тесте");
+        assertTrue(
+                plan.feasible(),
+                "С двумя брёвнами в наличии план обязан быть выполним, иначе дух отказывает при полном наборе. При "
+                        + "смене CraftPlan.feasible проверь строку нехватки ниже в тесте");
     }
 
     @Test
@@ -32,23 +43,36 @@ class CraftPlanTests {
         CraftPlan plan = CraftPlan.of(STICKS, 5, Map.of("oak_planks", 4));
 
         assertEquals(
-                2, plan.crafts(), "5 палок при выходе 4 требуют ceil(5/4) = 2 крафтов, остаток палок остаётся у духа");
-        assertEquals(Map.of("oak_planks", 4), plan.required(), "2 крафта по 2 доски — 4 доски");
+                2,
+                plan.crafts(),
+                "5 палок при выходе 4 требуют ceil(5/4) = 2 крафтов, остаток палок остаётся у духа, иначе лишний "
+                        + "крафт тратит доски. При смене ceil в CraftPlan.of проверь строку required в этом тесте");
+        assertEquals(
+                Map.of("oak_planks", 4),
+                plan.required(),
+                "2 крафта по 2 доски — 4 доски, иначе отказ называет неверную нехватку и дух добывает лишнее. При "
+                        + "смене CraftPlan.of проверь строку crafts выше в тесте");
     }
 
     @Test
     void of_ShortOfPlanks_ReportsMissingWithTotalRequired() {
         CraftPlan plan = CraftPlan.of(PICKAXE, 1, Map.of("oak_planks", 0, "stick", 2));
 
-        assertFalse(plan.feasible(), "Кирка без досок невыполнима");
+        assertFalse(
+                plan.feasible(),
+                "Кирка без досок невыполнима, иначе дух идёт крафтить без материала и падает. При смене "
+                        + "CraftPlan.feasible проверь строку missing ниже в тесте");
         assertEquals(
                 Map.of("oak_planks", 3),
                 plan.missing(),
-                "Отказ обязан называть недостающее: 3 доски нужны, 0 есть. Фактическое: " + plan.missing());
+                "Отказ обязан называть недостающее: 3 доски нужны, 0 есть, иначе доска заказов не показывает "
+                        + "причину. При смене CraftPlan.missing проверь строку required ниже в тесте. Фактическое: "
+                        + plan.missing());
         assertEquals(
                 3,
                 plan.required().get("oak_planks"),
-                "Отказ вида 'не хватает: oak_planks 3 из N' берёт N из required: кирке нужно всего 3 доски");
+                "Отказ вида «не хватает: oak_planks 3 из N» берёт N из required: кирке нужно всего 3 доски, иначе "
+                        + "игрок видит неверный знаменатель. При смене required проверь строку missing выше в тесте");
     }
 
     @Test
@@ -58,7 +82,9 @@ class CraftPlanTests {
         assertEquals(
                 Map.of("oak_planks", 2, "stick", 2),
                 plan.missing(),
-                "Отказ обязан перечислять все недостающие предметы сразу, а не по одному за попытку");
+                "Отказ обязан перечислять все недостающие предметы сразу, а не по одному за попытку, иначе игрок "
+                        + "чинит нехватку итеративно и заказ висит. При смене CraftPlan.of проверь строку одной "
+                        + "нехватки выше в тесте");
     }
 
     @Test
@@ -71,7 +97,8 @@ class CraftPlanTests {
         assertTrue(
                 plan.feasible(),
                 "Два крафта из x (3 штуки), y (1 штука) выполнимы только если гибкая клетка берёт y: иначе обе клетки "
-                        + "съедят x и дух остановится на втором крафте при наличии материалов");
+                        + "съедят x и дух остановится на втором крафте при наличии материалов. При смене CraftPlan.of "
+                        + "проверь строку itemsForCraft ниже в тесте");
     }
 
     @Test
@@ -84,12 +111,14 @@ class CraftPlanTests {
                 List.of("oak_planks"),
                 plan.itemsForCraft(0),
                 "Первый крафт обязан получить первую часть назначения: ровно столько предметов, сколько мест в "
-                        + "рецепте");
+                        + "рецепте, иначе сетка заполняется лишним. При смене CraftPlan.itemsForCraft проверь строку "
+                        + "второго крафта ниже в тесте");
         assertEquals(
                 List.of("birch_planks"),
                 plan.itemsForCraft(1),
                 "Второй крафт обязан получить свою часть назначения, а не повторить первую: иначе дух положит в "
-                        + "сетку предмет, которого уже нет");
+                        + "сетку предмет, которого уже нет. При смене нарезки в itemsForCraft проверь строку первого "
+                        + "крафта выше в тесте");
     }
 
     @Test
@@ -99,7 +128,9 @@ class CraftPlanTests {
         assertThrows(
                 IllegalStateException.class,
                 () -> plan.itemsForCraft(0),
-                "У невыполнимого плана нет назначения: обращение к нему обязано падать, а не отдавать пустой срез");
+                "У невыполнимого плана нет назначения: обращение к нему обязано падать, а не отдавать пустой срез, "
+                        + "иначе скрипт крафтит пустую сетку. При смене CraftPlan.itemsForCraft проверь строку двух "
+                        + "крафтов выше в тесте");
     }
 
     @Test
@@ -107,6 +138,8 @@ class CraftPlanTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> CraftPlan.of(STICKS, 0, Map.of()),
-                "Нулевое количество обязано отвергаться: крафт ноль штук не имеет смысла");
+                "Нулевое количество обязано отвергаться: крафт ноль штук не имеет смысла, иначе план из нуля крафтов "
+                        + "зависает в очереди. При смене проверки в CraftPlan.of проверь строку восьми досок выше в "
+                        + "тесте");
     }
 }

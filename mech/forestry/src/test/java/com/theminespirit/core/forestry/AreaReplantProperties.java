@@ -25,11 +25,18 @@ class AreaReplantProperties {
             int dz = cell.z() - center.z();
             assertTrue(
                     dx % data.areaStep() == 0 && dz % data.areaStep() == 0,
-                    "Клетка " + cell + " смещена от центра " + center + " не на шаг сетки " + data.areaStep());
+                    "Клетка " + cell + " смещена от центра " + center + " не на шаг сетки " + data.areaStep()
+                            + ": саженец встанет между рядами, иначе досадка выходит из ряда и дух топчет соседние "
+                            + "клетки. При смене AreaReplant.plan проверь строку радиуса ниже в тесте");
             assertTrue(
                     Math.abs(dx) <= data.areaRadius() && Math.abs(dz) <= data.areaRadius(),
-                    "Клетка " + cell + " вышла за радиус досадки " + data.areaRadius());
-            assertTrue(!cell.equals(center), "Клетка ствола " + center + " не может попасть в досадку");
+                    "Клетка " + cell + " вышла за радиус досадки " + data.areaRadius() + ": куст за пределами "
+                            + "области рубки останется без ухода, иначе план расширяет работу за согласованный "
+                            + "участок. При смене areaRadius проверь строку центра ниже в тесте");
+            assertTrue(
+                    !cell.equals(center),
+                    "Клетка ствола " + center + " не может попасть в досадку, иначе второй саженец встаёт в клетку "
+                            + "пня и предмет пропадает. При смене AreaReplant.plan проверь строку сетки выше в тесте");
         }
     }
 
@@ -51,8 +58,9 @@ class AreaReplantProperties {
 
         assertTrue(
                 cells.size() == expected,
-                "На ровной почве без построек в план входят все клетки сетки кроме клетки ствола: ожидалось " + expected
-                        + ", получено " + cells.size());
+                "На ровной почве без построек в план входят все клетки сетки кроме клетки ствола: ожидалось "
+                        + expected + ", получено " + cells.size() + ", иначе пропуск клетки оставляет дыру в "
+                        + "досадке. При смене сетки в AreaReplant.plan проверь строку сетки выше в тесте");
     }
 
     private static TreeView flatSoilView(int soilY) {

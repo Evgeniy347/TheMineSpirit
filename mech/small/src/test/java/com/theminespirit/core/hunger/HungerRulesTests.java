@@ -18,7 +18,9 @@ class HungerRulesTests {
         assertEquals(
                 HungerRules.defaults(),
                 HungerRules.parse(VALID, "hunger.json"),
-                "Файл данных обязан совпадать с умолчаниями: иначе быстрое ядро и адаптер расходятся в числах");
+                "Файл данных обязан совпадать с умолчаниями, иначе быстрое ядро и адаптер расходятся в числах и "
+                        + "голод ведёт себя по-разному. При смене HungerRules.parse проверь строку загрузки ниже в "
+                        + "тесте");
     }
 
     @Test
@@ -26,8 +28,9 @@ class HungerRulesTests {
         assertEquals(
                 HungerRules.defaults(),
                 HungerRules.load(),
-                "Файл data/theminespirit/hunger/hunger.json обязан читаться и совпадать с умолчаниями: "
-                        + "скорости истощения — данные, а не ветки в коде");
+                "Файл data/theminespirit/hunger/hunger.json обязан читаться и совпадать с умолчаниями: скорости "
+                        + "истощения — данные, а не ветки в коде, иначе баланс меняется без данных. При смене "
+                        + "HungerRules.load проверь строку умолчаний ниже в тесте");
     }
 
     @Test
@@ -35,8 +38,9 @@ class HungerRulesTests {
         assertEquals(
                 HungerRules.load(),
                 HungerRules.loadDefault(),
-                "Без подмены таблицы потребитель обязан получать файл data/theminespirit/hunger/hunger.json: "
-                        + "иначе до первого /reload числа брались бы из ниоткуда");
+                "Без подмены таблицы потребитель обязан получать файл data/theminespirit/hunger/hunger.json, иначе "
+                        + "до первого /reload числа брались бы из ниоткуда. При смене loadDefault проверь строку выше "
+                        + "в тесте");
     }
 
     @Test
@@ -46,10 +50,14 @@ class HungerRulesTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> HungerRules.parse(json, "hunger.json"),
-                "Неизвестное поле ломает загрузку: опечатка в данных не должна молча ложиться в умолчания");
+                "Неизвестное поле ломает загрузку: опечатка в данных не должна молча ложиться в умолчания, иначе "
+                        + "настройка не применяется. При смене parse проверь строку имени ниже в тесте");
 
         assertEquals(
-                true, error.getMessage().contains("вкус"), "Сообщение называет лишнее поле: " + error.getMessage());
+                true,
+                error.getMessage().contains("вкус"),
+                "Сообщение называет лишнее поле: " + error.getMessage() + ", иначе игрок не найдёт опечатку. При "
+                        + "смене текста проверь строку порога ниже в тесте");
     }
 
     @Test
@@ -58,7 +66,8 @@ class HungerRulesTests {
                 IllegalStateException.class,
                 () -> HungerRules.parse(
                         VALID.replace("\"regenFoodThreshold\": 18", "\"regenFoodThreshold\": 25"), "hunger.json"),
-                "Порог восстановления выше шкалы голода отвергается: дух никогда не лечился бы");
+                "Порог восстановления выше шкалы голода отвергается, иначе дух никогда не лечился бы. При смене "
+                        + "parse проверь строку нуля ниже в тесте");
     }
 
     @Test
@@ -67,7 +76,8 @@ class HungerRulesTests {
                 IllegalStateException.class,
                 () -> HungerRules.parse(
                         VALID.replace("\"starveIntervalTicks\": 80", "\"starveIntervalTicks\": 0"), "hunger.json"),
-                "Нулевой интервал голода отвергается: урон капал бы каждый тик");
+                "Нулевой интервал голода отвергается, иначе урон капал бы каждый тик. При смене parse проверь строку "
+                        + "расхода ниже в тесте");
     }
 
     @Test
@@ -77,6 +87,7 @@ class HungerRulesTests {
                 () -> HungerRules.parse(
                         VALID.replace("\"combatExhaustionPerAttack\": 0.1", "\"combatExhaustionPerAttack\": -1"),
                         "hunger.json"),
-                "Отрицательный расход отвергается: голод не отматывается назад");
+                "Отрицательный расход отвергается: голод не отматывается назад, иначе расход кормит духа. При смене "
+                        + "parse проверь строку выше в тесте");
     }
 }

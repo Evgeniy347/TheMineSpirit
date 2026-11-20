@@ -106,19 +106,27 @@ class HerdCensusTests {
         assertEquals(
                 adults,
                 countedAdults,
-                "Взрослых обязано быть " + adults + " (" + reason + "): иначе пастух сведёт не ту пару");
+                "Взрослых обязано быть " + adults + " (" + reason + "): иначе пастух сведёт не ту пару, "
+                        + "приплода не будет и цикл разведения встанет. При смене HerdCensus.summarize проверь "
+                        + "все строки censusRows и property summarize_AnyHerd_TotalsMatchInputs");
         assertEquals(
                 babies,
                 countedBabies,
-                "Детёнышей обязано быть " + babies + " (" + reason + "): детёныш в графе взрослых пойдёт под нож");
+                "Детёнышей обязано быть " + babies + " (" + reason + "): детёныш в графе взрослых пойдёт под "
+                        + "нож, и стадо потеряет приплод. При смене HerdCensus.summarize проверь строки «только "
+                        + "детёныши» и «смесь видов» в censusRows");
         assertEquals(
                 outOfPen,
                 countedOut,
-                "Вне загона обязано быть " + outOfPen + " (" + reason + "): иначе отбившихся не вернут приманкой");
+                "Вне загона обязано быть " + outOfPen + " (" + reason + "): иначе отбившихся не вернут "
+                        + "приманкой, они уйдут из загона и выживут вдали от корма. При смене HerdCensus.summarize "
+                        + "проверь строки «все вне загона» и «полное стадо» в censusRows");
         assertEquals(
                 herd.size(),
                 census.total(),
-                "Сводка обязана покрывать всё стадо (" + reason + "): потерянное животное не покормят и не защитят");
+                "Сводка обязана покрывать всё стадо (" + reason + "): потерянное животное не покормят и не "
+                        + "защитят, а план стада будет врать о численности. При смене HerdCensus.summarize проверь "
+                        + "property summarize_AnyHerd_TotalsMatchInputs");
     }
 
     @Property
@@ -145,12 +153,15 @@ class HerdCensusTests {
                     counts.adults() + counts.babies(),
                     counts.total(),
                     "Детёныш вида " + species + " обязан считаться ровно в одной графе: иначе сумма по виду "
-                            + "разойдётся со входом и пастух перекормит стадо");
+                            + "разойдётся со входом, пастух перекормит стадо и забьёт лишнее. При смене "
+                            + "HerdCensus.summarize проверь счётчики outOfPen и строки censusRows");
         }
         assertEquals(
                 herd.size(),
                 total,
-                "Сумма по видам обязана равняться числу входов: потерянное животное не покормят и не защитят");
+                "Сумма по видам обязана равняться числу входов: потерянное животное не покормят и не защитят, "
+                        + "а план стада будет врать о численности. При смене HerdCensus.summarize проверь "
+                        + "таблицу censusRows на всех четырёх видах");
     }
 
     private static AnimalRef cow(String id, boolean baby, BlockCoord pos, boolean inPen) {

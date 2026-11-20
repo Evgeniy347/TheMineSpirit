@@ -10,9 +10,6 @@ core/building/FillScenarioTests.java	323
 core/building/PresetLibraryTests.java	431
 core/engine/TaskRunnerRestoreTests.java	333
 core/engine/TaskRunnerTests.java	743
-core/farming/FarmJobTests.java	356
-core/farming/FarmPlannerTests.java	339
-core/forestry/TreeShapeTests.java	352
 core/inventory/BaseKitTests.java	321
 core/inventory/OverflowPolicyTests.java	464
 core/inventory/ValueTableTests.java	339

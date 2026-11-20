@@ -24,7 +24,8 @@ class HydrationProperties {
         assertEquals(
                 HydrationTests.bruteForce(water, ground),
                 Hydration.of(water).watered(ground),
-                "watered обязан совпадать с перебором ящика [x−4,x+4]×[y,y+1]×[z−4,z+4]: иначе till вспашет сухую "
-                        + "землю или откажет на политой. Вода: " + water + ", земля: " + ground);
+                "watered обязан совпадать с перебором ящика [x−4,x+4]×[y,y+1]×[z−4,z+4]: иначе till вспашет "
+                        + "сухую землю или откажет на политой. При смене Hydration.watered проверь "
+                        + "HydrationTests.watered_WaterAtBoxCorner_IsWatered. Вода: " + water + ", земля: " + ground);
     }
 }

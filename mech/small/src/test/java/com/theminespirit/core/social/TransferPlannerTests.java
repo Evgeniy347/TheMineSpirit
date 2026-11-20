@@ -50,12 +50,21 @@ class TransferPlannerTests {
         List<TransferOrder> orders = TransferPlanner.plan(
                 List.of(need), List.of(source(A, HOME, KEEP_TWO_STICKS, sticks(6))), Map.of(), VALUES, 32, 64);
 
-        assertEquals(1, orders.size(), "Один источник с излишком обязан дать ровно одну передачу");
+        assertEquals(
+                1,
+                orders.size(),
+                "Один источник с излишком обязан дать ровно одну передачу, иначе духи дублируют задачу. При смене "
+                        + "TransferPlanner.plan проверь счёт ниже в тесте");
         assertEquals(
                 4,
                 orders.get(0).count(),
-                "Из шести палок две держит норма, а четыре — излишек: передают нужное, но не норму");
-        assertEquals(Optional.of(A), orders.get(0).from(), "Передачу собирают с духа, у которого излишек");
+                "Из шести палок две держит норма, а четыре — излишек: передают нужное, но не норму, иначе запас "
+                        + "источника тает до нуля и сосед остаётся без палок. При смене plan проверь from ниже в тесте");
+        assertEquals(
+                Optional.of(A),
+                orders.get(0).from(),
+                "Передачу собирают с духа, у которого излишек, иначе источник без запаса и заказ висит без "
+                        + "исполнения. При смене plan проверь строку выше в тесте");
     }
 
     @Test
@@ -67,8 +76,16 @@ class TransferPlannerTests {
         List<TransferOrder> orders =
                 TransferPlanner.plan(List.of(need), List.of(withEmptySlot), Map.of(), VALUES, 32, 64);
 
-        assertEquals(1, orders.size(), "Пустой слот инвентаря не мешает передаче: излишек считается по непустым");
-        assertEquals(2, orders.get(0).count(), "Из трёх палок передают две нужные");
+        assertEquals(
+                1,
+                orders.size(),
+                "Пустой слот инвентаря не мешает передаче: излишек считается по непустым, иначе пустой слот ломает "
+                        + "передачу. При смене plan проверь счёт ниже в тесте");
+        assertEquals(
+                2,
+                orders.get(0).count(),
+                "Из трёх палок передают две нужные, иначе передача больше нужды и источник теряет запас. При смене "
+                        + "plan проверь строку нормы ниже в тесте");
     }
 
     @Test
@@ -77,7 +94,10 @@ class TransferPlannerTests {
         List<TransferOrder> orders = TransferPlanner.plan(
                 List.of(need), List.of(source(A, HOME, KEEP_TWO_STICKS, sticks(2))), Map.of(), VALUES, 32, 64);
 
-        assertTrue(orders.isEmpty(), "Палки в пределах нормы не отдают: норма неприкосновенна");
+        assertTrue(
+                orders.isEmpty(),
+                "Палки в пределах нормы не отдают: норма неприкосновенна, иначе источник остаётся без запаса. При "
+                        + "смене plan проверь строку излишка ниже в тесте");
     }
 
     @Test
@@ -92,8 +112,13 @@ class TransferPlannerTests {
         assertEquals(
                 Optional.of(A),
                 orders.get(0).from(),
-                "Первым берут источник с наибольшим излишком: близость не важнее запаса");
-        assertEquals(5, orders.get(0).count(), "Передают ровно нужное, даже если излишка больше");
+                "Первым берут источник с наибольшим излишком: близость не важнее запаса, иначе передача не покрывает "
+                        + "нужду. При смене plan проверь счёт ниже в тесте");
+        assertEquals(
+                5,
+                orders.get(0).count(),
+                "Передают ровно нужное, даже если излишка больше, иначе источник отдаёт лишнее. При смене plan "
+                        + "проверь строку склада ниже в тесте");
     }
 
     @Test
@@ -102,7 +127,10 @@ class TransferPlannerTests {
 
         List<TransferOrder> orders = TransferPlanner.plan(List.of(need), List.of(), Map.of(), VALUES, 32, 64);
 
-        assertTrue(orders.isEmpty(), "Нет источников — нет задач: доска не выдаёт пустую передачу");
+        assertTrue(
+                orders.isEmpty(),
+                "Нет источников — нет задач: доска не выдаёт пустую передачу, иначе духи идут в пустоту. При смене "
+                        + "plan проверь строку склада ниже в тесте");
     }
 
     @Test
@@ -112,9 +140,20 @@ class TransferPlannerTests {
         List<TransferOrder> orders =
                 TransferPlanner.plan(List.of(need), List.of(), Map.of("cobblestone", 7), VALUES, 32, 64);
 
-        assertEquals(1, orders.size(), "Склад обязан стать источником, если у духов излишка нет");
-        assertTrue(orders.get(0).fromWarehouse(), "Со склада забирают через withdraw, а не доставкой духа");
-        assertEquals(3, orders.get(0).count(), "Со склада берут ровно нужное количество");
+        assertEquals(
+                1,
+                orders.size(),
+                "Склад обязан стать источником, если у духов излишка нет, иначе заказ висит. При смене plan проверь "
+                        + "fromWarehouse ниже в тесте");
+        assertTrue(
+                orders.get(0).fromWarehouse(),
+                "Со склада забирают через withdraw, а не доставкой духа, иначе склад путается с духом. При смене plan "
+                        + "проверь счёт ниже в тесте");
+        assertEquals(
+                3,
+                orders.get(0).count(),
+                "Со склада берут ровно нужное количество, иначе запас списывается лишним. При смене plan проверь "
+                        + "строку радиуса ниже в тесте");
     }
 
     @Test
@@ -124,7 +163,10 @@ class TransferPlannerTests {
 
         List<TransferOrder> orders = TransferPlanner.plan(List.of(need), List.of(far), Map.of(), VALUES, 16, 64);
 
-        assertTrue(orders.isEmpty(), "Источник за радиусом не участвует: дальняя передача не планируется");
+        assertTrue(
+                orders.isEmpty(),
+                "Источник за радиусом не участвует, иначе дальняя передача не планируется. При смене проверки "
+                        + "радиуса проверь строку ближайшего ниже в тесте");
     }
 
     @Test
@@ -139,7 +181,8 @@ class TransferPlannerTests {
         assertEquals(
                 Optional.of(A),
                 orders.get(0).from(),
-                "При равном излишке берут ближайшего: путь короче — передача быстрее");
+                "При равном излишке берут ближайшего: путь короче — передача быстрее, иначе дух идёт к дальнему. При "
+                        + "смене plan проверь строку крафта ниже в тесте");
     }
 
     @Test
@@ -158,10 +201,26 @@ class TransferPlannerTests {
                 32,
                 64));
 
-        assertEquals(1, orders.size(), "Нехватка одного ингредиента даёт одну передачу нужного предмета");
-        assertEquals("stick", orders.get(0).item(), "Передают тот ингредиент, которого крафтеру не хватает");
-        assertEquals(2, orders.get(0).count(), "Передают ровно нехватку рецепта");
-        assertEquals(Optional.of(A), orders.get(0).from(), "Источник — дух с излишком палок");
+        assertEquals(
+                1,
+                orders.size(),
+                "Нехватка одного ингредиента даёт одну передачу нужного предмета, иначе передач несколько. При смене "
+                        + "planForCraft проверь item ниже в тесте");
+        assertEquals(
+                "stick",
+                orders.get(0).item(),
+                "Передают тот ингредиент, которого крафтеру не хватает, иначе крафт встаёт на нехватке и источник не "
+                        + "задействован, а заказ висит. При смене planForCraft проверь счёт ниже в тесте");
+        assertEquals(
+                2,
+                orders.get(0).count(),
+                "Передают ровно нехватку рецепта, иначе источник отдаёт лишнее и запас тает без пользы. При смене "
+                        + "planForCraft проверь from ниже в тесте");
+        assertEquals(
+                Optional.of(A),
+                orders.get(0).from(),
+                "Источник — дух с излишком палок, иначе передача из пустоты. При смене planForCraft проверь строку "
+                        + "присутствия ниже в тесте");
     }
 
     @Test
@@ -178,7 +237,10 @@ class TransferPlannerTests {
                 32,
                 64));
 
-        assertTrue(orders.isEmpty(), "Все ингредиенты на месте — передача не нужна");
+        assertTrue(
+                orders.isEmpty(),
+                "Все ингредиенты на месте — передача не нужна, иначе духи носят зря. При смене planForCraft проверь "
+                        + "property ниже в тесте");
     }
 
     @Property
@@ -189,12 +251,16 @@ class TransferPlannerTests {
                 List.of(need), List.of(source(A, HOME, NOTHING_PROTECTED, sticks(owned))), Map.of(), VALUES, 32, 64);
 
         if (orders.isEmpty()) {
-            assertFalse(owned > 0 && needed > 0, "При излишке и нужде передача обязана существовать");
+            assertFalse(
+                    owned > 0 && needed > 0,
+                    "При излишке и нужде передача обязана существовать, иначе крафт встаёт и заказ висит до "
+                            + "тайм-аута. При смене plan проверь счёт ниже в тесте");
             return;
         }
         assertEquals(
                 Math.min(owned, needed),
                 orders.get(0).count(),
-                "Передача обязана покрыть нужду в пределах излишка: owned=" + owned + ", needed=" + needed);
+                "Передача обязана покрыть нужду в пределах излишка: owned=" + owned + ", needed=" + needed
+                        + ", иначе передача больше излишка или нужды. При смене plan проверь строку выше в тесте");
     }
 }

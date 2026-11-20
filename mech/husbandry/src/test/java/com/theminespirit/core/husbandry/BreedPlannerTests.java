@@ -127,31 +127,43 @@ class BreedPlannerTests {
                 assertInstanceOf(
                         BreedPlanner.Feed.class,
                         result,
-                        "Пара обязана сводиться (" + reason + "): иначе стадо не растёт");
+                        "Пара обязана сводиться (" + reason + "): иначе стадо не растёт, приплода нет и загон "
+                                + "остаётся без молодняка. При смене BreedPlanner.next проверь строки breedRows "
+                                + "с исходами Feed и NeedsMoreFeed");
                 BreedPlanner.Feed feed = (BreedPlanner.Feed) result;
                 assertEquals(
                         fragment,
                         feed.targetId(),
-                        "Первой кормят ближайшую к духу (" + reason + "): иначе дух мечется между головами");
+                        "Первой кормят ближайшую к духу (" + reason + "): иначе дух мечется между головами, пара "
+                                + "не сходится и цикл встаёт до тайм-аута. При смене выбора цели проверь строки "
+                                + "«трое готовых» и «чужой вид не мешает» в breedRows");
             }
             case "NeedsMoreFeed" -> {
                 assertInstanceOf(
                         BreedPlanner.NeedsMoreFeed.class,
                         result,
-                        "Без корма обязан проситься корм (" + reason + "): иначе дух будет толкать голодное стадо");
+                        "Без корма обязано проситься корм (" + reason + "): иначе дух толкает голодное стадо "
+                                + "без результата и цикл встаёт. При смене BreedPlanner.next проверь строки EMPTY "
+                                + "и «корма хватает на одного» в breedRows");
                 assertEquals(
                         fragment,
                         ((BreedPlanner.NeedsMoreFeed) result).feedId(),
-                        "Просить обязаны пшеницу (" + reason + "): чужой корм коровы не едят");
+                        "Просить обязаны пшеницу (" + reason + "): чужой корм коровы не едят, и носить его "
+                                + "бессмысленно. При смене таблицы кормов проверь "
+                                + "FeedTableTests.feedFor_SpeciesTable_MatchesContract");
             }
             default -> {
                 assertInstanceOf(
                         BreedPlanner.NothingToDo.class,
                         result,
-                        "Простой обязан объясняться (" + reason + "): иначе стратег повторит бессмысленный вызов");
+                        "Простой обязан объясняться (" + reason + "): иначе стратег повторит бессмысленный вызов "
+                                + "и цикл фермы зациклится. При смене BreedPlanner.next проверь строки "
+                                + "NothingToDo в breedRows");
                 assertTrue(
                         ((BreedPlanner.NothingToDo) result).reason().contains(fragment),
-                        "Причина обязана содержать «" + fragment + "» (" + reason + "). Фактически: "
+                        "Причина обязана содержать «" + fragment + "» (" + reason + "): по тексту стратег "
+                                + "понимает, чего не хватает, и иначе повторит тот же вызов вслепую. При смене "
+                                + "текстов причин проверь фрагменты breedRows. Фактически: "
                                 + ((BreedPlanner.NothingToDo) result).reason());
             }
         }
@@ -171,12 +183,15 @@ class BreedPlannerTests {
         if (result instanceof BreedPlanner.Feed) {
             assertTrue(
                     wheat >= 2,
-                    "Разрешение кормить выдаётся только когда корма хватает на пару: иначе вторую голову кормить "
-                            + "нечем и пара не сойдётся. Пшеницы: " + wheat);
+                    "Разрешение кормить выдаётся только когда корма хватает на пару: иначе вторую голову "
+                            + "кормить нечем, пара не сойдётся и корм уходит впустую. При смене порога в "
+                            + "BreedPlanner.next проверь это свойство на пшенице 0..6. Пшеницы: " + wheat);
         } else {
             assertTrue(
                     wheat < 2,
-                    "При нехватке корма кормить запрещено: пара не сойдётся, корм уйдёт впустую. Пшеницы: " + wheat);
+                    "При нехватке корма кормить запрещено: пара не сойдётся, корм уйдёт впустую и стадо "
+                            + "останется голодным. При смене порога проверь ветку Feed того же свойства. "
+                            + "Пшеницы: " + wheat);
         }
     }
 
@@ -196,7 +211,8 @@ class BreedPlannerTests {
                 first,
                 second,
                 "Результат обязан зависеть только от стада, а не от порядка снимка: иначе дух при каждом опросе "
-                        + "будет менять пару и не сведёт ни одну");
+                        + "меняет пару и не сведёт ни одну. При смене сортировки в BreedPlanner.next проверь это "
+                        + "свойство и строку «трое готовых» в breedRows");
     }
 
     private static AnimalRef cow(String id, boolean baby, boolean ready, BlockCoord pos) {

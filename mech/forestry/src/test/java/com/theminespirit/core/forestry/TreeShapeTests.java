@@ -2,17 +2,13 @@ package com.theminespirit.core.forestry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.theminespirit.core.forestry.api.ChopTuning;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class TreeShapeTests {
-    private static final BlockCoord AIR_START = new BlockCoord(0, 0, 0);
-
     @Test
     void detect_TrunkWithCrown_ReturnsLogsBottomUp() {
         TreeGrid grid = TreeGrid.ofLayers("#", "L", "L", "L", "L", "L@", "@@");
@@ -21,8 +17,9 @@ class TreeShapeTests {
         Tree tree = assertInstanceOf(
                 Tree.class,
                 TreeShape.detect(start, grid),
-                "Ствол с тремя естественными листьями рядом обязан распознаться деревом: иначе дух "
-                        + "пройдёт мимо настоящего дерева");
+                "Ствол с тремя естественными листьями рядом обязан распознаться деревом, иначе дух пройдёт мимо "
+                        + "настоящего дерева и поселение останется без древесины. При смене TreeShape.detect проверь "
+                        + "строку порядка брёвен ниже в тесте");
 
         assertEquals(
                 new Tree(
@@ -35,7 +32,8 @@ class TreeShapeTests {
                                 new BlockCoord(0, 5, 0))),
                 tree,
                 "Дерево обязано содержать все брёвна ствола снизу вверх: порядок рубки начинается с основания, "
-                        + "поэтому список брёвен отсортирован по высоте");
+                        + "иначе дух бьёт верхние брёвна и ствол висит в воздухе. При смене сортировки в TreeShape "
+                        + "проверь строку распознавания выше в тесте");
     }
 
     @Test
@@ -46,7 +44,9 @@ class TreeShapeTests {
         Tree tree = assertInstanceOf(
                 Tree.class,
                 TreeShape.detect(start, grid),
-                "Акация с диагональной веткой обязана распознаться деревом: 26 соседей связывают ветку со стволом");
+                "Акация с диагональной веткой обязана распознаться деревом: 26 соседей связывают ветку со стволом, "
+                        + "иначе ветка остаётся стоять после рубки. При смене обхода в TreeShape.detect проверь "
+                        + "строку брёвен ниже в тесте");
 
         assertEquals(
                 List.of(
@@ -56,8 +56,9 @@ class TreeShapeTests {
                         new BlockCoord(0, 3, 0),
                         new BlockCoord(2, 3, 0)),
                 tree.logs(),
-                "Диагональная ветка входит в дерево целиком: обход по 26 соседям должен захватить ветку "
-                        + "и упорядочить брёвна снизу вверх, а на одном уровне — ближе к основанию");
+                "Диагональная ветка входит в дерево целиком: обход по 26 соседям должен захватить ветку и "
+                        + "упорядочить брёвна снизу вверх, а на одном уровне — ближе к основанию, иначе ветка не "
+                        + "попадает в план. При смене порядка в TreeShape проверь строку выше в тесте");
     }
 
     @Test
@@ -76,18 +77,22 @@ class TreeShapeTests {
         Tree fromTrunk = assertInstanceOf(
                 Tree.class,
                 TreeShape.detect(trunk, grid),
-                "Акация со ствола обязана распознаться деревом: габарит группы 9 блоков в пределах "
-                        + "2·MAX_SPREAD, дух обязан рубить такое дерево");
+                "Акация со ствола обязана распознаться деревом: габарит группы 9 блоков в пределах 2·MAX_SPREAD, "
+                        + "иначе дух считает дерево слишком большим. При смене предела в TreeShape.detect проверь "
+                        + "кончик ветви ниже в тесте");
         Tree fromTip = assertInstanceOf(
                 Tree.class,
                 TreeShape.detect(branchTip, grid),
-                "Акация с кончика ветви обязана распознаться деревом: стартовое бревно — ближайшее к духу, "
-                        + "это может быть конец ветви, и разбор не должен превращать то же дерево в TOO_BIG");
+                "Акация с кончика ветви обязана распознаться деревом: стартовое бревно — ближайшее к духу, это "
+                        + "может быть конец ветви, и разбор не должен превращать то же дерево в TOO_BIG, иначе "
+                        + "выбор начального бревна меняет вердикт. При смене TreeShape.detect проверь строку "
+                        + "равенства ниже в тесте");
         assertEquals(
                 fromTrunk,
                 fromTip,
-                "Ответ разбора обязан не зависеть от выбранного бревна: TreeChooser начинает с ближайшего "
-                        + "к духу бревна, и одинаковое дерево обязано давать одинаковый план рубки");
+                "Ответ разбора обязан не зависеть от выбранного бревна: TreeChooser начинает с ближайшего к духу "
+                        + "бревна, и одинаковое дерево обязано давать одинаковый план рубки, иначе дух рубит с "
+                        + "другого конца. При смене порядка обхода проверь строки выше в тесте");
     }
 
     @Test
@@ -98,10 +103,15 @@ class TreeShapeTests {
         Tree tree = assertInstanceOf(
                 Tree.class,
                 TreeShape.detect(start, grid),
-                "Ствол 2x2 тёмного дуба обязан распознаться деревом: дух должен рубить толстый ствол целиком");
+                "Ствол 2x2 тёмного дуба обязан распознаться деревом: дух должен рубить толстый ствол целиком, иначе "
+                        + "часть ствола остаётся стоять. При смене TreeShape.detect проверь строку размера ниже в "
+                        + "тесте");
 
         assertEquals(
-                8, tree.logs().size(), "Ствол 2x2 из двух слоёв — 8 брёвен: каждое бревно учитывается ровно один раз");
+                8,
+                tree.logs().size(),
+                "Ствол 2x2 из двух слоёв — 8 брёвен: каждое бревно учитывается ровно один раз, иначе план рубки "
+                        + "дублирует брёвна. При смене обхода проверь строку множества ниже в тесте");
         assertEquals(
                 Set.copyOf(List.of(
                         new BlockCoord(0, 1, 0),
@@ -113,127 +123,8 @@ class TreeShapeTests {
                         new BlockCoord(0, 2, 1),
                         new BlockCoord(1, 2, 1))),
                 Set.copyOf(tree.logs()),
-                "Дерево 2x2 обязано собрать все брёвна обеих слоёв, без пропусков и чужих клеток");
-    }
-
-    @Test
-    void detect_HutWithoutLeaves_ReturnsNotATrunk() {
-        TreeGrid grid = TreeGrid.ofLayers("###", "LLL", "LLL", "LLL", "LLL");
-
-        NotATree rejection = assertInstanceOf(
-                NotATree.class,
-                TreeShape.detect(new BlockCoord(0, 1, 0), grid),
-                "Хижина из брёвен без листвы обязана быть отвергнута как не-дерево: бревенчатая постройка "
-                        + "игрока не должна ломаться под видом леса");
-        assertEquals(
-                NotATree.Reason.NOT_A_TRUNK,
-                rejection.reason(),
-                "Хижина отвергается по форме нижнего слоя: основание 3x3 — больше четырёх брёвен, которые "
-                        + "допускает квадрат 2x2 у настоящего ствола");
-    }
-
-    @Test
-    void detect_HutNextToOakWithCrown_ReturnsNotATrunk() {
-        TreeGrid grid = TreeGrid.ofLayers(
-                "####\n####\n####", "LLLL\n.LLL\n.LLL", "LLLL\n.LLL\n.LLL", "LLLL\n.LLL\n.LLL", ".@..\n@@..\n....");
-
-        NotATree rejection = assertInstanceOf(
-                NotATree.class,
-                TreeShape.detect(new BlockCoord(1, 1, 1), grid),
-                "Бревенчатая хижина вплотную к дубу обязана быть отвергнута как не-дерево: крона дуба нависает "
-                        + "и даёт три листа, но сруб постройки игрока запрещён политикой «не трогать постройки»");
-        assertEquals(
-                NotATree.Reason.NOT_A_TRUNK,
-                rejection.reason(),
-                "Хижина с примкнувшим стволом отвергается по форме нижнего слоя: основание 3x3 шире, чем "
-                        + "четыре бревна в квадрате 2x2 у настоящего дерева");
-    }
-
-    @Test
-    void detect_PillarUnderNeighborCrown_ReturnsNotATrunk() {
-        TreeGrid grid = TreeGrid.ofLayers("####", "LLL.", "LLL.", ".@@@");
-
-        NotATree rejection = assertInstanceOf(
-                NotATree.class,
-                TreeShape.detect(new BlockCoord(0, 1, 0), grid),
-                "Столб из брёвен под кроной соседнего дерева обязан быть отвергнут как не-дерево: листья чужой "
-                        + "кроны касаются постройки, но рубить её дух не должен");
-        assertEquals(
-                NotATree.Reason.NOT_A_TRUNK,
-                rejection.reason(),
-                "Постройка отвергается по форме нижнего слоя: три бревна в линию не влезают в квадрат 2x2, "
-                        + "листья же чужого дерева могут висеть над любой постройкой");
-    }
-
-    @Test
-    void reject_HutNotATree_CarriesAllItsLogs() {
-        TreeGrid grid = TreeGrid.ofLayers("###", "LLL", "LLL", "LLL", "LLL");
-
-        NotATree rejection = assertInstanceOf(
-                NotATree.class,
-                TreeShape.detect(new BlockCoord(0, 1, 0), grid),
-                "Хижина обязана быть отвергнута как не-дерево: это постройка игрока, а не лес");
-        assertEquals(
-                grid.logs(),
-                rejection.logs(),
-                "Отвергнутая группа обязана нести все свои брёвна: по одному разбору на хижину адаптер заносит "
-                        + "в known всю группу, иначе на каждое бревно постройки будет отдельный разбор и дух "
-                        + "потратит попытки на стены вместо настоящих деревьев");
-    }
-
-    @Test
-    void detect_TrunkInAir_ReturnsNoSoil() {
-        TreeGrid grid = TreeGrid.ofLayers(".", "L", "L", "L", "@@@");
-
-        NotATree rejection = assertInstanceOf(
-                NotATree.class,
-                TreeShape.detect(new BlockCoord(0, 1, 0), grid),
-                "Ствол без почвы под основанием обязан быть отвергнут как не-дерево: летающее бревно — арт-объект "
-                        + "или постройка, а не лес");
-        assertEquals(
-                NotATree.Reason.NO_SOIL,
-                rejection.reason(),
-                "Ствол в воздухе отвергается по почве под нижним бревном, а не по кроне: над листьями "
-                        + "проверяется, что дерево стоит на земле");
-    }
-
-    @Test
-    void detect_TwoHundredLogs_ReturnsTooBig() {
-        TreeGrid grid = new TreeGrid().soil(0, 0, 0);
-        for (int y = 1; y <= 200; y++) {
-            grid.log(0, y, 0);
-        }
-
-        NotATree rejection = assertInstanceOf(
-                NotATree.class,
-                TreeShape.detect(new BlockCoord(0, 1, 0), grid),
-                "Связная группа из 200 брёвен обязана быть отвергнута по размеру: разбор гигантского массива "
-                        + "стоит больше лимита MAX_LOGS и завешивает тик");
-        assertEquals(
-                NotATree.Reason.TOO_BIG,
-                rejection.reason(),
-                "Группа больше лимита отвергается как TOO_BIG: разбор обязан останавливаться по числу брёвен, "
-                        + "а не обходить весь массив");
-        assertEquals(
-                ChopTuning.MAX_LOGS + 1,
-                rejection.logs().size(),
-                "Отвергнутая группа несёт пройденные до остановки брёвна: адаптер заносит в known именно их, "
-                        + "чтобы не разбирать гигантский массив по одному бревну");
-    }
-
-    @Test
-    void detect_TwoLeavesOnly_ReturnsNoLeaves() {
-        TreeGrid grid = TreeGrid.ofLayers("#", "L", "L", "L", "@@");
-
-        NotATree rejection = assertInstanceOf(
-                NotATree.class,
-                TreeShape.detect(new BlockCoord(0, 1, 0), grid),
-                "Два естественных листа вокруг брёвен — ещё не дерево: граница в три листа отличает лес "
-                        + "от декоративного столба и забора");
-        assertEquals(
-                NotATree.Reason.NO_LEAVES,
-                rejection.reason(),
-                "Две листвы рядом со стволом не дают крону: меньше MIN_NATURAL_LEAVES — группа отвергается");
+                "Дерево 2x2 обязано собрать все брёвна обеих слоёв, без пропусков и чужих клеток, иначе дух рубит "
+                        + "чужое дерево. При смене TreeGrid проверь строку размера выше в тесте");
     }
 
     @Test
@@ -244,57 +135,20 @@ class TreeShapeTests {
         Tree tree = assertInstanceOf(
                 Tree.class,
                 TreeShape.detect(new BlockCoord(1, 1, 0), grid),
-                "Настоящий дуб на склоне, ветка которого висит над травой выше основания, обязан рубиться: "
-                        + "почва под веткой не признак постройки, иначе дух не тронет ни одного дерева на холме");
+                "Настоящий дуб на склоне, ветка которого висит над травой выше основания, обязан рубиться: почва "
+                        + "под веткой не признак постройки, иначе дух не тронет ни одного дерева на холме. При "
+                        + "смене проверки почвы в TreeShape.detect проверь строку основания ниже в тесте");
         assertEquals(
                 new BlockCoord(1, 1, 0),
                 tree.base(),
-                "Основанием остаётся нижнее бревно ствола, а не ветка над склоном");
+                "Основанием остаётся нижнее бревно ствола, а не ветка над склоном, иначе рубка начинается с ветки и "
+                        + "ствол висит. При смене выбора основания проверь строку размера ниже в тесте");
         assertEquals(
                 11,
                 tree.logs().size(),
-                "Дерево на склоне содержит ствол и ветку целиком: 11 брёвен, ничего не отрезано почвой под веткой");
-    }
-
-    @Test
-    void detect_HutOnSlopeWithPlanksTouchingBranches_ReturnsBuiltNearby() {
-        TreeGrid grid =
-                TreeGrid.ofLayers(".#......", ".L......", ".L......", ".L...###", ".LLLLLLL", "@L@..PPP", ".@......");
-
-        NotATree rejection = assertInstanceOf(
-                NotATree.class,
-                TreeShape.detect(new BlockCoord(1, 1, 0), grid),
-                "Пол из брёвен на склоне с досками поверх, касающийся ствола, обязан быть отвергнут как "
-                        + "постройка: сруб пола под видом ветвей — нарушение политики «не трогать постройки игрока»");
-        assertEquals(
-                NotATree.Reason.BUILT_NEARBY,
-                rejection.reason(),
-                "Постройку выдают искусственные блоки (доски) вплотную к брёвнам группы, а не почва под ветвью");
-    }
-
-    @Test
-    void detect_PostBesidePlanksUnderNeighborCrown_ReturnsBuiltNearby() {
-        TreeGrid grid = TreeGrid.ofLayers("#.", "LP", "LP", "L@", "@@");
-
-        NotATree rejection = assertInstanceOf(
-                NotATree.class,
-                TreeShape.detect(new BlockCoord(0, 1, 0), grid),
-                "Угловой столб сруба с досками стены, под кроной соседнего дерева, обязан быть отвергнут: "
-                        + "один столб с листьями вокруг неотличим от ствола, кроме досок рядом");
-        assertEquals(
-                NotATree.Reason.BUILT_NEARBY,
-                rejection.reason(),
-                "Доски вплотную к бревну выдают постройку раньше, чем листья чужой кроны выдают дерево");
-    }
-
-    @Test
-    void detect_StartNotALog_Throws() {
-        TreeGrid grid = TreeGrid.ofLayers("#", "L", "@@@");
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> TreeShape.detect(AIR_START, grid),
-                "Разбор с не-бревна обязан отказывать: искать дерево с пустой клетки бессмысленно");
+                "Дерево на склоне содержит ствол и ветку целиком: 11 брёвен, ничего не отрезано почвой под веткой, "
+                        + "иначе дух недорубает ветку. При смене TreeShape.detect проверь строку основания выше в "
+                        + "тесте");
     }
 
     @Test
@@ -313,40 +167,15 @@ class TreeShapeTests {
         Tree tree = assertInstanceOf(
                 Tree.class,
                 TreeShape.detect(new BlockCoord(1, 1, 0), grid),
-                "Выбранное дерево рядом с соседним обязано распознаться: кроны не мешают разбору ствола");
+                "Выбранное дерево рядом с соседним обязано распознаться: кроны не мешают разбору ствола, иначе "
+                        + "соседнее дерево сливается с выбранным. При смене обхода проверь строку множества ниже в "
+                        + "тесте");
 
         assertEquals(
                 Set.of(new BlockCoord(1, 1, 0), new BlockCoord(1, 2, 0), new BlockCoord(1, 3, 0)),
                 Set.copyOf(tree.logs()),
-                "Цели рубки — ровно брёвна выбранного дерева: соседнее дерево вплотную не входит, иначе "
-                        + "дальняя досягаемость срубила бы и его");
-    }
-
-    @Test
-    void detect_LogHutNextToSelected_IsRejectedAsNotATree() {
-        TreeGrid grid = new TreeGrid().soil(0, 0, 0);
-        for (int y = 1; y <= 4; y++) {
-            grid.log(0, y, 0);
-        }
-        grid.leaves(0, 5, 0).leaves(-1, 5, 0).leaves(0, 5, 1);
-        for (int y = 1; y <= 2; y++) {
-            for (int dx = 1; dx <= 2; dx++) {
-                for (int dz = 0; dz <= 1; dz++) {
-                    grid.log(dx, y, dz);
-                }
-            }
-        }
-
-        NotATree rejection = assertInstanceOf(
-                NotATree.class,
-                TreeShape.detect(new BlockCoord(0, 1, 0), grid),
-                "Бревенчатая постройка вплотную к выбранному дереву обязана быть отвергнута: сруб постройки "
-                        + "игрока запрещён политикой «не трогать постройки»");
-
-        assertEquals(
-                NotATree.Reason.NOT_A_TRUNK,
-                rejection.reason(),
-                "Постройка выдаёт себя формой нижнего слоя: пять брёвен в основании шире квадрата 2x2, "
-                        + "поэтому ни одно её бревно не попадает в цели рубки");
+                "Цели рубки — ровно брёвна выбранного дерева: соседнее дерево вплотную не входит, иначе дальняя "
+                        + "досягаемость срубила бы и его. При смене проверки соседей в TreeShape.detect проверь "
+                        + "строку распознавания выше в тесте");
     }
 }

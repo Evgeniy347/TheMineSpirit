@@ -35,10 +35,16 @@ class CraftPlanProperties {
         assertEquals(
                 covered,
                 plan.missing().isEmpty(),
-                "Пустой missing обязан значить 'выполнимо', непустой — 'не хватает': иначе дух крафтит без "
-                        + "материалов или отказывает при их наличии. Места: " + slotItems + ", число: " + count
-                        + ", выход: " + outputCount + ", наличие: " + stock);
-        assertEquals(crafts, plan.crafts(), "Число крафтов обязано быть ceil(count / выход)");
+                "Пустой missing обязан значить «выполнимо», непустой — «не хватает»: иначе дух крафтит без "
+                        + "материалов или отказывает при их наличии. При смене CraftPlan.of проверь строку crafts "
+                        + "ниже в тесте. Места: " + slotItems + ", число: " + count + ", выход: " + outputCount
+                        + ", наличие: " + stock);
+        assertEquals(
+                crafts,
+                plan.crafts(),
+                "Число крафтов обязано быть ceil(count / выход), иначе нехватка считается по одному лишнему или "
+                        + "недостающему крафту. При смене CraftPlan.of проверь строку missing выше в тесте. Число: "
+                        + count + ", выход: " + outputCount);
     }
 
     @Property
@@ -66,13 +72,17 @@ class CraftPlanProperties {
         assertEquals(
                 plan.crafts() * slots.size(),
                 total,
-                "Суммарные расходы обязаны равняться числу крафтов на число мест рецепта");
+                "Суммарные расходы обязаны равняться числу крафтов на число мест рецепта, иначе отказ называет "
+                        + "неверный объём и дух добывает мимо. При смене CraftPlan.of проверь строку покрытия ниже "
+                        + "в тесте. Места: " + masks + ", число: " + count);
         if (plan.feasible()) {
             plan.required()
                     .forEach((item, need) -> assertTrue(
                             need <= available.getOrDefault(item, 0),
                             "Выполнимый план расходует " + item + " " + need + " при наличии "
-                                    + available.getOrDefault(item, 0) + ": дух не может отдать то, чего нет"));
+                                    + available.getOrDefault(item, 0) + ": дух не может отдать то, чего нет, иначе "
+                                    + "крафт падает на нехватке. При смене CraftPlan.of проверь строку суммы выше в "
+                                    + "тесте. Наличие: " + stock));
         }
     }
 

@@ -23,8 +23,9 @@ class FarmJobProperties {
 
         assertFalse(
                 harvestable && feedable,
-                "Клетка не может одновременно требовать сбор и подкормку: зрелость едина, "
-                        + "иначе планировщик сломает зрелый посев мукой или удобрит вместо сбора. Клетка: " + tile);
+                "Клетка не может одновременно требовать сбор и подкормку: зрелость едина, иначе планировщик "
+                        + "сломает зрелый посев мукой или удобрит вместо сбора. При смене FarmJob.eligible проверь "
+                        + "FarmTileTests.constructor_TileTable_HoldsCropInvariant. Клетка: " + tile);
     }
 
     private static FarmTile tile(Ground ground, Above above, CropKind kind, int age) {

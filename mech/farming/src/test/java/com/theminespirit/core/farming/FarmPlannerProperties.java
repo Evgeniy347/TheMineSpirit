@@ -44,10 +44,14 @@ class FarmPlannerProperties {
             FarmTile fresh = farm.peek(next.target());
             assertTrue(
                     FarmJob.HARVEST.eligible(fresh, CropKind.ANY, false),
-                    "Выбранная цель обязана подходить под работу на свежем тайле: иначе дух идёт к чужой клетке");
+                    "Выбранная цель обязана подходить под работу на свежем тайле: иначе дух идёт к чужой клетке и "
+                            + "работа пропускается. При смене FarmPlanner.next проверь "
+                            + "next_DenseTillWorld_MatchesFullScanWithoutEarlyExit");
             assertTrue(
                     FarmStandSpots.of(next.target(), FROM, safety, farm).contains(next.stand()),
-                    "Выбранная стоянка обязана входить в набор допустимых для цели: иначе дух встанет в опасное место");
+                    "Выбранная стоянка обязана входить в набор допустимых для цели: иначе дух встанет в опасное "
+                            + "место и погибнет. При смене FarmPlanner.next проверь "
+                            + "FarmStandSpotsTests.of_HazardNeighbor_RejectsAdjacentStand");
         }
     }
 
@@ -68,8 +72,9 @@ class FarmPlannerProperties {
         assertEquals(
                 ordered,
                 reordered,
-                "Результат не должен зависеть от порядка целей: ничья разрешается координатами, иначе "
-                        + "работа непредсказуемо выбирает разные клетки");
+                "Результат не должен зависеть от порядка целей: ничья разрешается координатами, иначе работа "
+                        + "непредсказуемо выбирает разные клетки и дух мечется. При смене сортировки в "
+                        + "FarmPlanner.next проверь next_DenseTillWorld_MatchesFullScanWithoutEarlyExit");
     }
 
     @Property
@@ -90,7 +95,9 @@ class FarmPlannerProperties {
                 expected,
                 actual,
                 "Ранний выход обязан возвращать то же, что полный перебор: иначе остановка пропускает ближнюю цель "
-                        + "со стоянкой на смещении до √11. Цели: " + candidates);
+                        + "со стоянкой на смещении до √11 и поле обрабатывается хуже. При смене раннего выхода в "
+                        + "FarmPlanner.next проверь FarmStandSpotsTests.of_ReachCheckedFirst_OutOfReachCostsNoReads. "
+                        + "Цели: " + candidates);
     }
 
     private static MapFarmView tillableFarm(Random random) {
@@ -214,9 +221,9 @@ class FarmPlannerProperties {
 
         assertTrue(
                 safety.reads() <= 324 * candidates.size(),
-                "Планирование читает не более " + 324 + " клеток на цель: "
-                        + "иначе перебор целей кладёт серверный тик. Чтений: " + safety.reads() + ", целей: "
-                        + candidates.size());
+                "Планирование читает не более " + 324 + " клеток на цель: иначе перебор целей кладёт серверный "
+                        + "тик. При смене бюджета чтений проверь FarmStandSpotsTests.of_CachedView_ReadsStayWithinBound. "
+                        + "Чтений: " + safety.reads() + ", целей: " + candidates.size());
     }
 
     private static MapFarmView randomFarm(Random random) {

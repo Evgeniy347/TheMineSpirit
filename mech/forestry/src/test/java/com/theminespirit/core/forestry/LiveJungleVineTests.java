@@ -27,21 +27,27 @@ class LiveJungleVineTests {
         SnapshotView view = new SnapshotView(blocks(incident));
         TreeDetection detection = TreeShape.detect(BASE, view);
         Tree tree = assertInstanceOf(
-                Tree.class, detection, "Живой ствол обязан разобраться как дерево, а вышло " + detection);
+                Tree.class,
+                detection,
+                "Живой ствол обязан разобраться как дерево, а вышло " + detection + ", иначе рубка не начинается. "
+                        + "При смене TreeShape.detect проверь строку лиан ниже в тесте");
 
         List<BlockCoord> clearing = LeafObstacles.blockingStand(tree, view, BASE);
 
         assertTrue(
                 clearing.contains(new BlockCoord(-203, 70, -564)),
                 "Лианы вплотную к стволу закрывают стоянку и не попадают в план расчистки: " + clearing
-                        + ". В observe11 такие лианы дали «без стоянки: 43» — дух не доходит до ствола");
+                        + ". В observe11 такие лианы дали «без стоянки: 43» — дух не доходит до ствола, иначе рубка "
+                        + "встаёт. При смене LeafObstacles проверь строку второй лианы ниже в тесте");
         assertTrue(
                 clearing.contains(new BlockCoord(-202, 70, -565)),
-                "Лиана в клетке стоянки — такая же преграда, как листва: её тоже надо ломать при рубке: " + clearing);
+                "Лиана в клетке стоянки — такая же преграда, как листва: её тоже надо ломать при рубке: " + clearing
+                        + ", иначе стоянка остаётся завалена. При смене LeafObstacles.blockingStand проверь строку "
+                        + "после расчистки ниже в тесте");
         assertTrue(
                 !clearedStands(tree, view, clearing).isEmpty(),
                 "После расчистки листвы и лиан стоянка у ствола обязана появиться, иначе дерево так и останется "
-                        + "недостижимым");
+                        + "недостижимым. При смене ChopStands.stands проверь строку выше в тесте");
     }
 
     private static List<BlockCoord> clearedStands(Tree tree, SnapshotView view, List<BlockCoord> clearing) {
