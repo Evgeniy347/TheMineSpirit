@@ -73,7 +73,8 @@ final class FarmStray {
                 collected.stand(),
                 collected.top(),
                 collected.lowest(),
-                collected.treeCells());
+                collected.treeCells(),
+                collected.fences());
     }
 
     static void collect(

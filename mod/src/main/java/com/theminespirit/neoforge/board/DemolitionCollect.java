@@ -74,7 +74,8 @@ final class DemolitionCollect {
         if (scope != DemolitionScope.STRAYS) {
             findings(ctx, found);
         }
-        ExtraFenceScan.collect(ctx, remove, notes);
+        List<BlockCoord> fences = new ArrayList<>();
+        ExtraFenceScan.collect(ctx, remove, fences, notes);
         return new PlanDemolition.Collected(
                 found.remove,
                 List.copyOf(found.notes),
@@ -83,7 +84,8 @@ final class DemolitionCollect {
                 found.placement == null ? null : found.placement.stand(),
                 found.placement == null ? null : found.placement.top(),
                 found.placement == null ? null : found.placement.lowest(),
-                found.treeCells);
+                found.treeCells,
+                List.copyOf(fences));
     }
 
     private static void findings(Ctx ctx, Found found) {

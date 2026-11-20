@@ -22,7 +22,8 @@ final class ExtraFenceScan {
 
     private ExtraFenceScan() {}
 
-    static void collect(DemolitionCollect.Ctx ctx, List<BlockCoord> remove, List<String> notes) {
+    static void collect(
+            DemolitionCollect.Ctx ctx, List<BlockCoord> remove, List<BlockCoord> fences, List<String> notes) {
         ServerLevel level = ctx.level();
         StageSite site = ctx.site();
         PlacedBlocksData placed = PlacedBlocksData.get(level);
@@ -64,6 +65,7 @@ final class ExtraFenceScan {
                     continue;
                 }
                 remove.add(at);
+                fences.add(at);
                 if (shown++ < NOTE_LIMIT) {
                     notes.add(at + " — заглушка вне плана: в уборку");
                 }

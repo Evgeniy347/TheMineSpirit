@@ -19,6 +19,7 @@ import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.UnreachableCellsStore;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 
@@ -39,7 +40,8 @@ final class PlanDemolition {
             BlockCoord stand,
             BlockCoord top,
             BlockCoord lowest,
-            List<BlockCoord> treeCells) {}
+            List<BlockCoord> treeCells,
+            List<BlockCoord> fences) {}
 
     private PlanDemolition() {}
 
@@ -132,13 +134,19 @@ final class PlanDemolition {
 
     private static List<BlockCoord> stray(Collected collected) {
         List<BlockCoord> candidates = collected.treeCells().isEmpty() ? collected.remove() : collected.treeCells();
-        List<BlockCoord> sorted = candidates.stream()
-                .distinct()
-                .sorted(Comparator.comparingInt(BlockCoord::y).reversed().thenComparing(Comparator.naturalOrder()))
-                .toList();
+        List<BlockCoord> sorted = order(candidates, Set.copyOf(collected.fences()));
         return collected.treeCells().isEmpty()
                 ? DemolitionKey.piece(sorted)
                 : DemolitionKey.treePiece(sorted, collected.stand());
+    }
+
+    static List<BlockCoord> order(List<BlockCoord> candidates, Set<BlockCoord> fences) {
+        return candidates.stream()
+                .distinct()
+                .sorted(Comparator.comparing((BlockCoord at) -> !fences.contains(at))
+                        .thenComparing(Comparator.comparingInt(BlockCoord::y).reversed())
+                        .thenComparing(Comparator.naturalOrder()))
+                .toList();
     }
 
     static int shown() {
