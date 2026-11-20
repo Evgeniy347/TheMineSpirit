@@ -28,6 +28,28 @@ class MineLayoutTests {
                   .
             """;
 
+    private static final String TORCHED = """
+            type: underground
+            size: 1x4x1
+            entrance: 0,3,0
+            repeat:
+              step: [1, -1, 0]
+              times: 8
+              torch: 4
+            legend:
+              '#': @floor
+              'T': wall_torch[facing=south] ~
+            layers:
+              - y0: |
+                  #
+              - y1: |
+                  .
+              - y2: |
+                  T
+              - y3: |
+                  .
+            """;
+
     private static MineLayout descent(BlockCoord origin, BuildRotation rotation, MineLayout.Extent extent) {
         SchematicDocument document = SchematicTextParser.parse(DESCENT, "спуск.txt");
         return MineLayout.place(
@@ -50,6 +72,26 @@ class MineLayoutTests {
                 new BlockCoord(10, 67, 20),
                 layout.entrance(),
                 "вход — верхняя клетка первой ступени (0,3,0) от якоря: проходка начинается от него");
+    }
+
+    @Test
+    void place_TorchEveryFourthCopy_KeepsOneTorchPerFourSegments() {
+        SchematicDocument document = SchematicTextParser.parse(TORCHED, "спуск с факелами.txt");
+        MineLayout layout = MineLayout.place(
+                document.schematic(),
+                document.header().entrance().orElseThrow(),
+                new BlockCoord(0, 40, 0),
+                BuildRotation.NONE,
+                MineLayout.Extent.NONE);
+
+        assertEquals(
+                2,
+                layout.optional().size(),
+                "у 8 копий спуска факел ставится на каждой 4-й — 2 факела, а фактически "
+                        + layout.optional().size());
+        assertTrue(
+                layout.air().contains(new BlockCoord(0, 42, 0)),
+                "клетка факела входит в воздух прохода: её выламывают, даже если в мире там порода");
     }
 
     @Test

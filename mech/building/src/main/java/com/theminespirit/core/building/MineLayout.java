@@ -38,11 +38,14 @@ public record MineLayout(
             int sx = repeat == null ? 0 : repeat.dx() * copy;
             int sy = repeat == null ? 0 : repeat.dy() * copy;
             int sz = repeat == null ? 0 : repeat.dz() * copy;
+            boolean keepOptional = repeat == null || repeat.torchEvery() == 0 || copy % repeat.torchEvery() == 0;
             for (Schematic.Entry entry : segment.blocks()) {
                 BlockCoord pos = at(segment, origin, rotation, entry.dx() + sx, entry.dy() + sy, entry.dz() + sz);
                 if (entry.optional()) {
-                    optional.add(new Schematic.PlacedEntry(pos, entry.block(), entry.state(), entry.text(), true));
                     air.add(pos);
+                    if (keepOptional) {
+                        optional.add(new Schematic.PlacedEntry(pos, entry.block(), entry.state(), entry.text(), true));
+                    }
                 } else if (SchematicBlocks.isFloor(entry.block())) {
                     floors.add(pos);
                 }
@@ -62,11 +65,19 @@ public record MineLayout(
         }
         if (override.untilY() != null) {
             return new Schematic.Repeat(
-                    declared.dx(), declared.dy(), declared.dz(), new Schematic.Repeat.TargetY(override.untilY()));
+                    declared.dx(),
+                    declared.dy(),
+                    declared.dz(),
+                    new Schematic.Repeat.TargetY(override.untilY()),
+                    declared.torchEvery());
         }
         if (override.segments() != null) {
             return new Schematic.Repeat(
-                    declared.dx(), declared.dy(), declared.dz(), new Schematic.Repeat.Times(override.segments()));
+                    declared.dx(),
+                    declared.dy(),
+                    declared.dz(),
+                    new Schematic.Repeat.Times(override.segments()),
+                    declared.torchEvery());
         }
         return declared;
     }

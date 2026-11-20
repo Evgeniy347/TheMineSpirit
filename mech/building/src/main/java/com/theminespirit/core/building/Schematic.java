@@ -72,9 +72,17 @@ public record Schematic(
         this(sizeX, sizeY, sizeZ, blocks, List.of(), null);
     }
 
-    public record Repeat(int dx, int dy, int dz, Until until) {
+    public record Repeat(int dx, int dy, int dz, Until until, int torchEvery) {
         public Repeat {
             Objects.requireNonNull(until, "Условие повтора не может быть null: без него повтор бесконечен");
+            if (torchEvery < 0) {
+                throw new IllegalArgumentException(
+                        "Шаг факелов " + torchEvery + " отрицателен: 0 — факелы в каждой копии, иначе номер копии");
+            }
+        }
+
+        public Repeat(int dx, int dy, int dz, Until until) {
+            this(dx, dy, dz, until, 0);
         }
 
         public sealed interface Until permits Times, TargetY {}
