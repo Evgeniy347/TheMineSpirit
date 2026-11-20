@@ -11,7 +11,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -50,11 +49,11 @@ public final class GameTestFilter {
         setBoardEnabled(false);
         setCoordinatorEnabled(false);
         installSettlementBatches();
-        List<String> filters = parseFilters(System.getProperty(FILTER_PROPERTY, ""));
+        List<String> filters = GameTestSelector.parseFilters(System.getProperty(FILTER_PROPERTY, ""));
         Map<String, String> runOptions = readRunOptions();
         String excludeRaw = runOptions.getOrDefault("exclude", System.getProperty(EXCLUDE_PROPERTY, ""));
         String shardRaw = runOptions.getOrDefault("shard", System.getProperty(SHARD_PROPERTY, ""));
-        List<String> excludes = parseFilters(excludeRaw);
+        List<String> excludes = GameTestSelector.parseFilters(excludeRaw);
         Shard shard = Shard.parse(shardRaw);
         if (filters.isEmpty() && excludes.isEmpty() && shard == null) {
             return;
@@ -187,33 +186,23 @@ public final class GameTestFilter {
         return options;
     }
 
-    private static List<String> parseFilters(String raw) {
-        List<String> filters = new ArrayList<>();
-        for (String part : raw.split(",", -1)) {
-            String trimmed = part.trim();
-            if (!trimmed.isEmpty()) {
-                filters.add(trimmed.toLowerCase(Locale.ROOT));
-            }
-        }
-        return filters;
-    }
-
     private static void applyFilter(GameTestServer server, List<String> filters, List<String> excludes, Shard shard)
             throws ReflectiveOperationException {
         Field field = GameTestServer.class.getDeclaredField("testFunctions");
         field.setAccessible(true);
         @SuppressWarnings("unchecked")
         List<TestFunction> functions = (List<TestFunction>) field.get(server);
-        Map<String, Set<String>> classTests = classToTests();
+        Map<String, Set<String>> classTests = GameTestSelector.classToTests();
         int before = functions.size();
         if (!filters.isEmpty()) {
-            functions.removeIf(function -> filters.stream().noneMatch(filter -> matches(function, filter, classTests)));
+            functions.removeIf(function ->
+                    filters.stream().noneMatch(filter -> GameTestSelector.matches(function, filter, classTests)));
             if (functions.size() == before) {
                 throw new IllegalStateException("Фильтр GameTest " + filters + " не совпал ни с одной пачкой, "
                         + "классом или тестом — проверьте имя: прогон не состоится");
             }
         } else if (!excludes.isEmpty()) {
-            functions.removeIf(function -> excluded(function.batchName(), excludes));
+            functions.removeIf(function -> GameTestSelector.excluded(function.batchName(), excludes));
         }
         if (shard != null) {
             Map<String, Integer> assignment = shardAssignment(functions, shard.count());
@@ -232,11 +221,6 @@ public final class GameTestFilter {
                 functions.size(),
                 excludes,
                 shard);
-    }
-
-    private static boolean excluded(String batch, List<String> excludes) {
-        String lower = batch.toLowerCase(Locale.ROOT);
-        return excludes.stream().anyMatch(lower::startsWith);
     }
 
     private static Map<String, Integer> shardAssignment(List<TestFunction> functions, int shards) {
@@ -281,25 +265,5 @@ public final class GameTestFilter {
             }
             return new Shard(index, count);
         }
-    }
-
-    private static boolean matches(TestFunction function, String filter, Map<String, Set<String>> classTests) {
-        String batch = function.batchName().toLowerCase(Locale.ROOT);
-        String test = function.testName().toLowerCase(Locale.ROOT);
-        if (filter.equals(batch) || filter.equals(test)) {
-            return true;
-        }
-        int dot = filter.indexOf('.');
-        if (dot >= 0) {
-            return filter.substring(dot + 1).equals(test)
-                    && classTests
-                            .getOrDefault(filter.substring(0, dot), Set.of())
-                            .contains(test);
-        }
-        return classTests.getOrDefault(filter, Set.of()).contains(test);
-    }
-
-    private static Map<String, Set<String>> classToTests() {
-        return GameTestClassIndex.byClass();
     }
 }
