@@ -24,7 +24,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class ForestryScenarioTests {
-    private static final int TRUNK_HEIGHT = 4;
+    static final int TRUNK_HEIGHT = 4;
     private static final int GROUND = 0;
 
     @Test
@@ -37,7 +37,8 @@ class ForestryScenarioTests {
         assertEquals(
                 new HashSet<>(bases),
                 new HashSet<>(assigned.values()),
-                "Три духа обязаны разобрать три разных дерева, а не встать в очередь к одному: " + assigned);
+                "Три духа обязаны разобрать три разных дерева, а не встать в очередь к одному: " + assigned
+                        + ", иначе два духа рубят одно, третье стоит. При смене assign проверь строку ниже в тесте");
 
         for (Map.Entry<BlockCoord, BlockCoord> entry : assigned.entrySet()) {
             BlockCoord spirit = entry.getKey();
@@ -46,82 +47,36 @@ class ForestryScenarioTests {
             chopAndReplant(tree, spirit, world);
         }
 
-        assertEquals(Set.of(), world.logs(), "После рубки в лесу не осталось брёвен: " + world.logs());
+        assertEquals(
+                Set.of(),
+                world.logs(),
+                "После рубки в лесу не осталось брёвен: " + world.logs() + ", иначе дерево недорубано. При смене "
+                        + "chopAndReplant проверь строку ствола ниже в тесте");
         for (BlockCoord base : bases) {
             for (int y = base.y(); y < base.y() + TRUNK_HEIGHT; y++) {
-                assertFalse(world.isLog(new BlockCoord(base.x(), y, base.z())), "Ствол " + base + " не дорублен");
+                assertFalse(
+                        world.isLog(new BlockCoord(base.x(), y, base.z())),
+                        "Ствол " + base + " не дорублен, иначе пенёк висит и рубка считается незавершённой. При "
+                                + "смене chopAndReplant проверь строку листвы ниже в тесте");
             }
             for (BlockCoord cell : leafCells(base)) {
                 assertFalse(
                         world.isNaturalLeaves(cell),
-                        "Листва " + cell + " осталась висеть после рубки: дух обязан её убрать");
+                        "Листва " + cell + " осталась висеть после рубки: дух обязан её убрать, иначе крона висит над "
+                                + "пнём. При смене группового сноса проверь строку почвы ниже в тесте");
             }
             assertTrue(
                     world.isSoil(new BlockCoord(base.x(), GROUND, base.z())),
-                    "Почва под стволом " + base + " цела: рубка не выкапывает дёрн");
+                    "Почва под стволом " + base + " цела: рубка не выкапывает дёрн, иначе участок остаётся без земли "
+                            + "и досадка невозможна. При смене сноса проверь строку постройки ниже в тесте");
         }
         assertTrue(
                 world.isArtificial(new BlockCoord(28, 1, 0)),
-                "Постройка рядом с лесом цела: чужой блок не срублен вместе с деревом");
+                "Постройка рядом с лесом цела: чужой блок не срублен вместе с деревом, иначе дух рушит постройку. "
+                        + "При смене SnapshotView проверь строку листвы выше в тесте");
     }
 
-    @Test
-    void forest_TwoTreesCloseTwoSpirits_NearestTreeIsClaimedByEachAndNotTwice() {
-        TreeGrid world = forest();
-        List<BlockCoord> bases = List.of(base(2), base(12), base(22));
-        BlockCoord first = new BlockCoord(3, 1, 2);
-        BlockCoord second = new BlockCoord(11, 1, 2);
-
-        Optional<BlockCoord> firstTree = TreeChooser.next(first.x(), first.y(), first.z(), bases, Set.of());
-        Set<BlockCoord> claimed = new HashSet<>(firstTree.stream().toList());
-        Optional<BlockCoord> secondTree = TreeChooser.next(second.x(), second.y(), second.z(), bases, claimed);
-
-        assertEquals(Optional.of(base(2)), firstTree, "Дух у ближнего дерева берёт его, а не дальнее");
-        assertEquals(
-                Optional.of(base(12)),
-                secondTree,
-                "Второй дух не претендует на уже выбранное дерево и берёт следующее ближнее: первый " + firstTree
-                        + ", второй " + secondTree);
-        assertFalse(
-                claimed.contains(base(22)),
-                "Третье дерево остаётся свободным: два духа не разбирают весь лес, доска даст его другому");
-
-        chopAndReplant(assertTree(firstTree.orElseThrow(), world), first, world);
-        chopAndReplant(assertTree(secondTree.orElseThrow(), world), second, world);
-
-        assertTrue(world.isLog(base(22)), "Невыбранное дерево не тронуто: его ствол обязан остаться на месте");
-        assertTrue(
-                world.isLog(new BlockCoord(base(22).x(), base(22).y() + TRUNK_HEIGHT - 1, base(22).z())),
-                "Невыбранное дерево осталось целым до своей задачи");
-    }
-
-    @Test
-    void treeSight_LiveJungleTrunk_IsForest() throws IOException {
-        Map<BlockCoord, String> blocks = blocks(Path.of("src/test/resources/live/observe11-jungle-tree.json"));
-
-        List<TreeSight.Stand> found = TreeSight.detect(
-                Map.of("jungle", cells(blocks, "jungle")), species -> new SnapshotView(blocks, species));
-
-        assertTrue(
-                found.stream().anyMatch(stand -> new BlockCoord(-203, 70, -565).equals(stand.base())),
-                "Живой ствол jungle обязан найтись: метка мира tree:jungle ставится по базе ствола, иначе "
-                        + "граф рубит не то место. Найдено: " + found);
-    }
-
-    @Test
-    void treeSight_LiveHouseOfJungleLogs_IsNotForest() throws IOException {
-        Map<BlockCoord, String> blocks = blocks(Path.of("src/test/resources/live/woodchain-house-1111.json"));
-
-        List<TreeSight.Stand> found = TreeSight.detect(
-                Map.of("jungle", cells(blocks, "jungle")), species -> new SnapshotView(blocks, species));
-
-        assertTrue(
-                found.isEmpty(),
-                "Постройка поселения из jungle-брёвен не делает породу доступной: иначе граф ставит рубку "
-                        + "стен у (-180,70,-505) и повторяет её каждый час. Найдено: " + found);
-    }
-
-    private static List<BlockCoord> cells(Map<BlockCoord, String> blocks, String species) {
+    static List<BlockCoord> cells(Map<BlockCoord, String> blocks, String species) {
         List<BlockCoord> cells = new ArrayList<>();
         blocks.forEach((cell, block) -> {
             if (("minecraft:" + species + "_log").equals(block)) {
@@ -199,20 +154,29 @@ class ForestryScenarioTests {
         Set<BlockCoord> claimed = new HashSet<>();
         for (BlockCoord spirit : spirits) {
             Optional<BlockCoord> next = TreeChooser.next(spirit.x(), spirit.y(), spirit.z(), bases, claimed);
-            assertTrue(next.isPresent(), "Дух " + spirit + " без дерева: на доске три свободных ствола");
-            assertTrue(claimed.add(next.orElseThrow()), "Два духа выбрали одно дерево " + next);
+            assertTrue(
+                    next.isPresent(),
+                    "Дух " + spirit + " без дерева: на доске три свободных ствола, иначе задание висит без цели. "
+                            + "При смене assign проверь строку claim ниже в тесте");
+            assertTrue(
+                    claimed.add(next.orElseThrow()),
+                    "Два духа выбрали одно дерево, иначе один ствол рубится дважды и второй дух ждёт: claimed "
+                            + "обязан исключать занятое дерево. При смене TreeChooser.next проверь строку выше в "
+                            + "тесте");
             assigned.put(spirit, next.orElseThrow());
         }
         return assigned;
     }
 
-    private static void chopAndReplant(Tree tree, BlockCoord spirit, TreeGrid world) {
+    static void chopAndReplant(Tree tree, BlockCoord spirit, TreeGrid world) {
         List<BlockCoord> clearing = LeafObstacles.blockingStand(tree, world, spirit);
         clearing.forEach(cell -> world.air(cell.x(), cell.y(), cell.z()));
 
         List<BlockCoord> stands = ChopStands.stands(tree, feet -> standable(world, clearing, feet));
         assertFalse(
-                stands.isEmpty(), "У дерева " + tree.base() + " нет стоянки: дух не начнёт рубку, хотя дерево найдено");
+                stands.isEmpty(),
+                "У дерева " + tree.base() + " нет стоянки: дух не начнёт рубку, хотя дерево найдено, иначе задание "
+                        + "висит. При смене ChopStands.stands проверь строку группы ниже в тесте");
 
         TreeGroup group = TreeGroup.of(tree.base(), world)
                 .orElseThrow(() -> new AssertionError("Дерево " + tree.base() + " не собралось в группу"));
@@ -221,11 +185,18 @@ class ForestryScenarioTests {
         assertEquals(
                 tree.logs().stream().mapToInt(BlockCoord::y).max().orElseThrow(),
                 plan.order().get(0).y(),
-                "Рубка начинается с верхнего бревна: иначе ствол падает на духа");
+                "Рубка начинается с верхнего бревна, иначе ствол падает на духа. При смене ChopPlan.of проверь "
+                        + "строку порядка ниже в тесте");
         int previous = Integer.MAX_VALUE;
         for (BlockCoord log : plan.order()) {
-            assertTrue(world.isLog(log), "План рубит уже убранное бревно " + log);
-            assertTrue(log.y() <= previous, "Бревно " + log + " идёт после более низкого: порядок снизу вверх");
+            assertTrue(
+                    world.isLog(log),
+                    "План рубит уже убранное бревно, иначе дух бьёт воздух и задание висит до тайм-аута. При смене "
+                            + "chopAndReplant проверь строку порядка ниже в тесте");
+            assertTrue(
+                    log.y() <= previous,
+                    "Бревно " + log + " идёт после более низкого: порядок сверху вниз, иначе верхнее падает на духа "
+                            + "(INC-49). При смене ChopPlan.of проверь строку выше в тесте");
             previous = log.y();
             world.air(log.x(), log.y(), log.z());
         }
@@ -236,16 +207,19 @@ class ForestryScenarioTests {
         List<BlockCoord> saplings = AreaReplant.plan(tree.base(), excluded, ReplantData.defaults(), world);
         assertTrue(
                 saplings.size() >= ReplantData.defaults().squareSaplings(),
-                "После рубки " + tree.base() + " не хватает саженцев: " + saplings.size()
-                        + ", досадка обязана продолжить лес");
+                "После рубки " + tree.base() + " не хватает саженцев: " + saplings.size() + ", досадка обязана "
+                        + "продолжить лес, иначе участок пустеет. При смене AreaReplant.plan проверь строку почвы "
+                        + "ниже в тесте");
         for (BlockCoord sapling : saplings) {
             assertTrue(
                     world.isSoil(new BlockCoord(sapling.x(), sapling.y() - 1, sapling.z())),
                     "Саженец " + sapling + " стоит не на почве, а на "
-                            + world.getClass().getSimpleName());
+                            + world.getClass().getSimpleName()
+                            + ", иначе не прорастёт. При смене AreaReplant.plan проверь строку клетки ниже в тесте");
             assertFalse(
                     group.logs().contains(sapling) || group.leaves().contains(sapling),
-                    "Саженец " + sapling + " посажен в клетку ствола или кроны: там ещё дерево");
+                    "Саженец " + sapling + " посажен в клетку ствола или кроны: там ещё дерево, иначе запас "
+                            + "тратится впустую. При смене excluded проверь строку выше в тесте");
         }
     }
 
@@ -259,9 +233,12 @@ class ForestryScenarioTests {
         return cleared.contains(cell) || world.isEmpty(cell);
     }
 
-    private static Tree assertTree(BlockCoord base, TreeView view) {
+    static Tree assertTree(BlockCoord base, TreeView view) {
         return assertInstanceOf(
-                Tree.class, TreeShape.detect(base, view), "Дерево " + base + " не разобралось: рубка не начнётся");
+                Tree.class,
+                TreeShape.detect(base, view),
+                "Дерево " + base + " не разобралось: рубка не начнётся, иначе сценарий врёт. При смене "
+                        + "TreeShape.detect проверь строку выше в тесте");
     }
 
     private static List<BlockCoord> leafCells(BlockCoord base) {
@@ -275,11 +252,11 @@ class ForestryScenarioTests {
         return leaves;
     }
 
-    private static BlockCoord base(int x) {
+    static BlockCoord base(int x) {
         return new BlockCoord(x, 1, 2);
     }
 
-    private static TreeGrid forest() {
+    static TreeGrid forest() {
         TreeGrid world = new TreeGrid();
         for (int x = 0; x <= 28; x++) {
             for (int z = 0; z <= 5; z++) {

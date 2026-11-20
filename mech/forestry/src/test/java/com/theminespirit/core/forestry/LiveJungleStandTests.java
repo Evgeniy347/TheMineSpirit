@@ -22,9 +22,14 @@ class LiveJungleStandTests {
         Tree tree = assertInstanceOf(
                 Tree.class,
                 TreeShape.detect(BASE, new ForestryScenarioTests.SnapshotView(blocks, "jungle")),
-                "Живой джунглевый ствол обязан разобраться как дерево");
+                "Живой джунглевый ствол обязан разобраться как дерево, иначе дух бросает живую 2×2. При смене "
+                        + "TreeShape.detect проверь строку ствола ниже в тесте");
         long baseLogs = tree.logs().stream().filter(log -> log.y() == BASE.y()).count();
-        assertEquals(4, baseLogs, "Живой джунглевый ствол обязан быть 2×2: " + tree.logs());
+        assertEquals(
+                4,
+                baseLogs,
+                "Живой джунглевый ствол обязан быть 2×2: " + tree.logs() + ", иначе тест проверяет не то дерево. "
+                        + "При смене SnapshotView проверь строку стоянок ниже в тесте");
 
         ChopStands.View view = new ChopStands.View() {
             @Override
@@ -41,26 +46,33 @@ class LiveJungleStandTests {
         };
         List<BlockCoord> stands = ChopStands.stands(tree, view);
 
-        assertFalse(stands.isEmpty(), "У живого 2×2 дерева обязана найтись стоянка вплотную к стволу");
+        assertFalse(
+                stands.isEmpty(),
+                "У живого 2×2 дерева обязана найтись стоянка вплотную к стволу, иначе рубка не начинается. При "
+                        + "смене ChopStands.stands проверь строку соседства ниже в тесте");
         assertTrue(
                 stands.stream().allMatch(feet -> adjacent(feet, tree.logs())),
-                "Стоянка обязана быть вплотную к стволу по x и z, а не в стороне: " + stands);
+                "Стоянка обязана быть вплотную к стволу по x и z, а не в стороне: " + stands + ", иначе дух рубит "
+                        + "издалека. При смене выбора стоянок проверь строку окна ниже в тесте");
         List<BlockCoord> aboveWindow =
                 stands.stream().filter(feet -> feet.y() > BASE.y() + 1).toList();
         assertTrue(
                 !aboveWindow.isEmpty(),
-                "Высота стоянки не ограничена основанием дерева: у живого 2×2 есть клетки вплотную к стволу "
-                        + "выше старого окна основания, иначе среди бугров, лиан и листвы стоянки нет: " + stands);
+                "Высота стоянки не ограничена основанием дерева: у живого 2×2 есть клетки вплотную к стволу выше "
+                        + "старого окна основания, иначе среди бугров, лиан и листвы стоянки нет: " + stands
+                        + ". При смене окна высот проверь строку плана ниже в тесте");
 
         ChopPlan plan = ChopPlan.of(tree, aboveWindow.get(0));
         assertEquals(
                 tree.logs().size(),
                 plan.order().size(),
-                "С найденной стоянки рубится всё дерево, а не часть ствола: " + plan.order());
+                "С найденной стоянки рубится всё дерево, а не часть ствола: " + plan.order() + ", иначе верх "
+                        + "остаётся. При смене ChopPlan.of проверь строку верхнего ниже в тесте");
         assertEquals(
                 tree.logs().stream().mapToInt(BlockCoord::y).max().orElseThrow(),
                 plan.order().get(0).y(),
-                "Рубка начинается с верхнего бревна: иначе ствол падает на духа");
+                "Рубка начинается с верхнего бревна, иначе ствол падает на духа. При смене ChopPlan.of проверь "
+                        + "строку размера выше в тесте");
     }
 
     private static boolean free(Map<BlockCoord, String> blocks, BlockCoord cell) {

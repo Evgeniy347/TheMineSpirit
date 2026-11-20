@@ -32,16 +32,23 @@ class LiveOakStumpTests {
             assertInstanceOf(
                     NotATree.class,
                     TreeShape.detect(base, view),
-                    "Живой пень " + base + " обязан быть отвергнут как не-дерево: иначе дух снова бьётся в "
-                            + "недоступный остаток вместо настоящего дуба");
+                    "Живой пень " + base + " обязан быть отвергнут как не-дерево, иначе дух снова бьётся в "
+                            + "недоступный остаток вместо настоящего дуба. При смене TreeShape.detect проверь строку "
+                            + "дуба ниже в тесте");
         }
         TreeDetection detected = TreeShape.detect(coord(world.get("tree").get("base")), view);
         Tree tree = assertInstanceOf(
-                Tree.class, detected, "Ближайший настоящий дуб обязан разбираться как дерево, а вышло " + detected);
+                Tree.class,
+                detected,
+                "Ближайший настоящий дуб обязан разбираться как дерево, а вышло " + detected + ", иначе рубка не "
+                        + "находит цель. При смене SnapshotView проверь строку расстояния ниже в тесте");
         BlockCoord anchor = coord(world.get("anchor"));
         int distance = (int)
                 Math.ceil(Math.hypot(tree.base().x() - anchor.x(), tree.base().z() - anchor.z()));
-        assertTrue(distance > 32, "Живой настоящий дуб обязан быть дальше старого предела 32: " + distance);
+        assertTrue(
+                distance > 32,
+                "Живой настоящий дуб обязан быть дальше старого предела 32: " + distance + ", иначе тест не "
+                        + "проверяет расширение. При смене фикстуры проверь строку поиска ниже в тесте");
         Optional<BlockCoord> near = TreeChooser.near(
                 anchor,
                 ChopTuning.maxDistance(CatalogLimits.CHOP_RADIUS_MAX),
@@ -52,8 +59,9 @@ class LiveOakStumpTests {
                 Set.of());
         assertTrue(
                 near.isPresent(),
-                "Настоящий дуб в " + distance + " блоках обязан попадать в поиск доски в 100: иначе пни снова "
-                        + "останутся единственными целями");
+                "Настоящий дуб в " + distance + " блоках обязан попадать в поиск доски в 100, иначе пни снова "
+                        + "останутся единственными целями. При смене ChopTuning.maxDistance проверь строку "
+                        + "расстояния выше в тесте");
     }
 
     private static Map<BlockCoord, String> blocks(JsonNode world) {
