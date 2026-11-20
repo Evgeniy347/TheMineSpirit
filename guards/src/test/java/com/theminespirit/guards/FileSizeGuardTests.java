@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 
 class FileSizeGuardTests {
     private static final int LIMIT = 300;
-    private static final int BASELINE_LIMIT = 47;
+    private static final int BASELINE_LIMIT = 46;
     private static final Path BASELINE = Path.of("config", "filesize-baseline.txt");
 
     @Test
@@ -87,7 +87,7 @@ class FileSizeGuardTests {
     void baseline_CountOverLimit_IsReported() {
         assertEquals(
                 List.of(
-                        "config/filesize-baseline.txt: 59 записей при пределе 47 — исправленный файл убирается из списка"),
+                        "config/filesize-baseline.txt: 59 записей при пределе 46 — исправленный файл убирается из списка"),
                 countProblems(59),
                 "Сторож ослеп: базлайн длиннее предела обязан попасть в нарушители");
     }
