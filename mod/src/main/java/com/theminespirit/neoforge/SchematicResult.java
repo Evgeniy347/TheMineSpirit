@@ -14,7 +14,10 @@ import com.theminespirit.neoforge.movement.PathNetworkService;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -67,6 +70,25 @@ final class SchematicResult {
     }
 
     ScriptStatus noMaterial(String blockId, @Nullable String refusal) {
+        String raise = SchematicActions.raiseItem(blockId);
+        if (raise != null && host.trips < BuildSupplyTrip.MAX_TRIPS) {
+            Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(raise));
+            if (host.spirit.getInventory().countItem(item) == 0) {
+                int needed = Math.max(1, Math.min(countMissing(blockId), CatalogLimits.COUNT_MAX));
+                List<ScriptCall> steps = BuildSupplyTrip.exact(host.spirit, host.site, Map.of(item, needed));
+                if (!steps.isEmpty()) {
+                    host.trips++;
+                    LOGGER.info(
+                            "Стройка {}: заход {} за подъёмом '{}' ×{} (шагов withdraw {})",
+                            host.buildKey,
+                            host.trips,
+                            raise,
+                            needed,
+                            steps.size());
+                    return host.startSupply(steps);
+                }
+            }
+        }
         if (host.trips < BuildSupplyTrip.MAX_TRIPS) {
             List<ScriptCall> steps = BuildSupplyTrip.plan(host.spirit, host.site, host.phaseBand, host.bottomY);
             if (!steps.isEmpty()) {
