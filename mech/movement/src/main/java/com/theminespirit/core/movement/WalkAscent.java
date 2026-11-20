@@ -17,7 +17,8 @@ public final class WalkAscent {
         CLIMB,
         SWIM,
         DIVE,
-        ARRIVED
+        ARRIVED,
+        IMPOSSIBLE
     }
 
     public record Body(boolean onGround, boolean inWater, boolean onClimbable, boolean waterTarget) {
@@ -63,7 +64,7 @@ public final class WalkAscent {
         }
         Step step = switch (lift(rising, body)) {
             case HOLD -> Step.MOVE;
-            case JUMP -> Step.JUMP;
+            case JUMP -> cell.y() - pose.feet().y() > 1 ? Step.IMPOSSIBLE : Step.JUMP;
             case CLIMB -> Step.CLIMB;
         };
         return new Command(step, targetX, cell.y(), targetZ);

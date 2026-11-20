@@ -145,6 +145,10 @@ public final class RouteWalk {
             advance();
             return Optional.empty();
         }
+        if (command.step() == WalkAscent.Step.IMPOSSIBLE) {
+            return Optional.of(
+                    "шаг выше на " + (cell.y() - spirit.blockPosition().getY()) + " блока: прыжком не взять");
+        }
         spirit.getNavigation().stop();
         boolean fall = command.step() == WalkAscent.Step.MOVE || command.step() == WalkAscent.Step.DIVE;
         if (fall && command.y() < spirit.getY() - 0.5 && !spirit.isInWater()) {
@@ -184,8 +188,13 @@ public final class RouteWalk {
     }
 
     private Optional<String> jump(BlockCoord cell) {
-        if (WalkAscent.next(cell, pose(), body(cell)).step() == WalkAscent.Step.ARRIVED) {
+        WalkAscent.Command command = WalkAscent.next(cell, pose(), body(cell));
+        if (command.step() == WalkAscent.Step.ARRIVED) {
             return advance();
+        }
+        if (command.step() == WalkAscent.Step.IMPOSSIBLE) {
+            return Optional.of(
+                    "шаг выше на " + (cell.y() - spirit.blockPosition().getY()) + " блока: прыжком не взять");
         }
         spirit.getNavigation().stop();
         spirit.getMoveControl().setWantedPosition(cell.x() + 0.5, cell.y(), cell.z() + 0.5, SPEED);
