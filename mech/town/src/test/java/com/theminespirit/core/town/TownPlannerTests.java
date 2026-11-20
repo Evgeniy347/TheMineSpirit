@@ -161,6 +161,7 @@ class TownPlannerTests {
                     site.level().contains(cell.x(), cell.z()) || site.mineColumn(cell.x(), cell.z()),
                     "Клетка " + cell + " сада не выравнивается: деревья повиснут или утонут");
         }
+        assertEquals("oak", site.orchardWood(), "Главный сад — яблоневый (дуб), даже если порода поселения другая");
         assertEquals(
                 "jungle",
                 site.extraOrchards().stream()

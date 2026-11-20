@@ -117,7 +117,7 @@ final class GraphHarvestPost {
     boolean replantOrchard(GraphTickets.Ticket ticket, GraphPlan.Task task) {
         StageSite stage = post.scan.stage();
         Map<String, Integer> stock = post.service.stock().available();
-        if (plant(ticket, task, stage.orchardSaplings(), stage.wood(), stock)) {
+        if (plant(ticket, task, stage.orchardSaplings(), stage.orchardWood(), stock)) {
             return true;
         }
         for (OrchardPlot plot : stage.extraOrchards()) {

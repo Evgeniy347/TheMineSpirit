@@ -43,14 +43,14 @@ final class FarmInputs {
         FarmRules.Crops crops = crops(level, scan.home());
         int seeds = sum(graph, stock, "#seeds");
         StageSite site = scan.stage();
-        boolean orchardEmpty = siteEmpty(level, site.orchardSaplings(), site.wood(), stock);
-        boolean orchardSapling = siteStocked(site.wood(), stock);
+        boolean orchardEmpty = siteEmpty(level, site.orchardSaplings(), site.orchardWood(), stock);
+        boolean orchardSapling = siteStocked(site.orchardWood(), stock);
         for (OrchardPlot plot : site.extraOrchards()) {
             orchardEmpty |= siteEmpty(level, plot.saplings(), plot.wood(), stock);
             orchardSapling |= siteStocked(plot.wood(), stock);
         }
         Set<String> world = new HashSet<>(state.world());
-        orchardGrown(world, level, site.orchardSaplings(), site.wood());
+        orchardGrown(world, level, site.orchardSaplings(), site.orchardWood());
         for (OrchardPlot plot : site.extraOrchards()) {
             orchardGrown(world, level, plot.saplings(), plot.wood());
         }

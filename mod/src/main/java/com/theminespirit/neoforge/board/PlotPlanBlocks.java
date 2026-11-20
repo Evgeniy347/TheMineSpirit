@@ -91,7 +91,7 @@ public final class PlotPlanBlocks {
                     piece.rotation(),
                     List.of());
         }
-        String sapling = WoodSpecies.swap("minecraft:oak_sapling", site.wood());
+        String sapling = WoodSpecies.swap("minecraft:oak_sapling", site.orchardWood());
         site.orchardSaplings().forEach(at -> blocks.putIfAbsent(at, sapling));
         for (OrchardPlot plot : site.extraOrchards()) {
             String tree = WoodSpecies.swap("minecraft:oak_sapling", plot.wood());

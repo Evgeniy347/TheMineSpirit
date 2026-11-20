@@ -39,20 +39,18 @@ class PlotPlanBlocksTests {
     }
 
     @Test
-    void plan_ForeignWood_SaplingsMatchSettlementSpecies() {
+    void plan_ForeignSettlementWood_MainOrchardStaysOak() {
         StageSite birch = TownFixtures.flatSite("birch");
         PlotPlanBlocks.Plan plan = PlotPlanBlocks.of(birch);
 
         assertEquals(
                 birch.orchardSaplings().size(),
-                plan.expected("minecraft:birch_sapling").size(),
-                "Саженцы сада в плане — породы поселения: иначе план ждёт oak там, где посадка ставит birch, "
-                        + "и защита/аудит видит чужие саженцы лишними");
+                plan.expected("minecraft:oak_sapling").size(),
+                "Главный сад — яблоневый (дуб): порода поселения birch не подменяет его саженцы");
         assertTrue(
-                plan.expected("minecraft:oak_sapling").isEmpty(),
-                "Порода поселения birch не оставляет в плане жёстко зашитых oak-саженцев");
-        assertEquals(
-                "birch", birch.wood(), "Порода этапа берётся из участка поселения, а не подставляется по умолчанию");
+                plan.expected("minecraft:birch_sapling").isEmpty(),
+                "Чужая порода поселения не оставляет в главном саду birch-саженцев");
+        assertEquals("birch", birch.wood(), "Порода поселения остаётся birch для остальных построек и ограды");
     }
 
     @Test

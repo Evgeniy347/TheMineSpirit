@@ -134,12 +134,17 @@ public final class FirstStepsRunner {
     }
 
     public static TicketTarget targetFor(ServerLevel level, BoardCase caseValue, StageSite stage, String wood) {
+        String species = woodFor(caseValue, wood);
         BlockCoord point = BEFORE_YARD.contains(caseValue) ? Stations.at(level, caseValue, stage) : stage.workYard();
         TicketTarget target = TicketTarget.at(point).withWork(StageBuilds.of(level, caseValue, stage, 0));
-        if (WOODEN_BUILDINGS.contains(caseValue) && !WoodSpecies.OAK.equals(wood)) {
-            target = target.withWood(wood);
+        if (WOODEN_BUILDINGS.contains(caseValue) && !WoodSpecies.OAK.equals(species)) {
+            target = target.withWood(species);
         }
         return ToolSet.isTool(caseValue) ? target.withToolCount(1) : target;
+    }
+
+    private static String woodFor(BoardCase step, String wood) {
+        return step == BoardCase.BUILD_ORCHARD ? WoodSpecies.OAK : wood;
     }
 
     static Map<String, Integer> materials(MaterialSource source, BoardCase caseValue, TicketTarget target) {
@@ -176,7 +181,7 @@ public final class FirstStepsRunner {
     }
 
     static BuildGap.Gap gap(ServerLevel level, BoardCase step, int buildingLevel, StageSite stage, String fallback) {
-        String wood = BuildingWoodChoice.stored(level, step, stage, fallback);
+        String wood = woodFor(step, BuildingWoodChoice.stored(level, step, stage, fallback));
         return BuildGap.trace(
                 TicketPlans.plan(step, buildingLevel, targetFor(level, step, buildingLevel, stage, wood)),
                 wood,

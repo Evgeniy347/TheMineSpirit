@@ -1,5 +1,6 @@
 package com.theminespirit.core.town;
 
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.town.api.PlanBuilding;
 import java.util.ArrayList;
@@ -109,9 +110,13 @@ public record StageSite(
         return orchard.covers(x, z) || extraOrchardCell(x, z);
     }
 
+    public String orchardWood() {
+        return WoodSpecies.OAK;
+    }
+
     public Optional<String> orchardWoodAt(int x, int z) {
         if (orchard.covers(x, z)) {
-            return Optional.of(wood);
+            return Optional.of(orchardWood());
         }
         for (OrchardPlot plot : extraOrchards) {
             if (plot.place().covers(x, z)) {
