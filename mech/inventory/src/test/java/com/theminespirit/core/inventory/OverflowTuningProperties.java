@@ -16,8 +16,10 @@ class OverflowTuningProperties {
 
         assertTrue(
                 tuning.stockFactor(bigger) <= tuning.stockFactor(low),
-                "Чем больше предметов на базе, тем ниже ценность: " + low + " → " + bigger + ", коэффициенты "
-                        + tuning.stockFactor(low) + " → " + tuning.stockFactor(bigger));
+                "Чем больше предметов на базе, тем ниже ценность, иначе склад обесценивает добычу обратным ходом: "
+                        + low + " → " + bigger + ", коэффициенты "
+                        + tuning.stockFactor(low) + " → " + tuning.stockFactor(bigger)
+                        + ". При смене stockFactor проверь границу роста склада");
     }
 
     @Property
@@ -27,9 +29,14 @@ class OverflowTuningProperties {
         int value = tuning.effectiveUnitValue(base, stock);
 
         assertTrue(
-                value >= 0, "Ценность не бывает отрицательной: база " + base + ", склад " + stock + ", итог " + value);
+                value >= 0,
+                "Ценность не бывает отрицательной, иначе сравнение выгод ломается и дух бегает к бессмыслице: база "
+                        + base + ", склад " + stock + ", итог " + value
+                        + ". При смене effectiveUnitValue проверь нижнюю границу");
         assertTrue(
                 value <= base,
-                "Склад может только снижать ценность: база " + base + ", склад " + stock + ", итог " + value);
+                "Склад может только снижать ценность, иначе большие запасы выгоднее добычи и план растёт: база "
+                        + base + ", склад " + stock + ", итог " + value
+                        + ". При смене effectiveUnitValue проверь верхнюю границу");
     }
 }

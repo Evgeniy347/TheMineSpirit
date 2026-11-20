@@ -27,8 +27,9 @@ class ContainerPickerProperties {
             assertTrue(
                     picked.hasFreeSlot() || picked.hasPartial(incoming),
                     "выбранный контейнер обязан принять предмет: либо свободный слот, либо неполная стопка того же "
-                            + "предмета. В полный контейнер предмет не влезет. Снимки: " + containers
-                            + ", предмет: " + incoming);
+                            + "предмета. В полный контейнер предмет не влезет, и перенос сорвётся. Снимки: "
+                            + containers
+                            + ", предмет: " + incoming + ". При смене choose проверь контейнеры без свободных слотов");
         }
     }
 
@@ -40,17 +41,21 @@ class ContainerPickerProperties {
         ContainerChoice choice = ContainerPicker.choose(containers, ORIGIN, incoming);
         assertTrue(
                 choice instanceof ContainerChoice.Chosen,
-                "при наличии неполного стака того же предмета отказ недопустим: " + containers);
+                "при наличии неполного стака того же предмета отказ недопустим, иначе предмет ляжет в новый слот "
+                        + "мимо существующей стопки: " + containers
+                        + ". При смене choose проверь набор с гарантированной неполной стопкой");
         ContainerSnapshot chosen = containers.get(((ContainerChoice.Chosen) choice).index());
         assertTrue(
                 chosen.hasPartial(incoming),
                 "если в радиусе есть контейнер с неполной стопкой того же предмета, выбран обязан быть такой "
                         + "контейнер, а не пустой. Снимки: " + containers + ", предмет: " + incoming
-                        + ", выбран индекс " + ((ContainerChoice.Chosen) choice).index());
+                        + ", выбран индекс " + ((ContainerChoice.Chosen) choice).index()
+                        + ". При смене приоритета проверь докладывание в существующую стопку");
         assertFalse(
                 containers.get(partialIndex).hasPartial(incoming) && !chosen.hasPartial(incoming),
                 "неполный стак был в контейнере " + partialIndex + ", но выбран контейнер без него: "
-                        + "докладывание обязано идти к существующей стопке");
+                        + "докладывание обязано идти к существующей стопке, иначе слот-источник не освободится. "
+                        + "При смене выбора проверь индекс неполного стака");
     }
 
     @Provide
