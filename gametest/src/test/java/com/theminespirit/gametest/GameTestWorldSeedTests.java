@@ -18,9 +18,10 @@ class GameTestWorldSeedTests {
                     first,
                     second,
                     "Сид мира GameTest без --seed обязан быть постоянным: от него зависит место сетки тестов, "
-                            + "а случайное место двигает сцены по чужим чанкам и делает полный прогон флейком "
+                            + "иначе случайное место двигает сцены по чужим чанкам и делает полный прогон флейком "
                             + "(route_sanddig_layersflatspiritbringssand, craftscene_arenasteps_allpass). "
-                            + "Проверь GameTestWorldSeed.resolve и GameTestSeeding.onServerStarted");
+                            + "Проверь GameTestWorldSeed.resolve и GameTestSeeding.onServerStarted. "
+                            + "При смене resolve проверь постоянство без --seed");
         } finally {
             restore(previous);
         }
@@ -35,7 +36,8 @@ class GameTestWorldSeedTests {
                     42L,
                     GameTestWorldSeed.resolve(),
                     "Явный --seed обязан задавать сид мира: иначе повтор прогона с тем же --seed не повторит "
-                            + "место сетки тестов. Проверь разбор theminespirit.gametest.seed");
+                            + "место сетки тестов. Проверь разбор theminespirit.gametest.seed. "
+                            + "При смене resolve проверь явный --seed");
         } finally {
             restore(previous);
         }
