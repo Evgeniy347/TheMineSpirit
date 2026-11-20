@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.forestry.ReplantPlan;
 import com.theminespirit.core.forestry.Tree;
 import com.theminespirit.core.forestry.api.ChopTuning;
 import com.theminespirit.core.forestry.api.TreeSpecies;
@@ -20,6 +21,7 @@ final class ChopHarvest {
     private final boolean replant;
     private final boolean orchard;
     private final TreeView view;
+    private final @Nullable String orchardWood;
     private @Nullable DropCollector collector;
     private @Nullable ChopReplant planting;
     private @Nullable Tree tree;
@@ -30,10 +32,15 @@ final class ChopHarvest {
     private String failureReason = "";
 
     ChopHarvest(SpiritEntity spirit, boolean replant, boolean orchard, TreeView view) {
+        this(spirit, replant, orchard, view, null);
+    }
+
+    ChopHarvest(SpiritEntity spirit, boolean replant, boolean orchard, TreeView view, @Nullable String orchardWood) {
         this.spirit = spirit;
         this.replant = replant;
         this.orchard = orchard;
         this.view = view;
+        this.orchardWood = orchardWood;
     }
 
     void begin(Tree target, TreeSpecies harvested) {
@@ -69,6 +76,9 @@ final class ChopHarvest {
                     if (target == null || harvested == null) {
                         failureReason = "дерево или порода пропали до досадки";
                         return State.FAILED;
+                    }
+                    if (!ReplantPlan.keepHarvested(orchardWood, harvested.id())) {
+                        return State.DONE;
                     }
                     planting = new ChopReplant(spirit, harvested, view, !orchard);
                     planting.begin(target, target.base().y());

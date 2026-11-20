@@ -52,12 +52,7 @@ class TownPlanOriginTests {
         Placement before = base.placement(StageSites.ORCHARD).orElseThrow();
 
         TownPlan grown = TownPlanner.plant(
-                TownPlannerTests.grid((x, z) -> 70, (x, z) -> 0),
-                base,
-                RULES,
-                STAGES,
-                List.of(OrchardSites.siteId("orchard_jungle")),
-                1);
+                TownPlannerTests.grid((x, z) -> 70, (x, z) -> 0), base, RULES, STAGES, List.of("orchard_jungle"), 1);
         Placement after = grown.placement(StageSites.ORCHARD).orElseThrow();
 
         assertEquals(

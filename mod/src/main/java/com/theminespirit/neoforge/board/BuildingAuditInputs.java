@@ -5,7 +5,9 @@ import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphFacts;
 import com.theminespirit.core.board.graph.GraphState.Built;
+import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.town.OrchardSites;
 import com.theminespirit.core.town.Placement;
 import com.theminespirit.core.town.TownPlan;
 import java.util.ArrayList;
@@ -105,6 +107,9 @@ public final class BuildingAuditInputs {
     }
 
     static String key(String planId) {
+        if (OrchardSites.isExtra(planId)) {
+            return OrchardSites.baseBuilding(planId);
+        }
         Optional<String> graphId = StageCatalog.graphId(planId);
         if (graphId.isPresent()) {
             return graphId.orElseThrow();
@@ -112,7 +117,7 @@ public final class BuildingAuditInputs {
         return switch (planId) {
             case "yard" -> "chests";
             case "torches" -> "lighting";
-            case "orchard", "orchard_extra" -> "orchard_oak";
+            case OrchardSites.MAIN_PLACEMENT -> OrchardSites.MAIN_BUILDING;
             default -> planId;
         };
     }
@@ -180,7 +185,7 @@ public final class BuildingAuditInputs {
     static Map<String, List<Placement>> grouped(TownPlan plan) {
         Map<String, List<Placement>> groups = new LinkedHashMap<>();
         for (Placement place : plan.placements()) {
-            if (!auditable(place.id())) {
+            if (!auditable(place.id()) || OrchardSites.TEMPLATE.equals(place.id())) {
                 continue;
             }
             String key = key(place.id());
@@ -209,8 +214,9 @@ public final class BuildingAuditInputs {
                         new GraphFacts.Position(place.x(), scan.stage().anchor().y(), place.z());
                 spots.add(spot);
                 Optional<StageCatalog.Entry> entry = StageCatalog.entry(place.id());
-                audits.add(entry.map(value -> BuildingAudit.scheme(level, value.scheme(), spot, scan.wood(), now))
-                        .orElseGet(() -> BuildingAudit.stageOrchard(level, spot, scan.wood(), now)));
+                audits.add(entry.map(value ->
+                                BuildingAudit.scheme(level, value.scheme(), spot, orchardWood(place, scan), now))
+                        .orElseGet(() -> BuildingAudit.stageOrchard(level, spot, orchardWood(place, scan), now)));
             }
             GraphFacts.Position at = spots.get(incomplete(audits));
             GraphFacts.Building base = facts.get(key);
@@ -235,6 +241,13 @@ public final class BuildingAuditInputs {
             out = out.plus(audit);
         }
         return out;
+    }
+
+    private static String orchardWood(Placement place, FirstStepsRunner.StageScan scan) {
+        if (OrchardSites.MAIN_PLACEMENT.equals(place.id())) {
+            return WoodSpecies.OAK;
+        }
+        return OrchardSites.speciesOfBuilding(place.id()).orElse(scan.wood());
     }
 
     private static boolean built(Map<String, Built> states, String key, String planId) {

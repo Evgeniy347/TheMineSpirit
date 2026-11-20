@@ -28,38 +28,46 @@ final class ExtraOrchardPost {
     static boolean post(GraphPost post, GraphTickets.Ticket ticket, GraphPlan.Task task) {
         String building = ticket.node();
         StageSite site = post.scan.stage();
-        Optional<OrchardPlot> plot = site.extraOrchard(building);
-        if (plot.isEmpty()) {
+        List<OrchardPlot> plots = site.extraOrchards().stream()
+                .filter(plot -> building.equals(OrchardSites.baseBuilding(plot.building())))
+                .toList();
+        if (plots.isEmpty()) {
             return false;
         }
-        if (post.done(ticket.id()) || post.open(ticket.id())) {
-            return true;
+        boolean posted = false;
+        for (OrchardPlot known : plots) {
+            String id = ticket.id() + "#" + known.building();
+            if (post.done(id) || post.open(id)) {
+                posted = true;
+                continue;
+            }
+            BlockCoord origin = known.origin(site.anchor().y());
+            TicketTarget target = TicketTarget.at(origin)
+                    .withWork(StageBuilds.of(post.level, BoardCase.BUILD_ORCHARD, site, 0))
+                    .withWood(known.wood())
+                    .withBuilding(known.building());
+            Map<String, Integer> need = new HashMap<>(CaseMaterials.need(
+                    TicketPlans.plan(BoardCase.BUILD_ORCHARD, 1, target), FirstStepsRunner.materialSource(post.level)));
+            FirstStepsRunner.minusPlaced(
+                    post.level, TicketPlans.plan(BoardCase.BUILD_ORCHARD, 1, target), known.wood(), need);
+            if (!ResourceGate.missing(new StockNeed(need), post.stock).isEmpty()) {
+                posted = true;
+                continue;
+            }
+            post.submit(
+                    new BoardTicket(
+                            id,
+                            BoardCase.BUILD_ORCHARD,
+                            Optional.empty(),
+                            task.priority(),
+                            post.now,
+                            1,
+                            ticket.id(),
+                            List.of(),
+                            Map.copyOf(need)),
+                    target);
+            posted = true;
         }
-        OrchardPlot known = plot.orElseThrow();
-        BlockCoord origin = known.origin(site.anchor().y());
-        TicketTarget target = TicketTarget.at(origin)
-                .withWork(StageBuilds.of(post.level, BoardCase.BUILD_ORCHARD, site, 0))
-                .withWood(known.wood())
-                .withBuilding(building);
-        Map<String, Integer> need = new HashMap<>(CaseMaterials.need(
-                TicketPlans.plan(BoardCase.BUILD_ORCHARD, 1, target), FirstStepsRunner.materialSource(post.level)));
-        FirstStepsRunner.minusPlaced(
-                post.level, TicketPlans.plan(BoardCase.BUILD_ORCHARD, 1, target), known.wood(), need);
-        if (!ResourceGate.missing(new StockNeed(need), post.stock).isEmpty()) {
-            return true;
-        }
-        post.submit(
-                new BoardTicket(
-                        ticket.id(),
-                        BoardCase.BUILD_ORCHARD,
-                        Optional.empty(),
-                        task.priority(),
-                        post.now,
-                        1,
-                        ticket.id(),
-                        List.of(),
-                        Map.copyOf(need)),
-                target);
-        return true;
+        return posted;
     }
 }

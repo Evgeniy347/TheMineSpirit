@@ -70,7 +70,10 @@ class OrchardPlansTests {
     @Test
     void plan_ExtraOrchardBuilding_BuildsOnItsPlotWithItsSpecies() {
         StageSite site = TownFixtures.site(TownFixtures.planWithOrchard("orchard_jungle"));
-        OrchardPlot plot = site.extraOrchard("orchard_jungle").orElseThrow();
+        OrchardPlot plot = site.extraOrchards().stream()
+                .filter(found -> "orchard_jungle".equals(found.building()))
+                .findFirst()
+                .orElseThrow();
         BlockCoord origin = plot.origin(site.anchor().y());
         TicketTarget target = TicketTarget.at(origin)
                 .withWork(new StageWork(site, List.of()))

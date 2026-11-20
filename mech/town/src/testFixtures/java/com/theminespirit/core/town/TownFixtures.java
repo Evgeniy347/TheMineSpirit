@@ -63,7 +63,7 @@ public final class TownFixtures {
                 flatPlan(),
                 rules,
                 StageRules.load().plans(),
-                List.of(OrchardSites.siteId(building)),
+                List.of(building),
                 1);
     }
 

@@ -58,7 +58,10 @@ class PlotPlanBlocksTests {
     @Test
     void plan_ExtraOrchardTrees_CountAsPlannedPlantings() {
         StageSite site = TownFixtures.site(TownFixtures.planWithOrchard("orchard_jungle"));
-        OrchardPlot plot = site.extraOrchard("orchard_jungle").orElseThrow();
+        OrchardPlot plot = site.extraOrchards().stream()
+                .filter(found -> "orchard_jungle".equals(found.building()))
+                .findFirst()
+                .orElseThrow();
         PlotPlanBlocks.Plan plan = PlotPlanBlocks.of(site);
 
         for (BlockCoord at : plot.saplings()) {

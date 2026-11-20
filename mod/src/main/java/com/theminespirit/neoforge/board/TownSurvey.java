@@ -126,16 +126,66 @@ final class TownSurvey {
     private static List<String> demanded(BoardService service, TownPlan plan) {
         List<String> wanted = new ArrayList<>();
         Map<String, Integer> stock = service.stock().available();
-        for (SupplyGraph.Trigger trigger : DataTables.INSTANCE.graph().current().triggers()) {
-            if (!OrchardSites.isExtra(trigger.build()) || stock.getOrDefault(trigger.have(), 0) <= 0) {
+        SupplyGraph graph = DataTables.INSTANCE.graph().current();
+        Set<String> built = built(service, plan);
+        for (SupplyGraph.Trigger trigger : graph.triggers()) {
+            if (!OrchardSites.isExtra(trigger.build())) {
                 continue;
             }
-            String site = OrchardSites.siteId(trigger.build());
-            if (plan.placement(site).isEmpty() && !plan.unplaced().contains(site)) {
-                wanted.add(site);
+            String base = OrchardSites.baseBuilding(trigger.build());
+            int saplings = stock.getOrDefault(trigger.have(), 0);
+            List<Placement> plots = plotsOf(plan, base);
+            if (plots.isEmpty()) {
+                if (saplings > 0 && !plan.unplaced().contains(base)) {
+                    wanted.add(base);
+                }
+                continue;
+            }
+            boolean previousBuilt = plots.stream().allMatch(place -> built.contains(place.id()));
+            int perPlot = saplingsPerPlot(graph, base, trigger.have());
+            if (!OrchardSites.wantAnother(previousBuilt, saplings, perPlot)) {
+                continue;
+            }
+            String next = OrchardSites.numbered(base, planNumber(plan, base) + 1);
+            if (plan.placement(next).isEmpty() && !plan.unplaced().contains(next)) {
+                wanted.add(next);
             }
         }
         return wanted;
+    }
+
+    private static List<Placement> plotsOf(TownPlan plan, String base) {
+        List<Placement> plots = new ArrayList<>();
+        if (OrchardSites.MAIN_BUILDING.equals(base)) {
+            plan.placement(OrchardSites.MAIN_PLACEMENT).ifPresent(plots::add);
+        }
+        for (Placement place : plan.placements()) {
+            if (OrchardSites.isExtra(place.id()) && base.equals(OrchardSites.baseBuilding(place.id()))) {
+                plots.add(place);
+            }
+        }
+        return plots;
+    }
+
+    private static int planNumber(TownPlan plan, String base) {
+        int number = OrchardSites.MAIN_BUILDING.equals(base)
+                        && plan.placement(OrchardSites.MAIN_PLACEMENT).isPresent()
+                ? 1
+                : 0;
+        for (Placement place : plan.placements()) {
+            if (OrchardSites.isExtra(place.id()) && base.equals(OrchardSites.baseBuilding(place.id()))) {
+                number = Math.max(number, OrchardSites.number(place.id()));
+            }
+        }
+        return number;
+    }
+
+    private static int saplingsPerPlot(SupplyGraph graph, String base, String sapling) {
+        SupplyGraph.Building building = graph.buildings().get(base);
+        if (building == null) {
+            return 1;
+        }
+        return Math.max(1, building.materials().getOrDefault(sapling, 1));
     }
 
     private static boolean near(BlockCoord anchor, BlockCoord center) {

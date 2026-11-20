@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 public record ReplantPlan(List<BlockCoord> cells, BlockCoord base, boolean square, boolean lacked) {
     public ReplantPlan {
@@ -33,6 +34,11 @@ public record ReplantPlan(List<BlockCoord> cells, BlockCoord base, boolean squar
             return new ReplantPlan(List.of(base), base, square, square);
         }
         return new ReplantPlan(List.of(), base, square, true);
+    }
+
+    public static boolean keepHarvested(@Nullable String plotWood, String treeSpecies) {
+        Objects.requireNonNull(treeSpecies, "Порода срубленного дерева не может быть null: по ней решают пересадку");
+        return plotWood == null || plotWood.equals(treeSpecies);
     }
 
     static boolean isFullSquare(List<BlockCoord> cells) {

@@ -101,13 +101,8 @@ final class GraphPost {
                         || FarmPost.building(this, ticket)
                         || GraphNodeBuilds.post(this, ticket, task)
                         || PortalPost.building(this, ticket)
-                        || (ExtraOrchardPost.handles(ticket.node())
-                                ? ExtraOrchardPost.post(this, ticket, task)
-                                : StagePlacePost.handles(ticket.node())
-                                        ? StagePlacePost.post(this, ticket)
-                                        : StageBuilt.ids().contains(ticket.node())
-                                                ? building(ticket)
-                                                : routes().building(ticket));
+                        || OrchardBuildPost.post(this, ticket, task)
+                        || (StageBuilt.ids().contains(ticket.node()) ? building(ticket) : routes().building(ticket));
             case EVENT -> event(ticket);
             case WAY -> way(ticket, task);
         };

@@ -118,6 +118,7 @@ public final class TownPlanner {
                 continue;
             }
             TownEntry template = rules.template(id)
+                    .or(() -> rules.template(OrchardSites.TEMPLATE).filter(ignored -> OrchardSites.isExtra(id)))
                     .orElseThrow(() -> new IllegalArgumentException("Нет шаблона участка для '" + id
                             + "': этап берёт его из каталога town.json, иначе место не разметить"));
             if (placer.placeAs(template, id, stage).isEmpty()) {

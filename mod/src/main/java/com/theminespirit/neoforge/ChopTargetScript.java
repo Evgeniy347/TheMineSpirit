@@ -11,10 +11,13 @@ import com.theminespirit.core.forestry.TreeShape;
 import com.theminespirit.core.forestry.api.TreeSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.api.ChopTargetParams;
+import com.theminespirit.neoforge.board.SettlementPlotStore;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 public final class ChopTargetScript implements ScriptInstance {
@@ -38,7 +41,16 @@ public final class ChopTargetScript implements ScriptInstance {
         this.params = params;
         this.logBlocks = TreeBlocks.logs(TreeSpecies.ALL);
         this.treeView = new LevelTreeView(spirit.level(), logBlocks);
-        this.chop = new TreeChop(spirit, params.replant(), params.orchard(), treeView);
+        this.chop = new TreeChop(spirit, params.replant(), params.orchard(), treeView, plotWood());
+    }
+
+    private @Nullable String plotWood() {
+        if (!params.orchard() || !(spirit.level() instanceof ServerLevel server)) {
+            return null;
+        }
+        return SettlementPlotStore.liveSite(server)
+                .flatMap(site -> site.orchardWoodAt(params.x(), params.z()))
+                .orElse(null);
     }
 
     @Override

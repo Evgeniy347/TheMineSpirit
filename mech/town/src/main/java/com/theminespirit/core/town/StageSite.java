@@ -99,13 +99,6 @@ public record StageSite(
         return orchardOrigin();
     }
 
-    public Optional<OrchardPlot> extraOrchard(String building) {
-        Objects.requireNonNull(building, "Постройка сада не может быть null: по ней ищут площадку");
-        return extraOrchards.stream()
-                .filter(plot -> plot.building().equals(building))
-                .findFirst();
-    }
-
     public List<BlockCoord> allOrchardSaplings() {
         List<BlockCoord> spots = new ArrayList<>(orchardSaplings);
         extraOrchards.forEach(plot -> spots.addAll(plot.saplings()));
@@ -114,6 +107,18 @@ public record StageSite(
 
     public boolean orchardTerritory(int x, int z) {
         return orchard.covers(x, z) || extraOrchardCell(x, z);
+    }
+
+    public Optional<String> orchardWoodAt(int x, int z) {
+        if (orchard.covers(x, z)) {
+            return Optional.of(wood);
+        }
+        for (OrchardPlot plot : extraOrchards) {
+            if (plot.place().covers(x, z)) {
+                return Optional.of(plot.wood());
+            }
+        }
+        return Optional.empty();
     }
 
     public boolean orchardTree(int x, int y, int z) {

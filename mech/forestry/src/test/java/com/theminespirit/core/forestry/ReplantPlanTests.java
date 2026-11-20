@@ -16,6 +16,26 @@ class ReplantPlanTests {
             List.of(new BlockCoord(0, 1, 0), new BlockCoord(1, 1, 0), new BlockCoord(0, 1, 1), new BlockCoord(1, 1, 1));
 
     @Test
+    void keepHarvested_ForeignPlotSpecies_False() {
+        assertFalse(
+                ReplantPlan.keepHarvested("oak", "jungle"),
+                "Порода участка другая: старое дерево не пересаживаем, место засадит сад породы участка");
+    }
+
+    @Test
+    void keepHarvested_SameSpecies_True() {
+        assertTrue(
+                ReplantPlan.keepHarvested("jungle", "jungle"), "Порода участка совпала: сажаем сразу, сад не пустеет");
+    }
+
+    @Test
+    void keepHarvested_UnknownPlotWood_True() {
+        assertTrue(
+                ReplantPlan.keepHarvested(null, "jungle"),
+                "Вне сада породы участка нет: пересадка по срубленной породе остаётся прежней");
+    }
+
+    @Test
     void of_SquareWithFourSaplings_PlantsFullSquare() {
         ReplantPlan plan = ReplantPlan.of(SQUARE, 4, DATA);
 

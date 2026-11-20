@@ -37,13 +37,18 @@ final class TreeChop {
     private @Nullable ChopOutcome refusal;
 
     TreeChop(SpiritEntity spirit, boolean replant, boolean orchard, TreeView view) {
+        this(spirit, replant, orchard, view, null);
+    }
+
+    TreeChop(SpiritEntity spirit, boolean replant, boolean orchard, TreeView view, @Nullable String orchardWood) {
         this.spirit = spirit;
         this.breaker = new BlockBreaker(spirit);
         this.scaffold = new ChopScaffold(spirit);
         this.pass = new ChopPass(spirit, view, orchard, breaker);
         this.ascent = new ChopAscent(spirit, view, pass, scaffold);
         this.canopy = new ChopCanopy(spirit, view);
-        this.chopReturn = new ChopReturn(spirit, scaffold, new ChopHarvest(spirit, replant, orchard, view));
+        this.chopReturn =
+                new ChopReturn(spirit, scaffold, new ChopHarvest(spirit, replant, orchard, view, orchardWood));
     }
 
     void begin(Tree target) {

@@ -138,14 +138,9 @@ class TownPlannerTests {
     @Test
     void plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled() {
         TownPlan base = plan((x, z) -> 70, (x, z) -> 0);
-        TownPlan grown = TownPlanner.plant(
-                grid((x, z) -> 70, (x, z) -> 0),
-                base,
-                RULES,
-                STAGES,
-                List.of(OrchardSites.siteId("orchard_jungle")),
-                1);
-        Placement extra = grown.placement(OrchardSites.siteId("orchard_jungle"))
+        TownPlan grown =
+                TownPlanner.plant(grid((x, z) -> 70, (x, z) -> 0), base, RULES, STAGES, List.of("orchard_jungle"), 1);
+        Placement extra = grown.placement("orchard_jungle")
                 .orElseThrow(() -> new AssertionError("Сад джунглей не появился в плане: " + grown.unplaced()));
         assertTrue(
                 grown.placement(StageSites.ORCHARD_EXTRA).isEmpty(),
@@ -168,8 +163,37 @@ class TownPlannerTests {
         }
         assertEquals(
                 "jungle",
-                site.extraOrchard("orchard_jungle").orElseThrow().wood(),
+                site.extraOrchards().stream()
+                        .filter(plot -> "orchard_jungle".equals(plot.building()))
+                        .findFirst()
+                        .orElseThrow()
+                        .wood(),
                 "Порода сада берётся из постройки графа orchard_jungle");
+    }
+
+    @Test
+    void plan_SameSpeciesTwice_NumberedPlots() {
+        TownPlan base = plan((x, z) -> 70, (x, z) -> 0);
+        TownPlan grown = TownPlanner.plant(
+                grid((x, z) -> 70, (x, z) -> 0),
+                base,
+                RULES,
+                STAGES,
+                List.of("orchard_jungle_2", "orchard_jungle_3"),
+                1);
+        Placement second = grown.placement("orchard_jungle_2")
+                .orElseThrow(() -> new AssertionError("Второй сад джунглей не появился: " + grown.unplaced()));
+        Placement third = grown.placement("orchard_jungle_3")
+                .orElseThrow(() -> new AssertionError("Третий сад джунглей не появился: " + grown.unplaced()));
+        assertEquals(13, second.width(), "Сад породы строится по шаблону orchard_extra шириной 13");
+        assertEquals(13, third.width(), "Второй участок той же породы тоже берёт шаблон orchard_extra");
+        assertFalse(second.overlaps(third, 0), "Сады одной породы не накладываются: у каждого своё место");
+        StageSite site = StageSites.of(grown, 1, grown.anchor().y(), RULES);
+        assertEquals(
+                2, site.extraOrchards().size(), "Обе площадки одной породы видны поселению: " + site.extraOrchards());
+        assertTrue(
+                site.extraOrchards().stream().allMatch(plot -> "jungle".equals(plot.wood())),
+                "Порода обеих площадок — джунгли: номер не меняет породу");
     }
 
     @Test
@@ -185,8 +209,8 @@ class TownPlannerTests {
                 base.fence(),
                 base.unplaced());
         StageSite before = StageSites.of(old, 1, old.anchor().y(), RULES);
-        TownPlan grown = TownPlanner.plant(
-                grid((x, z) -> 70, (x, z) -> 0), old, RULES, STAGES, List.of(OrchardSites.siteId("orchard_jungle")), 1);
+        TownPlan grown =
+                TownPlanner.plant(grid((x, z) -> 70, (x, z) -> 0), old, RULES, STAGES, List.of("orchard_jungle"), 1);
         StageSite after = StageSites.of(grown, 1, grown.anchor().y(), RULES);
 
         assertTrue(

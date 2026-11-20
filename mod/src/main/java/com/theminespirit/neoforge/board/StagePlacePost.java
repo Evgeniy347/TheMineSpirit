@@ -8,6 +8,7 @@ import com.theminespirit.core.building.SchematicGround;
 import com.theminespirit.core.building.api.WoodSpecies;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.DataTables;
+import com.theminespirit.core.town.OrchardSites;
 import com.theminespirit.core.town.PlotLeveling;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +40,9 @@ final class StagePlacePost {
         if (groundLayer(entry.scheme())) {
             target = level(target, post, ticket.node());
         }
-        if (!WoodSpecies.OAK.equals(post.scan.wood())) {
-            target = target.withWood(post.scan.wood());
+        String wood = OrchardSites.speciesOfBuilding(ticket.node()).orElse(post.scan.wood());
+        if (!WoodSpecies.OAK.equals(wood)) {
+            target = target.withWood(wood);
         }
         List<String> modifiers = tilled(entry.scheme()) ? List.of(ToolGate.TOOL_MODIFIER + "hoe") : List.of();
         post.submit(
