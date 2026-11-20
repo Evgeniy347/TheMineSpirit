@@ -62,6 +62,9 @@ public final class WalkAscent {
             Step swim = cell.y() < pose.feet().y() ? Step.DIVE : Step.SWIM;
             return new Command(swim, targetX, cell.y(), targetZ);
         }
+        if (!rising && pose.feet().y() - cell.y() > 1) {
+            return new Command(Step.DIVE, targetX, cell.y(), targetZ);
+        }
         Step step = switch (lift(rising, body)) {
             case HOLD -> Step.MOVE;
             case JUMP -> cell.y() - pose.feet().y() > 1 ? Step.IMPOSSIBLE : Step.JUMP;
