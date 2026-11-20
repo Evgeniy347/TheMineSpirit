@@ -5,6 +5,7 @@ import com.theminespirit.core.movement.api.PathReuse;
 import com.theminespirit.core.policy.WaterTasks;
 import com.theminespirit.neoforge.SpiritBrain;
 import com.theminespirit.neoforge.SpiritEntity;
+import java.util.stream.Collectors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
@@ -126,11 +127,11 @@ public final class SpiritNavigation extends GroundPathNavigation {
         return StackWalker.getInstance()
                 .walk(frames -> frames.filter(frame -> frame.getClassName().startsWith("com.theminespirit")
                                 && !frame.getClassName().contains("SpiritNavigation"))
-                        .findFirst()
+                        .limit(3)
                         .map(frame -> frame.getClassName()
                                         .substring(frame.getClassName().lastIndexOf('.') + 1) + "."
                                 + frame.getMethodName())
-                        .orElse("-"));
+                        .collect(Collectors.joining("<")));
     }
 
     private void logRebuild(BlockPos want, @Nullable Path path) {
