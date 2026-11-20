@@ -26,7 +26,9 @@ class PetRulesTests {
         assertEquals(
                 List.of("minecraft:bone", "minecraft:beef"),
                 PetRules.tameFoods(PetKind.WOLF, List.of(TAME_WOLF, TRUST_CAT, BREED_WOLF)),
-                "Корм приручения — только пути tame_/trust_ этого вида, в порядке путей и без повторов");
+                "Корм приручения — только пути tame_/trust_ этого вида, в порядке путей и без повторов: иначе дух "
+                        + "предложит волку чужой корм, потратит кости на кота и стадо останется диким. При смене "
+                        + "отбора путей в PetRules.tameFoods проверь живой захват волка костью и trust-кота треской");
     }
 
     @Test
@@ -34,7 +36,9 @@ class PetRulesTests {
         assertEquals(
                 List.of("minecraft:beef"),
                 PetRules.breedFoods(PetKind.WOLF, List.of(TAME_WOLF, BREED_WOLF, OTHER)),
-                "Корм разведения — только пути BREED_ANIMALS для своего вида: чужой корм не считается");
+                "Корм разведения — только пути BREED_ANIMALS своего вида: чужой корм не считается, иначе волка "
+                        + "кормят рыбой кота, размножение молча не срабатывает и пара стоит до тайм-аута. При смене "
+                        + "фильтра в PetRules.breedFoods проверь живое кормление пары волков говядиной");
     }
 
     @Test
@@ -42,19 +46,32 @@ class PetRulesTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> PetRules.tameFoods(PetKind.WOLF, List.of(OTHER)),
-                "Без пути приручения кормить нечем: молчаливое пустое меню оставило бы стадо диким");
+                "Без пути приручения кормить нечем: молчаливое пустое меню оставило бы стадо диким, а дух ходил "
+                        + "бы по загону с пустым списком корма и без причины отказа. При смене PetRules.tameFoods "
+                        + "проверь, что вид без tame_/trust_-пути падает отказом, а не возвращает пустой список");
 
         assertTrue(
                 error.getMessage().contains("wolf"),
-                "Отказ обязан называть вид питомца. Фактическое: " + error.getMessage());
+                "Отказ обязан называть вид питомца: иначе в логе «нет корма» без вида, и не понять, какое стадо "
+                        + "не приручается, а опечатку в feeds не найти. Фактическое: " + error.getMessage());
     }
 
     @Test
     void cap_FixedAndPerSpirit_RespectBothForms() {
         Map<String, HerdCap> caps = Map.of("wolf", new HerdCap(4, null), "cat", new HerdCap(null, 1.5));
 
-        assertEquals(4, PetRules.cap(PetKind.WOLF, 100, caps), "Фиксированный предел не зависит от числа духов");
-        assertEquals(3, PetRules.cap(PetKind.CAT, 2, caps), "Доля на духа округляется вниз: 1.5 × 2 = 3");
+        assertEquals(
+                4,
+                PetRules.cap(PetKind.WOLF, 100, caps),
+                "Фиксированный предел не зависит от числа духов: иначе с каждым духом лимит рос бы, стадо "
+                        + "расползалось сверх загона и захват шёл бы бесконечно. При смене PetRules.cap проверь "
+                        + "оба вида предела и соседнюю дробную долю на двух духах");
+        assertEquals(
+                3,
+                PetRules.cap(PetKind.CAT, 2, caps),
+                "Доля на духа округляется вниз: 1.5 × 2 = 3, иначе лишний кот попадает в загон, не помещается "
+                        + "в стойло и висит без работы. При смене округления в PetRules.cap проверь живой захват "
+                        + "третьего кота при двух духах: дух обязан ждать, а не тащить четвёртого");
     }
 
     @Test
@@ -62,10 +79,13 @@ class PetRulesTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> PetRules.cap(PetKind.OCELOT, 1, Map.of()),
-                "Без herdCaps стадо росло бы бесконтрольно: вид без лимита обязан падать");
+                "Без herdCaps стадо росло бы бесконтрольно: вид без лимита обязан падать, иначе план захвата "
+                        + "молча отключит предел и загон переполнится. При смене PetRules.cap проверь, что "
+                        + "отсутствие записи вида даёт отказ с видом в тексте");
 
         assertTrue(
                 error.getMessage().contains("ocelot"),
-                "Отказ обязан называть вид питомца. Фактическое: " + error.getMessage());
+                "Отказ обязан называть вид питомца: иначе не найти вид в herdCaps и не добавить предел, а "
+                        + "ошибка выглядит как «нет лимита» вообще. Фактическое: " + error.getMessage());
     }
 }
