@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -66,5 +67,37 @@ class OrchardSitesTests {
         assertFalse(
                 OrchardSites.wantAnother(true, 3, 4),
                 "Без саженцев на постройку новый сад не просят: стройка встала бы без материалов");
+    }
+
+    @Test
+    void plotIds_SpeciesPlots_EachPlotAlone() {
+        List<OrchardPlot> plots = List.of(plot("orchard_jungle"), plot("orchard_jungle_2"));
+        assertEquals(
+                List.of("orchard_jungle", "orchard_jungle_2"),
+                OrchardSites.plotIds("orchard_jungle", true, plots),
+                "У каждого участка породы своё задание: ремонт одного не чинит другой");
+        assertEquals(
+                List.of(),
+                OrchardSites.plotIds("orchard_dark_oak", true, plots),
+                "Чужие сады в ремонт породы не попадают: участок отвечает только за свою породу");
+    }
+
+    @Test
+    void plotIds_MainOak_IncludesMainAndNumbered() {
+        List<OrchardPlot> plots = List.of(plot("orchard_oak_2"));
+        assertEquals(
+                List.of("orchard", "orchard_oak_2"),
+                OrchardSites.plotIds("orchard_oak", true, plots),
+                "Главный сад — отдельный участок дуба, номерной сад дуба — второй");
+        assertEquals(
+                List.of("orchard_oak_2"),
+                OrchardSites.plotIds("orchard_oak", false, plots),
+                "Без главного сада на плане ремонт берёт только номерные участки");
+    }
+
+    private static OrchardPlot plot(String building) {
+        Placement place = new Placement(building, building, 1, 0, 0, 13, 13, Placement.Facing.NORTH);
+        return new OrchardPlot(
+                place, building, OrchardSites.speciesOfBuilding(building).orElseThrow(), List.of());
     }
 }

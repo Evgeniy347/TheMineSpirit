@@ -1,6 +1,8 @@
 package com.theminespirit.core.town;
 
 import com.theminespirit.core.building.api.WoodSpecies;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -63,6 +65,24 @@ public final class OrchardSites {
     public static Optional<Placement> placement(TownPlan plan, String building) {
         Objects.requireNonNull(plan, "План не может быть null: место сада берут из него");
         return isExtra(building) ? plan.placement(building) : Optional.empty();
+    }
+
+    public static List<String> plotIds(String building, boolean mainPlaced, List<OrchardPlot> extraOrchards) {
+        Objects.requireNonNull(building, "Постройка сада не может быть null: по ней ищут участки");
+        if (!isExtra(building)) {
+            throw new IllegalArgumentException(
+                    "Постройка '" + building + "' не сад: участки ищут только у orchard_<порода>");
+        }
+        List<String> ids = new ArrayList<>();
+        if (MAIN_BUILDING.equals(building) && mainPlaced) {
+            ids.add(MAIN_PLACEMENT);
+        }
+        for (OrchardPlot plot : extraOrchards) {
+            if (building.equals(baseBuilding(plot.building()))) {
+                ids.add(plot.building());
+            }
+        }
+        return List.copyOf(ids);
     }
 
     private static Optional<Integer> parseNumber(String tail) {

@@ -72,6 +72,9 @@ final class WorldPost {
             return false;
         }
         BoardCase step = building.boardCase();
+        if (step == BoardCase.BUILD_ORCHARD) {
+            return OrchardRepairPost.post(post, id);
+        }
         String wood = BuildingWoodChoice.stored(post.level, step, post.scan.stage(), post.scan.wood());
         TicketTarget target = FirstStepsRunner.targetFor(post.level, step, post.scan.stage(), wood);
         if (step == BoardCase.BUILD_PLACED) {

@@ -189,6 +189,10 @@ public final class FirstStepsRunner {
                 SCHEMES);
     }
 
+    static BuildGap.Gap gapAt(ServerLevel level, BoardCase step, TicketTarget target, String wood) {
+        return BuildGap.trace(TicketPlans.plan(step, 1, target), wood, probe(level), SCHEMES);
+    }
+
     private static TicketTarget targetFor(
             ServerLevel level, BoardCase step, int buildingLevel, StageSite stage, String wood) {
         if (buildingLevel > 1 && step == BoardCase.BUILD_MINE) {

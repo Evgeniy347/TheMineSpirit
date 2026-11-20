@@ -32,4 +32,19 @@ class RepairPlanTicketTests {
                 RepairPlan.ticket(BoardCase.BUILD_HOUSE, Map.of(), 1, null).id(),
                 "Без суффикса билет прежний: старые вызовы не меняют id");
     }
+
+    @Test
+    void ticket_OrchardPlots_HaveSeparateIds() {
+        BoardTicket jungle = RepairPlan.ticket(BoardCase.BUILD_ORCHARD, Map.of("torch", 4), 1, "orchard_jungle");
+        BoardTicket second = RepairPlan.ticket(BoardCase.BUILD_ORCHARD, Map.of(), 1, "orchard_jungle_2");
+
+        assertNotEquals(
+                jungle.id(),
+                second.id(),
+                "У каждого участка сада своя задача ремонта: иначе ремонт одного сада держит другой");
+        assertEquals(
+                "repair:build_orchard:orchard_jungle",
+                jungle.id(),
+                "Билет ремонта сада называет участок, чтобы цель и нехватка были своими");
+    }
 }
