@@ -215,7 +215,7 @@ class ForestryScenarioTests {
                     world.isSoil(new BlockCoord(sapling.x(), sapling.y() - 1, sapling.z())),
                     "Саженец " + sapling + " стоит не на почве, а на "
                             + world.getClass().getSimpleName()
-                            + ", иначе не прорастёт. При смене AreaReplant.plan проверь строку клетки ниже в тесте");
+                            + ", иначе не прорастёт и саженец пропадёт. При смене AreaReplant.plan проверь строку клетки ниже в тесте");
             assertFalse(
                     group.logs().contains(sapling) || group.leaves().contains(sapling),
                     "Саженец " + sapling + " посажен в клетку ствола или кроны: там ещё дерево, иначе запас "
@@ -237,7 +237,7 @@ class ForestryScenarioTests {
         return assertInstanceOf(
                 Tree.class,
                 TreeShape.detect(base, view),
-                "Дерево " + base + " не разобралось: рубка не начнётся, иначе сценарий врёт. При смене "
+                "Дерево " + base + " не разобралось: рубка не начнётся, иначе сценарий врёт и тест слеп. При смене "
                         + "TreeShape.detect проверь строку выше в тесте");
     }
 

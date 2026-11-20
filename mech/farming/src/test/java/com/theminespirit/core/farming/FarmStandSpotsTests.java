@@ -56,7 +56,7 @@ class FarmStandSpotsTests {
                 9 * 4 * 9,
                 FarmStandSpots.MAX_SAFETY_READS,
                 "Предел чтений обязан равняться объёму ящика 9×4×9 (окрестность ±4 по земле, 4 уровня по "
-                        + "высоте): поднятая константа тихо ослабит тест масштаба, и столбы кладут тик. При смене "
+                        + "высоте): иначе поднятая константа тихо ослабит тест масштаба, и столбы кладут тик. При смене "
                         + "FarmStandSpots.MAX_SAFETY_READS проверь of_CachedView_ReadsStayWithinBound");
     }
 
@@ -81,7 +81,7 @@ class FarmStandSpotsTests {
 
         assertFalse(
                 stands.contains(new BlockCoord(1, 1, 0)),
-                "Стоянка рядом с лавой отвергается: дух сгорит раньше, чем взмахнёт мотыгой. При смене проверки "
+                "Стоянка рядом с лавой отвергается: дух сгорит раньше, чем взмахнёт мотыгой, иначе тик зациклится. При смене проверки "
                         + "опасностей в FarmStandSpots.of проверь таблицу hazardRows");
         assertTrue(
                 stands.contains(new BlockCoord(-1, 1, 0)),
@@ -157,7 +157,7 @@ class FarmStandSpotsTests {
         assertFalse(
                 FarmStandSpots.of(TARGET, FROM, exposed, dirtPlane()).contains(stand),
                 "Стоянка рядом с опасностью отвергается (" + reason + "): дух сгорит раньше, чем взмахнёт "
-                        + "мотыгой. При смене проверки опасности в FarmStandSpots.of проверь контроль выше в тесте");
+                        + "мотыгой, иначе тик зациклится. При смене проверки опасности в FarmStandSpots.of проверь контроль выше в тесте");
     }
 
     @Test
