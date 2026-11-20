@@ -129,7 +129,7 @@ public final class SchematicRules {
         }
         SchematicWalk.Result walk = SchematicWalk.walk(grid, walls.schematic(), walls.entry());
         SchematicLevelRules.checkReachable(grid, walk, violations);
-        SchematicLevelRules.checkStairs(walls, grid, walk, level, violations);
+        SchematicUpperFloors.checkStairs(walls, grid, walk, level, violations);
         SchematicWalk.Result fullWalk = SchematicWalk.walk(full, structure.schematic(), structure.entry());
         SchematicWideApproach.check(structure, full, fullWalk, violations);
         SchematicRailing.check(structure, full, fullWalk, violations);

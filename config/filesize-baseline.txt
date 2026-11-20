@@ -11,7 +11,6 @@ core/building/BuildPlanner.java	838
 core/building/FillScenarioTests.java	323
 core/building/PresetLibraryTests.java	431
 core/building/Schematic.java	364
-core/building/SchematicLevelRules.java	322
 core/building/SchematicTextParser.java	655
 core/engine/TaskRunnerRestoreTests.java	333
 core/engine/TaskRunnerTests.java	743

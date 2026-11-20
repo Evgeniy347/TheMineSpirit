@@ -2,7 +2,6 @@ package com.theminespirit.core.building;
 
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -13,9 +12,6 @@ final class SchematicLevelRules {
     private static final int[] CEILING = {3, 4, 5, 6};
     private static final int[] WINDOW = {1, 2, 4, 6};
     private static final int[] DECOR_PERCENT = {3, 8, 12, 18};
-    private static final int UPPER_FLOOR_RISE = 3;
-    private static final int UPPER_FLOOR_MIN_CELLS = 6;
-    private static final int GRAND_STAIRS_LEVEL = 3;
     private static final int REACH_UP = 2;
     private static final int PERCENT = 100;
     private static final Set<String> STATIONS = Set.of(
@@ -100,7 +96,9 @@ final class SchematicLevelRules {
         Set<BlockCoord> seen = new HashSet<>();
         for (Map.Entry<BlockCoord, String> entry : grid.entrySet()) {
             BlockCoord cell = entry.getKey();
-            if (seen.contains(cell) || !onPerimeter(cell, walls) || !SchematicBlocks.isWindow(entry.getValue())) {
+            if (seen.contains(cell)
+                    || !SchematicUpperFloors.onPerimeter(cell, walls)
+                    || !SchematicBlocks.isWindow(entry.getValue())) {
                 continue;
             }
             largest = Math.max(largest, windowPiece(cell, walls, grid, seen));
@@ -122,9 +120,12 @@ final class SchematicLevelRules {
         while (!queue.isEmpty()) {
             BlockCoord cell = queue.poll();
             size++;
-            for (BlockCoord next : neighbours(cell)) {
+            for (BlockCoord next : SchematicUpperFloors.neighbours(cell)) {
                 String block = grid.get(next);
-                if (block != null && SchematicBlocks.isWindow(block) && onPerimeter(next, walls) && seen.add(next)) {
+                if (block != null
+                        && SchematicBlocks.isWindow(block)
+                        && SchematicUpperFloors.onPerimeter(next, walls)
+                        && seen.add(next)) {
                     queue.add(next);
                 }
             }
@@ -156,7 +157,9 @@ final class SchematicLevelRules {
         if (isDecorBlock(block)) {
             return true;
         }
-        return path.endsWith("_stairs") && !onPerimeter(cell, schematic) && coveredAbove(cell, schematic, grid);
+        return path.endsWith("_stairs")
+                && !SchematicUpperFloors.onPerimeter(cell, schematic)
+                && coveredAbove(cell, schematic, grid);
     }
 
     static boolean isDecorBlock(String block) {
@@ -176,7 +179,7 @@ final class SchematicLevelRules {
         return STATIONS.contains(SchematicBlocks.path(block));
     }
 
-    private static boolean coveredAbove(BlockCoord cell, Schematic schematic, Map<BlockCoord, String> grid) {
+    static boolean coveredAbove(BlockCoord cell, Schematic schematic, Map<BlockCoord, String> grid) {
         for (int y = cell.y() + 1; y < schematic.sizeY(); y++) {
             if (grid.containsKey(new BlockCoord(cell.x(), y, cell.z()))) {
                 return true;
@@ -214,109 +217,5 @@ final class SchematicLevelRules {
             }
         }
         return false;
-    }
-
-    static void checkStairs(
-            SchematicRules.Structure walls,
-            Map<BlockCoord, String> grid,
-            SchematicWalk.Result walk,
-            int level,
-            List<SchematicRules.Violation> violations) {
-        List<Set<BlockCoord>> floors = upperFloors(walls, grid);
-        if (floors.isEmpty()) {
-            return;
-        }
-        for (Set<BlockCoord> floor : floors) {
-            if (floor.stream().noneMatch(walk.feet()::contains)) {
-                BlockCoord any = floor.iterator().next();
-                violations.add(
-                        new SchematicRules.Violation(
-                                SchematicRules.RuleId.STAIRS,
-                                "этаж на высоте y=" + any.y() + " (" + floor.size()
-                                        + " клеток) не достижим от входа по "
-                                        + "ступенькам: нужна нормальная лестница, не приставная и без прыжков (владелец 19.10)"));
-                return;
-            }
-        }
-        if (level >= GRAND_STAIRS_LEVEL && !wideStairs(walk.risers())) {
-            violations.add(new SchematicRules.Violation(
-                    SchematicRules.RuleId.STAIRS,
-                    "у постройки уровня " + level + " с этажами нет лестницы шириной 2: парадная лестница — "
-                            + "две ступеньки рядом на каждом шаге (владелец 19.10)"));
-        }
-    }
-
-    private static boolean wideStairs(Set<BlockCoord> risers) {
-        for (BlockCoord riser : risers) {
-            for (BlockCoord next : neighbours(riser)) {
-                if (next.y() == riser.y() && risers.contains(next)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private static List<Set<BlockCoord>> upperFloors(SchematicRules.Structure walls, Map<BlockCoord, String> grid) {
-        Schematic schematic = walls.schematic();
-        int minY = walls.entry().y() + UPPER_FLOOR_RISE;
-        Set<BlockCoord> cells = new HashSet<>();
-        for (int x = 1; x < schematic.sizeX() - 1; x++) {
-            for (int z = 1; z < schematic.sizeZ() - 1; z++) {
-                for (int y = minY; y < schematic.sizeY(); y++) {
-                    BlockCoord cell = new BlockCoord(x, y, z);
-                    if (SchematicWalk.standableIn(grid, schematic, cell) && coveredAbove(cell, schematic, grid)) {
-                        cells.add(cell);
-                    }
-                }
-            }
-        }
-        List<Set<BlockCoord>> floors = new ArrayList<>();
-        Set<BlockCoord> seen = new HashSet<>();
-        for (BlockCoord cell : cells) {
-            if (!seen.add(cell)) {
-                continue;
-            }
-            Set<BlockCoord> floor = new HashSet<>();
-            Deque<BlockCoord> queue = new ArrayDeque<>(List.of(cell));
-            while (!queue.isEmpty()) {
-                BlockCoord current = queue.poll();
-                floor.add(current);
-                for (BlockCoord next : neighbours(current)) {
-                    if (next.y() == current.y() && cells.contains(next) && seen.add(next)) {
-                        queue.add(next);
-                    }
-                }
-            }
-            if (floor.size() >= UPPER_FLOOR_MIN_CELLS && hasSquare(floor)) {
-                floors.add(floor);
-            }
-        }
-        return floors;
-    }
-
-    private static boolean hasSquare(Set<BlockCoord> floor) {
-        for (BlockCoord cell : floor) {
-            if (floor.contains(new BlockCoord(cell.x() + 1, cell.y(), cell.z()))
-                    && floor.contains(new BlockCoord(cell.x(), cell.y(), cell.z() + 1))
-                    && floor.contains(new BlockCoord(cell.x() + 1, cell.y(), cell.z() + 1))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static List<BlockCoord> neighbours(BlockCoord cell) {
-        return List.of(
-                new BlockCoord(cell.x() + 1, cell.y(), cell.z()),
-                new BlockCoord(cell.x() - 1, cell.y(), cell.z()),
-                new BlockCoord(cell.x(), cell.y(), cell.z() + 1),
-                new BlockCoord(cell.x(), cell.y(), cell.z() - 1),
-                new BlockCoord(cell.x(), cell.y() + 1, cell.z()),
-                new BlockCoord(cell.x(), cell.y() - 1, cell.z()));
-    }
-
-    private static boolean onPerimeter(BlockCoord cell, Schematic schematic) {
-        return cell.x() == 0 || cell.x() == schematic.sizeX() - 1 || cell.z() == 0 || cell.z() == schematic.sizeZ() - 1;
     }
 }
