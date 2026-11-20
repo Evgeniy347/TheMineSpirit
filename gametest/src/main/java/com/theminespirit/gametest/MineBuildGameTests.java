@@ -68,10 +68,11 @@ public final class MineBuildGameTests {
         for (int k = 0; k < STEPS; k++) {
             for (int dy = 1; dy <= 3; dy++) {
                 BlockState state = helper.getBlockState(step(k, dy));
+                boolean open = state.isAir() || state.is(Blocks.TORCH) || state.is(Blocks.WALL_TORCH);
                 helper.assertTrue(
-                        state.isAir() && state.getFluidState().isEmpty(),
-                        "клетка спуска " + step(k, dy) + " обязана быть сухим воздухом: по ней дух ходит вверх и "
-                                + "вниз, фактически " + state);
+                        open && state.getFluidState().isEmpty(),
+                        "клетка спуска " + step(k, dy) + " обязана быть сухим воздухом или схемным факелом: по ней "
+                                + "дух ходит вверх и вниз, фактически " + state);
             }
             helper.assertTrue(
                     !helper.getBlockState(step(k, 0)).isAir(),
@@ -108,6 +109,10 @@ public final class MineBuildGameTests {
             run.assertStarted();
             data(helper, spirit);
             assertPassageOpen(helper);
+            helper.assertTrue(
+                    helper.getBlockState(step(3, 2)).isAir(),
+                    "посторонний факел в проходе " + step(3, 2) + " обязан быть выкопан: иначе шахта стоит на "
+                            + "лишнем блоке, а аудит считает её чистой");
             for (int k = 0; k < STEPS; k++) {
                 for (int dy = 1; dy <= 3; dy++) {
                     for (int side : new int[] {-1, 1}) {
