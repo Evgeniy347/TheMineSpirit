@@ -4,7 +4,6 @@ core/board/BoardLogTests.java	424
 core/board/BoardTests.java	967
 core/board/BoardTicketTests.java	402
 core/board/TicketPlansTests.java	1232
-core/board/graph/GraphPlanner.java	366
 core/board/graph/GraphPlannerTests.java	919
 core/building/BuildPlanner.java	838
 core/building/FillScenarioTests.java	323

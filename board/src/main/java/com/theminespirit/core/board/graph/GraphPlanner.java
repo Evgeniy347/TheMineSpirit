@@ -1,6 +1,5 @@
 package com.theminespirit.core.board.graph;
 
-import com.theminespirit.core.board.StageCatalog;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -9,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import org.jspecify.annotations.Nullable;
 
 public final class GraphPlanner {
     static final String BUILDING = "building:";
@@ -26,7 +24,7 @@ public final class GraphPlanner {
     private final GraphFlow flow = new GraphFlow();
     private final GraphChoiceRules choices;
     private final GraphBlocks blockRules;
-    private final Set<String> expanded = new HashSet<>();
+    private final GraphExpander expander;
     private final Set<String> chances = new HashSet<>();
     private final List<GraphPlan.Advice> advice = new ArrayList<>();
     private final GraphTaskBuilder builder;
@@ -36,7 +34,8 @@ public final class GraphPlanner {
         this.state = Objects.requireNonNull(state, "Состояние не может быть null: задания выводятся из нехваток");
         this.reach = new GraphReach(graph, state);
         this.choices = new GraphChoiceRules(graph, state, reach);
-        this.blockRules = new GraphBlocks(graph, state, flow, this::push, notices);
+        this.expander = new GraphExpander(graph, state, reach, flow, new HashSet<>(), chances, notices);
+        this.blockRules = new GraphBlocks(graph, state, flow, expander::push, notices);
         this.builder = new GraphTaskBuilder(graph, state, reach, choices, chances);
     }
 
@@ -67,7 +66,7 @@ public final class GraphPlanner {
             }
             int have = count(item.id());
             if (have < GraphLack.threshold(item, state) && reach.sourced(item.id())) {
-                push(null, item.id(), item.base() + (have < item.xmin() ? graph.urgentBoost() : 0));
+                expander.push(null, item.id(), item.base() + (have < item.xmin() ? graph.urgentBoost() : 0));
             }
         }
         for (String spirit : state.kits().keySet()) {
@@ -78,7 +77,7 @@ public final class GraphPlanner {
                     double base = state.bestTier(kind) >= target
                             ? graph.kit().secondaryBase()
                             : graph.kit().base();
-                    push(null, TOOL + kind + AT + spirit, base + (tier < 0 ? graph.urgentBoost() : 0));
+                    expander.push(null, TOOL + kind + AT + spirit, base + (tier < 0 ? graph.urgentBoost() : 0));
                 }
             }
         }
@@ -86,13 +85,14 @@ public final class GraphPlanner {
             if (building.stage() <= state.stage()
                     && state.built(building.id()) != Built.BUILT
                     && (!building.optional() || state.built(building.id()) == Built.PLANNED)) {
-                requireBuilding(null, building.id(), building.base(), "постройка этапа " + building.stage());
+                expander.requireBuilding(null, building.id(), building.base(), "постройка этапа " + building.stage());
             }
         }
         for (SupplyGraph.Trigger trigger : graph.triggers()) {
             SupplyGraph.Building wanted = graph.buildings().get(trigger.build());
             if (wanted != null && count(trigger.have()) > 0 && state.built(trigger.build()) != Built.BUILT) {
-                requireBuilding(null, trigger.build(), GraphLack.base(graph, state, wanted), "есть " + trigger.have());
+                expander.requireBuilding(
+                        null, trigger.build(), GraphLack.base(graph, state, wanted), "есть " + trigger.have());
             }
         }
         if (state.storageFreePercent() < graph.storage().minFreePercent()
@@ -104,147 +104,15 @@ public final class GraphPlanner {
                             "склад построен, но свободно " + state.storageFreePercent()
                                     + "%: нужен ещё сундук или расширение"));
         } else if (state.storageFreePercent() < graph.storage().minFreePercent()) {
-            requireBuilding(
+            expander.requireBuilding(
                     null,
                     graph.storage().building(),
                     graph.storage().base(),
                     "на складе свободно " + state.storageFreePercent() + "% (< "
                             + graph.storage().minFreePercent() + "%)");
         }
-        GraphStore.roots(graph, state, this::push);
-        DigOperations.roots(graph, state, this::push);
-    }
-
-    private void push(@Nullable String from, String node, double amount) {
-        if (amount == 0) return;
-        if (from == null) {
-            flow.root(node, amount);
-        } else {
-            flow.link(from, node, amount);
-        }
-        expand(node);
-    }
-
-    private void expand(String node) {
-        if (!expanded.add(node)) return;
-        double decay = graph.decay();
-        if (node.startsWith(TOOL)) {
-            String kind = node.substring(TOOL.length(), node.indexOf(AT));
-            String spirit = node.substring(node.indexOf(AT) + 1);
-            if (ChestTools.covered(graph, state).contains(kind + AT + spirit)) return;
-            for (String tier : ToolTiers.wanted(graph, state, reach, kind, state.tier(spirit, kind))) {
-                boolean aboveKit = graph.rank(tier) > graph.rank(graph.kit().tier(kind, state.stage()));
-                for (SupplyGraph.Way way : reach.producers(tier + "_" + kind)) {
-                    String key = way.id() + AT + spirit;
-                    flow.link(node, key, way.weight() * BuildingShare.luck(graph, state, aboveKit, way));
-                    if (aboveKit) {
-                        chances.add(key);
-                    } else {
-                        expandWay(key, way);
-                    }
-                }
-            }
-        } else if (node.startsWith(BUILDING)) {
-            String id = node.substring(BUILDING.length());
-            SupplyGraph.Building building = graph.buildings().get(id);
-            Map<String, Integer> needs = GraphLack.materials(graph, state, id);
-            if (building != null
-                    && GraphLack.stocked(graph, state, needs)
-                    && (building.tool() == null || state.bestTier(building.tool()) >= 0)) {
-                flow.local(node, graph.buildReadyBoost());
-            }
-            for (Map.Entry<String, Integer> input : needs.entrySet()) {
-                if (count(input.getKey()) < input.getValue()) {
-                    push(node, input.getKey(), decay);
-                }
-            }
-            if (building != null) {
-                for (String required : building.requires()) {
-                    if (state.built(required) != Built.BUILT) {
-                        requireBuilding(node, required, decay, "нужна постройке " + id);
-                    }
-                }
-                if (building.tool() != null && state.bestTier(building.tool()) < 0) {
-                    pushTool(node, building.tool(), decay);
-                }
-            }
-        } else if (node.startsWith(EVENT) || node.startsWith(EXPLORE)) {
-            return;
-        } else if (graph.isGroup(node)) {
-            for (String member : graph.members(node)) {
-                if (reach.sourced(member)) {
-                    push(node, member, 1.0);
-                }
-            }
-        } else {
-            List<SupplyGraph.Way> producers = reach.producers(node);
-            for (SupplyGraph.Way way : producers) {
-                if (reach.available(way)) {
-                    flow.link(node, way.id(), way.weight());
-                    expandWay(way.id(), way);
-                }
-            }
-            List<String> missing = producers.stream()
-                    .map(SupplyGraph.Way::world)
-                    .filter(id -> id != null && !state.world().contains(id) && !id.startsWith("more:"))
-                    .distinct()
-                    .toList();
-            if (!missing.isEmpty() && !reach.sourced(node)) {
-                notices.putIfAbsent(
-                        node,
-                        new GraphPlan.Notice(
-                                node,
-                                "нет источника " + node + " в округе (нет " + missing
-                                        + "): разведать или сменить материал/породу постройки"));
-                missing.forEach(resource -> flow.link(node, EXPLORE + resource, decay));
-            }
-        }
-    }
-
-    private void expandWay(String key, SupplyGraph.Way way) {
-        if (!expanded.add(key)) {
-            return;
-        }
-        double decay = graph.decay();
-        for (Map.Entry<String, Integer> input : way.consumes().entrySet()) {
-            if (count(input.getKey()) < input.getValue()) {
-                push(key, input.getKey(), decay);
-            }
-        }
-        for (Map.Entry<String, Integer> input : way.needs().entrySet()) {
-            if (count(input.getKey()) < input.getValue()) {
-                push(key, input.getKey(), decay);
-            }
-        }
-        if (way.tool() != null && state.bestTier(way.tool()) < graph.rank(way.tier() == null ? "wooden" : way.tier())) {
-            pushTool(key, way.tool(), decay);
-        }
-        if (way.building() != null && state.built(way.building()) != Built.BUILT) {
-            requireBuilding(key, way.building(), decay, "нужна пути " + way.id());
-        }
-    }
-
-    private void pushTool(@Nullable String from, String kind, double amount) {
-        for (String spirit : state.kits().keySet()) {
-            push(from, TOOL + kind + AT + spirit, amount / Math.max(1, state.spirits()));
-        }
-    }
-
-    private void requireBuilding(@Nullable String from, String id, double amount, String why) {
-        SupplyGraph.Building building = graph.buildings().get(id);
-        if (building == null || state.built(id) == Built.ABSENT || building.stage() > state.stage()) {
-            notices.putIfAbsent(
-                    id,
-                    new GraphPlan.Notice(
-                            id,
-                            "нужна постройка " + id + " (" + why + "), её нет в плане"
-                                    + (building != null && building.stage() > state.stage()
-                                            ? " этапа " + state.stage()
-                                            : "")));
-            return;
-        }
-        if (StageCatalog.watcherOwned(building.boardCase()) || GraphAudit.settles(state, building)) return;
-        push(from, BUILDING + id, amount);
+        GraphStore.roots(graph, state, expander::push);
+        DigOperations.roots(graph, state, expander::push);
     }
 
     private void events() {
@@ -260,7 +128,7 @@ public final class GraphPlanner {
                 for (Map.Entry<String, Integer> input :
                         GraphEventFacts.consumes(state, task).entrySet()) {
                     if (count(input.getKey()) < input.getValue()) {
-                        push(key, input.getKey(), graph.decay());
+                        expander.push(key, input.getKey(), graph.decay());
                     }
                 }
             }
@@ -274,7 +142,7 @@ public final class GraphPlanner {
         for (Map.Entry<String, Integer> lack : state.orders().entrySet()) {
             String item = lack.getKey();
             if (graph.items().containsKey(item) || graph.isGroup(item)) {
-                push(null, item, graph.maxPriority());
+                expander.push(null, item, graph.maxPriority());
             } else {
                 notices.putIfAbsent(
                         ORDER + item,
@@ -292,16 +160,16 @@ public final class GraphPlanner {
             int target = graph.rank(graph.kit().tier(kind, state.stage()));
             for (String spirit : state.kits().keySet()) {
                 if (state.tier(spirit, kind) < target) {
-                    push(null, TOOL + kind + AT + spirit, weight);
+                    expander.push(null, TOOL + kind + AT + spirit, weight);
                 }
             }
         } else if (node.startsWith(BUILDING)) {
             String id = node.substring(BUILDING.length());
             if (state.built(id) != Built.BUILT) {
-                requireBuilding(null, id, weight, "событие " + event);
+                expander.requireBuilding(null, id, weight, "событие " + event);
             }
         } else if (GraphLack.lacking(graph, state, node)) {
-            push(null, node, weight);
+            expander.push(null, node, weight);
         }
     }
 
@@ -322,7 +190,7 @@ public final class GraphPlanner {
             SupplyGraph.Way way = reach.way(edge.way()).orElse(null);
             if (!active && edge.weight() > 0 && way != null && !graph.isTool(way.makes()) && reach.available(way)) {
                 flow.root(way.id(), edge.weight());
-                expandWay(way.id(), way);
+                expander.expandWay(way.id(), way);
                 changed = true;
             } else if (active) {
                 changed = true;
