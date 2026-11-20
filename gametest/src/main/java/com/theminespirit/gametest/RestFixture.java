@@ -184,7 +184,7 @@ final class RestFixture {
     }
 
     ServerPlayer mockPlayer(GameTestHelper helper, BlockPos relative) {
-        ServerPlayer player = GameTestFixtures.mockPlayer(helper, relative, "gt_rest_player_" + playerCounter++);
+        ServerPlayer player = GameTestPlayers.mockPlayer(helper, relative, "gt_rest_player_" + playerCounter++);
         players.add(player);
         return player;
     }

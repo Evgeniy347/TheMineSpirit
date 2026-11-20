@@ -1,6 +1,5 @@
 package com.theminespirit.gametest;
 
-import com.mojang.authlib.GameProfile;
 import com.theminespirit.core.board.Board;
 import com.theminespirit.core.board.BoardTicket;
 import com.theminespirit.core.observation.BlockCoord;
@@ -14,12 +13,10 @@ import com.theminespirit.neoforge.board.BoardRegistry;
 import com.theminespirit.neoforge.coordinator.CoordinatorRegistry;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
 import com.theminespirit.neoforge.respawn.SpiritRespawnStore;
-import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -27,13 +24,7 @@ import net.minecraft.gametest.framework.GameTestInfo;
 import net.minecraft.gametest.framework.GameTestListener;
 import net.minecraft.gametest.framework.GameTestRunner;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.Connection;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.PacketFlow;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -254,70 +245,8 @@ final class GameTestFixtures {
                 .sum();
     }
 
-    static ServerPlayer mockPlayer(GameTestHelper helper, BlockPos relative, String name) {
-        MinecraftServer server = helper.getLevel().getServer();
-        CommonListenerCookie cookie =
-                CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), name), false);
-        ServerPlayer player =
-                new ServerPlayer(server, helper.getLevel(), cookie.gameProfile(), cookie.clientInformation());
-        Connection connection = new Connection(PacketFlow.SERVERBOUND);
-        new EmbeddedChannel(connection);
-        server.getPlayerList().placeNewPlayer(connection, player, cookie);
-        BlockPos absolute = helper.absolutePos(relative);
-        player.moveTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
-        removeAtEnd(helper, server, player);
-        return player;
-    }
-
-    static ServerPlayer mockPlayer(
-            GameTestHelper helper, BlockPos relative, String name, List<Component> capturedMessages) {
-        MinecraftServer server = helper.getLevel().getServer();
-        CommonListenerCookie cookie =
-                CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), name), false);
-        ServerPlayer player =
-                new ServerPlayer(server, helper.getLevel(), cookie.gameProfile(), cookie.clientInformation()) {
-                    @Override
-                    public void sendSystemMessage(Component message) {
-                        capturedMessages.add(message);
-                    }
-                };
-        Connection connection = new Connection(PacketFlow.SERVERBOUND);
-        new EmbeddedChannel(connection);
-        server.getPlayerList().placeNewPlayer(connection, player, cookie);
-        BlockPos absolute = helper.absolutePos(relative);
-        player.moveTo(absolute.getX() + 0.5, absolute.getY(), absolute.getZ() + 0.5);
-        removeAtEnd(helper, server, player);
-        return player;
-    }
-
-    private static void removeAtEnd(GameTestHelper helper, MinecraftServer server, ServerPlayer player) {
-        if (helper instanceof StepHelper step) {
-            step.atStepEnd(() -> server.getPlayerList().remove(player));
-            return;
-        }
-        helper.testInfo.addListener(new PlayerCleanup(server, player));
-    }
-
     private static AABB area(GameTestHelper helper) {
         return area(helper, CLEAR_HEIGHT);
-    }
-
-    private record PlayerCleanup(MinecraftServer server, ServerPlayer player) implements GameTestListener {
-        @Override
-        public void testStructureLoaded(GameTestInfo testInfo) {}
-
-        @Override
-        public void testPassed(GameTestInfo test, GameTestRunner runner) {
-            server.getPlayerList().remove(player);
-        }
-
-        @Override
-        public void testFailed(GameTestInfo test, GameTestRunner runner) {
-            server.getPlayerList().remove(player);
-        }
-
-        @Override
-        public void testAddedForRerun(GameTestInfo oldTest, GameTestInfo newTest, GameTestRunner runner) {}
     }
 
     private static AABB sweepArea(GameTestHelper helper) {

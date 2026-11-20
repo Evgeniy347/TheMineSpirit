@@ -36,7 +36,7 @@ public final class SocialGameTests {
         TacticsScene.prepare(helper);
         SpiritEntity spirit = TacticsScene.spirit(helper, new BlockPos(2, 1, 5));
         spirit.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 3));
-        ServerPlayer player = GameTestFixtures.mockPlayer(helper, new BlockPos(9, 1, 5), "RestartTarget");
+        ServerPlayer player = GameTestPlayers.mockPlayer(helper, new BlockPos(9, 1, 5), "RestartTarget");
         AtomicReference<SpiritEntity> holder = new AtomicReference<>(spirit);
         AtomicBoolean saved = new AtomicBoolean(false);
         SpiritRun run = SpiritRun.launch(

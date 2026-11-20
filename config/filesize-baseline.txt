@@ -34,7 +34,6 @@ core/tactics/TacticsConfigTests.java	370
 core/task/TaskReconcilerTests.java	368
 core/task/TaskRegistryTests.java	312
 gametest/DemoAuditGameTests.java	1101
-gametest/GameTestFixtures.java	354
 gametest/HouseMovementGameTests.java	364
 guards/DependencyVersionGuardTests.java	399
 guards/GameTestIsolationGuardTests.java	352

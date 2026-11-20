@@ -75,7 +75,7 @@ final class MovementScene {
     }
 
     static ServerPlayer mockPlayer(GameTestHelper helper, BlockPos relative) {
-        return GameTestFixtures.mockPlayer(helper, relative, "gt_move_player_" + PLAYER_COUNTER.incrementAndGet());
+        return GameTestPlayers.mockPlayer(helper, relative, "gt_move_player_" + PLAYER_COUNTER.incrementAndGet());
     }
 
     static void finish(GameTestHelper helper) {

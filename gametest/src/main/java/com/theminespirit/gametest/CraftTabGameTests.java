@@ -34,7 +34,7 @@ public final class CraftTabGameTests {
         settle(helper);
         chest(helper, LOGS, new ItemStack(Items.OAK_LOG, 2));
         chest(helper, COAL, new ItemStack(Items.COAL, 1));
-        ServerPlayer player = GameTestFixtures.mockPlayer(helper, PLAYER, "craft_tab_chain");
+        ServerPlayer player = GameTestPlayers.mockPlayer(helper, PLAYER, "craft_tab_chain");
 
         ChainReply reply = CraftChain.chain(player, "minecraft:torch", false, 1, true);
 
