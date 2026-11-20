@@ -15,7 +15,7 @@ public final class SchematicLight {
 
     public static boolean hasSource(Schematic schematic) {
         for (Schematic.Entry entry : schematic.blocks()) {
-            if (SchematicBlocks.lightLevel(entry.block(), entry.state()) > 0) {
+            if (SchematicLightLevels.lightLevel(entry.block(), entry.state()) > 0) {
                 return true;
             }
         }
@@ -46,7 +46,7 @@ public final class SchematicLight {
         int[][][] light = new int[schematic.sizeX()][schematic.sizeY()][schematic.sizeZ()];
         Deque<BlockCoord> queue = new ArrayDeque<>();
         for (Schematic.Entry entry : schematic.blocks()) {
-            int level = SchematicBlocks.lightLevel(entry.block(), entry.state());
+            int level = SchematicLightLevels.lightLevel(entry.block(), entry.state());
             if (level > 0) {
                 light[entry.dx()][entry.dy()][entry.dz()] = level;
                 queue.add(new BlockCoord(entry.dx(), entry.dy(), entry.dz()));
@@ -72,7 +72,7 @@ public final class SchematicLight {
                 }
                 BlockCoord neighbour = new BlockCoord(x, y, z);
                 String block = grid.get(neighbour);
-                if (light[x][y][z] >= next || (block != null && SchematicBlocks.blocksLight(block))) {
+                if (light[x][y][z] >= next || (block != null && SchematicLightLevels.blocksLight(block))) {
                     continue;
                 }
                 light[x][y][z] = next;

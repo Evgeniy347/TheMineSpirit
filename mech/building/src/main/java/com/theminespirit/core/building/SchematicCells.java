@@ -36,7 +36,7 @@ final class SchematicCells {
         for (int y = schematic.sizeY() - 1; y >= 0; y--) {
             for (BlockCoord cell : perimeter(schematic, y)) {
                 String block = grid.get(cell);
-                if (block != null && SchematicBlocks.lightLevel(block, Map.of()) == 0) {
+                if (block != null && SchematicLightLevels.lightLevel(block, Map.of()) == 0) {
                     return y;
                 }
             }
