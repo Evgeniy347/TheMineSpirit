@@ -5,6 +5,7 @@ import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.movement.DigOutGoal;
 import com.theminespirit.core.movement.DigOutObstacle;
+import com.theminespirit.core.movement.api.StepFall;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.script.GotoParams;
 import com.theminespirit.core.town.PlotProtection;
@@ -143,7 +144,7 @@ public final class DigOutScript implements ScriptInstance {
             return fail("за " + MAX_STEPS + " ступеней не вышел на поверхность, стоит в " + feet.toShortString());
         }
         if (direction == null) {
-            direction = towardTarget(feet);
+            direction = DigOutStep.towardTarget(feet, target.x(), target.z());
         }
         BlockPos ahead = feet.relative(direction);
         boolean sideways = DigOutExit.fixedCeiling(level, feet);
@@ -203,6 +204,11 @@ public final class DigOutScript implements ScriptInstance {
             turns = 0;
             return ScriptStatus.RUNNING;
         }
+        if (StepFall.fell(feet.getY(), next.getY(), spirit.onGround())) {
+            BlockPos missed = next;
+            next = null;
+            return turnOrFail("свалился со ступени " + missed.toShortString());
+        }
         if (++stepTicks > STEP_TICKS) {
             BlockPos missed = next;
             next = null;
@@ -238,15 +244,6 @@ public final class DigOutScript implements ScriptInstance {
         }
         direction = direction == null ? Direction.NORTH : direction.getClockWise();
         return ScriptStatus.RUNNING;
-    }
-
-    private Direction towardTarget(BlockPos feet) {
-        int dx = target.x() - feet.getX();
-        int dz = target.z() - feet.getZ();
-        if (Math.abs(dx) >= Math.abs(dz)) {
-            return dx >= 0 ? Direction.EAST : Direction.WEST;
-        }
-        return dz >= 0 ? Direction.SOUTH : Direction.NORTH;
     }
 
     private ScriptStatus fail(String reason) {

@@ -1,10 +1,20 @@
 package com.theminespirit.neoforge;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 
 final class DigOutStep {
     private DigOutStep() {}
+
+    static Direction towardTarget(BlockPos feet, int targetX, int targetZ) {
+        int dx = targetX - feet.getX();
+        int dz = targetZ - feet.getZ();
+        if (Math.abs(dx) >= Math.abs(dz)) {
+            return dx >= 0 ? Direction.EAST : Direction.WEST;
+        }
+        return dz >= 0 ? Direction.SOUTH : Direction.NORTH;
+    }
 
     static void moveTo(SpiritEntity spirit, BlockPos cell) {
         if (spirit.isInWater()) {
