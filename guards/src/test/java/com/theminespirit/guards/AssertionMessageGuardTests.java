@@ -4,27 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 class AssertionMessageGuardTests {
-    private static final Map<String, Integer> ARGUMENTS_WITH_MESSAGE = Map.ofEntries(
-            Map.entry("assertTrue", 2),
-            Map.entry("assertFalse", 2),
-            Map.entry("assertNull", 2),
-            Map.entry("assertEquals", 3),
-            Map.entry("assertNotEquals", 3),
-            Map.entry("assertSame", 3),
-            Map.entry("assertNotSame", 3),
-            Map.entry("assertArrayEquals", 3),
-            Map.entry("assertIterableEquals", 3),
-            Map.entry("assertLinesMatch", 3),
-            Map.entry("assertThrows", 3),
-            Map.entry("assertInstanceOf", 3));
-    private static final Pattern ASSERT_CALL = Pattern.compile("(?<![\\w.])(assert[A-Z]\\w*)\\s*\\(");
-
     @Test
     void testSources_EveryAssertion_CarriesMessage() {
         List<String> offenders = new ArrayList<>();
@@ -42,7 +25,9 @@ class AssertionMessageGuardTests {
                         + "последним аргументом сообщение на русском — какой контракт защищается и почему. "
                         + "Пример: assert" + "Equals(2, plan.steps().size(), \"план рубки обязан начинаться со scan: "
                         + "без скана дух не знает, где деревья\"). Правило: docs/TESTING.md → «Имя теста и "
-                        + "сообщение assertion». Нарушители (строка и вызов)");
+                        + "сообщение assertion». При смене списка ARGUMENTS_WITH_MESSAGE проверь образцы ниже: "
+                        + "лямбда, скобки и запятые в тексте не должны ни ослеплять сторож, ни давать ложных "
+                        + "нарушителей. Нарушители (строка и вызов)");
     }
 
     @Test
@@ -52,7 +37,10 @@ class AssertionMessageGuardTests {
         assertEquals(
                 List.of("1 assertEquals"),
                 callsWithoutMessage(sample),
-                "Сторож ослеп: assertEquals с двумя аргументами (запятые внутри List.of не в счёт) — нарушение");
+                "Сторож ослеп: assertEquals с двумя аргументами (запятые внутри List.of не в счёт) обязан попасть "
+                        + "в нарушители, иначе проверка без объяснения пройдёт сборку и при красном прогоне снова "
+                        + "не будет видно, какую механику чинят. При смене разбора аргументов проверь заодно "
+                        + "лямбды и строки с запятыми: они не должны давать ложных нарушителей");
     }
 
     @Test
@@ -63,7 +51,10 @@ class AssertionMessageGuardTests {
         assertEquals(
                 List.of(),
                 callsWithoutMessage(sample),
-                "Сторож ложно срабатывает: сообщение есть, запятые и скобки внутри строки и вложенных вызовов не в счёт");
+                "Сторож ложно срабатывает: сообщение есть, запятые и скобки внутри строки и вложенных вызовов — "
+                        + "один аргумент. Если начать считать их разделителями, нормальный assertEquals с текстом "
+                        + "станет нарушителем — иначе правило придётся отключить. При смене countArguments проверь "
+                        + "строку с экранированными кавычками и пару вложенных вызовов — оба не должны краснеть");
     }
 
     @Test
@@ -74,14 +65,18 @@ class AssertionMessageGuardTests {
         assertEquals(
                 List.of(),
                 callsWithoutMessage(sample),
-                "Сторож ложно срабатывает: лямбда с запятыми внутри скобок — один аргумент");
+                "Сторож ложно срабатывает: лямбда с запятыми внутри скобок — один аргумент, а не два. Если "
+                        + "лямбду посчитать разделителем, каждый assertThrows с сообщением начнёт ругаться "
+                        + "ложно — иначе каждый второй законный тест будет красным. При смене разбора аргументов "
+                        + "проверь assertThrows с лямбдой и без сообщения: зелёный первый случай и красный второй "
+                        + "обязаны различаться");
     }
 
     private static List<String> callsWithoutMessage(String text) {
         List<String> offenders = new ArrayList<>();
-        Matcher matcher = ASSERT_CALL.matcher(text);
+        Matcher matcher = AssertionMessageQuality.ASSERT_CALL.matcher(text);
         while (matcher.find()) {
-            Integer required = ARGUMENTS_WITH_MESSAGE.get(matcher.group(1));
+            Integer required = AssertionMessageQuality.ARGUMENTS_WITH_MESSAGE.get(matcher.group(1));
             if (required != null && countArguments(text, matcher.end()) < required) {
                 offenders.add(SourceFiles.lineOf(text, matcher.start()) + " " + matcher.group(1));
             }
@@ -96,7 +91,7 @@ class AssertionMessageGuardTests {
         for (int i = afterOpenParen; i < text.length(); i++) {
             char c = text.charAt(i);
             if (c == '"' || c == '\'') {
-                i = skipLiteral(text, i, c);
+                i = AssertionMessageQuality.skipLiteral(text, i, c);
                 empty = false;
             } else if (c == '(' || c == '[' || c == '{') {
                 depth++;
@@ -113,17 +108,5 @@ class AssertionMessageGuardTests {
             }
         }
         return commas + 1;
-    }
-
-    private static int skipLiteral(String text, int start, char quote) {
-        for (int i = start + 1; i < text.length(); i++) {
-            char c = text.charAt(i);
-            if (c == '\\') {
-                i++;
-            } else if (c == quote) {
-                return i;
-            }
-        }
-        return text.length();
     }
 }
