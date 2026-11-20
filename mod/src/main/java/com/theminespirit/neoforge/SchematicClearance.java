@@ -43,8 +43,15 @@ final class SchematicClearance {
         Set<BlockCoord> unique = new LinkedHashSet<>();
         for (BlockCoord cell : site.air) {
             BlockState current = site.level.getBlockState(SchematicSite.toPos(cell));
+            if (orchardPlant(cell, current)) {
+                continue;
+            }
             if (current.is(BlockTags.LOGS)) {
-                unique.addAll(TreeSpan.of(cell, at -> SchematicWild.log(site.level, site.schemeCells, at)));
+                List<BlockCoord> span = TreeSpan.of(cell, at -> SchematicWild.log(site.level, site.schemeCells, at));
+                if (span.stream().anyMatch(at -> orchardPlant(at, site.level.getBlockState(SchematicSite.toPos(at))))) {
+                    continue;
+                }
+                unique.addAll(span);
             } else if (!current.isAir() && current.getFluidState().isEmpty()) {
                 unique.add(cell);
             }
@@ -55,6 +62,9 @@ final class SchematicClearance {
                 continue;
             }
             BlockState current = site.level.getBlockState(SchematicSite.toPos(entry.pos()));
+            if (orchardPlant(entry.pos(), current)) {
+                continue;
+            }
             if (current.isAir()
                     || current.canBeReplaced()
                     || current.is(site.wanted(entry).getBlock())
@@ -105,6 +115,20 @@ final class SchematicClearance {
         }
         cells.addAll(SchematicUpgrade.extraPositionsToClear(
                 previous, site.schematic, site.origin, BuildRotation.NONE, this::aired));
+    }
+
+    private boolean orchardPlant(BlockCoord cell, BlockState state) {
+        if (!(state.is(BlockTags.LOGS) || state.is(BlockTags.LEAVES) || state.is(BlockTags.SAPLINGS))) {
+            return false;
+        }
+        if (!(site.level instanceof ServerLevel server)) {
+            return false;
+        }
+        return SettlementPlotStore.liveSite(server)
+                .filter(stage -> state.is(BlockTags.LOGS)
+                        ? stage.orchardTree(cell.x(), cell.y(), cell.z())
+                        : stage.orchardCrown(cell.x(), cell.y(), cell.z()))
+                .isPresent();
     }
 
     private boolean aired(BlockCoord cell) {

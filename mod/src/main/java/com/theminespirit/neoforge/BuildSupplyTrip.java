@@ -211,23 +211,7 @@ final class BuildSupplyTrip {
 
     private static Map<Item, Integer> need(
             SpiritEntity spirit, SchematicSite site, Predicate<Schematic.PlacedEntry> phase) {
-        Map<Item, Integer> need = new LinkedHashMap<>();
-        for (Schematic.PlacedEntry entry : site.primaries()) {
-            if (BlockItems.hasBlockItem(entry.block())
-                    && !SchematicActions.isActionPlaced(entry.block())
-                    && !site.matches(entry)
-                    && phase.test(entry)) {
-                need.merge(BlockItems.itemFor(entry.block()), 1, Integer::sum);
-            }
-        }
-        for (int slot = 0; slot < spirit.getInventory().getContainerSize(); slot++) {
-            ItemStack stack = spirit.getInventory().getItem(slot);
-            if (!stack.isEmpty()) {
-                need.computeIfPresent(
-                        stack.getItem(), (item, count) -> count > stack.getCount() ? count - stack.getCount() : null);
-            }
-        }
-        return need;
+        return BuildSupplyNeed.need(spirit.getInventory(), site, phase);
     }
 
     private static int take(

@@ -143,6 +143,10 @@ public record StageSite(
         return false;
     }
 
+    public boolean orchardCrown(int x, int y, int z) {
+        return y >= anchor.y() - 1 && y <= anchor.y() + ORCHARD_TREE_HEIGHT && orchardTerritory(x, z);
+    }
+
     public boolean ringPost(int x, int z) {
         return ring.posts().contains(new ColumnMask.Cell(x, z));
     }

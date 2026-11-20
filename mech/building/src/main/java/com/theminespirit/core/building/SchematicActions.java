@@ -46,6 +46,11 @@ public final class SchematicActions {
         return DIRT_PATH.equals(path) || FARMLAND.equals(path);
     }
 
+    public static @Nullable String raiseItem(String blockId) {
+        Objects.requireNonNull(blockId, "Id блока не может быть null: без него неизвестно, тратит ли подъём предмет");
+        return DIRT_PATH.equals(SchematicBlocks.path(blockId)) ? "minecraft:dirt" : null;
+    }
+
     public static @Nullable String itemOverride(String path) {
         return ITEM_OVERRIDES.get(path);
     }
