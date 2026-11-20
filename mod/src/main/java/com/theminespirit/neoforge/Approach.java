@@ -181,9 +181,6 @@ public final class Approach {
     }
 
     private void start(Vec3 point, Entity entity, double arrivalDistance) {
-        if (active) {
-            spirit.getNavigation().stop();
-        }
         pathRefresh = new PathRefreshPolicy();
         stuckWatcher = new StuckWatcher(GotoTuning.STUCK_MIN_MOVEMENT, GotoTuning.STUCK_TICKS);
         passages = new PassageWalk(spirit);

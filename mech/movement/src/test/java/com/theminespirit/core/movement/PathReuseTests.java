@@ -51,4 +51,14 @@ class PathReuseTests {
                         + "иначе дух дрожит на месте вместо хода. При смене moveTo в SpiritNavigation проверь "
                         + "обе перегрузки: четырёхаргументную и пятиаргументную с floorLevel");
     }
+
+    @Test
+    void keep_ApproachRestartSameCell_KeepsPath() {
+        assertTrue(
+                PathReuse.keep(true, -155, 68, -490, -155, 68, -490, true),
+                "Повторный begin подхода к той же точке не рвёт путь: иначе stop() в start() обнуляет путь, "
+                        + "и навигация строит его 5 раз в секунду (1592 пути за 5 минут, окно 12), а дух "
+                        + "дрожит у начала маршрута. При смене Approach.start или SpiritNavigation.stop "
+                        + "проверь живой goto к неподвижной точке: путь строится один раз");
+    }
 }
