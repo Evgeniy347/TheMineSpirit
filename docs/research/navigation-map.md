@@ -1,6 +1,6 @@
 # Карта навигации: кто строит маршрут, кто ведёт духа и почему он кружит
 
-Разведка 10.11 (ветка `task/navmap` от main `c928979a`). Поведение не менялось. Числа — `scripts/logq.sh --main`
+Разведка поведения навигации. Числа — `scripts/logq.sh --main`
 по базе основного сервера (`routes`, `stuck`, `spirit_samples`) за 11.07 16:26 – 11.10 04:37 UTC, 6 духов.
 Проверялись: `mech/movement` (`core/movement`, `core/navigation`, `core/route`), `mod` (`Approach`,
 `SpiritNavigation`, `movement`, `policy`), `board`, `policy`.

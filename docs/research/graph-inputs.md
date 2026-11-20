@@ -1,12 +1,12 @@
 # Вход и выход графа тактики: разбор 02.11
 
 Разбор по коду `main` (02.11), без изменения логики. Граф — `board/graph.json` + `board/graph-recipes.json`
-(после слияния: 1038 предметов, 135 построек, 1385 путей, 41 событие). Точка входа — `GraphSource.tick`
+(1038 предметов, 135 построек, 1385 путей, 41 событие). Точка входа — `GraphSource.tick`
 (`neoforge/board/GraphSource.java:59`): `FirstStepsRunner` → `GraphSurroundings` → `GraphInputs.state` →
 `GraphPlanner.plan` → `GraphTickets.of` → `GraphPost`. Полные таблицы — в
 [graph-inputs-tables.md](graph-inputs-tables.md).
 
-## 0. Что уже сделано (02.11, graphcore)
+## 0. Что граф уже получает (02.11)
 
 - **Фрагменты графа.** `SupplyGraph.loadDefault`/`merge` и `Graph.load_merged` читают
   `board/graph.json` + `board/graph-recipes.json` + все `board/graph.d/*.json`. Фрагмент добавляет только новые id,

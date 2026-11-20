@@ -143,7 +143,6 @@ curl -s 'http://<хост>:<порт>/v1/spirits/<uuid духа>/decisions?limit
 | [AGENTS.md](AGENTS.md) | карта правил, принцип «правило — сторож, а не текст», решения пользователя |
 | [docs/WRITING.md](docs/WRITING.md) | как писать документацию: структура, язык, «можно/нельзя», экономия контекста; **обязательно** при изменении документации |
 | [todo.md](todo.md) | открытые задачи плана и прогресс |
-| [tasks/](tasks/) | чеклисты блоков в работе; удаляются после приёмки |
 | [CLAUDE.md](CLAUDE.md) | вход для Claude Code, отсылает к AGENTS.md |
 | [docs/FIXING.md](docs/FIXING.md), [docs/CONVENTIONS.md](docs/CONVENTIONS.md), [docs/TESTING.md](docs/TESTING.md), [docs/testing/CROSS-MATRIX.md](docs/testing/CROSS-MATRIX.md), [docs/testing/CROSS-MATRIX-INTERRUPT.md](docs/testing/CROSS-MATRIX-INTERRUPT.md), [docs/testing/CROSS-MATRIX-NO-PAIR.md](docs/testing/CROSS-MATRIX-NO-PAIR.md), [docs/testing/CROSS-MATRIX-NOTES.md](docs/testing/CROSS-MATRIX-NOTES.md), [docs/testing/GRAPH-DEMAND.md](docs/testing/GRAPH-DEMAND.md), [docs/GIT.md](docs/GIT.md) | код, тесты, git; матрица пересечений механик, непересекающиеся пары, техдолг; реестр цепочек спроса графа |
 | [docs/PUBLISH.md](docs/PUBLISH.md) | публикация мода (только по согласованию) |
