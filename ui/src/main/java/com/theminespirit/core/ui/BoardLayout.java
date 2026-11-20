@@ -24,6 +24,7 @@ public final class BoardLayout {
     public static final int ICON_SIZE = 16;
     public static final int ICON_GAP = 2;
     public static final int ICON_TOP = 2;
+    public static final int ICON_LABEL = 9;
 
     private final Rect window;
     private final Rect inner;
@@ -131,7 +132,7 @@ public final class BoardLayout {
         if (count == 0) {
             return new IconGrid(0, 0, 0);
         }
-        int rows = Math.max(1, (TILE_HEIGHT - 2 * ICON_TOP + ICON_GAP) / (ICON_SIZE + ICON_GAP));
+        int rows = Math.max(1, (TILE_HEIGHT - 2 * ICON_TOP + ICON_GAP) / (ICON_SIZE + ICON_LABEL + ICON_GAP));
         int blockLimit = Math.max(ICON_SIZE, tileWidth / 2);
         int columns = Math.max(1, Math.min(count, (blockLimit + ICON_GAP) / (ICON_SIZE + ICON_GAP)));
         return new IconGrid(columns, rows, columns * rows);
