@@ -12,25 +12,29 @@ class SocialTuningTests {
         assertEquals(
                 1.5,
                 SocialTuning.MEET_ARRIVAL,
-                "meet заканчивается в 1.5 блока от цели — как возврат духа TacticsService.RETURN_ARRIVAL: "
-                        + "ближе — дух толкается в цель, дальше — отдалится и не закроет задачу");
+                "meet заканчивается в 1.5 блока от цели — как возврат духа TacticsService.RETURN_ARRIVAL: ближе — "
+                        + "дух толкается в цель, дальше — отдалится и не закроет задачу, иначе social ждёт вечно. "
+                        + "При смене SocialTuning.MEET_ARRIVAL проверь deliver ниже в тесте");
         assertEquals(
                 2.5,
                 SocialTuning.DELIVER_ARRIVAL,
-                "deliver завершается в 2.5 блока от адресата: груз передают с дистанции вытянутой руки, "
-                        + "ближе — дух упирается в игрока, дальше — предмет не долетит");
+                "deliver завершается в 2.5 блока от адресата: груз передают с дистанции вытянутой руки, ближе — дух "
+                        + "упирается в игрока, дальше — предмет не долетит, иначе передача висит. При смене "
+                        + "DELIVER_ARRIVAL проверь строку выше в тесте");
     }
 
     @Test
     void socialTuning_Arrivals_ArePositiveAndFinite() {
         assertTrue(
                 SocialTuning.MEET_ARRIVAL > 0 && Double.isFinite(SocialTuning.MEET_ARRIVAL),
-                "Прибытие meet обязано быть положительным и конечным: ноль завершил бы задачу, не сойдясь "
-                        + "с целью, а бесконечность повесила бы её навечно. Фактическое: " + SocialTuning.MEET_ARRIVAL);
+                "Прибытие meet обязано быть положительным и конечным: ноль завершил бы задачу, не сойдясь с целью, "
+                        + "а бесконечность повесила бы её навечно, иначе задача висит. Фактическое: "
+                        + SocialTuning.MEET_ARRIVAL + ". При смене константы проверь строку deliver ниже в тесте");
         assertTrue(
                 SocialTuning.DELIVER_ARRIVAL > 0 && Double.isFinite(SocialTuning.DELIVER_ARRIVAL),
                 "Прибытие deliver обязано быть положительным и конечным: ноль или бесконечность сломали бы "
-                        + "передачу. Фактическое: " + SocialTuning.DELIVER_ARRIVAL);
+                        + "передачу, иначе груз висит. Фактическое: " + SocialTuning.DELIVER_ARRIVAL + ". При смене "
+                        + "константы проверь строку meet выше в тесте");
     }
 
     @Test
@@ -38,10 +42,12 @@ class SocialTuningTests {
         assertNotEquals(
                 0.0,
                 SocialTuning.MEET_ARRIVAL,
-                "Нулевое прибытие meet запрещено: задача завершилась бы, не сойдясь с целью");
+                "Нулевое прибытие meet запрещено: задача завершилась бы, не сойдясь с целью, иначе дух бросает "
+                        + "работу. При смене MEET_ARRIVAL проверь строку deliver ниже в тесте");
         assertNotEquals(
                 0.0,
                 SocialTuning.DELIVER_ARRIVAL,
-                "Нулевое прибытие deliver запрещено: груз передали бы, не подойдя к адресату");
+                "Нулевое прибытие deliver запрещено: груз передали бы, не подойдя к адресату, иначе передача из "
+                        + "воздуха. При смене DELIVER_ARRIVAL проверь строку выше в тесте");
     }
 }
