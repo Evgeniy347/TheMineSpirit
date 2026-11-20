@@ -31,6 +31,15 @@ public final class SpiritNavigation extends GroundPathNavigation {
 
     @Override
     public boolean moveTo(double x, double y, double z, double speed) {
+        return reuseOrRebuild(x, y, z, 0, speed);
+    }
+
+    @Override
+    public boolean moveTo(double x, double y, double z, int floorLevel, double speed) {
+        return reuseOrRebuild(x, y, z, floorLevel, speed);
+    }
+
+    private boolean reuseOrRebuild(double x, double y, double z, int floorLevel, double speed) {
         BlockPos want = BlockPos.containing(x, y, z);
         Path path = getPath();
         BlockPos last = requestedTarget;
@@ -46,7 +55,7 @@ public final class SpiritNavigation extends GroundPathNavigation {
             return true;
         }
         requestedTarget = want;
-        return moveTo(createPath(x, y, z, 0), speed);
+        return moveTo(createPath(x, y, z, floorLevel), speed);
     }
 
     public PathType classify(PathfindingContext context, BlockPos pos) {
