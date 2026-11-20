@@ -20,6 +20,12 @@ import org.junit.jupiter.api.Test;
 
 class AnimalLifecycleTests {
 
+    @Provide
+    Arbitrary<List<String>> eventSequences() {
+        Arbitrary<String> events = Arbitraries.of("penBuilt", "lured", "animalDied");
+        return events.list().ofMaxSize(6);
+    }
+
     private static boolean hasActive(Board board, BoardCase boardCase) {
         return board.all().stream()
                 .filter(ticket -> ticket.boardCase() == boardCase)
@@ -267,8 +273,8 @@ class AnimalLifecycleTests {
         secondLifecycle.captured("capture_1");
 
         for (String event : events) {
-            apply(firstLifecycle, event);
-            apply(secondLifecycle, event);
+            AnimalLifecycleFixtures.apply(firstLifecycle, event);
+            AnimalLifecycleFixtures.apply(secondLifecycle, event);
         }
 
         assertEquals(
@@ -277,28 +283,13 @@ class AnimalLifecycleTests {
                 "Переходы цикла детерминированы: один вход — один состав доски, иначе "
                         + "наблюдатель видит разное состояние при тех же событиях мира");
         for (String event : events) {
-            apply(firstLifecycle, event);
-            apply(secondLifecycle, event);
+            AnimalLifecycleFixtures.apply(firstLifecycle, event);
+            AnimalLifecycleFixtures.apply(secondLifecycle, event);
         }
         assertEquals(
                 first.all(),
                 second.all(),
                 "Детерминизм сохраняется на второй прогон: состояние автомата зависит "
                         + "только от последовательности событий");
-    }
-
-    private static void apply(AnimalLifecycle lifecycle, String event) {
-        switch (event) {
-            case "penBuilt" -> lifecycle.penBuilt("capture_1");
-            case "lured" -> lifecycle.lured();
-            case "animalDied" -> lifecycle.animalDied();
-            default -> throw new IllegalArgumentException("Неизвестное событие: " + event);
-        }
-    }
-
-    @Provide
-    Arbitrary<List<String>> eventSequences() {
-        Arbitrary<String> events = Arbitraries.of("penBuilt", "lured", "animalDied");
-        return events.list().ofMaxSize(6);
     }
 }

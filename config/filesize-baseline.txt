@@ -1,4 +1,3 @@
-core/board/AnimalLifecycleTests.java	304
 core/board/Board.java	507
 core/board/BoardConfigTests.java	403
 core/board/BoardLogTests.java	424
