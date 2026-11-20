@@ -19,7 +19,8 @@ class Observe10MineStandsTests {
         assertFalse(
                 MineDigOrder.visible(feet, cell, List.of(), window),
                 "Живой отказ observe10: клетка " + cell + " из " + feet + " не видна — тест обязан воспроизвести "
-                        + "этот отказ, иначе он проверяет другой случай");
+                        + "этот отказ, иначе он проверяет другой случай"
+                        + " При смене cellStands_Observe10ShaftWallNotSeenFromSpirit_AllStandsSeeCell проверь это утверждение.");
 
         MineCellPlan.Plan plan =
                 MineCellPlan.of(cell, feet, window, new MineCellPlan.Seen(null, false, false, false), stand -> true);
@@ -27,17 +28,22 @@ class Observe10MineStandsTests {
         assertTrue(
                 plan.kind() == MineCellPlan.Kind.APPROACH,
                 "Невидимая клетка шахты требует подхода, а не отказа: MineBuildScript падал на «не виден из глаз», "
-                        + "хотя рядом есть стоянка — получили " + plan.kind());
+                        + "хотя рядом есть стоянка — получили " + plan.kind()
+                        + " Иначе тест cellStands_Observe10ShaftWallNotSeenFromSpirit_AllStandsSeeCell перестанет ловить эту поломку. При смене cellStands_Observe10ShaftWallNotSeenFromSpirit_AllStandsSeeCell проверь это утверждение.");
         assertFalse(
-                plan.stands().isEmpty(), "Подход обязан предложить стоянку: пустой список повторил бы отказ observe10");
+                plan.stands().isEmpty(),
+                "Подход обязан предложить стоянку: пустой список повторил бы отказ observe10"
+                        + " Иначе тест cellStands_Observe10ShaftWallNotSeenFromSpirit_AllStandsSeeCell перестанет ловить эту поломку. При смене cellStands_Observe10ShaftWallNotSeenFromSpirit_AllStandsSeeCell проверь это утверждение.");
         for (BlockCoord stand : plan.stands()) {
             assertTrue(
                     MineDigOrder.visible(stand, cell, List.of(), window),
                     "Стоянка " + stand + " обязана видеть клетку " + cell + ": иначе подход не убирает причину "
-                            + "отказа «не виден из глаз»");
+                            + "отказа «не виден из глаз»"
+                            + " При смене cellStands_Observe10ShaftWallNotSeenFromSpirit_AllStandsSeeCell проверь это утверждение.");
             assertFalse(
                     MineCellStands.occupies(stand, cell),
-                    "Стоянка " + stand + " не может стоять в самой клетке " + cell + ": дух не ломает блок собой");
+                    "Стоянка " + stand + " не может стоять в самой клетке " + cell + ": дух не ломает блок собой"
+                            + " При смене cellStands_Observe10ShaftWallNotSeenFromSpirit_AllStandsSeeCell проверь это утверждение.");
         }
     }
 
@@ -49,18 +55,21 @@ class Observe10MineStandsTests {
 
         assertTrue(
                 MineCellStands.occupies(feet, cell),
-                "Дух стоит под клеткой стенки шахты: тест обязан взять живое состояние observe10");
+                "Дух стоит под клеткой стенки шахты: тест обязан взять живое состояние observe10"
+                        + " Иначе тест cellPlan_Observe10SpiritInWallCell_WaitsInsteadOfFailing перестанет ловить эту поломку. При смене cellPlan_Observe10SpiritInWallCell_WaitsInsteadOfFailing проверь это утверждение.");
         MineCellPlan.Plan plan = MineCellPlan.of(
                 cell, feet, window, new MineCellPlan.Seen(window.occupantType(), false, true, true), stand -> true);
 
         assertTrue(
                 plan.kind() == MineCellPlan.Kind.WAIT,
                 "Клетку " + cell + " занимает другое существо: дух обязан ждать/обходить, а не проваливать шахту "
-                        + "сразу — получили " + plan.kind());
+                        + "сразу — получили " + plan.kind()
+                        + " Иначе тест cellPlan_Observe10SpiritInWallCell_WaitsInsteadOfFailing перестанет ловить эту поломку. При смене cellPlan_Observe10SpiritInWallCell_WaitsInsteadOfFailing проверь это утверждение.");
         assertTrue(
                 plan.reason().contains(window.occupantType()),
                 "Отказ обязан назвать тип существа '" + window.occupantType() + "': без него в логе observe10 "
-                        + "не понять, кого ждать — причина: " + plan.reason());
+                        + "не понять, кого ждать — причина: " + plan.reason()
+                        + " Иначе тест cellPlan_Observe10SpiritInWallCell_WaitsInsteadOfFailing перестанет ловить эту поломку. При смене cellPlan_Observe10SpiritInWallCell_WaitsInsteadOfFailing проверь это утверждение.");
     }
 
     @Test
@@ -72,12 +81,14 @@ class Observe10MineStandsTests {
         assertTrue(
                 MineCellStands.of(coal, feet, window, stand -> true).isEmpty(),
                 "Уголь " + coal + " закрыт породой сверху: стоянки с прямой видимостью нет, и mine_vein обязан "
-                        + "честно сказать это, а не искать стоянку по одному расстоянию 3600 тиков");
+                        + "честно сказать это, а не искать стоянку по одному расстоянию 3600 тиков"
+                        + " Иначе тест veinStands_Observe10CoalSealedByDirt_NoVisibleStandFound перестанет ловить эту поломку. При смене veinStands_Observe10CoalSealedByDirt_NoVisibleStandFound проверь это утверждение.");
 
         assertTrue(
                 MineVeinStands.next(List.of(coal), feet, window, Set.of(), Set.of())
                         .isEmpty(),
                 "Подход по одному расстоянию выбирал стоянку без видимости угля: mine_vein 3600 тиков не двигался "
-                        + "(observe10, graph:make:coal). Стоянка обязана видеть цель");
+                        + "(observe10, graph:make:coal). Стоянка обязана видеть цель"
+                        + " Иначе тест veinStands_Observe10CoalSealedByDirt_NoVisibleStandFound перестанет ловить эту поломку. При смене veinStands_Observe10CoalSealedByDirt_NoVisibleStandFound проверь это утверждение.");
     }
 }

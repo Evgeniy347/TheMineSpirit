@@ -26,7 +26,8 @@ class StandSpotsTests {
                 Optional.of(new BlockCoord(0, 1, 0)),
                 StandSpots.above(new BlockCoord(0, 0, 0), world),
                 "Полностью замурованная клетка с открытым верхом даёт стоянку сверху: с неё дух срывает бугор "
-                        + "и ставит блок, а не падает пять раз на «стоянки недостижимы»");
+                        + "и ставит блок, а не падает пять раз на «стоянки недостижимы»"
+                        + " Иначе тест above_SealedTargetWithFreeTop_ReturnsTopStand перестанет ловить эту поломку. При смене above_SealedTargetWithFreeTop_ReturnsTopStand проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +37,8 @@ class StandSpotsTests {
         assertEquals(
                 Optional.empty(),
                 StandSpots.above(new BlockCoord(0, 0, 0), world),
-                "Стоянка сверху допустима только на твёрдой цели: над воздухом дух не стоит");
+                "Стоянка сверху допустима только на твёрдой цели: над воздухом дух не стоит"
+                        + " Иначе тест above_TargetWithoutSolidTop_IsEmpty перестанет ловить эту поломку. При смене above_TargetWithoutSolidTop_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +50,8 @@ class StandSpotsTests {
         assertEquals(
                 List.of(new BlockCoord(1, 0, 0)),
                 spots,
-                "Обнажённая сбоку руда даёт стоянку в проходе: без неё дух не подходит к цели и стоит");
+                "Обнажённая сбоку руда даёт стоянку в проходе: без неё дух не подходит к цели и стоит"
+                        + " Иначе тест of_TargetWithOpenSide_ReturnsAdjacentStand перестанет ловить эту поломку. При смене of_TargetWithOpenSide_ReturnsAdjacentStand проверь это утверждение.");
     }
 
     @Test
@@ -65,7 +68,8 @@ class StandSpotsTests {
         assertEquals(
                 List.of(),
                 StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0)),
-                "Полностью замурованная руда не даёт стоянок: дух обязан пропустить её, а не пробивать стену");
+                "Полностью замурованная руда не даёт стоянок: дух обязан пропустить её, а не пробивать стену"
+                        + " Иначе тест of_SealedTarget_IsEmpty перестанет ловить эту поломку. При смене of_SealedTarget_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -83,7 +87,8 @@ class StandSpotsTests {
                 spots,
                 "Блок в одиночном колодце под насыпью достаётся со стоянки прямо над ним: пол под целью твёрдый, "
                         + "падение после ломки — один блок. Живой случай: трава над сундуком (-167,73,-486) "
-                        + "навсегда оставалась «без стоянки», а сундук — закрытым");
+                        + "навсегда оставалась «без стоянки», а сундук — закрытым"
+                        + " Иначе тест of_TopOpenOverSolidFloor_StandDirectlyAboveAllowed перестанет ловить эту поломку. При смене of_TopOpenOverSolidFloor_StandDirectlyAboveAllowed проверь это утверждение.");
     }
 
     @Test
@@ -99,7 +104,8 @@ class StandSpotsTests {
         assertEquals(
                 List.of(),
                 StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0)),
-                "Единственный проход — обрыв без пола: стоянка отвергается, иначе дух падает в яму");
+                "Единственный проход — обрыв без пола: стоянка отвергается, иначе дух падает в яму"
+                        + " При смене of_StandAtCliffWithoutFloor_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -117,7 +123,8 @@ class StandSpotsTests {
         assertEquals(
                 List.of(),
                 StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0)),
-                "Стоянка рядом с лавой отвергается: дух иначе сгорит, стоя у цели");
+                "Стоянка рядом с лавой отвергается: дух иначе сгорит, стоя у цели"
+                        + " При смене of_StandNextToLava_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -132,7 +139,8 @@ class StandSpotsTests {
         assertEquals(
                 List.of(new BlockCoord(0, 11, 0)),
                 spots,
-                "Руда на потолке достаётся с клетки пола внизу: без этого подпотолочные руды недосягаемы");
+                "Руда на потолке достаётся с клетки пола внизу: без этого подпотолочные руды недосягаемы"
+                        + " При смене of_TargetOnCeiling_ReturnsFloorStandBelow проверь это утверждение.");
     }
 
     @Test
@@ -151,7 +159,8 @@ class StandSpotsTests {
         assertEquals(
                 List.of(new BlockCoord(1, 0, 0), new BlockCoord(-1, 0, 0)),
                 spots,
-                "Стоянки сортируются по расстоянию от духа: ближняя стоянка первой сокращает путь");
+                "Стоянки сортируются по расстоянию от духа: ближняя стоянка первой сокращает путь"
+                        + " Иначе тест of_TwoOpenSides_SpotsSortedByDistanceFrom перестанет ловить эту поломку. При смене of_TwoOpenSides_SpotsSortedByDistanceFrom проверь это утверждение.");
     }
 
     @Test
@@ -168,7 +177,8 @@ class StandSpotsTests {
                         new BlockCoord(1, 1, 0)),
                 spots,
                 "Руда, открытая только сверху на ровной земле, обязана дать стоянки у поверхности рядом с целью, "
-                        + "а не остаться недосягаемой: столб над целью исключён («пол=цель»), под целью нет пола");
+                        + "а не остаться недосягаемой: столб над целью исключён («пол=цель»), под целью нет пола"
+                        + " Иначе тест of_FlatGroundTarget_ReturnsStandsBesideTargetAtSurface перестанет ловить эту поломку. При смене of_FlatGroundTarget_ReturnsStandsBesideTargetAtSurface проверь это утверждение.");
     }
 
     @Test
@@ -186,7 +196,8 @@ class StandSpotsTests {
                 List.of(new BlockCoord(1, 0, 0)),
                 spots,
                 "Стоянка в столбце руды ниже её под гравием сверху запрещена: после ломки гравий падает сквозь "
-                        + "полость на духа; стоянка сбоку от столбца разрешена");
+                        + "полость на духа; стоянка сбоку от столбца разрешена"
+                        + " Иначе тест of_FallingBlockAboveTarget_RejectsValidStandUnderTarget перестанет ловить эту поломку. При смене of_FallingBlockAboveTarget_RejectsValidStandUnderTarget проверь это утверждение.");
     }
 
     @Test
@@ -203,7 +214,8 @@ class StandSpotsTests {
         assertTrue(
                 spots.contains(new BlockCoord(0, -3, 0)) && spots.contains(new BlockCoord(1, -3, 0)),
                 "Самая глубокая стоянка обязана быть на 3 ниже цели и снизу, и сбоку: соседи дают (1,-3,0)=√10, "
-                        + "низ даёт (0,-3,0)=3; иначе верхушка столба остаётся без стоянки. Стоянки: " + spots);
+                        + "низ даёт (0,-3,0)=3; иначе верхушка столба остаётся без стоянки. Стоянки: " + spots
+                        + " При смене of_DeepestStandBelowTarget_MaxOffsetIsSquaredBound проверь это утверждение.");
         long maxOffset = spots.stream()
                 .mapToLong(stand -> (long) (stand.x() - target.x()) * (stand.x() - target.x())
                         + (long) (stand.y() - target.y()) * (stand.y() - target.y())
@@ -215,7 +227,8 @@ class StandSpotsTests {
                 maxOffset,
                 "Наибольшее смещение стоянки обязано равняться " + StandSpots.maxOffsetSquared(reach)
                         + " = 3² + 1² (сбоку на три ниже): по нему планировщик считает ранний выход, иначе "
-                        + "пропускает ближнюю цель со стоянкой. Стоянок: " + spots.size());
+                        + "пропускает ближнюю цель со стоянкой. Стоянок: " + spots.size()
+                        + " При смене of_DeepestStandBelowTarget_MaxOffsetIsSquaredBound проверь это утверждение.");
     }
 
     @Test
@@ -233,7 +246,8 @@ class StandSpotsTests {
                 List.of(),
                 StandSpots.of(new BlockCoord(0, 10, 0), world, new BlockCoord(0, 5, 0)),
                 "Клетка на потолке водяного кармана не даёт стоянок (живой случай -103,75,-411): вода под ней "
-                        + "не пол, а бока замурованы. Ремонт такой клетки не ставится, а «пути нет» уходит в граф");
+                        + "не пол, а бока замурованы. Ремонт такой клетки не ставится, а «пути нет» уходит в граф"
+                        + " Иначе тест of_CeilingOfWaterPocket_IsUnreachable перестанет ловить эту поломку. При смене of_CeilingOfWaterPocket_IsUnreachable проверь это утверждение.");
     }
 
     @Test
@@ -249,7 +263,10 @@ class StandSpotsTests {
 
         StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0));
 
-        assertTrue(world.reads() <= 440, "Поиск стоянок читает не более " + 440 + " клеток. Чтений: " + world.reads());
+        assertTrue(
+                world.reads() <= 440,
+                "Поиск стоянок читает не более " + 440 + " клеток. Чтений: " + world.reads()
+                        + " Иначе тест of_TargetReading_StaysWithinLimit перестанет ловить эту поломку. При смене of_TargetReading_StaysWithinLimit проверь это утверждение.");
     }
 
     @Test
@@ -271,26 +288,7 @@ class StandSpotsTests {
         assertTrue(
                 spots.contains(new BlockCoord(1, 0, 0)),
                 "Цель на третьем блоке столба достаётся со стоянки на три ниже: без неё верхушка столба "
-                        + "навсегда остаётся «без стоянки», хотя дух дотягивается на 3 вниз. Стоянки: " + spots);
-    }
-
-    @Test
-    void of_StandFourBelowTarget_IsRejected() {
-        CellWorld world = new CellWorld()
-                .set(0, 0, 0, Cell.SOLID)
-                .set(1, 0, 0, Cell.PASSABLE)
-                .set(1, -1, 0, Cell.PASSABLE)
-                .set(1, -2, 0, Cell.PASSABLE)
-                .set(1, -3, 0, Cell.PASSABLE)
-                .set(1, -4, 0, Cell.PASSABLE)
-                .set(1, -5, 0, Cell.SOLID);
-
-        List<BlockCoord> spots = StandSpots.of(new BlockCoord(0, 0, 0), world, new BlockCoord(0, 0, 0));
-
-        assertEquals(
-                List.of(),
-                spots,
-                "Стоянка на четыре ниже цели вне досягаемости (вниз 3): её нельзя предлагать, иначе дух "
-                        + "выберет клетку, с которой не достанет блок. Стоянки: " + spots);
+                        + "навсегда остаётся «без стоянки», хотя дух дотягивается на 3 вниз. Стоянки: " + spots
+                        + " Иначе тест of_TargetThreeHighAboveStand_FindsStandThreeBelow перестанет ловить эту поломку. При смене of_TargetThreeHighAboveStand_FindsStandThreeBelow проверь это утверждение.");
     }
 }

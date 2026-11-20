@@ -29,10 +29,12 @@ class VeinWalkerTests {
                         new BlockCoord(3, 0, 0),
                         new BlockCoord(4, 0, 0)),
                 new HashSet<>(vein.blocks()),
-                "Жила-линия обходится целиком: пропущенный блок руды остаётся в мире и count не набирается");
+                "Жила-линия обходится целиком: пропущенный блок руды остаётся в мире и count не набирается"
+                        + " Иначе тест collect_LineVein_ReturnsEveryBlock перестанет ловить эту поломку. При смене collect_LineVein_ReturnsEveryBlock проверь это утверждение.");
         assertFalse(
                 vein.truncated(),
-                "Жила короче предела не усечена: truncated=true заставил бы искать следующую жилу раньше времени");
+                "Жила короче предела не усечена: truncated=true заставил бы искать следующую жилу раньше времени"
+                        + " Иначе тест collect_LineVein_ReturnsEveryBlock перестанет ловить эту поломку. При смене collect_LineVein_ReturnsEveryBlock проверь это утверждение.");
     }
 
     @Test
@@ -51,8 +53,12 @@ class VeinWalkerTests {
         assertEquals(
                 27,
                 vein.blocks().size(),
-                "Куб 3×3×3 — одна связная жила из 27 блоков: обход по 26 соседям обязан собрать все");
-        assertFalse(vein.truncated(), "Куб меньше предела обхода не усечён");
+                "Куб 3×3×3 — одна связная жила из 27 блоков: обход по 26 соседям обязан собрать все"
+                        + " Иначе тест collect_CubeVein_ReturnsAllTwentySevenBlocks перестанет ловить эту поломку. При смене collect_CubeVein_ReturnsAllTwentySevenBlocks проверь это утверждение.");
+        assertFalse(
+                vein.truncated(),
+                "Куб меньше предела обхода не усечён"
+                        + " Иначе тест collect_CubeVein_ReturnsAllTwentySevenBlocks перестанет ловить эту поломку. При смене collect_CubeVein_ReturnsAllTwentySevenBlocks проверь это утверждение.");
     }
 
     @Test
@@ -68,7 +74,8 @@ class VeinWalkerTests {
         assertEquals(
                 Set.of(new BlockCoord(0, 0, 0), new BlockCoord(1, 0, 0)),
                 new HashSet<>(vein.blocks()),
-                "Жилы через пустую клетку не склеиваются: иначе дух уходит к чужой жиле и недобирает count");
+                "Жилы через пустую клетку не склеиваются: иначе дух уходит к чужой жиле и недобирает count"
+                        + " При смене collect_TwoVeinsSeparatedByEmptyCell_DoNotMerge проверь это утверждение.");
     }
 
     @Test
@@ -81,7 +88,8 @@ class VeinWalkerTests {
         assertEquals(
                 3,
                 vein.blocks().size(),
-                "Диагональная связь входит в жилу (26 соседей): иначе кристаллическая руда распадается на куски");
+                "Диагональная связь входит в жилу (26 соседей): иначе кристаллическая руда распадается на куски"
+                        + " При смене collect_DiagonalNeighbor_IsConnected проверь это утверждение.");
     }
 
     @Test
@@ -96,10 +104,12 @@ class VeinWalkerTests {
         assertEquals(
                 MiningTuning.VEIN_MAX_BLOCKS,
                 vein.blocks().size(),
-                "Длинная жила усекается по пределу: обход огромной жилы в один заход кладёт серверный тик");
+                "Длинная жила усекается по пределу: обход огромной жилы в один заход кладёт серверный тик"
+                        + " Иначе тест collect_VeinLongerThanLimit_TruncatesAtLimit перестанет ловить эту поломку. При смене collect_VeinLongerThanLimit_TruncatesAtLimit проверь это утверждение.");
         assertTrue(
                 vein.truncated(),
-                "Усечённая жила обязана помечаться: по флагу адаптер продолжает обход после добычи порции");
+                "Усечённая жила обязана помечаться: по флагу адаптер продолжает обход после добычи порции"
+                        + " Иначе тест collect_VeinLongerThanLimit_TruncatesAtLimit перестанет ловить эту поломку. При смене collect_VeinLongerThanLimit_TruncatesAtLimit проверь это утверждение.");
     }
 
     @Test
@@ -108,8 +118,15 @@ class VeinWalkerTests {
 
         Vein vein = VeinWalker.collect(new BlockCoord(0, 0, 0), view, MiningTuning.VEIN_MAX_BLOCKS);
 
-        assertEquals(List.of(), vein.blocks(), "Старт не руда — пустая жила: обход начинается только с найденной руды");
-        assertFalse(vein.truncated(), "Пустая жила не усечена");
+        assertEquals(
+                List.of(),
+                vein.blocks(),
+                "Старт не руда — пустая жила: обход начинается только с найденной руды"
+                        + " Иначе тест collect_StartNotOre_ReturnsEmpty перестанет ловить эту поломку. При смене collect_StartNotOre_ReturnsEmpty проверь это утверждение.");
+        assertFalse(
+                vein.truncated(),
+                "Пустая жила не усечена"
+                        + " Иначе тест collect_StartNotOre_ReturnsEmpty перестанет ловить эту поломку. При смене collect_StartNotOre_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -117,7 +134,8 @@ class VeinWalkerTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> VeinWalker.collect(new BlockCoord(0, 0, 0), new CountingOreView(), 0),
-                "Предел меньше 1 обязан отклоняться: иначе обход не вернёт ни одного блока");
+                "Предел меньше 1 обязан отклоняться: иначе обход не вернёт ни одного блока"
+                        + " При смене collect_NonPositiveLimit_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -136,6 +154,7 @@ class VeinWalkerTests {
         assertTrue(
                 view.reads() <= 26 * 27 + 1,
                 "Каждая клетка читается не более одного раза (множество посещённых): повторные чтения "
-                        + "превращают обход жилы в квадратичную нагрузку. Чтений: " + view.reads());
+                        + "превращают обход жилы в квадратичную нагрузку. Чтений: " + view.reads()
+                        + " Иначе тест collect_RepeatedCell_CellReadAtMostOnce перестанет ловить эту поломку. При смене collect_RepeatedCell_CellReadAtMostOnce проверь это утверждение.");
     }
 }

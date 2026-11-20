@@ -33,12 +33,14 @@ class DropTableTests {
                 IllegalStateException.class,
                 () -> DropTable.parse(content, ORIGIN),
                 "Файл «" + name + "» обязан отклоняться при загрузке: тихая подмена таблицы оставила бы "
-                        + "дропы без блоков-источников, и acquire не смог бы добыть руду");
+                        + "дропы без блоков-источников, и acquire не смог бы добыть руду"
+                        + " Иначе тест parse_BrokenFile_ThrowsNamingFileAndProblem перестанет ловить эту поломку. При смене parse_BrokenFile_ThrowsNamingFileAndProblem проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains(ORIGIN) && error.getMessage().contains(expectedPart),
                 "Ошибка файла «" + name + "» называет файл и проблему «" + expectedPart + "». Фактическое: "
-                        + error.getMessage());
+                        + error.getMessage()
+                        + " Иначе тест parse_BrokenFile_ThrowsNamingFileAndProblem перестанет ловить эту поломку. При смене parse_BrokenFile_ThrowsNamingFileAndProblem проверь это утверждение.");
     }
 
     @Test
@@ -49,24 +51,29 @@ class DropTableTests {
                 Optional.of(List.of("iron_ore", "deepslate_iron_ore")),
                 table.blocksFor("raw_iron"),
                 "Поставляемый drops.json обязан описывать raw_iron через железную и глубинную руду: без этого "
-                        + "acquire iron_ingot с нуля не резолвится");
+                        + "acquire iron_ingot с нуля не резолвится"
+                        + " При смене load_ShippedFile_CoversOverworldOresAndCobblestone проверь это утверждение.");
         assertEquals(
                 Optional.of(List.of("stone")),
                 table.blocksFor("cobblestone"),
-                "Поставляемый drops.json обязан описывать cobblestone через камень: булыжник — это ломаный камень");
+                "Поставляемый drops.json обязан описывать cobblestone через камень: булыжник — это ломаный камень"
+                        + " Иначе тест load_ShippedFile_CoversOverworldOresAndCobblestone перестанет ловить эту поломку. При смене load_ShippedFile_CoversOverworldOresAndCobblestone проверь это утверждение.");
         assertEquals(
                 Optional.of(List.of("coal_ore", "deepslate_coal_ore")),
                 table.blocksFor("coal"),
-                "Поставляемый drops.json обязан описывать уголь через оба слоя руды");
+                "Поставляемый drops.json обязан описывать уголь через оба слоя руды"
+                        + " Иначе тест load_ShippedFile_CoversOverworldOresAndCobblestone перестанет ловить эту поломку. При смене load_ShippedFile_CoversOverworldOresAndCobblestone проверь это утверждение.");
         assertEquals(
                 Optional.of(List.of("diamond_ore", "deepslate_diamond_ore")),
                 table.blocksFor("diamond"),
-                "Поставляемый drops.json обязан описывать алмаз через оба слоя руды");
+                "Поставляемый drops.json обязан описывать алмаз через оба слоя руды"
+                        + " Иначе тест load_ShippedFile_CoversOverworldOresAndCobblestone перестанет ловить эту поломку. При смене load_ShippedFile_CoversOverworldOresAndCobblestone проверь это утверждение.");
         assertEquals(
                 Optional.of(List.of("amethyst_block", "amethyst_cluster")),
                 table.blocksFor("amethyst_shard"),
                 "Поставляемый drops.json обязан описывать осколок аметиста через блок и друзу жеоды: без этого "
-                        + "mine_amethyst не резолвится в добычу");
+                        + "mine_amethyst не резолвится в добычу"
+                        + " При смене load_ShippedFile_CoversOverworldOresAndCobblestone проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +84,8 @@ class DropTableTests {
                 Optional.of(List.of("iron_ore")),
                 table.blocksFor("minecraft:raw_iron"),
                 "Полный id предмета обязан находить те же источники, что и короткий: резолвер работает "
-                        + "с обоими написаниями");
+                        + "с обоими написаниями"
+                        + " Иначе тест blocksFor_MinecraftPrefixedDrop_ReturnsSameBlocks перестанет ловить эту поломку. При смене blocksFor_MinecraftPrefixedDrop_ReturnsSameBlocks проверь это утверждение.");
     }
 
     @Test
@@ -87,6 +95,7 @@ class DropTableTests {
         assertEquals(
                 Optional.empty(),
                 table.blocksFor("stick"),
-                "Неизвестный предмет обязан получить пустой ответ: резолвер тогда честно решит, что способа нет");
+                "Неизвестный предмет обязан получить пустой ответ: резолвер тогда честно решит, что способа нет"
+                        + " Иначе тест blocksFor_UnknownDrop_ReturnsEmpty перестанет ловить эту поломку. При смене blocksFor_UnknownDrop_ReturnsEmpty проверь это утверждение.");
     }
 }

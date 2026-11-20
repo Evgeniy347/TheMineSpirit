@@ -19,7 +19,8 @@ class MineDigOrderTests {
         assertEquals(
                 List.of(new BlockCoord(1, 66, 0), new BlockCoord(1, 65, 0), new BlockCoord(1, 64, 0)),
                 MineDigOrder.from(stand, cells, world),
-                "Спуск 3×N рубится сверху вниз: верхняя клетка открывает вид на следующую, нижняя за ней скрыта");
+                "Спуск 3×N рубится сверху вниз: верхняя клетка открывает вид на следующую, нижняя за ней скрыта"
+                        + " Иначе тест from_ThreeHighShaft_OrdersTopDown перестанет ловить эту поломку. При смене from_ThreeHighShaft_OrdersTopDown проверь это утверждение.");
     }
 
     @Test
@@ -41,13 +42,15 @@ class MineDigOrderTests {
         assertEquals(
                 cells,
                 order,
-                "Ближняя клетка стены открывает дальнюю: порядок обязан идти от видимой к скрытой, а не наоборот");
+                "Ближняя клетка стены открывает дальнюю: порядок обязан идти от видимой к скрытой, а не наоборот"
+                        + " Иначе тест from_WallHidesNext_OpensNearFirst перестанет ловить эту поломку. При смене from_WallHidesNext_OpensNearFirst проверь это утверждение.");
         List<BlockCoord> opened = new ArrayList<>();
         for (BlockCoord cell : order) {
             assertTrue(
                     MineDigOrder.visible(stand, cell, opened, world),
                     "Каждая следующая клетка обязана быть видна с стоянки после снятия предыдущих: " + cell
-                            + " при открытых " + opened);
+                            + " при открытых " + opened
+                            + " Иначе тест from_WallHidesNext_OpensNearFirst перестанет ловить эту поломку. При смене from_WallHidesNext_OpensNearFirst проверь это утверждение.");
             opened.add(cell);
         }
     }
@@ -62,7 +65,8 @@ class MineDigOrderTests {
         assertEquals(
                 new BlockCoord(1, 66, 0),
                 order.get(0),
-                "Проходка колонки начинается с верхней клетки прохода: она видна из старой стоянки, нижние скрыты");
+                "Проходка колонки начинается с верхней клетки прохода: она видна из старой стоянки, нижние скрыты"
+                        + " Иначе тест column_ThreeHighShaft_StartsWithTopCell перестанет ловить эту поломку. При смене column_ThreeHighShaft_StartsWithTopCell проверь это утверждение.");
     }
 
     @Test
@@ -79,7 +83,8 @@ class MineDigOrderTests {
         assertTrue(
                 order.get(0).y() == 66 && order.get(1).y() == 66 && order.get(2).y() == 66,
                 "Расширение ступени шириной 3 сначала снимает верхний ряд: нижний ряд виден только через него, "
-                        + "порядок " + order);
+                        + "порядок " + order
+                        + " Иначе тест from_WidenedStep_OrdersTopLaneFirst перестанет ловить эту поломку. При смене from_WidenedStep_OrdersTopLaneFirst проверь это утверждение.");
     }
 
     @Test
@@ -105,7 +110,8 @@ class MineDigOrderTests {
                     order.indexOf(passage) < firstWall,
                     "Проход колонки " + column.floor() + " рубится раньше её стенок: первые блоки камня проходки "
                             + "дают булыжник на стенки. Иначе шахте нужен стартовый булыжник, которого без группы "
-                            + "не добыть (observe8: «нет булыжника на стенка»). Порядок " + order);
+                            + "не добыть (observe8: «нет булыжника на стенка»). Порядок " + order
+                            + " При смене column_PassageBeforeSideWalls_MineFeedsItself проверь это утверждение.");
         }
     }
 

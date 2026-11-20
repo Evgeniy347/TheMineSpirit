@@ -26,7 +26,8 @@ class MiningPlannerRiseTests {
                 outcome,
                 "Когда путь к высокой стоянке проверен настоящей навигацией, вертикальный порог не должен "
                         + "отбрасывать её: дух поднимается по ступеням и опоре, а не объявляет блок недостижимым "
-                        + "(observe13: «стоянка на 119 выше духа — не подняться» при живых ступенях)");
+                        + "(observe13: «стоянка на 119 выше духа — не подняться» при живых ступенях)"
+                        + " Иначе тест nextReachable_HighStandWithRealPath_IsAccepted перестанет ловить эту поломку. При смене nextReachable_HighStandWithRealPath_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -43,6 +44,7 @@ class MiningPlannerRiseTests {
                 new MiningPlanner.Exhausted(0, 0, 1),
                 outcome,
                 "Высокая стоянка без проверенного пути остаётся недостижимой: план не ведёт духа к блоку, "
-                        + "куда навигация не находит дороги");
+                        + "куда навигация не находит дороги"
+                        + " Иначе тест nextReachable_HighStandWithoutPath_StaysUnreachable перестанет ловить эту поломку. При смене nextReachable_HighStandWithoutPath_StaysUnreachable проверь это утверждение.");
     }
 }

@@ -22,6 +22,7 @@ class MiningPlannerDigInTests {
                 new MiningPlanner.Next(new BlockCoord(0, 0, 0), new BlockCoord(1, 0, 0)),
                 outcome,
                 "Если путь к стоянке не подтвердился, цель всё равно отдаётся подходу: дух врезается в породу "
-                        + "и расчищает соседнюю клетку, иначе глубокий конец шахты навсегда «без стоянки»");
+                        + "и расчищает соседнюю клетку, иначе глубокий конец шахты навсегда «без стоянки»"
+                        + " При смене nextReachable_OnlyUnreachableStand_StillReturnsForDigIn проверь это утверждение.");
     }
 }

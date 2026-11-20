@@ -23,7 +23,8 @@ class MiningPlannerTests {
         assertEquals(
                 new MiningPlanner.Next(new BlockCoord(0, 0, 0), new BlockCoord(1, 0, 0)),
                 outcome,
-                "Безопасная обнажённая цель обязана вернуться со стоянкой: без неё дух не знает, куда встать");
+                "Безопасная обнажённая цель обязана вернуться со стоянкой: без неё дух не знает, куда встать"
+                        + " Иначе тест next_SingleSafeTarget_ReturnsItWithStand перестанет ловить эту поломку. При смене next_SingleSafeTarget_ReturnsItWithStand проверь это утверждение.");
     }
 
     @Test
@@ -40,7 +41,8 @@ class MiningPlannerTests {
         assertEquals(
                 new MiningPlanner.Next(new BlockCoord(0, 0, 0), new BlockCoord(1, 0, 0)),
                 outcome,
-                "Из двух безопасных целей выбирается ближняя по стоянке: дальняя — лишний путь и время");
+                "Из двух безопасных целей выбирается ближняя по стоянке: дальняя — лишний путь и время"
+                        + " Иначе тест next_CloserTarget_IsPreferred перестанет ловить эту поломку. При смене next_CloserTarget_IsPreferred проверь это утверждение.");
     }
 
     @Test
@@ -57,7 +59,8 @@ class MiningPlannerTests {
         assertEquals(
                 new MiningPlanner.Exhausted(2, 0, 0),
                 outcome,
-                "Все цели с жидкостью обязаны считаться в unsafe: по числу видно, почему добыча не началась");
+                "Все цели с жидкостью обязаны считаться в unsafe: по числу видно, почему добыча не началась"
+                        + " Иначе тест next_AllUnsafe_ReturnsExhaustedWithUnsafeCount перестанет ловить эту поломку. При смене next_AllUnsafe_ReturnsExhaustedWithUnsafeCount проверь это утверждение.");
     }
 
     @Test
@@ -76,7 +79,8 @@ class MiningPlannerTests {
         assertEquals(
                 new MiningPlanner.Exhausted(0, 1, 0),
                 outcome,
-                "Замурованная цель обязана считаться в noStand: без числа непонятно, что дух не нашёл подход");
+                "Замурованная цель обязана считаться в noStand: без числа непонятно, что дух не нашёл подход"
+                        + " Иначе тест next_AllWithoutStand_ReturnsExhaustedWithNoStandCount перестанет ловить эту поломку. При смене next_AllWithoutStand_ReturnsExhaustedWithNoStandCount проверь это утверждение.");
     }
 
     @Test
@@ -100,7 +104,8 @@ class MiningPlannerTests {
         assertEquals(
                 new MiningPlanner.Next(new BlockCoord(10, 0, 0), new BlockCoord(11, 0, 0)),
                 outcome,
-                "Небезопасная и замурованная цели пропускаются, добывается безопасная: иначе задача встанет на первой цели");
+                "Небезопасная и замурованная цели пропускаются, добывается безопасная: иначе задача встанет на первой цели"
+                        + " При смене next_SkippedAndSafeTargets_ReturnsSafeAndCountsSkipped проверь это утверждение.");
     }
 
     @Test
@@ -124,11 +129,13 @@ class MiningPlannerTests {
         assertEquals(
                 new MiningPlanner.Next(new BlockCoord(10, 0, 0), new BlockCoord(11, 0, 0)),
                 before,
-                "Пока ближняя цель замурована, выбирается дальняя обнажённая");
+                "Пока ближняя цель замурована, выбирается дальняя обнажённая"
+                        + " Иначе тест next_AfterOpeningBuriedTarget_ReturnsIt перестанет ловить эту поломку. При смене next_AfterOpeningBuriedTarget_ReturnsIt проверь это утверждение.");
         assertEquals(
                 new MiningPlanner.Next(new BlockCoord(0, 0, 0), new BlockCoord(1, 0, 0)),
                 after,
-                "После обнажения ближней цели планировщик возвращается к ней: иначе дух навсегда обходит открытую руду");
+                "После обнажения ближней цели планировщик возвращается к ней: иначе дух навсегда обходит открытую руду"
+                        + " При смене next_AfterOpeningBuriedTarget_ReturnsIt проверь это утверждение.");
     }
 
     @Test
@@ -138,7 +145,8 @@ class MiningPlannerTests {
         assertEquals(
                 new MiningPlanner.Exhausted(0, 0, 0),
                 outcome,
-                "Пустой список целей — Exhausted с нулями: вызывающий отличает конец списка от пропусков");
+                "Пустой список целей — Exhausted с нулями: вызывающий отличает конец списка от пропусков"
+                        + " Иначе тест next_EmptyRemaining_ReturnsExhaustedZero перестанет ловить эту поломку. При смене next_EmptyRemaining_ReturnsExhaustedZero проверь это утверждение.");
     }
 
     @Test
@@ -151,7 +159,8 @@ class MiningPlannerTests {
                 new MiningPlanner.Next(new BlockCoord(0, 0, 0), new BlockCoord(-1, 1, 0)),
                 outcome,
                 "Сбор на ровной земле не должен заканчиваться Exhausted(noStand>0): цель открыта сверху, "
-                        + "стоянка — клетка поверхности рядом с целью");
+                        + "стоянка — клетка поверхности рядом с целью"
+                        + " Иначе тест next_FlatGroundTarget_IsReachableFromSurface перестанет ловить эту поломку. При смене next_FlatGroundTarget_IsReachableFromSurface проверь это утверждение.");
     }
 
     @Test
@@ -167,12 +176,14 @@ class MiningPlannerTests {
 
         assertTrue(
                 outcome instanceof MiningPlanner.Next,
-                "Каждая цель линии даёт стоянку с пола: планирование обязано выбрать цель, а не выйти Exhausted");
+                "Каждая цель линии даёт стоянку с пола: планирование обязано выбрать цель, а не выйти Exhausted"
+                        + " Иначе тест next_LineOf256Targets_ReadsStayWithinEightPerTarget перестанет ловить эту поломку. При смене next_LineOf256Targets_ReadsStayWithinEightPerTarget проверь это утверждение.");
         assertTrue(
                 world.reads() <= 446 * 8L,
                 "Ранний выход обязан читать целиком не больше 8 целей: стоянка дальней цели не ближе "
                         + "(dist(from,target) − 3), и дальше перебирать незачем. Чтений: " + world.reads()
-                        + ", предел: " + 446 * 8L);
+                        + ", предел: " + 446 * 8L
+                        + " Иначе тест next_LineOf256Targets_ReadsStayWithinEightPerTarget перестанет ловить эту поломку. При смене next_LineOf256Targets_ReadsStayWithinEightPerTarget проверь это утверждение.");
     }
 
     @Test
@@ -184,6 +195,7 @@ class MiningPlannerTests {
         assertTrue(
                 outcome instanceof MiningPlanner.Next next
                         && MiningSafety.canBreak(next.target(), world) instanceof BreakSafety.Safe,
-                "Возвращённая цель обязана быть безопасной для ломки: иначе дух бьёт блок с лавой за гранью");
+                "Возвращённая цель обязана быть безопасной для ломки: иначе дух бьёт блок с лавой за гранью"
+                        + " При смене next_SafeTarget_ReturnedTargetPassesCanBreak проверь это утверждение.");
     }
 }

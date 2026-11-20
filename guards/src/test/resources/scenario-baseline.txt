@@ -159,3 +159,9 @@ mech/forestry/com/theminespirit/core/forestry/TreeCanopyTests.java # план к
 mech/mining/com/theminespirit/core/mining/MiningPlannerStandTests.java # стоянки планировщика: MiningPlannerTests упёрся в 300 строк после сведения пакета, та же логика выбора стоянки
 
 mech/building/com/theminespirit/core/building/PillarHeadroomTests.java # чистая функция потолка столба: миру не нужен, сюита FillScenarioTests остаётся одна
+mech/mining/com/theminespirit/core/mining/DescentPlanTestsExtraTests.java # разделение DescentPlanTests по пределу 300 строк, тесты перенесены из него
+mech/mining/com/theminespirit/core/mining/MineStepStandsTestsExtraTests.java # разделение MineStepStandsTests по пределу 300 строк, тесты перенесены из него
+mech/mining/com/theminespirit/core/mining/MiningScenarioTestsExtraTests.java # разделение MiningScenarioTests по пределу 300 строк, тесты перенесены из него
+mech/mining/com/theminespirit/core/mining/SafeMinePlanTestsExtraTests.java # разделение SafeMinePlanTests по пределу 300 строк, тесты перенесены из него
+mech/mining/com/theminespirit/core/mining/StandSpotsTestsExtraTests.java # разделение StandSpotsTests по пределу 300 строк, тесты перенесены из него
+mech/mining/com/theminespirit/core/mining/ToolChoiceTestsExtraTests.java # разделение ToolChoiceTests по пределу 300 строк, тесты перенесены из него

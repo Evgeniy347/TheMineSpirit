@@ -19,7 +19,11 @@ class MineWallsTests {
         assertTrue(
                 walls.contains(floorSide),
                 "Стенка на уровне пола тоже ставится: без неё 56 клеток @floor у входа остаются воздухом и "
-                        + "шахта висит на 96%: " + walls);
-        assertTrue(walls.contains(passageSide), "Стенки вдоль прохода тоже остаются в списке: " + walls);
+                        + "шахта висит на 96%: " + walls
+                        + " Иначе тест of_PassageAndFloorSides_BothAreWalls перестанет ловить эту поломку. При смене of_PassageAndFloorSides_BothAreWalls проверь это утверждение.");
+        assertTrue(
+                walls.contains(passageSide),
+                "Стенки вдоль прохода тоже остаются в списке: " + walls
+                        + " Иначе тест of_PassageAndFloorSides_BothAreWalls перестанет ловить эту поломку. При смене of_PassageAndFloorSides_BothAreWalls проверь это утверждение.");
     }
 }

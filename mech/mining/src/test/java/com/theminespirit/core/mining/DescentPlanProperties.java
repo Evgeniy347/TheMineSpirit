@@ -28,8 +28,13 @@ class DescentPlanProperties {
                 depth,
                 plan.steps().size(),
                 "Число шагов обязано равняться глубине спуска (этаж под ногами минус целевой): "
-                        + "иначе дух либо останавливается рано, либо копает под дно мира");
-        assertEquals(DescentStop.TARGET_Y, plan.stop(), "Безопасная шахта обязана заканчиваться целью");
+                        + "иначе дух либо останавливается рано, либо копает под дно мира"
+                        + " При смене from_SafeShaft_StepCountEqualsEntryFloorMinusTargetYPlusOne проверь это утверждение.");
+        assertEquals(
+                DescentStop.TARGET_Y,
+                plan.stop(),
+                "Безопасная шахта обязана заканчиваться целью"
+                        + " Иначе тест from_SafeShaft_StepCountEqualsEntryFloorMinusTargetYPlusOne перестанет ловить эту поломку. При смене from_SafeShaft_StepCountEqualsEntryFloorMinusTargetYPlusOne проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -46,11 +51,17 @@ class DescentPlanProperties {
         assertEquals(
                 lavaStep,
                 plan.steps().size(),
-                "Лава у боковой стенки шага k обязана обрезать план ровно перед шагом k: дальше копать нельзя");
-        assertEquals(DescentStop.DANGER, plan.stop(), "Лава — остановка по опасности");
+                "Лава у боковой стенки шага k обязана обрезать план ровно перед шагом k: дальше копать нельзя"
+                        + " Иначе тест from_LavaAtSideOfLowestPassageCellOfStep_StopsExactlyBeforeThatStep перестанет ловить эту поломку. При смене from_LavaAtSideOfLowestPassageCellOfStep_StopsExactlyBeforeThatStep проверь это утверждение.");
+        assertEquals(
+                DescentStop.DANGER,
+                plan.stop(),
+                "Лава — остановка по опасности"
+                        + " Иначе тест from_LavaAtSideOfLowestPassageCellOfStep_StopsExactlyBeforeThatStep перестанет ловить эту поломку. При смене from_LavaAtSideOfLowestPassageCellOfStep_StopsExactlyBeforeThatStep проверь это утверждение.");
         assertTrue(
                 plan.dangerReason().contains("лава"),
-                "Причина остановки обязана называть лаву, чтобы игрок понял причину");
+                "Причина остановки обязана называть лаву, чтобы игрок понял причину"
+                        + " Иначе тест from_LavaAtSideOfLowestPassageCellOfStep_StopsExactlyBeforeThatStep перестанет ловить эту поломку. При смене from_LavaAtSideOfLowestPassageCellOfStep_StopsExactlyBeforeThatStep проверь это утверждение.");
     }
 
     @Property(tries = 200)
@@ -71,14 +82,24 @@ class DescentPlanProperties {
             assertEquals(
                     new BlockCoord(columnX, standY, -5),
                     step.stand(),
-                    "Ступень обязана спускаться лесенкой: шаг глубже — на этаж ниже и на блок ближе по direction");
+                    "Ступень обязана спускаться лесенкой: шаг глубже — на этаж ниже и на блок ближе по direction"
+                            + " Иначе тест from_Steps_DescendStaircaseAlongDirection перестанет ловить эту поломку. При смене from_Steps_DescendStaircaseAlongDirection проверь это утверждение.");
             assertEquals(
                     step.stand(),
                     step.passage().get(0),
-                    "Нижняя клетка прохода обязана быть ступенью: дух встаёт на клетку своего прохода");
+                    "Нижняя клетка прохода обязана быть ступенью: дух встаёт на клетку своего прохода"
+                            + " Иначе тест from_Steps_DescendStaircaseAlongDirection перестанет ловить эту поломку. При смене from_Steps_DescendStaircaseAlongDirection проверь это утверждение.");
             for (BlockCoord cell : step.passage()) {
-                assertEquals(columnX, cell.x(), "Клетка прохода обязана оставаться в колонке своей ступени");
-                assertEquals(-5, cell.z(), "Клетка прохода обязана сохранять координату Z колонки");
+                assertEquals(
+                        columnX,
+                        cell.x(),
+                        "Клетка прохода обязана оставаться в колонке своей ступени"
+                                + " Иначе тест from_Steps_DescendStaircaseAlongDirection перестанет ловить эту поломку. При смене from_Steps_DescendStaircaseAlongDirection проверь это утверждение.");
+                assertEquals(
+                        -5,
+                        cell.z(),
+                        "Клетка прохода обязана сохранять координату Z колонки"
+                                + " Иначе тест from_Steps_DescendStaircaseAlongDirection перестанет ловить эту поломку. При смене from_Steps_DescendStaircaseAlongDirection проверь это утверждение.");
             }
         }
     }

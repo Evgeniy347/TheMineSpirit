@@ -38,10 +38,15 @@ class MinePlanTests {
     void columns_Descent_OneColumnPerStepThreeHigh() {
         List<MineColumn> columns = MinePlan.columns(descentFloors(), descentAir());
 
-        assertEquals(STEPS, columns.size(), "каждая ступень спуска — своя колонка: пол и три клетки воздуха");
+        assertEquals(
+                STEPS,
+                columns.size(),
+                "каждая ступень спуска — своя колонка: пол и три клетки воздуха"
+                        + " Иначе тест columns_Descent_OneColumnPerStepThreeHigh перестанет ловить эту поломку. При смене columns_Descent_OneColumnPerStepThreeHigh проверь это утверждение.");
         assertTrue(
                 columns.stream().allMatch(column -> column.height() == MineColumn.PASSAGE_HEIGHT),
-                "проход спуска 3 блока высотой — дух идёт вверх и вниз с прыжком; фактически " + columns);
+                "проход спуска 3 блока высотой — дух идёт вверх и вниз с прыжком; фактически " + columns
+                        + " Иначе тест columns_Descent_OneColumnPerStepThreeHigh перестанет ловить эту поломку. При смене columns_Descent_OneColumnPerStepThreeHigh проверь это утверждение.");
     }
 
     @Test
@@ -49,7 +54,8 @@ class MinePlanTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> MinePlan.columns(List.of(new BlockCoord(0, 0, 0)), List.of(new BlockCoord(5, 1, 0))),
-                "воздух без пола под ним — ошибка схемы: дух не встанет в такой клетке");
+                "воздух без пола под ним — ошибка схемы: дух не встанет в такой клетке"
+                        + " Иначе тест columns_AirWithoutFloor_Throws перестанет ловить эту поломку. При смене columns_AirWithoutFloor_Throws проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +69,8 @@ class MinePlanTests {
             assertEquals(
                     new BlockCoord(k, -k, 0),
                     order.get(k).floor(),
-                    "проходка идёт от входа вглубь: ступень " + k + " — " + k + "-я по счёту; порядок " + order);
+                    "проходка идёт от входа вглубь: ступень " + k + " — " + k + "-я по счёту; порядок " + order
+                            + " Иначе тест order_Descent_FromEntranceDownwards перестанет ловить эту поломку. При смене order_Descent_FromEntranceDownwards проверь это утверждение.");
         }
     }
 
@@ -75,7 +82,8 @@ class MinePlanTests {
         assertEquals(
                 Optional.of(order.get(0)),
                 MinePlan.next(order, Set.of(), Set.of()),
-                "первой копается колонка входа: в ней дух начинает спуск");
+                "первой копается колонка входа: в ней дух начинает спуск"
+                        + " Иначе тест next_NothingOpen_ReturnsEntranceColumn перестанет ловить эту поломку. При смене next_NothingOpen_ReturnsEntranceColumn проверь это утверждение.");
     }
 
     @Test
@@ -88,7 +96,8 @@ class MinePlanTests {
         assertEquals(
                 Optional.empty(),
                 MinePlan.next(order, open, closed),
-                "за закрытой рудой колонкой ступень 3 недостижима пешком — следующей нет, нужен обход");
+                "за закрытой рудой колонкой ступень 3 недостижима пешком — следующей нет, нужен обход"
+                        + " Иначе тест next_ClosedColumnInPath_SkipsToReachableOnly перестанет ловить эту поломку. При смене next_ClosedColumnInPath_SkipsToReachableOnly проверь это утверждение.");
     }
 
     @Test
@@ -99,6 +108,7 @@ class MinePlanTests {
         assertEquals(
                 Optional.of(order.get(3)),
                 MinePlan.forward(order.get(1), order.get(2), order),
-                "за ступенью 2 по ходу спуска — ступень 3: туда обход обязан вывести");
+                "за ступенью 2 по ходу спуска — ступень 3: туда обход обязан вывести"
+                        + " Иначе тест forward_DescentStep_ReturnsNextStepBelow перестанет ловить эту поломку. При смене forward_DescentStep_ReturnsNextStepBelow проверь это утверждение.");
     }
 }

@@ -29,11 +29,13 @@ class MineStepStandsFallbackTests {
                 picked.found(),
                 "Дух за стеной в 20 блоках от входа: без достижимой стоянки шаг обязан предложить видимую "
                         + "стоянку у ступени, чтобы подход дошёл до неё, а не падал «вход завален»: "
-                        + picked.reason());
+                        + picked.reason()
+                        + " Иначе тест of_SpiritBehindWallButEntranceStandable_PicksVisibleStandForWalk перестанет ловить эту поломку. При смене of_SpiritBehindWallButEntranceStandable_PicksVisibleStandForWalk проверь это утверждение.");
         assertTrue(
                 picked.stands().stream()
                         .anyMatch(stand ->
                                 stand.y() == FLOOR + 1 && Math.abs(stand.x()) <= 1 && Math.abs(stand.z()) <= 1),
-                "Выбранная стоянка — рядом со ступенью входа (0,65,0), а не за стеной: " + picked.stands());
+                "Выбранная стоянка — рядом со ступенью входа (0,65,0), а не за стеной: " + picked.stands()
+                        + " Иначе тест of_SpiritBehindWallButEntranceStandable_PicksVisibleStandForWalk перестанет ловить эту поломку. При смене of_SpiritBehindWallButEntranceStandable_PicksVisibleStandForWalk проверь это утверждение.");
     }
 }

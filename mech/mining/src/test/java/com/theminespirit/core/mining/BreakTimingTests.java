@@ -29,7 +29,8 @@ class BreakTimingTests {
                 expected,
                 BreakTiming.ticks(hardness, speed, correct),
                 description + ": срок ломки должен совпадать с ванильным расчётом игрока "
-                        + "ceil(твёрдость × (30 или 100) / скорость), иначе дух ломает быстрее или медленнее игрока");
+                        + "ceil(твёрдость × (30 или 100) / скорость), иначе дух ломает быстрее или медленнее игрока"
+                        + " При смене ticks_VanillaTable_MatchesFormula проверь это утверждение.");
     }
 
     @Test
@@ -37,11 +38,13 @@ class BreakTimingTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> BreakTiming.ticks(-1.0, 1.0, true),
-                "Неразрушимый блок (твёрдость -1) ломать нельзя: срок обязан отвергаться, а не становиться 1 тиком");
+                "Неразрушимый блок (твёрдость -1) ломать нельзя: срок обязан отвергаться, а не становиться 1 тиком"
+                        + " Иначе тест ticks_NegativeHardness_IsRejected перестанет ловить эту поломку. При смене ticks_NegativeHardness_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("-1.0"),
-                "Сообщение обязано называть твёрдость. Фактическое: " + error.getMessage());
+                "Сообщение обязано называть твёрдость. Фактическое: " + error.getMessage()
+                        + " Иначе тест ticks_NegativeHardness_IsRejected перестанет ловить эту поломку. При смене ticks_NegativeHardness_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -49,11 +52,13 @@ class BreakTimingTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BreakTiming.ticks(1.0, 0.0, true),
-                "Скорость 0 обязана отвергаться: деление на ноль дало бы бесконечный срок");
+                "Скорость 0 обязана отвергаться: деление на ноль дало бы бесконечный срок"
+                        + " Иначе тест ticks_NonPositiveSpeed_IsRejected перестанет ловить эту поломку. При смене ticks_NonPositiveSpeed_IsRejected проверь это утверждение.");
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BreakTiming.ticks(1.0, -2.0, true),
-                "Отрицательная скорость обязана отвергаться: срок был бы отрицательным");
+                "Отрицательная скорость обязана отвергаться: срок был бы отрицательным"
+                        + " Иначе тест ticks_NonPositiveSpeed_IsRejected перестанет ловить эту поломку. При смене ticks_NonPositiveSpeed_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -61,6 +66,7 @@ class BreakTimingTests {
         assertEquals(
                 Integer.MAX_VALUE,
                 BreakTiming.ticks(1.0e300, 1.0e-300, false),
-                "Огромный срок обязан упираться в Integer.MAX_VALUE: переполнение int дало бы отрицательный срок");
+                "Огромный срок обязан упираться в Integer.MAX_VALUE: переполнение int дало бы отрицательный срок"
+                        + " Иначе тест ticks_HugeHardnessTinySpeed_SaturatesInsteadOfOverflowing перестанет ловить эту поломку. При смене ticks_HugeHardnessTinySpeed_SaturatesInsteadOfOverflowing проверь это утверждение.");
     }
 }
