@@ -29,7 +29,8 @@ class SwimDiveLiveTests {
                 WalkAscent.Step.DIVE,
                 command.step(),
                 "В observe14 маршрут вёл из " + feet + " в воду " + target + " на 4 блока ниже, а дух всплывал "
-                        + "(SWIM + jump) и падал: шаг вниз обязан быть погружением, иначе он никогда не дойдёт до выхода");
+                        + "(SWIM + jump) и падал: шаг вниз обязан быть погружением, иначе он никогда не дойдёт до выхода"
+                        + " При смене next_WaterStepBelowFeet_DivesInsteadOfSurfacing проверь это утверждение.");
     }
 
     private static BlockCoord coord(JsonNode node) {

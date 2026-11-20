@@ -21,9 +21,20 @@ class StuckSituationTests {
 
         StuckSituation.Verdict verdict = StuckSituation.detect(FEET, grid(air, (x, z) -> 64));
 
-        assertEquals(StuckSituation.Kind.FREE, verdict.kind(), "два блока воздуха сбоку — проход есть, дух не застрял");
-        assertEquals(new BlockCoord(11, 64, 10), verdict.passage(), "свободный вид обязан назвать сторону прохода");
-        assertFalse(verdict.stuck(), "свободный дух не требует спасения");
+        assertEquals(
+                StuckSituation.Kind.FREE,
+                verdict.kind(),
+                "два блока воздуха сбоку — проход есть, дух не застрял"
+                        + " Иначе тест detect_TwoAirBlocksToSide_IsFree перестанет ловить эту поломку. При смене detect_TwoAirBlocksToSide_IsFree проверь это утверждение.");
+        assertEquals(
+                new BlockCoord(11, 64, 10),
+                verdict.passage(),
+                "свободный вид обязан назвать сторону прохода"
+                        + " Иначе тест detect_TwoAirBlocksToSide_IsFree перестанет ловить эту поломку. При смене detect_TwoAirBlocksToSide_IsFree проверь это утверждение.");
+        assertFalse(
+                verdict.stuck(),
+                "свободный дух не требует спасения"
+                        + " Иначе тест detect_TwoAirBlocksToSide_IsFree перестанет ловить эту поломку. При смене detect_TwoAirBlocksToSide_IsFree проверь это утверждение.");
     }
 
     @Test
@@ -35,9 +46,16 @@ class StuckSituationTests {
         assertEquals(
                 StuckSituation.Kind.WALLED,
                 verdict.kind(),
-                "проход в один блок высотой не проход: дух ростом в два блока не пролезет, его надо спасать");
-        assertTrue(verdict.stuck(), "замурованный дух требует спасения");
-        assertNull(verdict.pit(), "у стены ямы нет: выход из ямы не подсказывается");
+                "проход в один блок высотой не проход: дух ростом в два блока не пролезет, его надо спасать"
+                        + " Иначе тест detect_OnlyHeadHighGap_IsWalled перестанет ловить эту поломку. При смене detect_OnlyHeadHighGap_IsWalled проверь это утверждение.");
+        assertTrue(
+                verdict.stuck(),
+                "замурованный дух требует спасения"
+                        + " Иначе тест detect_OnlyHeadHighGap_IsWalled перестанет ловить эту поломку. При смене detect_OnlyHeadHighGap_IsWalled проверь это утверждение.");
+        assertNull(
+                verdict.pit(),
+                "у стены ямы нет: выход из ямы не подсказывается"
+                        + " Иначе тест detect_OnlyHeadHighGap_IsWalled перестанет ловить эту поломку. При смене detect_OnlyHeadHighGap_IsWalled проверь это утверждение.");
     }
 
     @Test
@@ -47,7 +65,8 @@ class StuckSituationTests {
         assertEquals(
                 StuckSituation.Kind.WALLED,
                 verdict.kind(),
-                "воздуха по два блока ни в одну сторону нет — дух замурован, даже если рядом ровный пол");
+                "воздуха по два блока ни в одну сторону нет — дух замурован, даже если рядом ровный пол"
+                        + " Иначе тест detect_NoPassageAnySide_IsWalled перестанет ловить эту поломку. При смене detect_NoPassageAnySide_IsWalled проверь это утверждение.");
     }
 
     @Test
@@ -58,8 +77,13 @@ class StuckSituationTests {
         assertEquals(
                 StuckSituation.Kind.DEEP_PIT,
                 verdict.kind(),
-                "яма глубже шага без ступеней — отдельный вид: дух сам не выйдет, нужен подъём");
-        assertEquals(2, verdict.pit().rise(), "от дна до края ямы в три блока подсыпка на два блока");
+                "яма глубже шага без ступеней — отдельный вид: дух сам не выйдет, нужен подъём"
+                        + " Иначе тест detect_SurroundedByHigherGround_IsDeepPit перестанет ловить эту поломку. При смене detect_SurroundedByHigherGround_IsDeepPit проверь это утверждение.");
+        assertEquals(
+                2,
+                verdict.pit().rise(),
+                "от дна до края ямы в три блока подсыпка на два блока"
+                        + " Иначе тест detect_SurroundedByHigherGround_IsDeepPit перестанет ловить эту поломку. При смене detect_SurroundedByHigherGround_IsDeepPit проверь это утверждение.");
     }
 
     @Test
@@ -71,8 +95,12 @@ class StuckSituationTests {
         assertEquals(
                 StuckSituation.Kind.FREE,
                 verdict.kind(),
-                "из ямы есть боковой проход — дух выйдет сам, спасение не требуется");
-        assertNull(verdict.pit(), "при свободном проходе выход из ямы не нужен");
+                "из ямы есть боковой проход — дух выйдет сам, спасение не требуется"
+                        + " Иначе тест detect_PitWithSidePassage_IsFree перестанет ловить эту поломку. При смене detect_PitWithSidePassage_IsFree проверь это утверждение.");
+        assertNull(
+                verdict.pit(),
+                "при свободном проходе выход из ямы не нужен"
+                        + " Иначе тест detect_PitWithSidePassage_IsFree перестанет ловить эту поломку. При смене detect_PitWithSidePassage_IsFree проверь это утверждение.");
     }
 
     @Test
@@ -100,11 +128,13 @@ class StuckSituationTests {
         assertEquals(
                 StuckSituation.Kind.FREE,
                 verdict.kind(),
-                "Вода сбоку — дорога, а не стена: дух в пруду не замурован, спасение не требуется");
+                "Вода сбоку — дорога, а не стена: дух в пруду не замурован, спасение не требуется"
+                        + " Иначе тест detect_WaterOnSide_IsFree перестанет ловить эту поломку. При смене detect_WaterOnSide_IsFree проверь это утверждение.");
         assertEquals(
                 new BlockCoord(11, 64, 10),
                 verdict.passage(),
-                "Свободный вид обязан назвать водную сторону прохода, иначе спасение снова сочтёт духа замурованным");
+                "Свободный вид обязан назвать водную сторону прохода, иначе спасение снова сочтёт духа замурованным"
+                        + " При смене detect_WaterOnSide_IsFree проверь это утверждение.");
     }
 
     @Test
@@ -112,7 +142,8 @@ class StuckSituationTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new StuckSituation.Verdict(StuckSituation.Kind.FREE, null, null),
-                "свободный вид без названного прохода обязан отклоняться: иначе спасение пропустит духа");
+                "свободный вид без названного прохода обязан отклоняться: иначе спасение пропустит духа"
+                        + " При смене verdict_FreeWithoutPassage_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -120,7 +151,8 @@ class StuckSituationTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new StuckSituation.Verdict(StuckSituation.Kind.DEEP_PIT, null, null),
-                "яма без выхода обязана отклоняться: правилу подъёма некуда ставить ступени");
+                "яма без выхода обязана отклоняться: правилу подъёма некуда ставить ступени"
+                        + " Иначе тест verdict_DeepPitWithoutExit_IsRejected перестанет ловить эту поломку. При смене verdict_DeepPitWithoutExit_IsRejected проверь это утверждение.");
     }
 
     private static StuckSituation.Grid grid(Set<BlockCoord> air, IntBinaryOperator floor) {

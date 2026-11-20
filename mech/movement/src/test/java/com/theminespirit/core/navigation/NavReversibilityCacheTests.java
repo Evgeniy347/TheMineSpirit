@@ -19,12 +19,14 @@ class NavReversibilityCacheTests {
 
         assertTrue(
                 session.returnableCacheSize() > 0,
-                "Живая яма склада (-180,57,-519) обязана наполнять кэш обратимости: иначе проверять нечего");
+                "Живая яма склада (-180,57,-519) обязана наполнять кэш обратимости: иначе проверять нечего"
+                        + " При смене livePit_DeepSearch_ReturnableCacheStaysBounded проверь это утверждение.");
         assertTrue(
                 session.returnableCacheSize() <= NavAStarSession.MAX_RETURNABLE_CACHE,
                 "Кэш обратимости на живой яме вырос до " + session.returnableCacheSize() + " клеток при пределе "
                         + NavAStarSession.MAX_RETURNABLE_CACHE + ": сессия поиска съедает память под каждый спуск "
-                        + "(debtnav, п.4)");
+                        + "(debtnav, п.4)"
+                        + " Иначе тест livePit_DeepSearch_ReturnableCacheStaysBounded перестанет ловить эту поломку. При смене livePit_DeepSearch_ReturnableCacheStaysBounded проверь это утверждение.");
     }
 
     @Test
@@ -42,11 +44,13 @@ class NavReversibilityCacheTests {
                 session.returnableCacheSize() <= NavAStarSession.MAX_RETURNABLE_CACHE,
                 "Кэш обратимости вырос до " + session.returnableCacheSize() + " клеток при пределе "
                         + NavAStarSession.MAX_RETURNABLE_CACHE + ": BFS на каждую клетку спуска съедает память "
-                        + "(debtnav, п.4)");
+                        + "(debtnav, п.4)"
+                        + " Иначе тест wideBasin_ManyBelowReference_CacheIsClearedAtLimit перестанет ловить эту поломку. При смене wideBasin_ManyBelowReference_CacheIsClearedAtLimit проверь это утверждение.");
         assertTrue(
                 session.returnableCacheClears() > 0,
                 "Предел кэша ни разу не сработал на широкой низине со ступенью (размер "
                         + session.returnableCacheSize() + ", сбросов " + session.returnableCacheClears()
-                        + ") — сторож бесполезен");
+                        + ") — сторож бесполезен"
+                        + " Иначе тест wideBasin_ManyBelowReference_CacheIsClearedAtLimit перестанет ловить эту поломку. При смене wideBasin_ManyBelowReference_CacheIsClearedAtLimit проверь это утверждение.");
     }
 }

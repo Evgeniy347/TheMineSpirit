@@ -18,8 +18,14 @@ class SurfaceEscapeBlockedTests {
     void path_WithoutBlockedCells_UsesGapInWall() {
         Optional<List<BlockCoord>> found = SurfaceEscape.path(START, walled(), EXIT::equals, null);
 
-        assertTrue(found.isPresent(), "Предусловие: в стене есть проход — путь к небу обязан найтись");
-        assertTrue(found.orElseThrow().contains(GAP), "Предусловие: единственный проход — клетка " + GAP);
+        assertTrue(
+                found.isPresent(),
+                "Предусловие: в стене есть проход — путь к небу обязан найтись"
+                        + " Иначе тест path_WithoutBlockedCells_UsesGapInWall перестанет ловить эту поломку. При смене path_WithoutBlockedCells_UsesGapInWall проверь это утверждение.");
+        assertTrue(
+                found.orElseThrow().contains(GAP),
+                "Предусловие: единственный проход — клетка " + GAP
+                        + " Иначе тест path_WithoutBlockedCells_UsesGapInWall перестанет ловить эту поломку. При смене path_WithoutBlockedCells_UsesGapInWall проверь это утверждение.");
     }
 
     @Test
@@ -30,7 +36,8 @@ class SurfaceEscapeBlockedTests {
         assertFalse(
                 found.isPresent(),
                 "Путь спасения прошёл через клетку чужого плана " + GAP + ": дух лезет в постройку и ломает её "
-                        + "(observe24: oak_stairs хижины (-177,68,-510) сломаны выходом)");
+                        + "(observe24: oak_stairs хижины (-177,68,-510) сломаны выходом)"
+                        + " При смене path_BlockedPlanCell_NotUsedEvenAsOnlyGap проверь это утверждение.");
     }
 
     private static GridWorld walled() {

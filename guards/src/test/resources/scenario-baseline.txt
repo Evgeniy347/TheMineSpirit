@@ -170,3 +170,6 @@ mech/building/com/theminespirit/core/building/FillScenarioTestsPart2.java # ра
 mech/building/com/theminespirit/core/building/PresetLibraryTestsPart2.java # разделение PresetLibraryTests по пределу 300 строк, тесты перенесены из него
 mech/building/com/theminespirit/core/building/ReachPlannerTestsPart2.java # разделение ReachPlannerTests по пределу 300 строк, тесты перенесены из него
 mech/building/com/theminespirit/core/building/SchematicTextParserTestsPart2.java # разделение SchematicTextParserTests по пределу 300 строк, тесты перенесены из него
+mech/movement/com/theminespirit/core/movement/PitExitPlannerTestsPart2.java # разделение PitExitPlannerTests по пределу 300 строк, тесты перенесены из него
+mech/movement/com/theminespirit/core/movement/ProjectileDodgeTestsPart2.java # разделение ProjectileDodgeTests по пределу 300 строк, тесты перенесены из него
+mech/movement/com/theminespirit/core/navigation/NavAStarTestsPart2.java # разделение NavAStarTests по пределу 300 строк, тесты перенесены из него

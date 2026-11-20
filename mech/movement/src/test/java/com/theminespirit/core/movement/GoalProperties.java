@@ -28,7 +28,8 @@ class GoalProperties {
                 composite.heuristic(from),
                 EPS,
                 "Эвристика composite обязана равняться минимуму эвристик вложенных: иначе goto_block "
-                        + "выберет не ближайший найденный блок, а случайный");
+                        + "выберет не ближайший найденный блок, а случайный"
+                        + " При смене composite_Heuristic_EqualsMinimumOfNested проверь это утверждение.");
     }
 
     @Property
@@ -50,7 +51,8 @@ class GoalProperties {
             assertTrue(
                     goal.heuristic(from) <= octile + EPS,
                     "Эвристика " + goal + " обязана не превышать истинную октиальную дистанцию " + octile
-                            + ": завышенная эвристика недопустима для A* и ломает порядок целей");
+                            + ": завышенная эвристика недопустима для A* и ломает порядок целей"
+                            + " При смене heuristic_AnyGoal_NeverExceedsOctileDistance проверь это утверждение.");
         }
     }
 }

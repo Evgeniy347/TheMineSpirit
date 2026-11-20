@@ -8,17 +8,37 @@ import org.junit.jupiter.api.Test;
 class NavActionCostsTest {
     @Test
     void fallCosts_TableRoundTrip_ReturnsOriginalBlocks() {
-        assertEquals(4097, NavFallTable.size(), "таблица падений покрывает 0…4096 блоков");
+        assertEquals(
+                4097,
+                NavFallTable.size(),
+                "таблица падений покрывает 0…4096 блоков"
+                        + " Иначе тест fallCosts_TableRoundTrip_ReturnsOriginalBlocks перестанет ловить эту поломку. При смене fallCosts_TableRoundTrip_ReturnsOriginalBlocks проверь это утверждение.");
         for (int blocks = 0; blocks < 4097; blocks++) {
             assertEquals(
                     blocks,
                     ticksToBlocks(NavActionCosts.fallNBlocksCost(blocks)),
                     0.00000000001,
-                    "падение на " + blocks + " блоков переводится в тики и обратно");
+                    "падение на " + blocks + " блоков переводится в тики и обратно"
+                            + " Иначе тест fallCosts_TableRoundTrip_ReturnsOriginalBlocks перестанет ловить эту поломку. При смене fallCosts_TableRoundTrip_ReturnsOriginalBlocks проверь это утверждение.");
         }
-        assertEquals(6.2344, NavActionCosts.FALL_1_25_BLOCKS_COST, 0.00001, "падение 1.25 блока");
-        assertEquals(3.0710, NavActionCosts.FALL_0_25_BLOCKS_COST, 0.00001, "падение 0.25 блока");
-        assertEquals(3.1634, NavActionCosts.JUMP_ONE_BLOCK_COST, 0.00001, "прыжок на блок");
+        assertEquals(
+                6.2344,
+                NavActionCosts.FALL_1_25_BLOCKS_COST,
+                0.00001,
+                "падение 1.25 блока"
+                        + " Иначе тест fallCosts_TableRoundTrip_ReturnsOriginalBlocks перестанет ловить эту поломку. При смене fallCosts_TableRoundTrip_ReturnsOriginalBlocks проверь это утверждение.");
+        assertEquals(
+                3.0710,
+                NavActionCosts.FALL_0_25_BLOCKS_COST,
+                0.00001,
+                "падение 0.25 блока"
+                        + " Иначе тест fallCosts_TableRoundTrip_ReturnsOriginalBlocks перестанет ловить эту поломку. При смене fallCosts_TableRoundTrip_ReturnsOriginalBlocks проверь это утверждение.");
+        assertEquals(
+                3.1634,
+                NavActionCosts.JUMP_ONE_BLOCK_COST,
+                0.00001,
+                "прыжок на блок"
+                        + " Иначе тест fallCosts_TableRoundTrip_ReturnsOriginalBlocks перестанет ловить эту поломку. При смене fallCosts_TableRoundTrip_ReturnsOriginalBlocks проверь это утверждение.");
     }
 
     private static double ticksToBlocks(double ticks) {

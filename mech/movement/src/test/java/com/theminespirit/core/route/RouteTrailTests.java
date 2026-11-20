@@ -18,7 +18,8 @@ class RouteTrailTests {
         assertEquals(
                 List.of(cell(2), cell(3), cell(4), cell(5), cell(6)),
                 trail.last(),
-                "История держит последние 5 шагов в порядке исполнения: по строке смерти видно, откуда дух шёл");
+                "История держит последние 5 шагов в порядке исполнения: по строке смерти видно, откуда дух шёл"
+                        + " Иначе тест last_MoreStepsThanKeep_ReturnsNewestInOrder перестанет ловить эту поломку. При смене last_MoreStepsThanKeep_ReturnsNewestInOrder проверь это утверждение.");
     }
 
     @Test
@@ -26,7 +27,8 @@ class RouteTrailTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new RouteTrail(0),
-                "Нулевая длина истории бессмысленна: строка смерти осталась бы без шагов маршрута");
+                "Нулевая длина истории бессмысленна: строка смерти осталась бы без шагов маршрута"
+                        + " Иначе тест keep_NotPositive_IsRejected перестанет ловить эту поломку. При смене keep_NotPositive_IsRejected проверь это утверждение.");
     }
 
     private static RouteStep cell(int x) {

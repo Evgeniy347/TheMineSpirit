@@ -18,7 +18,8 @@ class NavChunkLoadingTests {
                 NavSearchStatus.FOUND,
                 before.status(),
                 "observe22: цель в незагруженном чанке — «неизвестно», а не воздух: расчёт не объявляет путь "
-                        + "найденным, пока чанк не подгружен");
+                        + "найденным, пока чанк не подгружен"
+                        + " Иначе тест route_GoalInUnloadedChunk_NotDeclaredAirThenFoundWhenLoaded перестанет ловить эту поломку. При смене route_GoalInUnloadedChunk_NotDeclaredAirThenFoundWhenLoaded проверь это утверждение.");
 
         NavSegmentedRoute after = plan(NavTestWorld.flat(0));
 
@@ -26,7 +27,8 @@ class NavChunkLoadingTests {
                 NavSearchStatus.FOUND,
                 after.status(),
                 "Чанк коридора подгружен (NavigationTickets) — путь находится: дух не ходит по кругу "
-                        + "«маршрут не найден»");
+                        + "«маршрут не найден»"
+                        + " Иначе тест route_GoalInUnloadedChunk_NotDeclaredAirThenFoundWhenLoaded перестанет ловить эту поломку. При смене route_GoalInUnloadedChunk_NotDeclaredAirThenFoundWhenLoaded проверь это утверждение.");
     }
 
     @Test
@@ -42,8 +44,13 @@ class NavChunkLoadingTests {
                 NavSearchStatus.FOUND,
                 route.status(),
                 "Сегментированный путь обязан идти по кэшу незагруженных чанков: без этого дух упирается в границу "
-                        + "загруженного и бросает дальнюю цель");
-        assertEquals(128, route.end().x(), "Кэш довёл сегменты до цели за границей живого мира: " + route.end());
+                        + "загруженного и бросает дальнюю цель"
+                        + " При смене route_CachedUnloadedChunks_SegmentedPathCrossesBorder проверь это утверждение.");
+        assertEquals(
+                128,
+                route.end().x(),
+                "Кэш довёл сегменты до цели за границей живого мира: " + route.end()
+                        + " Иначе тест route_CachedUnloadedChunks_SegmentedPathCrossesBorder перестанет ловить эту поломку. При смене route_CachedUnloadedChunks_SegmentedPathCrossesBorder проверь это утверждение.");
     }
 
     private static NavSegmentedRoute plan(NavWorld world) {

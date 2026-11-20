@@ -30,7 +30,8 @@ class WaterStepLiveTests {
                 command.step(),
                 "В observe12 spirit-1 стоял в воде " + live.get("feet")
                         + " и шаг в воду " + live.get("target_step") + " кончался NO_PROGRESS: вода — это не "
-                        + "ровный шаг, дух обязан плыть (подъём + движение), иначе маршрут в пещере не начинается");
+                        + "ровный шаг, дух обязан плыть (подъём + движение), иначе маршрут в пещере не начинается"
+                        + " При смене next_FlatStepIntoWater_SwimsInsteadOfWalking проверь это утверждение.");
     }
 
     @Test
@@ -44,7 +45,8 @@ class WaterStepLiveTests {
         assertEquals(
                 WalkAscent.Step.MOVE,
                 command.step(),
-                "Сухой ровный шаг остаётся ходьбой: иначе каждый шаг по земле начнёт всплывать");
+                "Сухой ровный шаг остаётся ходьбой: иначе каждый шаг по земле начнёт всплывать"
+                        + " При смене next_FlatDryStep_Walks проверь это утверждение.");
     }
 
     private static BlockCoord coord(JsonNode node) {

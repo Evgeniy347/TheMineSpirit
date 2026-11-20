@@ -21,11 +21,13 @@ class PerchLevelTests {
 
         assertTrue(
                 SurfaceLevel.escaped(true, 98, heights, false),
-                "Старое правило засчитывало вершину столба выходом: «выше всех под открытым небом»");
+                "Старое правило засчитывало вершину столба выходом: «выше всех под открытым небом»"
+                        + " Иначе тест ownPillarThirty_OpenSky_NotEscaped перестанет ловить эту поломку. При смене ownPillarThirty_OpenSky_NotEscaped проверь это утверждение.");
         assertFalse(
                 PerchLevel.escaped(true, 98, heights, false),
                 "spirit-4 10.11 на своём столбе y=98 над землёй y=68: метка «застрял» обязана остаться, "
-                        + "иначе спасение со спуском не запускается и дух стоит наверху часами");
+                        + "иначе спасение со спуском не запускается и дух стоит наверху часами"
+                        + " При смене ownPillarThirty_OpenSky_NotEscaped проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +38,8 @@ class PerchLevelTests {
 
         assertTrue(
                 PerchLevel.perched(true, 98, heights),
-                "Соседний столб той же высоты — не земля: вокруг всё равно обрыв, дух на вершине");
+                "Соседний столб той же высоты — не земля: вокруг всё равно обрыв, дух на вершине"
+                        + " Иначе тест pillar_NextToForeignPillarSameHeight_StillPerched перестанет ловить эту поломку. При смене pillar_NextToForeignPillarSameHeight_StillPerched проверь это утверждение.");
     }
 
     @Test
@@ -44,7 +47,8 @@ class PerchLevelTests {
         for (int height = PerchLevel.SAFE_DROP + 1; height <= 40; height++) {
             assertTrue(
                     PerchLevel.perched(true, 64 + height, around(64)),
-                    "Столб высотой " + height + " выше безопасного прыжка — вершина, а не поверхность");
+                    "Столб высотой " + height + " выше безопасного прыжка — вершина, а не поверхность"
+                            + " Иначе тест pillar_EveryHeightAboveSafeDrop_Perched перестанет ловить эту поломку. При смене pillar_EveryHeightAboveSafeDrop_Perched проверь это утверждение.");
         }
     }
 
@@ -52,12 +56,16 @@ class PerchLevelTests {
     void step_WithinSafeDrop_NotPerched() {
         assertFalse(
                 PerchLevel.perched(true, 64 + PerchLevel.SAFE_DROP, around(64)),
-                "Уступ в безопасный прыжок — дух спрыгивает сам, это не застревание");
+                "Уступ в безопасный прыжок — дух спрыгивает сам, это не застревание"
+                        + " Иначе тест step_WithinSafeDrop_NotPerched перестанет ловить эту поломку. При смене step_WithinSafeDrop_NotPerched проверь это утверждение.");
     }
 
     @Test
     void flatGround_Level_Escaped() {
-        assertTrue(PerchLevel.escaped(true, 64, around(64), false), "Ровная земля — выход");
+        assertTrue(
+                PerchLevel.escaped(true, 64, around(64), false),
+                "Ровная земля — выход"
+                        + " Иначе тест flatGround_Level_Escaped перестанет ловить эту поломку. При смене flatGround_Level_Escaped проверь это утверждение.");
     }
 
     @Test
@@ -69,18 +77,23 @@ class PerchLevelTests {
 
         assertFalse(
                 PerchLevel.perched(true, 74, heights),
-                "Крыша шире столба: большая часть клеток вокруг на уровне ног — решает прежнее правило");
+                "Крыша шире столба: большая часть клеток вокруг на уровне ног — решает прежнее правило"
+                        + " Иначе тест roof_LevelAround_NotPerched перестанет ловить эту поломку. При смене roof_LevelAround_NotPerched проверь это утверждение.");
     }
 
     @Test
     void pit_UnderOpenSky_StillNotEscaped() {
         assertFalse(
                 PerchLevel.escaped(true, 53, around(63), false),
-                "Яма по-прежнему ловушка: новое правило только добавляет вершину столба");
+                "Яма по-прежнему ловушка: новое правило только добавляет вершину столба"
+                        + " Иначе тест pit_UnderOpenSky_StillNotEscaped перестанет ловить эту поломку. При смене pit_UnderOpenSky_StillNotEscaped проверь это утверждение.");
     }
 
     @Test
     void underRoof_NoSky_NotPerched() {
-        assertFalse(PerchLevel.perched(false, 98, around(68)), "Без открытого неба это не вершина столба");
+        assertFalse(
+                PerchLevel.perched(false, 98, around(68)),
+                "Без открытого неба это не вершина столба"
+                        + " Иначе тест underRoof_NoSky_NotPerched перестанет ловить эту поломку. При смене underRoof_NoSky_NotPerched проверь это утверждение.");
     }
 }

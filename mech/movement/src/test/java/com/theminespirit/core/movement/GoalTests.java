@@ -62,13 +62,15 @@ class GoalTests {
                 row.goal().isSatisfied(row.feet()),
                 "Цель " + row.goal() + " обязана считать позицию " + row.feet()
                         + (row.satisfied() ? " достигнутой" : " недостигнутой")
-                        + ": иначе дух либо остановится раньше цели, либо пройдёт мимо неё");
+                        + ": иначе дух либо остановится раньше цели, либо пройдёт мимо неё"
+                        + " При смене goal_TableRow_SatisfactionAndHeuristicMatch проверь это утверждение.");
         assertEquals(
                 row.heuristic(),
                 row.goal().heuristic(row.feet()),
                 EPS,
                 "Эвристика цели " + row.goal() + " от " + row.feet() + " обязана равняться " + row.heuristic()
-                        + ": неверная эвристика ломает порядок целей и допустимость поиска пути");
+                        + ": неверная эвристика ломает порядок целей и допустимость поиска пути"
+                        + " При смене goal_TableRow_SatisfactionAndHeuristicMatch проверь это утверждение.");
     }
 
     @Test
@@ -77,11 +79,13 @@ class GoalTests {
                 IllegalArgumentException.class,
                 () -> new GoalComposite(List.of()),
                 "Составная цель без вложенных обязана отвергаться: пустая цель недостижима, "
-                        + "и дух встанет до первого шага, а стратег не узнает почему");
+                        + "и дух встанет до первого шага, а стратег не узнает почему"
+                        + " Иначе тест composite_EmptyList_Throws перестанет ловить эту поломку. При смене composite_EmptyList_Throws проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("пуст"),
-                "Отказ обязан объяснять, что список целей пуст. Фактическое: " + error.getMessage());
+                "Отказ обязан объяснять, что список целей пуст. Фактическое: " + error.getMessage()
+                        + " Иначе тест composite_EmptyList_Throws перестанет ловить эту поломку. При смене composite_EmptyList_Throws проверь это утверждение.");
     }
 
     @Test
@@ -90,6 +94,7 @@ class GoalTests {
                 IllegalArgumentException.class,
                 () -> new GoalNear(new BlockCoord(0, 0, 0), -1),
                 "Окрестность с отрицательным радиусом обязана отвергаться: такая цель недостижима "
-                        + "и дух встанет до первого шага");
+                        + "и дух встанет до первого шага"
+                        + " Иначе тест near_NegativeRadius_Throws перестанет ловить эту поломку. При смене near_NegativeRadius_Throws проверь это утверждение.");
     }
 }

@@ -42,15 +42,25 @@ class NavOpenSetTests {
             expected.add(node);
         }
         NavOpenSet heap = new NavBinaryHeapOpenSet();
-        assertTrue(heap.isEmpty(), "новая куча пуста");
+        assertTrue(
+                heap.isEmpty(),
+                "новая куча пуста"
+                        + " Иначе тест assertAscending перестанет ловить эту поломку. При смене assertAscending проверь это утверждение.");
         for (NavNode node : nodes) {
             heap.insert(node);
         }
-        assertFalse(heap.isEmpty(), "после вставки куча не пуста");
+        assertFalse(
+                heap.isEmpty(),
+                "после вставки куча не пуста"
+                        + " Иначе тест assertAscending перестанет ловить эту поломку. При смене assertAscending проверь это утверждение.");
         expected.sort(Comparator.comparingDouble(NavNode::combinedCost));
 
         for (int i = 0; i < size / 2; i++) {
-            assertEquals(expected.get(i), heap.removeLowest(), "куча отдаёт узел с наименьшей ценой");
+            assertEquals(
+                    expected.get(i),
+                    heap.removeLowest(),
+                    "куча отдаёт узел с наименьшей ценой"
+                            + " Иначе тест assertAscending перестанет ловить эту поломку. При смене assertAscending проверь это утверждение.");
         }
         for (NavNode node : nodes) {
             if (!node.isOpen()) {
@@ -63,7 +73,10 @@ class NavOpenSetTests {
         double previous = Double.NEGATIVE_INFINITY;
         while (!heap.isEmpty()) {
             double cost = heap.removeLowest().combinedCost();
-            assertTrue(cost >= previous, "после update порядок остаётся по возрастанию цены");
+            assertTrue(
+                    cost >= previous,
+                    "после update порядок остаётся по возрастанию цены"
+                            + " Иначе тест assertAscending перестанет ловить эту поломку. При смене assertAscending проверь это утверждение.");
             previous = cost;
         }
     }

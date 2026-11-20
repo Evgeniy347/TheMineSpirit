@@ -24,13 +24,21 @@ class GateCrossingTests {
                 List.of(GateCrossing.Phase.OPENED, GateCrossing.Phase.OPENED, GateCrossing.Phase.INSIDE),
                 phases,
                 "До клетки створки дух ещё не прошёл (INC-82: калитку закрывали через 50 мс после открытия, дух "
-                        + "упирался в неё); проверь условие «в клетке створки»");
-        assertFalse(crossing.closable(), "Дух стоит в клетке калитки: закрыть сейчас — запереть его в створке");
+                        + "упирался в неё); проверь условие «в клетке створки»"
+                        + " Иначе тест observe_OpenThenGateCellThenBehind_ClosableOnlyBehind перестанет ловить эту поломку. При смене observe_OpenThenGateCellThenBehind_ClosableOnlyBehind проверь это утверждение.");
+        assertFalse(
+                crossing.closable(),
+                "Дух стоит в клетке калитки: закрыть сейчас — запереть его в створке"
+                        + " Иначе тест observe_OpenThenGateCellThenBehind_ClosableOnlyBehind перестанет ловить эту поломку. При смене observe_OpenThenGateCellThenBehind_ClosableOnlyBehind проверь это утверждение.");
         assertEquals(
                 GateCrossing.Phase.BEYOND,
                 crossing.observe(BEHIND),
-                "Шаг за створку на другую сторону — проход завершён");
-        assertTrue(crossing.closable(), "Дух за калиткой: теперь створку закрывают, иначе ограда открыта для мобов");
+                "Шаг за створку на другую сторону — проход завершён"
+                        + " Иначе тест observe_OpenThenGateCellThenBehind_ClosableOnlyBehind перестанет ловить эту поломку. При смене observe_OpenThenGateCellThenBehind_ClosableOnlyBehind проверь это утверждение.");
+        assertTrue(
+                crossing.closable(),
+                "Дух за калиткой: теперь створку закрывают, иначе ограда открыта для мобов"
+                        + " При смене observe_OpenThenGateCellThenBehind_ClosableOnlyBehind проверь это утверждение.");
     }
 
     @Test
@@ -41,8 +49,12 @@ class GateCrossingTests {
         assertEquals(
                 GateCrossing.Phase.OPENED,
                 crossing.observe(BESIDE),
-                "Дух вернулся на сторону, откуда открыл калитку: он не прошёл, закрывать рано");
-        assertFalse(crossing.closable(), "Без прохода на другую сторону калитку не закрывают: дух пойдёт снова");
+                "Дух вернулся на сторону, откуда открыл калитку: он не прошёл, закрывать рано"
+                        + " Иначе тест observe_StepsBackToOpeningSide_NotClosable перестанет ловить эту поломку. При смене observe_StepsBackToOpeningSide_NotClosable проверь это утверждение.");
+        assertFalse(
+                crossing.closable(),
+                "Без прохода на другую сторону калитку не закрывают: дух пойдёт снова"
+                        + " Иначе тест observe_StepsBackToOpeningSide_NotClosable перестанет ловить эту поломку. При смене observe_StepsBackToOpeningSide_NotClosable проверь это утверждение.");
     }
 
     @Test
@@ -53,6 +65,7 @@ class GateCrossingTests {
 
         assertFalse(
                 crossing.closable(),
-                "Без клетки створки проход не засчитан: последовательность — открыть, клетка калитки, за калиткой");
+                "Без клетки створки проход не засчитан: последовательность — открыть, клетка калитки, за калиткой"
+                        + " Иначе тест observe_NeverEnteredButOtherSide_NotClosable перестанет ловить эту поломку. При смене observe_NeverEnteredButOtherSide_NotClosable проверь это утверждение.");
     }
 }

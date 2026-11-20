@@ -40,7 +40,8 @@ class PathNetworkTests {
                 Optional.of(List.of(cell(5, 1, 0), cell(10, 1, 0), cell(20, 1, 0), cell(25, 1, 0))),
                 route,
                 "маршрут по сети — вход, концы пройденных отрезков, выход: между соседними точками не больше отрезка, "
-                        + "и каждый шаг духа укладывается в путь игры 32");
+                        + "и каждый шаг духа укладывается в путь игры 32"
+                        + " Иначе тест route_ThreeSegmentsInARow_PassesThroughTheirEnds перестанет ловить эту поломку. При смене route_ThreeSegmentsInARow_PassesThroughTheirEnds проверь это утверждение.");
     }
 
     @Test
@@ -50,7 +51,8 @@ class PathNetworkTests {
         assertEquals(
                 Optional.of(List.of(cell(3, 1, 0), cell(11, 1, 0))),
                 network.route(cell(3, 1, 0), cell(11, 1, 0)),
-                "вход и выход на одном отрезке — сразу к выходу, без захода на концы");
+                "вход и выход на одном отрезке — сразу к выходу, без захода на концы"
+                        + " Иначе тест route_EntryAndExitOnOneSegment_GoesDirect перестанет ловить эту поломку. При смене route_EntryAndExitOnOneSegment_GoesDirect проверь это утверждение.");
     }
 
     @Test
@@ -61,12 +63,17 @@ class PathNetworkTests {
         network.add(line(0, 10, 1, 10));
         network.add(column(10, 0, 10, 1));
         network.blockChanged(cell(5, 0, 0));
-        assertEquals(List.of(shortcut), network.dirty(), "пол под отрезком изменился — к пересчёту только он");
+        assertEquals(
+                List.of(shortcut),
+                network.dirty(),
+                "пол под отрезком изменился — к пересчёту только он"
+                        + " Иначе тест route_ShortcutDirty_TakesTheLongWayAround перестанет ловить эту поломку. При смене route_ShortcutDirty_TakesTheLongWayAround проверь это утверждение.");
         Optional<List<BlockCoord>> route = network.route(cell(0, 1, 0), cell(10, 1, 0));
         assertEquals(
                 Optional.of(List.of(cell(0, 1, 0), cell(0, 1, 10), cell(10, 1, 10), cell(10, 1, 0))),
                 route,
-                "задетый, ещё не пересчитанный отрезок маршрут обходит: блок мог перекрыть проход");
+                "задетый, ещё не пересчитанный отрезок маршрут обходит: блок мог перекрыть проход"
+                        + " Иначе тест route_ShortcutDirty_TakesTheLongWayAround перестанет ловить эту поломку. При смене route_ShortcutDirty_TakesTheLongWayAround проверь это утверждение.");
     }
 
     @Test
@@ -75,8 +82,14 @@ class PathNetworkTests {
         int id = network.add(line(0, 10, 1, 0));
         network.blockChanged(cell(5, 1, 0));
         network.replace(id, line(0, 10, 1, 0));
-        assertTrue(network.dirty().isEmpty(), "пересчитанный отрезок снят с пересчёта: " + network.dirty());
-        assertTrue(network.route(cell(0, 1, 0), cell(10, 1, 0)).isPresent(), "пересчитанный отрезок снова в маршрутах");
+        assertTrue(
+                network.dirty().isEmpty(),
+                "пересчитанный отрезок снят с пересчёта: " + network.dirty()
+                        + " Иначе тест replace_RepairedSegment_IsUsableAgain перестанет ловить эту поломку. При смене replace_RepairedSegment_IsUsableAgain проверь это утверждение.");
+        assertTrue(
+                network.route(cell(0, 1, 0), cell(10, 1, 0)).isPresent(),
+                "пересчитанный отрезок снова в маршрутах"
+                        + " Иначе тест replace_RepairedSegment_IsUsableAgain перестанет ловить эту поломку. При смене replace_RepairedSegment_IsUsableAgain проверь это утверждение.");
     }
 
     @Test
@@ -86,7 +99,8 @@ class PathNetworkTests {
         assertEquals(
                 Set.of(),
                 network.blockChanged(cell(5, 4, 0)),
-                "блок выше головы над отрезком на ходьбу не влияет — отрезок не трогается");
+                "блок выше головы над отрезком на ходьбу не влияет — отрезок не трогается"
+                        + " Иначе тест blockChanged_BlockAwayFromNetwork_TouchesNothing перестанет ловить эту поломку. При смене blockChanged_BlockAwayFromNetwork_TouchesNothing проверь это утверждение.");
     }
 
     @Test
@@ -95,7 +109,8 @@ class PathNetworkTests {
                 operationsForOneChange(10),
                 operationsForOneChange(2_000),
                 "изменение одного блока в сети из 2 000 отрезков стоит столько же операций, сколько в сети из 10: "
-                        + "событие блока идёт в тике, обход всей сети на каждое — лаг поселения");
+                        + "событие блока идёт в тике, обход всей сети на каждое — лаг поселения"
+                        + " Иначе тест blockChanged_OneBlockInHugeNetwork_CostsAsInSmallOne перестанет ловить эту поломку. При смене blockChanged_OneBlockInHugeNetwork_CostsAsInSmallOne проверь это утверждение.");
     }
 
     private static long operationsForOneChange(int segments) {
@@ -105,7 +120,11 @@ class PathNetworkTests {
         }
         long before = network.operations();
         Set<Integer> touched = network.blockChanged(cell(7, 0, 0));
-        assertEquals(1, touched.size(), "пол под одним отрезком задевает ровно его: " + touched);
+        assertEquals(
+                1,
+                touched.size(),
+                "пол под одним отрезком задевает ровно его: " + touched
+                        + " Иначе тест blockChanged_OneBlockInHugeNetwork_CostsAsInSmallOne перестанет ловить эту поломку. При смене blockChanged_OneBlockInHugeNetwork_CostsAsInSmallOne проверь это утверждение.");
         return network.operations() - before;
     }
 }

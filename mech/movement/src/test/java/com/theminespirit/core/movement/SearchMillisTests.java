@@ -10,7 +10,8 @@ class SearchMillisTests {
         assertEquals(
                 0,
                 SearchMillis.since(0, 43_844_176_000_000L),
-                "Незаполненный замер (0) не превращается в «поиск 43844176 мс»: в логе честный ноль");
+                "Незаполненный замер (0) не превращается в «поиск 43844176 мс»: в логе честный ноль"
+                        + " Иначе тест since_ZeroStart_IsZeroNotHuge перестанет ловить эту поломку. При смене since_ZeroStart_IsZeroNotHuge проверь это утверждение.");
     }
 
     @Test
@@ -18,7 +19,8 @@ class SearchMillisTests {
         assertEquals(
                 250,
                 SearchMillis.since(1_000_000_000L, 1_250_000_000L),
-                "Замер от реального начала считается в миллисекундах");
+                "Замер от реального начала считается в миллисекундах"
+                        + " Иначе тест since_RealStart_CountsMilliseconds перестанет ловить эту поломку. При смене since_RealStart_CountsMilliseconds проверь это утверждение.");
     }
 
     @Test
@@ -26,6 +28,7 @@ class SearchMillisTests {
         assertEquals(
                 0,
                 SearchMillis.since(2_000_000_000L, 1_000_000_000L),
-                "Обратный ход часов не даёт отрицательный поиск");
+                "Обратный ход часов не даёт отрицательный поиск"
+                        + " Иначе тест since_ClockWentBack_IsZero перестанет ловить эту поломку. При смене since_ClockWentBack_IsZero проверь это утверждение.");
     }
 }

@@ -24,7 +24,8 @@ class LineObstacleTests {
                 Optional.of(new BlockCoord(1, 1, 0)),
                 obstacle,
                 "Преграда между духом и целью обязана называться клеткой: иначе отказ подхода не говорит, "
-                        + "что именно мешает и что расчищать (observe6: стена x=-190 у ступени -189,69,-518)");
+                        + "что именно мешает и что расчищать (observe6: стена x=-190 у ступени -189,69,-518)"
+                        + " При смене first_WallBetween_NamesBlockCell проверь это утверждение.");
     }
 
     @Test
@@ -34,7 +35,8 @@ class LineObstacleTests {
         assertTrue(
                 LineObstacle.first(new BlockCoord(0, 1, 0), new BlockCoord(3, 1, 2), view)
                         .isEmpty(),
-                "Свободная линия не даёт преграды: отказ подхода не должен выдумывать блок");
+                "Свободная линия не даёт преграды: отказ подхода не должен выдумывать блок"
+                        + " Иначе тест first_NoSolid_Empty перестанет ловить эту поломку. При смене first_NoSolid_Empty проверь это утверждение.");
     }
 
     @Test
@@ -46,6 +48,7 @@ class LineObstacleTests {
         assertTrue(
                 LineObstacle.first(new BlockCoord(0, 1, 0), new BlockCoord(1, 1, 0), view)
                         .isEmpty(),
-                "Сама цель не считается преградой: иначе отказ назовёт блок, к которому дух и так не идёт");
+                "Сама цель не считается преградой: иначе отказ назовёт блок, к которому дух и так не идёт"
+                        + " При смене first_TargetSolid_NotReported проверь это утверждение.");
     }
 }

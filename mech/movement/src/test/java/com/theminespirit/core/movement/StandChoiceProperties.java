@@ -34,7 +34,8 @@ class StandChoiceProperties {
                 bruteBest(shuffled, target, spirit, world),
                 StandChoice.choose(target, spirit, world),
                 "Выбор стоянки обязан не зависеть от порядка кандидатов: иначе один и тот же подход "
-                        + "даёт разные стоянки от запуска к запуску");
+                        + "даёт разные стоянки от запуска к запуску"
+                        + " При смене choose_CandidateOrderShuffled_SameStand проверь это утверждение.");
     }
 
     private static CountingSafety openGround(BlockCoord target) {

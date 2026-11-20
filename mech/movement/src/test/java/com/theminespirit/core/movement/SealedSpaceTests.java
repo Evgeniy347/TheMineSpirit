@@ -18,14 +18,16 @@ class SealedSpaceTests {
         assertFalse(
                 SealedSpace.sealed(FEET, view(Set.of(surface), water, Set.of(surface))),
                 "Дух в воде под открытым небом не замурован: он всплывает, а не копает лестницу; "
-                        + "иначе спасение срабатывает при каждом заплыве и зацикливается");
+                        + "иначе спасение срабатывает при каждом заплыве и зацикливается"
+                        + " При смене sealed_UnderwaterPocketWithSurfaceAbove_NotSealed проверь это утверждение.");
     }
 
     @Test
     void sealed_StonePocketWithoutSky_IsSealed() {
         assertTrue(
                 SealedSpace.sealed(FEET, view(Set.of(FEET), Set.of(), Set.of())),
-                "Карман из камня без единого выхода к небу — настоящая замуровка: духу требуется лестница");
+                "Карман из камня без единого выхода к небу — настоящая замуровка: духу требуется лестница"
+                        + " Иначе тест sealed_StonePocketWithoutSky_IsSealed перестанет ловить эту поломку. При смене sealed_StonePocketWithoutSky_IsSealed проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +38,8 @@ class SealedSpaceTests {
 
         assertFalse(
                 SealedSpace.sealed(FEET, view(air, water, Set.of(surface))),
-                "Вода — дорога: подводный ход, ведущий к небу, не делает духа замурованным");
+                "Вода — дорога: подводный ход, ведущий к небу, не делает духа замурованным"
+                        + " Иначе тест sealed_WaterCorridorToSky_NotSealed перестанет ловить эту поломку. При смене sealed_WaterCorridorToSky_NotSealed проверь это утверждение.");
     }
 
     private static SealedSpace.View view(Set<BlockCoord> air, Set<BlockCoord> water, Set<BlockCoord> sky) {

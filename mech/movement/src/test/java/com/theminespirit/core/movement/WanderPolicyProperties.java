@@ -22,7 +22,8 @@ class WanderPolicyProperties {
         assertEquals(
                 WanderPolicy.next(seed, origin, radius, attempt),
                 WanderPolicy.next(seed, origin, radius, attempt),
-                "Два вызова с тем же сидом обязаны давать ту же точку: иначе блуждание нетестируемо");
+                "Два вызова с тем же сидом обязаны давать ту же точку: иначе блуждание нетестируемо"
+                        + " При смене next_SameSeed_SamePoint проверь это утверждение.");
     }
 
     @Property
@@ -42,6 +43,7 @@ class WanderPolicyProperties {
                         && Math.abs(point.z() - z) <= radius
                         && Math.abs(point.y() - y) <= WanderPolicy.VERTICAL_SPREAD,
                 "Точка блуждания обязана лежать внутри радиуса от старта и в пределах ±2 по высоте: "
-                        + "иначе дух уходит из порученной зоны. Точка: " + point);
+                        + "иначе дух уходит из порученной зоны. Точка: " + point
+                        + " При смене next_AnySeed_PointInsideRadius проверь это утверждение.");
     }
 }

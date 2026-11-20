@@ -12,8 +12,18 @@ class LookAnglesTests {
     void toward_South_YawZeroPitchZero() {
         LookAngles angles = LookAngles.toward(0, 0, 5);
 
-        assertEquals(0.0F, angles.yaw(), EPS, "Юг (+Z) в Minecraft — рысканье 0°: иначе дух смотрит мимо блока");
-        assertEquals(0.0F, angles.pitch(), EPS, "Блок на уровне глаз — тангаж 0°");
+        assertEquals(
+                0.0F,
+                angles.yaw(),
+                EPS,
+                "Юг (+Z) в Minecraft — рысканье 0°: иначе дух смотрит мимо блока"
+                        + " При смене toward_South_YawZeroPitchZero проверь это утверждение.");
+        assertEquals(
+                0.0F,
+                angles.pitch(),
+                EPS,
+                "Блок на уровне глаз — тангаж 0°"
+                        + " Иначе тест toward_South_YawZeroPitchZero перестанет ловить эту поломку. При смене toward_South_YawZeroPitchZero проверь это утверждение.");
     }
 
     @Test
@@ -22,12 +32,18 @@ class LookAnglesTests {
                 90.0F,
                 LookAngles.toward(-3, 0, 0).yaw(),
                 EPS,
-                "Запад (−X) в Minecraft — рысканье 90°: перепутанный знак разворачивает голову от блока");
+                "Запад (−X) в Minecraft — рысканье 90°: перепутанный знак разворачивает голову от блока"
+                        + " Иначе тест toward_West_YawNinety перестанет ловить эту поломку. При смене toward_West_YawNinety проверь это утверждение.");
     }
 
     @Test
     void toward_East_YawMinusNinety() {
-        assertEquals(-90.0F, LookAngles.toward(4, 0, 0).yaw(), EPS, "Восток (+X) — рысканье −90°");
+        assertEquals(
+                -90.0F,
+                LookAngles.toward(4, 0, 0).yaw(),
+                EPS,
+                "Восток (+X) — рысканье −90°"
+                        + " Иначе тест toward_East_YawMinusNinety перестанет ловить эту поломку. При смене toward_East_YawMinusNinety проверь это утверждение.");
     }
 
     @Test
@@ -38,11 +54,17 @@ class LookAnglesTests {
                 45.0F,
                 angles.pitch(),
                 EPS,
-                "Блок ниже глаз — тангаж положителен (взгляд вниз), под 45° при равных смещениях: иначе дух глядит в небо");
+                "Блок ниже глаз — тангаж положителен (взгляд вниз), под 45° при равных смещениях: иначе дух глядит в небо"
+                        + " При смене toward_BlockBelowFeet_PitchPositiveDown проверь это утверждение.");
     }
 
     @Test
     void toward_StraightUp_PitchMinusNinety() {
-        assertEquals(-90.0F, LookAngles.toward(0, 2, 0).pitch(), EPS, "Блок прямо над головой — тангаж −90°");
+        assertEquals(
+                -90.0F,
+                LookAngles.toward(0, 2, 0).pitch(),
+                EPS,
+                "Блок прямо над головой — тангаж −90°"
+                        + " Иначе тест toward_StraightUp_PitchMinusNinety перестанет ловить эту поломку. При смене toward_StraightUp_PitchMinusNinety проверь это утверждение.");
     }
 }

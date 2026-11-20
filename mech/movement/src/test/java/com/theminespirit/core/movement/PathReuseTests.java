@@ -12,26 +12,32 @@ class PathReuseTests {
         assertTrue(
                 PathReuse.keep(true, -156, 71, -489, -156, 71, -489, true),
                 "Повторный запрос пути к той же цели при живом пути обязан переиспользовать путь: иначе дух "
-                        + "разворачивается к началу нового пути и дёргается на месте");
+                        + "разворачивается к началу нового пути и дёргается на месте"
+                        + " При смене keep_SameTargetWithActivePath_IsTrue проверь это утверждение.");
     }
 
     @Test
     void keep_SameTargetWithoutActivePath_IsFalse() {
         assertFalse(
                 PathReuse.keep(true, -156, 71, -489, -156, 71, -489, false),
-                "Закончившийся путь не переиспользуют: к той же цели нужен новый путь");
+                "Закончившийся путь не переиспользуют: к той же цели нужен новый путь"
+                        + " Иначе тест keep_SameTargetWithoutActivePath_IsFalse перестанет ловить эту поломку. При смене keep_SameTargetWithoutActivePath_IsFalse проверь это утверждение.");
     }
 
     @Test
     void keep_OtherTarget_IsFalse() {
         assertFalse(
                 PathReuse.keep(true, -156, 71, -489, -178, 73, -518, true),
-                "Для другой цели путь строится заново: иначе дух пойдёт к старой точке");
+                "Для другой цели путь строится заново: иначе дух пойдёт к старой точке"
+                        + " При смене keep_OtherTarget_IsFalse проверь это утверждение.");
     }
 
     @Test
     void keep_NoPreviousTarget_IsFalse() {
-        assertFalse(PathReuse.keep(false, 0, 0, 0, -156, 71, -489, true), "Без прошлой цели переиспользовать нечего");
+        assertFalse(
+                PathReuse.keep(false, 0, 0, 0, -156, 71, -489, true),
+                "Без прошлой цели переиспользовать нечего"
+                        + " Иначе тест keep_NoPreviousTarget_IsFalse перестанет ловить эту поломку. При смене keep_NoPreviousTarget_IsFalse проверь это утверждение.");
     }
 
     @Test

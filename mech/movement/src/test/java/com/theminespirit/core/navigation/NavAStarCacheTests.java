@@ -24,10 +24,25 @@ class NavAStarCacheTests {
         NavResult without = plan(plain, 128);
         NavResult with = plan(cached, 128);
 
-        assertEquals(NavSearchStatus.SEGMENT, without.status(), "без кэша поиск упирается в границу чанка");
-        assertTrue(without.end().x() < 16, "без кэша путь не выходит из загруженного чанка: " + without.end());
-        assertEquals(NavSearchStatus.FOUND, with.status(), "с кэшем путь идёт по незагруженным чанкам");
-        assertEquals(128, with.end().x(), "цель достигнута");
+        assertEquals(
+                NavSearchStatus.SEGMENT,
+                without.status(),
+                "без кэша поиск упирается в границу чанка"
+                        + " Иначе тест unloadedChunks_Cached_AllowPathBeyondLoadedBorder перестанет ловить эту поломку. При смене unloadedChunks_Cached_AllowPathBeyondLoadedBorder проверь это утверждение.");
+        assertTrue(
+                without.end().x() < 16,
+                "без кэша путь не выходит из загруженного чанка: " + without.end()
+                        + " Иначе тест unloadedChunks_Cached_AllowPathBeyondLoadedBorder перестанет ловить эту поломку. При смене unloadedChunks_Cached_AllowPathBeyondLoadedBorder проверь это утверждение.");
+        assertEquals(
+                NavSearchStatus.FOUND,
+                with.status(),
+                "с кэшем путь идёт по незагруженным чанкам"
+                        + " Иначе тест unloadedChunks_Cached_AllowPathBeyondLoadedBorder перестанет ловить эту поломку. При смене unloadedChunks_Cached_AllowPathBeyondLoadedBorder проверь это утверждение.");
+        assertEquals(
+                128,
+                with.end().x(),
+                "цель достигнута"
+                        + " Иначе тест unloadedChunks_Cached_AllowPathBeyondLoadedBorder перестанет ловить эту поломку. При смене unloadedChunks_Cached_AllowPathBeyondLoadedBorder проверь это утверждение.");
     }
 
     @Test
@@ -40,8 +55,16 @@ class NavAStarCacheTests {
 
         NavResult result = plan(context(new NavCacheWorld(live, cache)), 20);
 
-        assertEquals(NavSearchStatus.FOUND, result.status(), "один кэшированный чанк открывает путь до x=20");
-        assertEquals(20, result.end().x(), "цель внутри кэшированного чанка");
+        assertEquals(
+                NavSearchStatus.FOUND,
+                result.status(),
+                "один кэшированный чанк открывает путь до x=20"
+                        + " Иначе тест cachedChunkOne_OnlyOneChunk_AllowsPathToItsFarEdge перестанет ловить эту поломку. При смене cachedChunkOne_OnlyOneChunk_AllowsPathToItsFarEdge проверь это утверждение.");
+        assertEquals(
+                20,
+                result.end().x(),
+                "цель внутри кэшированного чанка"
+                        + " Иначе тест cachedChunkOne_OnlyOneChunk_AllowsPathToItsFarEdge перестанет ловить эту поломку. При смене cachedChunkOne_OnlyOneChunk_AllowsPathToItsFarEdge проверь это утверждение.");
     }
 
     private static NavResult plan(NavContext context, int targetX) {

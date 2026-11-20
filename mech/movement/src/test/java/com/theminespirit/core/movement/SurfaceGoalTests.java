@@ -11,7 +11,10 @@ class SurfaceGoalTests {
 
     @Test
     void home_CellAtHome_IsGoal() {
-        assertTrue(SurfaceGoal.home(HOME, HOME, 2), "Клетка дома на поверхности — цель маршрута выхода");
+        assertTrue(
+                SurfaceGoal.home(HOME, HOME, 2),
+                "Клетка дома на поверхности — цель маршрута выхода"
+                        + " Иначе тест home_CellAtHome_IsGoal перестанет ловить эту поломку. При смене home_CellAtHome_IsGoal проверь это утверждение.");
     }
 
     @Test
@@ -19,20 +22,23 @@ class SurfaceGoalTests {
         assertFalse(
                 SurfaceGoal.home(new BlockCoord(-175190, -47, -647982), HOME, 2),
                 "Любое небо — не цель: маршрут уводил духа на край площадки и он падал в пустоту "
-                        + "(падающий шаг DigOutGameTests после выхода из кармана)");
+                        + "(падающий шаг DigOutGameTests после выхода из кармана)"
+                        + " Иначе тест home_AnySkyFarAway_IsNotGoal перестанет ловить эту поломку. При смене home_AnySkyFarAway_IsNotGoal проверь это утверждение.");
     }
 
     @Test
     void home_EdgeOfRadius_IsGoal() {
         assertTrue(
                 SurfaceGoal.home(new BlockCoord(HOME.x() + 2, HOME.y() + 1, HOME.z() - 2), HOME, 2),
-                "Клетка на краю радиуса дома — ещё цель: тот же радиус, что у положительного исхода");
+                "Клетка на краю радиуса дома — ещё цель: тот же радиус, что у положительного исхода"
+                        + " Иначе тест home_EdgeOfRadius_IsGoal перестанет ловить эту поломку. При смене home_EdgeOfRadius_IsGoal проверь это утверждение.");
     }
 
     @Test
     void home_OneOutsideRadius_IsNotGoal() {
         assertFalse(
                 SurfaceGoal.home(new BlockCoord(HOME.x() + 3, HOME.y(), HOME.z()), HOME, 2),
-                "За радиусом дома небо не считается выходом");
+                "За радиусом дома небо не считается выходом"
+                        + " Иначе тест home_OneOutsideRadius_IsNotGoal перестанет ловить эту поломку. При смене home_OneOutsideRadius_IsNotGoal проверь это утверждение.");
     }
 }

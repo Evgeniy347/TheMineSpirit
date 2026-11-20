@@ -29,7 +29,8 @@ class LiveFixtureTests {
                 Map.of(new BlockCoord(1, 2, 3), BlockKind.SOFT, new BlockCoord(-4, 5, -6), BlockKind.HARD),
                 cells,
                 "Живая фикстура — это только строки клеток: комментарий, строка feet и пустая строка клетками не "
-                        + "считаются, иначе разбор падал бы на каждой живой фикстуре");
+                        + "считаются, иначе разбор падал бы на каждой живой фикстуре"
+                        + " При смене parse_SkipsCommentsFeetAndBlank_ReadsCells проверь это утверждение.");
     }
 
     @Test
@@ -43,16 +44,19 @@ class LiveFixtureTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> parse(text, "яма.live"),
-                "Строка живой фикстуры из трёх полей обязана падать с ошибкой: иначе клетка мира молча теряется");
+                "Строка живой фикстуры из трёх полей обязана падать с ошибкой: иначе клетка мира молча теряется"
+                        + " При смене parse_LineWithoutFourFields_NamesLineAndSource проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("Строка 3"),
                 "Ошибка обязана называть место в фикстуре, иначе при разборе снимка непонятно, какую строку править: "
-                        + error.getMessage());
+                        + error.getMessage()
+                        + " При смене parse_LineWithoutFourFields_NamesLineAndSource проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("яма.live"),
                 "Ошибка обязана называть фикстуру: у ямы и башни формат общий, и без имени файла непонятно, "
-                        + "чей снимок править: " + error.getMessage());
+                        + "чей снимок править: " + error.getMessage()
+                        + " Иначе тест parse_LineWithoutFourFields_NamesLineAndSource перестанет ловить эту поломку. При смене parse_LineWithoutFourFields_NamesLineAndSource проверь это утверждение.");
     }
 
     @Test
@@ -60,19 +64,24 @@ class LiveFixtureTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> parse("0 0 0 NETHER\n", "яма.live"),
-                "Неизвестный вид блока обязан падать: иначе живая фикстура молча даёт дырявую модель мира");
+                "Неизвестный вид блока обязан падать: иначе живая фикстура молча даёт дырявую модель мира"
+                        + " При смене parse_UnknownKind_NamesKind проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("NETHER"),
                 "Ошибка обязана называть неизвестный вид блока: молча пропущенная клетка сделала бы модель мира "
-                        + "дырявой: " + error.getMessage());
+                        + "дырявой: " + error.getMessage()
+                        + " Иначе тест parse_UnknownKind_NamesKind перестанет ловить эту поломку. При смене parse_UnknownKind_NamesKind проверь это утверждение.");
     }
 
     @Test
     void load_RealFixture_IsReadByBothWorlds() throws IOException {
         Map<BlockCoord, BlockKind> cells = LiveFixture.load("/live/pit-warehouse-0611.live");
 
-        assertFalse(cells.isEmpty(), "Живая фикстура ямы обязана читаться общим разбором: путь к ресурсу сломан");
+        assertFalse(
+                cells.isEmpty(),
+                "Живая фикстура ямы обязана читаться общим разбором: путь к ресурсу сломан"
+                        + " Иначе тест load_RealFixture_IsReadByBothWorlds перестанет ловить эту поломку. При смене load_RealFixture_IsReadByBothWorlds проверь это утверждение.");
     }
 
     private static Map<BlockCoord, BlockKind> parse(String text, String source) throws IOException {

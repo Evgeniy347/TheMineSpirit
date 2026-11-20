@@ -20,14 +20,43 @@ class NavCachedWorldTests {
                     chunkX, 0, MIN_Y, HEIGHT, (x, y, z) -> y < 0 ? NavBlockType.SOLID : NavBlockType.AIR));
         }
 
-        assertEquals(4, world.cachedChunks(), "все четыре чанка на месте, включая границу регионов");
-        assertTrue(world.isCached(0, 0), "нулевой чанк кэширован");
-        assertTrue(world.isCached(31 * 16, 0), "чанк 31 кэширован");
-        assertTrue(world.isCached(32 * 16, 0), "чанк 32 — уже второй регион");
-        assertTrue(world.isCached(-16, 0), "отрицательный чанк кэширован");
-        assertFalse(world.isCached(33 * 16, 0), "некэшированный чанк не выдумывается");
-        assertNull(world.type(33 * 16, 1, 0), "у некэшированного блока типа нет");
-        assertEquals(NavBlockType.SOLID, world.type(0, -1, 0), "пол читается из кэша");
-        assertTrue(world.cachedBytes() > 0, "кэш считает занятую память");
+        assertEquals(
+                4,
+                world.cachedChunks(),
+                "все четыре чанка на месте, включая границу регионов"
+                        + " Иначе тест put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates перестанет ловить эту поломку. При смене put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates проверь это утверждение.");
+        assertTrue(
+                world.isCached(0, 0),
+                "нулевой чанк кэширован"
+                        + " Иначе тест put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates перестанет ловить эту поломку. При смене put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates проверь это утверждение.");
+        assertTrue(
+                world.isCached(31 * 16, 0),
+                "чанк 31 кэширован"
+                        + " Иначе тест put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates перестанет ловить эту поломку. При смене put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates проверь это утверждение.");
+        assertTrue(
+                world.isCached(32 * 16, 0),
+                "чанк 32 — уже второй регион"
+                        + " Иначе тест put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates перестанет ловить эту поломку. При смене put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates проверь это утверждение.");
+        assertTrue(
+                world.isCached(-16, 0),
+                "отрицательный чанк кэширован"
+                        + " Иначе тест put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates перестанет ловить эту поломку. При смене put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates проверь это утверждение.");
+        assertFalse(
+                world.isCached(33 * 16, 0),
+                "некэшированный чанк не выдумывается"
+                        + " Иначе тест put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates перестанет ловить эту поломку. При смене put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates проверь это утверждение.");
+        assertNull(
+                world.type(33 * 16, 1, 0),
+                "у некэшированного блока типа нет"
+                        + " Иначе тест put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates перестанет ловить эту поломку. При смене put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates проверь это утверждение.");
+        assertEquals(
+                NavBlockType.SOLID,
+                world.type(0, -1, 0),
+                "пол читается из кэша"
+                        + " Иначе тест put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates перестанет ловить эту поломку. При смене put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates проверь это утверждение.");
+        assertTrue(
+                world.cachedBytes() > 0,
+                "кэш считает занятую память"
+                        + " Иначе тест put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates перестанет ловить эту поломку. При смене put_ChunksAcrossRegionBorder_AreFoundByBlockCoordinates проверь это утверждение.");
     }
 }
