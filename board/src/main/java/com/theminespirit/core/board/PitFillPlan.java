@@ -25,9 +25,7 @@ final class PitFillPlan {
         if (leveling != null && !leveling.fill().isEmpty()) {
             return pitFill(target, leveling);
         }
-        int blocks = target.craterBlocks() > 0
-                ? target.craterBlocks()
-                : craterBlocksEstimate(BoardTuning.craterBlocksEstimateRadius());
+        int blocks = CraterNeed.fillBlocks(target);
         int depth = Math.max(1, Math.min(blocks, CatalogLimits.WORLD_Y_MAX - CatalogLimits.WORLD_Y_MIN));
         int bottom = Math.max(CatalogLimits.WORLD_Y_MIN, target.target().y() - depth + 1);
         return new SequenceNode(List.of(
@@ -69,9 +67,5 @@ final class PitFillPlan {
                         target.target().y(),
                         "z2",
                         target.target().z() + BoardConfig.current().plans().craterFillRadius()));
-    }
-
-    private static int craterBlocksEstimate(int radius) {
-        return (int) Math.ceil(Math.PI * radius * radius);
     }
 }

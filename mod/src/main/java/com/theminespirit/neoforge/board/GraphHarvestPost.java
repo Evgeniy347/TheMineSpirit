@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardStatus;
+import com.theminespirit.core.board.CraterNeed;
 import com.theminespirit.core.board.FenceRepairs;
 import com.theminespirit.core.board.OrchardPlans;
 import com.theminespirit.core.board.TicketTarget;
@@ -42,6 +43,7 @@ final class GraphHarvestPost {
             }
             int cells =
                     post.service.craters().profile(CraterWatch.craterCause(pos)).size();
+            TicketTarget target = TicketTarget.at(center).withCraterBlocks(Math.max(1, cells));
             post.submit(
                     post.ticket(
                             id,
@@ -49,8 +51,8 @@ final class GraphHarvestPost {
                             Optional.empty(),
                             ticket.task().priority(),
                             CraterWatch.craterCause(pos),
-                            post.items(ticket.task())),
-                    TicketTarget.at(center).withCraterBlocks(Math.max(1, cells)));
+                            CraterNeed.fillNeed(target)),
+                    target);
         }
         return true;
     }
