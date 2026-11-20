@@ -108,18 +108,20 @@ public final class SpiritNavigation extends GroundPathNavigation {
                     FUTILE_BACKOFF_TICKS);
             return false;
         }
-        logBuilt(want, built);
+        logBuilt(want, built, last, path);
         return moveTo(built, speed);
     }
 
-    private void logBuilt(BlockPos want, Path path) {
+    private void logBuilt(BlockPos want, Path path, @Nullable BlockPos last, @Nullable Path previous) {
         LOGGER.info(
-                "[nav] дух {}: путь к {} — узлов {}, конец {}, из {}, источник {}",
+                "[nav] дух {}: путь к {} — узлов {}, конец {}, из {}, прошлая цель {}, прошлый путь {}, источник {}",
                 mob.getName().getString(),
                 want.toShortString(),
                 path.getNodeCount(),
                 path.getEndNode() == null ? "-" : path.getEndNode().asBlockPos().toShortString(),
                 mob.blockPosition().toShortString(),
+                last == null ? "-" : last.toShortString(),
+                previous == null ? "нет" : previous.isDone() ? "конец" : "идёт " + previous.getNextNodeIndex(),
                 source());
     }
 
