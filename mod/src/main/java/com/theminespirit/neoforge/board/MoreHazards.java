@@ -33,6 +33,7 @@ final class MoreHazards {
             return false;
         }
         BoardCase boardCase = kind == Kind.FIRE ? BoardCase.CLEAR_GROUNDS : BoardCase.FILL_CRATER;
+        Map<String, Integer> required = kind == Kind.FIRE ? Map.of() : Map.of(COBBLESTONE, 1);
         for (int index = 0; index < cells.size(); index++) {
             BlockCoord cell = cells.get(index);
             String id = ticket.id() + ":hazard:" + index;
@@ -48,7 +49,7 @@ final class MoreHazards {
                     boardCase,
                     ticket.task().priority(),
                     TicketTarget.at(cell).withPlan(plan),
-                    Map.of());
+                    required);
         }
         return true;
     }

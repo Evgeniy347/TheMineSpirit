@@ -45,7 +45,8 @@ public final class BoardMaterials {
             supplyItem = tile.supplyItem();
             materials.add(new Material(supplyKind, supplyItem, tile.supplyCount()));
         }
-        if ("REPAIR_BUILDING".equals(tile.boardCase())) {
+        boolean needRows = "REPAIR_BUILDING".equals(tile.boardCase()) || "FILL_CRATER".equals(tile.boardCase());
+        if (needRows) {
             for (Map.Entry<String, Integer> entry : new TreeMap<>(tile.requiredItems()).entrySet()) {
                 materials.add(new Material(
                         Kind.NEED,
@@ -54,7 +55,6 @@ public final class BoardMaterials {
                         tile.stock().get(entry.getKey())));
             }
         }
-        boolean needRows = "REPAIR_BUILDING".equals(tile.boardCase());
         for (Map.Entry<String, Integer> entry : new TreeMap<>(tile.missing()).entrySet()) {
             if (entry.getKey().equals(supplyItem) || (needRows && tile.stock().containsKey(entry.getKey()))) {
                 continue;

@@ -172,7 +172,9 @@ final class BoardTileView {
     }
 
     private static int iconY(int startY, BoardLayout.IconGrid grid, int index) {
-        return startY + (index / grid.columns()) * (BoardLayout.ICON_SIZE + BoardLayout.ICON_GAP);
+        return startY
+                + BoardLayout.ICON_LABEL
+                + (index / grid.columns()) * (BoardLayout.ICON_SIZE + BoardLayout.ICON_LABEL + BoardLayout.ICON_GAP);
     }
 
     private static boolean isInside(Cursor cursor, int iconX, int iconY) {
@@ -186,8 +188,9 @@ final class BoardTileView {
             GuiGraphics graphics, Font font, BoardMaterials.Material material, int iconX, int iconY) {
         String count = BoardTileTexts.countText(material.count());
         int starWidth = BoardMaterials.shortage(material) ? font.width("*") : 0;
-        int numberX = iconX + BoardLayout.ICON_SIZE - font.width(count) - starWidth;
-        int numberY = iconY + BoardLayout.ICON_SIZE - font.lineHeight + 1;
+        int numberWidth = font.width(count) + starWidth;
+        int numberX = iconX + (BoardLayout.ICON_SIZE - numberWidth) / 2;
+        int numberY = iconY - BoardLayout.ICON_LABEL;
         graphics.drawString(font, count, numberX, numberY, TEXT_COLOR, true);
         if (starWidth > 0) {
             graphics.drawString(font, "*", numberX + font.width(count), numberY, FAILED_COLOR, true);

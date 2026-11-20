@@ -5,7 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.api.Point;
+import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.plan.ScriptCall;
+import com.theminespirit.core.plan.SequenceNode;
+import com.theminespirit.core.plan.TaskNode;
+import com.theminespirit.core.town.PlotLeveling;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import net.jqwik.api.Arbitraries;
@@ -65,6 +72,67 @@ class CraterNeedTests {
                 () -> CraterNeed.estimate(new Point(0, 0), -1),
                 "Отрицательный радиус обязан отвергаться: он прошёл бы как «взрыв есть, "
                         + "а воронки нет» и скрыл бы реальный радиус от наблюдателя");
+    }
+
+    @Test
+    void fillBlocks_LevelingTarget_WholePitVolume() {
+        TicketTarget target =
+                TicketTarget.at(new BlockCoord(0, 64, 0)).withCraterBlocks(99).withLeveling(leveling(3));
+
+        assertEquals(
+                3,
+                CraterNeed.fillBlocks(target),
+                "Пит с планом выравнивания засыпается по объёму подсыпки, а не по числу клеток: "
+                        + "иначе карточка назовёт объём, на который духу не хватит земли; "
+                        + "При смене PlotLeveling.fillVolume проверь уровень ям и TicketDetails.pit");
+        assertEquals(
+                Map.of("dirt", 3),
+                CraterNeed.fillNeed(target),
+                "Нужда засыпки — земля ровно в объёме питы: без этого числа доска покажет пустую карточку "
+                        + "или чужую землю и не поставит гейт склада; При смене материала засыпки проверь "
+                        + "FillCraterScript и BoardMaterials");
+    }
+
+    @Test
+    void fillBlocks_CraterWithoutLeveling_ProfileCells() {
+        TicketTarget target = TicketTarget.at(new BlockCoord(10, 64, -5)).withCraterBlocks(29);
+
+        assertEquals(
+                29,
+                CraterNeed.fillBlocks(target),
+                "Воронка без плана выравнивания засыпается по числу клеток профиля: "
+                        + "иначе доска покажет чужое число и не поставит гейт на реальную землю; "
+                        + "При смене профиля воронок в CraterWatch проверь это число");
+    }
+
+    @Test
+    void fillBlocks_EmptyTarget_FallsBackToEstimate() {
+        TicketTarget target = TicketTarget.at(new BlockCoord(0, 64, 0));
+
+        assertEquals(
+                CraterNeed.estimate(new Point(0, 0), BoardTuning.craterBlocksEstimateRadius())
+                        .get("dirt"),
+                CraterNeed.fillBlocks(target),
+                "Цель без объёма и выравнивания получает оценку по радиусу крипера, как в плане засыпки: "
+                        + "иначе карточка покажет ноль земли при непустой воронке; "
+                        + "При смене craterBlocksEstimateRadius проверь PitFillPlan");
+    }
+
+    @Test
+    void fillNeed_PlanAcquires_ExactlyFillBlocks() {
+        TicketTarget target = TicketTarget.at(new BlockCoord(0, 64, 0)).withLeveling(leveling(5));
+        List<ScriptCall> calls = new ArrayList<>();
+        collect(TicketPlans.plan(BoardCase.FILL_CRATER, target), calls);
+        int acquired = calls.stream()
+                .filter(call -> "acquire".equals(call.script()))
+                .mapToInt(call -> (Integer) call.params().get("count"))
+                .sum();
+
+        assertEquals(
+                CraterNeed.fillBlocks(target),
+                acquired,
+                "План засыпки набирает ровно объём питы: иначе карточка и исполнитель назовут разные "
+                        + "числа и дух встанет в яму без земли; При смене PitFillPlan проверь fillNeed");
     }
 
     @Test
@@ -142,6 +210,19 @@ class CraterNeedTests {
                 CraterNeed.outsideTerritory(blast, homes, radius),
                 "Признак «за территорией» детерминирован: иначе наблюдатель видит "
                         + "разное решение при одних и тех же домах и взрыве");
+    }
+
+    private static PlotLeveling leveling(int blocks) {
+        return new PlotLeveling(
+                List.of(), List.of(new PlotLeveling.Box(0, 64, 0, 0, 64, blocks - 1)), PlotLeveling.DEFAULT_BLOCK);
+    }
+
+    private static void collect(TaskNode node, List<ScriptCall> found) {
+        if (node instanceof SequenceNode sequence) {
+            sequence.steps().forEach(step -> collect(step, found));
+        } else if (node instanceof ScriptCall call) {
+            found.add(call);
+        }
     }
 
     @Provide
