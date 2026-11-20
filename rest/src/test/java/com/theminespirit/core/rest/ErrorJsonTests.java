@@ -24,12 +24,14 @@ class ErrorJsonTests {
         assertEquals(
                 DOC_EXAMPLE,
                 json,
-                "Формат ошибки — контракт docs/api/README.md: {error:{code,message,details}} без пробелов и с details-объектом");
+                "Формат ошибки — контракт docs/api/README.md: {error:{code,message,details}} без пробелов и с details-объектом"
+                        + " Иначе тест toJson_InvalidPlanError_IsByteEqualToApiDocExample перестанет ловить эту поломку. При смене toJson_InvalidPlanError_IsByteEqualToApiDocExample проверь это утверждение.");
         String apiDoc = Files.readString(Path.of("docs/api/README.md"), StandardCharsets.UTF_8);
         assertTrue(
                 apiDoc.contains(json),
                 "Пример ошибки в docs/api/README.md обязан быть побайтно равен тому, что отдаёт мост: клиенты сверяют "
-                        + "ответы с документом. Поправь пример в docs/api/README.md");
+                        + "ответы с документом. Поправь пример в docs/api/README.md"
+                        + " Иначе тест toJson_InvalidPlanError_IsByteEqualToApiDocExample перестанет ловить эту поломку. При смене toJson_InvalidPlanError_IsByteEqualToApiDocExample проверь это утверждение.");
     }
 
     @Test
@@ -39,7 +41,8 @@ class ErrorJsonTests {
         assertEquals(
                 "{\"error\":{\"code\":\"not_found\",\"message\":\"нет\",\"details\":{}}}",
                 ErrorJson.toJson(error),
-                "details всегда объект: клиент не должен проверять его на null");
+                "details всегда объект: клиент не должен проверять его на null"
+                        + " Иначе тест toJson_ErrorWithoutDetails_WritesEmptyObjectNotNull перестанет ловить эту поломку. При смене toJson_ErrorWithoutDetails_WritesEmptyObjectNotNull проверь это утверждение.");
     }
 
     @Test
@@ -50,17 +53,23 @@ class ErrorJsonTests {
                 "{\"error\":{\"code\":\"invalid_request\",\"message\":\"поле \\\"radius\\\"\","
                         + "\"details\":{\"field\":\"radius\"}}}",
                 ErrorJson.toJson(error),
-                "Кавычки в тексте обязаны экранироваться, иначе клиент получит битый JSON");
+                "Кавычки в тексте обязаны экранироваться, иначе клиент получит битый JSON"
+                        + " При смене toJson_ErrorWithDetails_KeepsInsertionOrderAndEscapesQuotes проверь это утверждение.");
     }
 
     @Test
     void response_NotFoundException_CarriesStatusFromCode() {
         RestResponse response = ErrorJson.response(new ApiException(ErrorCode.NOT_FOUND, "нет бота"));
 
-        assertEquals(404, response.status(), "Статус ответа берётся из кода ошибки: not_found обязан быть 404");
+        assertEquals(
+                404,
+                response.status(),
+                "Статус ответа берётся из кода ошибки: not_found обязан быть 404"
+                        + " Иначе тест response_NotFoundException_CarriesStatusFromCode перестанет ловить эту поломку. При смене response_NotFoundException_CarriesStatusFromCode проверь это утверждение.");
         assertEquals(
                 "{\"error\":{\"code\":\"not_found\",\"message\":\"нет бота\",\"details\":{}}}",
                 response.body(),
-                "Тело ответа — тот же объект ошибки");
+                "Тело ответа — тот же объект ошибки"
+                        + " Иначе тест response_NotFoundException_CarriesStatusFromCode перестанет ловить эту поломку. При смене response_NotFoundException_CarriesStatusFromCode проверь это утверждение.");
     }
 }

@@ -32,6 +32,7 @@ class TaskRoutesRegistrationTests {
                         "GET /v1/tasks/{id}/events",
                         "POST /v1/plan"),
                 keys,
-                "Чеклист п.7 обязывает ровно пять маршрутов задач");
+                "Чеклист п.7 обязывает ровно пять маршрутов задач"
+                        + " Иначе тест routes_AllFiveMethods_AreRegistered перестанет ловить эту поломку. При смене routes_AllFiveMethods_AreRegistered проверь это утверждение.");
     }
 }

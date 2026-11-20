@@ -29,15 +29,34 @@ class WarehouseRoutesTests {
     void get_Warehouse_ReturnsRequiredLevelAndMaterials() throws Exception {
         RestResponse response = send("GET", "/v1/settlement/warehouse", "");
 
-        assertEquals(200, response.status(), "Чтение решения о складе обязано отвечать 200: " + response.body());
+        assertEquals(
+                200,
+                response.status(),
+                "Чтение решения о складе обязано отвечать 200: " + response.body()
+                        + " Иначе тест get_Warehouse_ReturnsRequiredLevelAndMaterials перестанет ловить эту поломку. При смене get_Warehouse_ReturnsRequiredLevelAndMaterials проверь это утверждение.");
         JsonNode parsed = MAPPER.readTree(response.body());
-        assertEquals(2, parsed.get("required_level").asInt(), "Этап 2 требует склад второго уровня");
-        assertTrue(parsed.get("order").isNull(), "Решения пока нет — order=null: " + response.body());
-        assertTrue(parsed.get("materials").has("oak_planks"), "GET называет материалы склада: " + response.body());
+        assertEquals(
+                2,
+                parsed.get("required_level").asInt(),
+                "Этап 2 требует склад второго уровня"
+                        + " Иначе тест get_Warehouse_ReturnsRequiredLevelAndMaterials перестанет ловить эту поломку. При смене get_Warehouse_ReturnsRequiredLevelAndMaterials проверь это утверждение.");
+        assertTrue(
+                parsed.get("order").isNull(),
+                "Решения пока нет — order=null: " + response.body()
+                        + " Иначе тест get_Warehouse_ReturnsRequiredLevelAndMaterials перестанет ловить эту поломку. При смене get_Warehouse_ReturnsRequiredLevelAndMaterials проверь это утверждение.");
+        assertTrue(
+                parsed.get("materials").has("oak_planks"),
+                "GET называет материалы склада: " + response.body()
+                        + " Иначе тест get_Warehouse_ReturnsRequiredLevelAndMaterials перестанет ловить эту поломку. При смене get_Warehouse_ReturnsRequiredLevelAndMaterials проверь это утверждение.");
         assertTrue(
                 parsed.has("plan_site"),
-                "GET подсказывает место storage из плана поселения: без него стратег гадает координаты");
-        assertEquals("4,64,5", parsed.get("plan_site").asText(), "plan_site — место storage из плана");
+                "GET подсказывает место storage из плана поселения: без него стратег гадает координаты"
+                        + " Иначе тест get_Warehouse_ReturnsRequiredLevelAndMaterials перестанет ловить эту поломку. При смене get_Warehouse_ReturnsRequiredLevelAndMaterials проверь это утверждение.");
+        assertEquals(
+                "4,64,5",
+                parsed.get("plan_site").asText(),
+                "plan_site — место storage из плана"
+                        + " Иначе тест get_Warehouse_ReturnsRequiredLevelAndMaterials перестанет ловить эту поломку. При смене get_Warehouse_ReturnsRequiredLevelAndMaterials проверь это утверждение.");
     }
 
     @Test
@@ -49,7 +68,8 @@ class WarehouseRoutesTests {
 
         assertTrue(
                 parsed.has("plan_site") && parsed.get("plan_site").isNull(),
-                "Без плана поселения plan_site=null: стратег не должен получать выдуманные координаты");
+                "Без плана поселения plan_site=null: стратег не должен получать выдуманные координаты"
+                        + " Иначе тест get_NoPlan_WritesNullPlanSite перестанет ловить эту поломку. При смене get_NoPlan_WritesNullPlanSite проверь это утверждение.");
     }
 
     @Test
@@ -61,16 +81,37 @@ class WarehouseRoutesTests {
                 "/v1/settlement/warehouse",
                 "{\"request_id\":\"" + requestId + "\",\"level\":2,\"site\":\"10,64,-3\"}");
 
-        assertEquals(200, response.status(), "Решение о складе обязано приниматься: " + response.body());
+        assertEquals(
+                200,
+                response.status(),
+                "Решение о складе обязано приниматься: " + response.body()
+                        + " Иначе тест post_Decision_StoresLevelAndSite перестанет ловить эту поломку. При смене post_Decision_StoresLevelAndSite проверь это утверждение.");
         JsonNode parsed = MAPPER.readTree(response.body());
-        assertEquals(requestId, parsed.get("request_id").asText(), "Ответ обязан эхать request_id");
-        assertEquals(2, parsed.get("order").get("level").asInt(), "Уровень решения сохранён: " + response.body());
-        assertEquals("10,64,-3", parsed.get("order").get("site").asText(), "Место решения сохранено");
-        assertEquals(1, gateway.decisions().size(), "Решение доходит до платформы ровно один раз");
+        assertEquals(
+                requestId,
+                parsed.get("request_id").asText(),
+                "Ответ обязан эхать request_id"
+                        + " Иначе тест post_Decision_StoresLevelAndSite перестанет ловить эту поломку. При смене post_Decision_StoresLevelAndSite проверь это утверждение.");
+        assertEquals(
+                2,
+                parsed.get("order").get("level").asInt(),
+                "Уровень решения сохранён: " + response.body()
+                        + " Иначе тест post_Decision_StoresLevelAndSite перестанет ловить эту поломку. При смене post_Decision_StoresLevelAndSite проверь это утверждение.");
+        assertEquals(
+                "10,64,-3",
+                parsed.get("order").get("site").asText(),
+                "Место решения сохранено"
+                        + " Иначе тест post_Decision_StoresLevelAndSite перестанет ловить эту поломку. При смене post_Decision_StoresLevelAndSite проверь это утверждение.");
+        assertEquals(
+                1,
+                gateway.decisions().size(),
+                "Решение доходит до платформы ровно один раз"
+                        + " Иначе тест post_Decision_StoresLevelAndSite перестанет ловить эту поломку. При смене post_Decision_StoresLevelAndSite проверь это утверждение.");
         assertEquals(
                 WarehouseOrder.DEFAULT_BY,
                 gateway.decisions().get(0).by(),
-                "Без 'by' решение подписано стратегом: карточка всё равно называет автора");
+                "Без 'by' решение подписано стратегом: карточка всё равно называет автора"
+                        + " Иначе тест post_Decision_StoresLevelAndSite перестанет ловить эту поломку. При смене post_Decision_StoresLevelAndSite проверь это утверждение.");
     }
 
     @Test
@@ -80,8 +121,16 @@ class WarehouseRoutesTests {
                 "/v1/settlement/warehouse",
                 "{\"request_id\":\"" + UUID.randomUUID() + "\",\"level\":1,\"site\":\"1,64,1\",\"by\":\"owner\"}");
 
-        assertEquals(200, response.status(), "PUT решения обязан работать как POST: " + response.body());
-        assertEquals("owner", gateway.decisions().get(0).by(), "PUT обязан передать 'by'");
+        assertEquals(
+                200,
+                response.status(),
+                "PUT решения обязан работать как POST: " + response.body()
+                        + " Иначе тест put_Decision_WorksLikePost перестанет ловить эту поломку. При смене put_Decision_WorksLikePost проверь это утверждение.");
+        assertEquals(
+                "owner",
+                gateway.decisions().get(0).by(),
+                "PUT обязан передать 'by'"
+                        + " Иначе тест put_Decision_WorksLikePost перестанет ловить эту поломку. При смене put_Decision_WorksLikePost проверь это утверждение.");
     }
 
     @Test
@@ -91,9 +140,21 @@ class WarehouseRoutesTests {
 
         RestResponse replay = send("POST", "/v1/settlement/warehouse", payload);
 
-        assertEquals(200, replay.status(), "Повтор решения обязан оставаться 200: " + replay.body());
-        assertEquals(first.body(), replay.body(), "Идемпотентный повтор возвращает исходный ответ байт в байт");
-        assertEquals(1, gateway.decisions().size(), "Повтор не должен решать склад второй раз");
+        assertEquals(
+                200,
+                replay.status(),
+                "Повтор решения обязан оставаться 200: " + replay.body()
+                        + " Иначе тест post_ReplaySameRequest_ReturnsSameResponseWithoutSecondDecision перестанет ловить эту поломку. При смене post_ReplaySameRequest_ReturnsSameResponseWithoutSecondDecision проверь это утверждение.");
+        assertEquals(
+                first.body(),
+                replay.body(),
+                "Идемпотентный повтор возвращает исходный ответ байт в байт"
+                        + " Иначе тест post_ReplaySameRequest_ReturnsSameResponseWithoutSecondDecision перестанет ловить эту поломку. При смене post_ReplaySameRequest_ReturnsSameResponseWithoutSecondDecision проверь это утверждение.");
+        assertEquals(
+                1,
+                gateway.decisions().size(),
+                "Повтор не должен решать склад второй раз"
+                        + " Иначе тест post_ReplaySameRequest_ReturnsSameResponseWithoutSecondDecision перестанет ловить эту поломку. При смене post_ReplaySameRequest_ReturnsSameResponseWithoutSecondDecision проверь это утверждение.");
     }
 
     @Test
@@ -110,7 +171,10 @@ class WarehouseRoutesTests {
                 "{\"request_id\":\"" + requestId + "\",\"level\":3,\"site\":\"10,64,-3\"}");
 
         assertEquals(
-                409, response.status(), "Тот же request_id с другим уровнем обязан конфликтовать: " + response.body());
+                409,
+                response.status(),
+                "Тот же request_id с другим уровнем обязан конфликтовать: " + response.body()
+                        + " Иначе тест post_SameRequestDifferentBody_Conflicts перестанет ловить эту поломку. При смене post_SameRequestDifferentBody_Conflicts проверь это утверждение.");
     }
 
     @Test
@@ -120,9 +184,20 @@ class WarehouseRoutesTests {
                 "/v1/settlement/warehouse",
                 "{\"request_id\":\"" + UUID.randomUUID() + "\",\"level\":2,\"site\":\"10,64,-3\",\"force\":true}");
 
-        assertEquals(400, response.status(), "Лишнее поле обязано отвергаться: " + response.body());
-        assertTrue(response.body().contains("force"), "Ошибка называет лишнее поле: " + response.body());
-        assertEquals(0, gateway.decisions().size(), "Отвергнутый запрос не меняет решение");
+        assertEquals(
+                400,
+                response.status(),
+                "Лишнее поле обязано отвергаться: " + response.body()
+                        + " Иначе тест post_UnknownField_Returns400 перестанет ловить эту поломку. При смене post_UnknownField_Returns400 проверь это утверждение.");
+        assertTrue(
+                response.body().contains("force"),
+                "Ошибка называет лишнее поле: " + response.body()
+                        + " Иначе тест post_UnknownField_Returns400 перестанет ловить эту поломку. При смене post_UnknownField_Returns400 проверь это утверждение.");
+        assertEquals(
+                0,
+                gateway.decisions().size(),
+                "Отвергнутый запрос не меняет решение"
+                        + " Иначе тест post_UnknownField_Returns400 перестанет ловить эту поломку. При смене post_UnknownField_Returns400 проверь это утверждение.");
     }
 
     @Test
@@ -132,7 +207,11 @@ class WarehouseRoutesTests {
                 "/v1/settlement/warehouse",
                 "{\"request_id\":\"" + UUID.randomUUID() + "\",\"level\":0,\"site\":\"10,64,-3\"}");
 
-        assertEquals(400, response.status(), "Нулевой уровень склада обязан отвергаться: " + response.body());
+        assertEquals(
+                400,
+                response.status(),
+                "Нулевой уровень склада обязан отвергаться: " + response.body()
+                        + " Иначе тест post_LevelBelowOne_Returns400 перестанет ловить эту поломку. При смене post_LevelBelowOne_Returns400 проверь это утверждение.");
     }
 
     @Test
@@ -142,7 +221,11 @@ class WarehouseRoutesTests {
                 "/v1/settlement/warehouse",
                 "{\"request_id\":\"" + UUID.randomUUID() + "\",\"level\":2,\"site\":\"верх\"}");
 
-        assertEquals(400, response.status(), "Место не координатами обязано отвергаться: " + response.body());
+        assertEquals(
+                400,
+                response.status(),
+                "Место не координатами обязано отвергаться: " + response.body()
+                        + " Иначе тест post_BadSite_Returns400 перестанет ловить эту поломку. При смене post_BadSite_Returns400 проверь это утверждение.");
     }
 
     @Test
@@ -153,8 +236,15 @@ class WarehouseRoutesTests {
         JsonNode parsed = MAPPER.readTree(
                 WarehouseJson.changeJson(change, UUID.randomUUID().toString()));
 
-        assertTrue(parsed.get("previous").isNull(), "Первого решения не было — previous=null: " + parsed);
-        assertEquals(2, parsed.get("order").get("level").asInt(), "order называет уровень решения");
+        assertTrue(
+                parsed.get("previous").isNull(),
+                "Первого решения не было — previous=null: " + parsed
+                        + " Иначе тест changeJson_NullPrevious_WritesNull перестанет ловить эту поломку. При смене changeJson_NullPrevious_WritesNull проверь это утверждение.");
+        assertEquals(
+                2,
+                parsed.get("order").get("level").asInt(),
+                "order называет уровень решения"
+                        + " Иначе тест changeJson_NullPrevious_WritesNull перестанет ловить эту поломку. При смене changeJson_NullPrevious_WritesNull проверь это утверждение.");
     }
 
     private RestResponse send(String method, String path, String body) {

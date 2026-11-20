@@ -93,23 +93,27 @@ class RouterTests {
                 status,
                 response.status(),
                 "Маршрутизация " + method + " " + path + " обязана дать статус " + status + ": неизвестный путь — 404, "
-                        + "чужой метод — 405, иначе клиент получит чужой обработчик. Тело: " + response.body());
+                        + "чужой метод — 405, иначе клиент получит чужой обработчик. Тело: " + response.body()
+                        + " При смене handle_TableCase_ProducesDocumentedStatusBodyAndAllow проверь это утверждение.");
         if (status == 200) {
             assertEquals(
                     expected,
                     response.body(),
-                    "Обработчик и параметр пути для " + method + " " + path + " определены неверно");
+                    "Обработчик и параметр пути для " + method + " " + path + " определены неверно"
+                            + " Иначе тест handle_TableCase_ProducesDocumentedStatusBodyAndAllow перестанет ловить эту поломку. При смене handle_TableCase_ProducesDocumentedStatusBodyAndAllow проверь это утверждение.");
         } else {
             assertTrue(
                     response.body().startsWith("{\"error\":{\"code\":\"" + expected + "\""),
                     "Ошибка маршрутизации " + method + " " + path + " обязана нести код " + expected
-                            + " в объекте ошибки, а не пустой ответ. Тело: " + response.body());
+                            + " в объекте ошибки, а не пустой ответ. Тело: " + response.body()
+                            + " Иначе тест handle_TableCase_ProducesDocumentedStatusBodyAndAllow перестанет ловить эту поломку. При смене handle_TableCase_ProducesDocumentedStatusBodyAndAllow проверь это утверждение.");
         }
         assertEquals(
                 allow,
                 response.headers().get("Allow"),
                 "Заголовок Allow при 405 перечисляет допустимые методы пути (и отсутствует иначе): " + method + " "
-                        + path);
+                        + path
+                        + " При смене handle_TableCase_ProducesDocumentedStatusBodyAndAllow проверь это утверждение.");
     }
 
     @Test
@@ -121,7 +125,8 @@ class RouterTests {
         assertEquals(
                 "GET, POST",
                 response.headers().get("Allow"),
-                "Allow обязан перечислять все методы пути по алфавиту: клиент выбирает по нему допустимый метод");
+                "Allow обязан перечислять все методы пути по алфавиту: клиент выбирает по нему допустимый метод"
+                        + " Иначе тест handle_PathWithTwoMethods_AllowListsBothSortedAlphabetically перестанет ловить эту поломку. При смене handle_PathWithTwoMethods_AllowListsBothSortedAlphabetically проверь это утверждение.");
     }
 
     @Test
@@ -132,7 +137,8 @@ class RouterTests {
         assertEquals(
                 200,
                 response.status(),
-                "Тело ровно в лимит MAX_BODY_BYTES допустимо: отказ на границе ломает честные запросы");
+                "Тело ровно в лимит MAX_BODY_BYTES допустимо: отказ на границе ломает честные запросы"
+                        + " При смене handle_BodyOfExactLimit_ReachesHandler проверь это утверждение.");
     }
 
     @Test
@@ -140,12 +146,17 @@ class RouterTests {
         RestResponse response =
                 ROUTER.handle(request("POST", "/v1/bots/abc/observe", new byte[RestTuning.MAX_BODY_BYTES + 1]));
 
-        assertEquals(400, response.status(), "Тело больше лимита обязано давать 400, а не доходить до обработчика");
+        assertEquals(
+                400,
+                response.status(),
+                "Тело больше лимита обязано давать 400, а не доходить до обработчика"
+                        + " Иначе тест handle_BodyOverLimit_Returns400InvalidRequestBeforeHandler перестанет ловить эту поломку. При смене handle_BodyOverLimit_Returns400InvalidRequestBeforeHandler проверь это утверждение.");
         assertTrue(
                 response.body().contains("\"code\":\"invalid_request\"")
                         && response.body().contains(String.valueOf(RestTuning.MAX_BODY_BYTES)),
                 "Ошибка называет код invalid_request и лимит в байтах, чтобы клиент знал, что сократить: "
-                        + response.body());
+                        + response.body()
+                        + " Иначе тест handle_BodyOverLimit_Returns400InvalidRequestBeforeHandler перестанет ловить эту поломку. При смене handle_BodyOverLimit_Returns400InvalidRequestBeforeHandler проверь это утверждение.");
     }
 
     @Test
@@ -156,11 +167,16 @@ class RouterTests {
 
         RestResponse response = router.handle(request("GET", "/v1/x", new byte[0]));
 
-        assertEquals(409, response.status(), "ApiException обработчика обязан стать ответом со статусом его кода");
+        assertEquals(
+                409,
+                response.status(),
+                "ApiException обработчика обязан стать ответом со статусом его кода"
+                        + " Иначе тест handle_HandlerThrowsApiException_ReturnsItsErrorObject перестанет ловить эту поломку. При смене handle_HandlerThrowsApiException_ReturnsItsErrorObject проверь это утверждение.");
         assertEquals(
                 "{\"error\":{\"code\":\"conflict\",\"message\":\"занято\",\"details\":{}}}",
                 response.body(),
-                "Тело ответа — объект ошибки исключения");
+                "Тело ответа — объект ошибки исключения"
+                        + " Иначе тест handle_HandlerThrowsApiException_ReturnsItsErrorObject перестанет ловить эту поломку. При смене handle_HandlerThrowsApiException_ReturnsItsErrorObject проверь это утверждение.");
     }
 
     @Test
@@ -170,10 +186,12 @@ class RouterTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> Router.of(duplicates),
-                "Два обработчика одного запроса — ошибка сборки маршрутов: победитель определялся бы порядком списка");
+                "Два обработчика одного запроса — ошибка сборки маршрутов: победитель определялся бы порядком списка"
+                        + " Иначе тест of_DuplicateMethodAndPattern_Rejected перестанет ловить эту поломку. При смене of_DuplicateMethodAndPattern_Rejected проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("GET /v1/x"),
-                "Сообщение называет дублирующийся маршрут: " + error.getMessage());
+                "Сообщение называет дублирующийся маршрут: " + error.getMessage()
+                        + " Иначе тест of_DuplicateMethodAndPattern_Rejected перестанет ловить эту поломку. При смене of_DuplicateMethodAndPattern_Rejected проверь это утверждение.");
     }
 
     @ParameterizedTest
@@ -182,7 +200,8 @@ class RouterTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> route("GET", pattern, "x"),
-                "Шаблон '" + pattern + "' неверен и обязан отклоняться при сборке маршрута, а не молча не совпадать");
+                "Шаблон '" + pattern + "' неверен и обязан отклоняться при сборке маршрута, а не молча не совпадать"
+                        + " Иначе тест route_MalformedPattern_Rejected перестанет ловить эту поломку. При смене route_MalformedPattern_Rejected проверь это утверждение.");
     }
 
     static Stream<String> badPatterns() {
@@ -194,7 +213,8 @@ class RouterTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> route("get", "/v1/x", "x"),
-                "Метод маршрута задаётся в верхнем регистре: методы запроса сравниваются точно");
+                "Метод маршрута задаётся в верхнем регистре: методы запроса сравниваются точно"
+                        + " Иначе тест route_LowerCaseMethod_Rejected перестанет ловить эту поломку. При смене route_LowerCaseMethod_Rejected проверь это утверждение.");
     }
 
     @Test
@@ -208,6 +228,7 @@ class RouterTests {
         assertEquals(
                 String.valueOf(body.length),
                 response.body(),
-                "Обработчик получает байты тела как есть: раскодирование UTF-8 делает он сам");
+                "Обработчик получает байты тела как есть: раскодирование UTF-8 делает он сам"
+                        + " Иначе тест handle_Utf8BodyBytes_PassedToHandlerUnchanged перестанет ловить эту поломку. При смене handle_Utf8BodyBytes_PassedToHandlerUnchanged проверь это утверждение.");
     }
 }

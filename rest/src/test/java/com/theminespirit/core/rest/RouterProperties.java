@@ -51,14 +51,22 @@ class RouterProperties {
         JsonNode body = MAPPER.readTree(response.body());
         assertTrue(
                 Set.of(200, 404, 405).contains(response.status()),
-                "Маршрутизатор отвечает только 200, 404 или 405: " + method + " " + path + " дал " + response.status());
+                "Маршрутизатор отвечает только 200, 404 или 405: " + method + " " + path + " дал " + response.status()
+                        + " Иначе тест assertValidAnswer перестанет ловить эту поломку. При смене assertValidAnswer проверь это утверждение.");
         if (response.status() == 200) {
-            assertTrue(body.has("handled"), "Успешный ответ принадлежит обработчику: " + response.body());
+            assertTrue(
+                    body.has("handled"),
+                    "Успешный ответ принадлежит обработчику: " + response.body()
+                            + " Иначе тест assertValidAnswer перестанет ловить эту поломку. При смене assertValidAnswer проверь это утверждение.");
         } else {
             assertTrue(
                     ERROR_CODES.contains(body.path("error").path("code").asText()),
-                    "Ошибка маршрутизации обязана нести код not_found или invalid_request: " + response.body());
-            assertTrue(body.path("error").path("details").isObject(), "details всегда объект: " + response.body());
+                    "Ошибка маршрутизации обязана нести код not_found или invalid_request: " + response.body()
+                            + " Иначе тест assertValidAnswer перестанет ловить эту поломку. При смене assertValidAnswer проверь это утверждение.");
+            assertTrue(
+                    body.path("error").path("details").isObject(),
+                    "details всегда объект: " + response.body()
+                            + " Иначе тест assertValidAnswer перестанет ловить эту поломку. При смене assertValidAnswer проверь это утверждение.");
         }
     }
 }

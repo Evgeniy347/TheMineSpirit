@@ -44,12 +44,22 @@ class TaskEventStreamTests {
         try (TaskEventStream stream = fresh(RUNNING, log, 0, new AtomicInteger())) {
             String frame = stream.nextFrame();
 
-            assertTrue(frame.startsWith("id: 2\n"), "Свежий кадр обязан стоять на позиции журнала: " + frame);
-            assertTrue(frame.contains("event: state"), "Первый кадр свежего подключения обязан быть state: " + frame);
-            assertTrue(frame.contains("\"state\":\"running\""), "Кадр обязан нести текущее состояние: " + frame);
+            assertTrue(
+                    frame.startsWith("id: 2\n"),
+                    "Свежий кадр обязан стоять на позиции журнала: " + frame
+                            + " Иначе тест nextFrame_FreshConnection_EmitsCurrentStateAtLogPosition перестанет ловить эту поломку. При смене nextFrame_FreshConnection_EmitsCurrentStateAtLogPosition проверь это утверждение.");
+            assertTrue(
+                    frame.contains("event: state"),
+                    "Первый кадр свежего подключения обязан быть state: " + frame
+                            + " Иначе тест nextFrame_FreshConnection_EmitsCurrentStateAtLogPosition перестанет ловить эту поломку. При смене nextFrame_FreshConnection_EmitsCurrentStateAtLogPosition проверь это утверждение.");
+            assertTrue(
+                    frame.contains("\"state\":\"running\""),
+                    "Кадр обязан нести текущее состояние: " + frame
+                            + " Иначе тест nextFrame_FreshConnection_EmitsCurrentStateAtLogPosition перестанет ловить эту поломку. При смене nextFrame_FreshConnection_EmitsCurrentStateAtLogPosition проверь это утверждение.");
             assertTrue(
                     frame.contains("\"current_script\":\"goto\""),
-                    "Кадр state обязан нести текущий прогресс: " + frame);
+                    "Кадр state обязан нести текущий прогресс: " + frame
+                            + " Иначе тест nextFrame_FreshConnection_EmitsCurrentStateAtLogPosition перестанет ловить эту поломку. При смене nextFrame_FreshConnection_EmitsCurrentStateAtLogPosition проверь это утверждение.");
         }
     }
 
@@ -61,8 +71,14 @@ class TaskEventStreamTests {
 
         try (TaskEventStream stream = fresh(RUNNING, log, 0, new AtomicInteger())) {
             String state = stream.nextFrame();
-            assertTrue(state.contains("event: state"), "Свежий поток обязан начинаться с кадром state: " + state);
-            assertNull(stream.nextFrame(), "Закрытый журнал обязан завершать поток сразу после state");
+            assertTrue(
+                    state.contains("event: state"),
+                    "Свежий поток обязан начинаться с кадром state: " + state
+                            + " Иначе тест nextFrame_FreshConnection_SkipsHistoryAndEndsOnClosedLog перестанет ловить эту поломку. При смене nextFrame_FreshConnection_SkipsHistoryAndEndsOnClosedLog проверь это утверждение.");
+            assertNull(
+                    stream.nextFrame(),
+                    "Закрытый журнал обязан завершать поток сразу после state"
+                            + " Иначе тест nextFrame_FreshConnection_SkipsHistoryAndEndsOnClosedLog перестанет ловить эту поломку. При смене nextFrame_FreshConnection_SkipsHistoryAndEndsOnClosedLog проверь это утверждение.");
         }
     }
 
@@ -75,9 +91,13 @@ class TaskEventStreamTests {
             String frame = stream.nextFrame();
             assertTrue(
                     frame.startsWith("id: 2\n"),
-                    "После Last-Event-ID=1 обязана прийти только более поздняя запись: " + frame);
+                    "После Last-Event-ID=1 обязана прийти только более поздняя запись: " + frame
+                            + " Иначе тест nextFrame_ReconnectWithLastEventId_DeliversOnlyLaterFrames перестанет ловить эту поломку. При смене nextFrame_ReconnectWithLastEventId_DeliversOnlyLaterFrames проверь это утверждение.");
             log.close();
-            assertNull(stream.nextFrame(), "Догнав журнал, поток обязан завершиться");
+            assertNull(
+                    stream.nextFrame(),
+                    "Догнав журнал, поток обязан завершиться"
+                            + " Иначе тест nextFrame_ReconnectWithLastEventId_DeliversOnlyLaterFrames перестанет ловить эту поломку. При смене nextFrame_ReconnectWithLastEventId_DeliversOnlyLaterFrames проверь это утверждение.");
         }
     }
 
@@ -91,14 +111,16 @@ class TaskEventStreamTests {
             assertTrue(
                     state.startsWith("id: 2\n") && state.contains("event: state"),
                     "Клиент с Last-Event-ID впереди журнала обязан получить текущий state на позиции журнала (id 2), "
-                            + "а не ждать события с несуществующим id: " + state);
+                            + "а не ждать события с несуществующим id: " + state
+                            + " Иначе тест nextFrame_LastEventIdAheadOfLog_EmitsStateAtLogPositionAndContinuesWithNewEvents перестанет ловить эту поломку. При смене nextFrame_LastEventIdAheadOfLog_EmitsStateAtLogPositionAndContinuesWithNewEvents проверь это утверждение.");
 
             log.append(events(TaskEvent.TYPE_PROGRESS, 1));
             String next = stream.nextFrame();
             assertTrue(
                     next.startsWith("id: 3\n") && next.contains("event: progress"),
                     "После state поток обязан продолжаться с позиции журнала и отдать новое событие id 3, а не "
-                            + "ждать id > 50 и слать одни кипалайвы: " + next);
+                            + "ждать id > 50 и слать одни кипалайвы: " + next
+                            + " Иначе тест nextFrame_LastEventIdAheadOfLog_EmitsStateAtLogPositionAndContinuesWithNewEvents перестанет ловить эту поломку. При смене nextFrame_LastEventIdAheadOfLog_EmitsStateAtLogPositionAndContinuesWithNewEvents проверь это утверждение.");
         }
     }
 
@@ -114,17 +136,30 @@ class TaskEventStreamTests {
 
         try (TaskEventStream stream = fresh(RUNNING, log, 1, new AtomicInteger())) {
             String state = stream.nextFrame();
-            assertTrue(state.contains("event: state"), "При потере окна обязана прийти текущая state: " + state);
+            assertTrue(
+                    state.contains("event: state"),
+                    "При потере окна обязана прийти текущая state: " + state
+                            + " Иначе тест nextFrame_ReconnectAfterGap_EmitsStateThenRemainingEvents перестанет ловить эту поломку. При смене nextFrame_ReconnectAfterGap_EmitsStateThenRemainingEvents проверь это утверждение.");
             long stateId = Long.parseLong(state.split("\n", 2)[0].substring(4));
             String later = stream.nextFrame();
-            assertTrue(later.startsWith("id: "), "После state обязаны идти оставшиеся события журнала: " + later);
+            assertTrue(
+                    later.startsWith("id: "),
+                    "После state обязаны идти оставшиеся события журнала: " + later
+                            + " Иначе тест nextFrame_ReconnectAfterGap_EmitsStateThenRemainingEvents перестанет ловить эту поломку. При смене nextFrame_ReconnectAfterGap_EmitsStateThenRemainingEvents проверь это утверждение.");
             long id = Long.parseLong(later.split("\n", 2)[0].substring(4));
-            assertTrue(id <= newest, "Догоняющие события не могут быть новее позиции журнала: " + id);
-            assertTrue(id > 1, "Догонять обязаны записи новее Last-Event-ID: " + id);
+            assertTrue(
+                    id <= newest,
+                    "Догоняющие события не могут быть новее позиции журнала: " + id
+                            + " Иначе тест nextFrame_ReconnectAfterGap_EmitsStateThenRemainingEvents перестанет ловить эту поломку. При смене nextFrame_ReconnectAfterGap_EmitsStateThenRemainingEvents проверь это утверждение.");
+            assertTrue(
+                    id > 1,
+                    "Догонять обязаны записи новее Last-Event-ID: " + id
+                            + " Иначе тест nextFrame_ReconnectAfterGap_EmitsStateThenRemainingEvents перестанет ловить эту поломку. При смене nextFrame_ReconnectAfterGap_EmitsStateThenRemainingEvents проверь это утверждение.");
             assertTrue(
                     stateId < id,
                     "id кадров обязаны расти и после state при потере окна: клиент, запомнивший id кадра state, "
-                            + "не должен получить меньший id следом: state " + stateId + ", затем " + id);
+                            + "не должен получить меньший id следом: state " + stateId + ", затем " + id
+                            + " Иначе тест nextFrame_ReconnectAfterGap_EmitsStateThenRemainingEvents перестанет ловить эту поломку. При смене nextFrame_ReconnectAfterGap_EmitsStateThenRemainingEvents проверь это утверждение.");
         }
     }
 
@@ -134,12 +169,16 @@ class TaskEventStreamTests {
 
         try (TaskEventStream stream = fresh(RUNNING, log, 0, new AtomicInteger())) {
             String state = stream.nextFrame();
-            assertTrue(state.contains("event: state"), "Свежий поток обязан начинаться с state: " + state);
+            assertTrue(
+                    state.contains("event: state"),
+                    "Свежий поток обязан начинаться с state: " + state
+                            + " Иначе тест nextFrame_AfterQuietKeepaliveTimeout_EmitsKeepaliveComment перестанет ловить эту поломку. При смене nextFrame_AfterQuietKeepaliveTimeout_EmitsKeepaliveComment проверь это утверждение.");
             String keepalive = stream.nextFrame();
             assertEquals(
                     ": keepalive\n\n",
                     keepalive,
-                    "Тишина обязана отбиваться кипалайв-комментарием, а не рвать соединение");
+                    "Тишина обязана отбиваться кипалайв-комментарием, а не рвать соединение"
+                            + " Иначе тест nextFrame_AfterQuietKeepaliveTimeout_EmitsKeepaliveComment перестанет ловить эту поломку. При смене nextFrame_AfterQuietKeepaliveTimeout_EmitsKeepaliveComment проверь это утверждение.");
         }
     }
 
@@ -152,7 +191,11 @@ class TaskEventStreamTests {
         stream.close();
         stream.close();
 
-        assertEquals(1, closes.get(), "Освобождение слота обязано произойти ровно один раз");
+        assertEquals(
+                1,
+                closes.get(),
+                "Освобождение слота обязано произойти ровно один раз"
+                        + " Иначе тест close_MultipleTimes_RunsOnCloseOnce перестанет ловить эту поломку. При смене close_MultipleTimes_RunsOnCloseOnce проверь это утверждение.");
     }
 
     @Test
@@ -163,7 +206,13 @@ class TaskEventStreamTests {
         String queued = stream.nextFrame();
         stream.close();
 
-        assertTrue(queued.contains("event: state"), "Кадр, взятый до закрытия, обязана доставляться: " + queued);
-        assertNull(stream.nextFrame(), "После close поток обязан отдавать null без ожидания");
+        assertTrue(
+                queued.contains("event: state"),
+                "Кадр, взятый до закрытия, обязана доставляться: " + queued
+                        + " Иначе тест nextFrame_AfterClose_StillDrainsQueuedFramesThenEnds перестанет ловить эту поломку. При смене nextFrame_AfterClose_StillDrainsQueuedFramesThenEnds проверь это утверждение.");
+        assertNull(
+                stream.nextFrame(),
+                "После close поток обязан отдавать null без ожидания"
+                        + " Иначе тест nextFrame_AfterClose_StillDrainsQueuedFramesThenEnds перестанет ловить эту поломку. При смене nextFrame_AfterClose_StillDrainsQueuedFramesThenEnds проверь это утверждение.");
     }
 }

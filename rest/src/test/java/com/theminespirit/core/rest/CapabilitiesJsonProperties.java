@@ -44,16 +44,23 @@ class CapabilitiesJsonProperties {
                 spec.params().size(),
                 properties.size(),
                 "Каждый параметр скрипта '" + spec.id() + "' обязан попасть в properties: потерянный параметр ИИ "
-                        + "не сможет передать");
+                        + "не сможет передать"
+                        + " При смене toJson_AnyScriptOfDefaultCatalog_KeepsEveryParamAndRequiredList проверь это утверждение.");
         for (ParamSpec param : spec.params()) {
             assertTrue(
                     properties.has(param.name()),
-                    "Параметр '" + param.name() + "' скрипта '" + spec.id() + "' отсутствует в JSON-схеме");
+                    "Параметр '" + param.name() + "' скрипта '" + spec.id() + "' отсутствует в JSON-схеме"
+                            + " Иначе тест toJson_AnyScriptOfDefaultCatalog_KeepsEveryParamAndRequiredList перестанет ловить эту поломку. При смене toJson_AnyScriptOfDefaultCatalog_KeepsEveryParamAndRequiredList проверь это утверждение.");
         }
         assertEquals(
                 expectedRequired,
                 required,
-                "required скрипта '" + spec.id() + "' обязан совпадать с ParamSpec.required() и порядком параметров");
-        assertEquals(spec.id(), script.get("id").textValue(), "id скрипта в JSON обязан совпадать с каталогом");
+                "required скрипта '" + spec.id() + "' обязан совпадать с ParamSpec.required() и порядком параметров"
+                        + " Иначе тест toJson_AnyScriptOfDefaultCatalog_KeepsEveryParamAndRequiredList перестанет ловить эту поломку. При смене toJson_AnyScriptOfDefaultCatalog_KeepsEveryParamAndRequiredList проверь это утверждение.");
+        assertEquals(
+                spec.id(),
+                script.get("id").textValue(),
+                "id скрипта в JSON обязан совпадать с каталогом"
+                        + " Иначе тест toJson_AnyScriptOfDefaultCatalog_KeepsEveryParamAndRequiredList перестанет ловить эту поломку. При смене toJson_AnyScriptOfDefaultCatalog_KeepsEveryParamAndRequiredList проверь это утверждение.");
     }
 }

@@ -46,18 +46,32 @@ class PolicyRoutesTests {
 
         RestResponse response = send("POST", "/v1/policy/unprotect", body(requestId, ""));
 
-        assertEquals(201, response.status(), "Выдача разрешения обязана отвечать 201: " + response.body());
+        assertEquals(
+                201,
+                response.status(),
+                "Выдача разрешения обязана отвечать 201: " + response.body()
+                        + " Иначе тест post_NewArea_Returns201WithIdAndRequestId перестанет ловить эту поломку. При смене post_NewArea_Returns201WithIdAndRequestId проверь это утверждение.");
         JsonNode parsed = MAPPER.readTree(response.body());
         assertEquals(
                 "unprotect-" + requestId,
                 parsed.get("id").asText(),
-                "id разрешения мод назначает от request_id: " + response.body());
+                "id разрешения мод назначает от request_id: " + response.body()
+                        + " Иначе тест post_NewArea_Returns201WithIdAndRequestId перестанет ловить эту поломку. При смене post_NewArea_Returns201WithIdAndRequestId проверь это утверждение.");
         assertEquals(
                 requestId,
                 parsed.get("request_id").asText(),
-                "201 обязан эхать request_id клиента: " + response.body());
-        assertEquals(3, parsed.get("min").size(), "201 обязан отдавать угол min массивом: " + response.body());
-        assertEquals(1, gateway.grants().size(), "Выдача обязана создать одно разрешение");
+                "201 обязан эхать request_id клиента: " + response.body()
+                        + " Иначе тест post_NewArea_Returns201WithIdAndRequestId перестанет ловить эту поломку. При смене post_NewArea_Returns201WithIdAndRequestId проверь это утверждение.");
+        assertEquals(
+                3,
+                parsed.get("min").size(),
+                "201 обязан отдавать угол min массивом: " + response.body()
+                        + " Иначе тест post_NewArea_Returns201WithIdAndRequestId перестанет ловить эту поломку. При смене post_NewArea_Returns201WithIdAndRequestId проверь это утверждение.");
+        assertEquals(
+                1,
+                gateway.grants().size(),
+                "Выдача обязана создать одно разрешение"
+                        + " Иначе тест post_NewArea_Returns201WithIdAndRequestId перестанет ловить эту поломку. При смене post_NewArea_Returns201WithIdAndRequestId проверь это утверждение.");
     }
 
     @Test
@@ -68,9 +82,21 @@ class PolicyRoutesTests {
 
         RestResponse replay = send("POST", "/v1/policy/unprotect", payload);
 
-        assertEquals(201, replay.status(), "Повтор того же запроса обязан оставаться 201: " + replay.body());
-        assertEquals(first.body(), replay.body(), "Идемпотентный повтор обязан вернуть исходный ответ байт в байт");
-        assertEquals(1, gateway.grants().size(), "Повтор не должен выдавать второе разрешение");
+        assertEquals(
+                201,
+                replay.status(),
+                "Повтор того же запроса обязан оставаться 201: " + replay.body()
+                        + " Иначе тест post_ReplaySameRequestId_ReturnsSameAreaWithoutDuplicate перестанет ловить эту поломку. При смене post_ReplaySameRequestId_ReturnsSameAreaWithoutDuplicate проверь это утверждение.");
+        assertEquals(
+                first.body(),
+                replay.body(),
+                "Идемпотентный повтор обязан вернуть исходный ответ байт в байт"
+                        + " Иначе тест post_ReplaySameRequestId_ReturnsSameAreaWithoutDuplicate перестанет ловить эту поломку. При смене post_ReplaySameRequestId_ReturnsSameAreaWithoutDuplicate проверь это утверждение.");
+        assertEquals(
+                1,
+                gateway.grants().size(),
+                "Повтор не должен выдавать второе разрешение"
+                        + " Иначе тест post_ReplaySameRequestId_ReturnsSameAreaWithoutDuplicate перестанет ловить эту поломку. При смене post_ReplaySameRequestId_ReturnsSameAreaWithoutDuplicate проверь это утверждение.");
     }
 
     @Test
@@ -80,8 +106,16 @@ class PolicyRoutesTests {
 
         RestResponse response = send("POST", "/v1/policy/unprotect", body(requestId, ",\"ttl_seconds\":3600"));
 
-        assertEquals(409, response.status(), "Тот же request_id с другим телом обязан давать 409: " + response.body());
-        assertEquals(1, gateway.grants().size(), "Конфликт не должен выдавать второе разрешение");
+        assertEquals(
+                409,
+                response.status(),
+                "Тот же request_id с другим телом обязан давать 409: " + response.body()
+                        + " Иначе тест post_SameRequestIdDifferentBody_Conflicts перестанет ловить эту поломку. При смене post_SameRequestIdDifferentBody_Conflicts проверь это утверждение.");
+        assertEquals(
+                1,
+                gateway.grants().size(),
+                "Конфликт не должен выдавать второе разрешение"
+                        + " Иначе тест post_SameRequestIdDifferentBody_Conflicts перестанет ловить эту поломку. При смене post_SameRequestIdDifferentBody_Conflicts проверь это утверждение.");
     }
 
     @Test
@@ -91,8 +125,15 @@ class PolicyRoutesTests {
         RestResponse response =
                 send("POST", "/v1/policy/unprotect", body(UUID.randomUUID().toString(), ""));
 
-        assertEquals(400, response.status(), "Отказ хранилища обязан отдаваться 400, а не 500: " + response.body());
-        assertTrue(response.body().contains("4096"), "400 обязан называть предел из данных: " + response.body());
+        assertEquals(
+                400,
+                response.status(),
+                "Отказ хранилища обязан отдаваться 400, а не 500: " + response.body()
+                        + " Иначе тест post_GatewayRefusesOverVolume_Returns400NamingLimit перестанет ловить эту поломку. При смене post_GatewayRefusesOverVolume_Returns400NamingLimit проверь это утверждение.");
+        assertTrue(
+                response.body().contains("4096"),
+                "400 обязан называть предел из данных: " + response.body()
+                        + " Иначе тест post_GatewayRefusesOverVolume_Returns400NamingLimit перестанет ловить эту поломку. При смене post_GatewayRefusesOverVolume_Returns400NamingLimit проверь это утверждение.");
     }
 
     @Test
@@ -103,9 +144,20 @@ class PolicyRoutesTests {
                 "{\"request_id\":\"" + UUID.randomUUID() + "\",\"dimension\":\"minecraft:overworld\","
                         + "\"min\":[10,64,10],\"max\":[11,65,11],\"granted_by\":\"игрок\"}");
 
-        assertEquals(400, response.status(), "Без причины разрешение не выдаётся: " + response.body());
-        assertTrue(response.body().contains("reason"), "400 обязан называть поле reason: " + response.body());
-        assertEquals(0, gateway.grants().size(), "Отклонённое тело не должно доходить до хранилища");
+        assertEquals(
+                400,
+                response.status(),
+                "Без причины разрешение не выдаётся: " + response.body()
+                        + " Иначе тест post_MissingReason_Returns400 перестанет ловить эту поломку. При смене post_MissingReason_Returns400 проверь это утверждение.");
+        assertTrue(
+                response.body().contains("reason"),
+                "400 обязан называть поле reason: " + response.body()
+                        + " Иначе тест post_MissingReason_Returns400 перестанет ловить эту поломку. При смене post_MissingReason_Returns400 проверь это утверждение.");
+        assertEquals(
+                0,
+                gateway.grants().size(),
+                "Отклонённое тело не должно доходить до хранилища"
+                        + " Иначе тест post_MissingReason_Returns400 перестанет ловить эту поломку. При смене post_MissingReason_Returns400 проверь это утверждение.");
     }
 
     @Test
@@ -121,10 +173,22 @@ class PolicyRoutesTests {
 
         RestResponse response = send("GET", "/v1/policy/unprotect", "");
 
-        assertEquals(200, response.status(), "Список разрешений обязан отвечать 200: " + response.body());
+        assertEquals(
+                200,
+                response.status(),
+                "Список разрешений обязан отвечать 200: " + response.body()
+                        + " Иначе тест get_Areas_ReturnsList перестанет ловить эту поломку. При смене get_Areas_ReturnsList проверь это утверждение.");
         JsonNode areas = MAPPER.readTree(response.body()).get("areas");
-        assertEquals(1, areas.size(), "GET обязан вернуть все разрешения: " + response.body());
-        assertEquals("unprotect-a", areas.get(0).get("id").asText(), "GET обязан отдавать id: " + response.body());
+        assertEquals(
+                1,
+                areas.size(),
+                "GET обязан вернуть все разрешения: " + response.body()
+                        + " Иначе тест get_Areas_ReturnsList перестанет ловить эту поломку. При смене get_Areas_ReturnsList проверь это утверждение.");
+        assertEquals(
+                "unprotect-a",
+                areas.get(0).get("id").asText(),
+                "GET обязан отдавать id: " + response.body()
+                        + " Иначе тест get_Areas_ReturnsList перестанет ловить эту поломку. При смене get_Areas_ReturnsList проверь это утверждение.");
     }
 
     @Test
@@ -140,11 +204,20 @@ class PolicyRoutesTests {
 
         RestResponse response = send("DELETE", "/v1/policy/unprotect/unprotect-a", "");
 
-        assertEquals(200, response.status(), "Снятие разрешения обязано отвечать 200: " + response.body());
+        assertEquals(
+                200,
+                response.status(),
+                "Снятие разрешения обязано отвечать 200: " + response.body()
+                        + " Иначе тест delete_KnownArea_RemovesAndReturnsId перестанет ловить эту поломку. При смене delete_KnownArea_RemovesAndReturnsId проверь это утверждение.");
         assertTrue(
                 MAPPER.readTree(response.body()).get("removed").asBoolean(),
-                "Ответ снятия обязан нести removed: true: " + response.body());
-        assertEquals(0, gateway.areas().size(), "Снятое разрешение обязано исчезнуть из хранилища");
+                "Ответ снятия обязан нести removed: true: " + response.body()
+                        + " Иначе тест delete_KnownArea_RemovesAndReturnsId перестанет ловить эту поломку. При смене delete_KnownArea_RemovesAndReturnsId проверь это утверждение.");
+        assertEquals(
+                0,
+                gateway.areas().size(),
+                "Снятое разрешение обязано исчезнуть из хранилища"
+                        + " Иначе тест delete_KnownArea_RemovesAndReturnsId перестанет ловить эту поломку. При смене delete_KnownArea_RemovesAndReturnsId проверь это утверждение.");
     }
 
     @Test
@@ -152,7 +225,13 @@ class PolicyRoutesTests {
         RestResponse response = send("DELETE", "/v1/policy/unprotect/missing", "");
 
         assertEquals(
-                404, response.status(), "Снятие несуществующего разрешения обязано отвечать 404: " + response.body());
-        assertTrue(response.body().contains("не найдено"), "404 обязан объяснять причину: " + response.body());
+                404,
+                response.status(),
+                "Снятие несуществующего разрешения обязано отвечать 404: " + response.body()
+                        + " Иначе тест delete_UnknownArea_Returns404 перестанет ловить эту поломку. При смене delete_UnknownArea_Returns404 проверь это утверждение.");
+        assertTrue(
+                response.body().contains("не найдено"),
+                "404 обязан объяснять причину: " + response.body()
+                        + " Иначе тест delete_UnknownArea_Returns404 перестанет ловить эту поломку. При смене delete_UnknownArea_Returns404 проверь это утверждение.");
     }
 }

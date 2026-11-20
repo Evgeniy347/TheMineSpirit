@@ -33,11 +33,13 @@ class IdempotencyCacheTests {
         IdempotencyCache.Result.Replay replay = assertInstanceOf(
                 IdempotencyCache.Result.Replay.class,
                 result,
-                "Повтор с тем же request_id и телом обязан возвращать прежний ответ, а не считаться новым");
+                "Повтор с тем же request_id и телом обязан возвращать прежний ответ, а не считаться новым"
+                        + " Иначе тест check_SameRequestAfterRemember_ReplaysStoredResponse перестанет ловить эту поломку. При смене check_SameRequestAfterRemember_ReplaysStoredResponse проверь это утверждение.");
         assertEquals(
                 "{\"task_id\":\"t-1\"}",
                 replay.storedResponse(),
-                "Replay обязан нести дословно прежний ответ: клиент получит тот же task_id");
+                "Replay обязан нести дословно прежний ответ: клиент получит тот же task_id"
+                        + " Иначе тест check_SameRequestAfterRemember_ReplaysStoredResponse перестанет ловить эту поломку. При смене check_SameRequestAfterRemember_ReplaysStoredResponse проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +53,8 @@ class IdempotencyCacheTests {
         assertInstanceOf(
                 IdempotencyCache.Result.Conflict.class,
                 result,
-                "Тот же request_id с другим телом обязан давать Conflict: иначе клиент не заметил бы переиспользование");
+                "Тот же request_id с другим телом обязан давать Conflict: иначе клиент не заметил бы переиспользование"
+                        + " При смене check_SameRequestIdDifferentBody_Conflicts проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +64,8 @@ class IdempotencyCacheTests {
         assertInstanceOf(
                 IdempotencyCache.Result.New.class,
                 cache.check(UUID.randomUUID().toString(), FP_ONE),
-                "Неизвестный request_id обязан считаться новым запросом");
+                "Неизвестный request_id обязан считаться новым запросом"
+                        + " Иначе тест check_UnknownRequestId_IsNew перестанет ловить эту поломку. При смене check_UnknownRequestId_IsNew проверь это утверждение.");
     }
 
     @Test
@@ -71,7 +75,8 @@ class IdempotencyCacheTests {
         assertInstanceOf(
                 IdempotencyCache.Result.New.class,
                 cache.check(requestId, FP_ONE),
-                "Первый запрос обязан бронировать request_id как взятый в работу");
+                "Первый запрос обязан бронировать request_id как взятый в работу"
+                        + " Иначе тест check_SecondCallWhileFirstInFlight_WaitsAndReplaysStoredResponse перестанет ловить эту поломку. При смене check_SecondCallWhileFirstInFlight_WaitsAndReplaysStoredResponse проверь это утверждение.");
 
         AtomicReference<IdempotencyCache.Result> waited = new AtomicReference<>();
         Thread duplicate = new Thread(() -> waited.set(cache.check(requestId, FP_ONE)));
@@ -85,9 +90,13 @@ class IdempotencyCacheTests {
         IdempotencyCache.Result.Replay replay = assertInstanceOf(
                 IdempotencyCache.Result.Replay.class,
                 waited.get(),
-                "После завершения первого запроса дубликат обязан получить повтор");
+                "После завершения первого запроса дубликат обязан получить повтор"
+                        + " Иначе тест check_SecondCallWhileFirstInFlight_WaitsAndReplaysStoredResponse перестанет ловить эту поломку. При смене check_SecondCallWhileFirstInFlight_WaitsAndReplaysStoredResponse проверь это утверждение.");
         assertEquals(
-                "{\"task_id\":\"t-1\"}", replay.storedResponse(), "Повтор обязан нести ответ первого запроса дословно");
+                "{\"task_id\":\"t-1\"}",
+                replay.storedResponse(),
+                "Повтор обязан нести ответ первого запроса дословно"
+                        + " Иначе тест check_SecondCallWhileFirstInFlight_WaitsAndReplaysStoredResponse перестанет ловить эту поломку. При смене check_SecondCallWhileFirstInFlight_WaitsAndReplaysStoredResponse проверь это утверждение.");
     }
 
     @Test
@@ -97,7 +106,8 @@ class IdempotencyCacheTests {
         assertInstanceOf(
                 IdempotencyCache.Result.New.class,
                 cache.check(requestId, FP_ONE),
-                "Первый запрос обязан бронировать request_id как взятый в работу");
+                "Первый запрос обязан бронировать request_id как взятый в работу"
+                        + " Иначе тест check_DuplicateWaitsLongerThanLimit_ThrowsInsteadOfHangingForever перестанет ловить эту поломку. При смене check_DuplicateWaitsLongerThanLimit_ThrowsInsteadOfHangingForever проверь это утверждение.");
 
         AtomicReference<Throwable> failure = new AtomicReference<>();
         Thread duplicate = new Thread(() -> {
@@ -114,14 +124,17 @@ class IdempotencyCacheTests {
         assertFalse(
                 duplicate.isAlive(),
                 "Дубликат обязан прекратить ждать по пределу 200 мс, а не висеть вечно: "
-                        + "первый запрос мог упасть, не вызвав remember/release");
+                        + "первый запрос мог упасть, не вызвав remember/release"
+                        + " Иначе тест check_DuplicateWaitsLongerThanLimit_ThrowsInsteadOfHangingForever перестанет ловить эту поломку. При смене check_DuplicateWaitsLongerThanLimit_ThrowsInsteadOfHangingForever проверь это утверждение.");
         ApiException error = assertInstanceOf(
                 ApiException.class,
                 failure.get(),
-                "Не дождавшийся повтора дубликат обязан получить ошибку моста, а не молчание");
+                "Не дождавшийся повтора дубликат обязан получить ошибку моста, а не молчание"
+                        + " Иначе тест check_DuplicateWaitsLongerThanLimit_ThrowsInsteadOfHangingForever перестанет ловить эту поломку. При смене check_DuplicateWaitsLongerThanLimit_ThrowsInsteadOfHangingForever проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains(requestId),
-                "Ошибка обязана называть request_id, по которому не дождались ответа: " + error.getMessage());
+                "Ошибка обязана называть request_id, по которому не дождались ответа: " + error.getMessage()
+                        + " Иначе тест check_DuplicateWaitsLongerThanLimit_ThrowsInsteadOfHangingForever перестанет ловить эту поломку. При смене check_DuplicateWaitsLongerThanLimit_ThrowsInsteadOfHangingForever проверь это утверждение.");
     }
 
     @Test
@@ -136,11 +149,13 @@ class IdempotencyCacheTests {
         assertEquals(
                 IdempotencyCache.CAPACITY,
                 cache.size(),
-                "Память идемпотентности обязана держать не больше " + IdempotencyCache.CAPACITY + " записей");
+                "Память идемпотентности обязана держать не больше " + IdempotencyCache.CAPACITY + " записей"
+                        + " Иначе тест check_EvictedRequestId_IsNewAgain перестанет ловить эту поломку. При смене check_EvictedRequestId_IsNewAgain проверь это утверждение.");
         assertInstanceOf(
                 IdempotencyCache.Result.New.class,
                 cache.check(first, FP_ONE),
-                "Вытесненный request_id считается новым: память ограничена, старейший ответ уходит");
+                "Вытесненный request_id считается новым: память ограничена, старейший ответ уходит"
+                        + " Иначе тест check_EvictedRequestId_IsNewAgain перестанет ловить эту поломку. При смене check_EvictedRequestId_IsNewAgain проверь это утверждение.");
     }
 
     @Test
@@ -155,7 +170,8 @@ class IdempotencyCacheTests {
         assertEquals(
                 "прежний",
                 replay.storedResponse(),
-                "Первый ответ закрепляется за request_id: повторная remember не подменяет его");
+                "Первый ответ закрепляется за request_id: повторная remember не подменяет его"
+                        + " Иначе тест remember_AlreadyKnown_DoesNotOverwriteFirstResponse перестанет ловить эту поломку. При смене remember_AlreadyKnown_DoesNotOverwriteFirstResponse проверь это утверждение.");
     }
 
     @Test
@@ -164,8 +180,16 @@ class IdempotencyCacheTests {
         String reordered = IdempotencyCache.fingerprint(BOT, "цель", "{\"a\":1}", Map.of("y", 2, "x", 1));
         String otherGoal = IdempotencyCache.fingerprint(BOT, "иная", "{\"a\":1}", Map.of("x", 1, "y", 2));
 
-        assertEquals(base, reordered, "Порядок ключей params не должен менять отпечаток: тело то же");
-        assertNotEquals(base, otherGoal, "Другая цель — другой отпечаток: Conflict обязан сработать");
+        assertEquals(
+                base,
+                reordered,
+                "Порядок ключей params не должен менять отпечаток: тело то же"
+                        + " Иначе тест fingerprint_ParamOrderAndGoalChange_ChangesDigest перестанет ловить эту поломку. При смене fingerprint_ParamOrderAndGoalChange_ChangesDigest проверь это утверждение.");
+        assertNotEquals(
+                base,
+                otherGoal,
+                "Другая цель — другой отпечаток: Conflict обязан сработать"
+                        + " Иначе тест fingerprint_ParamOrderAndGoalChange_ChangesDigest перестанет ловить эту поломку. При смене fingerprint_ParamOrderAndGoalChange_ChangesDigest проверь это утверждение.");
     }
 
     @Test
@@ -177,7 +201,8 @@ class IdempotencyCacheTests {
                 newlineInGoal,
                 newlineInBot,
                 "Перевод строки в поле не должен сдвигать границы полей: разные тела не могут давать один отпечаток, "
-                        + "иначе чужой запрос будет принят за повтор");
+                        + "иначе чужой запрос будет принят за повтор"
+                        + " При смене fingerprint_NewlineInGoalVersusNewlineInBot_DifferentDigests проверь это утверждение.");
     }
 
     @Test
@@ -191,7 +216,8 @@ class IdempotencyCacheTests {
                 first,
                 reserialized,
                 "Тот же план, сериализованный клиентом с другим порядком ключей, обязан давать тот же отпечаток: "
-                        + "иначе повтор запроса получит ложный 409");
+                        + "иначе повтор запроса получит ложный 409"
+                        + " При смене fingerprint_SamePlanWithOtherKeyOrder_SameDigest проверь это утверждение.");
     }
 
     @Test
@@ -199,7 +225,11 @@ class IdempotencyCacheTests {
         String absent = IdempotencyCache.fingerprint(BOT, null, null, Map.of());
         String empty = IdempotencyCache.fingerprint(BOT, "", null, Map.of());
 
-        assertNotEquals(absent, empty, "Отсутствующая цель и пустая цель — разные тела");
+        assertNotEquals(
+                absent,
+                empty,
+                "Отсутствующая цель и пустая цель — разные тела"
+                        + " Иначе тест fingerprint_GoalAbsentVersusEmpty_DifferentDigests перестанет ловить эту поломку. При смене fingerprint_GoalAbsentVersusEmpty_DifferentDigests проверь это утверждение.");
     }
 
     @Test
@@ -207,8 +237,16 @@ class IdempotencyCacheTests {
         String first = IdempotencyCache.fingerprint("дух", "срубить дерево 🌲", null, Map.of("target", "Стив"));
         String second = IdempotencyCache.fingerprint("дух", "срубить дерево 🌲", null, Map.of("target", "Стив"));
 
-        assertEquals(first, second, "Одни и те же данные обязаны давать один отпечаток");
-        assertEquals(64, first.length(), "Отпечаток — SHA-256 в 64 hex-символах");
+        assertEquals(
+                first,
+                second,
+                "Одни и те же данные обязаны давать один отпечаток"
+                        + " Иначе тест fingerprint_UnicodeAndEmptyParts_AreStableHexSha256 перестанет ловить эту поломку. При смене fingerprint_UnicodeAndEmptyParts_AreStableHexSha256 проверь это утверждение.");
+        assertEquals(
+                64,
+                first.length(),
+                "Отпечаток — SHA-256 в 64 hex-символах"
+                        + " Иначе тест fingerprint_UnicodeAndEmptyParts_AreStableHexSha256 перестанет ловить эту поломку. При смене fingerprint_UnicodeAndEmptyParts_AreStableHexSha256 проверь это утверждение.");
     }
 
     @Provide
@@ -228,10 +266,12 @@ class IdempotencyCacheTests {
 
         assertTrue(
                 cache.size() <= IdempotencyCache.CAPACITY,
-                "Размер памяти идемпотентности обязан быть ≤ " + IdempotencyCache.CAPACITY + ": " + cache.size());
+                "Размер памяти идемпотентности обязан быть ≤ " + IdempotencyCache.CAPACITY + ": " + cache.size()
+                        + " Иначе тест check_AnySequence_SizeNeverExceedsCapacityAndRecentSurvives перестанет ловить эту поломку. При смене check_AnySequence_SizeNeverExceedsCapacityAndRecentSurvives проверь это утверждение.");
         assertInstanceOf(
                 IdempotencyCache.Result.Replay.class,
                 cache.check(recent, FP_ONE),
-                "Недавний запрос обязан пережить вытеснение более старых: FIFO вытесняет только старейшие");
+                "Недавний запрос обязан пережить вытеснение более старых: FIFO вытесняет только старейшие"
+                        + " Иначе тест check_AnySequence_SizeNeverExceedsCapacityAndRecentSurvives перестанет ловить эту поломку. При смене check_AnySequence_SizeNeverExceedsCapacityAndRecentSurvives проверь это утверждение.");
     }
 }

@@ -28,13 +28,34 @@ class BoardTextTests {
     void line_WaitingTask_ShowsCasePriorityHolderAndMissing() {
         String line = BoardText.line(task(Map.of("oak_log", 10), List.of("board-root"), "дух-1"));
 
-        assertTrue(line.contains("board-1"), "Строка обязана начинаться с id задания: " + line);
-        assertTrue(line.contains("SUPPLY_SITE"), "Строка обязана называть кейс: " + line);
-        assertTrue(line.contains("приоритет 20"), "Строка обязана называть приоритет: " + line);
-        assertTrue(line.contains("ждёт ресурсов"), "Строка обязана переводить статус на русский: " + line);
-        assertTrue(line.contains("дух-1"), "Строка обязана называть владельца: " + line);
-        assertTrue(line.contains("oak_log ×10"), "Строка обязана называть нехватку с числом: " + line);
-        assertTrue(line.contains("после: board-root"), "Строка обязана называть зависимости: " + line);
+        assertTrue(
+                line.contains("board-1"),
+                "Строка обязана начинаться с id задания: " + line
+                        + " Иначе тест line_WaitingTask_ShowsCasePriorityHolderAndMissing перестанет ловить эту поломку. При смене line_WaitingTask_ShowsCasePriorityHolderAndMissing проверь это утверждение.");
+        assertTrue(
+                line.contains("SUPPLY_SITE"),
+                "Строка обязана называть кейс: " + line
+                        + " Иначе тест line_WaitingTask_ShowsCasePriorityHolderAndMissing перестанет ловить эту поломку. При смене line_WaitingTask_ShowsCasePriorityHolderAndMissing проверь это утверждение.");
+        assertTrue(
+                line.contains("приоритет 20"),
+                "Строка обязана называть приоритет: " + line
+                        + " Иначе тест line_WaitingTask_ShowsCasePriorityHolderAndMissing перестанет ловить эту поломку. При смене line_WaitingTask_ShowsCasePriorityHolderAndMissing проверь это утверждение.");
+        assertTrue(
+                line.contains("ждёт ресурсов"),
+                "Строка обязана переводить статус на русский: " + line
+                        + " Иначе тест line_WaitingTask_ShowsCasePriorityHolderAndMissing перестанет ловить эту поломку. При смене line_WaitingTask_ShowsCasePriorityHolderAndMissing проверь это утверждение.");
+        assertTrue(
+                line.contains("дух-1"),
+                "Строка обязана называть владельца: " + line
+                        + " Иначе тест line_WaitingTask_ShowsCasePriorityHolderAndMissing перестанет ловить эту поломку. При смене line_WaitingTask_ShowsCasePriorityHolderAndMissing проверь это утверждение.");
+        assertTrue(
+                line.contains("oak_log ×10"),
+                "Строка обязана называть нехватку с числом: " + line
+                        + " Иначе тест line_WaitingTask_ShowsCasePriorityHolderAndMissing перестанет ловить эту поломку. При смене line_WaitingTask_ShowsCasePriorityHolderAndMissing проверь это утверждение.");
+        assertTrue(
+                line.contains("после: board-root"),
+                "Строка обязана называть зависимости: " + line
+                        + " Иначе тест line_WaitingTask_ShowsCasePriorityHolderAndMissing перестанет ловить эту поломку. При смене line_WaitingTask_ShowsCasePriorityHolderAndMissing проверь это утверждение.");
     }
 
     @Test
@@ -65,16 +86,26 @@ class BoardTextTests {
 
         assertTrue(
                 line.contains("добыть: oak_log ×7"),
-                "Без иконок (REST/журнал) задание добычи обязано называть предмет и число: " + line);
+                "Без иконок (REST/журнал) задание добычи обязано называть предмет и число: " + line
+                        + " Иначе тест line_GatherTaskWithoutIcons_NamesItemAndCount перестанет ловить эту поломку. При смене line_GatherTaskWithoutIcons_NamesItemAndCount проверь это утверждение.");
     }
 
     @Test
     void line_FreeTaskWithoutMissing_NamesAnyFreeSpiritAndOmitsMissing() {
         String line = BoardText.line(task(Map.of(), List.of(), null));
 
-        assertTrue(line.contains("любой свободный"), "Задание без владельца обязано звать любого свободного: " + line);
-        assertTrue(!line.contains("не хватает"), "Без нехватки строку про ресурсы не показывают: " + line);
-        assertTrue(!line.contains("после:"), "Без зависимостей строку про них не показывают: " + line);
+        assertTrue(
+                line.contains("любой свободный"),
+                "Задание без владельца обязано звать любого свободного: " + line
+                        + " Иначе тест line_FreeTaskWithoutMissing_NamesAnyFreeSpiritAndOmitsMissing перестанет ловить эту поломку. При смене line_FreeTaskWithoutMissing_NamesAnyFreeSpiritAndOmitsMissing проверь это утверждение.");
+        assertTrue(
+                !line.contains("не хватает"),
+                "Без нехватки строку про ресурсы не показывают: " + line
+                        + " Иначе тест line_FreeTaskWithoutMissing_NamesAnyFreeSpiritAndOmitsMissing перестанет ловить эту поломку. При смене line_FreeTaskWithoutMissing_NamesAnyFreeSpiritAndOmitsMissing проверь это утверждение.");
+        assertTrue(
+                !line.contains("после:"),
+                "Без зависимостей строку про них не показывают: " + line
+                        + " Иначе тест line_FreeTaskWithoutMissing_NamesAnyFreeSpiritAndOmitsMissing перестанет ловить эту поломку. При смене line_FreeTaskWithoutMissing_NamesAnyFreeSpiritAndOmitsMissing проверь это утверждение.");
     }
 
     @Test
@@ -97,10 +128,18 @@ class BoardTextTests {
 
         String line = BoardText.line(task);
 
-        assertTrue(line.contains("уровень 2"), "Строка обязана называть уровень постройки: " + line);
         assertTrue(
-                line.contains("приоритет 80"), "Строка обязана показывать эффективный приоритет, а не базу: " + line);
-        assertTrue(line.contains("pen_caught_animal"), "Строка обязана называть сработавшие модификаторы: " + line);
+                line.contains("уровень 2"),
+                "Строка обязана называть уровень постройки: " + line
+                        + " Иначе тест line_LeveledTask_ShowsLevelEffectivePriorityAndModifiers перестанет ловить эту поломку. При смене line_LeveledTask_ShowsLevelEffectivePriorityAndModifiers проверь это утверждение.");
+        assertTrue(
+                line.contains("приоритет 80"),
+                "Строка обязана показывать эффективный приоритет, а не базу: " + line
+                        + " Иначе тест line_LeveledTask_ShowsLevelEffectivePriorityAndModifiers перестанет ловить эту поломку. При смене line_LeveledTask_ShowsLevelEffectivePriorityAndModifiers проверь это утверждение.");
+        assertTrue(
+                line.contains("pen_caught_animal"),
+                "Строка обязана называть сработавшие модификаторы: " + line
+                        + " Иначе тест line_LeveledTask_ShowsLevelEffectivePriorityAndModifiers перестанет ловить эту поломку. При смене line_LeveledTask_ShowsLevelEffectivePriorityAndModifiers проверь это утверждение.");
     }
 
     @Test
@@ -123,7 +162,8 @@ class BoardTextTests {
 
         assertTrue(
                 BoardText.line(task).contains("выполнено"),
-                "Отметка выполненной постройки обязана быть видна в чате: " + BoardText.line(task));
+                "Отметка выполненной постройки обязана быть видна в чате: " + BoardText.line(task)
+                        + " Иначе тест line_DoneBuilding_MarksDone перестанет ловить эту поломку. При смене line_DoneBuilding_MarksDone проверь это утверждение.");
     }
 
     @Test
@@ -131,13 +171,22 @@ class BoardTextTests {
         assertEquals(
                 "dirt ×4, oak_log ×10",
                 BoardText.missing(Map.of("oak_log", 10, "dirt", 4)),
-                "Нехватка в чате обязана идти по алфавиту: порядок карты непостоянен, а чат читает человек");
+                "Нехватка в чате обязана идти по алфавиту: порядок карты непостоянен, а чат читает человек"
+                        + " Иначе тест missing_MultipleItems_SortedByNameForStableChat перестанет ловить эту поломку. При смене missing_MultipleItems_SortedByNameForStableChat проверь это утверждение.");
     }
 
     @Test
     void statusRu_KnownStatuses_Translated() {
-        assertEquals("выдано", BoardText.statusRu("ASSIGNED"), "Известный статус обязан переводиться на русский");
-        assertEquals("выполнено", BoardText.statusRu("DONE"), "Известный статус обязан переводиться на русский");
+        assertEquals(
+                "выдано",
+                BoardText.statusRu("ASSIGNED"),
+                "Известный статус обязан переводиться на русский"
+                        + " Иначе тест statusRu_KnownStatuses_Translated перестанет ловить эту поломку. При смене statusRu_KnownStatuses_Translated проверь это утверждение.");
+        assertEquals(
+                "выполнено",
+                BoardText.statusRu("DONE"),
+                "Известный статус обязан переводиться на русский"
+                        + " Иначе тест statusRu_KnownStatuses_Translated перестанет ловить эту поломку. При смене statusRu_KnownStatuses_Translated проверь это утверждение.");
     }
 
     @Test
@@ -145,6 +194,7 @@ class BoardTextTests {
         assertEquals(
                 "САМОПАЛ",
                 BoardText.statusRu("САМОПАЛ"),
-                "Неизвестный статус не подменяется: наблюдатель видит то, что пришло");
+                "Неизвестный статус не подменяется: наблюдатель видит то, что пришло"
+                        + " Иначе тест statusRu_UnknownWireValue_ReturnedAsIs перестанет ловить эту поломку. При смене statusRu_UnknownWireValue_ReturnedAsIs проверь это утверждение.");
     }
 }

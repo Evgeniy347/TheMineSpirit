@@ -55,7 +55,8 @@ class CapabilitiesJsonTests {
                 actual,
                 "Каталог в JSON — контракт docs/api/README.md для ИИ-планировщика: типы параметров в JSON-Schema "
                         + "(integer/number/string/array/boolean/enum), границы, умолчания, required и порядок скриптов "
-                        + "как в каталоге. Меняя формат осознанно, правь docs/api/README.md");
+                        + "как в каталоге. Меняя формат осознанно, правь docs/api/README.md"
+                        + " Иначе тест toJson_SmallCatalogWithAllParamTypes_EqualsReferenceJson перестанет ловить эту поломку. При смене toJson_SmallCatalogWithAllParamTypes_EqualsReferenceJson проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +64,8 @@ class CapabilitiesJsonTests {
         assertEquals(
                 "{\"scripts\":[]}",
                 CapabilitiesJson.toJson(ScriptCatalog.of(List.of())),
-                "Пустой каталог — пустой список скриптов, а не null или ошибка: клиент отличает его от сбоя");
+                "Пустой каталог — пустой список скриптов, а не null или ошибка: клиент отличает его от сбоя"
+                        + " Иначе тест toJson_EmptyCatalog_WritesEmptyScriptList перестанет ловить эту поломку. При смене toJson_EmptyCatalog_WritesEmptyScriptList проверь это утверждение.");
     }
 
     @Test
@@ -72,21 +74,72 @@ class CapabilitiesJsonTests {
                 .get("scripts");
 
         JsonNode ore = requires(scripts, "mine_vein");
-        assertEquals("tool", ore.get("kind").textValue(), "требование кирки — инструментальное");
-        assertEquals("pickaxe", ore.get("tool").textValue(), "требование кирки называет инструмент pickaxe");
-        assertEquals("ore", ore.get("param").textValue(), "уровень кирки для mine_vein зависит от параметра ore");
-        assertEquals(1, ore.get("tiers").get("any").intValue(), "любая руда требует хотя бы деревянную кирку");
-        assertEquals(2, ore.get("tiers").get("iron").intValue(), "железная руда требует каменную кирку");
-        assertEquals(3, ore.get("tiers").get("diamond").intValue(), "алмазная руда требует железную кирку");
-        assertEquals(4, ore.get("tiers").get("netherite").intValue(), "древние обломки требуют алмазную кирку");
+        assertEquals(
+                "tool",
+                ore.get("kind").textValue(),
+                "требование кирки — инструментальное"
+                        + " Иначе тест toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog перестанет ловить эту поломку. При смене toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog проверь это утверждение.");
+        assertEquals(
+                "pickaxe",
+                ore.get("tool").textValue(),
+                "требование кирки называет инструмент pickaxe"
+                        + " Иначе тест toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog перестанет ловить эту поломку. При смене toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog проверь это утверждение.");
+        assertEquals(
+                "ore",
+                ore.get("param").textValue(),
+                "уровень кирки для mine_vein зависит от параметра ore"
+                        + " Иначе тест toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog перестанет ловить эту поломку. При смене toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog проверь это утверждение.");
+        assertEquals(
+                1,
+                ore.get("tiers").get("any").intValue(),
+                "любая руда требует хотя бы деревянную кирку"
+                        + " Иначе тест toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog перестанет ловить эту поломку. При смене toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog проверь это утверждение.");
+        assertEquals(
+                2,
+                ore.get("tiers").get("iron").intValue(),
+                "железная руда требует каменную кирку"
+                        + " Иначе тест toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog перестанет ловить эту поломку. При смене toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog проверь это утверждение.");
+        assertEquals(
+                3,
+                ore.get("tiers").get("diamond").intValue(),
+                "алмазная руда требует железную кирку"
+                        + " Иначе тест toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog перестанет ловить эту поломку. При смене toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog проверь это утверждение.");
+        assertEquals(
+                4,
+                ore.get("tiers").get("netherite").intValue(),
+                "древние обломки требуют алмазную кирку"
+                        + " Иначе тест toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog перестанет ловить эту поломку. При смене toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog проверь это утверждение.");
 
         JsonNode block = requires(scripts, "gather");
-        assertEquals("block", block.get("param").textValue(), "уровень кирки для gather зависит от параметра block");
-        assertEquals(1, block.get("tiers").get("stone").intValue(), "камень требует деревянную кирку");
-        assertEquals(2, block.get("tiers").get("iron_ore").intValue(), "железная руда требует каменную кирку");
-        assertEquals(4, block.get("tiers").get("obsidian").intValue(), "обсидиан требует алмазную кирку");
-        assertFalse(block.get("tiers").has("oak_log"), "бревно добывается топором, кирка для него не требуется");
-        assertEquals(0, block.get("fallback").intValue(), "блок вне таблицы кирки не требует");
+        assertEquals(
+                "block",
+                block.get("param").textValue(),
+                "уровень кирки для gather зависит от параметра block"
+                        + " Иначе тест toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog перестанет ловить эту поломку. При смене toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog проверь это утверждение.");
+        assertEquals(
+                1,
+                block.get("tiers").get("stone").intValue(),
+                "камень требует деревянную кирку"
+                        + " Иначе тест toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog перестанет ловить эту поломку. При смене toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog проверь это утверждение.");
+        assertEquals(
+                2,
+                block.get("tiers").get("iron_ore").intValue(),
+                "железная руда требует каменную кирку"
+                        + " Иначе тест toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog перестанет ловить эту поломку. При смене toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog проверь это утверждение.");
+        assertEquals(
+                4,
+                block.get("tiers").get("obsidian").intValue(),
+                "обсидиан требует алмазную кирку"
+                        + " Иначе тест toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog перестанет ловить эту поломку. При смене toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog проверь это утверждение.");
+        assertFalse(
+                block.get("tiers").has("oak_log"),
+                "бревно добывается топором, кирка для него не требуется"
+                        + " Иначе тест toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog перестанет ловить эту поломку. При смене toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog проверь это утверждение.");
+        assertEquals(
+                0,
+                block.get("fallback").intValue(),
+                "блок вне таблицы кирки не требует"
+                        + " Иначе тест toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog перестанет ловить эту поломку. При смене toJson_MineVeinAndGather_ExposePickaxeTiersFromCatalog проверь это утверждение.");
     }
 
     private static JsonNode requires(JsonNode scripts, String id) {
@@ -107,7 +160,8 @@ class CapabilitiesJsonTests {
         for (ScriptSpec spec : catalog.all()) {
             assertTrue(
                     json.contains("\"id\":\"" + spec.id() + "\""),
-                    "Скрипт '" + spec.id() + "' из CoreScripts.defaultCatalog() обязан быть в JSON каталога");
+                    "Скрипт '" + spec.id() + "' из CoreScripts.defaultCatalog() обязан быть в JSON каталога"
+                            + " Иначе тест toJson_DefaultCatalog_SerializesEveryScript перестанет ловить эту поломку. При смене toJson_DefaultCatalog_SerializesEveryScript проверь это утверждение.");
         }
     }
 }

@@ -56,15 +56,32 @@ class TaskBoardFallbackTests {
 
         RestResponse response = send(board, "GET", "/v1/tasks/graph:chop_jungle_log");
 
-        assertEquals(200, response.status(), "Задание доски обязано отдаваться по /v1/tasks/{id}: " + response.body());
+        assertEquals(
+                200,
+                response.status(),
+                "Задание доски обязано отдаваться по /v1/tasks/{id}: " + response.body()
+                        + " Иначе тест get_BoardTicket_ReturnsBoardStatusWaitReasonAndAssignee перестанет ловить эту поломку. При смене get_BoardTicket_ReturnsBoardStatusWaitReasonAndAssignee проверь это утверждение.");
         JsonNode task = MAPPER.readTree(response.body());
-        assertEquals("graph:chop_jungle_log", task.get("id").asText(), "Ответ обязан назвать задание доски");
-        assertEquals("ASSIGNED", task.get("status").asText(), "Ответ обязан назвать статус задания доски");
-        assertEquals(BOT, task.get("assignee").asText(), "Ответ обязан назвать держателя задания доски");
+        assertEquals(
+                "graph:chop_jungle_log",
+                task.get("id").asText(),
+                "Ответ обязан назвать задание доски"
+                        + " Иначе тест get_BoardTicket_ReturnsBoardStatusWaitReasonAndAssignee перестанет ловить эту поломку. При смене get_BoardTicket_ReturnsBoardStatusWaitReasonAndAssignee проверь это утверждение.");
+        assertEquals(
+                "ASSIGNED",
+                task.get("status").asText(),
+                "Ответ обязан назвать статус задания доски"
+                        + " Иначе тест get_BoardTicket_ReturnsBoardStatusWaitReasonAndAssignee перестанет ловить эту поломку. При смене get_BoardTicket_ReturnsBoardStatusWaitReasonAndAssignee проверь это утверждение.");
+        assertEquals(
+                BOT,
+                task.get("assignee").asText(),
+                "Ответ обязан назвать держателя задания доски"
+                        + " Иначе тест get_BoardTicket_ReturnsBoardStatusWaitReasonAndAssignee перестанет ловить эту поломку. При смене get_BoardTicket_ReturnsBoardStatusWaitReasonAndAssignee проверь это утверждение.");
         assertEquals(
                 "spirit-3 — занят: chop_tree",
                 task.get("waitReason").asText(),
-                "Ответ обязан отдать причину ожидания задания доски");
+                "Ответ обязан отдать причину ожидания задания доски"
+                        + " Иначе тест get_BoardTicket_ReturnsBoardStatusWaitReasonAndAssignee перестанет ловить эту поломку. При смене get_BoardTicket_ReturnsBoardStatusWaitReasonAndAssignee проверь это утверждение.");
     }
 
     @Test
@@ -77,19 +94,33 @@ class TaskBoardFallbackTests {
                 200,
                 response.status(),
                 "Задание, восстановленное из сейва, живёт в реестре доски: 404 «сервер перезапущен» врёт, "
-                        + "хотя бы его и не было в списке на момент снимка: " + response.body());
+                        + "хотя бы его и не было в списке на момент снимка: " + response.body()
+                        + " Иначе тест get_RestoredBoardTicket_ReturnedFromBoardRegistryNotSnapshot перестанет ловить эту поломку. При смене get_RestoredBoardTicket_ReturnedFromBoardRegistryNotSnapshot проверь это утверждение.");
         JsonNode task = MAPPER.readTree(response.body());
-        assertEquals("graph:chop_jungle_log", task.get("id").asText(), "Ответ обязан назвать задание доски");
-        assertEquals(BOT, task.get("assignee").asText(), "Ответ обязан назвать держателя задания доски");
+        assertEquals(
+                "graph:chop_jungle_log",
+                task.get("id").asText(),
+                "Ответ обязан назвать задание доски"
+                        + " Иначе тест get_RestoredBoardTicket_ReturnedFromBoardRegistryNotSnapshot перестанет ловить эту поломку. При смене get_RestoredBoardTicket_ReturnedFromBoardRegistryNotSnapshot проверь это утверждение.");
+        assertEquals(
+                BOT,
+                task.get("assignee").asText(),
+                "Ответ обязан назвать держателя задания доски"
+                        + " Иначе тест get_RestoredBoardTicket_ReturnedFromBoardRegistryNotSnapshot перестанет ловить эту поломку. При смене get_RestoredBoardTicket_ReturnedFromBoardRegistryNotSnapshot проверь это утверждение.");
     }
 
     @Test
     void get_UnknownTicket_StillReportsLostTask() {
         RestResponse response = send(new FakeBoardGateway(), "GET", "/v1/tasks/нет-такого");
 
-        assertEquals(404, response.status(), "Неизвестное задание обязано давать 404: " + response.body());
+        assertEquals(
+                404,
+                response.status(),
+                "Неизвестное задание обязано давать 404: " + response.body()
+                        + " Иначе тест get_UnknownTicket_StillReportsLostTask перестанет ловить эту поломку. При смене get_UnknownTicket_StillReportsLostTask проверь это утверждение.");
         assertTrue(
                 response.body().contains("\"code\":\"not_found\""),
-                "404 обязан нести код not_found: " + response.body());
+                "404 обязан нести код not_found: " + response.body()
+                        + " Иначе тест get_UnknownTicket_StillReportsLostTask перестанет ловить эту поломку. При смене get_UnknownTicket_StillReportsLostTask проверь это утверждение.");
     }
 }
