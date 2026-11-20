@@ -1,7 +1,6 @@
 package com.theminespirit.core.board.graph;
 
 import com.theminespirit.core.board.StageCatalog;
-import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphState.Built;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -9,19 +8,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public final class GraphPlanner {
-    private static final String BUILDING = "building:";
-    private static final String TOOL = "tool:";
-    private static final String EVENT = "event:";
-    private static final String EXPLORE = "explore:";
-    private static final String STATION = "station:";
+    static final String BUILDING = "building:";
+    static final String TOOL = "tool:";
+    static final String EVENT = "event:";
+    static final String EXPLORE = "explore:";
+    static final String STATION = "station:";
     private static final String ORDER = "order:";
-    private static final int EXPLORE_TICKS = 2400;
-    private static final char AT = '@';
+    static final char AT = '@';
     final Map<String, GraphPlan.Notice> notices = new LinkedHashMap<>();
     private final SupplyGraph graph;
     private final GraphState state;
@@ -32,6 +29,7 @@ public final class GraphPlanner {
     private final Set<String> expanded = new HashSet<>();
     private final Set<String> chances = new HashSet<>();
     private final List<GraphPlan.Advice> advice = new ArrayList<>();
+    private final GraphTaskBuilder builder;
 
     private GraphPlanner(SupplyGraph graph, GraphState state) {
         this.graph = Objects.requireNonNull(graph, "Граф не может быть null: без него не из чего выводить задания");
@@ -39,6 +37,7 @@ public final class GraphPlanner {
         this.reach = new GraphReach(graph, state);
         this.choices = new GraphChoiceRules(graph, state, reach);
         this.blockRules = new GraphBlocks(graph, state, flow, this::push, notices);
+        this.builder = new GraphTaskBuilder(graph, state, reach, choices, chances);
     }
 
     public static GraphPlan plan(SupplyGraph graph, GraphState state) {
@@ -332,149 +331,33 @@ public final class GraphPlanner {
         return changed ? flow.solve() : scores;
     }
 
-    private boolean task(String key) {
-        if (key.startsWith(BUILDING) || key.startsWith(EVENT) || key.startsWith(EXPLORE)) {
-            return true;
-        }
-        int at = key.indexOf(AT);
-        return !key.startsWith(TOOL)
-                && reach.way(at < 0 ? key : key.substring(0, at)).isPresent();
-    }
-
     private GraphPlan result(Map<String, Double> scores) {
         List<GraphPlan.Task> tasks = new ArrayList<>();
         Map<String, Double> load = new LinkedHashMap<>();
         Set<String> made = new HashSet<>();
         for (Map.Entry<String, Double> score : GraphChoiceRules.ordered(scores)) {
-            if (score.getValue() <= 0 || !task(score.getKey())) {
+            if (score.getValue() <= 0 || !builder.task(score.getKey())) {
                 continue;
             }
             boolean repeat = !made.add(choices.makes(score.getKey()));
             double value = score.getValue() * graph.costs().travelFactor(choices.travelTicks(score.getKey()));
             double adjusted =
                     choices.value(score.getKey(), value, repeat) * BuildingShare.of(graph, state, score.getKey());
-            GraphPlan.Task task = task(score.getKey(), GraphEvent.priority(state, graph, score.getKey(), adjusted));
+            GraphPlan.Task task =
+                    builder.task(score.getKey(), GraphEvent.priority(state, graph, score.getKey(), adjusted));
             String reason = blockRules.reason(score.getKey());
             if (reason != null) {
                 task = GraphBlocks.blockedTask(task, reason);
             }
             GraphPlan.Task ready = task;
             tasks.add(ready);
-            station(score.getKey())
+            builder.station(score.getKey())
                     .filter(ignored -> ready.feasible())
                     .ifPresent(building -> load.merge(building, adjusted, Math::max));
         }
-        load.forEach((building, value) -> stationTask(building, value, scores).ifPresent(tasks::add));
+        load.forEach((building, value) ->
+                builder.stationTask(building, value, scores).ifPresent(tasks::add));
         return new GraphPlan(tasks, List.copyOf(notices.values()), advice);
-    }
-
-    private Optional<String> station(String key) {
-        int at = key.indexOf(AT);
-        return reach.way(at < 0 ? key : key.substring(0, at))
-                .map(SupplyGraph.Way::building)
-                .filter(building -> graph.costs().stationCapacity().containsKey(building));
-    }
-
-    private Optional<GraphPlan.Task> stationTask(String building, double value, Map<String, Double> scores) {
-        long busy = scores.entrySet().stream()
-                .filter(entry -> entry.getValue() > 0 && task(entry.getKey()))
-                .filter(entry ->
-                        station(entry.getKey()).filter(building::equals).isPresent())
-                .filter(entry -> task(entry.getKey(), 0).feasible())
-                .count();
-        int capacity = graph.costs().stationCapacity().getOrDefault(building, Integer.MAX_VALUE);
-        if (state.built(building) != Built.BUILT || busy <= (long) state.stations(building) * capacity) {
-            return Optional.empty();
-        }
-        SupplyGraph.Building known = Objects.requireNonNull(
-                graph.buildings().get(building), "Станция " + building + " не описана среди построек графа");
-        Map<String, Integer> materials = GraphLack.materials(graph, state, building);
-        return Optional.of(new GraphPlan.Task(
-                STATION + building,
-                known.boardCase(),
-                building,
-                Optional.empty(),
-                GraphFlow.priority(value * graph.decay(), GraphPriorities.work(graph)),
-                materials,
-                GraphLack.stocked(graph, state, materials),
-                false,
-                graph.implemented(building),
-                graph.costs().ticks(STATION + building, known.boardCase())));
-    }
-
-    private GraphPlan.Task task(String key, int priority) {
-        if (key.startsWith(EXPLORE)) {
-            return new GraphPlan.Task(
-                    key,
-                    BoardCase.GATHER_MATERIALS,
-                    key.substring(EXPLORE.length()),
-                    Optional.empty(),
-                    priority,
-                    Map.of(),
-                    true,
-                    false,
-                    false,
-                    EXPLORE_TICKS);
-        }
-        if (key.startsWith(EVENT)) {
-            String[] parts = key.split(":", 3);
-            GraphEvent event = Objects.requireNonNull(
-                    graph.events().get(parts[1]), "Событие " + parts[1] + " задания не описано в графе");
-            GraphEvent.Task chosen = Objects.requireNonNull(
-                    GraphEvent.find(event, parts[2]),
-                    "Событие " + parts[1] + " не описывает задание " + parts[2] + ": узел графа обязан помнить кейс");
-            return new GraphPlan.Task(
-                    key,
-                    chosen.boardCase(),
-                    parts[2],
-                    GraphEventFacts.owner(state, chosen),
-                    priority,
-                    GraphEventFacts.consumes(state, chosen),
-                    GraphEventFacts.feasible(graph, state, chosen),
-                    false,
-                    chosen.implemented(),
-                    graph.costs().ticks(key, chosen.boardCase()));
-        }
-        if (key.startsWith(BUILDING)) {
-            String id = key.substring(BUILDING.length());
-            SupplyGraph.Building building = Objects.requireNonNull(
-                    graph.buildings().get(id), "Постройка " + id + " задания не описана в графе");
-            Map<String, Integer> materials = GraphLack.materials(graph, state, id);
-            boolean tooled = (building.tool() == null || state.bestTier(building.tool()) >= 0)
-                    && building.requires().stream().allMatch(required -> state.built(required) == Built.BUILT);
-            return new GraphPlan.Task(
-                    key,
-                    building.boardCase(),
-                    id,
-                    Optional.empty(),
-                    priority,
-                    materials,
-                    tooled && GraphLack.share(graph, state, building.materials()) >= graph.buildStartShare(),
-                    false,
-                    graph.implemented(id),
-                    graph.costs().ticks(key, building.boardCase()));
-        }
-        int at = key.indexOf(AT);
-        String wayId = at < 0 ? key : key.substring(0, at);
-        SupplyGraph.Way way = reach.way(wayId).orElseThrow();
-        Optional<String> spirit = at < 0 ? Optional.empty() : Optional.of(key.substring(at + 1));
-        boolean tooled = way.tool() == null
-                || state.bestTier(way.tool()) >= graph.rank(way.tier() == null ? "wooden" : way.tier());
-        return new GraphPlan.Task(
-                key,
-                way.boardCase(),
-                way.makes(),
-                spirit,
-                priority,
-                way.consumes(),
-                tooled
-                        && GraphLack.housed(state, way)
-                        && reach.available(way)
-                        && GraphLack.stocked(graph, state, way.consumes())
-                        && GraphLack.stocked(graph, state, way.needs()),
-                chances.contains(key),
-                graph.implemented(wayId),
-                choices.wayTicks(key, way));
     }
 
     private int count(String node) {
