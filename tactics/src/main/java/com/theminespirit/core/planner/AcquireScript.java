@@ -9,20 +9,13 @@ import com.theminespirit.core.engine.ScriptStatus;
 import com.theminespirit.core.engine.TaskRunner;
 import com.theminespirit.core.engine.TaskSnapshotCodec;
 import com.theminespirit.core.observation.BlockCoord;
-import com.theminespirit.core.plan.PlanBudget;
-import com.theminespirit.core.plan.PlanValidationException;
-import com.theminespirit.core.plan.PlanValidator;
-import com.theminespirit.core.plan.ScriptCall;
-import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.planner.api.ResourceKnowledge;
 import com.theminespirit.core.policy.api.PolicyExemptions;
 import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.script.api.ConditionCatalog;
 import com.theminespirit.core.script.api.ScriptCatalog;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,10 +25,8 @@ import org.jspecify.annotations.Nullable;
 public final class AcquireScript implements ScriptInstance {
     private final String item;
     private final int count;
-    private final ResourceKnowledge knowledge;
     private final AcquireSupplies supplies;
-    private final ScriptCatalog catalog;
-    private final ConditionCatalog conditions;
+    private final AcquireTaskPlan taskPlan;
     private final Supplier<ScriptRegistry> registry;
     private final ConditionRegistry conditionRegistry;
 
@@ -67,14 +58,8 @@ public final class AcquireScript implements ScriptInstance {
         }
         this.item = item;
         this.count = count;
-        this.knowledge = Objects.requireNonNull(
-                knowledge, "knowledge не может быть null: без знаний резолвер " + "не отличит крафт от сбора");
         this.supplies = Objects.requireNonNull(
                 supplies, "supplies не может быть null: без снабжения скрипт " + "не прочитает инвентарь и сундуки");
-        this.catalog = Objects.requireNonNull(
-                catalog, "catalog не может быть null: без каталога подплан " + "не пройдёт валидацию");
-        this.conditions = Objects.requireNonNull(
-                conditions, "conditions не может быть null: без каталога " + "проверок подплан не пройдёт валидацию");
         this.registry = Objects.requireNonNull(
                 registries.registry(),
                 "registry не может быть null: реестр скриптов "
@@ -82,6 +67,7 @@ public final class AcquireScript implements ScriptInstance {
         this.conditionRegistry = Objects.requireNonNull(
                 registries.conditionRegistry(),
                 "conditionRegistry не может " + "быть null: без реестра проверок вложенный раннер не выберет ветку");
+        this.taskPlan = new AcquireTaskPlan(knowledge, this.supplies, catalog, conditions);
     }
 
     @Override
@@ -151,33 +137,12 @@ public final class AcquireScript implements ScriptInstance {
             }
             return Optional.empty();
         }
-        List<ScriptCall> withdraws =
-                StorageItems.container(item) ? List.of() : supplies.withdraw(item, count - startInventory);
-        if (attempts == 1)
-            chestPlanned = withdraws.stream().mapToInt(step -> count(step)).sum();
-        int need = count - startInventory - chestPlanned;
-        List<TaskNode> nodes = new ArrayList<>(withdraws);
-        if (need > 0) {
-            BlockCoord place = gatherAt;
-            if (place != null) {
-                nodes.add(new ScriptCall("goto", Map.of("x", place.x(), "y", place.y(), "z", place.z())));
-            }
-            int trip = place == null ? need : Math.max(need, gatherAtLeast);
-            nodes.add(ResourceResolver.resolve(item, trip, knowledge, catalog, conditions, supplies));
+        AcquireTaskPlan.Built built =
+                taskPlan.build(item, count - startInventory, chestPlanned, gatherAt, gatherAtLeast, attempts == 1);
+        if (attempts == 1) {
+            chestPlanned = built.chestPlanned();
         }
-        TaskNode plan = new SequenceNode(nodes);
-        plan = PlanValidator.validate(plan, catalog, conditions);
-        PlanBudget.Budget budget = PlanBudget.measure(plan);
-        if (budget.exceeds()) {
-            throw new PlanValidationException("Подплан acquire '" + item + "' ×" + count + " выходит за бюджет: "
-                    + budget.describe() + ": разбейте цель на меньшие задачи");
-        }
-        return Optional.of(plan);
-    }
-
-    private static int count(ScriptCall step) {
-        Object value = step.params().get("count");
-        return value instanceof Integer integer ? integer : 0;
+        return Optional.of(built.plan());
     }
 
     private ScriptStatus fail(@Nullable String detail) {

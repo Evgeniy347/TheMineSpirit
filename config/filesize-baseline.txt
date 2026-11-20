@@ -19,7 +19,6 @@ core/inventory/OverflowPolicyTests.java	464
 core/inventory/ValueTableTests.java	339
 core/observation/WorldObservationTests.java	463
 core/plan/PlanValidatorRulesTests.java	359
-core/planner/AcquireScript.java	322
 core/planner/AcquireScriptTests.java	1000
 core/planner/FallbackPlannerTests.java	326
 core/planner/ResourceResolverTests.java	569
