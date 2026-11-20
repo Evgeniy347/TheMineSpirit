@@ -21,16 +21,26 @@ class YardOverflowTests {
         assertFalse(
                 builds.isEmpty(),
                 "ряд сундуков двора занят, но при заполнении <20% нужна новая пара: схема yard_chest "
-                        + "ставит её в свободное место двора, а не бросает задание");
+                        + "ставит её в свободное место двора, а не бросает задание"
+                        + " Иначе тест yardStock_SlotsExhausted_AddsOverflowPair перестанет ловить эту поломку. При смене yardStock_SlotsExhausted_AddsOverflowPair проверь это утверждение.");
         SchemeBuild build = builds.get(0);
-        assertEquals(YardScheme.CHESTS, build.scheme(), "новая пара строится схемой yard_chest");
-        assertEquals(SITE.anchor().y(), build.origin().y(), "пара стоит на уровне двора, не выше и не ниже");
+        assertEquals(
+                YardScheme.CHESTS,
+                build.scheme(),
+                "новая пара строится схемой yard_chest"
+                        + " Иначе тест yardStock_SlotsExhausted_AddsOverflowPair перестанет ловить эту поломку. При смене yardStock_SlotsExhausted_AddsOverflowPair проверь это утверждение.");
+        assertEquals(
+                SITE.anchor().y(),
+                build.origin().y(),
+                "пара стоит на уровне двора, не выше и не ниже"
+                        + " Иначе тест yardStock_SlotsExhausted_AddsOverflowPair перестанет ловить эту поломку. При смене yardStock_SlotsExhausted_AddsOverflowPair проверь это утверждение.");
         assertTrue(
                 SITE.yardColumn(build.origin().x(), build.origin().z())
                         && SITE.yardColumn(
                                 build.origin().x() + 1, build.origin().z()),
                 "обе половины новой пары внутри двора: иначе OldChests сочтёт её старым сундуком и унесёт: "
-                        + build.origin());
+                        + build.origin()
+                        + " При смене yardStock_SlotsExhausted_AddsOverflowPair проверь это утверждение.");
     }
 
     @Test
@@ -41,29 +51,40 @@ class YardOverflowTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> YardScheme.stock(SITE, beyond),
-                "место сверх дворового резерва не должно ставиться молча");
+                "место сверх дворового резерва не должно ставиться молча"
+                        + " Иначе тест yardStock_OverflowExhausted_ThrowsWithLimit перестанет ловить эту поломку. При смене yardStock_OverflowExhausted_ThrowsWithLimit проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("мест"),
-                "отказ называет предел мест, а не падает молча: " + error.getMessage());
+                "отказ называет предел мест, а не падает молча: " + error.getMessage()
+                        + " Иначе тест yardStock_OverflowExhausted_ThrowsWithLimit перестанет ловить эту поломку. При смене yardStock_OverflowExhausted_ThrowsWithLimit проверь это утверждение.");
     }
 
     @Test
     void yardOverflow_PairsInsideYard_AreDistinct() {
         List<List<BlockCoord>> overflow = YardScheme.overflowSlots(SITE);
 
-        assertFalse(overflow.isEmpty(), "во дворе есть свободные клетки под пару: иначе переполнение некуда ставить");
+        assertFalse(
+                overflow.isEmpty(),
+                "во дворе есть свободные клетки под пару: иначе переполнение некуда ставить"
+                        + " При смене yardOverflow_PairsInsideYard_AreDistinct проверь это утверждение.");
         for (List<BlockCoord> pair : overflow) {
-            assertEquals(2, pair.size(), "место переполнения — ровно пара сундуков: " + pair);
+            assertEquals(
+                    2,
+                    pair.size(),
+                    "место переполнения — ровно пара сундуков: " + pair
+                            + " Иначе тест yardOverflow_PairsInsideYard_AreDistinct перестанет ловить эту поломку. При смене yardOverflow_PairsInsideYard_AreDistinct проверь это утверждение.");
             assertTrue(
                     SITE.yardColumn(pair.get(0).x(), pair.get(0).z())
                             && SITE.yardColumn(pair.get(1).x(), pair.get(1).z()),
-                    "обе половины пары внутри двора: " + pair);
+                    "обе половины пары внутри двора: " + pair
+                            + " Иначе тест yardOverflow_PairsInsideYard_AreDistinct перестанет ловить эту поломку. При смене yardOverflow_PairsInsideYard_AreDistinct проверь это утверждение.");
         }
         assertEquals(
                 overflow.size(),
                 overflow.stream().map(pair -> pair.get(0)).distinct().count(),
-                "места переполнения не повторяются: иначе вторая пара встанет поверх первой");
+                "места переполнения не повторяются: иначе вторая пара встанет поверх первой"
+                        + " При смене yardOverflow_PairsInsideYard_AreDistinct проверь это утверждение.");
     }
 
     @Test
@@ -76,6 +97,7 @@ class YardOverflowTests {
         assertTrue(
                 !one.origin().equals(two.origin()),
                 "каждая следующая переполненная пара занимает своё место, а не то же самое: " + one.origin() + " и "
-                        + two.origin());
+                        + two.origin()
+                        + " Иначе тест yardStock_OverflowSlotAlreadyUsed_NextFreeSlot перестанет ловить эту поломку. При смене yardStock_OverflowSlotAlreadyUsed_NextFreeSlot проверь это утверждение.");
     }
 }

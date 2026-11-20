@@ -27,24 +27,39 @@ class MinePlotTests {
         assertEquals(
                 new BlockCoord(mine.x() + StageSite.MINE_SHIFT, SITE.anchor().y() - 1, mine.z() + 1),
                 plot.origin(),
-                "Начало спуска берётся из места шахты в плане: обе вкладки и стройка обязаны начать один и тот же спуск");
-        assertEquals(plot.origin(), SITE.mineEntrance(), "Вкладка «Шахта» рисует спуск от начала в плане");
+                "Начало спуска берётся из места шахты в плане: обе вкладки и стройка обязаны начать один и тот же спуск"
+                        + " Иначе тест of_PlanMine_SameOriginForBuildAndMineTab перестанет ловить эту поломку. При смене of_PlanMine_SameOriginForBuildAndMineTab проверь это утверждение.");
+        assertEquals(
+                plot.origin(),
+                SITE.mineEntrance(),
+                "Вкладка «Шахта» рисует спуск от начала в плане"
+                        + " Иначе тест of_PlanMine_SameOriginForBuildAndMineTab перестанет ловить эту поломку. При смене of_PlanMine_SameOriginForBuildAndMineTab проверь это утверждение.");
         TicketTarget target = TicketTarget.at(SITE.workYard()).withWork(new StageWork(SITE, List.of()));
-        assertEquals(plot.origin(), TicketPlans.mineDescentOrigin(target), "Стройка ставит спуск от того же начала");
+        assertEquals(
+                plot.origin(),
+                TicketPlans.mineDescentOrigin(target),
+                "Стройка ставит спуск от того же начала"
+                        + " Иначе тест of_PlanMine_SameOriginForBuildAndMineTab перестанет ловить эту поломку. При смене of_PlanMine_SameOriginForBuildAndMineTab проверь это утверждение.");
 
         MineLayout layout = layout();
-        assertEquals(plot.entrance(), layout.entrance(), "Вход схемы считается поворотом от того же начала");
+        assertEquals(
+                plot.entrance(),
+                layout.entrance(),
+                "Вход схемы считается поворотом от того же начала"
+                        + " Иначе тест of_PlanMine_SameOriginForBuildAndMineTab перестанет ловить эту поломку. При смене of_PlanMine_SameOriginForBuildAndMineTab проверь это утверждение.");
         for (BlockCoord cell : layout.air()) {
             assertTrue(
                     plot.covers(cell.x(), cell.z()),
-                    "Прямоугольник шахты " + plot + " не покрывает клетку спуска " + cell);
+                    "Прямоугольник шахты " + plot + " не покрывает клетку спуска " + cell
+                            + " Иначе тест of_PlanMine_SameOriginForBuildAndMineTab перестанет ловить эту поломку. При смене of_PlanMine_SameOriginForBuildAndMineTab проверь это утверждение.");
         }
         TownMapView.Bounds descent =
                 MineGeometry.of(layout, TicketPlans.mineTunnelSize()).descentBounds();
         assertEquals(
                 new TownMapView.Bounds(plot.x1(), plot.z1(), plot.x2(), plot.z2()),
                 descent,
-                "Вкладка «Шахта» рисует «Спуск» по тем же углам, что и «План»");
+                "Вкладка «Шахта» рисует «Спуск» по тем же углам, что и «План»"
+                        + " Иначе тест of_PlanMine_SameOriginForBuildAndMineTab перестанет ловить эту поломку. При смене of_PlanMine_SameOriginForBuildAndMineTab проверь это утверждение.");
     }
 
     @Test
@@ -55,10 +70,12 @@ class MinePlotTests {
                 plot.width() < mine.width() && plot.depth() > mine.depth(),
                 "Спуск повёрнут на 90°: он уже площадки в плане и уходит вдоль её глубины дальше ("
                         + plot.width() + "×" + plot.depth() + " против "
-                        + mine.width() + "×" + mine.depth() + ")");
+                        + mine.width() + "×" + mine.depth() + ")"
+                        + " Иначе тест of_RotatedDescent_ExtendsAlongPlanDepth перестанет ловить эту поломку. При смене of_RotatedDescent_ExtendsAlongPlanDepth проверь это утверждение.");
         assertTrue(
                 plot.x1() > mine.x() && plot.z1() > mine.z(),
-                "Спуск начинается внутри места шахты, а не по его углу: прямоугольник " + plot);
+                "Спуск начинается внутри места шахты, а не по его углу: прямоугольник " + plot
+                        + " Иначе тест of_RotatedDescent_ExtendsAlongPlanDepth перестанет ловить эту поломку. При смене of_RotatedDescent_ExtendsAlongPlanDepth проверь это утверждение.");
     }
 
     @Test
@@ -72,7 +89,8 @@ class MinePlotTests {
         assertEquals(
                 List.of(plot.x1(), plot.z1(), plot.width(), plot.depth()),
                 List.of(lot.x(), lot.z(), lot.width(), lot.depth()),
-                "На «Плане» участок шахты — тот же прямоугольник спуска, что рисует вкладка «Шахта»");
+                "На «Плане» участок шахты — тот же прямоугольник спуска, что рисует вкладка «Шахта»"
+                        + " Иначе тест snapshot_MineLot_MatchesMinePlot перестанет ловить эту поломку. При смене snapshot_MineLot_MatchesMinePlot проверь это утверждение.");
     }
 
     private static MineLayout layout() {

@@ -28,13 +28,37 @@ class PitGroupsTests {
 
         List<PitGroups.Pit> groups = PitGroups.group(pits);
 
-        assertEquals(1, groups.size(), "Девять соседних столбцов — одна впадина, а не девять билетов");
+        assertEquals(
+                1,
+                groups.size(),
+                "Девять соседних столбцов — одна впадина, а не девять билетов"
+                        + " Иначе тест group_OneWidePit_IsSingleTaskWithSizeBlocksAndDepth перестанет ловить эту поломку. При смене group_OneWidePit_IsSingleTaskWithSizeBlocksAndDepth проверь это утверждение.");
         PitGroups.Pit group = groups.get(0);
-        assertEquals("4,4:3x3", group.key(), "Ключ ямы — минимальный столбец и размер следа");
-        assertEquals(9, group.columns().size(), "На доске видно число клеток ямы");
-        assertEquals(27, group.blocks(), "На доске видно число блоков засыпки");
-        assertEquals(3, group.depth(), "На доске видна глубина ямы");
-        assertEquals(27, group.cells().size(), "Столбец глубины 3 даёт три клетки подсыпки");
+        assertEquals(
+                "4,4:3x3",
+                group.key(),
+                "Ключ ямы — минимальный столбец и размер следа"
+                        + " Иначе тест group_OneWidePit_IsSingleTaskWithSizeBlocksAndDepth перестанет ловить эту поломку. При смене group_OneWidePit_IsSingleTaskWithSizeBlocksAndDepth проверь это утверждение.");
+        assertEquals(
+                9,
+                group.columns().size(),
+                "На доске видно число клеток ямы"
+                        + " Иначе тест group_OneWidePit_IsSingleTaskWithSizeBlocksAndDepth перестанет ловить эту поломку. При смене group_OneWidePit_IsSingleTaskWithSizeBlocksAndDepth проверь это утверждение.");
+        assertEquals(
+                27,
+                group.blocks(),
+                "На доске видно число блоков засыпки"
+                        + " Иначе тест group_OneWidePit_IsSingleTaskWithSizeBlocksAndDepth перестанет ловить эту поломку. При смене group_OneWidePit_IsSingleTaskWithSizeBlocksAndDepth проверь это утверждение.");
+        assertEquals(
+                3,
+                group.depth(),
+                "На доске видна глубина ямы"
+                        + " Иначе тест group_OneWidePit_IsSingleTaskWithSizeBlocksAndDepth перестанет ловить эту поломку. При смене group_OneWidePit_IsSingleTaskWithSizeBlocksAndDepth проверь это утверждение.");
+        assertEquals(
+                27,
+                group.cells().size(),
+                "Столбец глубины 3 даёт три клетки подсыпки"
+                        + " Иначе тест group_OneWidePit_IsSingleTaskWithSizeBlocksAndDepth перестанет ловить эту поломку. При смене group_OneWidePit_IsSingleTaskWithSizeBlocksAndDepth проверь это утверждение.");
     }
 
     @Test
@@ -49,11 +73,13 @@ class PitGroupsTests {
         assertEquals(
                 1,
                 groups.size(),
-                "L-образная впадина и дырка через два блока — одна работа: дух не ходит по одной клетке");
+                "L-образная впадина и дырка через два блока — одна работа: дух не ходит по одной клетке"
+                        + " Иначе тест group_LCornerAndNearHoles_JoinIntoOnePit перестанет ловить эту поломку. При смене group_LCornerAndNearHoles_JoinIntoOnePit проверь это утверждение.");
         assertEquals(
                 11,
                 groups.get(0).blocks(),
-                "Четыре столбца по два блока, угол и две дырки через два блока — одиннадцать клеток");
+                "Четыре столбца по два блока, угол и две дырки через два блока — одиннадцать клеток"
+                        + " Иначе тест group_LCornerAndNearHoles_JoinIntoOnePit перестанет ловить эту поломку. При смене group_LCornerAndNearHoles_JoinIntoOnePit проверь это утверждение.");
     }
 
     @Test
@@ -63,9 +89,21 @@ class PitGroupsTests {
 
         List<PitGroups.Pit> groups = PitGroups.group(pits);
 
-        assertEquals(2, groups.size(), "Далёкие впадины — две разные работы");
-        assertEquals("0,0:2x2", groups.get(0).key(), "Порядок групп устойчив: сначала меньший столбец");
-        assertEquals("10,0:2x2", groups.get(1).key(), "Вторая впадина называется своим столбцом");
+        assertEquals(
+                2,
+                groups.size(),
+                "Далёкие впадины — две разные работы"
+                        + " Иначе тест group_TwoDistantPits_TwoTasks перестанет ловить эту поломку. При смене group_TwoDistantPits_TwoTasks проверь это утверждение.");
+        assertEquals(
+                "0,0:2x2",
+                groups.get(0).key(),
+                "Порядок групп устойчив: сначала меньший столбец"
+                        + " Иначе тест group_TwoDistantPits_TwoTasks перестанет ловить эту поломку. При смене group_TwoDistantPits_TwoTasks проверь это утверждение.");
+        assertEquals(
+                "10,0:2x2",
+                groups.get(1).key(),
+                "Вторая впадина называется своим столбцом"
+                        + " Иначе тест group_TwoDistantPits_TwoTasks перестанет ловить эту поломку. При смене group_TwoDistantPits_TwoTasks проверь это утверждение.");
     }
 
     @Test
@@ -76,9 +114,21 @@ class PitGroupsTests {
         Map<BlockCoord, Integer> shallower = pit(4, 4, 3, 2);
         PitGroups.Pit after = PitGroups.group(shallower).get(0);
 
-        assertEquals(before, PitGroups.group(shallower).get(0).key(), "Частичная засыпка не плодит новый id ямы");
-        assertEquals(18, after.blocks(), "Продолжение идёт той же задачей, блоков становится меньше");
-        assertEquals(2, after.depth(), "Глубина уменьшилась на засыпанный слой");
+        assertEquals(
+                before,
+                PitGroups.group(shallower).get(0).key(),
+                "Частичная засыпка не плодит новый id ямы"
+                        + " Иначе тест group_PartiallyFilled_KeepsSameId перестанет ловить эту поломку. При смене group_PartiallyFilled_KeepsSameId проверь это утверждение.");
+        assertEquals(
+                18,
+                after.blocks(),
+                "Продолжение идёт той же задачей, блоков становится меньше"
+                        + " Иначе тест group_PartiallyFilled_KeepsSameId перестанет ловить эту поломку. При смене group_PartiallyFilled_KeepsSameId проверь это утверждение.");
+        assertEquals(
+                2,
+                after.depth(),
+                "Глубина уменьшилась на засыпанный слой"
+                        + " Иначе тест group_PartiallyFilled_KeepsSameId перестанет ловить эту поломку. При смене group_PartiallyFilled_KeepsSameId проверь это утверждение.");
     }
 
     @Test
@@ -92,9 +142,21 @@ class PitGroupsTests {
 
         List<PitGroups.Pit> groups = PitGroups.group(pits);
 
-        assertEquals(1, groups.size(), "Живая воронка 3×3 из снимка — одна задача, а не девять билетов");
-        assertEquals(45, groups.get(0).blocks(), "9 столбцов по 5 блоков — 45 блоков одной задачей");
-        assertEquals("-198,-526:3x3", groups.get(0).key(), "Ключ воронки — её минимальный столбец и размер");
+        assertEquals(
+                1,
+                groups.size(),
+                "Живая воронка 3×3 из снимка — одна задача, а не девять билетов"
+                        + " Иначе тест group_LiveCraterFixture_OneTask перестанет ловить эту поломку. При смене group_LiveCraterFixture_OneTask проверь это утверждение.");
+        assertEquals(
+                45,
+                groups.get(0).blocks(),
+                "9 столбцов по 5 блоков — 45 блоков одной задачей"
+                        + " Иначе тест group_LiveCraterFixture_OneTask перестанет ловить эту поломку. При смене group_LiveCraterFixture_OneTask проверь это утверждение.");
+        assertEquals(
+                "-198,-526:3x3",
+                groups.get(0).key(),
+                "Ключ воронки — её минимальный столбец и размер"
+                        + " Иначе тест group_LiveCraterFixture_OneTask перестанет ловить эту поломку. При смене group_LiveCraterFixture_OneTask проверь это утверждение.");
     }
 
     @Test
@@ -105,7 +167,8 @@ class PitGroupsTests {
         assertTrue(
                 PitGroups.overlaps(after.cells(), new PlotLeveling.Box(4, LEVEL - 3, 4, 6, LEVEL - 1, 6)),
                 "Оставшийся столбец входит в старую задачу: после частичной засыпки она продолжается, "
-                        + "а не получает новый id");
+                        + "а не получает новый id"
+                        + " Иначе тест overlaps_OpenTaskCoversSurvivingColumn_ReusesSameId перестанет ловить эту поломку. При смене overlaps_OpenTaskCoversSurvivingColumn_ReusesSameId проверь это утверждение.");
     }
 
     @Test
@@ -114,7 +177,15 @@ class PitGroupsTests {
 
         PitGroups.Pit group = PitGroups.group(pits).get(0);
 
-        assertEquals("0,0:2x2", group.key(), "Яма у края участка не режется границей: работа одна");
-        assertEquals(8, group.blocks(), "Край участка не отменяет клетки самой впадины");
+        assertEquals(
+                "0,0:2x2",
+                group.key(),
+                "Яма у края участка не режется границей: работа одна"
+                        + " Иначе тест group_PitAtLotEdge_KeepsWholeFootprint перестанет ловить эту поломку. При смене group_PitAtLotEdge_KeepsWholeFootprint проверь это утверждение.");
+        assertEquals(
+                8,
+                group.blocks(),
+                "Край участка не отменяет клетки самой впадины"
+                        + " Иначе тест group_PitAtLotEdge_KeepsWholeFootprint перестанет ловить эту поломку. При смене group_PitAtLotEdge_KeepsWholeFootprint проверь это утверждение.");
     }
 }

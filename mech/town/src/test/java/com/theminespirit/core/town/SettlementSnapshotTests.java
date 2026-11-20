@@ -43,13 +43,24 @@ class SettlementSnapshotTests {
             }
             rows.add(line);
         }
-        assertEquals(32, rows.size(), "снимок рельефа — 32 строки колонок");
+        assertEquals(
+                32,
+                rows.size(),
+                "снимок рельефа — 32 строки колонок"
+                        + " Иначе тест scan_LiveSnapshot_HillsOutsideLotsAreNatural перестанет ловить эту поломку. При смене scan_LiveSnapshot_HillsOutsideLotsAreNatural проверь это утверждение.");
         for (int z = 0; z < rows.size(); z++) {
             String row = rows.get(z);
-            assertEquals(32, row.length(), "снимок рельефа — 32 колонки в строке");
+            assertEquals(
+                    32,
+                    row.length(),
+                    "снимок рельефа — 32 колонки в строке"
+                            + " Иначе тест scan_LiveSnapshot_HillsOutsideLotsAreNatural перестанет ловить эту поломку. При смене scan_LiveSnapshot_HillsOutsideLotsAreNatural проверь это утверждение.");
             for (int x = 0; x < row.length(); x++) {
                 int rise = row.charAt(x) - '0';
-                assertTrue(rise >= 0 && rise <= 2, "высота снимка — 0..2 над отметкой площадки");
+                assertTrue(
+                        rise >= 0 && rise <= 2,
+                        "высота снимка — 0..2 над отметкой площадки"
+                                + " Иначе тест scan_LiveSnapshot_HillsOutsideLotsAreNatural перестанет ловить эту поломку. При смене scan_LiveSnapshot_HillsOutsideLotsAreNatural проверь это утверждение.");
                 for (int y = LEVEL; y < LEVEL + rise; y++) {
                     world.put(x, y, z, "minecraft:dirt");
                 }
@@ -64,19 +75,28 @@ class SettlementSnapshotTests {
         SettlementScan.Strays found =
                 SettlementScan.scan(ColumnMask.rect(0, 0, 31, 31).cells(), LEVEL, rules(), world);
 
-        assertTrue(!found.mounds().isEmpty(), "снимок с неровным лотом обязан дать насыпи на лоте");
+        assertTrue(
+                !found.mounds().isEmpty(),
+                "снимок с неровным лотом обязан дать насыпи на лоте"
+                        + " Иначе тест scan_LiveSnapshot_HillsOutsideLotsAreNatural перестанет ловить эту поломку. При смене scan_LiveSnapshot_HillsOutsideLotsAreNatural проверь это утверждение.");
         assertTrue(
                 found.mounds().size() * 10 <= found.natural(),
                 "насыпей на порядок меньше природного: насыпи " + found.mounds().size() + ", природное "
-                        + found.natural());
+                        + found.natural()
+                        + " Иначе тест scan_LiveSnapshot_HillsOutsideLotsAreNatural перестанет ловить эту поломку. При смене scan_LiveSnapshot_HillsOutsideLotsAreNatural проверь это утверждение.");
         assertTrue(
                 found.mounds().stream()
                         .allMatch(at -> lot[0] <= at.x()
                                 && at.x() < lot[0] + lot[2]
                                 && lot[1] <= at.z()
                                 && at.z() < lot[1] + lot[3]),
-                "насыпи только на лоте, природный склон вне лота не работа: " + found.mounds());
-        assertEquals(Map.of(), found.pits(), "природные впадины вне лота не становятся ямами");
+                "насыпи только на лоте, природный склон вне лота не работа: " + found.mounds()
+                        + " Иначе тест scan_LiveSnapshot_HillsOutsideLotsAreNatural перестанет ловить эту поломку. При смене scan_LiveSnapshot_HillsOutsideLotsAreNatural проверь это утверждение.");
+        assertEquals(
+                Map.of(),
+                found.pits(),
+                "природные впадины вне лота не становятся ямами"
+                        + " Иначе тест scan_LiveSnapshot_HillsOutsideLotsAreNatural перестанет ловить эту поломку. При смене scan_LiveSnapshot_HillsOutsideLotsAreNatural проверь это утверждение.");
     }
 
     private static List<String> snapshot() throws IOException {

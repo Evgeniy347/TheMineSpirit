@@ -28,12 +28,18 @@ class ChestSpaceLiveTests {
                 162,
                 space.slots(),
                 "в поселении три двойных сундука двора по 54 слота: дальние сундуки -92/-82 за границей "
-                        + "поселения не входят в склад и не должны разбавлять процент");
-        assertEquals(12, space.free(), "во дворе свободно 0+0+12 слотов: " + space);
+                        + "поселения не входят в склад и не должны разбавлять процент"
+                        + " Иначе тест liveChests_YardFullFarEmpty_CountsOnlySettlement перестанет ловить эту поломку. При смене liveChests_YardFullFarEmpty_CountsOnlySettlement проверь это утверждение.");
+        assertEquals(
+                12,
+                space.free(),
+                "во дворе свободно 0+0+12 слотов: " + space
+                        + " Иначе тест liveChests_YardFullFarEmpty_CountsOnlySettlement перестанет ловить эту поломку. При смене liveChests_YardFullFarEmpty_CountsOnlySettlement проверь это утверждение.");
         assertTrue(
                 space.freePercent() < 20,
                 "двор заполнен на " + (100 - space.freePercent()) + "%: порог 20% обязан сработать, а не "
-                        + "тонуть в пустых дальних сундуках");
+                        + "тонуть в пустых дальних сундуках"
+                        + " Иначе тест liveChests_YardFullFarEmpty_CountsOnlySettlement перестанет ловить эту поломку. При смене liveChests_YardFullFarEmpty_CountsOnlySettlement проверь это утверждение.");
     }
 
     @Test
@@ -45,7 +51,8 @@ class ChestSpaceLiveTests {
         assertEquals(
                 spots.stream().mapToInt(ChestSpace.Spot::slots).sum(),
                 space.slots(),
-                "без границы поселения считать нечего, кроме всех известных сундуков: так же, как раньше");
+                "без границы поселения считать нечего, кроме всех известных сундуков: так же, как раньше"
+                        + " Иначе тест liveChests_NoReach_FallsBackToAll перестанет ловить эту поломку. При смене liveChests_NoReach_FallsBackToAll проверь это утверждение.");
     }
 
     @Test
@@ -54,8 +61,16 @@ class ChestSpaceLiveTests {
 
         ChestSpace space = ChestSpace.of(spots, new SettlementReach(0, 0, 10, 10));
 
-        assertEquals(0, space.slots(), "ни один живой сундук не попал в чужую границу: склад пуст");
-        assertEquals(100, space.freePercent(), "пустой склад — 100% свободного места, а не деление на ноль");
+        assertEquals(
+                0,
+                space.slots(),
+                "ни один живой сундук не попал в чужую границу: склад пуст"
+                        + " Иначе тест liveChests_ReachElsewhere_CountsNothing перестанет ловить эту поломку. При смене liveChests_ReachElsewhere_CountsNothing проверь это утверждение.");
+        assertEquals(
+                100,
+                space.freePercent(),
+                "пустой склад — 100% свободного места, а не деление на ноль"
+                        + " Иначе тест liveChests_ReachElsewhere_CountsNothing перестанет ловить эту поломку. При смене liveChests_ReachElsewhere_CountsNothing проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +78,8 @@ class ChestSpaceLiveTests {
         assertEquals(
                 100,
                 ChestSpace.of(List.of(), null).freePercent(),
-                "сундуков нет — свободного места 100%, а не деление на ноль");
+                "сундуков нет — свободного места 100%, а не деление на ноль"
+                        + " Иначе тест emptyChests_NoContainers_IsHundredPercent перестанет ловить эту поломку. При смене emptyChests_NoContainers_IsHundredPercent проверь это утверждение.");
     }
 
     private static JsonNode live() throws IOException {

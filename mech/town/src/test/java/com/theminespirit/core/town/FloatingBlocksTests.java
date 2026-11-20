@@ -1,7 +1,6 @@
 package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.observation.BlockCoord;
@@ -14,8 +13,8 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class FloatingBlocksTests {
-    private static final int GROUND = 64;
-    private static final Set<String> NATURAL =
+    static final int GROUND = 64;
+    static final Set<String> NATURAL =
             Set.of("minecraft:air", "minecraft:stone", "minecraft:dirt", "minecraft:oak_leaves");
 
     @Test
@@ -25,11 +24,20 @@ class FloatingBlocksTests {
 
         FloatingBlocks.Finding finding = world.only(1, 66, 1);
 
-        assertEquals(FloatingBlocks.Kind.FENCE, finding.kind(), "Забор без опоры — забор, а не «прочее»: его снимают");
-        assertEquals(1, finding.height(), "Высота считается от верхнего твёрдого блока под клеткой: 66 − 64 − 1");
+        assertEquals(
+                FloatingBlocks.Kind.FENCE,
+                finding.kind(),
+                "Забор без опоры — забор, а не «прочее»: его снимают"
+                        + " Иначе тест classify_FenceAboveGround_IsFenceAtHeight перестанет ловить эту поломку. При смене classify_FenceAboveGround_IsFenceAtHeight проверь это утверждение.");
+        assertEquals(
+                1,
+                finding.height(),
+                "Высота считается от верхнего твёрдого блока под клеткой: 66 − 64 − 1"
+                        + " Иначе тест classify_FenceAboveGround_IsFenceAtHeight перестанет ловить эту поломку. При смене classify_FenceAboveGround_IsFenceAtHeight проверь это утверждение.");
         assertTrue(
                 finding.reason().contains("висит на высоте 1"),
-                "Причина называет высоту: владелец видит, насколько объект оторвался от земли");
+                "Причина называет высоту: владелец видит, насколько объект оторвался от земли"
+                        + " Иначе тест classify_FenceAboveGround_IsFenceAtHeight перестанет ловить эту поломку. При смене classify_FenceAboveGround_IsFenceAtHeight проверь это утверждение.");
     }
 
     @Test
@@ -40,7 +48,8 @@ class FloatingBlocksTests {
         assertEquals(
                 Optional.empty(),
                 FloatingBlocks.classify(new BlockCoord(1, 65, 1), world),
-                "Забор, стоящий на твёрдом блоке, не висит: его не трогают");
+                "Забор, стоящий на твёрдом блоке, не висит: его не трогают"
+                        + " Иначе тест classify_FenceOnGround_IsNotReported перестанет ловить эту поломку. При смене classify_FenceOnGround_IsNotReported проверь это утверждение.");
     }
 
     @Test
@@ -52,10 +61,14 @@ class FloatingBlocksTests {
         FloatingBlocks.Finding finding = world.only(2, 67, 2);
 
         assertEquals(
-                FloatingBlocks.Kind.REGISTERED_CHEST, finding.kind(), "Сундук из реестра поселения — отдельный вид");
+                FloatingBlocks.Kind.REGISTERED_CHEST,
+                finding.kind(),
+                "Сундук из реестра поселения — отдельный вид"
+                        + " Иначе тест classify_RegisteredChest_IsRegisteredChest перестанет ловить эту поломку. При смене classify_RegisteredChest_IsRegisteredChest проверь это утверждение.");
         assertTrue(
                 finding.reason().contains("в реестре"),
-                "Причина говорит про реестр: уборка сначала переносит содержимое");
+                "Причина говорит про реестр: уборка сначала переносит содержимое"
+                        + " Иначе тест classify_RegisteredChest_IsRegisteredChest перестанет ловить эту поломку. При смене classify_RegisteredChest_IsRegisteredChest проверь это утверждение.");
     }
 
     @Test
@@ -63,7 +76,11 @@ class FloatingBlocksTests {
         Fake world = new Fake();
         world.put(2, 67, 2, "minecraft:chest");
 
-        assertEquals(FloatingBlocks.Kind.CHEST, world.only(2, 67, 2).kind(), "Сундук вне реестра — обычный сундук");
+        assertEquals(
+                FloatingBlocks.Kind.CHEST,
+                world.only(2, 67, 2).kind(),
+                "Сундук вне реестра — обычный сундук"
+                        + " Иначе тест classify_UnregisteredChest_IsChest перестанет ловить эту поломку. При смене classify_UnregisteredChest_IsChest проверь это утверждение.");
     }
 
     @Test
@@ -74,7 +91,8 @@ class FloatingBlocksTests {
         assertEquals(
                 FloatingBlocks.Kind.STATION,
                 world.only(3, 68, 3).kind(),
-                "Печь и верстак — станции: их снимают или переставляют по плану");
+                "Печь и верстак — станции: их снимают или переставляют по плану"
+                        + " Иначе тест classify_FurnaceAboveGround_IsStation перестанет ловить эту поломку. При смене classify_FurnaceAboveGround_IsStation проверь это утверждение.");
     }
 
     @Test
@@ -87,8 +105,12 @@ class FloatingBlocksTests {
         assertEquals(
                 FloatingBlocks.Kind.STUMP,
                 finding.kind(),
-                "Бревно без дерева — пенёк: его рубят, даже если он стоит на земле");
-        assertTrue(finding.reason().contains("бревно без дерева"), "Причина пенька называет его прямо");
+                "Бревно без дерева — пенёк: его рубят, даже если он стоит на земле"
+                        + " Иначе тест classify_LogWithoutTree_IsStumpEvenOnGround перестанет ловить эту поломку. При смене classify_LogWithoutTree_IsStumpEvenOnGround проверь это утверждение.");
+        assertTrue(
+                finding.reason().contains("бревно без дерева"),
+                "Причина пенька называет его прямо"
+                        + " Иначе тест classify_LogWithoutTree_IsStumpEvenOnGround перестанет ловить эту поломку. При смене classify_LogWithoutTree_IsStumpEvenOnGround проверь это утверждение.");
     }
 
     @Test
@@ -100,7 +122,8 @@ class FloatingBlocksTests {
         assertEquals(
                 Optional.empty(),
                 FloatingBlocks.classify(new BlockCoord(4, 65, 4), world),
-                "Бревно живого дерева — не пенёк: рубка деревьев остаётся своему заданию");
+                "Бревно живого дерева — не пенёк: рубка деревьев остаётся своему заданию"
+                        + " Иначе тест classify_LogInTree_IsNotReported перестанет ловить эту поломку. При смене classify_LogInTree_IsNotReported проверь это утверждение.");
     }
 
     @Test
@@ -114,7 +137,8 @@ class FloatingBlocksTests {
         assertEquals(
                 FloatingBlocks.Kind.TREE,
                 finding.kind(),
-                "Связная листва без брёвен и без опоры — остаток кроны: он обязан попасть в уборку, а не в OTHER");
+                "Связная листва без брёвен и без опоры — остаток кроны: он обязан попасть в уборку, а не в OTHER"
+                        + " Иначе тест classify_LeafCloudWithoutLogs_IsFloatingTree перестанет ловить эту поломку. При смене classify_LeafCloudWithoutLogs_IsFloatingTree проверь это утверждение.");
     }
 
     @Test
@@ -126,7 +150,8 @@ class FloatingBlocksTests {
         assertEquals(
                 Optional.empty(),
                 FloatingBlocks.classify(new BlockCoord(5, 69, 5), world),
-                "Блок схемы постройки — часть плана: аудит его не трогает");
+                "Блок схемы постройки — часть плана: аудит его не трогает"
+                        + " Иначе тест classify_PlannedFence_IsNotReported перестанет ловить эту поломку. При смене classify_PlannedFence_IsNotReported проверь это утверждение.");
     }
 
     @Test
@@ -137,7 +162,8 @@ class FloatingBlocksTests {
         assertEquals(
                 Optional.empty(),
                 FloatingBlocks.classify(new BlockCoord(6, 72, 6), world),
-                "Природный блок без опоры — не искусственный объект, уборка его не касается");
+                "Природный блок без опоры — не искусственный объект, уборка его не касается"
+                        + " Иначе тест classify_NaturalStone_IsNotReported перестанет ловить эту поломку. При смене classify_NaturalStone_IsNotReported проверь это утверждение.");
     }
 
     @Test
@@ -152,10 +178,12 @@ class FloatingBlocksTests {
                 FloatingBlocks.Kind.OTHER,
                 finding.kind(),
                 "Земля, поставленная духом вне плана, — временный блок перемещения: аудит обязан её видеть, "
-                        + "хотя обычная земля природная и в уборку не идёт");
+                        + "хотя обычная земля природная и в уборку не идёт"
+                        + " Иначе тест classify_SpiritPlacedDirtPillar_IsTemporaryAndRemoved перестанет ловить эту поломку. При смене classify_SpiritPlacedDirtPillar_IsTemporaryAndRemoved проверь это утверждение.");
         assertTrue(
                 finding.reason().contains("временный блок духа"),
-                "Причина называет владельца и обязанность убрать: иначе след духа неотличим от рельефа");
+                "Причина называет владельца и обязанность убрать: иначе след духа неотличим от рельефа"
+                        + " При смене classify_SpiritPlacedDirtPillar_IsTemporaryAndRemoved проверь это утверждение.");
     }
 
     @Test
@@ -168,7 +196,8 @@ class FloatingBlocksTests {
         assertEquals(
                 Optional.empty(),
                 FloatingBlocks.classify(new BlockCoord(6, 72, 6), world),
-                "Блок духа на клетке плана — часть постройки: аудит его не снимает");
+                "Блок духа на клетке плана — часть постройки: аудит его не снимает"
+                        + " Иначе тест classify_SpiritPlacedDirtInsidePlan_IsNotReported перестанет ловить эту поломку. При смене classify_SpiritPlacedDirtInsidePlan_IsNotReported проверь это утверждение.");
     }
 
     @Test
@@ -179,7 +208,8 @@ class FloatingBlocksTests {
         assertEquals(
                 FloatingBlocks.Kind.OTHER,
                 world.only(7, 70, 7).kind(),
-                "Искусственный блок без своего вида — «прочее»: его тоже снимают");
+                "Искусственный блок без своего вида — «прочее»: его тоже снимают"
+                        + " Иначе тест classify_OtherArtificialBlock_IsOther перестанет ловить эту поломку. При смене classify_OtherArtificialBlock_IsOther проверь это утверждение.");
     }
 
     @Test
@@ -191,44 +221,19 @@ class FloatingBlocksTests {
         List<FloatingBlocks.Finding> found =
                 FloatingBlocks.find(ColumnMask.rect(0, 0, 2, 2), GROUND + 1, GROUND + 5, world);
 
-        assertEquals(1, found.size(), "Сканируются только колонки участка: чужой забор за границей не в списке");
-        assertEquals(new BlockCoord(1, 66, 1), found.get(0).at(), "Находка называет точные координаты");
+        assertEquals(
+                1,
+                found.size(),
+                "Сканируются только колонки участка: чужой забор за границей не в списке"
+                        + " Иначе тест find_AreaOnly_FindsObjectsInsideColumns перестанет ловить эту поломку. При смене find_AreaOnly_FindsObjectsInsideColumns проверь это утверждение.");
+        assertEquals(
+                new BlockCoord(1, 66, 1),
+                found.get(0).at(),
+                "Находка называет точные координаты"
+                        + " Иначе тест find_AreaOnly_FindsObjectsInsideColumns перестанет ловить эту поломку. При смене find_AreaOnly_FindsObjectsInsideColumns проверь это утверждение.");
     }
 
-    @Test
-    void countedInGraph_Buildings_ExcludedFromHanging() {
-        Fake world = new Fake();
-        world.put(2, 67, 2, "minecraft:chest");
-        world.put(3, 68, 3, "minecraft:furnace");
-        world.put(4, 68, 4, "minecraft:crafting_table");
-        world.put(5, 66, 5, "minecraft:oak_fence");
-        world.put(6, 70, 6, "minecraft:oak_planks");
-
-        assertFalse(
-                FloatingBlocks.countedInGraph(world.only(2, 67, 2)),
-                "Сундук — постройка/станция, а не висящий блок: [graph] висящее его не считает (observe24: "
-                        + "в составе висящего chest/furnace/crafting_table)");
-        assertFalse(
-                FloatingBlocks.countedInGraph(world.only(3, 68, 3)),
-                "Печь — станция поселения, а не мусор: граф не должен звать её в уборку висящего");
-        assertFalse(
-                FloatingBlocks.countedInGraph(world.only(4, 68, 4)),
-                "Верстак — станция поселения, а не висящий блок: граф не должен звать его в уборку висящего");
-        assertTrue(FloatingBlocks.countedInGraph(world.only(5, 66, 5)), "Забор без опоры — висящее");
-        assertTrue(FloatingBlocks.countedInGraph(world.only(6, 70, 6)), "Доска без опоры — висящее");
-        assertEquals(
-                2,
-                FloatingBlocks.countedInGraph(List.of(world.only(2, 67, 2), world.only(5, 66, 5), world.only(6, 70, 6)))
-                        .size(),
-                "Список для [graph] висящее отбрасывает сундук и станции: 2 из 3 находок — висящее");
-        assertEquals(
-                2,
-                FloatingBlocks.hangingCount(List.of(world.only(2, 67, 2), world.only(5, 66, 5), world.only(6, 70, 6))),
-                "Счётчик висящего для /v1/world берётся из того же правила: chest/furnace/crafting_table не "
-                        + "висящие, иначе REST и граф считают по-разному");
-    }
-
-    private static final class Fake implements FloatingBlocks.World {
+    static final class Fake implements FloatingBlocks.World {
         private final Map<BlockCoord, String> blocks = new HashMap<>();
         private final Set<BlockCoord> planned = new HashSet<>();
         private final Set<BlockCoord> temporary = new HashSet<>();

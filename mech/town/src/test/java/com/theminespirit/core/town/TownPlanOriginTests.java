@@ -18,11 +18,31 @@ class TownPlanOriginTests {
 
         TownPlan leveled = base.atLevel(63);
 
-        assertEquals(63, leveled.anchor().y(), "Высота поселения — единственная высота плана после основания");
-        assertEquals(base.anchor().x(), leveled.anchor().x(), "Перенос высоты не двигает план по x");
-        assertEquals(base.anchor().z(), leveled.anchor().z(), "Перенос высоты не двигает план по z");
-        assertEquals(base.region(), leveled.region(), "Контур плана при смене высоты не меняется");
-        assertEquals(base.placements(), leveled.placements(), "Места построек при смене высоты не меняются");
+        assertEquals(
+                63,
+                leveled.anchor().y(),
+                "Высота поселения — единственная высота плана после основания"
+                        + " Иначе тест atLevel_KeepsLayout_WritesOneHeightIntoPlan перестанет ловить эту поломку. При смене atLevel_KeepsLayout_WritesOneHeightIntoPlan проверь это утверждение.");
+        assertEquals(
+                base.anchor().x(),
+                leveled.anchor().x(),
+                "Перенос высоты не двигает план по x"
+                        + " Иначе тест atLevel_KeepsLayout_WritesOneHeightIntoPlan перестанет ловить эту поломку. При смене atLevel_KeepsLayout_WritesOneHeightIntoPlan проверь это утверждение.");
+        assertEquals(
+                base.anchor().z(),
+                leveled.anchor().z(),
+                "Перенос высоты не двигает план по z"
+                        + " Иначе тест atLevel_KeepsLayout_WritesOneHeightIntoPlan перестанет ловить эту поломку. При смене atLevel_KeepsLayout_WritesOneHeightIntoPlan проверь это утверждение.");
+        assertEquals(
+                base.region(),
+                leveled.region(),
+                "Контур плана при смене высоты не меняется"
+                        + " Иначе тест atLevel_KeepsLayout_WritesOneHeightIntoPlan перестанет ловить эту поломку. При смене atLevel_KeepsLayout_WritesOneHeightIntoPlan проверь это утверждение.");
+        assertEquals(
+                base.placements(),
+                leveled.placements(),
+                "Места построек при смене высоты не меняются"
+                        + " Иначе тест atLevel_KeepsLayout_WritesOneHeightIntoPlan перестанет ловить эту поломку. При смене atLevel_KeepsLayout_WritesOneHeightIntoPlan проверь это утверждение.");
     }
 
     @Test
@@ -40,10 +60,14 @@ class TownPlanOriginTests {
                 base.fence(),
                 base.unplaced());
 
-        assertFalse(TownPlanner.laidWith(old, RULES), "Старый обмер не совпадает с текущим радиусом рельефа");
+        assertFalse(
+                TownPlanner.laidWith(old, RULES),
+                "Старый обмер не совпадает с текущим радиусом рельефа"
+                        + " Иначе тест keepStored_OldProbeRadius_KeepsPlanOrigins перестанет ловить эту поломку. При смене keepStored_OldProbeRadius_KeepsPlanOrigins проверь это утверждение.");
         assertTrue(
                 TownPlanner.keepStored(old),
-                "План прежнего обмера сохраняют: иначе рестарт переносит origin уже построенных мест");
+                "План прежнего обмера сохраняют: иначе рестарт переносит origin уже построенных мест"
+                        + " При смене keepStored_OldProbeRadius_KeepsPlanOrigins проверь это утверждение.");
     }
 
     @Test
@@ -58,6 +82,7 @@ class TownPlanOriginTests {
         assertEquals(
                 before,
                 after,
-                "Рост плана ради сада другой породы не переносит уже размеченный сад: одна постройка — один origin");
+                "Рост плана ради сада другой породы не переносит уже размеченный сад: одна постройка — один origin"
+                        + " Иначе тест plant_Extension_KeepsExistingPlotOrigins перестанет ловить эту поломку. При смене plant_Extension_KeepsExistingPlotOrigins проверь это утверждение.");
     }
 }

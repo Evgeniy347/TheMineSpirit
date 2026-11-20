@@ -8,7 +8,6 @@ import com.theminespirit.core.board.StageRules;
 import com.theminespirit.core.building.FenceGateRule;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -17,10 +16,10 @@ import java.util.function.IntBinaryOperator;
 import org.junit.jupiter.api.Test;
 
 class TownPlannerTests {
-    private static final TownRules RULES = TownRules.load();
-    private static final List<List<String>> STAGES = StageRules.load().plans();
-    private static final BlockCoord ANCHOR = new BlockCoord(200, 70, -300);
-    private static final int RADIUS = RULES.ground().probeRadius();
+    static final TownRules RULES = TownRules.load();
+    static final List<List<String>> STAGES = StageRules.load().plans();
+    static final BlockCoord ANCHOR = new BlockCoord(200, 70, -300);
+    static final int RADIUS = RULES.ground().probeRadius();
 
     @Test
     void plan_FlatLand_AreaNearTargetAndStageOnePlaced() {
@@ -30,12 +29,14 @@ class TownPlannerTests {
         assertTrue(
                 Math.abs(plan.area() - target) <= target / 10,
                 "Участок на ровной суше — около " + target + " колонок по решению владельца 25.10, а вышло "
-                        + plan.area() + ": проверь рост контура и сглаживание");
+                        + plan.area() + ": проверь рост контура и сглаживание"
+                        + " Иначе тест plan_FlatLand_AreaNearTargetAndStageOnePlaced перестанет ловить эту поломку. При смене plan_FlatLand_AreaNearTargetAndStageOnePlaced проверь это утверждение.");
         for (String id : STAGES.get(0)) {
             assertTrue(
                     TownPlanner.LINE_ELEMENTS.contains(id) || plan.placement(id).isPresent(),
                     "Постройка этапа 1 '" + id + "' без места в плане: этап 1 берёт места только из плана; "
-                            + "не поместилось " + plan.unplaced());
+                            + "не поместилось " + plan.unplaced()
+                            + " Иначе тест plan_FlatLand_AreaNearTargetAndStageOnePlaced перестанет ловить эту поломку. При смене plan_FlatLand_AreaNearTargetAndStageOnePlaced проверь это утверждение.");
         }
     }
 
@@ -48,18 +49,21 @@ class TownPlannerTests {
             for (ColumnMask.Cell cell : place.mask().cells()) {
                 assertTrue(
                         plan.onPlot(cell.x(), cell.z()),
-                        "Место '" + place.id() + "' выходит за контур в " + cell + ": постройки стоят внутри ограды");
+                        "Место '" + place.id() + "' выходит за контур в " + cell + ": постройки стоят внутри ограды"
+                                + " Иначе тест plan_FlatLand_PlacementsInsideFreeAndApart перестанет ловить эту поломку. При смене plan_FlatLand_PlacementsInsideFreeAndApart проверь это утверждение.");
                 boolean centered = RULES.entry(place.id()).orElseThrow().quarter() == TownEntry.Quarter.CENTER;
                 assertFalse(
                         !centered && plan.streets().contains(cell.x(), cell.z()),
-                        "Место '" + place.id() + "' лежит на улице в " + cell + ": улица — общий проход");
+                        "Место '" + place.id() + "' лежит на улице в " + cell + ": улица — общий проход"
+                                + " Иначе тест plan_FlatLand_PlacementsInsideFreeAndApart перестанет ловить эту поломку. При смене plan_FlatLand_PlacementsInsideFreeAndApart проверь это утверждение.");
             }
             for (Placement other : places) {
                 assertFalse(
                         !other.equals(place)
                                 && other.overlaps(place, RULES.spacing().gap()),
                         "Места '" + place.id() + "' и '" + other.id() + "' ближе отступа "
-                                + RULES.spacing().gap() + ": между участками газон с тропой, наложение ломает стройку");
+                                + RULES.spacing().gap() + ": между участками газон с тропой, наложение ломает стройку"
+                                + " При смене plan_FlatLand_PlacementsInsideFreeAndApart проверь это утверждение.");
             }
         }
     }
@@ -71,7 +75,8 @@ class TownPlannerTests {
         assertEquals(
                 plan(hills, (x, z) -> 0),
                 plan(hills, (x, z) -> 0),
-                "План — чистая функция рельефа: тот же рельеф обязан дать тот же план, иначе живой мир и тест разойдутся");
+                "План — чистая функция рельефа: тот же рельеф обязан дать тот же план, иначе живой мир и тест разойдутся"
+                        + " При смене plan_SameTerrain_SamePlan проверь это утверждение.");
     }
 
     @Test
@@ -82,7 +87,8 @@ class TownPlannerTests {
                 plan,
                 TownPlanCodec.decode(TownPlanCodec.encode(plan)),
                 "План хранится в мире текстом: прочитанный план обязан совпасть с записанным, иначе после перезапуска "
-                        + "этапы возьмут другие места");
+                        + "этапы возьмут другие места"
+                        + " При смене codec_EncodedPlan_DecodesEqual проверь это утверждение.");
     }
 
     @Test
@@ -93,7 +99,8 @@ class TownPlannerTests {
         for (ColumnMask.Cell cell : plan.region().cells()) {
             assertTrue(
                     cell.x() < river - 2,
-                    "Клетка " + cell + " за рекой у x=" + river + " вошла в участок: вода — естественная граница");
+                    "Клетка " + cell + " за рекой у x=" + river + " вошла в участок: вода — естественная граница"
+                            + " Иначе тест plan_RiverEast_ContourStopsAtWater перестанет ловить эту поломку. При смене plan_RiverEast_ContourStopsAtWater проверь это утверждение.");
         }
     }
 
@@ -105,7 +112,8 @@ class TownPlannerTests {
         for (ColumnMask.Cell cell : plan.region().cells()) {
             assertTrue(
                     cell.z() >= cliff,
-                    "Клетка " + cell + " за обрывом у z=" + cliff + " вошла в участок: обрыв — естественная граница");
+                    "Клетка " + cell + " за обрывом у z=" + cliff + " вошла в участок: обрыв — естественная граница"
+                            + " Иначе тест plan_CliffNorth_ContourStopsAtCliff перестанет ловить эту поломку. При смене plan_CliffNorth_ContourStopsAtCliff проверь это утверждение.");
         }
     }
 
@@ -121,17 +129,20 @@ class TownPlannerTests {
             assertEquals(
                     1,
                     Math.abs(here.x() - next.x()) + Math.abs(here.z() - next.z()),
-                    "Столбы " + here + " и " + next + " не соседи по стороне: между ними щель, ограда проходима");
+                    "Столбы " + here + " и " + next + " не соседи по стороне: между ними щель, ограда проходима"
+                            + " Иначе тест fence_FlatLand_ClosedAndGatesEvenlySpaced перестанет ловить эту поломку. При смене fence_FlatLand_ClosedAndGatesEvenlySpaced проверь это утверждение.");
         }
         assertFalse(
                 escapes(fence),
-                "Из-за ограды есть путь к центру мимо столбов: ограда по контуру обязана быть замкнутой");
+                "Из-за ограды есть путь к центру мимо столбов: ограда по контуру обязана быть замкнутой"
+                        + " Иначе тест fence_FlatLand_ClosedAndGatesEvenlySpaced перестанет ловить эту поломку. При смене fence_FlatLand_ClosedAndGatesEvenlySpaced проверь это утверждение.");
         for (int span : FenceGates.spans(fence)) {
             assertTrue(
                     span >= FenceGateRule.MIN_SPAN - 3 && span <= FenceGateRule.MAX_SPAN,
                     "Пролёт между калитками " + span + " вне " + FenceGateRule.MIN_SPAN + ".."
                             + FenceGateRule.MAX_SPAN + " (" + FenceGates.spans(fence) + "): калитки равномерно "
-                            + "по всем сторонам, иначе обход до калитки слишком долгий");
+                            + "по всем сторонам, иначе обход до калитки слишком долгий"
+                            + " При смене fence_FlatLand_ClosedAndGatesEvenlySpaced проверь это утверждение.");
         }
     }
 
@@ -144,24 +155,35 @@ class TownPlannerTests {
                 .orElseThrow(() -> new AssertionError("Сад джунглей не появился в плане: " + grown.unplaced()));
         assertTrue(
                 grown.placement(StageSites.ORCHARD_EXTRA).isEmpty(),
-                "Готовое место orchard_extra занято породой, а не осталось вторым садом-двойником");
+                "Готовое место orchard_extra занято породой, а не осталось вторым садом-двойником"
+                        + " Иначе тест plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled перестанет ловить эту поломку. При смене plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled проверь это утверждение.");
         for (Placement other : grown.placements()) {
             assertFalse(
                     !other.equals(extra)
                             && other.overlaps(extra, RULES.spacing().gap()),
-                    "Сад джунглей пересекает '" + other.id() + "': у каждой породы своё место");
+                    "Сад джунглей пересекает '" + other.id() + "': у каждой породы своё место"
+                            + " Иначе тест plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled перестанет ловить эту поломку. При смене plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled проверь это утверждение.");
         }
         StageSite site = StageSites.of(grown, 1, grown.anchor().y(), RULES);
         assertTrue(
                 site.inside(extra.x(), extra.z()) && site.inside(extra.x() + extra.width() - 1, extra.z()),
-                "Сад джунглей " + extra + " оказался вне ограды этапа: всё поселение внутри контура");
-        assertTrue(StageSites.insideEnclosure(site), "Каждый участок плана этапа обязан быть внутри ограды");
+                "Сад джунглей " + extra + " оказался вне ограды этапа: всё поселение внутри контура"
+                        + " Иначе тест plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled перестанет ловить эту поломку. При смене plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled проверь это утверждение.");
+        assertTrue(
+                StageSites.insideEnclosure(site),
+                "Каждый участок плана этапа обязан быть внутри ограды"
+                        + " Иначе тест plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled перестанет ловить эту поломку. При смене plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled проверь это утверждение.");
         for (ColumnMask.Cell cell : extra.mask().cells()) {
             assertTrue(
                     site.level().contains(cell.x(), cell.z()) || site.mineColumn(cell.x(), cell.z()),
-                    "Клетка " + cell + " сада не выравнивается: деревья повиснут или утонут");
+                    "Клетка " + cell + " сада не выравнивается: деревья повиснут или утонут"
+                            + " Иначе тест plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled перестанет ловить эту поломку. При смене plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled проверь это утверждение.");
         }
-        assertEquals("oak", site.orchardWood(), "Главный сад — яблоневый (дуб), даже если порода поселения другая");
+        assertEquals(
+                "oak",
+                site.orchardWood(),
+                "Главный сад — яблоневый (дуб), даже если порода поселения другая"
+                        + " Иначе тест plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled перестанет ловить эту поломку. При смене plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled проверь это утверждение.");
         assertEquals(
                 "jungle",
                 site.extraOrchards().stream()
@@ -169,7 +191,8 @@ class TownPlannerTests {
                         .findFirst()
                         .orElseThrow()
                         .wood(),
-                "Порода сада берётся из постройки графа orchard_jungle");
+                "Порода сада берётся из постройки графа orchard_jungle"
+                        + " Иначе тест plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled перестанет ловить эту поломку. При смене plan_ExtraOrchardOnDemand_ApartInsideFenceAndLeveled проверь это утверждение.");
     }
 
     @Test
@@ -186,76 +209,30 @@ class TownPlannerTests {
                 .orElseThrow(() -> new AssertionError("Второй сад джунглей не появился: " + grown.unplaced()));
         Placement third = grown.placement("orchard_jungle_3")
                 .orElseThrow(() -> new AssertionError("Третий сад джунглей не появился: " + grown.unplaced()));
-        assertEquals(13, second.width(), "Сад породы строится по шаблону orchard_extra шириной 13");
-        assertEquals(13, third.width(), "Второй участок той же породы тоже берёт шаблон orchard_extra");
-        assertFalse(second.overlaps(third, 0), "Сады одной породы не накладываются: у каждого своё место");
+        assertEquals(
+                13,
+                second.width(),
+                "Сад породы строится по шаблону orchard_extra шириной 13"
+                        + " Иначе тест plan_SameSpeciesTwice_NumberedPlots перестанет ловить эту поломку. При смене plan_SameSpeciesTwice_NumberedPlots проверь это утверждение.");
+        assertEquals(
+                13,
+                third.width(),
+                "Второй участок той же породы тоже берёт шаблон orchard_extra"
+                        + " Иначе тест plan_SameSpeciesTwice_NumberedPlots перестанет ловить эту поломку. При смене plan_SameSpeciesTwice_NumberedPlots проверь это утверждение.");
+        assertFalse(
+                second.overlaps(third, 0),
+                "Сады одной породы не накладываются: у каждого своё место"
+                        + " Иначе тест plan_SameSpeciesTwice_NumberedPlots перестанет ловить эту поломку. При смене plan_SameSpeciesTwice_NumberedPlots проверь это утверждение.");
         StageSite site = StageSites.of(grown, 1, grown.anchor().y(), RULES);
         assertEquals(
-                2, site.extraOrchards().size(), "Обе площадки одной породы видны поселению: " + site.extraOrchards());
+                2,
+                site.extraOrchards().size(),
+                "Обе площадки одной породы видны поселению: " + site.extraOrchards()
+                        + " Иначе тест plan_SameSpeciesTwice_NumberedPlots перестанет ловить эту поломку. При смене plan_SameSpeciesTwice_NumberedPlots проверь это утверждение.");
         assertTrue(
                 site.extraOrchards().stream().allMatch(plot -> "jungle".equals(plot.wood())),
-                "Порода обеих площадок — джунгли: номер не меняет породу");
-    }
-
-    @Test
-    void plan_ExtensionGrowsFence_OldPlotsStayInside() {
-        TownPlan base = plan((x, z) -> 70, (x, z) -> 0);
-        TownPlan old = new TownPlan(
-                base.anchor(),
-                base.region(),
-                base.streets(),
-                base.placements().stream()
-                        .filter(place -> !StageSites.ORCHARD_EXTRA.equals(place.id()))
-                        .toList(),
-                base.fence(),
-                base.unplaced());
-        StageSite before = StageSites.of(old, 1, old.anchor().y(), RULES);
-        TownPlan grown =
-                TownPlanner.plant(grid((x, z) -> 70, (x, z) -> 0), old, RULES, STAGES, List.of("orchard_jungle"), 1);
-        StageSite after = StageSites.of(grown, 1, grown.anchor().y(), RULES);
-
-        assertTrue(
-                after.enclosure().count() >= before.enclosure().count(),
-                "Контур ограды при росте плана не вырос: новый сад остался бы за забором");
-        assertTrue(StageSites.insideEnclosure(after), "После роста плана все старые и новые участки внутри ограды");
-        assertTrue(
-                after.ring().posts().containsAll(before.ring().posts())
-                        || after.enclosure().count() > before.enclosure().count(),
-                "Ограда этапа не охватывает старый и новый контур: старые куски остались бы за забором");
-    }
-
-    @Test
-    void stages_SecondStagePlan_AllBuildingsRequired() {
-        StageRules.Stage second = StageRules.load().stages().get(1);
-
-        assertEquals(
-                Set.copyOf(second.plan()),
-                second.requires().keySet(),
-                "Этап 2 закрывается всем составом плана: у каждой постройки плана есть требование и уровень");
-        assertTrue(
-                second.requires().values().stream().allMatch(level -> level == 1),
-                "Постройки плана этапа 2 стоят уровнем 1 из каталога: завышенный уровень держал бы этап навсегда");
-    }
-
-    @Test
-    void stages_EveryCatalogEntry_InExactlyOneStage() {
-        Set<String> seen = new HashSet<>();
-        for (List<String> stage : STAGES) {
-            for (String id : stage) {
-                assertTrue(
-                        seen.add(id),
-                        "Постройка '" + id + "' в двух этапах stages.json: место в плане одно, этап — один");
-            }
-        }
-        List<String> orphans = new ArrayList<>();
-        RULES.buildings().stream()
-                .map(TownEntry::id)
-                .filter(id -> !seen.contains(id))
-                .forEach(orphans::add);
-        assertEquals(
-                List.of(),
-                orphans,
-                "Постройки каталога town.json без этапа: план размечает все постройки всех этапов сразу");
+                "Порода обеих площадок — джунгли: номер не меняет породу"
+                        + " Иначе тест plan_SameSpeciesTwice_NumberedPlots перестанет ловить эту поломку. При смене plan_SameSpeciesTwice_NumberedPlots проверь это утверждение.");
     }
 
     static TownPlan plan(IntBinaryOperator feet, IntBinaryOperator water) {
@@ -266,7 +243,7 @@ class TownPlannerTests {
         return TownFixtures.grid(feet, water);
     }
 
-    private static boolean escapes(FenceLine fence) {
+    static boolean escapes(FenceLine fence) {
         Set<ColumnMask.Cell> wall = new HashSet<>(fence.posts());
         int edge = RADIUS + 2;
         Deque<ColumnMask.Cell> queue = new ArrayDeque<>();

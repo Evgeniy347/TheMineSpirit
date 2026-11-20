@@ -34,8 +34,13 @@ class OrchardTreeTests {
                 expected,
                 SITE.orchardSaplings(),
                 "Места деревьев сада берутся из мягких клеток-саженцев схемы orchard_1: жёсткий список в коде "
-                        + "разошёлся бы со схемой и защита рубила бы не те колонки");
-        assertEquals(4, expected.size(), "В саду уровня 1 четыре дерева: " + expected);
+                        + "разошёлся бы со схемой и защита рубила бы не те колонки"
+                        + " Иначе тест orchardTrees_SchemeSoftSaplings_SameCells перестанет ловить эту поломку. При смене orchardTrees_SchemeSoftSaplings_SameCells проверь это утверждение.");
+        assertEquals(
+                4,
+                expected.size(),
+                "В саду уровня 1 четыре дерева: " + expected
+                        + " Иначе тест orchardTrees_SchemeSoftSaplings_SameCells перестанет ловить эту поломку. При смене orchardTrees_SchemeSoftSaplings_SameCells проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +56,8 @@ class OrchardTreeTests {
                         SITE.orchardTree(spot.x() + 1, y, spot.z()),
                         SITE.orchardTree(spot.x(), y + StageSite.ORCHARD_TREE_HEIGHT + 1, spot.z())),
                 "Саженец и выросшее дерево сада — часть плана: снос, расчистка и фоновая рубка их не трогают; "
-                        + "соседняя колонка и высота выше кроны — уже не сад");
+                        + "соседняя колонка и высота выше кроны — уже не сад"
+                        + " Иначе тест orchardTree_SaplingColumn_PlannedFromSaplingToCrown перестанет ловить эту поломку. При смене orchardTree_SaplingColumn_PlannedFromSaplingToCrown проверь это утверждение.");
     }
 
     @Test
@@ -60,7 +66,8 @@ class OrchardTreeTests {
 
         assertTrue(
                 SITE.planCell(spot.x(), spot.y(), spot.z()),
-                "Клетка дерева сада входит в план этапа: иначе аудит и защита не отличили бы её от дикого леса");
+                "Клетка дерева сада входит в план этапа: иначе аудит и защита не отличили бы её от дикого леса"
+                        + " При смене planCell_OrchardSapling_InsidePlan проверь это утверждение.");
     }
 
     @Test
@@ -70,12 +77,15 @@ class OrchardTreeTests {
 
         assertTrue(
                 SITE.orchardTerritory(spot.x(), spot.z()),
-                "Колонка саженца сада — территория сада: по ней детектор послабляет крону через разрыв");
+                "Колонка саженца сада — территория сада: по ней детектор послабляет крону через разрыв"
+                        + " Иначе тест orchardTerritory_SaplingsAndOutside_MatchesPlot перестанет ловить эту поломку. При смене orchardTerritory_SaplingsAndOutside_MatchesPlot проверь это утверждение.");
         assertTrue(
                 SITE.orchardTerritory(origin.x(), origin.z()),
-                "Угол площадки сада тоже на территории сада: иначе крайние стволы остались бы без послабления");
+                "Угол площадки сада тоже на территории сада: иначе крайние стволы остались бы без послабления"
+                        + " При смене orchardTerritory_SaplingsAndOutside_MatchesPlot проверь это утверждение.");
         assertTrue(
                 !SITE.orchardTerritory(origin.x() + 50, origin.z() + 50),
-                "За границей площадки послабления нет: дикий лес рубится по общим правилам");
+                "За границей площадки послабления нет: дикий лес рубится по общим правилам"
+                        + " Иначе тест orchardTerritory_SaplingsAndOutside_MatchesPlot перестанет ловить эту поломку. При смене orchardTerritory_SaplingsAndOutside_MatchesPlot проверь это утверждение.");
     }
 }

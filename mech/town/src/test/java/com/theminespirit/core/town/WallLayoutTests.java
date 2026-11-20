@@ -1,7 +1,6 @@
 package com.theminespirit.core.town;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,9 +17,9 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class WallLayoutTests {
-    private static final PresetLibrary PRESETS = DataTables.INSTANCE.presets().current();
-    private static final WallLayout FENCE = WallLayout.of(PRESETS, StageSchemes.FENCE);
-    private static final WallLayout WALL = WallLayout.of(PRESETS, StageSchemes.WALL);
+    static final PresetLibrary PRESETS = DataTables.INSTANCE.presets().current();
+    static final WallLayout FENCE = WallLayout.of(PRESETS, StageSchemes.FENCE);
+    static final WallLayout WALL = WallLayout.of(PRESETS, StageSchemes.WALL);
 
     @Test
     void open_StraightLine_LongFragmentAndPost() {
@@ -30,7 +29,8 @@ class WallLayoutTests {
         assertEquals(
                 2,
                 pieces.size(),
-                "РїСЂСЏРјР°СЏ РёР· 9 РєР»РµС‚РѕРє вЂ” РґР»РёРЅРЅС‹Р№ С„СЂР°РіРјРµРЅС‚ РЅР° 8 Рё СЃС‚РѕР»Р±: РєСЂСѓРїРЅС‹Рµ С„СЂР°РіРјРµРЅС‚С‹ СЌРєРѕРЅРѕРјСЏС‚ СЃС‚СЂРѕР№РєРё");
+                "РїСЂСЏРјР°СЏ РёР· 9 РєР»РµС‚РѕРє вЂ” РґР»РёРЅРЅС‹Р№ С„СЂР°РіРјРµРЅС‚ РЅР° 8 Рё СЃС‚РѕР»Р±: РєСЂСѓРїРЅС‹Рµ С„СЂР°РіРјРµРЅС‚С‹ СЌРєРѕРЅРѕРјСЏС‚ СЃС‚СЂРѕР№РєРё"
+                        + " Иначе тест open_StraightLine_LongFragmentAndPost перестанет ловить эту поломку. При смене open_StraightLine_LongFragmentAndPost проверь это утверждение.");
     }
 
     @Test
@@ -42,7 +42,8 @@ class WallLayoutTests {
         assertTrue(
                 uses(pieces, "fence_corner"),
                 "РїРѕРІРѕСЂРѕС‚ РЅР° 90В° РєР»Р°РґС‘С‚СЃСЏ С„СЂР°РіРјРµРЅС‚РѕРј-СѓРіР»РѕРј, Р° РЅРµ СЃС‚РѕР»Р±Р°РјРё: "
-                        + pieces);
+                        + pieces
+                        + " Иначе тест open_RightAngle_CornerFragmentClosesTurn перестанет ловить эту поломку. При смене open_RightAngle_CornerFragmentClosesTurn проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +60,8 @@ class WallLayoutTests {
                         || uses(pieces, "fence_corner45_right")
                         || uses(pieces, "fence_corner45_left"),
                 "Р»РµСЃРµРЅРєР° РѕРіСЂР°РґС‹ РєР»Р°РґС‘С‚СЃСЏ РґРёР°РіРѕРЅР°Р»СЊРЅС‹РјРё С„СЂР°РіРјРµРЅС‚Р°РјРё: "
-                        + pieces);
+                        + pieces
+                        + " Иначе тест open_Staircase_DiagonalAndCorner45 перестанет ловить эту поломку. При смене open_Staircase_DiagonalAndCorner45 проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +79,8 @@ class WallLayoutTests {
                         .filter(piece -> "fence_wicket".equals(piece.scheme()))
                         .count(),
                 "РєР°Р¶РґР°СЏ РєР°Р»РёС‚РєР° РѕРіСЂР°РґС‹ вЂ” С„СЂР°РіРјРµРЅС‚ СЃ РєР°Р»РёС‚РєРѕР№ Рё С„Р°РєРµР»Р°РјРё: "
-                        + pieces);
+                        + pieces
+                        + " Иначе тест closed_RingWithGates_WicketOnEveryGate перестанет ловить эту поломку. При смене closed_RingWithGates_WicketOnEveryGate проверь это утверждение.");
     }
 
     @Test
@@ -87,7 +90,8 @@ class WallLayoutTests {
         assertExact(line, Set.of(), pieces);
         assertTrue(
                 pieces.stream().allMatch(piece -> piece.scheme().startsWith("wall_3")),
-                "этап 2 поднимает забор каменной стеной: линия идёт фрагментами стены, а не забора: " + pieces);
+                "этап 2 поднимает забор каменной стеной: линия идёт фрагментами стены, а не забора: " + pieces
+                        + " Иначе тест wall_StraightLine_StoneFragments перестанет ловить эту поломку. При смене wall_StraightLine_StoneFragments проверь это утверждение.");
     }
 
     @Test
@@ -102,7 +106,8 @@ class WallLayoutTests {
         assertEquals(
                 2,
                 pieces.stream().filter(piece -> "gate_3".equals(piece.scheme())).count(),
-                "каждые ворота этапа 2 — фрагмент ворот со створкой: " + pieces);
+                "каждые ворота этапа 2 — фрагмент ворот со створкой: " + pieces
+                        + " Иначе тест wall_ClosedRingWithGates_GateFragments перестанет ловить эту поломку. При смене wall_ClosedRingWithGates_GateFragments проверь это утверждение.");
     }
 
     @Test
@@ -114,7 +119,8 @@ class WallLayoutTests {
         assertThrows(
                 IllegalStateException.class,
                 () -> FENCE.closed(ring, List.of(5)),
-                "РєР°Р»РёС‚РєР° РЅР° СѓРіР»Сѓ РЅРµ Р»РѕР¶РёС‚СЃСЏ РІРѕ С„СЂР°РіРјРµРЅС‚ СЃ РєР°Р»РёС‚РєРѕР№: С‚РёС…Рѕ РїРѕС‚РµСЂСЏС‚СЊ РїСЂРѕС…РѕРґ РЅРµР»СЊР·СЏ");
+                "РєР°Р»РёС‚РєР° РЅР° СѓРіР»Сѓ РЅРµ Р»РѕР¶РёС‚СЃСЏ РІРѕ С„СЂР°РіРјРµРЅС‚ СЃ РєР°Р»РёС‚РєРѕР№: С‚РёС…Рѕ РїРѕС‚РµСЂСЏС‚СЊ РїСЂРѕС…РѕРґ РЅРµР»СЊР·СЏ"
+                        + " Иначе тест closed_GateOnTurn_FailsLoudly перестанет ловить эту поломку. При смене closed_GateOnTurn_FailsLoudly проверь это утверждение.");
     }
 
     @Test
@@ -130,12 +136,17 @@ class WallLayoutTests {
         List<WallPiece> flat = new ArrayList<>();
         parts.forEach(flat::addAll);
 
-        assertEquals(5, parts.size(), "Ограда делится ровно на запрошенное число частей");
+        assertEquals(
+                5,
+                parts.size(),
+                "Ограда делится ровно на запрошенное число частей"
+                        + " Иначе тест parts_RingWithGates_SplitsSamePiecesWithoutLossOrRepeats перестанет ловить эту поломку. При смене parts_RingWithGates_SplitsSamePiecesWithoutLossOrRepeats проверь это утверждение.");
         assertEquals(
                 whole,
                 flat,
                 "Части ограды вместе дают ту же раскладку, что и целый обход: иначе часть забора пропадает или "
-                        + "строится дважды");
+                        + "строится дважды"
+                        + " При смене parts_RingWithGates_SplitsSamePiecesWithoutLossOrRepeats проверь это утверждение.");
     }
 
     @Test
@@ -146,12 +157,21 @@ class WallLayoutTests {
         List<WallPiece> flat = new ArrayList<>();
         parts.forEach(flat::addAll);
 
-        assertEquals(5, parts.size(), "Пустые части остаются в списке: номер части — это id задания доски");
-        assertEquals(whole, flat, "Делёж не теряет и не повторяет куски, даже если частей больше, чем кусков");
+        assertEquals(
+                5,
+                parts.size(),
+                "Пустые части остаются в списке: номер части — это id задания доски"
+                        + " Иначе тест parts_MorePartsThanPieces_KeepsEmptyPartsAndSamePieces перестанет ловить эту поломку. При смене parts_MorePartsThanPieces_KeepsEmptyPartsAndSamePieces проверь это утверждение.");
+        assertEquals(
+                whole,
+                flat,
+                "Делёж не теряет и не повторяет куски, даже если частей больше, чем кусков"
+                        + " Иначе тест parts_MorePartsThanPieces_KeepsEmptyPartsAndSamePieces перестанет ловить эту поломку. При смене parts_MorePartsThanPieces_KeepsEmptyPartsAndSamePieces проверь это утверждение.");
         assertEquals(
                 2,
                 parts.stream().filter(part -> !part.isEmpty()).count(),
-                "Пустых частей три, а куски попадают ровно в две части");
+                "Пустых частей три, а куски попадают ровно в две части"
+                        + " Иначе тест parts_MorePartsThanPieces_KeepsEmptyPartsAndSamePieces перестанет ловить эту поломку. При смене parts_MorePartsThanPieces_KeepsEmptyPartsAndSamePieces проверь это утверждение.");
     }
 
     @Test
@@ -161,85 +181,29 @@ class WallLayoutTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FENCE.parts(line, List.of(), 0),
-                "Ноль частей — ошибка вызова: иначе ограда молча не строится");
+                "Ноль частей — ошибка вызова: иначе ограда молча не строится"
+                        + " При смене parts_CountBelowOne_Throws проверь это утверждение.");
     }
 
-    @Test
-    void demoWall_ClosedRing_HasBothCornerKindsAndWicket() {
-        FenceLine line = WallDemo.line();
-        List<WallPiece> pieces = WallDemo.pieces(PRESETS);
-
-        assertExact(line.posts(), Set.of(line.posts().get(WallDemo.GATE)), pieces);
-        assertEquals(
-                2,
-                count(pieces, "fence_corner"),
-                "Витрина обязана показать два угла 90°: на одном угле не увидеть, что линия поворачивает в обе стороны: "
-                        + pieces);
-        assertEquals(
-                1,
-                count(pieces, "fence_corner45_left"),
-                "Витрина обязана показать угол 45° влево: иначе 45° в демо нет: " + pieces);
-        assertEquals(
-                1,
-                count(pieces, "fence_corner45_right"),
-                "Витрина обязана показать угол 45° вправо: левый и правый — разные схемы: " + pieces);
-        assertEquals(
-                1,
-                count(pieces, "fence_diagonal"),
-                "Витрина обязана показать участок диагонали, а не только повороты: " + pieces);
-        assertEquals(
-                1,
-                count(pieces, "fence_wicket"),
-                "В витрине одни ворота: калитка — единственный проход в замкнутом контуре: " + pieces);
-        assertRing(line.posts());
-    }
-
-    @Test
-    void demoWall_Contour_IsCompact() {
-        List<ColumnMask.Cell> posts = WallDemo.line().posts();
-        int minX = posts.stream().mapToInt(ColumnMask.Cell::x).min().orElseThrow();
-        int maxX = posts.stream().mapToInt(ColumnMask.Cell::x).max().orElseThrow();
-        int minZ = posts.stream().mapToInt(ColumnMask.Cell::z).min().orElseThrow();
-        int maxZ = posts.stream().mapToInt(ColumnMask.Cell::z).max().orElseThrow();
-
-        assertTrue(
-                maxX - minX + 1 <= 9 && maxZ - minZ + 1 <= 7 && posts.size() <= 30,
-                "Витрина ограды обязана быть компактной и строиться рядом с остальным демо: получено "
-                        + (maxX - minX + 1) + "×" + (maxZ - minZ + 1) + ", клеток " + posts.size());
-    }
-
-    @Test
-    void wall_StoneStage_HasNo45Schemes() {
-        assertTrue(
-                StageSchemes.FENCE.contains("fence_diagonal")
-                        && StageSchemes.FENCE.contains("fence_corner45_left")
-                        && StageSchemes.FENCE.contains("fence_corner45_right"),
-                "Уровень забора обязан иметь диагональ и оба угла 45°: на нём и держится витрина");
-        assertFalse(
-                StageSchemes.WALL.stream()
-                        .anyMatch(scheme -> scheme.contains("diagonal") || scheme.contains("corner45")),
-                "У каменной стены этапа 2 нет схем диагонали и угла 45°: витрину 45° строить не из чего, поэтому "
-                        + "витрина — забор этапа 0");
-    }
-
-    private static long count(List<WallPiece> pieces, String scheme) {
+    static long count(List<WallPiece> pieces, String scheme) {
         return pieces.stream().filter(piece -> piece.scheme().equals(scheme)).count();
     }
 
-    private static void assertRing(List<ColumnMask.Cell> posts) {
+    static void assertRing(List<ColumnMask.Cell> posts) {
         Set<ColumnMask.Cell> cells = Set.copyOf(posts);
         assertEquals(
                 posts.size(),
                 cells.size(),
-                "В контуре одна и та же клетка не повторяется: иначе столб строится дважды");
+                "В контуре одна и та же клетка не повторяется: иначе столб строится дважды"
+                        + " При смене assertRing проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
         for (int index = 0; index < posts.size(); index++) {
             ColumnMask.Cell here = posts.get(index);
             ColumnMask.Cell next = posts.get((index + 1) % posts.size());
             assertEquals(
                     1,
                     Math.abs(here.x() - next.x()) + Math.abs(here.z() - next.z()),
-                    "Соседние клетки контура обязаны стоять вплотную: иначе в ограде дыра между " + here + " и "
-                            + next);
+                    "Соседние клетки контура обязаны стоять вплотную: иначе в ограде дыра между " + here + " и " + next
+                            + " При смене assertRing проверь это утверждение.");
             int neighbours = 0;
             for (ColumnMask.Cell other : cells) {
                 if (!other.equals(here) && Math.abs(here.x() - other.x()) + Math.abs(here.z() - other.z()) == 1) {
@@ -250,22 +214,22 @@ class WallLayoutTests {
                     2,
                     neighbours,
                     "У клетки " + here + " обязано быть ровно два соседа по контуру: иначе ограда ветвится или "
-                            + "касается сама себя");
+                            + "касается сама себя" + " При смене assertRing проверь это утверждение.");
         }
     }
 
-    private static List<ColumnMask.Cell> run(List<ColumnMask.Cell> line, int x, int z, int dx, int dz, int count) {
+    static List<ColumnMask.Cell> run(List<ColumnMask.Cell> line, int x, int z, int dx, int dz, int count) {
         for (int step = 0; step < count; step++) {
             line.add(new ColumnMask.Cell(x + dx * step, z + dz * step));
         }
         return line;
     }
 
-    private static boolean uses(List<WallPiece> pieces, String scheme) {
+    static boolean uses(List<WallPiece> pieces, String scheme) {
         return pieces.stream().anyMatch(piece -> piece.scheme().equals(scheme));
     }
 
-    private static void assertExact(List<ColumnMask.Cell> line, Set<ColumnMask.Cell> gates, List<WallPiece> pieces) {
+    static void assertExact(List<ColumnMask.Cell> line, Set<ColumnMask.Cell> gates, List<WallPiece> pieces) {
         Map<ColumnMask.Cell, Integer> covered = new HashMap<>();
         Set<ColumnMask.Cell> gated = new HashSet<>();
         for (WallPiece piece : pieces) {
@@ -286,11 +250,17 @@ class WallLayoutTests {
         assertEquals(
                 Set.copyOf(line),
                 covered.keySet(),
-                "С„СЂР°РіРјРµРЅС‚С‹ Р·Р°РєСЂС‹РІР°СЋС‚ СЂРѕРІРЅРѕ Р»РёРЅРёСЋ СЃС‚РµРЅС‹: РґС‹СЂР° вЂ” РїСЂРѕС…РѕРґ РґР»СЏ РјРѕР±РѕРІ, Р»РёС€РЅСЏСЏ РєР»РµС‚РєР° вЂ” Р·Р°Р±РѕСЂ РїРѕРїРµСЂС‘Рє");
+                "С„СЂР°РіРјРµРЅС‚С‹ Р·Р°РєСЂС‹РІР°СЋС‚ СЂРѕРІРЅРѕ Р»РёРЅРёСЋ СЃС‚РµРЅС‹: РґС‹СЂР° вЂ” РїСЂРѕС…РѕРґ РґР»СЏ РјРѕР±РѕРІ, Р»РёС€РЅСЏСЏ РєР»РµС‚РєР° вЂ” Р·Р°Р±РѕСЂ РїРѕРїРµСЂС‘Рє"
+                        + " Иначе тест assertExact перестанет ловить эту поломку. При смене assertExact проверь это утверждение.");
         assertTrue(
                 covered.values().stream().allMatch(count -> count == 1),
                 "С„СЂР°РіРјРµРЅС‚С‹ СЃС‚С‹РєСѓСЋС‚СЃСЏ Р±РµР· РЅР°Р»РѕР¶РµРЅРёР№: РґРІРѕР№РЅР°СЏ РєР»РµС‚РєР° вЂ” РґРІРµ СЃС‚СЂРѕР№РєРё СЃРїРѕСЂСЏС‚ Рѕ Р±Р»РѕРєРµ "
-                        + covered);
-        assertEquals(gates, gated, "РєР°Р»РёС‚РєРё СЃС‚РѕСЏС‚ СЂРѕРІРЅРѕ РІ РєР»РµС‚РєР°С… РєР°Р»РёС‚РѕРє РїР»Р°РЅР°");
+                        + covered
+                        + " Иначе тест assertExact перестанет ловить эту поломку. При смене assertExact проверь это утверждение.");
+        assertEquals(
+                gates,
+                gated,
+                "РєР°Р»РёС‚РєРё СЃС‚РѕСЏС‚ СЂРѕРІРЅРѕ РІ РєР»РµС‚РєР°С… РєР°Р»РёС‚РѕРє РїР»Р°РЅР°"
+                        + " Иначе тест assertExact перестанет ловить эту поломку. При смене assertExact проверь это утверждение.");
     }
 }

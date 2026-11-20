@@ -49,7 +49,8 @@ class StreetWorkTests {
         assertEquals(
                 Set.of("minecraft:dirt"),
                 materials(1),
-                "плитки улиц этапа 1 — только земля: тропу и гравий духам на первом этапе не добыть");
+                "плитки улиц этапа 1 — только земля: тропу и гравий духам на первом этапе не добыть"
+                        + " Иначе тест scheme_StageOne_TilesOnlyDirt перестанет ловить эту поломку. При смене scheme_StageOne_TilesOnlyDirt проверь это утверждение.");
     }
 
     @Test
@@ -58,10 +59,12 @@ class StreetWorkTests {
             Set<String> blocks = materials(stage);
             assertTrue(
                     blocks.contains("minecraft:dirt") && blocks.contains("minecraft:gravel"),
-                    "этап " + stage + ": покрытие улиц — тропа (в смете земля) с гравийными краями, а не " + blocks);
+                    "этап " + stage + ": покрытие улиц — тропа (в смете земля) с гравийными краями, а не " + blocks
+                            + " Иначе тест scheme_StagesTwoThree_PathAndGravel перестанет ловить эту поломку. При смене scheme_StagesTwoThree_PathAndGravel проверь это утверждение.");
             assertFalse(
                     blocks.contains("minecraft:dirt_path"),
-                    "этап " + stage + ": dirt_path не предмет, тропу топчут на месте: " + blocks);
+                    "этап " + stage + ": dirt_path не предмет, тропу топчут на месте: " + blocks
+                            + " Иначе тест scheme_StagesTwoThree_PathAndGravel перестанет ловить эту поломку. При смене scheme_StagesTwoThree_PathAndGravel проверь это утверждение.");
         }
     }
 
@@ -74,22 +77,28 @@ class StreetWorkTests {
                 DataTables.INSTANCE.town().current().streets(),
                 PRESETS,
                 stageLevel(1));
-        assertFalse(builds.isEmpty(), "на выровненных площадках этапа 1 есть улицы: плиткам есть где лечь");
+        assertFalse(
+                builds.isEmpty(),
+                "на выровненных площадках этапа 1 есть улицы: плиткам есть где лечь"
+                        + " Иначе тест of_FlatSite_TilesOnLevelledGroundOutsidePostsAndPlaces перестанет ловить эту поломку. При смене of_FlatSite_TilesOnLevelledGroundOutsidePostsAndPlaces проверь это утверждение.");
         ColumnMask within = StreetWork.within(site);
         for (SchemeBuild build : builds) {
             assertEquals(
                     site.anchor().y(),
                     build.origin().y(),
-                    "плитка ставится от клетки под ногами: слой земли схемы сам ложится на поверхность");
+                    "плитка ставится от клетки под ногами: слой земли схемы сам ложится на поверхность"
+                            + " Иначе тест of_FlatSite_TilesOnLevelledGroundOutsidePostsAndPlaces перестанет ловить эту поломку. При смене of_FlatSite_TilesOnLevelledGroundOutsidePostsAndPlaces проверь это утверждение.");
             for (Schematic.PlacedEntry entry :
                     PRESETS.byId(build.scheme()).orElseThrow().schematic().entries(build.origin(), build.rotation())) {
                 assertEquals(
                         site.anchor().y() - 1,
                         entry.pos().y(),
-                        "покрытие улицы лежит в слое земли, а не блоком над улицей: " + entry.pos());
+                        "покрытие улицы лежит в слое земли, а не блоком над улицей: " + entry.pos()
+                                + " Иначе тест of_FlatSite_TilesOnLevelledGroundOutsidePostsAndPlaces перестанет ловить эту поломку. При смене of_FlatSite_TilesOnLevelledGroundOutsidePostsAndPlaces проверь это утверждение.");
                 assertTrue(
                         within.contains(entry.pos().x(), entry.pos().z()),
-                        "плитка " + build + " вышла за выровненную улицу — на столб ограды или постройку");
+                        "плитка " + build + " вышла за выровненную улицу — на столб ограды или постройку"
+                                + " Иначе тест of_FlatSite_TilesOnLevelledGroundOutsidePostsAndPlaces перестанет ловить эту поломку. При смене of_FlatSite_TilesOnLevelledGroundOutsidePostsAndPlaces проверь это утверждение.");
             }
         }
     }

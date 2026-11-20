@@ -27,16 +27,30 @@ class FloatingNoteTests {
 
         String line = FloatingNote.line(findings);
 
-        assertTrue(line.startsWith("2 ("), "Строка начинается с числа находок: " + line);
+        assertTrue(
+                line.startsWith("2 ("),
+                "Строка начинается с числа находок: " + line
+                        + " Иначе тест line_FindingsWithTypes_ListsCountTypeAndFirstCells перестанет ловить эту поломку. При смене line_FindingsWithTypes_ListsCountTypeAndFirstCells проверь это утверждение.");
         assertTrue(
                 line.contains("minecraft:oak_log=2"),
-                "Тип и число блоков видны: листва не путается с бревном: " + line);
-        assertTrue(line.contains("minecraft:oak_leaves=1"), "Каждый тип в строке: " + line);
-        assertTrue(line.contains("BlockCoord[x=-183"), "Первые клетки названы: по ним идут убирать: " + line);
+                "Тип и число блоков видны: листва не путается с бревном: " + line
+                        + " Иначе тест line_FindingsWithTypes_ListsCountTypeAndFirstCells перестанет ловить эту поломку. При смене line_FindingsWithTypes_ListsCountTypeAndFirstCells проверь это утверждение.");
+        assertTrue(
+                line.contains("minecraft:oak_leaves=1"),
+                "Каждый тип в строке: " + line
+                        + " Иначе тест line_FindingsWithTypes_ListsCountTypeAndFirstCells перестанет ловить эту поломку. При смене line_FindingsWithTypes_ListsCountTypeAndFirstCells проверь это утверждение.");
+        assertTrue(
+                line.contains("BlockCoord[x=-183"),
+                "Первые клетки названы: по ним идут убирать: " + line
+                        + " Иначе тест line_FindingsWithTypes_ListsCountTypeAndFirstCells перестанет ловить эту поломку. При смене line_FindingsWithTypes_ListsCountTypeAndFirstCells проверь это утверждение.");
     }
 
     @Test
     void line_NoFindings_IsZero() {
-        assertEquals("0", FloatingNote.line(List.of()), "Пустой обход не притворяется работой: ноль без скобок");
+        assertEquals(
+                "0",
+                FloatingNote.line(List.of()),
+                "Пустой обход не притворяется работой: ноль без скобок"
+                        + " Иначе тест line_NoFindings_IsZero перестанет ловить эту поломку. При смене line_NoFindings_IsZero проверь это утверждение.");
     }
 }

@@ -15,12 +15,13 @@ class SettlementPlotTests {
                 IllegalArgumentException.class,
                 () -> SettlementPlot.center(List.of()),
                 "Центр поселения без домов — ошибка, а не выдуманная точка: иначе вызывающий молча уходит в "
-                        + "пустой угол мира");
+                        + "пустой угол мира" + " При смене center_NoHomes_FailsWithReason проверь это утверждение.");
 
         assertTrue(
                 refusal.getMessage().contains("Нет ни одного дома"),
                 "Центр поселения без домов не выдумывается: исключение называет причину, иначе вызывающий "
-                        + "молча получит координату из воздуха; получено: " + refusal.getMessage());
+                        + "молча получит координату из воздуха; получено: " + refusal.getMessage()
+                        + " При смене center_NoHomes_FailsWithReason проверь это утверждение.");
     }
 
     @Test
@@ -33,6 +34,7 @@ class SettlementPlotTests {
                 SettlementPlot.center(List.of(first, second, third)),
                 SettlementPlot.center(List.of(third, first, second)),
                 "Точка поселения не зависит от порядка духов: иначе сцена и цель выхода меняются от "
-                        + "порядка сущностей в мире");
+                        + "порядка сущностей в мире"
+                        + " При смене center_SpiritOrder_DoesNotMoveHome проверь это утверждение.");
     }
 }

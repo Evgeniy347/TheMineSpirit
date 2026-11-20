@@ -16,7 +16,6 @@ import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.repair.RepairData;
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -24,10 +23,10 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class TownPlanChangeGuardTests {
-    private static final TownRules RULES = TownRules.load();
-    private static final List<List<String>> STAGES = StageRules.load().plans();
-    private static final BlockCoord ANCHOR = new BlockCoord(200, 70, -300);
-    private static final int RADIUS = RULES.ground().probeRadius();
+    static final TownRules RULES = TownRules.load();
+    static final List<List<String>> STAGES = StageRules.load().plans();
+    static final BlockCoord ANCHOR = new BlockCoord(200, 70, -300);
+    static final int RADIUS = RULES.ground().probeRadius();
 
     @Test
     void wheatField_PlacedAsPlanPlot_WithFiveByTenFarmAndWater() {
@@ -35,18 +34,36 @@ class TownPlanChangeGuardTests {
         Placement field = plan.placement("wheat_field")
                 .orElseThrow(() -> new AssertionError("Домашняя грядка не получила участок: " + plan.unplaced()));
 
-        assertEquals(7, field.width(), "Участок грядки — 5×10 пашни плюс обход по краю по одному блоку");
-        assertEquals(12, field.depth(), "Участок грядки — 5×10 пашни плюс обход по краю по одному блоку");
-        assertTrue(plan.region().contains(field.x(), field.z()), "Грядка стоит внутри контура поселения");
+        assertEquals(
+                7,
+                field.width(),
+                "Участок грядки — 5×10 пашни плюс обход по краю по одному блоку"
+                        + " Иначе тест wheatField_PlacedAsPlanPlot_WithFiveByTenFarmAndWater перестанет ловить эту поломку. При смене wheatField_PlacedAsPlanPlot_WithFiveByTenFarmAndWater проверь это утверждение.");
+        assertEquals(
+                12,
+                field.depth(),
+                "Участок грядки — 5×10 пашни плюс обход по краю по одному блоку"
+                        + " Иначе тест wheatField_PlacedAsPlanPlot_WithFiveByTenFarmAndWater перестанет ловить эту поломку. При смене wheatField_PlacedAsPlanPlot_WithFiveByTenFarmAndWater проверь это утверждение.");
+        assertTrue(
+                plan.region().contains(field.x(), field.z()),
+                "Грядка стоит внутри контура поселения"
+                        + " Иначе тест wheatField_PlacedAsPlanPlot_WithFiveByTenFarmAndWater перестанет ловить эту поломку. При смене wheatField_PlacedAsPlanPlot_WithFiveByTenFarmAndWater проверь это утверждение.");
         for (ColumnMask.Cell cell : field.mask().cells()) {
-            assertTrue(plan.onPlot(cell.x(), cell.z()), "Клетка грядки " + cell + " вышла за контур поселения");
-            assertFalse(plan.streets().contains(cell.x(), cell.z()), "Грядка налезла на улицу в " + cell);
+            assertTrue(
+                    plan.onPlot(cell.x(), cell.z()),
+                    "Клетка грядки " + cell + " вышла за контур поселения"
+                            + " Иначе тест wheatField_PlacedAsPlanPlot_WithFiveByTenFarmAndWater перестанет ловить эту поломку. При смене wheatField_PlacedAsPlanPlot_WithFiveByTenFarmAndWater проверь это утверждение.");
+            assertFalse(
+                    plan.streets().contains(cell.x(), cell.z()),
+                    "Грядка налезла на улицу в " + cell
+                            + " Иначе тест wheatField_PlacedAsPlanPlot_WithFiveByTenFarmAndWater перестанет ловить эту поломку. При смене wheatField_PlacedAsPlanPlot_WithFiveByTenFarmAndWater проверь это утверждение.");
         }
         for (Placement other : plan.placements()) {
             assertFalse(
                     !other.equals(field)
                             && other.overlaps(field, RULES.spacing().gap()),
-                    "Грядка пересекает участок '" + other.id() + "'");
+                    "Грядка пересекает участок '" + other.id() + "'"
+                            + " Иначе тест wheatField_PlacedAsPlanPlot_WithFiveByTenFarmAndWater перестанет ловить эту поломку. При смене wheatField_PlacedAsPlanPlot_WithFiveByTenFarmAndWater проверь это утверждение.");
         }
     }
 
@@ -64,17 +81,27 @@ class TownPlanChangeGuardTests {
                 .map(Schematic.PlacedEntry::pos)
                 .toList();
 
-        assertEquals(2, water.size(), "На 5×10 пашни хватает двух клеток воды: каждая увлажняет 9 клеток в длину");
-        assertEquals(48, farm.size(), "5×10 минус две клетки воды — 48 грядок");
+        assertEquals(
+                2,
+                water.size(),
+                "На 5×10 пашни хватает двух клеток воды: каждая увлажняет 9 клеток в длину"
+                        + " Иначе тест wheatFieldScheme_AllFarmland_EveryCellWithinFourOfWater перестанет ловить эту поломку. При смене wheatFieldScheme_AllFarmland_EveryCellWithinFourOfWater проверь это утверждение.");
+        assertEquals(
+                48,
+                farm.size(),
+                "5×10 минус две клетки воды — 48 грядок"
+                        + " Иначе тест wheatFieldScheme_AllFarmland_EveryCellWithinFourOfWater перестанет ловить эту поломку. При смене wheatFieldScheme_AllFarmland_EveryCellWithinFourOfWater проверь это утверждение.");
         for (BlockCoord cell : farm) {
             assertTrue(
                     water.stream().anyMatch(at -> Math.abs(at.x() - cell.x()) <= 4 && Math.abs(at.z() - cell.z()) <= 4),
-                    "Грядка " + cell + " не увлажнена: до воды больше четырёх блоков");
+                    "Грядка " + cell + " не увлажнена: до воды больше четырёх блоков"
+                            + " Иначе тест wheatFieldScheme_AllFarmland_EveryCellWithinFourOfWater перестанет ловить эту поломку. При смене wheatFieldScheme_AllFarmland_EveryCellWithinFourOfWater проверь это утверждение.");
         }
         for (BlockCoord cell : water) {
             assertTrue(
                     cell.x() > 0 && cell.x() < 6 && cell.z() > 0 && cell.z() < 11,
-                    "Вода " + cell + " стоит внутри контура 5×10, а не на обходе");
+                    "Вода " + cell + " стоит внутри контура 5×10, а не на обходе"
+                            + " Иначе тест wheatFieldScheme_AllFarmland_EveryCellWithinFourOfWater перестанет ловить эту поломку. При смене wheatFieldScheme_AllFarmland_EveryCellWithinFourOfWater проверь это утверждение.");
         }
         for (Schematic.PlacedEntry entry : entries) {
             if ("dirt_path".equals(SchematicBlocks.path(entry.block()))) {
@@ -83,10 +110,15 @@ class TownPlanChangeGuardTests {
                                 || entry.pos().x() == 6
                                 || entry.pos().z() == 0
                                 || entry.pos().z() == 11,
-                        "Обход " + entry.pos() + " обязан идти по краю участка");
+                        "Обход " + entry.pos() + " обязан идти по краю участка"
+                                + " Иначе тест wheatFieldScheme_AllFarmland_EveryCellWithinFourOfWater перестанет ловить эту поломку. При смене wheatFieldScheme_AllFarmland_EveryCellWithinFourOfWater проверь это утверждение.");
             }
         }
-        assertEquals(5 * 10 - 2, farm.size(), "Пашня — прямоугольник 5×10 без клеток воды: иначе вода занимает грядку");
+        assertEquals(
+                5 * 10 - 2,
+                farm.size(),
+                "Пашня — прямоугольник 5×10 без клеток воды: иначе вода занимает грядку"
+                        + " При смене wheatFieldScheme_AllFarmland_EveryCellWithinFourOfWater проверь это утверждение.");
     }
 
     @Test
@@ -109,8 +141,14 @@ class TownPlanChangeGuardTests {
 
         TownPlan next = TownPlanner.readapt(grid(), stored, changed, built);
 
-        assertTrue(next.placement("orchard_9").isPresent(), "сад по спросу не из каталога остаётся в плане");
-        assertTrue(next.placement("retired_lot").isPresent(), "бывший участок не роняет подгонку и весь граф");
+        assertTrue(
+                next.placement("orchard_9").isPresent(),
+                "сад по спросу не из каталога остаётся в плане"
+                        + " Иначе тест readapt_PlacementsOutsideCatalog_DoNotBreakStreetOpening перестанет ловить эту поломку. При смене readapt_PlacementsOutsideCatalog_DoNotBreakStreetOpening проверь это утверждение.");
+        assertTrue(
+                next.placement("retired_lot").isPresent(),
+                "бывший участок не роняет подгонку и весь граф"
+                        + " Иначе тест readapt_PlacementsOutsideCatalog_DoNotBreakStreetOpening перестанет ловить эту поломку. При смене readapt_PlacementsOutsideCatalog_DoNotBreakStreetOpening проверь это утверждение.");
     }
 
     @Test
@@ -133,7 +171,8 @@ class TownPlanChangeGuardTests {
             assertTrue(
                     fitsNew || resized.equals(target),
                     "Участок '" + target.id() + "' после смены размера обязан либо получить новый размер "
-                            + wanted.width() + "×" + wanted.depth() + ", либо остаться прежним: " + resized);
+                            + wanted.width() + "×" + wanted.depth() + ", либо остаться прежним: " + resized
+                            + " Иначе тест change_AnyOneSize_KeepsOtherBuiltPlacementsAndStreets перестанет ловить эту поломку. При смене change_AnyOneSize_KeepsOtherBuiltPlacementsAndStreets проверь это утверждение.");
             for (Placement before : base.placements()) {
                 if (before.id().equals(target.id())) {
                     continue;
@@ -144,64 +183,18 @@ class TownPlanChangeGuardTests {
                 assertEquals(
                         before,
                         after,
-                        "Смена размера '" + target.id() + "' сдвинула готовый участок '" + before.id() + "'");
+                        "Смена размера '" + target.id() + "' сдвинула готовый участок '" + before.id() + "'"
+                                + " Иначе тест change_AnyOneSize_KeepsOtherBuiltPlacementsAndStreets перестанет ловить эту поломку. При смене change_AnyOneSize_KeepsOtherBuiltPlacementsAndStreets проверь это утверждение.");
             }
             assertPlacementsApart(next);
         }
     }
 
-    @Test
-    void savedPlanWithoutWheat_Migration_KeepsEveryOtherPlot() {
-        TownPlan base = plan();
-        TownPlan old = new TownPlan(
-                base.anchor(),
-                base.region(),
-                base.streets(),
-                base.placements().stream()
-                        .filter(place -> !"wheat_field".equals(place.id()))
-                        .toList(),
-                base.fence(),
-                base.unplaced());
-        TownPlan decoded = TownPlanCodec.decode(TownPlanCodec.encode(old));
-
-        TownPlan grown = TownPlanner.plant(grid(), decoded, RULES, STAGES, List.of(), 1);
-
-        assertTrue(grown.placement("wheat_field").isPresent(), "Старый план обязан получить участок грядки");
-        for (Placement before : decoded.placements()) {
-            assertEquals(
-                    before,
-                    grown.placement(before.id()).orElseThrow(),
-                    "Переезд грядки не имеет права двигать чужой участок '" + before.id() + "'");
-        }
-        assertEquals(decoded.anchor(), grown.anchor(), "Origin поселения при миграции не меняется");
-        assertPlacementsApart(grown);
-    }
-
-    @Test
-    void change_AnyOneScheme_KeepsOtherSchemeAudit() {
-        Schematic first = scheme("wheat_field_1");
-        Schematic second = scheme("field_1");
-        Map<BlockCoord, String> world = new HashMap<>();
-        for (Schematic.PlacedEntry entry : second.entries(ANCHOR)) {
-            world.put(entry.pos(), entry.block());
-        }
-        int before = audit(second, world).total();
-
-        assertTrue(
-                first.sizeX() != second.sizeX() || first.sizeZ() != second.sizeZ(),
-                "Схемы обязаны отличаться габаритом: иначе тест не меняет чужую схему");
-        assertEquals(before, audit(second, world).total(), "Чужая схема не меняет аудит этой постройки");
-        assertEquals(
-                before,
-                audit(second, world).total(),
-                "Повторный аудит после смены другой схемы обязан дать тот же результат");
-    }
-
-    private static TownPlan plan() {
+    static TownPlan plan() {
         return TownPlanner.plan(grid(), ANCHOR, RULES, STAGES);
     }
 
-    private static TerrainGrid grid() {
+    static TerrainGrid grid() {
         int side = 2 * RADIUS + 1;
         int[] heights = new int[side * side];
         for (int dz = -RADIUS; dz <= RADIUS; dz++) {
@@ -212,7 +205,7 @@ class TownPlanChangeGuardTests {
         return TerrainGrid.around(ANCHOR, RADIUS, heights, new BitSet());
     }
 
-    private static TownRules withSize(String id, int addWidth, int addDepth) {
+    static TownRules withSize(String id, int addWidth, int addDepth) {
         List<TownEntry> entries = new ArrayList<>();
         for (TownEntry entry : RULES.buildings()) {
             if (entry.id().equals(id)) {
@@ -232,28 +225,30 @@ class TownPlanChangeGuardTests {
         return new TownRules(RULES.ground(), RULES.streets(), RULES.spacing(), entries);
     }
 
-    private static void assertPlacementsApart(TownPlan plan) {
+    static void assertPlacementsApart(TownPlan plan) {
         for (Placement place : plan.placements()) {
             for (Placement other : plan.placements()) {
                 assertFalse(
                         !other.equals(place)
                                 && other.overlaps(place, RULES.spacing().gap()),
-                        "После смены размера участки '" + place.id() + "' и '" + other.id() + "' пересеклись");
+                        "После смены размера участки '" + place.id() + "' и '" + other.id() + "' пересеклись"
+                                + " Иначе тест assertPlacementsApart перестанет ловить эту поломку. При смене assertPlacementsApart проверь это утверждение.");
             }
             for (ColumnMask.Cell cell : place.mask().cells()) {
                 assertFalse(
                         plan.streets().contains(cell.x(), cell.z()),
-                        "После смены размера участок '" + place.id() + "' налез на улицу в " + cell);
+                        "После смены размера участок '" + place.id() + "' налез на улицу в " + cell
+                                + " Иначе тест assertPlacementsApart перестанет ловить эту поломку. При смене assertPlacementsApart проверь это утверждение.");
             }
         }
     }
 
-    private static Schematic scheme(String id) {
+    static Schematic scheme(String id) {
         String path = PresetLibrary.SCHEMATICS_ROOT + id + SchematicTextParser.EXTENSION;
         return SchematicTextParser.parse(JsonResource.readClasspath(path), path).schematic();
     }
 
-    private static RepairAudit.Report audit(Schematic scheme, Map<BlockCoord, String> world) {
+    static RepairAudit.Report audit(Schematic scheme, Map<BlockCoord, String> world) {
         return RepairAudit.audit(
                 scheme,
                 ANCHOR,
