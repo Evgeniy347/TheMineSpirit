@@ -10,7 +10,6 @@ core/board/graph/GraphPlannerTests.java	919
 core/building/BuildPlanner.java	838
 core/building/FillScenarioTests.java	323
 core/building/PresetLibraryTests.java	431
-core/building/SchematicTextParser.java	395
 core/engine/TaskRunnerRestoreTests.java	333
 core/engine/TaskRunnerTests.java	743
 core/farming/FarmJobTests.java	356
