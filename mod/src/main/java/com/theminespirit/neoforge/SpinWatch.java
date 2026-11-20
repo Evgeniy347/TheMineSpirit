@@ -46,8 +46,15 @@ public final class SpinWatch {
                 mob.getLookControl().getWantedX(),
                 mob.getLookControl().getWantedY(),
                 mob.getLookControl().getWantedZ());
+        String move = String.format(
+                Locale.ROOT,
+                "%.1f,%.1f,%.1f",
+                mob.getMoveControl().getWantedX(),
+                mob.getMoveControl().getWantedY(),
+                mob.getMoveControl().getWantedZ());
         LOGGER.info(
-                "[spin] дух {} ({}): {}, вид={}, слой={}, script={}, возраст={} тиков, nav={}, look={}, target={}, next={}",
+                "[spin] дух {} ({}): {}, вид={}, слой={}, script={}, возраст={} тиков, nav={}, look={}, move={},"
+                        + " target={}, next={}",
                 mob.getName().getString(),
                 owner,
                 spin.text(),
@@ -57,6 +64,7 @@ public final class SpinWatch {
                 tick - age.since(),
                 nav,
                 look,
+                move,
                 shortCoord(target),
                 next);
         if (mob.level() instanceof ServerLevel server) {
