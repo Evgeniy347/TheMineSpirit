@@ -17,7 +17,13 @@ final class FarmSessions {
                 count,
                 radius,
                 false,
-                new FarmTargets(spirit.level(), spirit.blockPosition(), radius, FarmJob.TILL, CropKind.ANY));
+                new FarmTargets(
+                        spirit.level(),
+                        spirit.blockPosition(),
+                        radius,
+                        FarmJob.TILL,
+                        CropKind.ANY,
+                        spirit.protectionGate()));
     }
 
     static FarmSession plantCrop(SpiritEntity spirit, CropKind crop, int radius, int count) {
@@ -28,7 +34,8 @@ final class FarmSessions {
                 count,
                 radius,
                 false,
-                new FarmTargets(spirit.level(), spirit.blockPosition(), radius, FarmJob.PLANT, crop));
+                new FarmTargets(
+                        spirit.level(), spirit.blockPosition(), radius, FarmJob.PLANT, crop, spirit.protectionGate()));
     }
 
     static FarmSession harvestCrop(SpiritEntity spirit, CropKind crop, int radius, boolean replant) {
@@ -39,7 +46,13 @@ final class FarmSessions {
                 UNLIMITED,
                 radius,
                 replant,
-                new FarmTargets(spirit.level(), spirit.blockPosition(), radius, FarmJob.HARVEST, crop));
+                new FarmTargets(
+                        spirit.level(),
+                        spirit.blockPosition(),
+                        radius,
+                        FarmJob.HARVEST,
+                        crop,
+                        spirit.protectionGate()));
     }
 
     static FarmSession boneMeal(SpiritEntity spirit, CropKind crop, int radius, int count) {
@@ -50,7 +63,13 @@ final class FarmSessions {
                 count,
                 radius,
                 false,
-                new FarmTargets(spirit.level(), spirit.blockPosition(), radius, FarmJob.BONE_MEAL, crop));
+                new FarmTargets(
+                        spirit.level(),
+                        spirit.blockPosition(),
+                        radius,
+                        FarmJob.BONE_MEAL,
+                        crop,
+                        spirit.protectionGate()));
     }
 
     static FarmSession tillPlot(SpiritEntity spirit, FarmPlot plot) {
@@ -67,7 +86,8 @@ final class FarmSessions {
                         FarmSearch.plotPos(plot, groundY),
                         plot.searchRadius(groundY),
                         plot.grounds(groundY),
-                        FarmJob.TILL));
+                        FarmJob.TILL,
+                        spirit.protectionGate()));
     }
 
     static FarmSession plantPlot(SpiritEntity spirit, CropKind crop, FarmPlot plot) {
@@ -84,6 +104,7 @@ final class FarmSessions {
                         FarmSearch.plotPos(plot, groundY),
                         plot.searchRadius(groundY),
                         plot.grounds(groundY),
-                        FarmJob.PLANT));
+                        FarmJob.PLANT,
+                        spirit.protectionGate()));
     }
 }

@@ -2,11 +2,14 @@ package com.theminespirit.neoforge;
 
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.ModIdentity;
+import com.theminespirit.core.board.TicketPlans;
+import com.theminespirit.core.building.Preset;
 import com.theminespirit.core.reload.DataTables;
 import com.theminespirit.core.reload.TableRegistry;
 import com.theminespirit.core.reload.api.ContentSource;
 import com.theminespirit.core.reload.api.LoadedContent;
 import com.theminespirit.core.reload.api.TableStatus;
+import com.theminespirit.neoforge.board.DescentSync;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -43,6 +46,18 @@ public final class DataReload {
                 LOGGER.info("Таблица '{}' перезагружена", report.id());
             }
         }
+        checkDescent();
+    }
+
+    private static void checkDescent() {
+        Optional<Preset> preset = DataTables.INSTANCE.presets().current().byId(TicketPlans.MINE_DESCENT_SCHEME);
+        if (preset.isEmpty()) {
+            return;
+        }
+        DescentSync.mismatch(
+                        preset.orElseThrow().schematic(),
+                        DataTables.INSTANCE.descent().current())
+                .ifPresent(message -> LOGGER.error("Данные спуска разъехались: {}", message));
     }
 
     public static List<TableRegistry.Report> lastReload() {

@@ -4,6 +4,8 @@ import com.theminespirit.core.mining.MiningTuning;
 import com.theminespirit.core.mining.Vein;
 import com.theminespirit.core.mining.VeinWalker;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.BlockProtection;
+import com.theminespirit.neoforge.policy.ProtectionGate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -13,12 +15,16 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
 final class VeinTargets implements HarvestTargets {
+    private final Level level;
+    private final ProtectionGate gate;
     private final BlockLocator.Search search;
     private final LevelOreView oreView;
     private final Set<BlockCoord> seen = new HashSet<>();
     private int slices;
 
-    VeinTargets(Level level, BlockPos center, int radius, Set<Block> ores) {
+    VeinTargets(Level level, BlockPos center, int radius, Set<Block> ores, ProtectionGate gate) {
+        this.level = level;
+        this.gate = gate;
         this.search = BlockLocator.search(level, center, radius, ores);
         this.oreView = new LevelOreView(level, ores);
     }
@@ -53,6 +59,9 @@ final class VeinTargets implements HarvestTargets {
     private List<BlockCoord> expand(List<BlockPos> found) {
         List<BlockCoord> vein = new ArrayList<>();
         for (BlockPos pos : found) {
+            if (gate.checkBreak(pos, level.getBlockState(pos)) instanceof BlockProtection.Refused) {
+                continue;
+            }
             BlockCoord start = new BlockCoord(pos.getX(), pos.getY(), pos.getZ());
             if (!seen.add(start)) {
                 continue;

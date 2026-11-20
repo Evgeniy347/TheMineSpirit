@@ -6,6 +6,8 @@ import com.theminespirit.core.farming.WaterCells;
 import com.theminespirit.core.farming.api.CropKind;
 import com.theminespirit.core.farming.api.HarvestMethod;
 import com.theminespirit.core.observation.BlockCoord;
+import com.theminespirit.core.policy.BlockProtection;
+import com.theminespirit.neoforge.policy.ProtectionGate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -29,20 +31,24 @@ public final class FarmTargets implements HarvestTargets {
     private final List<BlockCoord> plotGrounds;
     private final WaterScan water;
     private final int groundShift;
+    private final ProtectionGate gate;
     private Hydration hydration;
     private int slices;
     private int plotCursor;
 
-    public FarmTargets(Level level, BlockPos center, int radius, FarmJob job, CropKind crop) {
+    public FarmTargets(Level level, BlockPos center, int radius, FarmJob job, CropKind crop, ProtectionGate gate) {
         this.level = level;
+        this.gate = gate;
         this.search = Optional.of(BlockLocator.search(level, center, radius, blocksFor(job, crop)));
         this.plotGrounds = List.of();
         this.water = job == FarmJob.TILL ? WaterScan.around(level, center, radius) : WaterScan.skipped();
         this.groundShift = job == FarmJob.HARVEST || job == FarmJob.BONE_MEAL ? 1 : 0;
     }
 
-    public FarmTargets(Level level, BlockPos center, int radius, List<BlockCoord> plotGrounds, FarmJob job) {
+    public FarmTargets(
+            Level level, BlockPos center, int radius, List<BlockCoord> plotGrounds, FarmJob job, ProtectionGate gate) {
         this.level = level;
+        this.gate = gate;
         this.search = Optional.empty();
         this.plotGrounds = List.copyOf(plotGrounds);
         this.water = job == FarmJob.TILL ? WaterScan.around(level, center, radius) : WaterScan.skipped();
@@ -60,17 +66,25 @@ public final class FarmTargets implements HarvestTargets {
             List<BlockCoord> portion = plotGrounds.subList(plotCursor, to);
             slices += portion.size();
             plotCursor = to;
-            return portion;
+            return groundsOf(portion.stream()
+                    .map(cell -> new BlockPos(cell.x(), cell.y(), cell.z()))
+                    .filter(pos -> allowed(pos.above()))
+                    .toList());
         }
         BlockLocator.Search active = search.orElseThrow();
         for (int i = 0; i < MAX_SLICES_PER_TICK && !active.done(); i++) {
             slices++;
             List<BlockPos> found = active.step(1);
-            if (!found.isEmpty()) {
-                return groundsOf(found);
+            List<BlockPos> allowed = found.stream().filter(this::allowed).toList();
+            if (!allowed.isEmpty()) {
+                return groundsOf(allowed);
             }
         }
         return List.of();
+    }
+
+    private boolean allowed(BlockPos pos) {
+        return !(gate.checkHarvest(pos, level.getBlockState(pos)) instanceof BlockProtection.Refused);
     }
 
     @Override

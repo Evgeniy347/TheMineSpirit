@@ -26,18 +26,14 @@ class More5InputsTests {
                 Map.of(),
                 GraphFacts.empty());
 
-        GraphState next = More5Inputs.events(state, Set.of("more5_mine_dark", "more5_wood_drops"));
+        GraphState next = More5Inputs.events(state, Set.of("more5_route_blocked", "more5_wood_drops"));
 
         assertTrue(next.events().contains("night"), "Вход области не теряет события других сборщиков");
-        assertTrue(next.events().contains("more5_mine_dark"), "Тёмная шахта добавляется к событиям");
+        assertTrue(
+                next.events().contains("more5_route_blocked"),
+                "Событие области добавляется к событиям: без этого сборщик теряет сигнал и граф не ставит работу; "
+                        + "при смене More5Inputs.events проверь наличие more5_route_blocked");
         assertTrue(next.events().contains("more5_wood_drops"), "Дропы рубки добавляются к событиям");
         assertEquals(state.facts(), next.facts(), "Сборщик не подменяет факты графа");
-    }
-
-    @Test
-    void darkMineCells_BelowMinimum_AreNotReported() {
-        assertEquals(0, More5Inputs.darkMineCells(0), "Светлая шахта работ не требует");
-        assertEquals(0, More5Inputs.darkMineCells(3), "Пара тёмных клеток — ещё не повод строить освещение");
-        assertEquals(4, More5Inputs.darkMineCells(4), "Порог тёмных клеток шахты даёт событие");
     }
 }

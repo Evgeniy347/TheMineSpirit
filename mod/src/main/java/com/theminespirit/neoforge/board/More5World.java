@@ -25,11 +25,8 @@ final class More5World {
     private static final int GROW_BELOW = 2;
     private static final int GROW_ABOVE = 3;
     private static final int GROW_LIGHT = 9;
-    private static final int MINE_BELOW = 16;
-    private static final int DARK_LIGHT = 8;
     private static final String SAPLINGS = "#saplings";
     private static final String BONE_MEAL = "bone_meal";
-    private static final String MINE = "mine";
     private static final String FURNACE = "furnace";
 
     private More5World() {}
@@ -60,7 +57,6 @@ final class More5World {
         int shortage = More5Rules.buildShortage(state.materials(), state.stock(), built(state));
         int broken = More5Store.get(level).recentBreaks(level.getGameTime()).size() + carriedBlocks(level, scan.home());
         int cut = cutRoutes(level, facts, scan.home());
-        int darkMine = More5Inputs.darkMineCells(darkAroundMine(level, facts));
         int wood = More5Rules.woodDrops(around.drops().keySet(), saplings(graph));
         return new More5Rules.Signals(
                 growth.darkCrops(),
@@ -73,7 +69,6 @@ final class More5World {
                 shortage,
                 broken,
                 cut,
-                darkMine,
                 wood);
     }
 
@@ -188,34 +183,6 @@ final class More5World {
             line.add(fluid);
         }
         return line;
-    }
-
-    private static int darkAroundMine(ServerLevel level, GraphFacts facts) {
-        GraphFacts.Building mine = facts.buildings().get(MINE);
-        if (mine == null || mine.position() == null) {
-            return 0;
-        }
-        BlockPos center = new BlockPos(
-                mine.position().x(), mine.position().y(), mine.position().z());
-        int dark = 0;
-        for (int dx = -BoardConfig.current().facts().mineRadius();
-                dx <= BoardConfig.current().facts().mineRadius();
-                dx++) {
-            for (int dz = -BoardConfig.current().facts().mineRadius();
-                    dz <= BoardConfig.current().facts().mineRadius();
-                    dz++) {
-                for (int dy = -MINE_BELOW; dy <= 0; dy++) {
-                    BlockPos at = center.offset(dx, dy, dz);
-                    if (!level.isLoaded(at) || !level.getBlockState(at).isAir()) {
-                        continue;
-                    }
-                    if (!level.getBlockState(at.below()).isAir() && level.getMaxLocalRawBrightness(at) < DARK_LIGHT) {
-                        dark++;
-                    }
-                }
-            }
-        }
-        return dark;
     }
 
     private static Set<String> saplings(SupplyGraph graph) {

@@ -10,7 +10,6 @@ public final class More5Rules {
     public static final long BROKEN_WINDOW_TICKS = 12_000L;
     public static final String FUEL = "#more5_fuel";
     public static final int ROUTE_FLUID_WIDTH = 2;
-    public static final int MINE_DARK_MIN = 4;
     private static final int FUEL_FLOOR = 16;
     private static final int FUEL_PER_FURNACE = 8;
 
@@ -25,7 +24,6 @@ public final class More5Rules {
             int buildingShortage,
             int mobBrokenBlocks,
             int cutRoutes,
-            int darkMineCells,
             int woodDrops) {
         public Signals {
             for (Map.Entry<String, Integer> count : Map.ofEntries(
@@ -38,7 +36,6 @@ public final class More5Rules {
                             Map.entry("нехватки стройматериалов", buildingShortage),
                             Map.entry("блоков, сломанных мобами", mobBrokenBlocks),
                             Map.entry("перерезанных путей", cutRoutes),
-                            Map.entry("тёмных клеток шахты", darkMineCells),
                             Map.entry("дропов после рубки", woodDrops))
                     .entrySet()) {
                 if (count.getValue() < 0) {
@@ -54,7 +51,6 @@ public final class More5Rules {
     public static Set<String> events(Signals signals) {
         Set<String> events = new LinkedHashSet<>();
         add(events, signals.darkCrops() > 0, "more5_crops_dark");
-        add(events, signals.darkCrops() > 0, "more5_crops_dark");
         add(events, signals.darkSaplings() > 0, "more5_saplings_dark");
         add(events, signals.dryCrops() > 0, "more5_crops_dry");
         add(events, signals.unfedGrowth() > 0, "more5_growth_unfed");
@@ -62,7 +58,6 @@ public final class More5Rules {
         add(events, signals.buildingShortage() > 0, "more5_build_shortage");
         add(events, signals.mobBrokenBlocks() > 0, "more5_mob_broken");
         add(events, signals.cutRoutes() > 0, "more5_route_blocked");
-        add(events, signals.darkMineCells() > 0, "more5_mine_dark");
         add(events, signals.woodDrops() > 0, "more5_wood_drops");
         return Set.copyOf(events);
     }

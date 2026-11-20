@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.engine.ScriptInstance;
 import com.theminespirit.core.engine.ScriptResult;
 import com.theminespirit.core.engine.ScriptStatus;
@@ -22,6 +23,7 @@ public final class PillarUpScript implements ScriptInstance {
     private int returned;
     private ScriptStatus outcome = ScriptStatus.RUNNING;
     private String failureReason;
+    private FailureFact failureFact;
 
     public PillarUpScript(SpiritEntity spirit, PillarUpParams params) {
         this.spirit = spirit;
@@ -43,10 +45,14 @@ public final class PillarUpScript implements ScriptInstance {
                 case RUNNING -> ScriptStatus.RUNNING;
                 case DONE -> {
                     returned = dismantler.returned();
-                    outcome = ScriptStatus.SUCCEEDED;
+                    outcome = failureReason == null ? ScriptStatus.SUCCEEDED : ScriptStatus.FAILED;
                     yield outcome;
                 }
-                case FAILED -> fail(dismantler.failureReason());
+                case FAILED ->
+                    fail(
+                            failureReason == null
+                                    ? dismantler.failureReason()
+                                    : failureReason + "; уборка столба: " + dismantler.failureReason());
             };
         }
         if (column == null && !startColumn()) {
@@ -65,7 +71,15 @@ public final class PillarUpScript implements ScriptInstance {
                 dismantler = new PillarDismantler(spirit, topDown(column.cells()), column.lease());
                 yield ScriptStatus.RUNNING;
             }
-            case FAILED -> fail(column.failureReason());
+            case FAILED -> {
+                failureReason = column.failureReason();
+                failureFact = column.failureFact();
+                if (column.cells().isEmpty()) {
+                    yield fail(failureReason);
+                }
+                dismantler = new PillarDismantler(spirit, topDown(column.cells()), column.lease());
+                yield ScriptStatus.RUNNING;
+            }
         };
     }
 
@@ -127,6 +141,11 @@ public final class PillarUpScript implements ScriptInstance {
     @Override
     public String failureReason() {
         return failureReason;
+    }
+
+    @Override
+    public Optional<FailureFact> failureFact() {
+        return Optional.ofNullable(failureFact);
     }
 
     @Override

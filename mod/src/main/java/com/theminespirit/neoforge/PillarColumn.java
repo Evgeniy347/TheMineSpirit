@@ -1,6 +1,7 @@
 package com.theminespirit.neoforge;
 
 import com.theminespirit.core.building.PillarBase;
+import com.theminespirit.core.building.PillarHeadroom;
 import com.theminespirit.core.engine.FailureFact;
 import com.theminespirit.core.movement.api.CellCentering;
 import com.theminespirit.core.observation.BlockCoord;
@@ -9,6 +10,7 @@ import com.theminespirit.core.town.PlotProtection;
 import com.theminespirit.neoforge.lease.LeaseRun;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;
@@ -42,6 +44,7 @@ final class PillarColumn {
 
     private int built;
     private int stallTicks;
+    private boolean headChecked;
     private Outcome outcome = Outcome.RUNNING;
     private String failureReason;
     private @Nullable FailureFact failureFact;
@@ -111,6 +114,18 @@ final class PillarColumn {
             outcome = Outcome.BUILT;
             return outcome;
         }
+        if (!headChecked) {
+            headChecked = true;
+            Optional<PillarHeadroom.Blockage> blocked =
+                    PillarHeadroom.firstBlocked(view(), new BlockCoord(baseX, baseY, baseZ), height);
+            if (blocked.isPresent()) {
+                PillarHeadroom.Blockage at = blocked.orElseThrow();
+                return fail(
+                        "над столбом " + at.block() + " в " + at.cell() + ": подъём на " + height
+                                + " блоков невозможен, нужен другой столб или снос помехи",
+                        FailureFact.NO_PATH);
+            }
+        }
         BlockPos target = new BlockPos(baseX, baseY + built, baseZ);
         String danger = danger(target);
         if (danger != null) {
@@ -127,10 +142,31 @@ final class PillarColumn {
                     + ", на земле " + spirit.onGround() + ", столб от " + baseX + "," + baseY + "," + baseZ
                     + ", построено " + built + "): вероятно, потолок над столбом");
         }
-        if (spirit.onGround() || (waterOk && spirit.isInWater())) {
+        if (spirit.onGround() || spirit.verticalCollisionBelow || (waterOk && spirit.isInWater())) {
             spirit.getJumpControl().jump();
         }
         return Outcome.RUNNING;
+    }
+
+    private PillarHeadroom.View view() {
+        return new PillarHeadroom.View() {
+            @Override
+            public String block(BlockCoord at) {
+                return BlockStates.idOf(level.getBlockState(new BlockPos(at.x(), at.y(), at.z())));
+            }
+
+            @Override
+            public boolean replaceable(BlockCoord at) {
+                BlockState state = level.getBlockState(new BlockPos(at.x(), at.y(), at.z()));
+                return state.isAir() || state.canBeReplaced();
+            }
+
+            @Override
+            public boolean fluid(BlockCoord at) {
+                return !level.getFluidState(new BlockPos(at.x(), at.y(), at.z()))
+                        .isEmpty();
+            }
+        };
     }
 
     private void keepCentered() {

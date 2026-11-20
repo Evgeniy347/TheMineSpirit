@@ -101,6 +101,7 @@ public final class MineBuildGameTests {
         }
         SpiritEntity spirit = miner(helper);
         spirit.getInventory().setItem(1, new ItemStack(Items.COBBLESTONE, 64));
+        helper.setBlock(step(3, 2), Blocks.TORCH);
         SpiritRun run = SpiritRun.launch(helper, spirit, descent(helper), SETTLE_TICKS);
 
         helper.succeedWhen(() -> {

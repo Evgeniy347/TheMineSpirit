@@ -3,6 +3,9 @@ package com.theminespirit.core.board;
 import static com.theminespirit.core.board.TicketPlans.*;
 
 import com.theminespirit.core.base.NamespacedId;
+import com.theminespirit.core.building.MineLayout;
+import com.theminespirit.core.building.PresetLibrary;
+import com.theminespirit.core.building.api.BuildRotation;
 import com.theminespirit.core.mining.api.OreKind;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.FallbackNode;
@@ -11,6 +14,7 @@ import com.theminespirit.core.plan.SequenceNode;
 import com.theminespirit.core.plan.TaskNode;
 import com.theminespirit.core.script.api.CatalogLimits;
 import com.theminespirit.core.town.PlotLeveling;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -85,25 +89,35 @@ final class TicketStructurePlans {
         BlockCoord origin = TicketPlans.mineDescentOrigin(target);
         int x = origin.x();
         int z = origin.z();
-        return sequence(
-                new FallbackNode(List.of(
-                        gotoPoint(new BlockCoord(x, target.target().y(), z)),
-                        new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))),
-                takeFloor("minecraft:cobblestone"),
-                takeFloor(NamespacedId.MINECRAFT + PlotLeveling.DEFAULT_BLOCK),
-                new ScriptCall(
-                        BUILD_SCHEMATIC,
-                        Map.of(
-                                FILE,
-                                MINE_DESCENT_SCHEME,
-                                "x",
-                                x,
-                                "y",
-                                origin.y(),
-                                "z",
-                                z,
-                                "rotation",
-                                MINE_DESCENT_ROTATION)));
+        List<TaskNode> steps = new ArrayList<>();
+        steps.add(new FallbackNode(List.of(
+                gotoPoint(new BlockCoord(x, target.target().y(), z)),
+                new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
+        steps.add(takeFloor("minecraft:cobblestone"));
+        steps.add(takeFloor(NamespacedId.MINECRAFT + PlotLeveling.DEFAULT_BLOCK));
+        int torches = descentTorches(origin);
+        if (torches > 0) {
+            steps.add(new FallbackNode(List.of(
+                    new SequenceNode(new ArrayList<>(TorchPlans.supply(torches))),
+                    new ScriptCall(WAIT, Map.of(TICKS, CatalogLimits.WAIT_TICKS_MIN)))));
+        }
+        steps.add(new ScriptCall(
+                BUILD_SCHEMATIC,
+                Map.of(FILE, MINE_DESCENT_SCHEME, "x", x, "y", origin.y(), "z", z, "rotation", MINE_DESCENT_ROTATION)));
+        return new SequenceNode(List.copyOf(steps));
+    }
+
+    private static int descentTorches(BlockCoord origin) {
+        return PresetLibrary.current()
+                .byId(MINE_DESCENT_SCHEME)
+                .map(preset -> MineLayout.place(
+                        preset.schematic(),
+                        preset.entry(),
+                        origin,
+                        BuildRotation.parse(MINE_DESCENT_ROTATION),
+                        MineLayout.Extent.NONE))
+                .map(layout -> layout.optional().size())
+                .orElse(0);
     }
 
     static TaskNode buildPenLevel(int level, TicketTarget target) {

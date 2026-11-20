@@ -155,3 +155,5 @@ mech/forestry/com/theminespirit/core/forestry/LiveJungleStandTests.java # жив
 mech/mining/com/theminespirit/core/mining/StandSpotsReachTests.java # досягаемость стоянки из SpiritReach: границы глубины и предел смещения, отдельно от StandSpotsTests (300 строк)
 mech/forestry/com/theminespirit/core/forestry/TreeCanopyTests.java # план кроны: геометрия своей и соседней листвы, сюита рубки ForestryScenarioTests уже 297 строк (предел 300)
 mech/mining/com/theminespirit/core/mining/MiningPlannerStandTests.java # стоянки планировщика: MiningPlannerTests упёрся в 300 строк после сведения пакета, та же логика выбора стоянки
+
+mech/building/com/theminespirit/core/building/PillarHeadroomTests.java # чистая функция потолка столба: миру не нужен, сюита FillScenarioTests остаётся одна
