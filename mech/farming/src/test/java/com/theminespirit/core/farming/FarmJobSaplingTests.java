@@ -19,4 +19,15 @@ class FarmJobSaplingTests {
                 FarmJob.HARVEST.bonemealSaplings(CropKind.ANY),
                 "Саженцы — только забота костной муки, сбор урожая их не трогает");
     }
+
+    @Test
+    void bonemealSapling_SaplingCell_OnlyBoneMeal() {
+        assertTrue(
+                FarmJob.BONE_MEAL.bonemealSapling(true),
+                "Костная мука растит саженец и без культуры в клетке: сад не ждёт зрелого посева");
+        assertFalse(
+                FarmJob.BONE_MEAL.bonemealSapling(false),
+                "Обычную клетку костная мука растит по культуре, а не как саженец");
+        assertFalse(FarmJob.PLANT.bonemealSapling(true), "Посадка не подкармливает саженцы: у неё другая работа");
+    }
 }

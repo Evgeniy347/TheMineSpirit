@@ -44,6 +44,10 @@ public enum FarmJob {
         return this == BONE_MEAL && filter == CropKind.ANY;
     }
 
+    public boolean bonemealSapling(boolean sapling) {
+        return this == BONE_MEAL && sapling;
+    }
+
     private static boolean isClearForTill(Above above) {
         return above == Above.AIR || above == Above.WEED;
     }

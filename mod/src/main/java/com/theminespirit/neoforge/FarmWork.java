@@ -82,13 +82,16 @@ final class FarmWork {
     }
 
     FarmSession.State act() {
+        BlockPos ground = FarmSearch.posOf(search.ground());
+        if (job.bonemealSapling(view.saplingAt(ground.above()))) {
+            return boneMealNow(ground.above());
+        }
         FarmTile tile = view.tileAt(search.ground());
         if (!job.eligible(tile, crop, targets.hydration().watered(search.ground()))) {
             counters.addIneligible();
             finishTarget();
             return FarmSession.State.PICK;
         }
-        BlockPos ground = FarmSearch.posOf(search.ground());
         return switch (job) {
             case TILL -> tillOrClearWeed(tile, ground);
             case PLANT -> plantNow(ground);

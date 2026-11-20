@@ -13,6 +13,7 @@ import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -126,6 +127,10 @@ public final class LevelFarmView implements FarmView {
 
     public int reads() {
         return reads;
+    }
+
+    public boolean saplingAt(BlockPos pos) {
+        return read(pos).is(BlockTags.SAPLINGS);
     }
 
     private BlockState read(BlockPos pos) {
