@@ -65,7 +65,18 @@ public final class SpiritNavigation extends GroundPathNavigation {
             logNoPath(want, floorLevel);
             return false;
         }
+        logBuilt(want, built);
         return moveTo(built, speed);
+    }
+
+    private void logBuilt(BlockPos want, Path path) {
+        LOGGER.info(
+                "[nav] дух {}: путь к {} — узлов {}, конец {}, из {}",
+                mob.getName().getString(),
+                want.toShortString(),
+                path.getNodeCount(),
+                path.getEndNode() == null ? "-" : path.getEndNode().asBlockPos().toShortString(),
+                mob.blockPosition().toShortString());
     }
 
     private void logNoPath(BlockPos want, int floorLevel) {
