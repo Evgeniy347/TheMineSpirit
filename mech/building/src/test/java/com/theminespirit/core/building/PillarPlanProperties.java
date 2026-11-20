@@ -16,9 +16,17 @@ class PillarPlanProperties {
         int height = Math.floorMod(rawHeight, 32) + 1;
         List<BlockCoord> plan = PillarPlan.plan(height);
 
-        assertEquals(height, plan.size(), "блоков в плане = высота " + height);
+        assertEquals(
+                height,
+                plan.size(),
+                "блоков в плане = высота " + height
+                        + " Иначе тест plan_AnyHeight_CountEqualsHeightAndEveryStepOneAbove перестанет ловить эту поломку. При смене plan_AnyHeight_CountEqualsHeightAndEveryStepOneAbove проверь это утверждение.");
         for (int i = 0; i < plan.size(); i++) {
-            assertEquals(i, plan.get(i).y(), "ступень " + i + " обязана быть на " + i + " блоков выше основания");
+            assertEquals(
+                    i,
+                    plan.get(i).y(),
+                    "ступень " + i + " обязана быть на " + i + " блоков выше основания"
+                            + " Иначе тест plan_AnyHeight_CountEqualsHeightAndEveryStepOneAbove перестанет ловить эту поломку. При смене plan_AnyHeight_CountEqualsHeightAndEveryStepOneAbove проверь это утверждение.");
         }
     }
 
@@ -29,6 +37,9 @@ class PillarPlanProperties {
 
         own.removeAll(PillarPlan.dismantle(height));
 
-        assertTrue(own.isEmpty(), "после разбора высоты " + height + " своих блоков не осталось: " + own);
+        assertTrue(
+                own.isEmpty(),
+                "после разбора высоты " + height + " своих блоков не осталось: " + own
+                        + " Иначе тест dismantle_AnyHeight_RemovesEveryPlannedCell перестанет ловить эту поломку. При смене dismantle_AnyHeight_RemovesEveryPlannedCell проверь это утверждение.");
     }
 }

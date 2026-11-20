@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.inventory.api.JsonResource;
-import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.reload.api.LoadedContent;
 import com.theminespirit.core.reload.api.TableStatus;
 import java.util.ArrayList;
@@ -62,11 +61,13 @@ class PresetLibraryTests {
                 library.size(),
                 "Библиотека обязана прочитать все пресеты, включая фрагменты забора, четыре уровня дома семьи и дома игрока, площадь 1–3, колодец 2, светильники 2–3, три уровня чаровальни, "
                         + "четыре уровня склада, загоны трёх уровней и сад: без них стратегу не из чего "
-                        + "составлять планировку поселения");
+                        + "составлять планировку поселения"
+                        + " Иначе тест parse_RealIndex_LoadsAllPresets перестанет ловить эту поломку. При смене parse_RealIndex_LoadsAllPresets проверь это утверждение.");
         assertEquals(
                 PRESET_IDS,
                 library.ids(),
-                "Состав пресетов обязан совпадать с индексом: пропажа пресета ломает застройку этапа");
+                "Состав пресетов обязан совпадать с индексом: пропажа пресета ломает застройку этапа"
+                        + " При смене parse_RealIndex_LoadsAllPresets проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +78,8 @@ class PresetLibraryTests {
             assertEquals(
                     preset.materials(),
                     PresetLibrary.countMaterials(preset.schematic()),
-                    "У пресета '" + preset.id() + "' материалы обязаны считаться из блоков, а не задаваться вручную");
+                    "У пресета '" + preset.id() + "' материалы обязаны считаться из блоков, а не задаваться вручную"
+                            + " Иначе тест parse_EachRealPreset_PassesLibraryChecks перестанет ловить эту поломку. При смене parse_EachRealPreset_PassesLibraryChecks проверь это утверждение.");
             assertTrue(
                     preset.entry().x() >= 0
                             && preset.entry().x() < preset.sizeX()
@@ -86,10 +88,12 @@ class PresetLibraryTests {
                             && preset.entry().z() >= 0
                             && preset.entry().z() < preset.sizeZ(),
                     "У пресета '" + preset.id() + "' точка входа обязана лежать внутри габаритов, иначе в постройку "
-                            + "не войти: " + preset.entry());
+                            + "не войти: " + preset.entry()
+                            + " При смене parse_EachRealPreset_PassesLibraryChecks проверь это утверждение.");
             assertTrue(
                     preset.stage() >= Preset.STAGE_MIN && preset.stage() <= Preset.STAGE_MAX,
-                    "У пресета '" + preset.id() + "' этап развития обязан быть 0..4, фактически " + preset.stage());
+                    "У пресета '" + preset.id() + "' этап развития обязан быть 0..4, фактически " + preset.stage()
+                            + " Иначе тест parse_EachRealPreset_PassesLibraryChecks перестанет ловить эту поломку. При смене parse_EachRealPreset_PassesLibraryChecks проверь это утверждение.");
         }
     }
 
@@ -100,11 +104,13 @@ class PresetLibraryTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> PresetLibrary.parse(List.of(indexWith("hut"), body)),
-                "Пресет без названия обязан отвергаться: /spirit presets и стратег показывают постройку по имени");
+                "Пресет без названия обязан отвергаться: /spirit presets и стратег показывают постройку по имени"
+                        + " Иначе тест parse_PresetWithoutName_IsRejected перестанет ловить эту поломку. При смене parse_PresetWithoutName_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("name"),
-                "Ошибка обязана называть недостающий ключ name; фактически: " + error.getMessage());
+                "Ошибка обязана называть недостающий ключ name; фактически: " + error.getMessage()
+                        + " Иначе тест parse_PresetWithoutName_IsRejected перестанет ловить эту поломку. При смене parse_PresetWithoutName_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -120,11 +126,13 @@ class PresetLibraryTests {
         IllegalStateException error = assertThrows(
                 IllegalStateException.class,
                 () -> PresetLibrary.parse(List.of(indexWith("post"), body)),
-                "Точка входа, занятая сплошным блоком, обязана отвергаться: сквозь стену не войти");
+                "Точка входа, занятая сплошным блоком, обязана отвергаться: сквозь стену не войти"
+                        + " Иначе тест parse_EntryInsideSolidBlock_IsRejected перестанет ловить эту поломку. При смене parse_EntryInsideSolidBlock_IsRejected проверь это утверждение.");
 
         assertTrue(
                 error.getMessage().contains("вход"),
-                "Ошибка обязана называть точку входа: без неё непонятно, где проём; фактически: " + error.getMessage());
+                "Ошибка обязана называть точку входа: без неё непонятно, где проём; фактически: " + error.getMessage()
+                        + " Иначе тест parse_EntryInsideSolidBlock_IsRejected перестанет ловить эту поломку. При смене parse_EntryInsideSolidBlock_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -140,7 +148,8 @@ class PresetLibraryTests {
         assertThrows(
                 IllegalStateException.class,
                 () -> PresetLibrary.parse(List.of(indexWith("post"), body)),
-                "Точка входа вне габаритов обязана отвергаться: через клетку за постройкой в неё не войти");
+                "Точка входа вне габаритов обязана отвергаться: через клетку за постройкой в неё не войти"
+                        + " Иначе тест parse_EntryOutsideSize_IsRejected перестанет ловить эту поломку. При смене parse_EntryOutsideSize_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -156,12 +165,14 @@ class PresetLibraryTests {
         assertEquals(
                 1,
                 single.materials().get("minecraft:cobblestone"),
-                "Один блок в теле обязан дать один материал: число считается из блоков, а не пишется вручную");
+                "Один блок в теле обязан дать один материал: число считается из блоков, а не пишется вручную"
+                        + " Иначе тест materials_BodyGainsOneBlock_CountsFollowBlocks перестанет ловить эту поломку. При смене materials_BodyGainsOneBlock_CountsFollowBlocks проверь это утверждение.");
         assertEquals(
                 2,
                 doubled.materials().get("minecraft:cobblestone"),
                 "Два блока в теле обязаны дать два материала: ручное число, совпавшее случайно, развалилось бы "
-                        + "на подлоге с лишним блоком");
+                        + "на подлоге с лишним блоком"
+                        + " Иначе тест materials_BodyGainsOneBlock_CountsFollowBlocks перестанет ловить эту поломку. При смене materials_BodyGainsOneBlock_CountsFollowBlocks проверь это утверждение.");
     }
 
     @Test
@@ -175,7 +186,8 @@ class PresetLibraryTests {
                 Map.of("minecraft:oak_door", 1),
                 door.materials(),
                 "Дверь в двух клетках — один предмет: верхнюю половину ставит тот же предмет, иначе сундук демо "
-                        + "и гейт доски требовали бы вдвое больше дверей");
+                        + "и гейт доски требовали бы вдвое больше дверей"
+                        + " При смене materials_DoorTwoCells_CountsOneDoor проверь это утверждение.");
     }
 
     @Test
@@ -202,7 +214,8 @@ class PresetLibraryTests {
                         "fence_gate"),
                 library.byStage(0).stream().map(Preset::id).toList(),
                 "Этап 0 «лагерь выживания» — палисад, факелы, вход в шахту, спуск и ход, первый каменный дом и площадь: по этапу стратег решает, "
-                        + "что строить сейчас");
+                        + "что строить сейчас"
+                        + " Иначе тест byStage_StageZero_ReturnsCampStructures перестанет ловить эту поломку. При смене byStage_StageZero_ReturnsCampStructures проверь это утверждение.");
     }
 
     @Test
@@ -214,7 +227,8 @@ class PresetLibraryTests {
                 library.byTypeAndStage(BuildingType.STORAGE, 1).stream()
                         .map(Preset::id)
                         .toList(),
-                "Склад-хижина обязана находиться одновременно по типу «склад» и этапу 1");
+                "Склад-хижина обязана находиться одновременно по типу «склад» и этапу 1"
+                        + " Иначе тест byIdAndTypeAndStage_StorageHut_MatchesStorageAtStageOne перестанет ловить эту поломку. При смене byIdAndTypeAndStage_StorageHut_MatchesStorageAtStageOne проверь это утверждение.");
     }
 
     @Test
@@ -226,16 +240,19 @@ class PresetLibraryTests {
             assertEquals(
                     level,
                     preset.level(),
-                    "Уровень склада " + level + " обязан нести свой номер: номер отличает ступень постройки");
+                    "Уровень склада " + level + " обязан нести свой номер: номер отличает ступень постройки"
+                            + " Иначе тест requires_StorageLevels_PointAtPreviousLevel перестанет ловить эту поломку. При смене requires_StorageLevels_PointAtPreviousLevel проверь это утверждение.");
             if (level == 1) {
                 assertTrue(
                         preset.requires().isEmpty(),
-                        "Первый уровень склада ничего не требует: предыдущего уровня у него нет");
+                        "Первый уровень склада ничего не требует: предыдущего уровня у него нет"
+                                + " Иначе тест requires_StorageLevels_PointAtPreviousLevel перестанет ловить эту поломку. При смене requires_StorageLevels_PointAtPreviousLevel проверь это утверждение.");
             } else {
                 assertEquals(
                         Optional.of("storage_v" + (level - 1)),
                         preset.requires(),
-                        "Уровень " + level + " обязан требовать предыдущий: без цепочки upgrade перескочил бы ступень");
+                        "Уровень " + level + " обязан требовать предыдущий: без цепочки upgrade перескочил бы ступень"
+                                + " Иначе тест requires_StorageLevels_PointAtPreviousLevel перестанет ловить эту поломку. При смене requires_StorageLevels_PointAtPreviousLevel проверь это утверждение.");
             }
         }
     }
@@ -249,9 +266,13 @@ class PresetLibraryTests {
         assertEquals(
                 2,
                 materials.get("minecraft:cobblestone"),
-                "Повтор одного блока обязан суммироваться: иначе нехватка материала на стройке");
+                "Повтор одного блока обязан суммироваться: иначе нехватка материала на стройке"
+                        + " При смене countMaterials_DuplicateBlockId_SumsCounts проверь это утверждение.");
         assertEquals(
-                1, materials.get("minecraft:oak_planks"), "Второй вид блока обязан идти отдельной записью с числом 1");
+                1,
+                materials.get("minecraft:oak_planks"),
+                "Второй вид блока обязан идти отдельной записью с числом 1"
+                        + " Иначе тест countMaterials_DuplicateBlockId_SumsCounts перестанет ловить эту поломку. При смене countMaterials_DuplicateBlockId_SumsCounts проверь это утверждение.");
     }
 
     @Test
@@ -263,169 +284,12 @@ class PresetLibraryTests {
         assertEquals(
                 133,
                 paths.size(),
-                "Индекс обязан назвать по телу на каждый из тридцати четырёх пресетов: пропуск тела оставил бы пресет без схемы");
+                "Индекс обязан назвать по телу на каждый из тридцати четырёх пресетов: пропуск тела оставил бы пресет без схемы"
+                        + " Иначе тест bodyPaths_RealIndex_ReturnsOnePathPerPreset перестанет ловить эту поломку. При смене bodyPaths_RealIndex_ReturnsOnePathPerPreset проверь это утверждение.");
         assertEquals(
                 PresetLibrary.SCHEMATICS_ROOT + "storage_hut.txt",
                 paths.get(2),
-                "Порядок тел обязан совпадать с порядком пресетов в индексе: иначе метаданные склеятся с чужой схемой");
-    }
-
-    @Test
-    void byId_Pen4x5_FourByFiveWithGate() {
-        Preset pen = loadReal().byId("pen_4x5").orElseThrow();
-
-        assertEquals(
-                List.of(4, 5),
-                List.of(pen.sizeX(), pen.sizeZ()),
-                "Загон уровня 1 — минимум 4×5: меньший загон не вместит пару животных для разведения");
-        assertTrue(
-                pen.schematic().blocks().stream()
-                        .anyMatch(block -> block.block().contains("fence_gate")),
-                "Загон уровня 1 обязан иметь калитку: без неё животное не загнать");
-    }
-
-    @Test
-    void entry_WellWaterCenter_IsAboveWater() {
-        Preset well = loadReal().byId("well").orElseThrow();
-
-        assertEquals(
-                new BlockCoord(1, 1, 1),
-                well.entry(),
-                "У колодца вход — клетка над водой: спуск к воде, а не в сплошной блок");
-    }
-
-    @Test
-    void byType_Craft_ReturnsEnchantRoomLevels() {
-        PresetLibrary library = loadReal();
-
-        assertEquals(
-                List.of(
-                        "enchant_room_v1",
-                        "enchant_room_v2",
-                        "enchant_room_v3",
-                        "lumber_yard_1",
-                        "lumber_yard_2",
-                        "workshop_1",
-                        "workshop_2",
-                        "workshop_3",
-                        "forge_1",
-                        "weaver_1",
-                        "forge_2",
-                        "forge_3",
-                        "weaver_2",
-                        "alchemy_1",
-                        "alchemy_2",
-                        "alchemy_3",
-                        "alchemy_4",
-                        "enchant_room_v4"),
-                library.byType(BuildingType.CRAFT).stream().map(Preset::id).toList(),
-                "Чаровальня обязана лежать в типе «ремесло»: по типу стратег находит постройку под стол чарования");
-    }
-
-    @Test
-    void requires_EnchantRoomV2_PointsAtLevelOne() {
-        PresetLibrary library = loadReal();
-
-        Preset level1 = library.byId("enchant_room_v1").orElseThrow();
-        Preset level2 = library.byId("enchant_room_v2").orElseThrow();
-
-        assertEquals(
-                1, level1.level(), "Первый уровень чаровальни несёт номер 1: номер называет ступень внутри постройки");
-        assertTrue(level1.requires().isEmpty(), "Первый уровень ничего не требует: предыдущего уровня у него нет");
-        assertEquals(
-                2,
-                level2.level(),
-                "Второй уровень обязан нести номер 2: номер отличает ступень внутри одной постройки");
-        assertEquals(
-                Optional.of("enchant_room_v1"),
-                level2.requires(),
-                "Второй уровень обязан требовать первый: условие доступности «предыдущий уровень построен»");
-    }
-
-    @Test
-    void byIdAndLevel_EnchantRoom_LevelsAreMonotone() {
-        PresetLibrary library = loadReal();
-
-        for (Preset preset : library.byType(BuildingType.CRAFT)) {
-            if (preset.requires().isPresent()) {
-                Preset previous = library.byId(preset.requires().get()).orElseThrow();
-                assertTrue(
-                        previous.level() > Preset.LEVEL_NONE && previous.level() < preset.level(),
-                        "У пресета '" + preset.id() + "' предыдущий уровень '" + previous.id()
-                                + "' обязан иметь меньший номер: иначе цепочка уровней не растёт");
-            }
-        }
-    }
-
-    @Test
-    void parse_RequiresUnknownPreset_IsRejected() {
-        LoadedContent body = bodyContent(body("""
-                name: Зал
-                type: craft
-                stage: 2
-                level: 2
-                requires: ghost
-                size: 2x1x1
-                entrance: 0,0,0
-                """, ".C"));
-
-        IllegalStateException error = assertThrows(
-                IllegalStateException.class,
-                () -> PresetLibrary.parse(List.of(indexWith("room"), body)),
-                "Требование неизвестного пресета обязано отвергаться: правило «предыдущий уровень построен» "
-                        + "ссылается на постройку, которой нет");
-
-        assertTrue(
-                error.getMessage().contains("ghost"),
-                "Ошибка обязана называть неизвестный id требования: без него непонятно, что чинить; фактически: "
-                        + error.getMessage());
-    }
-
-    @Test
-    void realIndex_EnchantRoomFinalLevel_HasScheme() {
-        PresetLibrary library = loadReal();
-
-        assertEquals(
-                List.of(),
-                library.planned(),
-                "Все уровни чаровальни описаны схемами: запланированный уровень без схемы остаётся запасным "
-                        + "механизмом, а не способом держать финал на бумаге");
-        Preset finalLevel = library.byId("enchant_room_v3").orElseThrow();
-        assertEquals(3, finalLevel.level(), "Финальный уровень чаровальни несёт номер 3");
-        assertEquals(
-                Optional.of("enchant_room_v2"),
-                finalLevel.requires(),
-                "Финальный уровень требует второй: его ставят, только когда предыдущий построен");
-        assertEquals(
-                BuildingType.CRAFT,
-                finalLevel.type(),
-                "Чаровальня остаётся постройкой ремесла: от типа зависят правила схем");
-    }
-
-    @Test
-    void parse_PlannedUnknownRequires_IsRejected() {
-        LoadedContent index = new LoadedContent(
-                "{\"version\":2,\"presets\":[\"hut\"],"
-                        + "\"planned\":[{\"level\":3,\"name\":\"Финал\",\"requires\":\"ghost\"}]}",
-                "тестовый индекс",
-                TableStatus.Source.BUILTIN);
-        LoadedContent body = bodyContent(body("""
-                                 name: Хижина
-                                 type: housing
-                                 stage: 0
-                                 size: 2x1x1
-                                 entrance: 0,0,0
-                                 """, ".#"));
-
-        IllegalStateException error = assertThrows(
-                IllegalStateException.class,
-                () -> PresetLibrary.parse(List.of(index, body)),
-                "Запланированный уровень с неизвестным требованием обязан отвергаться: иначе финал числится "
-                        + "доступным без предыдущей постройки");
-
-        assertTrue(
-                error.getMessage().contains("ghost"),
-                "Ошибка обязана называть неизвестный id требования запланированного уровня; фактически: "
-                        + error.getMessage());
+                "Порядок тел обязан совпадать с порядком пресетов в индексе: иначе метаданные склеятся с чужой схемой"
+                        + " При смене bodyPaths_RealIndex_ReturnsOnePathPerPreset проверь это утверждение.");
     }
 }

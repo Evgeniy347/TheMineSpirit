@@ -42,14 +42,20 @@ class ReachStandsLiveTests {
                 candidate -> !candidate.equals(BEHIND_WALL),
                 8);
 
-        assertTrue(stand.isPresent(), "у живого склада есть достижимая стоянка: " + stand);
+        assertTrue(
+                stand.isPresent(),
+                "у живого склада есть достижимая стоянка: " + stand
+                        + " Иначе тест liveWarehouseStand_BehindBarrier_SkippedForReachableStand перестанет ловить эту поломку. При смене liveWarehouseStand_BehindBarrier_SkippedForReachableStand проверь это утверждение.");
         assertNotEquals(
                 BEHIND_WALL,
                 stand.orElseThrow(),
                 "стоянка -171,70,-488 за преградой не выбирается: дух не идёт в тупик "
-                        + "(observe10 A6: «путь упёрся в тупик, стоянка за преградой»), фактически " + stand);
+                        + "(observe10 A6: «путь упёрся в тупик, стоянка за преградой»), фактически " + stand
+                        + " Иначе тест liveWarehouseStand_BehindBarrier_SkippedForReachableStand перестанет ловить эту поломку. При смене liveWarehouseStand_BehindBarrier_SkippedForReachableStand проверь это утверждение.");
         assertTrue(
-                stand.orElseThrow().equals(AROUND), "выбирается ближайшая достижимая стоянка вокруг сундука: " + stand);
+                stand.orElseThrow().equals(AROUND),
+                "выбирается ближайшая достижимая стоянка вокруг сундука: " + stand
+                        + " Иначе тест liveWarehouseStand_BehindBarrier_SkippedForReachableStand перестанет ловить эту поломку. При смене liveWarehouseStand_BehindBarrier_SkippedForReachableStand проверь это утверждение.");
     }
 
     @Test
@@ -76,13 +82,19 @@ class ReachStandsLiveTests {
         Optional<BlockCoord> second = search.nextCandidate();
 
         assertTrue(
-                second.isPresent(), "После отказа от первой стоянки поиск обязан назвать следующую, а не закончиться");
+                second.isPresent(),
+                "После отказа от первой стоянки поиск обязан назвать следующую, а не закончиться"
+                        + " Иначе тест search_SkippedStand_IsNotProbedAtNextTick перестанет ловить эту поломку. При смене search_SkippedStand_IsNotProbedAtNextTick проверь это утверждение.");
         assertNotEquals(
                 first,
                 second.orElseThrow(),
                 "Отказанная стоянка запоминается: иначе один и тот же дорогой поиск пути повторяется каждый тик "
-                        + "(сервер 0.1.3614: UndoLeaseScript держал поток 1,5 с на тик)");
-        assertTrue(tried.contains(first), "Отказ попал в общий список проверенных стоянок подхода");
+                        + "(сервер 0.1.3614: UndoLeaseScript держал поток 1,5 с на тик)"
+                        + " При смене search_SkippedStand_IsNotProbedAtNextTick проверь это утверждение.");
+        assertTrue(
+                tried.contains(first),
+                "Отказ попал в общий список проверенных стоянок подхода"
+                        + " Иначе тест search_SkippedStand_IsNotProbedAtNextTick перестанет ловить эту поломку. При смене search_SkippedStand_IsNotProbedAtNextTick проверь это утверждение.");
     }
 
     @Test
@@ -107,6 +119,7 @@ class ReachStandsLiveTests {
 
         assertTrue(
                 stand.isEmpty(),
-                "Ни одна стоянка не достижима пешком — честный отказ, а не первая стоянка за преградой: " + stand);
+                "Ни одна стоянка не достижима пешком — честный отказ, а не первая стоянка за преградой: " + stand
+                        + " Иначе тест livePit_AllStandsBehindBarrier_NoStandInsteadOfFirst перестанет ловить эту поломку. При смене livePit_AllStandsBehindBarrier_NoStandInsteadOfFirst проверь это утверждение.");
     }
 }

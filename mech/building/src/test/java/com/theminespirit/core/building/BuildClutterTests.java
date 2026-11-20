@@ -23,7 +23,8 @@ class BuildClutterTests {
         assertEquals(
                 List.of(1, 2),
                 BuildClutter.junk(inventory, NEEDED, Set.of()),
-                "дроп мобов (гнилая плоть, кость) стройке не нужен — его слоты освобождаются, материалы остаются");
+                "дроп мобов (гнилая плоть, кость) стройке не нужен — его слоты освобождаются, материалы остаются"
+                        + " Иначе тест junk_MobDropsBesideMaterials_FreesOnlyDrops перестанет ловить эту поломку. При смене junk_MobDropsBesideMaterials_FreesOnlyDrops проверь это утверждение.");
     }
 
     @Test
@@ -32,7 +33,8 @@ class BuildClutterTests {
         assertEquals(
                 List.of(1),
                 BuildClutter.junk(inventory, NEEDED, Set.of(0)),
-                "набор духа (кирка) в обычной игре не отдаётся, даже если стройке не нужен");
+                "набор духа (кирка) в обычной игре не отдаётся, даже если стройке не нужен"
+                        + " Иначе тест junk_KeptSlot_StaysEvenIfNotNeeded перестанет ловить эту поломку. При смене junk_KeptSlot_StaysEvenIfNotNeeded проверь это утверждение.");
     }
 
     @Test
@@ -42,7 +44,8 @@ class BuildClutterTests {
         assertEquals(
                 10,
                 BuildClutter.toRelease(junk, 0, 10).size(),
-                "инвентарь, забитый дропом, освобождает под порцию в 10 стопок 10 слотов: заход не падает");
+                "инвентарь, забитый дропом, освобождает под порцию в 10 стопок 10 слотов: заход не падает"
+                        + " Иначе тест toRelease_FullInventoryOfJunk_FreesWhatThePortionNeeds перестанет ловить эту поломку. При смене toRelease_FullInventoryOfJunk_FreesWhatThePortionNeeds проверь это утверждение.");
     }
 
     @Test
@@ -51,7 +54,8 @@ class BuildClutterTests {
         assertEquals(
                 List.of(3, 5),
                 BuildClutter.toRelease(junk, 0, 30),
-                "лишнего меньше, чем не хватает слотов, — освобождается всё лишнее, материалы не трогаются");
+                "лишнего меньше, чем не хватает слотов, — освобождается всё лишнее, материалы не трогаются"
+                        + " Иначе тест toRelease_PortionLargerThanJunk_FreesAllJunk перестанет ловить эту поломку. При смене toRelease_PortionLargerThanJunk_FreesAllJunk проверь это утверждение.");
     }
 
     @Test
@@ -60,6 +64,7 @@ class BuildClutterTests {
                 List.of(),
                 BuildClutter.toRelease(List.of(0, 1), 2, 10),
                 "есть свободные слоты — заход идёт порцией в них (заходы с двумя свободными слотами, решение 20.10), "
-                        + "лишнее не выбрасывается и не носится на склад зря");
+                        + "лишнее не выбрасывается и не носится на склад зря"
+                        + " Иначе тест toRelease_SomeFreeSlots_KeepsJunk перестанет ловить эту поломку. При смене toRelease_SomeFreeSlots_KeepsJunk проверь это утверждение.");
     }
 }

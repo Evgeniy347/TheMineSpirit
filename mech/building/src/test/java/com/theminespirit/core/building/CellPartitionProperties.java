@@ -30,7 +30,11 @@ class CellPartitionProperties {
             @ForAll("cells") List<BlockCoord> cells, @ForAll @IntRange(min = 1, max = 6) int parts) {
         List<List<BlockCoord>> shares = CellPartition.split(cells, parts);
 
-        assertEquals(parts, shares.size(), "Долей ровно столько, сколько частей");
+        assertEquals(
+                parts,
+                shares.size(),
+                "Долей ровно столько, сколько частей"
+                        + " Иначе тест split_AnyCellsAnyParts_DisjointAndFullCoverage перестанет ловить эту поломку. При смене split_AnyCellsAnyParts_DisjointAndFullCoverage проверь это утверждение.");
 
         List<BlockCoord> merged = new ArrayList<>();
         for (List<BlockCoord> share : shares) {
@@ -40,11 +44,13 @@ class CellPartitionProperties {
                 cells.size(),
                 merged.size(),
                 "Доли вместе содержат столько клеток, сколько во входе: клетка не потеряна и не удвоена, то есть "
-                        + "доли не пересекаются");
+                        + "доли не пересекаются"
+                        + " Иначе тест split_AnyCellsAnyParts_DisjointAndFullCoverage перестанет ловить эту поломку. При смене split_AnyCellsAnyParts_DisjointAndFullCoverage проверь это утверждение.");
         assertEquals(
                 new HashSet<>(cells),
                 new HashSet<>(merged),
-                "Объединение долей совпадает со входом: полнота разбиения");
+                "Объединение долей совпадает со входом: полнота разбиения"
+                        + " Иначе тест split_AnyCellsAnyParts_DisjointAndFullCoverage перестанет ловить эту поломку. При смене split_AnyCellsAnyParts_DisjointAndFullCoverage проверь это утверждение.");
     }
 
     @Property
@@ -53,6 +59,7 @@ class CellPartitionProperties {
         assertEquals(
                 CellPartition.split(cells, parts),
                 CellPartition.split(cells, parts),
-                "Тот же вход даёт то же разбиение: доли стабильны между пересборками отряда");
+                "Тот же вход даёт то же разбиение: доли стабильны между пересборками отряда"
+                        + " Иначе тест split_AnyCellsAnyParts_Deterministic перестанет ловить эту поломку. При смене split_AnyCellsAnyParts_Deterministic проверь это утверждение.");
     }
 }

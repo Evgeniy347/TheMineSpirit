@@ -18,7 +18,8 @@ class DoorPairsTests {
         assertFalse(
                 problem.isPresent(),
                 "Две створки с петлями по краям проёма — это правильная двойная дверь, сторож не должен ругаться: "
-                        + problem);
+                        + problem
+                        + " Иначе тест problem_TwoAdjacentDoorsWithCorrectHinges_IsAccepted перестанет ловить эту поломку. При смене problem_TwoAdjacentDoorsWithCorrectHinges_IsAccepted проверь это утверждение.");
     }
 
     @Test
@@ -26,7 +27,10 @@ class DoorPairsTests {
         Optional<String> problem =
                 DoorPairs.problem(schematic(door(0, 0, 0, "south", "right"), door(1, 0, 0, "east", "left")));
 
-        assertTrue(problem.isPresent(), "Две двери рядом обязаны смотреть в одну сторону, иначе это не дверная пара");
+        assertTrue(
+                problem.isPresent(),
+                "Две двери рядом обязаны смотреть в одну сторону, иначе это не дверная пара"
+                        + " При смене problem_TwoAdjacentDoorsLookOppositeWays_IsReported проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +40,8 @@ class DoorPairsTests {
 
         assertTrue(
                 problem.isPresent(),
-                "Ряд из трёх створок не делится на пары: у последней двери нет пары, сторож обязан это назвать");
+                "Ряд из трёх створок не делится на пары: у последней двери нет пары, сторож обязан это назвать"
+                        + " Иначе тест problem_ThreeDoorsInARow_IsReported перестанет ловить эту поломку. При смене problem_ThreeDoorsInARow_IsReported проверь это утверждение.");
     }
 
     private static Schematic schematic(Schematic.Entry... doors) {

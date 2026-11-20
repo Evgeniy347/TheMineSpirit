@@ -35,7 +35,8 @@ class PresetLibraryDefenseTests {
                         "gate_3"),
                 library.byType(BuildingType.DEFENSE).stream().map(Preset::id).toList(),
                 "Поиск по типу «оборона» обязан находить палисад-секцию, фрагменты забора и каменной стены: по нему "
-                        + "стратег выбирает ограждение");
+                        + "стратег выбирает ограждение"
+                        + " Иначе тест byType_Defense_ReturnsPalisadeSection перестанет ловить эту поломку. При смене byType_Defense_ReturnsPalisadeSection проверь это утверждение.");
     }
 
     private static PresetLibrary loadReal() {

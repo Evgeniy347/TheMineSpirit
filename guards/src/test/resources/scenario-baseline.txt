@@ -165,3 +165,8 @@ mech/mining/com/theminespirit/core/mining/MiningScenarioTestsExtraTests.java # �
 mech/mining/com/theminespirit/core/mining/SafeMinePlanTestsExtraTests.java # разделение SafeMinePlanTests по пределу 300 строк, тесты перенесены из него
 mech/mining/com/theminespirit/core/mining/StandSpotsTestsExtraTests.java # разделение StandSpotsTests по пределу 300 строк, тесты перенесены из него
 mech/mining/com/theminespirit/core/mining/ToolChoiceTestsExtraTests.java # разделение ToolChoiceTests по пределу 300 строк, тесты перенесены из него
+mech/building/com/theminespirit/core/building/BuildPlannerTestsPart2.java # разделение BuildPlannerTests по пределу 300 строк, тесты перенесены из него
+mech/building/com/theminespirit/core/building/FillScenarioTestsPart2.java # разделение FillScenarioTests по пределу 300 строк, тесты перенесены из него
+mech/building/com/theminespirit/core/building/PresetLibraryTestsPart2.java # разделение PresetLibraryTests по пределу 300 строк, тесты перенесены из него
+mech/building/com/theminespirit/core/building/ReachPlannerTestsPart2.java # разделение ReachPlannerTests по пределу 300 строк, тесты перенесены из него
+mech/building/com/theminespirit/core/building/SchematicTextParserTestsPart2.java # разделение SchematicTextParserTests по пределу 300 строк, тесты перенесены из него

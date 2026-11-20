@@ -14,13 +14,36 @@ class ShelterMaterialsTests {
 
     @Test
     void rank_CobblestoneThenPlanks_LogsAndSmoothStoneCheapNo() {
-        assertEquals(0, ShelterMaterials.rank("cobblestone"), "Булыжник — первый по дешевизне");
-        assertEquals(0, ShelterMaterials.rank("minecraft:cobblestone"), "Пространство имён не меняет дешевизну");
-        assertTrue(ShelterMaterials.rank("oak_planks") >= 0, "Доски — дешёвый материал");
-        assertTrue(ShelterMaterials.rank("jungle_planks") >= 0, "Любая порода досок дешёвая");
-        assertFalse(ShelterMaterials.rank("jungle_log") >= 0, "Брёвна дороги: из бревна выходит четыре доски");
-        assertFalse(ShelterMaterials.rank("oak_log") >= 0, "Дубовые брёвна так же дороги");
-        assertFalse(ShelterMaterials.rank("smooth_stone") >= 0, "Гладкий камень дорог: его обжигают в печи");
+        assertEquals(
+                0,
+                ShelterMaterials.rank("cobblestone"),
+                "Булыжник — первый по дешевизне"
+                        + " Иначе тест rank_CobblestoneThenPlanks_LogsAndSmoothStoneCheapNo перестанет ловить эту поломку. При смене rank_CobblestoneThenPlanks_LogsAndSmoothStoneCheapNo проверь это утверждение.");
+        assertEquals(
+                0,
+                ShelterMaterials.rank("minecraft:cobblestone"),
+                "Пространство имён не меняет дешевизну"
+                        + " Иначе тест rank_CobblestoneThenPlanks_LogsAndSmoothStoneCheapNo перестанет ловить эту поломку. При смене rank_CobblestoneThenPlanks_LogsAndSmoothStoneCheapNo проверь это утверждение.");
+        assertTrue(
+                ShelterMaterials.rank("oak_planks") >= 0,
+                "Доски — дешёвый материал"
+                        + " Иначе тест rank_CobblestoneThenPlanks_LogsAndSmoothStoneCheapNo перестанет ловить эту поломку. При смене rank_CobblestoneThenPlanks_LogsAndSmoothStoneCheapNo проверь это утверждение.");
+        assertTrue(
+                ShelterMaterials.rank("jungle_planks") >= 0,
+                "Любая порода досок дешёвая"
+                        + " Иначе тест rank_CobblestoneThenPlanks_LogsAndSmoothStoneCheapNo перестанет ловить эту поломку. При смене rank_CobblestoneThenPlanks_LogsAndSmoothStoneCheapNo проверь это утверждение.");
+        assertFalse(
+                ShelterMaterials.rank("jungle_log") >= 0,
+                "Брёвна дороги: из бревна выходит четыре доски"
+                        + " Иначе тест rank_CobblestoneThenPlanks_LogsAndSmoothStoneCheapNo перестанет ловить эту поломку. При смене rank_CobblestoneThenPlanks_LogsAndSmoothStoneCheapNo проверь это утверждение.");
+        assertFalse(
+                ShelterMaterials.rank("oak_log") >= 0,
+                "Дубовые брёвна так же дороги"
+                        + " Иначе тест rank_CobblestoneThenPlanks_LogsAndSmoothStoneCheapNo перестанет ловить эту поломку. При смене rank_CobblestoneThenPlanks_LogsAndSmoothStoneCheapNo проверь это утверждение.");
+        assertFalse(
+                ShelterMaterials.rank("smooth_stone") >= 0,
+                "Гладкий камень дорог: его обжигают в печи"
+                        + " Иначе тест rank_CobblestoneThenPlanks_LogsAndSmoothStoneCheapNo перестанет ловить эту поломку. При смене rank_CobblestoneThenPlanks_LogsAndSmoothStoneCheapNo проверь это утверждение.");
     }
 
     @Test
@@ -31,8 +54,16 @@ class ShelterMaterialsTests {
                         PORCH)
                 .orElseThrow();
 
-        assertEquals("cobblestone", choice.block(), "При полном запасе обоих материалов берётся булыжник");
-        assertEquals("cobblestone_slab", choice.slab(), "Порог — полублок того же материала");
+        assertEquals(
+                "cobblestone",
+                choice.block(),
+                "При полном запасе обоих материалов берётся булыжник"
+                        + " Иначе тест choose_BothEnough_CobblestoneWins перестанет ловить эту поломку. При смене choose_BothEnough_CobblestoneWins проверь это утверждение.");
+        assertEquals(
+                "cobblestone_slab",
+                choice.slab(),
+                "Порог — полублок того же материала"
+                        + " Иначе тест choose_BothEnough_CobblestoneWins перестанет ловить эту поломку. При смене choose_BothEnough_CobblestoneWins проверь это утверждение.");
     }
 
     @Test
@@ -46,8 +77,13 @@ class ShelterMaterialsTests {
         assertEquals(
                 "jungle_planks",
                 choice.block(),
-                "Булыжника 44 на корпус не хватает — берутся доски, а не недоделка из булыжника");
-        assertEquals("jungle_slab", choice.slab(), "Полублок порога обязан быть из того же материала");
+                "Булыжника 44 на корпус не хватает — берутся доски, а не недоделка из булыжника"
+                        + " Иначе тест choose_CobblestoneShort_PlanksUsed перестанет ловить эту поломку. При смене choose_CobblestoneShort_PlanksUsed проверь это утверждение.");
+        assertEquals(
+                "jungle_slab",
+                choice.slab(),
+                "Полублок порога обязан быть из того же материала"
+                        + " Иначе тест choose_CobblestoneShort_PlanksUsed перестанет ловить эту поломку. При смене choose_CobblestoneShort_PlanksUsed проверь это утверждение.");
     }
 
     @Test
@@ -61,7 +97,8 @@ class ShelterMaterialsTests {
         assertEquals(
                 "cobblestone",
                 choice.block(),
-                "Досок хватает, но полублока порога нет — берётся булыжник с готовым полублоком");
+                "Досок хватает, но полублока порога нет — берётся булыжник с готовым полублоком"
+                        + " Иначе тест choose_PlanksWithoutSlab_CobblestoneUsed перестанет ловить эту поломку. При смене choose_PlanksWithoutSlab_CobblestoneUsed проверь это утверждение.");
     }
 
     @Test
@@ -69,7 +106,8 @@ class ShelterMaterialsTests {
         assertTrue(
                 ShelterMaterials.choose(Map.of("jungle_log", 64, "smooth_stone", 64, "stone", 64), BODY, PORCH)
                         .isEmpty(),
-                "Брёвна, гладкий и обычный камень без полублока не годятся: укрытие не начинают");
+                "Брёвна, гладкий и обычный камень без полублока не годятся: укрытие не начинают"
+                        + " Иначе тест choose_NoCheapMaterial_Empty перестанет ловить эту поломку. При смене choose_NoCheapMaterial_Empty проверь это утверждение.");
     }
 
     @Test
@@ -81,7 +119,8 @@ class ShelterMaterialsTests {
         assertEquals(
                 "cobblestone",
                 choice.block(),
-                "При нехватке выбор всё равно называет материал, чтобы причина сказала 10 из 130");
+                "При нехватке выбор всё равно называет материал, чтобы причина сказала 10 из 130"
+                        + " Иначе тест choose_ShortStock_ReturnsCheapestForExactNumbers перестанет ловить эту поломку. При смене choose_ShortStock_ReturnsCheapestForExactNumbers проверь это утверждение.");
     }
 
     @Test
@@ -89,6 +128,7 @@ class ShelterMaterialsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ShelterMaterials.slabFor("jungle_log"),
-                "Полублок берётся только из булыжника или досок: из бревна полублока нет");
+                "Полублок берётся только из булыжника или досок: из бревна полублока нет"
+                        + " Иначе тест slabFor_LogMaterial_Rejected перестанет ловить эту поломку. При смене slabFor_LogMaterial_Rejected проверь это утверждение.");
     }
 }

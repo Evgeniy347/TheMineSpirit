@@ -29,7 +29,8 @@ class BuildPhaseTests {
                     BuildPhase.rough(block),
                     "'" + block
                             + "' — черновая работа (пол, стены, лестница, крыша, окна, перила): без неё нет этажа и "
-                            + "лестницы, по которой дух поднимается выше");
+                            + "лестницы, по которой дух поднимается выше"
+                            + " Иначе тест rough_WallsFloorsStairsRoofWindows_AreRough перестанет ловить эту поломку. При смене rough_WallsFloorsStairsRoofWindows_AreRough проверь это утверждение.");
         }
     }
 
@@ -51,7 +52,8 @@ class BuildPhaseTests {
             assertFalse(
                     BuildPhase.rough(block),
                     "'" + block + "' — отделка: ставится после всех черновых работ в любом порядке, иначе дух "
-                            + "уходит на верхний этаж за мебелью раньше, чем построена лестница");
+                            + "уходит на верхний этаж за мебелью раньше, чем построена лестница"
+                            + " При смене rough_FurnitureLightDoorsAndShutters_AreFinish проверь это утверждение.");
         }
     }
 
@@ -66,11 +68,13 @@ class BuildPhaseTests {
                 List.of(wall),
                 current(List.of(upperWall, carpet, wall)),
                 "Пока в нижней полосе из 4 слоёв есть черновые клетки, ставятся только они: в следующую полосу дух "
-                        + "не поднимается, отделка ждёт конца черновых работ (владелец 20.10)");
+                        + "не поднимается, отделка ждёт конца черновых работ (владелец 20.10)"
+                        + " Иначе тест current_RoughLeftInLowBand_OnlyThatBandNow перестанет ловить эту поломку. При смене current_RoughLeftInLowBand_OnlyThatBandNow проверь это утверждение.");
         assertEquals(
                 List.of(floor),
                 current(List.of(upperWall, carpet, floor, wall)),
-                "Пол — раньше стен нижней полосы: отложенная клетка пола иначе остаётся в чулане за стенами");
+                "Пол — раньше стен нижней полосы: отложенная клетка пола иначе остаётся в чулане за стенами"
+                        + " При смене current_RoughLeftInLowBand_OnlyThatBandNow проверь это утверждение.");
     }
 
     @Test
@@ -82,7 +86,8 @@ class BuildPhaseTests {
         assertEquals(
                 List.of(upperWall),
                 current(List.of(roof, lantern, upperWall)),
-                "Нижняя полоса застроена — очередь следующих 4 слоёв, а не крыши и не отделки");
+                "Нижняя полоса застроена — очередь следующих 4 слоёв, а не крыши и не отделки"
+                        + " Иначе тест current_LowBandDone_NextBandNow перестанет ловить эту поломку. При смене current_LowBandDone_NextBandNow проверь это утверждение.");
     }
 
     @Test
@@ -94,6 +99,7 @@ class BuildPhaseTests {
         assertEquals(
                 List.of(lantern, door, carpet),
                 current(List.of(lantern, door, carpet)),
-                "Черновые работы закончены — вся отделка доступна сразу, в любом порядке");
+                "Черновые работы закончены — вся отделка доступна сразу, в любом порядке"
+                        + " Иначе тест current_NoRoughLeft_AllFinishInAnyOrder перестанет ловить эту поломку. При смене current_NoRoughLeft_AllFinishInAnyOrder проверь это утверждение.");
     }
 }

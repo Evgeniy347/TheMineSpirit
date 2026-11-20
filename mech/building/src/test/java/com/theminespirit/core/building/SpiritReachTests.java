@@ -20,31 +20,40 @@ class SpiritReachTests {
                 OWNER,
                 data.reach(),
                 "Досягаемость задана владельцем (решение 18.10): 3 по горизонтали, 15 вверх, 3 вниз; "
-                        + "менять — в building/build.json и вместе с правилом досягаемости");
+                        + "менять — в building/build.json и вместе с правилом досягаемости"
+                        + " Иначе тест table_OwnerDecision_HorizontalThreeUpFifteenDownThreeAndTwoBlocksPerSecond перестанет ловить эту поломку. При смене table_OwnerDecision_HorizontalThreeUpFifteenDownThreeAndTwoBlocksPerSecond проверь это утверждение.");
         assertEquals(
                 10,
                 data.placeIntervalTicks(),
-                "Темп постановки — примерно 2 блока в секунду (решение владельца 18.10): 10 тиков между блоками");
+                "Темп постановки — примерно 2 блока в секунду (решение владельца 18.10): 10 тиков между блоками"
+                        + " Иначе тест table_OwnerDecision_HorizontalThreeUpFifteenDownThreeAndTwoBlocksPerSecond перестанет ловить эту поломку. При смене table_OwnerDecision_HorizontalThreeUpFifteenDownThreeAndTwoBlocksPerSecond проверь это утверждение.");
         assertEquals(
                 2,
                 data.intervalTicks(true),
                 "Темп демо-стройки — 10 блоков в секунду (решение владельца 19.10): 2 тика между блоками; темп "
-                        + "обычной игры при этом не меняется");
-        assertEquals(10, data.intervalTicks(false), "Обычная стройка обязана идти темпом placeIntervalTicks");
+                        + "обычной игры при этом не меняется"
+                        + " Иначе тест table_OwnerDecision_HorizontalThreeUpFifteenDownThreeAndTwoBlocksPerSecond перестанет ловить эту поломку. При смене table_OwnerDecision_HorizontalThreeUpFifteenDownThreeAndTwoBlocksPerSecond проверь это утверждение.");
+        assertEquals(
+                10,
+                data.intervalTicks(false),
+                "Обычная стройка обязана идти темпом placeIntervalTicks"
+                        + " Иначе тест table_OwnerDecision_HorizontalThreeUpFifteenDownThreeAndTwoBlocksPerSecond перестанет ловить эту поломку. При смене table_OwnerDecision_HorizontalThreeUpFifteenDownThreeAndTwoBlocksPerSecond проверь это утверждение.");
     }
 
     @Test
     void reaches_ThreeAcrossFifteenUp_IsReachable() {
         assertTrue(
                 OWNER.reaches(FEET, new BlockCoord(13, 79, 10)),
-                "Клетка в 3 по горизонтали и 15 вверх обязана быть досягаемой: иначе высокая стена строится лесами");
+                "Клетка в 3 по горизонтали и 15 вверх обязана быть досягаемой: иначе высокая стена строится лесами"
+                        + " При смене reaches_ThreeAcrossFifteenUp_IsReachable проверь это утверждение.");
     }
 
     @Test
     void reaches_FourAcross_IsNotReachable() {
         assertFalse(
                 OWNER.reaches(FEET, new BlockCoord(14, 64, 10)),
-                "Клетка в 4 по горизонтали обязана быть недосягаемой: иначе правило 3 блоков не работает");
+                "Клетка в 4 по горизонтали обязана быть недосягаемой: иначе правило 3 блоков не работает"
+                        + " При смене reaches_FourAcross_IsNotReachable проверь это утверждение.");
     }
 
     @Test
@@ -52,23 +61,28 @@ class SpiritReachTests {
         BlockCoord target = new BlockCoord(10, 64, 10);
         assertTrue(
                 SpiritReach.forbiddenStand(target, target),
-                "Стоянка в целевой клетке запрещена: дух не может ставить блок в себя");
+                "Стоянка в целевой клетке запрещена: дух не может ставить блок в себя"
+                        + " Иначе тест forbiddenStand_TargetAndCellBelow_AreForbidden перестанет ловить эту поломку. При смене forbiddenStand_TargetAndCellBelow_AreForbidden проверь это утверждение.");
         assertTrue(
                 SpiritReach.forbiddenStand(new BlockCoord(10, 63, 10), target),
-                "Стоянка в клетке под целью запрещена: дух стоит там, куда падает блок");
+                "Стоянка в клетке под целью запрещена: дух стоит там, куда падает блок"
+                        + " Иначе тест forbiddenStand_TargetAndCellBelow_AreForbidden перестанет ловить эту поломку. При смене forbiddenStand_TargetAndCellBelow_AreForbidden проверь это утверждение.");
         assertFalse(
                 SpiritReach.forbiddenStand(new BlockCoord(11, 64, 10), target),
-                "Соседняя клетка — законная стоянка: без неё дух не подойдёт к стене");
+                "Соседняя клетка — законная стоянка: без неё дух не подойдёт к стене"
+                        + " Иначе тест forbiddenStand_TargetAndCellBelow_AreForbidden перестанет ловить эту поломку. При смене forbiddenStand_TargetAndCellBelow_AreForbidden проверь это утверждение.");
     }
 
     @Test
     void reaches_ThreeDown_IsReachableAndFourDownIsNot() {
         assertTrue(
                 OWNER.reaches(FEET, new BlockCoord(10, 61, 10)),
-                "Клетка в 3 вниз обязана быть досягаемой: дух ставит фундамент под собой");
+                "Клетка в 3 вниз обязана быть досягаемой: дух ставит фундамент под собой"
+                        + " Иначе тест reaches_ThreeDown_IsReachableAndFourDownIsNot перестанет ловить эту поломку. При смене reaches_ThreeDown_IsReachableAndFourDownIsNot проверь это утверждение.");
         assertFalse(
                 OWNER.reaches(FEET, new BlockCoord(10, 60, 10)),
-                "Клетка в 4 вниз обязана быть недосягаемой: иначе дух ставит сквозь пол");
+                "Клетка в 4 вниз обязана быть недосягаемой: иначе дух ставит сквозь пол"
+                        + " При смене reaches_ThreeDown_IsReachableAndFourDownIsNot проверь это утверждение.");
     }
 
     @Test
@@ -77,8 +91,12 @@ class SpiritReachTests {
 
         assertTrue(
                 wide.reaches(FEET, new BlockCoord(15, 66, 10)),
-                "Досягаемость обязана браться из чисел таблицы, а не из констант: 5 по горизонтали и 2 вверх");
-        assertFalse(wide.reaches(FEET, new BlockCoord(10, 67, 10)), "3 вверх при пределе 2 — вне досягаемости");
+                "Досягаемость обязана браться из чисел таблицы, а не из констант: 5 по горизонтали и 2 вверх"
+                        + " Иначе тест reaches_TableNumbers_AreUsed перестанет ловить эту поломку. При смене reaches_TableNumbers_AreUsed проверь это утверждение.");
+        assertFalse(
+                wide.reaches(FEET, new BlockCoord(10, 67, 10)),
+                "3 вверх при пределе 2 — вне досягаемости"
+                        + " Иначе тест reaches_TableNumbers_AreUsed перестанет ловить эту поломку. При смене reaches_TableNumbers_AreUsed проверь это утверждение.");
     }
 
     @Test
@@ -88,8 +106,12 @@ class SpiritReachTests {
                 () -> BuildData.parse(
                         "{\"reachHorizontal\":3,\"reachUp\":15,\"reachDown\":3,\"placeIntervalTicks\":0,\"demoPlaceIntervalTicks\":2}",
                         "тест"),
-                "Нулевой интервал постановки обязан отвергаться: дух ставил бы весь дом за тик");
+                "Нулевой интервал постановки обязан отвергаться: дух ставил бы весь дом за тик"
+                        + " Иначе тест parse_ZeroInterval_IsRejected перестанет ловить эту поломку. При смене parse_ZeroInterval_IsRejected проверь это утверждение.");
 
-        assertTrue(error.getMessage().contains("placeIntervalTicks"), "Ошибка называет поле: " + error.getMessage());
+        assertTrue(
+                error.getMessage().contains("placeIntervalTicks"),
+                "Ошибка называет поле: " + error.getMessage()
+                        + " Иначе тест parse_ZeroInterval_IsRejected перестанет ловить эту поломку. При смене parse_ZeroInterval_IsRejected проверь это утверждение.");
     }
 }

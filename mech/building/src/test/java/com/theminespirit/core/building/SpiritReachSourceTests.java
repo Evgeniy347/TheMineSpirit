@@ -18,7 +18,8 @@ class SpiritReachSourceTests {
                     data,
                     SpiritReach.current(),
                     "Досягаемость из build.json обязана доходить до :mech:building без импорта загрузчика таблиц: "
-                            + "иначе модуль снова тянет :content");
+                            + "иначе модуль снова тянет :content"
+                            + " При смене current_SourceBound_ReturnsLoadedReach проверь это утверждение.");
         } finally {
             SpiritReach.useSource(() -> before);
         }
@@ -29,6 +30,7 @@ class SpiritReachSourceTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new SpiritReach(0, 1, 1),
-                "Горизонтальная досягаемость меньше 1: дух не достал бы соседнюю клетку");
+                "Горизонтальная досягаемость меньше 1: дух не достал бы соседнюю клетку"
+                        + " Иначе тест source_InvalidReach_IsRejected перестанет ловить эту поломку. При смене source_InvalidReach_IsRejected проверь это утверждение.");
     }
 }

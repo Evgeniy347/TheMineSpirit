@@ -89,7 +89,8 @@ class CraterPlanProperties {
                     assertTrue(
                             filled.contains(cell),
                             "После засыпки в клетке " + cell + " ниже уровня земли не должно остаться пустоты: "
-                                    + "иначе яма не закрыта");
+                                    + "иначе яма не закрыта"
+                                    + " При смене plan_AfterFill_NoFillableCellBelowGroundRemainsEmpty проверь это утверждение.");
                 }
             }
         }
@@ -103,7 +104,8 @@ class CraterPlanProperties {
         assertEquals(
                 plan.cells().size(),
                 plan.blockCount(),
-                "Расход блоков обязан совпасть с числом пустых клеток плана: иначе дух берёт лишнее или недобирает");
+                "Расход блоков обязан совпасть с числом пустых клеток плана: иначе дух берёт лишнее или недобирает"
+                        + " При смене plan_BlockCount_EqualsNumberOfEmptyPlanCells проверь это утверждение.");
     }
 
     @Property
@@ -113,13 +115,16 @@ class CraterPlanProperties {
 
         for (BlockCoord cell : plan.cells()) {
             assertTrue(
-                    inDisk(cell), "Клетка засыпки " + cell + " обязана лежать в диске взрыва: иначе дух засыпает мимо");
+                    inDisk(cell),
+                    "Клетка засыпки " + cell + " обязана лежать в диске взрыва: иначе дух засыпает мимо"
+                            + " При смене plan_AnyInput_CellsAreBottomUpAndInsideDisk проверь это утверждение.");
         }
         int previousY = Integer.MIN_VALUE;
         for (BlockCoord cell : plan.cells()) {
             assertTrue(
                     cell.y() >= previousY,
-                    "Клетки плана обязаны идти снизу вверх: иначе верхний блок повиснет без опоры");
+                    "Клетки плана обязаны идти снизу вверх: иначе верхний блок повиснет без опоры"
+                            + " При смене plan_AnyInput_CellsAreBottomUpAndInsideDisk проверь это утверждение.");
             previousY = cell.y();
         }
     }
@@ -130,6 +135,7 @@ class CraterPlanProperties {
         assertEquals(
                 CraterPlan.plan(surface(depths, protectedCells)),
                 CraterPlan.plan(surface(depths, protectedCells)),
-                "Тот же вход даёт тот же план: иначе число блоков и постановка расходятся");
+                "Тот же вход даёт тот же план: иначе число блоков и постановка расходятся"
+                        + " При смене plan_SameInput_TwiceSameResult проверь это утверждение.");
     }
 }

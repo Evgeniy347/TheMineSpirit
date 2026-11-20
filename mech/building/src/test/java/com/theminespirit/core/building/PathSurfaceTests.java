@@ -20,13 +20,17 @@ class PathSurfaceTests {
         List<Schematic.PlacedEntry> entries = orchard.entries(FEET, BuildRotation.NONE);
         List<Schematic.PlacedEntry> paths = paths(entries);
 
-        assertFalse(paths.isEmpty(), "В схеме сада есть тропа: иначе тест не проверяет её уровень");
+        assertFalse(
+                paths.isEmpty(),
+                "В схеме сада есть тропа: иначе тест не проверяет её уровень"
+                        + " При смене orchard_PathOnFlatGround_LiesAtSurfaceHeight проверь это утверждение.");
         for (Schematic.PlacedEntry path : paths) {
             assertEquals(
                     FEET.y() - 1,
                     path.pos().y(),
                     "Тропа сада заменяет верхний блок земли на уровне поверхности (якорь " + FEET
-                            + " — клетка под ногами), а не встаёт блоком над ней: " + path.pos());
+                            + " — клетка под ногами), а не встаёт блоком над ней: " + path.pos()
+                            + " Иначе тест orchard_PathOnFlatGround_LiesAtSurfaceHeight перестанет ловить эту поломку. При смене orchard_PathOnFlatGround_LiesAtSurfaceHeight проверь это утверждение.");
         }
     }
 
@@ -41,7 +45,8 @@ class PathSurfaceTests {
                 assertEquals(
                         FEET.y(),
                         entry.pos().y(),
-                        "Факел и саженец стоят на поверхности, а не тонут вместе с тропой: " + entry.pos());
+                        "Факел и саженец стоят на поверхности, а не тонут вместе с тропой: " + entry.pos()
+                                + " Иначе тест orchard_ObjectsOnPath_StayAtFeetHeight перестанет ловить эту поломку. При смене orchard_ObjectsOnPath_StayAtFeetHeight проверь это утверждение.");
             }
         }
     }
@@ -56,7 +61,8 @@ class PathSurfaceTests {
         assertTrue(
                 air.contains(new BlockCoord(path.pos().x(), FEET.y(), path.pos().z())),
                 "Клетка над тропой — воздух: старую тропу, поставленную блоком над поверхностью, стройка снимает. "
-                        + "Воздух: " + air);
+                        + "Воздух: " + air
+                        + " Иначе тест orchard_LegacyPathAboveSurface_IsClearedAirCell перестанет ловить эту поломку. При смене orchard_LegacyPathAboveSurface_IsClearedAirCell проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +72,8 @@ class PathSurfaceTests {
         assertEquals(
                 FEET.y() - 1,
                 patch.entries(FEET, BuildRotation.NONE).get(0).pos().y(),
-                "Заплатка улицы ложится в слой земли под ногами: тропа не висит над улицей");
+                "Заплатка улицы ложится в слой земли под ногами: тропа не висит над улицей"
+                        + " Иначе тест streetPatch_OnFlatGround_PathAtSurfaceHeight перестанет ловить эту поломку. При смене streetPatch_OnFlatGround_PathAtSurfaceHeight проверь это утверждение.");
     }
 
     @Test
@@ -81,10 +88,13 @@ class PathSurfaceTests {
                 assertEquals(
                         FEET.y() - 1,
                         entry.pos().y(),
-                        "Нижний слой грядки (" + path + ") заменяет землю, а не стоит на ней: " + entry.pos());
+                        "Нижний слой грядки (" + path + ") заменяет землю, а не стоит на ней: " + entry.pos()
+                                + " Иначе тест wheatField_PathFarmlandAndWater_AllAtSurfaceHeight перестанет ловить эту поломку. При смене wheatField_PathFarmlandAndWater_AllAtSurfaceHeight проверь это утверждение.");
             } else {
                 assertTrue(
-                        entry.pos().y() >= FEET.y(), "Посев стоит на поверхности, а не тонет в землю: " + entry.pos());
+                        entry.pos().y() >= FEET.y(),
+                        "Посев стоит на поверхности, а не тонет в землю: " + entry.pos()
+                                + " Иначе тест wheatField_PathFarmlandAndWater_AllAtSurfaceHeight перестанет ловить эту поломку. При смене wheatField_PathFarmlandAndWater_AllAtSurfaceHeight проверь это утверждение.");
             }
         }
     }
@@ -96,13 +106,17 @@ class PathSurfaceTests {
                 .filter(entry -> "wheat".equals(SchematicBlocks.path(entry.block())))
                 .toList();
 
-        assertFalse(sprouts.isEmpty(), "В схеме грядки есть посев: иначе тест не проверяет его высоту");
+        assertFalse(
+                sprouts.isEmpty(),
+                "В схеме грядки есть посев: иначе тест не проверяет его высоту"
+                        + " При смене wheatField_SproutsOnSunkGround_StayOneAboveSurface проверь это утверждение.");
         for (Schematic.PlacedEntry sprout : sprouts) {
             assertEquals(
                     FEET.y(),
                     sprout.pos().y(),
                     "Посев стоит на поверхности (якорь " + FEET + " — клетка под ногами), а не двумя блоками "
-                            + "над землёй: " + sprout.pos());
+                            + "над землёй: " + sprout.pos()
+                            + " Иначе тест wheatField_SproutsOnSunkGround_StayOneAboveSurface перестанет ловить эту поломку. При смене wheatField_SproutsOnSunkGround_StayOneAboveSurface проверь это утверждение.");
         }
     }
 
@@ -113,7 +127,10 @@ class PathSurfaceTests {
                 .filter(entry -> "jungle_log".equals(SchematicBlocks.path(entry.block())))
                 .toList();
 
-        assertFalse(logs.isEmpty(), "В схеме какао есть столбы: иначе тест не проверяет высоту стопки");
+        assertFalse(
+                logs.isEmpty(),
+                "В схеме какао есть столбы: иначе тест не проверяет высоту стопки"
+                        + " При смене cocoa_LogColumn_KeepsTwoTallStackWithoutCollision проверь это утверждение.");
         for (int x = 2; x <= 6; x += 4) {
             for (int z = 2; z <= 6; z += 4) {
                 int columnX = FEET.x() + x;
@@ -128,7 +145,8 @@ class PathSurfaceTests {
                         List.of(FEET.y(), FEET.y() + 1),
                         heights,
                         "Столб какао — два блока над землёй: столбец предметов не сдвигается вниз, иначе два "
-                                + "бревна сойдутся в одной клетке. Высоты: " + heights);
+                                + "бревна сойдутся в одной клетке. Высоты: " + heights
+                                + " При смене cocoa_LogColumn_KeepsTwoTallStackWithoutCollision проверь это утверждение.");
             }
         }
         long unique = cocoa.entries(FEET, BuildRotation.NONE).stream()
@@ -138,24 +156,28 @@ class PathSurfaceTests {
         assertEquals(
                 cocoa.entries(FEET, BuildRotation.NONE).size(),
                 unique,
-                "Две клетки схемы не имеют права встать в одну: иначе часть постройки молча теряется");
+                "Две клетки схемы не имеют права встать в одну: иначе часть постройки молча теряется"
+                        + " При смене cocoa_LogColumn_KeepsTwoTallStackWithoutCollision проверь это утверждение.");
     }
 
     @Test
     void walkwayPlaced_PathOneBelowCell_NotPlaced() {
         assertFalse(
                 SchematicGround.walkwayPlaced("minecraft:dirt_path", "minecraft:air"),
-                "Тропа ниже уровня плана — ступенька, а не готовая улица: аудит обязан требовать её в клетке схемы");
+                "Тропа ниже уровня плана — ступенька, а не готовая улица: аудит обязан требовать её в клетке схемы"
+                        + " Иначе тест walkwayPlaced_PathOneBelowCell_NotPlaced перестанет ловить эту поломку. При смене walkwayPlaced_PathOneBelowCell_NotPlaced проверь это утверждение.");
         assertTrue(
                 SchematicGround.walkwayPlaced("minecraft:dirt_path", "minecraft:dirt_path"),
-                "Дорожка в самой клетке схемы — готовая улица на уровне плана");
+                "Дорожка в самой клетке схемы — готовая улица на уровне плана"
+                        + " Иначе тест walkwayPlaced_PathOneBelowCell_NotPlaced перестанет ловить эту поломку. При смене walkwayPlaced_PathOneBelowCell_NotPlaced проверь это утверждение.");
     }
 
     @Test
     void walkwayPlaced_PathAboveStandingPath_NotCountedAsSurface() {
         assertFalse(
                 SchematicGround.walkwayPlaced("minecraft:dirt_path", "minecraft:grass_block"),
-                "Тропа в воздухе над дёрном — висящая: аудит обязан требовать её в поверхности, а не над ней");
+                "Тропа в воздухе над дёрном — висящая: аудит обязан требовать её в поверхности, а не над ней"
+                        + " Иначе тест walkwayPlaced_PathAboveStandingPath_NotCountedAsSurface перестанет ловить эту поломку. При смене walkwayPlaced_PathAboveStandingPath_NotCountedAsSurface проверь это утверждение.");
     }
 
     private static List<Schematic.PlacedEntry> paths(List<Schematic.PlacedEntry> entries) {

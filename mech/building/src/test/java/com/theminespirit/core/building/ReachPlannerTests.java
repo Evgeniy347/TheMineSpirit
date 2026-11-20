@@ -28,7 +28,8 @@ class ReachPlannerTests {
                 targets,
                 ReachPlanner.workableNow(REACH, cell(0, 1, 1), targets, world),
                 "С места делаются все досягаемые готовые клетки в порядке, который задал вызывающий (снизу вверх "
-                        + "для постановки, сверху вниз для очистки): иначе верхний блок повиснет без опоры");
+                        + "для постановки, сверху вниз для очистки): иначе верхний блок повиснет без опоры"
+                        + " При смене workableNow_ReachableReadyCells_KeepCallerOrder проверь это утверждение.");
     }
 
     @Test
@@ -42,7 +43,8 @@ class ReachPlannerTests {
                 List.of(cell(1, 2, 0)),
                 ReachPlanner.workableNow(REACH, feet, targets, world),
                 "С места делается только клетка вне тела, в досягаемости и готовая (с опорой): блок в теле духа, "
-                        + "в четырёх шагах или без опоры ставить нельзя");
+                        + "в четырёх шагах или без опоры ставить нельзя"
+                        + " Иначе тест workableNow_NotReadyOutOfReachOrInsideBody_Skipped перестанет ловить эту поломку. При смене workableNow_NotReadyOutOfReachOrInsideBody_Skipped проверь это утверждение.");
     }
 
     @Test
@@ -64,7 +66,8 @@ class ReachPlannerTests {
                 Optional.of(cell(3, 1, -1)),
                 stand,
                 "Стоянка обязана накрывать всю стену: центр стены в 7 клеток ставит её с места, а не за четыре "
-                        + "перехода по краям");
+                        + "перехода по краям"
+                        + " Иначе тест nextStand_WallOfSeven_CenterCoversWholeWall перестанет ловить эту поломку. При смене nextStand_WallOfSeven_CenterCoversWholeWall проверь это утверждение.");
     }
 
     @Test
@@ -79,7 +82,7 @@ class ReachPlannerTests {
                 Optional.of(cell(1, 1, 3)),
                 stand,
                 "При равном охвате выбирается стоянка ближе к духу: иначе он бежит через всю площадку ради той же "
-                        + "стройки");
+                        + "стройки" + " При смене nextStand_EqualCoverage_PicksNearest проверь это утверждение.");
     }
 
     @Test
@@ -105,7 +108,8 @@ class ReachPlannerTests {
         assertTrue(
                 stand.isPresent() && stand.get().x() <= 8,
                 "С ближней стоянки ставится 6 клеток (не меньше половины лучших 7) — она и выбирается, а не дальняя "
-                        + "в 20 блоках ради одной лишней клетки; фактически " + stand);
+                        + "в 20 блоках ради одной лишней клетки; фактически " + stand
+                        + " Иначе тест nextStand_NearUsefulAndFarBiggerGroups_PicksNearUseful перестанет ловить эту поломку. При смене nextStand_NearUsefulAndFarBiggerGroups_PicksNearUseful проверь это утверждение.");
     }
 
     @Test
@@ -118,13 +122,18 @@ class ReachPlannerTests {
 
         Optional<BlockCoord> stand = ReachPlanner.nextStand(REACH, feet, wall, world, Set.of(), Set.copyOf(wall));
 
-        assertTrue(stand.isPresent(), "Рядом есть свободная земля: стоянка обязана найтись");
+        assertTrue(
+                stand.isPresent(),
+                "Рядом есть свободная земля: стоянка обязана найтись"
+                        + " Иначе тест nextStand_SchemeCellsAndCurrentSpot_NotReturned перестанет ловить эту поломку. При смене nextStand_SchemeCellsAndCurrentSpot_NotReturned проверь это утверждение.");
         assertFalse(
                 wall.contains(stand.get()),
-                "Стоянка не может быть клеткой схемы: дух окажется в будущем блоке, фактически " + stand);
+                "Стоянка не может быть клеткой схемы: дух окажется в будущем блоке, фактически " + stand
+                        + " Иначе тест nextStand_SchemeCellsAndCurrentSpot_NotReturned перестанет ловить эту поломку. При смене nextStand_SchemeCellsAndCurrentSpot_NotReturned проверь это утверждение.");
         assertFalse(
                 stand.get().equals(feet),
-                "Следующая стоянка не может совпадать с текущей: иначе подход не начнётся, фактически " + stand);
+                "Следующая стоянка не может совпадать с текущей: иначе подход не начнётся, фактически " + stand
+                        + " При смене nextStand_SchemeCellsAndCurrentSpot_NotReturned проверь это утверждение.");
     }
 
     @Test
@@ -140,7 +149,8 @@ class ReachPlannerTests {
         assertTrue(
                 second.isPresent() && !second.get().equals(best),
                 "Недостижимая стоянка исключается, и планировщик предлагает следующую: иначе дух повторяет тот же "
-                        + "подход, фактически " + second);
+                        + "подход, фактически " + second
+                        + " При смене nextStand_ExcludedSpot_SecondBestChosen проверь это утверждение.");
     }
 
     @Test
@@ -154,7 +164,8 @@ class ReachPlannerTests {
         assertTrue(
                 stand.isPresent() && REACH.reaches(stand.get(), cell(0, 1, 0)),
                 "Если готовых клеток нет, стоянка накрывает нижний слой: с него стройка начнётся, когда появится "
-                        + "опора; фактически " + stand);
+                        + "опора; фактически " + stand
+                        + " Иначе тест nextStand_NothingReady_CoversLowestLayer перестанет ловить эту поломку. При смене nextStand_NothingReady_CoversLowestLayer проверь это утверждение.");
     }
 
     @Test
@@ -168,7 +179,8 @@ class ReachPlannerTests {
         assertTrue(
                 stand.isPresent() && REACH.reaches(stand.get(), cell(0, 9, 0)),
                 "Ставня второго этажа в 9 блоках над землёй ставится снаружи с земли, раз досягаемость вверх 15: "
-                        + "иначе последние верхние ставни остаются «ни с одной стоянки»; фактически " + stand);
+                        + "иначе последние верхние ставни остаются «ни с одной стоянки»; фактически " + stand
+                        + " При смене nextStandFromAfar_HighCellOnlyGroundBelow_StandsOnGroundWithinReachUp проверь это утверждение.");
     }
 
     @Test
@@ -182,7 +194,8 @@ class ReachPlannerTests {
         assertTrue(
                 stand.isEmpty(),
                 "Обычный поиск стоянки — не ниже 6 под клетками: дальний поиск внутри стройки (усадьба, 20.10) "
-                        + "оставлял духа на мебели, и заходы к сундукам не удавались; фактически " + stand);
+                        + "оставлял духа на мебели, и заходы к сундукам не удавались; фактически " + stand
+                        + " Иначе тест nextStand_HighCellOnlyGroundBelow_NearSearchOnly перестанет ловить эту поломку. При смене nextStand_HighCellOnlyGroundBelow_NearSearchOnly проверь это утверждение.");
     }
 
     static Set<BlockCoord> standableAround(int y, int z) {
@@ -206,10 +219,21 @@ class ReachPlannerTests {
                 69);
 
         assertFalse(
-                world.standable(cell(0, 66, 0)), "стоянка ниже низа постройки — это яма: дух спустится и не выйдет");
-        assertTrue(world.standable(cell(0, 69, 0)), "стоянка на низу постройки допустима");
-        assertTrue(world.standable(cell(0, 70, 0)), "стоянка выше низа постройки допустима");
-        assertTrue(world.ready(cell(0, 69, 0)), "ready делегируется исходному миру");
+                world.standable(cell(0, 66, 0)),
+                "стоянка ниже низа постройки — это яма: дух спустится и не выйдет"
+                        + " Иначе тест atOrAbove_BelowBuildBase_IsNotStandable перестанет ловить эту поломку. При смене atOrAbove_BelowBuildBase_IsNotStandable проверь это утверждение.");
+        assertTrue(
+                world.standable(cell(0, 69, 0)),
+                "стоянка на низу постройки допустима"
+                        + " Иначе тест atOrAbove_BelowBuildBase_IsNotStandable перестанет ловить эту поломку. При смене atOrAbove_BelowBuildBase_IsNotStandable проверь это утверждение.");
+        assertTrue(
+                world.standable(cell(0, 70, 0)),
+                "стоянка выше низа постройки допустима"
+                        + " Иначе тест atOrAbove_BelowBuildBase_IsNotStandable перестанет ловить эту поломку. При смене atOrAbove_BelowBuildBase_IsNotStandable проверь это утверждение.");
+        assertTrue(
+                world.ready(cell(0, 69, 0)),
+                "ready делегируется исходному миру"
+                        + " Иначе тест atOrAbove_BelowBuildBase_IsNotStandable перестанет ловить эту поломку. При смене atOrAbove_BelowBuildBase_IsNotStandable проверь это утверждение.");
     }
 
     @Test
@@ -218,8 +242,14 @@ class ReachPlannerTests {
                 new SetWorld(Set.of(cell(0, 68, 0), cell(0, 70, 0)), Set.of(cell(0, 68, 0), cell(0, 70, 0))),
                 List.of(cell(0, 70, 0), cell(0, 71, 0)));
 
-        assertFalse(world.standable(cell(0, 68, 0)), "низ схемы — её нижний слой: стоянка ниже него не годится");
-        assertTrue(world.standable(cell(0, 70, 0)), "стоянка на уровне нижнего слоя проходит");
+        assertFalse(
+                world.standable(cell(0, 68, 0)),
+                "низ схемы — её нижний слой: стоянка ниже него не годится"
+                        + " Иначе тест atOrAbove_SchemeCells_UsesLowestSchemeLayerAsBase перестанет ловить эту поломку. При смене atOrAbove_SchemeCells_UsesLowestSchemeLayerAsBase проверь это утверждение.");
+        assertTrue(
+                world.standable(cell(0, 70, 0)),
+                "стоянка на уровне нижнего слоя проходит"
+                        + " Иначе тест atOrAbove_SchemeCells_UsesLowestSchemeLayerAsBase перестанет ловить эту поломку. При смене atOrAbove_SchemeCells_UsesLowestSchemeLayerAsBase проверь это утверждение.");
     }
 
     @Test
@@ -227,7 +257,8 @@ class ReachPlannerTests {
         assertEquals(
                 67,
                 BuildStandLevel.standBase(68, false),
-                "У дома пол на уровне участка: дух стоит на земле на клетку ниже низа схемы");
+                "У дома пол на уровне участка: дух стоит на земле на клетку ниже низа схемы"
+                        + " Иначе тест standBase_StructureStands_OneBelowBottom перестанет ловить эту поломку. При смене standBase_StructureStands_OneBelowBottom проверь это утверждение.");
     }
 
     @Test
@@ -236,27 +267,8 @@ class ReachPlannerTests {
                 66,
                 BuildStandLevel.standBase(68, true),
                 "У грядки и сада тропа лежит в нижнем слое: там, где земля ниже плана, дух входит в яму "
-                        + "на клетку глубже и поднимает тропу до уровня схемы");
-    }
-
-    @Test
-    void allowed_StandBelowBase_IsRejectedAboveIsAccepted() {
-        assertFalse(
-                BuildStandLevel.allowed(cell(0, 66, 0), 69),
-                "стоянка ниже низа постройки — это яма: дух спустится и не выйдет");
-        assertTrue(BuildStandLevel.allowed(cell(0, 69, 0), 69), "стоянка на уровне низа допустима");
-        assertTrue(BuildStandLevel.allowed(cell(0, 71, 0), 69), "стоянка выше низа допустима");
-    }
-
-    @Test
-    void isAction_ActionPlacedCell_IsDetected() {
-        assertTrue(
-                BuildStandLevel.isAction(new Schematic.PlacedEntry(cell(0, 0, 0), "minecraft:dirt_path")),
-                "дорожка ставится действием лопаты: схема обязана видеть её без предмета");
-        assertFalse(
-                BuildStandLevel.isAction(new Schematic.PlacedEntry(cell(0, 0, 0), "minecraft:stone")),
-                "обычный блок ставится предметом, а не действием");
-        assertFalse(BuildStandLevel.isAction(null), "пустая клетка схемы не является действием");
+                        + "на клетку глубже и поднимает тропу до уровня схемы"
+                        + " Иначе тест standBase_GroundLayerBuilds_TwoBelowBottom перестанет ловить эту поломку. При смене standBase_GroundLayerBuilds_TwoBelowBottom проверь это утверждение.");
     }
 
     record SetWorld(Set<BlockCoord> ready, Set<BlockCoord> standable) implements ReachPlanner.World {

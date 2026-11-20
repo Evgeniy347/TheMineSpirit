@@ -52,9 +52,14 @@ class LightPlanProperties {
             assertTrue(
                     lit,
                     "После плана тёмная клетка " + cell.coord() + " осталась без света: "
-                            + "мобы спавнятся при блочном свете 0, площадка небезопасна");
+                            + "мобы спавнятся при блочном свете 0, площадка небезопасна"
+                            + " Иначе тест plan_OpenArea_NoDarkCellRemains перестанет ловить эту поломку. При смене plan_OpenArea_NoDarkCellRemains проверь это утверждение.");
         }
-        assertEquals(0, plan.darkRemaining(), "Счёт тёмных обязан обнулиться, когда все клетки размещаемы и достижимы");
+        assertEquals(
+                0,
+                plan.darkRemaining(),
+                "Счёт тёмных обязан обнулиться, когда все клетки размещаемы и достижимы"
+                        + " Иначе тест plan_OpenArea_NoDarkCellRemains перестанет ловить эту поломку. При смене plan_OpenArea_NoDarkCellRemains проверь это утверждение.");
     }
 
     @Property
@@ -67,11 +72,13 @@ class LightPlanProperties {
         assertTrue(
                 plan.torches().size() <= simpleGrid,
                 "Факелов " + plan.torches().size() + " больше, чем у простой сетки " + simpleGrid
-                        + ": оптимизация не имеет права ухудшать наивную раскладку");
+                        + ": оптимизация не имеет права ухудшать наивную раскладку"
+                        + " Иначе тест plan_OpenArea_NoMoreTorchesThanSimpleGrid перестанет ловить эту поломку. При смене plan_OpenArea_NoMoreTorchesThanSimpleGrid проверь это утверждение.");
         assertTrue(
                 plan.torches().size()
                         <= LightPlan.grid(0, 0, area.radius(), cells).size(),
-                "План обязан быть подмножеством сетки-кандидата");
+                "План обязан быть подмножеством сетки-кандидата"
+                        + " Иначе тест plan_OpenArea_NoMoreTorchesThanSimpleGrid перестанет ловить эту поломку. При смене plan_OpenArea_NoMoreTorchesThanSimpleGrid проверь это утверждение.");
     }
 
     @Property
@@ -87,12 +94,14 @@ class LightPlanProperties {
             assertEquals(
                     true,
                     placeable.get(torch),
-                    "Факел " + torch + " стоит на занятой или запрещённой клетке: чужую постройку и воду не трогаем");
+                    "Факел " + torch + " стоит на занятой или запрещённой клетке: чужую постройку и воду не трогаем"
+                            + " Иначе тест plan_BlockedArea_TorchesOnlyOnPlaceableCells перестанет ловить эту поломку. При смене plan_BlockedArea_TorchesOnlyOnPlaceableCells проверь это утверждение.");
         }
         assertTrue(
                 plan.torches().size()
                         <= LightPlan.grid(0, 0, area.radius(), cells).size(),
-                "Даже с запрещёнными клетками план не превышает сетку-кандидата");
+                "Даже с запрещёнными клетками план не превышает сетку-кандидата"
+                        + " Иначе тест plan_BlockedArea_TorchesOnlyOnPlaceableCells перестанет ловить эту поломку. При смене plan_BlockedArea_TorchesOnlyOnPlaceableCells проверь это утверждение.");
     }
 
     @Property
@@ -113,7 +122,8 @@ class LightPlanProperties {
         assertEquals(
                 uncovered,
                 plan.darkRemaining(),
-                "Счёт оставшихся тёмных клеток обязан совпасть с числом тёмных клеток вне досягаемости факелов");
+                "Счёт оставшихся тёмных клеток обязан совпасть с числом тёмных клеток вне досягаемости факелов"
+                        + " Иначе тест plan_BlockedArea_DarkRemainingMatchesUncovered перестанет ловить эту поломку. При смене plan_BlockedArea_DarkRemainingMatchesUncovered проверь это утверждение.");
     }
 
     @Property
@@ -123,7 +133,8 @@ class LightPlanProperties {
         assertEquals(
                 LightPlan.plan(0, 0, area.radius(), cells),
                 LightPlan.plan(0, 0, area.radius(), cells),
-                "Тот же вход даёт тот же план: иначе исполнитель и бронь расходятся");
+                "Тот же вход даёт тот же план: иначе исполнитель и бронь расходятся"
+                        + " При смене plan_SameInput_TwiceSameResult проверь это утверждение.");
     }
 
     private static List<LightCell> cells(Area area) {

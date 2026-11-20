@@ -30,8 +30,13 @@ class CraterPlanTests {
         assertEquals(
                 List.of(new BlockCoord(CENTER.x(), 64, CENTER.z())),
                 plan.cells(),
-                "Яма глубиной 1 обязана засыпаться одним блоком на уровне земли");
-        assertEquals(1, plan.blockCount(), "Число блоков обязано совпасть с числом пустых клеток плана");
+                "Яма глубиной 1 обязана засыпаться одним блоком на уровне земли"
+                        + " Иначе тест plan_OneDeepHole_FillsCellAtHoleAndStopsAtGround перестанет ловить эту поломку. При смене plan_OneDeepHole_FillsCellAtHoleAndStopsAtGround проверь это утверждение.");
+        assertEquals(
+                1,
+                plan.blockCount(),
+                "Число блоков обязано совпасть с числом пустых клеток плана"
+                        + " Иначе тест plan_OneDeepHole_FillsCellAtHoleAndStopsAtGround перестанет ловить эту поломку. При смене plan_OneDeepHole_FillsCellAtHoleAndStopsAtGround проверь это утверждение.");
     }
 
     @Test
@@ -48,7 +53,8 @@ class CraterPlanTests {
                         new BlockCoord(CENTER.x(), 63, CENTER.z()),
                         new BlockCoord(CENTER.x(), 64, CENTER.z())),
                 plan.cells(),
-                "Яма глубиной 4 обязана засыпаться четырьмя клетками снизу вверх до уровня земли");
+                "Яма глубиной 4 обязана засыпаться четырьмя клетками снизу вверх до уровня земли"
+                        + " Иначе тест plan_DeepHole_FillsBottomUpToGroundLevel перестанет ловить эту поломку. При смене plan_DeepHole_FillsBottomUpToGroundLevel проверь это утверждение.");
     }
 
     @Test
@@ -57,8 +63,15 @@ class CraterPlanTests {
 
         CraterPlan.Plan plan = CraterPlan.plan(surface);
 
-        assertTrue(plan.cells().isEmpty(), "Столбец без ямы не засыпают: над уровнем земли нет пустых клеток");
-        assertEquals(0, plan.blockCount(), "Пустой план не тратит блоки");
+        assertTrue(
+                plan.cells().isEmpty(),
+                "Столбец без ямы не засыпают: над уровнем земли нет пустых клеток"
+                        + " Иначе тест plan_NoHole_ReturnsEmptyPlan перестанет ловить эту поломку. При смене plan_NoHole_ReturnsEmptyPlan проверь это утверждение.");
+        assertEquals(
+                0,
+                plan.blockCount(),
+                "Пустой план не тратит блоки"
+                        + " Иначе тест plan_NoHole_ReturnsEmptyPlan перестанет ловить эту поломку. При смене plan_NoHole_ReturnsEmptyPlan проверь это утверждение.");
     }
 
     @Test
@@ -77,7 +90,8 @@ class CraterPlanTests {
                         new BlockCoord(CENTER.x(), 63, CENTER.z()),
                         new BlockCoord(CENTER.x(), 64, CENTER.z())),
                 plan.cells(),
-                "Воду на дне перекрывают нижним слоем: пустая клетка остаётся открытой ямой");
+                "Воду на дне перекрывают нижним слоем: пустая клетка остаётся открытой ямой"
+                        + " Иначе тест plan_WaterInHole_CoveredByBottomLayer перестанет ловить эту поломку. При смене plan_WaterInHole_CoveredByBottomLayer проверь это утверждение.");
     }
 
     @Test
@@ -91,11 +105,13 @@ class CraterPlanTests {
 
         assertTrue(
                 !plan.cells().contains(protectedCell),
-                "Защищённую (чужую) клетку не засыпают: политика защиты блоков выше ремонта");
+                "Защищённую (чужую) клетку не засыпают: политика защиты блоков выше ремонта"
+                        + " Иначе тест plan_ProtectedCellInHole_Skipped перестанет ловить эту поломку. При смене plan_ProtectedCellInHole_Skipped проверь это утверждение.");
         assertEquals(
                 List.of(new BlockCoord(CENTER.x(), 62, CENTER.z()), new BlockCoord(CENTER.x(), 64, CENTER.z())),
                 plan.cells(),
-                "Незащищённые пустоты вокруг защищённой клетки засыпают, а саму защищённую пропускают");
+                "Незащищённые пустоты вокруг защищённой клетки засыпают, а саму защищённую пропускают"
+                        + " Иначе тест plan_ProtectedCellInHole_Skipped перестанет ловить эту поломку. При смене plan_ProtectedCellInHole_Skipped проверь это утверждение.");
     }
 
     @Test
@@ -109,6 +125,7 @@ class CraterPlanTests {
         assertEquals(
                 3,
                 plan.blockCount(),
-                "Две ямы глубиной 1 и 2 внутри диска радиуса 1 дают 3 клетки; клетки вне диска не берутся");
+                "Две ямы глубиной 1 и 2 внутри диска радиуса 1 дают 3 клетки; клетки вне диска не берутся"
+                        + " Иначе тест plan_MultipleColumns_OnlyHolesInsideRadius перестанет ловить эту поломку. При смене plan_MultipleColumns_OnlyHolesInsideRadius проверь это утверждение.");
     }
 }

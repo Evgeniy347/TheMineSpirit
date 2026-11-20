@@ -14,13 +14,22 @@ class FenceGateRuleTests {
         assertEquals(
                 List.of(11),
                 FenceGateRule.gates(23),
-                "На стороне 23 калитка одна и посередине: отрезки до углов по 11, иначе калитка к углу ближе 10");
+                "На стороне 23 калитка одна и посередине: отрезки до углов по 11, иначе калитка к углу ближе 10"
+                        + " При смене gates_Side23_OneGateInMiddle проверь это утверждение.");
     }
 
     @Test
     void gates_ShortSides_HaveNoGate() {
-        assertEquals(List.of(), FenceGateRule.gates(20), "Сторона 20 короче двух отрезков по 10: калитки нет");
-        assertEquals(List.of(), FenceGateRule.gates(8), "Сторона 8 — не периметр поселения: калитки нет");
+        assertEquals(
+                List.of(),
+                FenceGateRule.gates(20),
+                "Сторона 20 короче двух отрезков по 10: калитки нет"
+                        + " Иначе тест gates_ShortSides_HaveNoGate перестанет ловить эту поломку. При смене gates_ShortSides_HaveNoGate проверь это утверждение.");
+        assertEquals(
+                List.of(),
+                FenceGateRule.gates(8),
+                "Сторона 8 — не периметр поселения: калитки нет"
+                        + " Иначе тест gates_ShortSides_HaveNoGate перестанет ловить эту поломку. При смене gates_ShortSides_HaveNoGate проверь это утверждение.");
     }
 
     @Test
@@ -28,7 +37,8 @@ class FenceGateRuleTests {
         assertEquals(
                 List.of(10),
                 FenceGateRule.gates(21),
-                "На стороне 21 калитка посередине даёт два отрезка по 10 — нижняя граница правила");
+                "На стороне 21 калитка посередине даёт два отрезка по 10 — нижняя граница правила"
+                        + " Иначе тест gates_Side21_OneGateEvenly перестанет ловить эту поломку. При смене gates_Side21_OneGateEvenly проверь это утверждение.");
     }
 
     @Test
@@ -36,7 +46,8 @@ class FenceGateRuleTests {
         assertEquals(
                 List.of(14, 28),
                 FenceGateRule.gates(42),
-                "На стороне 42 двух калиток хватает: отрезки 14, 14 и 13 — каждый в границах 10–20");
+                "На стороне 42 двух калиток хватает: отрезки 14, 14 и 13 — каждый в границах 10–20"
+                        + " Иначе тест gates_Side42_TwoEvenlySpaced перестанет ловить эту поломку. При смене gates_Side42_TwoEvenlySpaced проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +70,8 @@ class FenceGateRuleTests {
                 List.of(),
                 problems,
                 "Любая сторона от 21: каждый отрезок между углом и калиткой 10–20 блоков, иначе калитки "
-                        + "либо слишком редкие (дыра в обороне), либо слишком частые (лишние проходы)");
+                        + "либо слишком редкие (дыра в обороне), либо слишком частые (лишние проходы)"
+                        + " При смене gates_EverySideLength_SegmentsWithinTenAndTwenty проверь это утверждение.");
     }
 
     @Test
@@ -86,7 +98,8 @@ class FenceGateRuleTests {
                 List.of(),
                 problems,
                 "Калитки на стороне стоят равномерно: разница соседних отрезков не больше блока, иначе калитка "
-                        + "сбивается к одному краю");
+                        + "сбивается к одному краю"
+                        + " При смене gates_EverySideLength_SpacingDiffersByAtMostOne проверь это утверждение.");
     }
 
     @Test
@@ -94,9 +107,11 @@ class FenceGateRuleTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FenceGateRule.gates(0),
-                "Сторона 0 — ошибка раскладки: молчаливое пустое правило спрятало бы сломанный размер ограды");
+                "Сторона 0 — ошибка раскладки: молчаливое пустое правило спрятало бы сломанный размер ограды"
+                        + " Иначе тест gates_SideShorterThanOne_Rejected перестанет ловить эту поломку. При смене gates_SideShorterThanOne_Rejected проверь это утверждение.");
         assertTrue(
                 FenceGateRule.gates(1).isEmpty(),
-                "Сторона 1 — одна клетка без калитки: на ней негде развернуть отрезок 10");
+                "Сторона 1 — одна клетка без калитки: на ней негде развернуть отрезок 10"
+                        + " Иначе тест gates_SideShorterThanOne_Rejected перестанет ловить эту поломку. При смене gates_SideShorterThanOne_Rejected проверь это утверждение.");
     }
 }

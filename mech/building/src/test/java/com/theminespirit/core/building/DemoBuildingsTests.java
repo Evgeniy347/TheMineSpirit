@@ -101,7 +101,8 @@ class DemoBuildingsTests {
                         "alchemy"),
                 DemoBuildings.ids(),
                 "Каталог демо-строек обязан содержать все постройки чеклиста: игрок наберёт /spirit demo <id> "
-                        + "и не найдёт нужную");
+                        + "и не найдёт нужную"
+                        + " При смене ids_Listed_ContainEveryChecklistBuilding проверь это утверждение.");
     }
 
     @Test
@@ -113,7 +114,8 @@ class DemoBuildingsTests {
                 assertTrue(
                         body.contains("layers:"),
                         "Схема уровня '" + level.scheme() + "' постройки '" + building.id()
-                                + "' обязана читаться из ресурсов мода: иначе демо-стройка не найдёт тело");
+                                + "' обязана читаться из ресурсов мода: иначе демо-стройка не найдёт тело"
+                                + " При смене level_EachScheme_ResolvesToBodyOrPreset проверь это утверждение.");
             }
         }
     }
@@ -125,14 +127,28 @@ class DemoBuildingsTests {
         assertEquals(
                 "pen_4x5",
                 pen.level(1).scheme(),
-                "Первый уровень загона — 4×5: иначе upgrade построит не тот младший уровень");
-        assertEquals("pen_7x7", pen.level(2).scheme(), "Второй уровень загона — 7×7");
-        assertEquals("pen_9x9", pen.level(3).scheme(), "Третий уровень загона — 9×9");
-        assertEquals("pen_13x13", pen.level(4).scheme(), "Четвёртый уровень загона — 13×13 с навесом");
+                "Первый уровень загона — 4×5: иначе upgrade построит не тот младший уровень"
+                        + " При смене pen_EachLevel_UsesItsOwnScheme проверь это утверждение.");
+        assertEquals(
+                "pen_7x7",
+                pen.level(2).scheme(),
+                "Второй уровень загона — 7×7"
+                        + " Иначе тест pen_EachLevel_UsesItsOwnScheme перестанет ловить эту поломку. При смене pen_EachLevel_UsesItsOwnScheme проверь это утверждение.");
+        assertEquals(
+                "pen_9x9",
+                pen.level(3).scheme(),
+                "Третий уровень загона — 9×9"
+                        + " Иначе тест pen_EachLevel_UsesItsOwnScheme перестанет ловить эту поломку. При смене pen_EachLevel_UsesItsOwnScheme проверь это утверждение.");
+        assertEquals(
+                "pen_13x13",
+                pen.level(4).scheme(),
+                "Четвёртый уровень загона — 13×13 с навесом"
+                        + " Иначе тест pen_EachLevel_UsesItsOwnScheme перестанет ловить эту поломку. При смене pen_EachLevel_UsesItsOwnScheme проверь это утверждение.");
         assertNotEquals(
                 pen.level(1).scheme(),
                 pen.level(2).scheme(),
-                "Уровни загона обязаны различаться схемами: одинаковые схемы сделали бы upgrade бессмысленным");
+                "Уровни загона обязаны различаться схемами: одинаковые схемы сделали бы upgrade бессмысленным"
+                        + " Иначе тест pen_EachLevel_UsesItsOwnScheme перестанет ловить эту поломку. При смене pen_EachLevel_UsesItsOwnScheme проверь это утверждение.");
     }
 
     @Test
@@ -144,10 +160,12 @@ class DemoBuildingsTests {
         assertEquals(
                 PresetLibrary.countMaterials(preset.schematic()),
                 preset.materials(),
-                "Материалы уровня берутся из тела схемы: сундук обязан вмещать ровно то, из чего строится");
+                "Материалы уровня берутся из тела схемы: сундук обязан вмещать ровно то, из чего строится"
+                        + " Иначе тест materials_PenLevel2_MatchPen7x7Preset перестанет ловить эту поломку. При смене materials_PenLevel2_MatchPen7x7Preset проверь это утверждение.");
         assertTrue(
                 preset.materials().values().stream().anyMatch(count -> count > 0),
-                "У схемы обязаны быть материалы: пустой сундук нечего строить");
+                "У схемы обязаны быть материалы: пустой сундук нечего строить"
+                        + " Иначе тест materials_PenLevel2_MatchPen7x7Preset перестанет ловить эту поломку. При смене materials_PenLevel2_MatchPen7x7Preset проверь это утверждение.");
     }
 
     @Test
@@ -161,7 +179,8 @@ class DemoBuildingsTests {
                 "enchant_room_v1",
                 levelTwo.requires().orElseThrow(),
                 "Второй уровень чаровальни строится поверх первого: без требования upgrade заказал бы "
-                        + "второй уровень на пустом месте");
+                        + "второй уровень на пустом месте"
+                        + " Иначе тест enchantRoom_LevelTwo_RequiresLevelOne перестанет ловить эту поломку. При смене enchantRoom_LevelTwo_RequiresLevelOne проверь это утверждение.");
     }
 
     @Test
@@ -175,14 +194,16 @@ class DemoBuildingsTests {
                             preset.type(),
                             building.type(),
                             "Тип демо-постройки '" + building.id() + "' обязан совпадать с типом пресета '"
-                                    + preset.id() + "': иначе сторож схем применит к жилью правила склада");
+                                    + preset.id() + "': иначе сторож схем применит к жилью правила склада"
+                                    + " При смене type_PresetSchemes_MatchPresetType проверь это утверждение.");
                 }
             }
         }
         assertEquals(
                 BuildingType.HOUSING,
                 DemoBuildings.require("family_house").type(),
-                "Дом семьи — жильё: без типа жилья сторож не проверит у него окна, дверь и свет");
+                "Дом семьи — жильё: без типа жилья сторож не проверит у него окна, дверь и свет"
+                        + " Иначе тест type_PresetSchemes_MatchPresetType перестанет ловить эту поломку. При смене type_PresetSchemes_MatchPresetType проверь это утверждение.");
     }
 
     @Test
@@ -190,7 +211,8 @@ class DemoBuildingsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> DemoBuildings.require("pen").level(5),
-                "Пятого уровня загона нет: заказ несуществующего уровня обязан отвергаться с подсказкой");
+                "Пятого уровня загона нет: заказ несуществующего уровня обязан отвергаться с подсказкой"
+                        + " Иначе тест level_UnknownRequested_IsRejected перестанет ловить эту поломку. При смене level_UnknownRequested_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -202,10 +224,12 @@ class DemoBuildingsTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> DemoBuildings.parse(json, "тест"),
-                "Каталог с ошибкой обязан отвергаться при разборе, а не молча");
+                "Каталог с ошибкой обязан отвергаться при разборе, а не молча"
+                        + " Иначе тест parse_DuplicateId_IsRejected перестанет ловить эту поломку. При смене parse_DuplicateId_IsRejected проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("дважды"),
-                "Каталог с двумя постройками одного id обязан отвергаться с причиной, получено: " + error.getMessage());
+                "Каталог с двумя постройками одного id обязан отвергаться с причиной, получено: " + error.getMessage()
+                        + " Иначе тест parse_DuplicateId_IsRejected перестанет ловить эту поломку. При смене parse_DuplicateId_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -216,10 +240,12 @@ class DemoBuildingsTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> DemoBuildings.parse(json, "тест"),
-                "Постройка с именем подкоманды обязана отвергаться: /spirit demo city затенила бы её");
+                "Постройка с именем подкоманды обязана отвергаться: /spirit demo city затенила бы её"
+                        + " Иначе тест parse_IdOfDemoSubcommand_IsRejected перестанет ловить эту поломку. При смене parse_IdOfDemoSubcommand_IsRejected проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("подкоманды"),
-                "Отказ обязан назвать конфликт с подкомандой, получено: " + error.getMessage());
+                "Отказ обязан назвать конфликт с подкомандой, получено: " + error.getMessage()
+                        + " Иначе тест parse_IdOfDemoSubcommand_IsRejected перестанет ловить эту поломку. При смене parse_IdOfDemoSubcommand_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -230,9 +256,11 @@ class DemoBuildingsTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> DemoBuildings.parse(json, "тест"),
-                "Каталог с ошибкой обязан отвергаться при разборе, а не молча");
+                "Каталог с ошибкой обязан отвергаться при разборе, а не молча"
+                        + " Иначе тест parse_UnknownType_IsRejected перестанет ловить эту поломку. При смене parse_UnknownType_IsRejected проверь это утверждение.");
         assertTrue(
                 error.getMessage().contains("castle"),
-                "Неизвестный тип постройки обязан называться в отказе, получено: " + error.getMessage());
+                "Неизвестный тип постройки обязан называться в отказе, получено: " + error.getMessage()
+                        + " Иначе тест parse_UnknownType_IsRejected перестанет ловить эту поломку. При смене parse_UnknownType_IsRejected проверь это утверждение.");
     }
 }

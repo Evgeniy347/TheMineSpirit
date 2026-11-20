@@ -27,22 +27,34 @@ class DemoPlacementTests {
                 BuildRotation.NONE,
                 placement.rotation(),
                 "Схема с входом на северной стороне и игроком, смотрящим на юг, не поворачивается: "
-                        + "вход и так смотрит на игрока");
+                        + "вход и так смотрит на игрока"
+                        + " Иначе тест compute_LookSouth_TurnsEntryToPlayerAndPlacesChestAside перестанет ловить эту поломку. При смене compute_LookSouth_TurnsEntryToPlayerAndPlacesChestAside проверь это утверждение.");
         assertEquals(
                 new BlockCoord(8, 64, 11),
                 placement.origin(),
-                "Начало постройки обязано ставить клетку входа на одну клетку за якорем по взгляду игрока");
+                "Начало постройки обязано ставить клетку входа на одну клетку за якорем по взгляду игрока"
+                        + " Иначе тест compute_LookSouth_TurnsEntryToPlayerAndPlacesChestAside перестанет ловить эту поломку. При смене compute_LookSouth_TurnsEntryToPlayerAndPlacesChestAside проверь это утверждение.");
         assertEquals(
                 new BlockCoord(8, 64, 10),
                 placement.chest(),
                 "Сундук ставится в стороне от входа, на два блока левее: перед дверью ему не место, "
-                        + "а в клетке схемы он мешает стройке");
+                        + "а в клетке схемы он мешает стройке"
+                        + " Иначе тест compute_LookSouth_TurnsEntryToPlayerAndPlacesChestAside перестанет ловить эту поломку. При смене compute_LookSouth_TurnsEntryToPlayerAndPlacesChestAside проверь это утверждение.");
         assertEquals(
                 new BlockCoord(10, 64, 10),
                 placement.spawn(),
-                "Дух появляется в клетке перед входом, на площадке: оттуда он видит дверь и не стоит в схеме");
-        assertEquals(5, placement.sizeX(), "Без поворота сторона постройки совпадает со схемой");
-        assertEquals(5, placement.sizeZ(), "Без поворота сторона постройки совпадает со схемой");
+                "Дух появляется в клетке перед входом, на площадке: оттуда он видит дверь и не стоит в схеме"
+                        + " Иначе тест compute_LookSouth_TurnsEntryToPlayerAndPlacesChestAside перестанет ловить эту поломку. При смене compute_LookSouth_TurnsEntryToPlayerAndPlacesChestAside проверь это утверждение.");
+        assertEquals(
+                5,
+                placement.sizeX(),
+                "Без поворота сторона постройки совпадает со схемой"
+                        + " Иначе тест compute_LookSouth_TurnsEntryToPlayerAndPlacesChestAside перестанет ловить эту поломку. При смене compute_LookSouth_TurnsEntryToPlayerAndPlacesChestAside проверь это утверждение.");
+        assertEquals(
+                5,
+                placement.sizeZ(),
+                "Без поворота сторона постройки совпадает со схемой"
+                        + " Иначе тест compute_LookSouth_TurnsEntryToPlayerAndPlacesChestAside перестанет ловить эту поломку. При смене compute_LookSouth_TurnsEntryToPlayerAndPlacesChestAside проверь это утверждение.");
     }
 
     @Test
@@ -60,22 +72,38 @@ class DemoPlacementTests {
                 5,
                 pad,
                 "Запас площадки демо-стройки — число данных, равное 5: другое значение меняет и очистку, "
-                        + "и обход дома духом");
-        assertEquals(15, placement.platform().sideX(), "Площадка шире схемы на запас с обеих сторон по X: 5 + 10 = 15");
-        assertEquals(15, placement.platform().sideZ(), "Площадка шире схемы на запас с обеих сторон по Z: 5 + 10 = 15");
-        assertEquals(8, placement.platform().sideY(), "Площадка выше схемы на запас (вниз не расширяется): 3 + 5 = 8");
+                        + "и обход дома духом"
+                        + " Иначе тест compute_Platform_IsFootprintPlusPaddingSidesAndUp перестанет ловить эту поломку. При смене compute_Platform_IsFootprintPlusPaddingSidesAndUp проверь это утверждение.");
+        assertEquals(
+                15,
+                placement.platform().sideX(),
+                "Площадка шире схемы на запас с обеих сторон по X: 5 + 10 = 15"
+                        + " Иначе тест compute_Platform_IsFootprintPlusPaddingSidesAndUp перестанет ловить эту поломку. При смене compute_Platform_IsFootprintPlusPaddingSidesAndUp проверь это утверждение.");
+        assertEquals(
+                15,
+                placement.platform().sideZ(),
+                "Площадка шире схемы на запас с обеих сторон по Z: 5 + 10 = 15"
+                        + " Иначе тест compute_Platform_IsFootprintPlusPaddingSidesAndUp перестанет ловить эту поломку. При смене compute_Platform_IsFootprintPlusPaddingSidesAndUp проверь это утверждение.");
+        assertEquals(
+                8,
+                placement.platform().sideY(),
+                "Площадка выше схемы на запас (вниз не расширяется): 3 + 5 = 8"
+                        + " Иначе тест compute_Platform_IsFootprintPlusPaddingSidesAndUp перестанет ловить эту поломку. При смене compute_Platform_IsFootprintPlusPaddingSidesAndUp проверь это утверждение.");
         assertEquals(
                 64,
                 placement.platform().minY(),
-                "Низ площадки совпадает с низом схемы: ниже копать не нужно, земля выравнивается отдельно");
+                "Низ площадки совпадает с низом схемы: ниже копать не нужно, земля выравнивается отдельно"
+                        + " Иначе тест compute_Platform_IsFootprintPlusPaddingSidesAndUp перестанет ловить эту поломку. При смене compute_Platform_IsFootprintPlusPaddingSidesAndUp проверь это утверждение.");
         assertEquals(
                 64 + 3 - 1 + pad,
                 placement.platform().maxY(),
-                "Верх площадки — верх схемы плюс запас: дух поднимается над крышей без упора в землю");
+                "Верх площадки — верх схемы плюс запас: дух поднимается над крышей без упора в землю"
+                        + " Иначе тест compute_Platform_IsFootprintPlusPaddingSidesAndUp перестанет ловить эту поломку. При смене compute_Platform_IsFootprintPlusPaddingSidesAndUp проверь это утверждение.");
         assertEquals(
                 64 - 1,
                 placement.floorBox().minY(),
-                "Пол выравнивается слоем под низом схемы: иначе под кольцом вокруг постройки останется яма");
+                "Пол выравнивается слоем под низом схемы: иначе под кольцом вокруг постройки останется яма"
+                        + " При смене compute_Platform_IsFootprintPlusPaddingSidesAndUp проверь это утверждение.");
     }
 
     @Test
@@ -91,16 +119,19 @@ class DemoPlacementTests {
         assertEquals(
                 BuildRotation.COUNTERCLOCKWISE_90,
                 placement.rotation(),
-                "Игрок смотрит на восток — вход на северной стороне обязан повернуться на запад, к игроку");
+                "Игрок смотрит на восток — вход на северной стороне обязан повернуться на запад, к игроку"
+                        + " Иначе тест compute_LookEast_TurnsEntryToPlayer перестанет ловить эту поломку. При смене compute_LookEast_TurnsEntryToPlayer проверь это утверждение.");
         BuildRotation.Cell entry = placement.rotation().rotate(2, 0, 5, 5);
         assertEquals(
                 11,
                 placement.origin().x() + entry.x(),
-                "Клетка входа обязана встать на одну клетку за сундуком по взгляду игрока (ось X)");
+                "Клетка входа обязана встать на одну клетку за сундуком по взгляду игрока (ось X)"
+                        + " Иначе тест compute_LookEast_TurnsEntryToPlayer перестанет ловить эту поломку. При смене compute_LookEast_TurnsEntryToPlayer проверь это утверждение.");
         assertEquals(
                 10,
                 placement.origin().z() + entry.z(),
-                "Клетка входа обязана встать на одну клетку за сундуком по взгляду игрока (ось Z)");
+                "Клетка входа обязана встать на одну клетку за сундуком по взгляду игрока (ось Z)"
+                        + " Иначе тест compute_LookEast_TurnsEntryToPlayer перестанет ловить эту поломку. При смене compute_LookEast_TurnsEntryToPlayer проверь это утверждение.");
     }
 
     @Test
@@ -116,12 +147,14 @@ class DemoPlacementTests {
         assertEquals(
                 BuildRotation.CLOCKWISE_180,
                 placement.rotation(),
-                "Явный поворот обязан перебивать вывод из взгляда игрока: иначе параметр поворота не работает");
+                "Явный поворот обязан перебивать вывод из взгляда игрока: иначе параметр поворота не работает"
+                        + " При смене compute_ExplicitRotation_OverridesLook проверь это утверждение.");
         BuildRotation.Cell entry = BuildRotation.CLOCKWISE_180.rotate(2, 0, 5, 5);
         assertEquals(
                 new BlockCoord(10 + 0 - entry.x(), 64, 10 + 1 - entry.z()),
                 placement.origin(),
-                "Начало постройки обязано считаться с явным поворотом");
+                "Начало постройки обязано считаться с явным поворотом"
+                        + " Иначе тест compute_ExplicitRotation_OverridesLook перестанет ловить эту поломку. При смене compute_ExplicitRotation_OverridesLook проверь это утверждение.");
     }
 
     @Test
@@ -138,7 +171,8 @@ class DemoPlacementTests {
                 BuildRotation.NONE,
                 placement.rotation(),
                 "Вход внутри схемы (колодец) не задаёт сторону: поворот не выводится из взгляда, постройка "
-                        + "остаётся как в схеме");
+                        + "остаётся как в схеме"
+                        + " Иначе тест compute_EntryInDepth_KeepsNoRotation перестанет ловить эту поломку. При смене compute_EntryInDepth_KeepsNoRotation проверь это утверждение.");
     }
 
     @Test
@@ -155,7 +189,8 @@ class DemoPlacementTests {
                 BuildRotation.CLOCKWISE_180,
                 placement.rotation(),
                 "Вход на южной стороне (чаровальня) при взгляде на юг обязан перевернуть схему, чтобы вход "
-                        + "смотрел на игрока");
+                        + "смотрел на игрока"
+                        + " Иначе тест compute_EntryOnSouthEdge_LooksNorthToPlayer перестанет ловить эту поломку. При смене compute_EntryOnSouthEdge_LooksNorthToPlayer проверь это утверждение.");
     }
 
     @Test
@@ -173,15 +208,18 @@ class DemoPlacementTests {
         assertEquals(
                 new DemoPlacement.Door(4, 1, 0, -1, 1),
                 door,
-                "Дверь дома семьи — на северной стене тела, перед ней крыльцо в одну клетку со ступенькой");
+                "Дверь дома семьи — на северной стене тела, перед ней крыльцо в одну клетку со ступенькой"
+                        + " Иначе тест door_FamilyHouseWithPorch_FacesPlayerAndStepIsInFrontOfDoor перестанет ловить эту поломку. При смене door_FamilyHouseWithPorch_FacesPlayerAndStepIsInFrontOfDoor проверь это утверждение.");
         assertEquals(
                 BuildRotation.NONE,
                 placement.rotation(),
-                "Вход на севере тела при взгляде на юг уже смотрит на игрока: поворачивать не нужно");
+                "Вход на севере тела при взгляде на юг уже смотрит на игрока: поворачивать не нужно"
+                        + " Иначе тест door_FamilyHouseWithPorch_FacesPlayerAndStepIsInFrontOfDoor перестанет ловить эту поломку. При смене door_FamilyHouseWithPorch_FacesPlayerAndStepIsInFrontOfDoor проверь это утверждение.");
         assertEquals(
                 new BlockCoord(6, 64, 11),
                 placement.origin(),
-                "Якорь — клетка перед крыльцом: ступенька встаёт на клетку дальше по взгляду, дверь — ещё на одну");
+                "Якорь — клетка перед крыльцом: ступенька встаёт на клетку дальше по взгляду, дверь — ещё на одну"
+                        + " Иначе тест door_FamilyHouseWithPorch_FacesPlayerAndStepIsInFrontOfDoor перестанет ловить эту поломку. При смене door_FamilyHouseWithPorch_FacesPlayerAndStepIsInFrontOfDoor проверь это утверждение.");
     }
 
     static PresetLibrary loadReal() {

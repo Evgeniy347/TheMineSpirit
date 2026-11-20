@@ -50,7 +50,8 @@ class DemoPlacementSweepTests {
                     assertTrue(
                             !onWall || !inSchema(placement, schematic, front),
                             where + ": клетка, куда смотрит игрок, обязана остаться перед крыльцом, вне схемы: "
-                                    + "иначе ступенька встаёт под ноги игроку и вход не к нему лицом");
+                                    + "иначе ступенька встаёт под ноги игроку и вход не к нему лицом"
+                                    + " При смене compute_EveryBuildingAndLook_ChestAndSpawnFitOnPlatform проверь это утверждение.");
                     assertPlatform(placement, schematic, where);
                     assertChest(placement, schematic, front, where);
                     assertSpawn(placement, schematic, where);
@@ -64,43 +65,59 @@ class DemoPlacementSweepTests {
         assertEquals(
                 placement.sizeX() + 2 * pad,
                 placement.platform().sideX(),
-                where + ": площадка обязана быть шире основания на запас с двух сторон по X");
+                where + ": площадка обязана быть шире основания на запас с двух сторон по X"
+                        + " Иначе тест assertPlatform перестанет ловить эту поломку. При смене assertPlatform проверь это утверждение.");
         assertEquals(
                 placement.sizeZ() + 2 * pad,
                 placement.platform().sideZ(),
-                where + ": площадка обязана быть шире основания на запас с двух сторон по Z");
+                where + ": площадка обязана быть шире основания на запас с двух сторон по Z"
+                        + " Иначе тест assertPlatform перестанет ловить эту поломку. При смене assertPlatform проверь это утверждение.");
         assertEquals(
                 schematic.sizeY() + pad,
                 placement.platform().sideY(),
-                where + ": площадка обязана быть выше схемы на запас, вниз не расширяясь");
+                where + ": площадка обязана быть выше схемы на запас, вниз не расширяясь"
+                        + " Иначе тест assertPlatform перестанет ловить эту поломку. При смене assertPlatform проверь это утверждение.");
     }
 
     private static void assertChest(DemoPlacement placement, Schematic schematic, BlockCoord front, String where) {
         BlockCoord chest = placement.chest();
         assertTrue(
                 placement.platform().contains(chest),
-                where + ": сундук обязан стоять на площадке, а не за её краем: " + chest);
+                where + ": сундук обязан стоять на площадке, а не за её краем: " + chest
+                        + " Иначе тест assertChest перестанет ловить эту поломку. При смене assertChest проверь это утверждение.");
         assertTrue(
                 !inSchema(placement, schematic, chest),
-                where + ": сундук обязан стоять вне клеток схемы, иначе он мешает постройке: " + chest);
-        assertEquals(placement.origin().y(), chest.y(), where + ": сундук ставится на уровень пола площадки");
-        assertNotEquals(front, chest, where + ": сундук не встаёт в клетку перед входом");
+                where + ": сундук обязан стоять вне клеток схемы, иначе он мешает постройке: " + chest
+                        + " При смене assertChest проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
+        assertEquals(
+                placement.origin().y(),
+                chest.y(),
+                where + ": сундук ставится на уровень пола площадки"
+                        + " Иначе тест assertChest перестанет ловить эту поломку. При смене assertChest проверь это утверждение.");
+        assertNotEquals(
+                front,
+                chest,
+                where + ": сундук не встаёт в клетку перед входом"
+                        + " Иначе тест assertChest перестанет ловить эту поломку. При смене assertChest проверь это утверждение.");
         assertTrue(
                 chebyshev(chest, front) >= 2,
-                where + ": сундук не встаёт и в соседнюю с входом клетку — дух обходит дом по площадке: " + chest);
+                where + ": сундук не встаёт и в соседнюю с входом клетку — дух обходит дом по площадке: " + chest
+                        + " Иначе тест assertChest перестанет ловить эту поломку. При смене assertChest проверь это утверждение.");
         BlockCoord sign = placement.sign();
         assertTrue(
                 sign != null && chebyshev(sign, chest) >= 1 && chebyshev(sign, chest) <= 2 && sign.y() == chest.y(),
-                where + ": у сундука обязана стоять табличка с названием рядом, вдоль фасада (владелец 19.10): "
-                        + sign);
+                where + ": у сундука обязана стоять табличка с названием рядом, вдоль фасада (владелец 19.10): " + sign
+                        + " Иначе тест assertChest перестанет ловить эту поломку. При смене assertChest проверь это утверждение.");
         for (BlockCoord cell : chestGroupCells(placement)) {
             assertTrue(
                     placement.platform().contains(cell),
-                    where + ": сундук, вторая половина и табличка обязаны стоять на площадке: " + cell);
+                    where + ": сундук, вторая половина и табличка обязаны стоять на площадке: " + cell
+                            + " Иначе тест assertChest перестанет ловить эту поломку. При смене assertChest проверь это утверждение.");
             assertTrue(
                     !inSchema(placement, schematic, cell),
                     where + ": сундук, вторая половина и табличка обязаны стоять вне клеток схемы при любом "
-                            + "повороте, иначе дух не очистит клетку ограды (владелец 21.10): " + cell);
+                            + "повороте, иначе дух не очистит клетку ограды (владелец 21.10): " + cell
+                            + " При смене assertChest проверь это утверждение.");
         }
     }
 
@@ -134,14 +151,17 @@ class DemoPlacementSweepTests {
         BlockCoord spawn = placement.spawn();
         assertTrue(
                 placement.platform().contains(spawn),
-                where + ": дух обязан появляться на площадке, а не за её краем: " + spawn);
+                where + ": дух обязан появляться на площадке, а не за её краем: " + spawn
+                        + " Иначе тест assertSpawn перестанет ловить эту поломку. При смене assertSpawn проверь это утверждение.");
         assertTrue(
                 !inSchema(placement, schematic, spawn),
-                where + ": дух не появляется в клетке схемы, иначе он задохнётся в блоках: " + spawn);
+                where + ": дух не появляется в клетке схемы, иначе он задохнётся в блоках: " + spawn
+                        + " При смене assertSpawn проверь это утверждение. Иначе поломка пройдёт незамеченной в прогоне.");
         for (BlockCoord cell : chestGroupCells(placement)) {
             assertTrue(
                     cell.x() != spawn.x() || cell.z() != spawn.z(),
-                    where + ": дух не появляется в клетке сундука или таблички: " + cell);
+                    where + ": дух не появляется в клетке сундука или таблички: " + cell
+                            + " Иначе тест assertSpawn перестанет ловить эту поломку. При смене assertSpawn проверь это утверждение.");
         }
     }
 

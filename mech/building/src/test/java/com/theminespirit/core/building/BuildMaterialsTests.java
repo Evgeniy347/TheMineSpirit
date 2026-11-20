@@ -19,12 +19,18 @@ class BuildMaterialsTests {
         assertEquals(
                 List.of(),
                 plan.steps(),
-                "Когда материала хватает, шагов withdraw быть не должно: иначе дух ходит к сундукам без нужды");
+                "Когда материала хватает, шагов withdraw быть не должно: иначе дух ходит к сундукам без нужды"
+                        + " При смене plan_AllPresent_GivesEmptySteps проверь это утверждение.");
         assertEquals(
                 0,
                 plan.missing(),
-                "Когда материала хватает, нехватка обязана быть 0: иначе стройка откажет при полном инвентаре");
-        assertEquals(5, plan.have(), "have обязан ограничиваться нужным числом: иначе итог врёт о запасах");
+                "Когда материала хватает, нехватка обязана быть 0: иначе стройка откажет при полном инвентаре"
+                        + " При смене plan_AllPresent_GivesEmptySteps проверь это утверждение.");
+        assertEquals(
+                5,
+                plan.have(),
+                "have обязан ограничиваться нужным числом: иначе итог врёт о запасах"
+                        + " При смене plan_AllPresent_GivesEmptySteps проверь это утверждение.");
     }
 
     @Test
@@ -37,11 +43,13 @@ class BuildMaterialsTests {
         assertEquals(
                 List.of(step),
                 plan.steps(),
-                "При частичной нехватке шаги обязаны запрашивать остаток: иначе дух идёт за всем объёмом заново");
+                "При частичной нехватке шаги обязаны запрашивать остаток: иначе дух идёт за всем объёмом заново"
+                        + " При смене plan_PartiallyPresent_StepsForRemainder проверь это утверждение.");
         assertEquals(
                 5,
                 plan.missing(),
-                "Нехватка обязана равняться нужному минус своё: иначе отказ называет неверные числа");
+                "Нехватка обязана равняться нужному минус своё: иначе отказ называет неверные числа"
+                        + " При смене plan_PartiallyPresent_StepsForRemainder проверь это утверждение.");
     }
 
     @Test
@@ -53,7 +61,8 @@ class BuildMaterialsTests {
         assertEquals(
                 8,
                 plan.missing(),
-                "При пустом инвентаре нехватка обязана равняться нужному: иначе стратег не узнает, сколько нести");
+                "При пустом инвентаре нехватка обязана равняться нужному: иначе стратег не узнает, сколько нести"
+                        + " При смене plan_NothingPresent_MissingEqualsNeeded проверь это утверждение.");
     }
 
     @Test
@@ -66,7 +75,8 @@ class BuildMaterialsTests {
         assertEquals(
                 List.of(first, second),
                 plan.steps(),
-                "Порядок шагов обязан сохраняться: ближний сундук идёт первым, перестановка гонит духа далеко");
+                "Порядок шагов обязан сохраняться: ближний сундук идёт первым, перестановка гонит духа далеко"
+                        + " Иначе тест plan_StepOrder_PreservedAsGiven перестанет ловить эту поломку. При смене plan_StepOrder_PreservedAsGiven проверь это утверждение.");
     }
 
     @Test
@@ -74,11 +84,13 @@ class BuildMaterialsTests {
         assertThrows(
                 NullPointerException.class,
                 () -> BuildMaterials.plan(null, 5, stub(5, List.of())),
-                "plan без id блока обязан отказывать: без id неизвестно, что считать");
+                "plan без id блока обязан отказывать: без id неизвестно, что считать"
+                        + " Иначе тест plan_NullArguments_AreRejected перестанет ловить эту поломку. При смене plan_NullArguments_AreRejected проверь это утверждение.");
         assertThrows(
                 NullPointerException.class,
                 () -> BuildMaterials.plan("cobblestone", 5, null),
-                "plan без снабжения обязан отказывать: без него неизвестно, сколько материала есть");
+                "plan без снабжения обязан отказывать: без него неизвестно, сколько материала есть"
+                        + " Иначе тест plan_NullArguments_AreRejected перестанет ловить эту поломку. При смене plan_NullArguments_AreRejected проверь это утверждение.");
     }
 
     @Test
@@ -86,7 +98,8 @@ class BuildMaterialsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BuildMaterials.plan("   ", 5, stub(5, List.of())),
-                "Пустой id блока обязан отвергаться: по пробелам материал не найти");
+                "Пустой id блока обязан отвергаться: по пробелам материал не найти"
+                        + " Иначе тест plan_BlankBlock_IsRejected перестанет ловить эту поломку. При смене plan_BlankBlock_IsRejected проверь это утверждение.");
     }
 
     private static BuildSupplies stub(int have, List<ScriptCall> steps) {
@@ -98,7 +111,10 @@ class BuildMaterialsTests {
 
             @Override
             public List<ScriptCall> withdraw(String block, int maxCount) {
-                assertTrue(maxCount >= 0, "Запрос withdraw обязан быть неотрицательным");
+                assertTrue(
+                        maxCount >= 0,
+                        "Запрос withdraw обязан быть неотрицательным"
+                                + " Иначе тест plan_BlankBlock_IsRejected перестанет ловить эту поломку. При смене plan_BlankBlock_IsRejected проверь это утверждение.");
                 return steps;
             }
         };

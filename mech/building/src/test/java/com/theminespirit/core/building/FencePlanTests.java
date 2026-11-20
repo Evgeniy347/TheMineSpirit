@@ -28,17 +28,21 @@ class FencePlanTests {
         assertEquals(
                 15,
                 plan.cells().size(),
-                "Периметр квадрата 5×5 — 16 клеток, одна уходит под калитку: иначе в заборе нет прохода");
+                "Периметр квадрата 5×5 — 16 клеток, одна уходит под калитку: иначе в заборе нет прохода"
+                        + " При смене contour_FourCorners_BuildsPerimeterWithoutGate проверь это утверждение.");
         assertTrue(
                 plan.cells().stream().allMatch(cell -> cell.y() == Y),
-                "Забор стоит на одном уровне: наклонный забор дух не строит");
+                "Забор стоит на одном уровне: наклонный забор дух не строит"
+                        + " Иначе тест contour_FourCorners_BuildsPerimeterWithoutGate перестанет ловить эту поломку. При смене contour_FourCorners_BuildsPerimeterWithoutGate проверь это утверждение.");
         assertFalse(
                 plan.cells().contains(plan.gate()),
-                "Клетка калитки не входит в забор: иначе проход окажется заложен блоком забора");
+                "Клетка калитки не входит в забор: иначе проход окажется заложен блоком забора"
+                        + " При смене contour_FourCorners_BuildsPerimeterWithoutGate проверь это утверждение.");
         assertEquals(
                 new BlockCoord(2, Y, 0),
                 plan.gate(),
-                "Калитка стоит в середине длинной стороны: дух проходит там, где не надо ломать забор");
+                "Калитка стоит в середине длинной стороны: дух проходит там, где не надо ломать забор"
+                        + " Иначе тест contour_FourCorners_BuildsPerimeterWithoutGate перестанет ловить эту поломку. При смене contour_FourCorners_BuildsPerimeterWithoutGate проверь это утверждение.");
     }
 
     @Test
@@ -49,9 +53,13 @@ class FencePlanTests {
         assertEquals(
                 new BlockCoord(4, Y, 0),
                 plan.gate(),
-                "Калитка обязана быть в середине длинной стороны (8 клеток), а не короткой: иначе проход жмётся к углу");
+                "Калитка обязана быть в середине длинной стороны (8 клеток), а не короткой: иначе проход жмётся к углу"
+                        + " При смене contour_Rectangle_GateOnLongestSide проверь это утверждение.");
         assertEquals(
-                19, plan.cells().size(), "Периметр 9×3 — 20 клеток, минус калитка: каждая клетка ставится один раз");
+                19,
+                plan.cells().size(),
+                "Периметр 9×3 — 20 клеток, минус калитка: каждая клетка ставится один раз"
+                        + " Иначе тест contour_Rectangle_GateOnLongestSide перестанет ловить эту поломку. При смене contour_Rectangle_GateOnLongestSide проверь это утверждение.");
     }
 
     @Test
@@ -66,17 +74,21 @@ class FencePlanTests {
 
         assertTrue(
                 plan.cells().contains(new BlockCoord(1, Y, 0)),
-                "Ребро вдоль оси X обязано заполняться промежуточными клетками: иначе между углами дыра");
+                "Ребро вдоль оси X обязано заполняться промежуточными клетками: иначе между углами дыра"
+                        + " При смене contour_LShape_ConnectsEdges проверь это утверждение.");
         assertTrue(
                 plan.cells().contains(new BlockCoord(4, Y, 2)),
-                "Ребро вдоль оси Z обязано заполняться промежуточными клетками");
+                "Ребро вдоль оси Z обязано заполняться промежуточными клетками"
+                        + " Иначе тест contour_LShape_ConnectsEdges перестанет ловить эту поломку. При смене contour_LShape_ConnectsEdges проверь это утверждение.");
         assertTrue(
                 plan.cells().contains(new BlockCoord(3, Y, 3)),
-                "Горизонтальная полка Г-контура обязана быть непрерывной");
+                "Горизонтальная полка Г-контура обязана быть непрерывной"
+                        + " Иначе тест contour_LShape_ConnectsEdges перестанет ловить эту поломку. При смене contour_LShape_ConnectsEdges проверь это утверждение.");
         assertEquals(
                 plan.cells().size(),
                 new HashSet<>(plan.cells()).size(),
-                "Дубли в плане — двойной расход блоков: каждая клетка ставится один раз");
+                "Дубли в плане — двойной расход блоков: каждая клетка ставится один раз"
+                        + " Иначе тест contour_LShape_ConnectsEdges перестанет ловить эту поломку. При смене contour_LShape_ConnectsEdges проверь это утверждение.");
     }
 
     @Test
@@ -92,7 +104,8 @@ class FencePlanTests {
         assertEquals(
                 open,
                 closed,
-                "Замкнутый вход с повтором первого угла обязан давать тот же план: повтор угла не добавляет клеток");
+                "Замкнутый вход с повтором первого угла обязан давать тот же план: повтор угла не добавляет клеток"
+                        + " Иначе тест contour_ClosedInput_DoesNotDuplicateFirstCorner перестанет ловить эту поломку. При смене contour_ClosedInput_DoesNotDuplicateFirstCorner проверь это утверждение.");
     }
 
     @Test
@@ -101,7 +114,8 @@ class FencePlanTests {
                 IllegalArgumentException.class,
                 () -> FencePlan.contour(
                         List.of(new BlockCoord(0, Y, 0), new BlockCoord(4, Y, 4), new BlockCoord(0, Y, 4))),
-                "Диагональное ребро обязано отвергаться: забор по диагонали оставляет дыры между столбами");
+                "Диагональное ребро обязано отвергаться: забор по диагонали оставляет дыры между столбами"
+                        + " Иначе тест contour_DiagonalEdge_IsRejected перестанет ловить эту поломку. При смене contour_DiagonalEdge_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -110,7 +124,8 @@ class FencePlanTests {
                 IllegalArgumentException.class,
                 () -> FencePlan.contour(
                         List.of(new BlockCoord(0, Y, 0), new BlockCoord(4, Y, 0), new BlockCoord(4, Y + 1, 4))),
-                "Углы на разной высоте обязаны отвергаться: забор стоит по земле, а не по склону");
+                "Углы на разной высоте обязаны отвергаться: забор стоит по земле, а не по склону"
+                        + " Иначе тест contour_DifferentHeights_IsRejected перестанет ловить эту поломку. При смене contour_DifferentHeights_IsRejected проверь это утверждение.");
     }
 
     @Test
@@ -118,6 +133,7 @@ class FencePlanTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> FencePlan.contour(List.of(new BlockCoord(0, Y, 0), new BlockCoord(4, Y, 0))),
-                "Двух углов недостаточно для замкнутого контура: получилась бы линия, а не забор");
+                "Двух углов недостаточно для замкнутого контура: получилась бы линия, а не забор"
+                        + " Иначе тест contour_TooFewCorners_IsRejected перестанет ловить эту поломку. При смене contour_TooFewCorners_IsRejected проверь это утверждение.");
     }
 }

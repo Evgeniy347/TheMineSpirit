@@ -10,49 +10,59 @@ class BlockMatchTests {
     void matches_SaplingAgainstTree_Accepted() {
         assertTrue(
                 BlockMatch.matches("minecraft:oak_log", "minecraft:oak_sapling"),
-                "выросшее дерево на месте саженца — та же посадка: владелец считает саженец и дерево равными");
+                "выросшее дерево на месте саженца — та же посадка: владелец считает саженец и дерево равными"
+                        + " Иначе тест matches_SaplingAgainstTree_Accepted перестанет ловить эту поломку. При смене matches_SaplingAgainstTree_Accepted проверь это утверждение.");
         assertTrue(
                 BlockMatch.matches("minecraft:oak_leaves", "minecraft:oak_sapling"),
-                "листва выросшего дерева тоже закрывает клетку саженца");
+                "листва выросшего дерева тоже закрывает клетку саженца"
+                        + " Иначе тест matches_SaplingAgainstTree_Accepted перестанет ловить эту поломку. При смене matches_SaplingAgainstTree_Accepted проверь это утверждение.");
     }
 
     @Test
     void matches_TreeOfOtherSpecies_Rejected() {
         assertFalse(
                 BlockMatch.matches("minecraft:birch_log", "minecraft:oak_sapling"),
-                "берёза не заменяет дубовый саженец: порода входит в план сада");
+                "берёза не заменяет дубовый саженец: порода входит в план сада"
+                        + " Иначе тест matches_TreeOfOtherSpecies_Rejected перестанет ловить эту поломку. При смене matches_TreeOfOtherSpecies_Rejected проверь это утверждение.");
     }
 
     @Test
     void matches_WallTorchAgainstStanding_Accepted() {
         assertTrue(
                 BlockMatch.matches("minecraft:wall_torch", "minecraft:torch"),
-                "настенный факел — тот же факел: владелец разрешил не различать способ крепления");
+                "настенный факел — тот же факел: владелец разрешил не различать способ крепления"
+                        + " Иначе тест matches_WallTorchAgainstStanding_Accepted перестанет ловить эту поломку. При смене matches_WallTorchAgainstStanding_Accepted проверь это утверждение.");
         assertTrue(
                 BlockMatch.matches("minecraft:torch[facing=east]", "minecraft:wall_torch"),
-                "стоящий факел закрывает клетку настенного: способ крепления не входит в готовность");
+                "стоящий факел закрывает клетку настенного: способ крепления не входит в готовность"
+                        + " Иначе тест matches_WallTorchAgainstStanding_Accepted перестанет ловить эту поломку. При смене matches_WallTorchAgainstStanding_Accepted проверь это утверждение.");
     }
 
     @Test
     void matches_DoorGateAndChest_IgnoreState() {
         assertTrue(
                 BlockMatch.matches("minecraft:oak_door[half=lower,open=true]", "minecraft:oak_door"),
-                "открытая дверь не повреждает постройку: состояние open не входит в готовность");
+                "открытая дверь не повреждает постройку: состояние open не входит в готовность"
+                        + " Иначе тест matches_DoorGateAndChest_IgnoreState перестанет ловить эту поломку. При смене matches_DoorGateAndChest_IgnoreState проверь это утверждение.");
         assertTrue(
                 BlockMatch.matches("minecraft:oak_fence_gate[open=false]", "minecraft:oak_fence_gate"),
-                "закрытая калитка не повреждает постройку: состояние open не входит в готовность");
+                "закрытая калитка не повреждает постройку: состояние open не входит в готовность"
+                        + " Иначе тест matches_DoorGateAndChest_IgnoreState перестанет ловить эту поломку. При смене matches_DoorGateAndChest_IgnoreState проверь это утверждение.");
         assertTrue(
                 BlockMatch.matches("minecraft:chest[facing=east,type=right]", "minecraft:chest"),
-                "направление и двойная половина сундука не влияют на готовность склада");
+                "направление и двойная половина сундука не влияют на готовность склада"
+                        + " Иначе тест matches_DoorGateAndChest_IgnoreState перестанет ловить эту поломку. При смене matches_DoorGateAndChest_IgnoreState проверь это утверждение.");
     }
 
     @Test
     void matches_GrassOnDirtTile_Accepted() {
         assertTrue(
                 BlockMatch.matches("minecraft:grass_block", "minecraft:dirt"),
-                "дёрн на месте плитки из земли — тот же грунт: расчистка схемы не сносит траву ради земли");
+                "дёрн на месте плитки из земли — тот же грунт: расчистка схемы не сносит траву ради земли"
+                        + " Иначе тест matches_GrassOnDirtTile_Accepted перестанет ловить эту поломку. При смене matches_GrassOnDirtTile_Accepted проверь это утверждение.");
         assertFalse(
                 BlockMatch.matches("minecraft:stone", "minecraft:dirt"),
-                "камень на земляной клетке — помеха: его снос нужен");
+                "камень на земляной клетке — помеха: его снос нужен"
+                        + " Иначе тест matches_GrassOnDirtTile_Accepted перестанет ловить эту поломку. При смене matches_GrassOnDirtTile_Accepted проверь это утверждение.");
     }
 }
