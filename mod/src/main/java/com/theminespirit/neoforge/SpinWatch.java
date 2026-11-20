@@ -17,6 +17,9 @@ import org.slf4j.Logger;
 public final class SpinWatch {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Map<UUID, SpinDetector> DETECTORS = new ConcurrentHashMap<>();
+    private static final Map<UUID, ScriptAge> SCRIPTS = new ConcurrentHashMap<>();
+
+    private record ScriptAge(String script, long since) {}
 
     private SpinWatch() {}
 
@@ -33,14 +36,20 @@ public final class SpinWatch {
         Path path = mob.getNavigation().getPath();
         String next = path == null || path.isDone() ? "-" : shortCoord(path.getNextNodePos());
         String layer = "-".equals(next) ? "RouteWalk" : "ванильный";
+        ScriptAge age = SCRIPTS.compute(
+                mob.getUUID(),
+                (id, old) -> old == null || !old.script().equals(script) ? new ScriptAge(script, tick) : old);
+        String nav = path == null ? "нет" : path.isDone() ? "конец" : "идёт";
         LOGGER.info(
-                "[spin] дух {} ({}): {}, вид={}, слой={}, script={}, target={}, next={}",
+                "[spin] дух {} ({}): {}, вид={}, слой={}, script={}, возраст={} тиков, nav={}, target={}, next={}",
                 mob.getName().getString(),
                 owner,
                 spin.text(),
                 spin.kind(),
                 layer,
                 script,
+                tick - age.since(),
+                nav,
                 shortCoord(target),
                 next);
         if (mob.level() instanceof ServerLevel server) {
