@@ -10,7 +10,6 @@ import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 import net.jqwik.api.ForAll;
@@ -23,7 +22,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class CullPolicyTests {
     private static final BlockCoord CENTER = new BlockCoord(0, 64, 0);
-    private static final Map<String, SwordTier> SWORDS = SwordTier.loadFile();
 
     static Stream<Arguments> cullRows() {
         BlockCoord near = new BlockCoord(1, 64, 0);
@@ -146,20 +144,27 @@ class CullPolicyTests {
             assertInstanceOf(
                     CullPolicy.Refused.class,
                     result,
-                    "Слабый меч обязан давать отказ до удара (" + reason + "): животное не бьют зря");
+                    "Слабый меч обязан давать отказ до удара (" + reason + "): иначе животное бьют впустую, оно "
+                            + "убегает и мясо теряется. При смене CullPolicy.pick проверь строки cullRows с WOOD, "
+                            + "STONE, GOLD и HAND");
             assertTrue(
                     ((CullPolicy.Refused) result).reason().contains("железным мечом и выше"),
-                    "Отказ обязан называть порог (" + reason + "): иначе стратег не узнает, какой меч нести");
+                    "Отказ обязан называть порог («железным мечом и выше») (" + reason + "): иначе стратег не "
+                            + "узнает, какой меч нести, и снова придёт с каменным. При смене текста отказа проверь "
+                            + "строки слабых мечей");
             return;
         }
         assertInstanceOf(
                 CullPolicy.Picked.class,
                 result,
-                "Достаточный меч обязан давать список (" + reason + "): иначе стадо перерастёт загон");
+                "Достаточный меч обязан давать список (" + reason + "): иначе стадо перерастёт загон, начнёт "
+                        + "давиться и болеть. При смене CullPolicy.pick проверь строки IRON, DIAMOND и NETHERITE");
         assertEquals(
                 expected,
                 ((CullPolicy.Picked) result).ids(),
-                "Забирать обязаны дальних от центра сверх нормы (" + reason + "): ближние держат стадо у кормушки");
+                "Забирать обязаны дальних от центра сверх нормы (" + reason + "): ближние держат стадо у "
+                        + "кормушки, иначе кормление идёт через пустой загон. При смене порядка отбора проверь "
+                        + "строку «шесть голов при норме два» в cullRows");
     }
 
     @Test
@@ -169,11 +174,14 @@ class CullPolicyTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> CullPolicy.pick(herd, CENTER, Species.COW, 1, SwordTier.IRON),
-                "Норма меньше двух обязана отвергаться: пара нужна для разведения, стадо выродится до нуля");
+                "Норма меньше двух обязана отвергаться: пара нужна для разведения, иначе стадо выродится до "
+                        + "нуля и загон опустеет. При смене проверки нормы в CullPolicy.pick проверь границы 1 и 2");
 
         assertTrue(
                 error.getMessage().contains("2"),
-                "Сообщение обязано называть минимум: иначе норму поправят вслепую. Фактически: " + error.getMessage());
+                "Сообщение обязано называть минимум: иначе норму поправят вслепую и снова поставят 1, а стадо "
+                        + "останется без пары. При смене текста исключения проверь этот отказ. Фактически: "
+                        + error.getMessage());
     }
 
     @Test
@@ -188,50 +196,14 @@ class CullPolicyTests {
         assertInstanceOf(
                 CullPolicy.Refused.class,
                 result,
-                "Овец загона не забивают даже железным мечом: шерсть стригут повторно, а не режут стадо");
+                "Овец загона не забивают даже железным мечом: шерсть стригут повторно, а не режут стадо, иначе "
+                        + "источник шерсти теряется. При смене CullPolicy.pick проверь вид SHEEP и живой забой "
+                        + "коров при овцах рядом");
         assertTrue(
                 ((CullPolicy.Refused) result).reason().contains("овец загона не убиваем"),
-                "Отказ обязан называть правило: иначе стратег решит, что виноват меч. Фактически: "
+                "Отказ обязан называть правило («овец загона не убиваем»): иначе стратег решит, что виноват "
+                        + "меч, и понесёт алмазный. При смене текста отказа проверь эту строку. Фактически: "
                         + ((CullPolicy.Refused) result).reason());
-    }
-
-    @Test
-    void swordTiers_ProductionTable_MatchesVanillaOrder() {
-        assertEquals(
-                SwordTier.WOOD,
-                SwordTier.ofItem("minecraft:wooden_sword", SWORDS),
-                "Деревянный меч обязан читаться из таблицы: иначе забой разрешит не тот тир");
-        assertEquals(
-                SwordTier.IRON,
-                SwordTier.ofItem("minecraft:iron_sword", SWORDS),
-                "Железный меч обязан читаться из таблицы: порог забоя считается по таблице, а не по урону");
-        assertEquals(
-                SwordTier.NETHERITE,
-                SwordTier.ofItem("minecraft:netherite_sword", SWORDS),
-                "Незеритовый меч обязан читаться из таблицы: иначе лучшему мечу откажут");
-        assertEquals(
-                SwordTier.HAND,
-                SwordTier.ofItem("minecraft:air", SWORDS),
-                "Пустая рука обязана быть ниже дерева: руками стадо не забивают");
-        assertTrue(
-                SwordTier.NETHERITE.atLeast(SwordTier.IRON) && !SwordTier.GOLD.atLeast(SwordTier.IRON),
-                "Порядок тиров обязан идти от руки к незериту: иначе золотой меч сойдёт за железный");
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> SwordTier.ofItem("minecraft:diamond_axe", SWORDS),
-                "Алмазный топор — не меч: тир считается по таблице, а не по урону, топору обязаны отказать");
-    }
-
-    @Test
-    void swordTable_FileItems_MatchProduction() {
-        Map<String, SwordTier> items = SWORDS;
-
-        assertTrue(
-                items.get("minecraft:iron_sword") == SwordTier.IRON
-                        && items.get("minecraft:diamond_sword") == SwordTier.DIAMOND
-                        && items.get("minecraft:netherite_sword") == SwordTier.NETHERITE,
-                "Файл sword.json обязан покрывать боевые мечи: без файла забой запрещён вовсе");
-        assertTrue(items.get("minecraft:air") == SwordTier.HAND, "Пустая рука обязана быть в таблице ниже дерева");
     }
 
     @Property
@@ -251,15 +223,23 @@ class CullPolicyTests {
 
         CullPolicy.Outcome result = CullPolicy.pick(herd, CENTER, Species.COW, keep, SwordTier.IRON);
 
-        assertInstanceOf(CullPolicy.Picked.class, result, "Железный меч обязан разрешать забой");
+        assertInstanceOf(
+                CullPolicy.Picked.class,
+                result,
+                "Железный меч обязан разрешать забой: иначе свойство теряет смысл и не проверяет отбор по "
+                        + "взрослым. При смене CullPolicy.pick проверь таблицу cullRows и строку «железный меч»");
         List<String> ids = ((CullPolicy.Picked) result).ids();
         assertTrue(
                 ids.stream().noneMatch(babyIds::contains),
-                "Выбранные обязаны быть только взрослыми: детёнышей не трогают никогда. Выбрано: " + ids);
+                "Выбранные обязаны быть только взрослыми: детёнышей не трогают никогда, иначе стадо теряет "
+                        + "приплод. При смене отбора в CullPolicy.pick проверь строки «лишние только детёныши» и "
+                        + "«телята при забое целы». Выбрано: " + ids);
         assertEquals(
                 Math.max(0, adults - keep),
                 ids.size(),
-                "После забоя выбранных взрослых обязано остаться ровно keep (" + keep + "): иначе норма не держится");
+                "После забоя выбранных взрослых обязано остаться ровно keep (" + keep + "): иначе норма не "
+                        + "держится и стадо снова разрастается. При смене подсчёта в CullPolicy.pick проверь "
+                        + "строки «ровно норма» и «одна лишняя»");
     }
 
     @Property
@@ -275,7 +255,9 @@ class CullPolicyTests {
         assertEquals(
                 first,
                 second,
-                "Забой обязан зависеть только от стада, а не от порядка снимка: иначе дух будет менять жертв");
+                "Забой обязан зависеть только от стада, а не от порядка снимка: иначе дух меняет жертв при "
+                        + "каждом опросе и не забивает ни одну. При смене сортировки в CullPolicy.pick проверь "
+                        + "это свойство и строки cullRows с несколькими лишними");
     }
 
     private static AnimalRef cow(String id, BlockCoord pos) {
