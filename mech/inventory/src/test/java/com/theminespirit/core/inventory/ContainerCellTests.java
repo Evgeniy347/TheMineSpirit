@@ -23,7 +23,7 @@ class ContainerCellTests {
         assertEquals(
                 ContainerCell.Problem.AIR_WITH_ENTITY,
                 cell.problem(),
-                "живая клетка -180,69,-517 из observe10 — воздух с BlockEntity сундука: без распознавания "
+                "живая клетка -180,69,-517 из observe10 — воздух с BlockEntity сундука: иначе ContainerLid снова "
                         + "ContainerLid снова полезет за ChestType в air и уронит тик сервера. "
                         + "При смене problem проверь этот живой случай");
         assertFalse(
@@ -60,7 +60,8 @@ class ContainerCellTests {
                 ContainerCell.Problem.BLOCK_WITHOUT_ENTITY,
                 cell.problem(),
                 "склад -171,72,-487 отклонил клетку «нет блочной сущности»: StorageFinder обязан писать это "
-                        + "расхождение отдельным событием, а не молчать про обратный случай air ↔ BlockEntity. "
+                        + "расхождение отдельным событием, а не молчать про обратный случай air ↔ BlockEntity, "
+                        + "иначе расхождение не найти. "
                         + "При смене problem проверь блок без сущности");
     }
 
@@ -75,8 +76,8 @@ class ContainerCellTests {
         assertEquals(
                 "STOCK_CHESTS",
                 ticket.get("case").asText(),
-                "фикстура обязана быть живым провалом chests:1: подмена тикета сделает тест зелёным не про тот "
-                        + "путь. При смене фикстуры проверь case = STOCK_CHESTS");
+                "фикстура обязана быть живым провалом chests:1: иначе подмена тикета сделает тест зелёным не "
+                        + "про тот путь. При смене фикстуры проверь case = STOCK_CHESTS");
         assertTrue(
                 ticket.get("message").asText().contains(coord),
                 "тикет chests:1 обязан называть ту же клетку " + coord
@@ -85,7 +86,7 @@ class ContainerCellTests {
         assertTrue(
                 ticket.get("message").asText().contains("опора false"),
                 "живой провал говорит «опора false»: именно это обязано запрещать постановку второй половины, "
-                        + "а не оставлять воздух с BlockEntity. При смене текста проверь фразу «опора false»");
+                        + "иначе запрет не сработает. При смене текста проверь фразу «опора false»");
     }
 
     private static ContainerCell cell(String key) throws IOException {
