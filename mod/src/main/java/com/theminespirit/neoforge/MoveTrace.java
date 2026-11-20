@@ -51,6 +51,7 @@ public final class MoveTrace {
         if (broken || spirit.level().isClientSide()) {
             return;
         }
+        SpinWatch.tick(spirit, owner, tick);
         Vec3 pos = spirit.position();
         var navigation = spirit.getNavigation();
         BlockPos target = navigation.getTargetPos();
@@ -69,7 +70,8 @@ public final class MoveTrace {
         Node node = path == null || path.isDone() ? null : path.getNextNode();
         String line = String.format(
                 Locale.ROOT,
-                "%s t=%d %s pos=%.2f,%.2f,%.2f v=%.2f,%.2f,%.2f ground=%s water=%s target=%s next=%s%s path=%s owner=%s%n",
+                "%s t=%d %s pos=%.2f,%.2f,%.2f v=%.2f,%.2f,%.2f ground=%s water=%s target=%s next=%s%s path=%s"
+                        + " owner=%s yaw=%.1f%n",
                 LocalTime.now(ZoneId.systemDefault()).format(TIME),
                 tick,
                 name,
@@ -85,7 +87,8 @@ public final class MoveTrace {
                 coord(next),
                 node == null ? "" : "(" + node.type + ")",
                 path == null ? "-" : path.getNextNodeIndex() + "/" + path.getNodeCount(),
-                owner);
+                owner,
+                spirit.getYRot());
         write(line, tick);
     }
 
