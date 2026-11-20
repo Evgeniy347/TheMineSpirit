@@ -76,16 +76,18 @@ class BlockProtectionUseTests {
                     BlockProtection.Allowed.class,
                     decision,
                     "«" + name + "»: механизм без чужой постройки обязан нажиматься, иначе дух не откроет дверь "
-                            + "собственной базы");
+                            + "собственной базы. При смене checkUse проверь поле, разрешённую область и зону на одной таблице");
         } else {
             BlockProtection.Refused refused = assertInstanceOf(
                     BlockProtection.Refused.class,
                     decision,
-                    "«" + name + "»: чужой или запрещённый механизм обязан отвергаться. Ответ: " + decision);
+                    "«" + name + "»: чужой или запрещённый механизм обязан отвергаться. Ответ: " + decision
+                            + ". При смене checkUse проверь, что зона сильнее метки игрока, а постройка рядом — сильнее поля");
             assertEquals(
                     refusedBy,
                     refused.policy(),
-                    "«" + name + "»: политика отказа должна называть причину, чтобы скрипт показал понятное сообщение");
+                    "«" + name + "»: политика отказа должна называть причину, чтобы скрипт показал понятное сообщение. "
+                            + "При смене порядка проверок сверь ожидаемую PolicyId для каждой строки таблицы");
         }
     }
 
@@ -98,7 +100,8 @@ class BlockProtectionUseTests {
                 BlockProtection.Allowed.class,
                 decision,
                 "Использовать рычаг — не ломать его: чёрный список защиты (deny) на нажатие не распространяется, "
-                        + "иначе дверь и рычаг собственной базы никогда не сработают");
+                        + "иначе дверь и рычаг собственной базы никогда не сработают. При смене checkUse проверь, "
+                        + "что рычаг из deny-списка всё равно нажимается");
     }
 
     @Test
@@ -106,7 +109,8 @@ class BlockProtectionUseTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> protection.checkUse(List.of("minecraft:air"), new BlockProtection.Placement(false, false, false)),
-                "Список соседей обязан быть 26: иное число значит, что постройку считают не по 3×3×3");
+                "Список соседей обязан быть 26: иное число значит, что постройку считают не по 3×3×3, и защита "
+                        + "слепнет. При смене NEIGHBOUR_COUNT проверь, что размер списка валидируется");
     }
 
     @Test
@@ -114,6 +118,7 @@ class BlockProtectionUseTests {
         assertThrows(
                 NullPointerException.class,
                 () -> protection.checkUse(null, new BlockProtection.Placement(false, false, false)),
-                "Без списка соседей нельзя отличить постройку от природы: null обязан отказывать");
+                "Без списка соседей нельзя отличить постройку от природы: null обязан отказывать, а не молча "
+                        + "пропускать проверку. При смене checkUse проверь null до обращения к списку");
     }
 }
