@@ -13,21 +13,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import org.jspecify.annotations.Nullable;
 
 public final class RecipeImport {
     public static final String INGREDIENT_TAG = "#";
     public static final double REVERSE_WEIGHT = 0.1;
-    private static final String COALS = "#coals";
-    private static final String ALT_PREFIX = "#alt_";
-    private static final Map<String, String> STATIONS = Map.of(
+    static final String COALS = "#coals";
+    static final String ALT_PREFIX = "#alt_";
+    static final Map<String, String> STATIONS = Map.of(
             "smelting", "furnace",
             "blasting", "blast_furnace",
             "smoking", "smoker",
             "campfire_cooking", "campfire",
             "stonecutting", "stonecutter",
             "smithing_transform", "smithing_table");
-    private static final Set<String> FUELLED = Set.of("smelting", "blasting", "smoking");
+    static final Set<String> FUELLED = Set.of("smelting", "blasting", "smoking");
 
     public record Result(
             Map<String, List<String>> groups,
@@ -49,7 +48,7 @@ public final class RecipeImport {
     private RecipeImport() {}
 
     public static Result importRecipes(Map<String, String> recipes, Map<String, String> tagJson, SupplyGraph manual) {
-        Tags tags = new Tags(tagJson);
+        RecipeTags tags = new RecipeTags(tagJson);
         Map<String, List<String>> groups = new LinkedHashMap<>();
         Map<String, BoardCase> manualCases = manualCases(manual);
         Map<String, Integer> parsed = new TreeMap<>();
@@ -58,7 +57,7 @@ public final class RecipeImport {
         for (Map.Entry<String, String> entry : new TreeMap<>(recipes).entrySet()) {
             JsonNode root = JsonResource.parse(entry.getValue(), "рецепт " + entry.getKey());
             String type = simple(root.path("type").asText());
-            SupplyGraph.Way way = parse(entry.getKey(), type, root, tags, groups, manualCases);
+            SupplyGraph.Way way = RecipeParsing.parse(entry.getKey(), type, root, tags, groups, manualCases);
             if (way == null) {
                 if (STATIONS.containsKey(type) || type.startsWith("crafting_")) {
                     skipped.merge(type, 1, Integer::sum);
@@ -70,7 +69,7 @@ public final class RecipeImport {
             parsed.merge(type, 1, Integer::sum);
             ways.add(way);
         }
-        ways = reverseWeights(ways);
+        ways = RecipeParsing.reverseWeights(ways);
         ways.sort(Comparator.comparing(SupplyGraph.Way::id));
         Map<String, List<String>> usedGroups = usedGroups(ways, groups);
         Map<String, SupplyGraph.Item> items = items(ways, usedGroups, manual);
@@ -101,233 +100,6 @@ public final class RecipeImport {
         });
         selected.sort(Comparator.comparing(SupplyGraph.Way::id));
         return selected;
-    }
-
-    private static SupplyGraph.@Nullable Way parse(
-            String id,
-            String type,
-            JsonNode root,
-            Tags tags,
-            Map<String, List<String>> groups,
-            Map<String, BoardCase> manualCases) {
-        return switch (type) {
-            case "crafting_shaped" -> shaped(id, root, tags, groups, manualCases);
-            case "crafting_shapeless" -> shapeless(id, root, tags, groups, manualCases);
-            case "smelting", "blasting", "smoking", "campfire_cooking", "stonecutting" ->
-                cooking(id, type, root, tags, groups, manualCases);
-            case "smithing_transform" -> smithing(id, root, tags, groups, manualCases);
-            default -> null;
-        };
-    }
-
-    private static SupplyGraph.@Nullable Way shaped(
-            String id, JsonNode root, Tags tags, Map<String, List<String>> groups, Map<String, BoardCase> manualCases) {
-        JsonNode pattern = root.path("pattern");
-        JsonNode key = root.path("key");
-        if (!pattern.isArray() || pattern.isEmpty() || !key.isObject()) {
-            return null;
-        }
-        int rows = pattern.size();
-        int cols = 0;
-        for (JsonNode row : pattern) {
-            cols = Math.max(cols, row.asText().length());
-        }
-        Map<String, Integer> consumes = new LinkedHashMap<>();
-        for (JsonNode row : pattern) {
-            String line = row.asText();
-            for (int index = 0; index < line.length(); index++) {
-                char mark = line.charAt(index);
-                if (mark == ' ') {
-                    continue;
-                }
-                String node = resolve(key.path(String.valueOf(mark)), tags, groups, id + "_" + mark);
-                if (node.isEmpty()) {
-                    return null;
-                }
-                consumes.merge(node, 1, Integer::sum);
-            }
-        }
-        return complete(
-                id, consumes, rows > 2 || cols > 2 ? "crafting_table" : null, result(root), amount(root), manualCases);
-    }
-
-    private static SupplyGraph.@Nullable Way shapeless(
-            String id, JsonNode root, Tags tags, Map<String, List<String>> groups, Map<String, BoardCase> manualCases) {
-        JsonNode ingredients = root.path("ingredients");
-        if (!ingredients.isArray() || ingredients.isEmpty()) {
-            return null;
-        }
-        Map<String, Integer> consumes = new LinkedHashMap<>();
-        int index = 0;
-        for (JsonNode ingredient : ingredients) {
-            String node = resolve(ingredient, tags, groups, id + "_" + index);
-            if (node.isEmpty()) {
-                return null;
-            }
-            consumes.merge(node, 1, Integer::sum);
-            index++;
-        }
-        return complete(
-                id,
-                consumes,
-                ingredients.size() > 4 ? "crafting_table" : null,
-                result(root),
-                amount(root),
-                manualCases);
-    }
-
-    private static SupplyGraph.@Nullable Way cooking(
-            String id,
-            String type,
-            JsonNode root,
-            Tags tags,
-            Map<String, List<String>> groups,
-            Map<String, BoardCase> manualCases) {
-        String node = resolve(root.path("ingredient"), tags, groups, id);
-        if (node.isEmpty()) {
-            return null;
-        }
-        Map<String, Integer> consumes = new LinkedHashMap<>();
-        consumes.merge(node, 1, Integer::sum);
-        if (FUELLED.contains(type)) {
-            consumes.merge(COALS, 1, Integer::sum);
-        }
-        return complete(id, consumes, STATIONS.get(type), result(root), amount(root), manualCases);
-    }
-
-    private static SupplyGraph.@Nullable Way smithing(
-            String id, JsonNode root, Tags tags, Map<String, List<String>> groups, Map<String, BoardCase> manualCases) {
-        Map<String, Integer> consumes = new LinkedHashMap<>();
-        for (String field : List.of("template", "base", "addition")) {
-            JsonNode ingredient = root.get(field);
-            if (ingredient == null) {
-                continue;
-            }
-            String node = resolve(ingredient, tags, groups, id + "_" + field);
-            if (node.isEmpty()) {
-                return null;
-            }
-            consumes.merge(node, 1, Integer::sum);
-        }
-        return complete(id, consumes, STATIONS.get("smithing_transform"), result(root), amount(root), manualCases);
-    }
-
-    private static SupplyGraph.@Nullable Way complete(
-            String id,
-            Map<String, Integer> consumes,
-            @Nullable String building,
-            String makes,
-            int amount,
-            Map<String, BoardCase> manualCases) {
-        if (makes.isEmpty() || consumes.isEmpty()) {
-            return null;
-        }
-        return new SupplyGraph.Way(
-                "auto_" + sanitize(id),
-                manualCases.getOrDefault(makes, BoardCase.GATHER_MATERIALS),
-                makes,
-                amount,
-                1.0,
-                consumes,
-                null,
-                null,
-                building,
-                null,
-                Map.of());
-    }
-
-    private static String resolve(JsonNode ingredient, Tags tags, Map<String, List<String>> groups, String context) {
-        if (ingredient.isArray()) {
-            Set<String> members = new LinkedHashSet<>();
-            for (JsonNode alternative : ingredient) {
-                String node = resolve(alternative, tags, groups, context);
-                if (node.isEmpty()) {
-                    continue;
-                }
-                if (node.startsWith(INGREDIENT_TAG)) {
-                    members.addAll(tags.members(node.substring(1)));
-                } else {
-                    members.add(node);
-                }
-            }
-            if (members.isEmpty()) {
-                return "";
-            }
-            if (members.size() == 1) {
-                return members.iterator().next();
-            }
-            List<String> list = List.copyOf(members);
-            String tag = tags.groupOf(list);
-            String name = tag == null ? ALT_PREFIX + sanitize(context) : INGREDIENT_TAG + tag;
-            groups.putIfAbsent(name, list);
-            return name;
-        }
-        if (ingredient.isObject()) {
-            if (ingredient.has("tag")) {
-                String tag = tagName(ingredient.path("tag").asText());
-                if (!tags.has(tag) || tags.members(tag).isEmpty()) {
-                    return "";
-                }
-                String name = INGREDIENT_TAG + tag;
-                groups.putIfAbsent(name, tags.members(tag));
-                return name;
-            }
-            if (ingredient.has("item")) {
-                return item(ingredient.path("item").asText());
-            }
-        }
-        if (ingredient.isTextual()) {
-            return item(ingredient.asText());
-        }
-        return "";
-    }
-
-    private static List<SupplyGraph.Way> reverseWeights(List<SupplyGraph.Way> ways) {
-        Map<String, List<Integer>> byMakes = new LinkedHashMap<>();
-        for (int index = 0; index < ways.size(); index++) {
-            byMakes.computeIfAbsent(ways.get(index).makes(), key -> new ArrayList<>())
-                    .add(index);
-        }
-        boolean[] reverse = new boolean[ways.size()];
-        for (int index = 0; index < ways.size(); index++) {
-            SupplyGraph.Way way = ways.get(index);
-            for (String input : way.consumes().keySet()) {
-                if (input.startsWith(INGREDIENT_TAG)) {
-                    continue;
-                }
-                if (input.equals(way.makes())) {
-                    reverse[index] = true;
-                    continue;
-                }
-                for (int other : byMakes.getOrDefault(input, List.of())) {
-                    if (other != index && ways.get(other).consumes().containsKey(way.makes())) {
-                        reverse[index] = true;
-                        reverse[other] = true;
-                    }
-                }
-            }
-        }
-        List<SupplyGraph.Way> weighted = new ArrayList<>(ways.size());
-        for (int index = 0; index < ways.size(); index++) {
-            SupplyGraph.Way way = ways.get(index);
-            if (!reverse[index]) {
-                weighted.add(way);
-                continue;
-            }
-            weighted.add(new SupplyGraph.Way(
-                    way.id(),
-                    way.boardCase(),
-                    way.makes(),
-                    way.yield(),
-                    REVERSE_WEIGHT,
-                    way.consumes(),
-                    way.tool(),
-                    way.tier(),
-                    way.building(),
-                    way.world(),
-                    way.needs()));
-        }
-        return weighted;
     }
 
     private static Map<String, List<String>> usedGroups(List<SupplyGraph.Way> ways, Map<String, List<String>> groups) {
@@ -381,7 +153,7 @@ public final class RecipeImport {
         return items;
     }
 
-    private static int stage(
+    static int stage(
             Set<String> inputs, Map<String, Integer> stages, Map<String, List<String>> groups, SupplyGraph manual) {
         int result = Integer.MAX_VALUE;
         for (String input : inputs) {
@@ -453,103 +225,37 @@ public final class RecipeImport {
         return cases;
     }
 
-    private static String result(JsonNode root) {
+    static String result(JsonNode root) {
         return item(root.path("result").path("id").asText());
     }
 
-    private static int amount(JsonNode root) {
+    static int amount(JsonNode root) {
         return Math.max(1, root.path("result").path("count").asInt(1));
     }
 
-    private static String item(String raw) {
+    static String item(String raw) {
         if (raw == null || raw.isBlank()) {
             return "";
         }
         return GraphNames.graphItem(raw);
     }
 
-    private static String tagName(String raw) {
+    static String tagName(String raw) {
         String name = raw.startsWith(INGREDIENT_TAG) ? raw.substring(1) : raw;
         return name.startsWith(NamespacedId.MINECRAFT) ? name.substring(NamespacedId.MINECRAFT.length()) : name;
     }
 
-    private static String simple(String type) {
+    static String simple(String type) {
         int colon = type.indexOf(':');
         return colon < 0 ? type : type.substring(colon + 1);
     }
 
-    private static String sanitize(String value) {
+    static String sanitize(String value) {
         StringBuilder out = new StringBuilder(value.length());
         for (int index = 0; index < value.length(); index++) {
             char symbol = Character.toLowerCase(value.charAt(index));
             out.append(Character.isLetterOrDigit(symbol) ? symbol : '_');
         }
         return out.toString();
-    }
-
-    private static final class Tags {
-        private final Map<String, List<String>> raw = new LinkedHashMap<>();
-        private final Map<String, List<String>> expanded = new LinkedHashMap<>();
-        private final Map<List<String>, String> byMembers = new LinkedHashMap<>();
-
-        Tags(Map<String, String> json) {
-            for (Map.Entry<String, String> entry : new TreeMap<>(json).entrySet()) {
-                String name = tagName(entry.getKey());
-                JsonNode root = JsonResource.parse(entry.getValue(), "тег " + entry.getKey());
-                List<String> values = new ArrayList<>();
-                for (JsonNode value : root.path("values")) {
-                    String id = value.isObject() ? value.path("id").asText() : value.asText();
-                    if (!id.isBlank()) {
-                        values.add(id);
-                    }
-                }
-                raw.put(name, values);
-            }
-            for (String name : raw.keySet()) {
-                expanded.put(name, List.copyOf(expand(name, new LinkedHashSet<>())));
-            }
-            expanded.forEach((name, members) -> {
-                if (members.size() > 1 && raw.containsKey(name)) {
-                    List<String> key = members.stream().sorted().toList();
-                    byMembers.merge(key, name, (left, right) -> shorter(left, right));
-                }
-            });
-        }
-
-        boolean has(String name) {
-            return expanded.containsKey(name);
-        }
-
-        List<String> members(String name) {
-            return expanded.getOrDefault(name, List.of());
-        }
-
-        @Nullable
-        String groupOf(List<String> members) {
-            return byMembers.get(members.stream().sorted().toList());
-        }
-
-        private Set<String> expand(String name, Set<String> visiting) {
-            Set<String> members = new LinkedHashSet<>();
-            if (!visiting.add(name)) {
-                return members;
-            }
-            for (String value : raw.getOrDefault(name, List.of())) {
-                if (value.startsWith(INGREDIENT_TAG)) {
-                    members.addAll(expand(tagName(value), visiting));
-                } else {
-                    members.add(item(value));
-                }
-            }
-            visiting.remove(name);
-            return members;
-        }
-
-        private static String shorter(String left, String right) {
-            if (left.length() != right.length()) {
-                return left.length() < right.length() ? left : right;
-            }
-            return left.compareTo(right) <= 0 ? left : right;
-        }
     }
 }

@@ -10,6 +10,14 @@ final class DeadCodeExemptions {
                     "Генератор graph-recipes.json (export-задача): рецепты импортируются при генерации, "
                             + "в игре читается готовый файл; TestResults/task.md"),
             new Exemption(
+                    "core/board/graph/RecipeParsing.java|class|<top>#RecipeParsing",
+                    "Часть генератора graph-recipes.json (export-задача): разбор рецептов при генерации, "
+                            + "в игре читается готовый файл; TestResults/task.md"),
+            new Exemption(
+                    "core/board/graph/RecipeTags.java|class|<top>#RecipeTags",
+                    "Часть генератора graph-recipes.json (export-задача): теги рецептов при генерации, "
+                            + "в игре читается готовый файл; TestResults/task.md"),
+            new Exemption(
                     "neoforge/crafting/RecipeKnowledge.java|method|RecipeKnowledge#indexBuilds",
                     "Заготовка под открытую задачу: todo.md → «Кузнечество»"),
             new Exemption(
@@ -106,9 +114,6 @@ final class DeadCodeExemptions {
             new Exemption(
                     "core/tactics/Scorer.java|method|Scorer#combine",
                     "Комбинация оценок — публичная чистая функция, проверяется свойствами; в игре зовут другие методы"),
-            new Exemption(
-                    "core/board/graph/RecipeImport.java|method|Tags#groupOf",
-                    "Часть генератора graph-recipes.json: рецепты импортируются при генерации, в игре читается файл"),
             new Exemption(
                     "core/board/TicketTarget.java|method|TicketTarget#withRescue",
                     "Заготовка под узел графа спасения: RESCUE_SPIRIT ставит граф, а не RescueWatch; "
