@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.tactics;
 
+import com.theminespirit.core.tactics.ReturnGate;
 import com.theminespirit.core.tactics.TacticalOption;
 import com.theminespirit.core.tactics.TacticsAction;
 import com.theminespirit.core.tactics.adapter.ExecutionResult;
@@ -42,6 +43,7 @@ final class TacticsExecution {
         }
         if (host.outcome.decision() == TacticalOption.IGNORE
                 && !host.orders.directives().held()
+                && ReturnGate.allowed(host.spirit.taskStatus().orElse(null))
                 && host.returnWalk.due(host.spirit.level().getGameTime())) {
             host.active = true;
             host.action = host.orders.zone().isPresent() ? TacticsAction.GUARD : TacticsAction.RETURN;
