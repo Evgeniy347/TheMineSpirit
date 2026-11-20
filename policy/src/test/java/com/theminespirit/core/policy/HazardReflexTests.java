@@ -111,24 +111,31 @@ class HazardReflexTests {
             assertEquals(
                     new PolicyVerdict.Clear(),
                     verdict,
-                    "Картинка «" + name + "»: опасности нет, дух не должен получать рефлекс");
+                    "Картинка «" + name + "»: опасности нет, дух не должен получать рефлекс, иначе сходит с работы. "
+                            + "При смене evaluate проверь безопасные снимки и неопасные соседи вроде паутины");
             return;
         }
         PolicyVerdict.Reflex reflex = assertInstanceOf(
-                PolicyVerdict.Reflex.class, verdict, "Картинка «" + name + "»: ждали рефлекс, получено " + verdict);
+                PolicyVerdict.Reflex.class,
+                verdict,
+                "Картинка «" + name + "»: ждали рефлекс, получено " + verdict
+                        + ", иначе дух молча идёт в опасность. При смене таблицы pictures проверь каждый опасный случай");
         assertEquals(
                 expected.policy(),
                 reflex.policy(),
-                "Картинка «" + name + "»: рефлекс принадлежит другой политике, причина: " + reflex.reason());
+                "Картинка «" + name + "»: рефлекс принадлежит другой политике, иначе исключения и лог ищут "
+                        + "не ту причину. Причина: " + reflex.reason() + ". При смене порядка проверок сверь PolicyId");
         assertEquals(
                 expected.type(),
                 reflex.action().getClass(),
-                "Картинка «" + name + "»: другое действие рефлекса, причина: " + reflex.reason());
+                "Картинка «" + name + "»: другое действие рефлекса, иначе исполнитель делает не то, что нужно, "
+                        + "чтобы выжить. Причина: " + reflex.reason() + ". При смене приоритетов сверь класс действия");
         if (expected.cell().isPresent()) {
             assertEquals(
                     expected.cell().get(),
                     cellOf(reflex.action()),
-                    "Картинка «" + name + "»: духа ведут не в ту клетку, причина: " + reflex.reason());
+                    "Картинка «" + name + "»: духа ведут не в ту клетку, иначе бегство идёт в опасность. " + "Причина: "
+                            + reflex.reason() + ". При смене выбора клетки сверь координаты");
         }
     }
 
@@ -145,7 +152,8 @@ class HazardReflexTests {
                 verdict,
                 "Живой случай -99,52,-417: ноги в воде, голова на воздухе, потолок на блоке 54, берег на 53. "
                         + "Прыжок в потолок невозможен — это не рефлекс выхода, а ловушка: дух обязан получить "
-                        + "спасение (dig_out), а не кружить в воде (260 тысяч попыток)");
+                        + "спасение (dig_out), а не кружить в воде (260 тысяч попыток). При смене проверки потолка "
+                        + "сверь высоту 54 и берег 53");
     }
 
     @Test
@@ -160,7 +168,8 @@ class HazardReflexTests {
                 new PolicyVerdict.Reflex(
                         PolicyId.WATER, new ReflexAction.ExitWater(Pictures.at(1, 1, 0)), "дух в воде"),
                 verdict,
-                "Тот же карман без потолка: прыжок на берег возможен, и рефлекс обязан вести туда");
+                "Тот же карман без потолка: прыжок на берег возможен, и рефлекс обязан вести туда, иначе дух "
+                        + "остаётся в воде до спасения. При смене проверки места для прыжка сверь клетку над головой");
     }
 
     @Test
@@ -174,7 +183,8 @@ class HazardReflexTests {
                 new PolicyVerdict.Clear(),
                 verdict,
                 "Берега рядом нет: рефлекс не может вывести духа, а вечное удержание на поверхности не даёт "
-                        + "выполнить спасение (AIR отдельно следит за воздухом под водой)");
+                        + "выполнить спасение (AIR отдельно следит за воздухом под водой). При смене проверки берега "
+                        + "сверь озеро без выхода");
     }
 
     private static BlockCoord cellOf(ReflexAction action) {
@@ -196,7 +206,8 @@ class HazardReflexTests {
         assertEquals(
                 new PolicyVerdict.Reflex(PolicyId.LAVA_FIRE, new ReflexAction.Flee(water), "дух горит: цель — вода"),
                 verdict,
-                "Горящий дух с водой в пределах досягаемости идёт к воде: огонь гаснет только в воде, а не на суше");
+                "Горящий дух с водой в пределах досягаемости идёт к воде: огонь гаснет только в воде, а не на "
+                        + "суше, иначе здоровье догорает. При смене выбора цели проверь приоритет воды при горении");
     }
 
     @Test
@@ -207,12 +218,16 @@ class HazardReflexTests {
         PolicyVerdict verdict =
                 HazardReflex.evaluate(picture.surroundings(), PolicyExemptions.empty(), picture.world());
 
-        PolicyVerdict.Reflex reflex =
-                assertInstanceOf(PolicyVerdict.Reflex.class, verdict, "Горящий дух обязан получить рефлекс");
+        PolicyVerdict.Reflex reflex = assertInstanceOf(
+                PolicyVerdict.Reflex.class,
+                verdict,
+                "Горящий дух обязан получить рефлекс, иначе останется догорать и потеряет здоровье. "
+                        + "При смене evaluate проверь флаг горения без воды рядом");
         assertEquals(
                 new ReflexAction.Flee(water),
                 reflex.action(),
-                "Горящему духу важнее потушиться, чем отойти от лавы вплотную: лава рядом не жжёт, а пока горим, здоровье тает");
+                "Горящему духу важнее потушиться, чем отойти от лавы вплотную: лава рядом не жжёт, а пока горим, "
+                        + "здоровье тает. При смене приоритетов проверь пожар против соседней лавы");
     }
 
     @Test
@@ -223,11 +238,15 @@ class HazardReflexTests {
                 HazardReflex.evaluate(picture.surroundings(), PolicyExemptions.of(PolicyId.WATER), picture.world());
 
         PolicyVerdict.Reflex reflex = assertInstanceOf(
-                PolicyVerdict.Reflex.class, verdict, "Лава вплотную обязана дать рефлекс даже при исключении WATER");
+                PolicyVerdict.Reflex.class,
+                verdict,
+                "Лава вплотную обязана дать рефлекс даже при исключении WATER, иначе дух стоит в опасности. "
+                        + "При смене PolicyExemptions проверь, что WATER не глушит чужие политики");
         assertEquals(
                 PolicyId.LAVA_FIRE,
                 reflex.policy(),
-                "Исключение WATER снимает только политику воды: лава остаётся опасной всегда");
+                "Исключение WATER снимает только политику воды: лава остаётся опасной всегда, иначе переправа "
+                        + "вброд отменяет защиту от лавы. При смене проверки исключений сверь LAVA_FIRE");
     }
 
     @Test
@@ -240,6 +259,7 @@ class HazardReflexTests {
         assertEquals(
                 new PolicyVerdict.Clear(),
                 verdict,
-                "Скрипт с исключением WATER (переправа вброд) не должен выдёргиваться из воды рефлексом");
+                "Скрипт с исключением WATER (переправа вброд) не должен выдёргиваться из воды рефлексом, "
+                        + "иначе переход не завершить. При смене evaluate проверь WATER с исключением в луже");
     }
 }

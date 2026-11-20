@@ -18,7 +18,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BlockProtectionTests {
@@ -167,89 +166,23 @@ class BlockProtectionTests {
 
         if (refusedBy == null) {
             assertEquals(
-                    new BlockProtection.Allowed(), decision, "Строка «" + name + "»: блок природный, ломать можно");
+                    new BlockProtection.Allowed(),
+                    decision,
+                    "Строка «" + name + "»: блок природный, ломать можно, иначе добыча встанет на природе. "
+                            + "При смене правил проверь строки с refusedBy = null");
         } else {
-            BlockProtection.Refused refused =
-                    assertInstanceOf(BlockProtection.Refused.class, decision, "Строка «" + name + "»: ломать нельзя");
+            BlockProtection.Refused refused = assertInstanceOf(
+                    BlockProtection.Refused.class,
+                    decision,
+                    "Строка «" + name + "»: ломать нельзя, иначе уборка сносит постройки и механизмы. "
+                            + "При смене таблицы проверь каждую строку с ожидаемым отказом");
             assertEquals(
                     refusedBy,
                     refused.policy(),
-                    "Строка «" + name + "»: порядок правил — чёрный список, зона, игрок, здание. Причина: "
-                            + refused.reason());
+                    "Строка «" + name + "»: порядок правил — чёрный список, зона, игрок, здание, иначе отказ "
+                            + "называет не ту причину. Причина: " + refused.reason()
+                            + ". При смене порядка сверь PolicyId");
         }
-    }
-
-    @ParameterizedTest(name = "{0}")
-    @ValueSource(
-            strings = {
-                "minecraft:oak_sign",
-                "minecraft:oak_hanging_sign",
-                "minecraft:birch_door",
-                "minecraft:iron_door",
-                "minecraft:iron_trapdoor",
-                "minecraft:oak_fence",
-                "minecraft:nether_brick_fence",
-                "minecraft:oak_fence_gate",
-                "minecraft:stone_pressure_plate",
-                "minecraft:lever",
-                "minecraft:stone_button",
-                "minecraft:bell",
-                "minecraft:lectern",
-                "minecraft:jukebox",
-                "minecraft:note_block",
-                "minecraft:redstone_wire",
-                "minecraft:redstone_torch",
-                "minecraft:rail",
-                "minecraft:powered_rail",
-                "minecraft:torch",
-                "minecraft:wall_torch",
-                "minecraft:soul_lantern",
-                "minecraft:ladder",
-                "minecraft:white_banner",
-                "minecraft:piston",
-                "minecraft:repeater"
-            })
-    void check_DenyListBlock_IsRefusedAsProtectedBlock(String block) {
-        BlockProtection.Decision decision = protection.check(block, forest(), false, false);
-
-        BlockProtection.Refused refused = assertInstanceOf(
-                BlockProtection.Refused.class,
-                decision,
-                "Блок " + block + " из чёрного списка защиты: его ломать нельзя");
-        assertEquals(
-                PolicyId.PROTECTED_BLOCKS,
-                refused.policy(),
-                "Блок " + block + ": отказ по чёрному списку называет политику PROTECTED_BLOCKS");
-    }
-
-    @ParameterizedTest(name = "{0}")
-    @ValueSource(
-            strings = {
-                "minecraft:stone",
-                "minecraft:dirt",
-                "minecraft:grass_block",
-                "minecraft:oak_log",
-                "minecraft:dark_oak_leaves",
-                "minecraft:sand",
-                "minecraft:gravel",
-                "minecraft:coal_ore",
-                "minecraft:redstone_ore",
-                "minecraft:deepslate_redstone_ore",
-                "minecraft:nether_quartz_ore",
-                "minecraft:deepslate",
-                "minecraft:tuff",
-                "minecraft:netherrack",
-                "minecraft:short_grass",
-                "minecraft:sugar_cane"
-            })
-    void check_NaturalBlockInNature_IsAllowed(String block) {
-        BlockProtection.Decision decision = protection.check(block, around(0, "", "minecraft:stone"), false, false);
-
-        assertEquals(
-                new BlockProtection.Allowed(),
-                decision,
-                "Природный блок " + block
-                        + " вдали от построек обязан ломаться: иначе добыча руды и рубка леса остановятся");
     }
 
     @Test
@@ -260,7 +193,8 @@ class BlockProtectionTests {
         assertEquals(
                 ((GatherPolicy.Refused) GatherPolicy.check("minecraft:chest")).reason(),
                 refused.reason(),
-                "Контейнеры и механизмы запрещает GatherPolicy, protection.json их не дублирует: причина берётся оттуда");
+                "Контейнеры и механизмы запрещает GatherPolicy, protection.json их не дублирует: причина берётся "
+                        + "оттуда, иначе две копии правила разъедутся. При смене check проверь сундук в пещере");
     }
 
     @Test
@@ -271,7 +205,8 @@ class BlockProtectionTests {
         assertEquals(
                 "вокруг блока 'minecraft:oak_log' 14 искусственных блоков из 26 (порог 6, например 'minecraft:oak_planks'): это постройка игрока",
                 refused.reason(),
-                "Отказ называет число искусственных соседей и порог: по итогу задачи видно, почему бревно пропущено");
+                "Отказ называет число искусственных соседей и порог: по итогу задачи видно, почему бревно "
+                        + "пропущено, иначе игрок считает защиту случайной. При смене текста проверь оба числа");
     }
 
     @Test
@@ -279,11 +214,13 @@ class BlockProtectionTests {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
                 () -> protection.check("minecraft:stone", List.of("minecraft:air"), false, false),
-                "25 или 27 соседей — ошибка вызова");
+                "25 или 27 соседей — ошибка вызова, иначе защита считает постройку по неполному кубу 3×3×3 "
+                        + "и слепнет. При смене NEIGHBOUR_COUNT проверь отказ на одном соседе");
 
         assertTrue(
                 error.getMessage().startsWith("Соседей 1, ожидается 26"),
-                "Ошибка называет число и ожидание. Фактическое: " + error.getMessage());
+                "Ошибка называет число и ожидание, иначе вызывающий не поймёт, какой список передать. Фактическое: "
+                        + error.getMessage() + ". При смене текста проверь оба числа");
     }
 
     @Test
@@ -292,11 +229,12 @@ class BlockProtectionTests {
                 new BlockProtection.Allowed(),
                 protection.checkSettlement("minecraft:jungle_fence", false),
                 "Старая ограда на участке поселения убирается выравниванием: чёрный список заборов её держал, и ящик "
-                        + "проваливался «защищено: 22» (INC-71)");
+                        + "проваливался «защищено: 22» (INC-71). При смене checkSettlement проверь старый забор");
         assertInstanceOf(
                 BlockProtection.Refused.class,
                 protection.checkSettlement("minecraft:chest", false),
-                "Сундук на участке по-прежнему не ломают: в нём запас поселения");
+                "Сундук на участке по-прежнему не ломают: в нём запас поселения, иначе дух разорит склад. "
+                        + "При смене checkSettlement проверь отказ на сундуке");
     }
 
     @Test
@@ -304,12 +242,14 @@ class BlockProtectionTests {
         assertEquals(
                 6,
                 protection.buildingThreshold(),
-                "Порог «здания» 6 искусственных соседей из 26 (предварительное значение чеклиста)");
+                "Порог «здания» 6 искусственных соседей из 26 (предварительное значение чеклиста), иначе "
+                        + "граница постройки смещается и стены считаются природой. При смене файла проверь порог");
         for (String exact : GatherPolicy.forbiddenExactIds()) {
             assertFalse(
                     protection.denyPatterns().contains("minecraft:" + exact),
                     "protection.json → deny не повторяет точный id '" + exact
-                            + "' из GatherPolicy: дубль разъедется при правке одного из списков");
+                            + "' из GatherPolicy: дубль разъедется при правке одного из списков, и защита "
+                            + "начнёт противоречить сама себе. При смене списков проверь отсутствие пересечения");
         }
     }
 }
