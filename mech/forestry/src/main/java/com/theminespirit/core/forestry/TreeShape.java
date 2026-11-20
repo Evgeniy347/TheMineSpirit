@@ -58,7 +58,8 @@ public final class TreeShape {
         if (!hasAllowedExtent(logs)) {
             return new NotATree(NotATree.Reason.TOO_BIG, Set.copyOf(logs));
         }
-        if (builtNearby) {
+        if (builtNearby && !orchardCare) {
+            // lib: в саду ствол стоит вплотную к ограде, и соседний столб не делает дерево постройкой.
             return new NotATree(NotATree.Reason.BUILT_NEARBY, Set.copyOf(logs));
         }
         if (!hasTrunkBase(logs)) {

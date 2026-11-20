@@ -101,6 +101,23 @@ class OrchardTreeSightTests {
                 "Вне сада тот же голый ствол отвергается: послабление листвы — только для территории сада");
     }
 
+    @Test
+    void treeShape_OrchardTrunkBesideFence_AcceptedOnlyInOrchard() {
+        Map<BlockCoord, String> blocks = orchardBlocks();
+        blocks.put(new BlockCoord(BASE.x(), BASE.y(), BASE.z() + 1), "minecraft:jungle_fence");
+        ForestryScenarioTests.SnapshotView view = new ForestryScenarioTests.SnapshotView(blocks, "jungle");
+
+        assertInstanceOf(
+                Tree.class,
+                TreeShape.detect(BASE, view, false, true),
+                "Ствол сада вплотную к ограде — дерево: правило «рядом постройка» в саду не работает, иначе "
+                        + "деревья вдоль забора не рубятся никогда");
+        assertInstanceOf(
+                NotATree.class,
+                TreeShape.detect(BASE, view, false, false),
+                "Вне сада та же картина остаётся постройкой: послабление не открывает снос чужих стен");
+    }
+
     private static Map<BlockCoord, String> orchardBlocks() {
         Map<BlockCoord, String> blocks = new HashMap<>();
         for (int y = 68; y <= 74; y++) {
