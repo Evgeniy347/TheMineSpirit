@@ -41,7 +41,8 @@ public final class SettlementGround {
         PlotLeveling plan = SiteLevels.leveling(site, tops, PlotPlanBlocks.of(site)::planned);
         if (!plan.cut().isEmpty() || !plan.fill().isEmpty()) {
             LOGGER.info(
-                    "Выравнивание на y={}: срезка {} боксов, подсыпка {} боксов",
+                    "Выравнивание до y0={} (проходы y0+1={}): срезка {} боксов, подсыпка {} боксов",
+                    SiteLevels.level(site),
                     site.anchor().y(),
                     plan.cut().size(),
                     plan.fill().size());

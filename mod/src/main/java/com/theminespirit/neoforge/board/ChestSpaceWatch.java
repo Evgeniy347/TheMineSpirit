@@ -114,7 +114,7 @@ final class ChestSpaceWatch {
     private static boolean postYardChest(GraphPost post, ServerLevel level, StageSite site) {
         Optional<Integer> next = nextSlot(level, site);
         if (next.isEmpty()) {
-            LOGGER.info("[chests] склад и двор заполнены: новых клеток на высоте поселения +1 нет — нужен "
+            LOGGER.info("[chests] склад и двор заполнены: новых клеток на y0+1 нет — нужен "
                     + "следующий уровень по решению стратега");
             return true;
         }
