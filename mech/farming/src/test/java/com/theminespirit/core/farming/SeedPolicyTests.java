@@ -42,8 +42,10 @@ class SeedPolicyTests {
         assertEquals(
                 expected,
                 SeedPolicy.forReplant(kind, items),
-                "Решение о пересадке обязано зависеть от запаса посадочного предмета (" + reason + "): "
-                        + "иначе дух оставит грядку пустой при полных закромах или посадит из воздуха");
+                "Решение о пересадке обязано зависеть от запаса посадочного предмета (" + reason + "): иначе "
+                        + "дух оставит грядку пустой при полных закромах или посадит из воздуха. При смене "
+                        + "SeedPolicy.forReplant проверь строки replantRows и свойство "
+                        + "forReplant_AnySeedCount_MatchesSingleSeedRule");
     }
 
     static Stream<Arguments> plantingRows() {
@@ -61,8 +63,9 @@ class SeedPolicyTests {
         assertEquals(
                 expected,
                 SeedPolicy.forPlanting(kind, items, cells),
-                "Число посадок обязано равняться min(предметов, клеток) (" + reason + "): "
-                        + "иначе дух посадит из воздуха или бросит семена при пустой грядке");
+                "Число посадок обязано равняться min(предметов, клеток) (" + reason + "): иначе дух посадит из "
+                        + "воздуха или бросит семена при пустой грядке, и план поля не закроется. При смене "
+                        + "SeedPolicy.forPlanting проверь строки plantingRows");
     }
 
     @Property
@@ -78,8 +81,9 @@ class SeedPolicyTests {
 
         assertTrue(
                 planted <= Math.min(items, cells),
-                "Посажено обязано не превышать min(предметов, клеток): иначе посадка тратит семена из воздуха. "
-                        + "Предметов: " + items + ", клеток: " + cells + ", посажено: " + planted);
+                "Посажено обязано не превышать min(предметов, клеток): иначе посадка тратит семена из воздуха и "
+                        + "грядка выходит частично пустой. При смене SeedPolicy.forPlanting проверь таблицу "
+                        + "plantingRows. Предметов: " + items + ", клеток: " + cells + ", посажено: " + planted);
     }
 
     @Property
@@ -87,7 +91,8 @@ class SeedPolicyTests {
         assertEquals(
                 items > 0 ? SeedPolicy.Decision.PLANT : SeedPolicy.Decision.OUT_OF_SEEDS,
                 SeedPolicy.forReplant(CropKind.WHEAT, items),
-                "Пересадка одной клетки требует ровно одно семя: иначе клетка останется пустой при запасе. "
+                "Пересадка одной клетки требует ровно одно семя: иначе клетка останется пустой при запасе, и "
+                        + "грядка выпадет из цикла. При смене SeedPolicy.forReplant проверь таблицу replantRows. "
                         + "Предметов: " + items);
     }
 
@@ -96,6 +101,8 @@ class SeedPolicyTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> SeedPolicy.forReplant(CropKind.WHEAT, -1),
-                "Отрицательный запас обязан отвергаться: иначе учёт семян расходится с инвентарём");
+                "Отрицательный запас обязан отвергаться: иначе учёт семян расходится с инвентарём и пересадка "
+                        + "врёт о запасе. При смене проверки запаса в SeedPolicy.forReplant проверь границы "
+                        + "минус один и ноль");
     }
 }
