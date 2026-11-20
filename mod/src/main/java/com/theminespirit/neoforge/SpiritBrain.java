@@ -3,6 +3,7 @@ package com.theminespirit.neoforge;
 import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.StateChangeLog;
 import com.theminespirit.core.engine.FailureFact;
+import com.theminespirit.core.engine.RunHalt;
 import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.engine.RunStatus;
 import com.theminespirit.core.engine.ScriptResult;
@@ -93,6 +94,7 @@ public final class SpiritBrain {
             recordResult();
             runner = null;
         }
+        halt();
         WorkReserveHub.releaseAll(spirit);
     }
 
@@ -186,11 +188,17 @@ public final class SpiritBrain {
         } finally {
             TickWatch.done("SpiritBrain", watch);
         }
-        if (status != RunStatus.RUNNING) {
+        if (RunHalt.needed(status)) {
             recordResult();
             runner = null;
+            halt();
             WorkReserveHub.releaseAll(spirit);
         }
+    }
+
+    private void halt() {
+        spirit.getNavigation().stop();
+        spirit.getMoveControl().setWantedPosition(spirit.getX(), spirit.getY(), spirit.getZ(), 0.0);
     }
 
     private void recordResult() {

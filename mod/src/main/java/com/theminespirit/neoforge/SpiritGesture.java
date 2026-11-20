@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge;
 
+import com.theminespirit.core.movement.api.GazeTurn;
 import com.theminespirit.core.movement.api.LookAngles;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -28,6 +29,6 @@ public final class SpiritGesture {
         LookAngles angles = LookAngles.toward(x - spirit.getX(), y - spirit.getEyeY(), z - spirit.getZ());
         spirit.setYHeadRot(angles.yaw());
         spirit.setXRot(angles.pitch());
-        spirit.getLookControl().setLookAt(x, y, z, 180.0F, 180.0F);
+        spirit.getLookControl().setLookAt(x, y, z, GazeTurn.forWork(true), GazeTurn.forWork(true));
     }
 }
