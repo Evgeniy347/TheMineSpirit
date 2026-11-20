@@ -18,7 +18,9 @@ class SweetBerryTests {
         assertEquals(
                 HarvestMethod.PICK,
                 kind.harvestMethod(),
-                "Сладкая ягода обязана собираться PICK (правый клик без ломки): иначе дух ломает куст и теряет урожай");
+                "Сладкая ягода обязана собираться PICK (правый клик без ломки): иначе дух ломает куст и теряет "
+                        + "урожай, а куст растёт заново. При смене таблицы культур проверь harvestMethod_Wheat_IsBreak "
+                        + "и живой сбор ягод правым кликом");
     }
 
     @ParameterizedTest(name = "age {0} -> mature {1}")
@@ -30,7 +32,8 @@ class SweetBerryTests {
                 mature,
                 state.isMature(),
                 "Куст ягоды зреет с 2: при age=" + age + " mature=" + mature
-                        + ", иначе harvest соберёт недозрелое или пропустит зрелое");
+                        + ", иначе harvest соберёт недозрелое или пропустит зрелое и цикл фермы встанет. При смене "
+                        + "age-таблицы CropState.isMature проверь все четыре возраста этой строки и живой куст");
     }
 
     @Test
@@ -40,10 +43,12 @@ class SweetBerryTests {
         FarmTile young = new FarmTile(Ground.FARMLAND, Above.CROP, Optional.of(new CropState(kind, 1)));
         assertTrue(
                 FarmJob.HARVEST.eligible(mature, kind, true),
-                "Зрелый куст (age 3) обязан быть целью HARVEST: иначе дух не собирает ягоды");
+                "Зрелый куст (age 3) обязан быть целью HARVEST: иначе дух не собирает ягоды и урожай гниёт на "
+                        + "кусте. При смене FarmJob.HARVEST.eligible проверь соседний young в этом тесте");
         assertFalse(
                 FarmJob.HARVEST.eligible(young, kind, true),
-                "Недозрелый куст (age 1) не цель HARVEST: иначе дух собирает пустой куст");
+                "Недозрелый куст (age 1) не цель HARVEST: иначе дух собирает пустой куст и тратит цикл фермы "
+                        + "впустую. При смене FarmJob.HARVEST.eligible проверь зрелый куст рядом в этом тесте");
     }
 
     @Test
@@ -51,6 +56,8 @@ class SweetBerryTests {
         assertEquals(
                 HarvestMethod.BREAK,
                 CropKind.WHEAT.harvestMethod(),
-                "Пшеница обязана собираться BREAK: иначе таблица культур врёт о способе сбора");
+                "Пшеница обязана собираться BREAK: иначе таблица культур врёт о способе сбора и дух жмёт правый "
+                        + "клик по колосьям без урожая. При смене CropKind.WHEAT.harvestMethod проверь строку "
+                        + "sweet_berry выше и живой сбор пшеницы");
     }
 }

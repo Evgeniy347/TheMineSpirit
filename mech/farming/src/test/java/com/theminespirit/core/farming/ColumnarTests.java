@@ -21,7 +21,9 @@ class ColumnarTests {
             assertEquals(
                     HarvestMethod.BREAK_COLUMN,
                     kind.harvestMethod(),
-                    "Столбовая культура " + name + " обязана собираться BREAK_COLUMN: иначе дух ломает нижний блок");
+                    "Столбовая культура " + name + " обязана собираться BREAK_COLUMN: иначе дух ломает нижний "
+                            + "блок и столб не восстанавливается, урожай теряется. При смене таблицы культур "
+                            + "проверь planner_TwoHighColumn_IsEligible и живой сбор тростника");
         }
     }
 
@@ -32,7 +34,9 @@ class ColumnarTests {
             for (int age = 0; age <= kind.maxAge(); age++) {
                 assertTrue(
                         new CropState(kind, age).isMature(),
-                        "Столбовая культура " + name + " считается зрелой вне зависимости от age, высота решает");
+                        "Столбовая культура " + name + " считается зрелой вне зависимости от age, высота решает: "
+                                + "иначе недоросток столба не собирается вовсе и план поля встаёт. При смене "
+                                + "CropState.isMature проверь planner_SingleColumn_IsIneligible");
             }
         }
     }
@@ -52,7 +56,8 @@ class ColumnarTests {
                 Hydration.of(Set.of()));
         assertTrue(
                 result instanceof FarmPlanner.Exhausted,
-                "Столб высотой 1 не цель: дух должен оставить недоросток, а выбрано " + result);
+                "Столб высотой 1 не цель: дух должен оставить недоросток, иначе сломает единственный блок и "
+                        + "урожая не будет. При смене FarmPlanner.next проверь planner_TwoHighColumn_IsEligible");
     }
 
     @Test
@@ -70,8 +75,13 @@ class ColumnarTests {
                 Hydration.of(Set.of()));
         assertTrue(
                 result instanceof FarmPlanner.Next,
-                "Столб высотой 2 обязан быть целью: нижний остаётся, верх собирается");
-        assertEquals(new BlockCoord(0, 0, 0), ((FarmPlanner.Next) result).target(), "цель — земля под столбом");
+                "Столб высотой 2 обязан быть целью: нижний остаётся, верх собирается, иначе ломается основание "
+                        + "и столб пропадает. При смене FarmPlanner.next проверь planner_SingleColumn_IsIneligible");
+        assertEquals(
+                new BlockCoord(0, 0, 0),
+                ((FarmPlanner.Next) result).target(),
+                "Цель — земля под столбом: иначе дух бьёт по блоку не той высоты и столб не снимается. При "
+                        + "смене цели в FarmPlanner.next проверь живой сбор тростника высотой 2");
     }
 
     @Test
@@ -80,9 +90,12 @@ class ColumnarTests {
         FarmTile tile = new FarmTile(Ground.OTHER, Above.CROP, Optional.of(new CropState(cactus, 0)));
         assertTrue(
                 FarmJob.HARVEST.eligible(tile, cactus, true),
-                "HARVEST eligible для столба всегда true по клетке: высота проверяется планировщиком");
+                "HARVEST eligible для столба всегда true по клетке: высота проверяется планировщиком, иначе "
+                        + "eligible отсечёт высокие столбы и сбор не начнётся. При смене FarmJob.HARVEST.eligible "
+                        + "проверь planner_TwoHighColumn_IsEligible");
         assertFalse(
                 FarmJob.HARVEST.eligible(new FarmTile(Ground.OTHER, Above.AIR, Optional.empty()), cactus, true),
-                "Пустая клетка не harvestable");
+                "Пустая клетка не harvestable: иначе дух бьёт по воздуху и тратит цикл фермы. При смене "
+                        + "FarmJob.HARVEST.eligible проверь строку Above.AIR в этом тесте");
     }
 }
