@@ -75,7 +75,7 @@ final class DemolitionCollect {
             findings(ctx, found);
         }
         List<BlockCoord> fences = new ArrayList<>();
-        ExtraFenceScan.collect(ctx, remove, fences, notes);
+        ExtraFenceScan.collect(ctx, fences, notes);
         return new PlanDemolition.Collected(
                 found.remove,
                 List.copyOf(found.notes),

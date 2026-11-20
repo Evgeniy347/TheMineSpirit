@@ -17,6 +17,7 @@ import com.theminespirit.core.town.PlannedBlock;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.core.town.TownPlan;
 import com.theminespirit.neoforge.UnreachableCellsStore;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -74,6 +75,9 @@ final class PlanDemolition {
         if (lost
                 && DemolitionRestore.restoreLost(
                         level, service, post, site, open, new DemolitionTickets.Batch(stray, blocks, placement))) {
+            return;
+        }
+        if (submitStubs(world, level, service, site, post, scope, collected, now, cause)) {
             return;
         }
         if (stray.isEmpty()) {
@@ -138,6 +142,58 @@ final class PlanDemolition {
         return collected.treeCells().isEmpty()
                 ? DemolitionKey.piece(sorted)
                 : DemolitionKey.treePiece(sorted, collected.stand());
+    }
+
+    private static boolean submitStubs(
+            String world,
+            ServerLevel level,
+            BoardService service,
+            StageSite site,
+            GraphPost post,
+            DemolitionScope scope,
+            Collected collected,
+            long now,
+            String cause) {
+        for (List<BlockCoord> piece : stubPieces(collected.fences())) {
+            String id = DemolitionTickets.idFor(piece);
+            if (waiting(world, id, collected, now)) {
+                continue;
+            }
+            if (!SUBMITS.allow("demolish:stub:" + world, RETRIES.signature(id))) {
+                continue;
+            }
+            List<PlannedBlock> blocks = piece.stream()
+                    .map(cell -> new PlannedBlock(cell, StagePlans.AIR))
+                    .toList();
+            DemolitionTickets.Placement placement = new DemolitionTickets.Placement(null, null, null);
+            if (!DemolitionTickets.submit(post, site, blocks, id, placement, cause)) {
+                RETRIES.submitted(id, now, COOLDOWN);
+                continue;
+            }
+            RETRIES.submitted(id, now, COOLDOWN);
+            DemolitionHistory.supersede(level, service, id, scope);
+            if (CHANGES.changed("tidy-stub:" + world, id)) {
+                LOGGER.info(
+                        "[tidy] {}: снос столбов-заглушек — {} из {}; {}",
+                        id,
+                        piece.size(),
+                        collected.fences().size(),
+                        collected.notes());
+            }
+            return true;
+        }
+        return false;
+    }
+
+    static List<List<BlockCoord>> stubPieces(List<BlockCoord> fences) {
+        List<BlockCoord> rest = new ArrayList<>(order(fences, Set.of()));
+        List<List<BlockCoord>> pieces = new ArrayList<>();
+        while (!rest.isEmpty()) {
+            List<BlockCoord> piece = DemolitionKey.piece(rest);
+            pieces.add(piece);
+            rest.removeAll(piece);
+        }
+        return pieces;
     }
 
     static List<BlockCoord> order(List<BlockCoord> candidates, Set<BlockCoord> fences) {
