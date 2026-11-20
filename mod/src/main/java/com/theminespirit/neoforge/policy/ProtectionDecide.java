@@ -113,7 +113,10 @@ final class ProtectionDecide {
                     false,
                     new BlockProtection.Refused(PolicyId.PROTECTED_BLOCKS, refused.reason()));
         }
-        boolean planCell = plot instanceof PlotProtection.Allowed allowed && allowed.building() != PlanBuilding.NONE;
+        boolean planCell = plot instanceof PlotProtection.Allowed allowed
+                && (allowed.building() != PlanBuilding.NONE
+                        || (site != null
+                                && site.protectionBuilding(coord.x(), coord.y(), coord.z()) == PlanBuilding.MINE));
         return new PlotOutcome(inProtectedZone, unprotectArea, planCell, null);
     }
 
@@ -123,6 +126,9 @@ final class ProtectionDecide {
         BlockState state = request.state();
         boolean inProtectedZone = plot.inProtectedZone();
         boolean unprotectArea = plot.unprotectArea();
+        if (request.ground() == PlotProtection.Ground.PLAN_EXCAVATE) {
+            return new BlockProtection.Allowed();
+        }
         if (request.demolish()
                 && !inProtectedZone
                 && level instanceof ServerLevel server

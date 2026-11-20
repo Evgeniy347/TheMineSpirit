@@ -15,7 +15,7 @@ class More5RulesTests {
 
     @Test
     void events_AllSignals_AddExpected() {
-        Set<String> events = More5Rules.events(new More5Rules.Signals(2, 3, 4, 5, 6, 12, true, 7, 8, 9, 11, 12));
+        Set<String> events = More5Rules.events(new More5Rules.Signals(2, 3, 4, 5, 6, 12, true, 7, 8, 9, 12));
 
         assertEquals(
                 Set.of(
@@ -27,7 +27,6 @@ class More5RulesTests {
                         "more5_build_shortage",
                         "more5_mob_broken",
                         "more5_route_blocked",
-                        "more5_mine_dark",
                         "more5_wood_drops"),
                 events,
                 "Каждый вход области даёт своё событие");
@@ -35,19 +34,19 @@ class More5RulesTests {
 
     @Test
     void events_EmptySignals_AddNothing() {
-        Set<String> events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 0, 16, false, 0, 0, 0, 0, 0));
+        Set<String> events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 0, 16, false, 0, 0, 0, 0));
 
         assertEquals(Set.of(), events, "Пустой вход не ставит работ");
     }
 
     @Test
     void events_FuelEnough_NoFuelEvent() {
-        Set<String> events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 16, 16, true, 0, 0, 0, 0, 0));
+        Set<String> events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 16, 16, true, 0, 0, 0, 0));
 
         assertFalse(events.contains("more5_fuel_low"), "Полного запаса топлива хватает");
-        events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 15, 16, true, 0, 0, 0, 0, 0));
+        events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 15, 16, true, 0, 0, 0, 0));
         assertTrue(events.contains("more5_fuel_low"), "Недостача топлива при печи — событие");
-        events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 0, 16, false, 0, 0, 0, 0, 0));
+        events = More5Rules.events(new More5Rules.Signals(0, 0, 0, 0, 0, 16, false, 0, 0, 0, 0));
         assertFalse(events.contains("more5_fuel_low"), "Без печи топливо не тратят");
     }
 
@@ -55,11 +54,11 @@ class More5RulesTests {
     void signals_Negative_Rejected() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new More5Rules.Signals(-1, 0, 0, 0, 0, 16, false, 0, 0, 0, 0, 0),
+                () -> new More5Rules.Signals(-1, 0, 0, 0, 0, 16, false, 0, 0, 0, 0),
                 "Отрицательное число тёмных грядок не имеет смысла");
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new More5Rules.Signals(0, 0, 0, 0, 0, -1, false, 0, 0, 0, 0, 0),
+                () -> new More5Rules.Signals(0, 0, 0, 0, 0, -1, false, 0, 0, 0, 0),
                 "Отрицательная цель по топливу не имеет смысла");
     }
 

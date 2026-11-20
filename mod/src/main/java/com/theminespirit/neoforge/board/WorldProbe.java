@@ -26,6 +26,14 @@ final class WorldProbe {
             }
 
             @Override
+            public boolean open(BlockCoord at) {
+                BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
+                var state = level.getBlockState(pos);
+                return (state.isAir() || state.canBeReplaced())
+                        && state.getFluidState().isEmpty();
+            }
+
+            @Override
             public boolean loaded(BlockCoord at) {
                 return level.isLoaded(new BlockPos(at.x(), at.y(), at.z()));
             }

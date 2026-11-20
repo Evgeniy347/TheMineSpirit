@@ -7,6 +7,7 @@ import com.theminespirit.core.board.BuildGap;
 import com.theminespirit.core.board.CraterNeed;
 import com.theminespirit.core.board.FillIndex;
 import com.theminespirit.core.board.LevelRepair;
+import com.theminespirit.core.board.RepairNeed;
 import com.theminespirit.core.board.StageAudit;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
@@ -46,14 +47,20 @@ final class WorldPost {
 
     private static Predicate<BlockCoord> skipPlanned(StageSite site) {
         return at -> {
-            if (!site.planCell(at.x(), at.y(), at.z())) {
+            if (!site.planCell(at.x(), at.y(), at.z()) && !streetLayer(site, at)) {
                 return false;
             }
             if (PLANNED_SKIPPED.add(at)) {
-                LOGGER.info("[plot] расчистка не трогает {}: там блок постройки плана поселения", at);
+                LOGGER.info("[plot] расчистка не трогает {}: там блок постройки или полоса улиц плана поселения", at);
             }
             return true;
         };
+    }
+
+    private static boolean streetLayer(StageSite site, BlockCoord at) {
+        return site.streetColumn(at.x(), at.z())
+                && at.y() >= site.anchor().y() - StageSite.STREET_DEPTH
+                && at.y() <= site.anchor().y();
     }
 
     static boolean handles(String node) {
@@ -111,12 +118,14 @@ final class WorldPost {
                 post,
                 step,
                 target,
-                new StageRepair.Gap(
-                        gap.shortage(),
-                        gap.total(),
-                        WorldNeeds.of(post.graph, ticket.task().consumes(), post.scan.wood())),
+                new StageRepair.Gap(gap.shortage(), gap.total(), repairNeed(gap, ticket, post.graph, post.scan.wood())),
                 step == BoardCase.BUILD_PLACED ? id : null);
         return StageAudit.keeps(outcome);
+    }
+
+    private static Map<String, Integer> repairNeed(
+            BuildGap.Gap gap, GraphTickets.Ticket ticket, SupplyGraph graph, String wood) {
+        return RepairNeed.merge(WorldNeeds.of(graph, ticket.task().consumes(), wood), gap.missingItems());
     }
 
     private static boolean world(GraphPost post, GraphTickets.Ticket ticket) {

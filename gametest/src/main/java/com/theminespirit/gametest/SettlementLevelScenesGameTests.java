@@ -34,7 +34,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class SettlementLevelScenesGameTests {
     private SettlementLevelScenesGameTests() {}
 
-    @GameTest(template = "arena", timeoutTicks = 40)
+    @GameTest(template = "arena", batch = "scene_settlement_level_save", timeoutTicks = 40)
     public static void settlementPlot_Settle_HeightCountedOnce(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         SettlementPlotStore store = SettlementPlotStore.get(helper.getLevel());
@@ -75,7 +75,7 @@ public final class SettlementLevelScenesGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "arena", timeoutTicks = 40)
+    @GameTest(template = "arena", batch = "scene_settlement_level_rescue", timeoutTicks = 40)
     public static void rescue_PlanCellBreak_IsAllowedAndRestorable(GameTestHelper helper) {
         GameTestFixtures.reset(helper);
         SettlementPlotStore store = SettlementPlotStore.get(helper.getLevel());

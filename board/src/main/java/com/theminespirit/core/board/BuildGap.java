@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
+import org.jspecify.annotations.Nullable;
 
 public final class BuildGap {
     public static final String DIG = "проходка";
@@ -34,6 +35,10 @@ public final class BuildGap {
         String block(BlockCoord at);
 
         boolean passable(BlockCoord at);
+
+        default boolean open(BlockCoord at) {
+            return passable(at);
+        }
 
         default String rawBlock(BlockCoord at) {
             return block(at);
@@ -225,6 +230,10 @@ public final class BuildGap {
                         () -> SchematicBlocks.isFloorClass(standing) || ore(standing),
                         " ожидается " + floor + ", стоит " + standing);
             }
+            Map<BlockCoord, String> schemeTorches = new LinkedHashMap<>();
+            for (Schematic.PlacedEntry entry : layout.optional()) {
+                schemeTorches.put(entry.pos(), entry.block());
+            }
             for (BlockCoord cell : layout.air()) {
                 if (!probe.loaded(cell)) {
                     unknown++;
@@ -232,8 +241,14 @@ public final class BuildGap {
                     continue;
                 }
                 String standing = probe.block(cell);
-                count(cell, DIG, "minecraft:air", () -> probe.passable(cell) || ore(standing), " копать: " + standing);
+                boolean done = probe.open(cell) || ore(standing) || schemeTorch(standing, schemeTorches.get(cell));
+                count(cell, DIG, "minecraft:air", () -> done, " копать: " + standing);
             }
+        }
+
+        private static boolean schemeTorch(String standing, @Nullable String planned) {
+            return planned != null
+                    && bare(SchematicBlocks.itemOf(planned)).equals(bare(SchematicBlocks.itemOf(standing)));
         }
 
         private static boolean ore(String blockId) {

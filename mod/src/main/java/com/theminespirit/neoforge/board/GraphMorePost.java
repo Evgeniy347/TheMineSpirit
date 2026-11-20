@@ -51,8 +51,6 @@ final class GraphMorePost {
             case "more5_craft_build_material" -> gatherBuild(post, ticket, true);
             case "more5_restore_block" -> restoreBlock(post, ticket);
             case "more5_bridge_route" -> bridgeRoute(post, ticket);
-            case "more5_light_mine" ->
-                GraphMoreCarePost.light(post, ticket, post.scan.stage().mineEntrance());
             case "more5_craft_mine_torch" -> new GraphCrafting(post).torches(ticket, task);
             case "more5_pickup_wood_drop" -> pickupWoodDrop(post, ticket);
             case "more5_plant_sapling" -> plantSapling(post, ticket);

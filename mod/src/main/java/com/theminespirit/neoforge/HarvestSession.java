@@ -71,7 +71,7 @@ public final class HarvestSession {
         return new HarvestSession(
                 spirit,
                 new HarvestSpec(
-                        new VeinTargets(spirit.level(), spirit.blockPosition(), radius, ores),
+                        new VeinTargets(spirit.level(), spirit.blockPosition(), radius, ores, spirit.protectionGate()),
                         WorkKind.VEIN,
                         ore.name().toLowerCase(Locale.ROOT),
                         count,

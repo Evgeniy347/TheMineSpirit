@@ -1,7 +1,6 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.graph.GraphState;
-import com.theminespirit.core.board.graph.More5Rules;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -24,9 +23,5 @@ final class More5Inputs {
                 state.stations(),
                 state.orders(),
                 state.facts());
-    }
-
-    static int darkMineCells(int raw) {
-        return raw >= More5Rules.MINE_DARK_MIN ? raw : 0;
     }
 }
