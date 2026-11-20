@@ -152,7 +152,7 @@ class SettlementLevelGuardTests {
     @Test
     void fenceOrigins_DangerAndPortal_UseSettlementLevel() {
         List<String> offenders = new ArrayList<>();
-        for (String file : List.of("neoforge/board/More3Post.java", "neoforge/board/More4Post.java")) {
+        for (String file : List.of("neoforge/board/More4Post.java")) {
             if (!read(SourceFiles.path(file)).contains("SiteLevels.fenceOrigin(")) {
                 offenders.add(file);
             }
@@ -169,7 +169,7 @@ class SettlementLevelGuardTests {
     @Test
     void fenceEvents_UseSmallStageStub_NotWholeRing() {
         List<String> offenders = new ArrayList<>();
-        for (String file : List.of("neoforge/board/More3Post.java", "neoforge/board/More4Post.java")) {
+        for (String file : List.of("neoforge/board/More4Post.java")) {
             String text = read(SourceFiles.path(file));
             if (!text.contains("FenceStubPlan.of(")) {
                 offenders.add(file);
@@ -197,18 +197,12 @@ class SettlementLevelGuardTests {
 
     @Test
     void fenceFailure_UnreachableOrigin_IsSkippedBeforeSubmit() {
-        String danger = read(SourceFiles.path("neoforge/board/More3Post.java"));
         String portal = read(SourceFiles.path("neoforge/board/More4Post.java"));
 
         assertTrue(
-                danger.indexOf("post.unreachable(at)") >= 0
-                        && danger.indexOf("post.unreachable(at)") < danger.indexOf("post.submit("),
-                "Забор в точке опасности не ставится снова, пока граф помнит её недостижимой (post.unreachable → "
-                        + "continue): иначе DigOut повторяет полный поиск каждый заход");
-        assertTrue(
                 portal.indexOf("post.unreachable(origin)") >= 0
                         && portal.indexOf("post.unreachable(origin)") < portal.indexOf("post.submit("),
-                "Забор у портала тоже пропускает недостижимую точку: правило общее, а не только для опасностей");
+                "Забор у портала пропускает недостижимую точку: иначе DigOut повторяет полный поиск каждый заход");
     }
 
     @Test

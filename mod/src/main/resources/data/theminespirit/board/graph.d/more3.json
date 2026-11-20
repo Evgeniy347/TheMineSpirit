@@ -31,8 +31,7 @@
   "events": {
     "danger_spot": {
       "tasks": [
-        {"id": "secure_danger", "case": "ACTIVITY_ESCAPE", "base": 92, "consumes": {}},
-        {"id": "fence_danger", "case": "BUILD_FENCE", "base": 84, "consumes": {"#logs": 4}}
+        {"id": "secure_danger", "case": "ACTIVITY_ESCAPE", "base": 92, "consumes": {}}
       ],
       "push": {"danger_known": 10},
       "advice": ["avoid_or_fence_dangerous_place"]

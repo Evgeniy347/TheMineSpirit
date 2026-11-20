@@ -1,14 +1,12 @@
 package com.theminespirit.neoforge.board;
 
 import com.theminespirit.core.board.BoardConfig;
-import com.theminespirit.core.board.FenceStubPlan;
 import com.theminespirit.core.board.TicketTarget;
 import com.theminespirit.core.board.api.BoardCase;
 import com.theminespirit.core.board.graph.GraphTickets;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.plan.ScriptCall;
 import com.theminespirit.core.plan.TaskNode;
-import com.theminespirit.core.town.SiteLevels;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.Map;
 import java.util.Optional;
@@ -18,7 +16,6 @@ import net.minecraft.core.BlockPos;
 final class More3Post {
     private static final Set<String> NODES = Set.of(
             "secure_danger",
-            "fence_danger",
             "recover_death_drop",
             "clear_trash",
             "assign_chest_purpose",
@@ -34,7 +31,6 @@ final class More3Post {
     static boolean post(GraphPost post, GraphTickets.Ticket ticket) {
         return switch (ticket.node()) {
             case "secure_danger" -> avoidDanger(post);
-            case "fence_danger" -> fenceDanger(post, ticket);
             case "recover_death_drop" -> recoverDrops(post, ticket);
             case "clear_trash" ->
                 ActivityLaunch.launch(post, BoardCase.ACTIVITY_UNLOAD, "unload", new ScriptCall("unload", unload()));
@@ -45,31 +41,6 @@ final class More3Post {
                 ActivityLaunch.launch(post, BoardCase.ACTIVITY_MOVE, "goto", gotoPoint(post.scan.home()));
             default -> false;
         };
-    }
-
-    private static boolean fenceDanger(GraphPost post, GraphTickets.Ticket ticket) {
-        for (More3Store.Danger danger : More3Store.get(post.level).recentDangers(post.now)) {
-            BlockCoord at = SiteLevels.fenceOrigin(post.scan.stage(), danger.position());
-            if (post.unreachable(at)) {
-                continue;
-            }
-            String id = "more3_fence:" + at.x() + "," + at.y() + "," + at.z();
-            if (post.done(id) || post.open(id)) {
-                return true;
-            }
-            post.submit(
-                    post.ticket(
-                            id,
-                            BoardCase.BUILD_FENCE,
-                            Optional.empty(),
-                            ticket.task().priority(),
-                            ticket.id(),
-                            post.items(ticket.task())),
-                    TicketTarget.at(at)
-                            .withPlan(FenceStubPlan.of(at, post.scan.stage().stage(), post.scan.wood())));
-            return true;
-        }
-        return false;
     }
 
     private static boolean avoidDanger(GraphPost post) {

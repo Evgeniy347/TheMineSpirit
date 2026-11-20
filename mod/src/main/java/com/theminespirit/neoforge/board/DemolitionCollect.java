@@ -74,6 +74,7 @@ final class DemolitionCollect {
         if (scope != DemolitionScope.STRAYS) {
             findings(ctx, found);
         }
+        ExtraFenceScan.collect(ctx, remove, notes);
         return new PlanDemolition.Collected(
                 found.remove,
                 List.copyOf(found.notes),
