@@ -51,7 +51,7 @@ public final class SpiritNavigation extends GroundPathNavigation {
 
     private void logStop() {
         long now = mob.level().getGameTime();
-        if (now - stopLogTick < NO_PATH_LOG_TICKS) {
+        if (now < stopLogTick + NO_PATH_LOG_TICKS) {
             return;
         }
         stopLogTick = now;
@@ -138,7 +138,7 @@ public final class SpiritNavigation extends GroundPathNavigation {
 
     private void logRebuild(BlockPos want, @Nullable Path path) {
         long now = mob.level().getGameTime();
-        if (now - rebuildLogTick < NO_PATH_LOG_TICKS) {
+        if (now < rebuildLogTick + NO_PATH_LOG_TICKS) {
             return;
         }
         rebuildLogTick = now;
@@ -153,7 +153,7 @@ public final class SpiritNavigation extends GroundPathNavigation {
 
     private void logNoPath(BlockPos want, int floorLevel) {
         long now = mob.level().getGameTime();
-        if (now - noPathLogTick < NO_PATH_LOG_TICKS) {
+        if (now < noPathLogTick + NO_PATH_LOG_TICKS) {
             return;
         }
         noPathLogTick = now;
