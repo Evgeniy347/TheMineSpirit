@@ -1,6 +1,7 @@
 package com.theminespirit.core.board;
 
 import com.theminespirit.core.board.api.Point;
+import com.theminespirit.core.town.PlotLeveling;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -9,6 +10,23 @@ public final class CraterNeed {
     private static final String DIRT = "dirt";
 
     private CraterNeed() {}
+
+    public static int fillBlocks(TicketTarget target) {
+        Objects.requireNonNull(target, "Цель засыпки не может быть null: без неё неизвестен объём воронки");
+        PlotLeveling leveling = target.leveling();
+        if (leveling != null && !leveling.fill().isEmpty()) {
+            return leveling.fillVolume();
+        }
+        if (target.craterBlocks() > 0) {
+            return target.craterBlocks();
+        }
+        double radius = BoardTuning.craterBlocksEstimateRadius();
+        return (int) Math.ceil(Math.PI * radius * radius);
+    }
+
+    public static Map<String, Integer> fillNeed(TicketTarget target) {
+        return Map.of(DIRT, fillBlocks(target));
+    }
 
     public static Map<String, Integer> estimate(Point blast, double radius) {
         Objects.requireNonNull(blast, "blast не может быть null: точка взрыва — центр воронки");

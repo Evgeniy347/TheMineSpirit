@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.theminespirit.core.board.BoardOutcome;
 import com.theminespirit.core.board.BoardStatus;
 import com.theminespirit.core.board.BuildGap;
+import com.theminespirit.core.board.CraterNeed;
 import com.theminespirit.core.board.FillIndex;
 import com.theminespirit.core.board.LevelRepair;
 import com.theminespirit.core.board.StageAudit;
@@ -159,6 +160,9 @@ final class WorldPost {
             if (post.open(id)) {
                 continue;
             }
+            TicketTarget target = TicketTarget.at(pit.anchor())
+                    .withCraterBlocks(Math.min(pit.blocks(), CatalogLimits.COUNT_MAX))
+                    .withLeveling(LevelRepair.leveling(pit.cells(), List.of()));
             post.submit(
                     post.ticket(
                             id,
@@ -166,10 +170,8 @@ final class WorldPost {
                             Optional.empty(),
                             priority,
                             ticket.id(),
-                            post.items(ticket.task())),
-                    TicketTarget.at(pit.anchor())
-                            .withCraterBlocks(Math.min(pit.blocks(), CatalogLimits.COUNT_MAX))
-                            .withLeveling(LevelRepair.leveling(pit.cells(), List.of())));
+                            CraterNeed.fillNeed(target)),
+                    target);
             posted++;
         }
         return true;
@@ -234,6 +236,7 @@ final class WorldPost {
                 posted = true;
                 continue;
             }
+            TicketTarget target = TicketTarget.at(at).withCraterBlocks(1);
             post.submit(
                     post.ticket(
                             id,
@@ -241,8 +244,8 @@ final class WorldPost {
                             Optional.empty(),
                             priority,
                             ticket.id(),
-                            post.items(ticket.task())),
-                    TicketTarget.at(at).withCraterBlocks(1));
+                            CraterNeed.fillNeed(target)),
+                    target);
             posted = true;
         }
         return posted;

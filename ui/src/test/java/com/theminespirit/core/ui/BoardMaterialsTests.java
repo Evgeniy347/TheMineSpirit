@@ -99,6 +99,66 @@ class BoardMaterialsTests {
     }
 
     @Test
+    void of_FillCraterWithStock_ShowsDirtHaveAndNeed() {
+        BoardTile crater = fillCraterTile(Map.of(), Map.of("dirt", 416), Map.of("dirt", 4688));
+
+        List<BoardMaterials.Material> materials = BoardMaterials.of(crater);
+
+        assertEquals(
+                List.of(new BoardMaterials.Material(BoardMaterials.Kind.NEED, "dirt", 416, 4688)),
+                materials,
+                "Карточка «Засыпать воронку» обязана показать землю и «есть / надо»: без этого игрок "
+                        + "не знает, сколько земли нужно на яму; При смене FILL_CRATER-тикетов проверь fillNeed");
+        assertTrue(
+                !BoardMaterials.shortage(materials.get(0)),
+                "Земли 4688 при нужде 416: звезды нехватки быть не должно, иначе игрок побежит добывать "
+                        + "землю, которой и так хватает; При смене расчёта stock в BoardMaterials проверь "
+                        + "shortage и карточку ремонта");
+    }
+
+    @Test
+    void of_FillCraterShortStock_StarWithoutDuplicateMissing() {
+        BoardTile crater = fillCraterTile(Map.of("dirt", 316), Map.of("dirt", 416), Map.of("dirt", 100));
+
+        List<BoardMaterials.Material> materials = BoardMaterials.of(crater);
+
+        assertEquals(
+                List.of(new BoardMaterials.Material(BoardMaterials.Kind.NEED, "dirt", 416, 100)),
+                materials,
+                "При нехватке земли карточка показывает нужду и звезду, а не вторую строку «не хватает»: "
+                        + "иначе число, которое надо добрать, теряется среди дублей и гейт склада выглядит "
+                        + "сломанным; При смене BoardMaterials.needRows проверь REPAIR_BUILDING");
+        assertTrue(
+                BoardMaterials.shortage(materials.get(0)),
+                "Земли 100 при нужде 416: звезда нехватки обязана звать добычу, иначе засыпка молча ждёт "
+                        + "и воронка стоит до конца этапа; При смене BoardMaterials.shortage проверь карточку "
+                        + "FILL_CRATER");
+    }
+
+    private static BoardTile fillCraterTile(
+            Map<String, Integer> missing, Map<String, Integer> requiredItems, Map<String, Integer> stock) {
+        return new BoardTile(
+                "world:backfill:-206,-526:16x26",
+                "FILL_CRATER",
+                1,
+                55,
+                null,
+                "PENDING",
+                BoardTileGroup.AVAILABLE,
+                missing,
+                List.of(),
+                0,
+                0,
+                0,
+                0,
+                null,
+                0,
+                List.of("target=-206,66,-526"),
+                requiredItems,
+                stock);
+    }
+
+    @Test
     void of_RepairWithStock_ShowsHaveAndNeedWithoutDuplicateMissing() {
         BoardTile repair = new BoardTile(
                 "repair:hut",
