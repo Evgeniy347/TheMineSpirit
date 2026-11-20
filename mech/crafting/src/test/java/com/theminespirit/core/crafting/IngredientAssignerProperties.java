@@ -30,8 +30,9 @@ class IngredientAssignerProperties {
                 bruteForceExists(slots, new HashMap<>(available), 0),
                 assignment.isPresent(),
                 "Ассигнатор обязан находить назначение ровно тогда, когда оно существует: иначе выполнимый рецепт "
-                        + "объявляется невыполнимым (дух не крафтит при наличии материалов) или наоборот. Места: "
-                        + masks + ", наличие: " + stock);
+                        + "объявляется невыполнимым (дух не крафтит при наличии материалов) или крафт падает на "
+                        + "нехватке. При смене IngredientAssigner.assign проверь перебор bruteForceExists выше в "
+                        + "тесте. Места: " + masks + ", наличие: " + stock);
     }
 
     @Property
@@ -45,18 +46,26 @@ class IngredientAssignerProperties {
 
         if (assignment.isPresent()) {
             List<String> chosen = assignment.get();
-            assertEquals(slots.size(), chosen.size(), "На каждое место рецепта обязан быть назначен предмет");
+            assertEquals(
+                    slots.size(),
+                    chosen.size(),
+                    "На каждое место рецепта обязан быть назначен предмет, иначе крафт получает меньше слотов, чем "
+                            + "диктует рецепт. При смене IngredientAssigner.assign проверь строку alternatives ниже "
+                            + "в тесте. Места: " + masks);
             Map<String, Integer> used = new HashMap<>();
             for (int i = 0; i < chosen.size(); i++) {
                 assertTrue(
                         slots.get(i).alternatives().contains(chosen.get(i)),
-                        "Предмет '" + chosen.get(i) + "' назначен на место " + i + ", которое его не допускает");
+                        "Предмет '" + chosen.get(i) + "' назначен на место " + i + ", которое его не допускает: "
+                                + "иначе рецепт собирается из чужих предметов и крафт выдаёт не то. При смене "
+                                + "assign проверь строку расхода ниже в тесте. Места: " + masks);
                 used.merge(chosen.get(i), 1, Integer::sum);
             }
             used.forEach((item, count) -> assertTrue(
                     count <= available.getOrDefault(item, 0),
                     "Назначение расходует " + item + " " + count + " раз при наличии " + available.getOrDefault(item, 0)
-                            + ": дух не может отдать то, чего нет"));
+                            + ": дух не может отдать то, чего нет, иначе учёт расходов врёт и крафт падает. При "
+                            + "смене assign проверь строку допуска выше в тесте. Наличие: " + stock));
         }
     }
 
