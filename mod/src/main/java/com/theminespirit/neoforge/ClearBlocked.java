@@ -85,13 +85,8 @@ final class ClearBlocked {
         if (!demolish && PlanCells.keep(spirit.level(), pos)) {
             return "блок постройки плана поселения";
         }
-        BlockProtection.Decision decision = BreakProtection.check(
-                spirit,
-                demolish ? BlockBreaker.Intent.DEMOLISH : BlockBreaker.Intent.EXCAVATE,
-                pos,
-                state,
-                false,
-                false);
+        BlockProtection.Decision decision =
+                BreakProtection.check(spirit, BlockBreaker.intent(false, demolish), pos, state, false, false);
         if (decision instanceof BlockProtection.Refused refused) {
             return "защищено: " + refused.reason();
         }

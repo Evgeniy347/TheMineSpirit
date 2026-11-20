@@ -133,7 +133,7 @@ public final class BlockBreaker {
         return begin(target, Intent.EXCAVATE, true);
     }
 
-    private static Intent intent(boolean tended, boolean demolish) {
+    static Intent intent(boolean tended, boolean demolish) {
         return demolish ? Intent.DEMOLISH : tended ? Intent.HARVEST : Intent.BREAK;
     }
 
