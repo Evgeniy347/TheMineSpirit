@@ -223,9 +223,9 @@ public final class KitFor {
                     : JsonResource.optionalStrings(matchNode, origin, "поля match " + what);
             rules.add(rule(
                     match,
-                    BaseKit.textField(ruleNode.get("category"), origin, what),
-                    BaseKit.keepField(ruleNode.get("keep"), origin, "поля keep " + what),
-                    BaseKit.modeField(ruleNode.get("mode"), origin, "поля mode " + what),
+                    KitJson.textField(ruleNode.get("category"), origin, what),
+                    KitJson.keepField(ruleNode.get("keep"), origin, "поля keep " + what),
+                    KitJson.modeField(ruleNode.get("mode"), origin, "поля mode " + what),
                     origin,
                     what));
         }
