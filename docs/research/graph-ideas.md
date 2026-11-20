@@ -8,8 +8,7 @@
 
 ## 1. Что уже покрыто и где настоящий пробел
 
-- После слияния `graph.json` и `graph-recipes.json`: **1038 предметов, 135 построек, 1637 путей, 70 групп,
-  41 событие**. `graph-recipes.json` — автогенерация рецептов (751 предмет, 1138 путей): крафт уже покрыт широко.
+- Граф: **1038 предметов, 135 построек, 1637 путей, 70 групп, 41 событие**. `graph-recipes.json` — автогенерация рецептов (751 предмет, 1138 путей): крафт уже покрыт широко.
 - В коде **100 классов `*Script` и 100 `ScriptSpec`**, 33 `*Watch`, 19 `*Session`. Из 87 `BoardCase` в графе
   не используются 25: `ACTIVITY_*`, `TRANSFER_ITEM`, `RESCUE_SPIRIT`, `SUPPLY_SITE`, `RESTOCK_FOOD`,
   `RELOCATE_BUILDING`, `DISMANTLE_SHELTER`, `LURE_ANIMAL`, `ENCHANT_SHELVES`, `CRAFT_SHEARS`.
