@@ -124,10 +124,12 @@ public final class SpiritNavigation extends GroundPathNavigation {
 
     private static String source() {
         return StackWalker.getInstance()
-                .walk(frames -> frames.map(StackWalker.StackFrame::getClassName)
-                        .filter(name -> name.startsWith("com.theminespirit") && !name.contains("SpiritNavigation"))
+                .walk(frames -> frames.filter(frame -> frame.getClassName().startsWith("com.theminespirit")
+                                && !frame.getClassName().contains("SpiritNavigation"))
                         .findFirst()
-                        .map(name -> name.substring(name.lastIndexOf('.') + 1))
+                        .map(frame -> frame.getClassName()
+                                        .substring(frame.getClassName().lastIndexOf('.') + 1) + "."
+                                + frame.getMethodName())
                         .orElse("-"));
     }
 
