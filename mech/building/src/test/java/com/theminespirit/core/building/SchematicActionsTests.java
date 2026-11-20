@@ -57,6 +57,28 @@ class SchematicActionsTests {
     }
 
     @Test
+    void raiseItem_DirtPath_Dirt() {
+        assertEquals(
+                "minecraft:dirt",
+                SchematicActions.raiseItem("minecraft:dirt_path"),
+                "Подъём тропинки в воздушную клетку тратит блок земли: без этого дух приходит с пустым "
+                        + "рюкзаком и падает с «нет земли»; При смене raiseItem в SchematicActions проверь "
+                        + "BuildSupplyNeed и живой ремонт сада");
+    }
+
+    @Test
+    void raiseItem_Farmland_Null() {
+        assertNull(
+                SchematicActions.raiseItem("minecraft:farmland"),
+                "Пашня делается тяпкой и землю не тратит: иначе снабжение понесёт лишний блок под каждую "
+                        + "грядку; При смене raiseItem проверь SchematicActionsTests и BuildSupplyNeed");
+        assertNull(
+                SchematicActions.raiseItem("minecraft:stone"),
+                "Обычный блок ставится предметом, а не подъёмом: иначе raiseItem запросит землю вместо самого "
+                        + "блока; При смене raiseItem проверь BuildSupplyNeed и подвоз стройки");
+    }
+
+    @Test
     void buildEntry_StoneWithItem_IsBuildEntry() {
         assertTrue(
                 SchematicActions.buildEntry("minecraft:stone", true),
