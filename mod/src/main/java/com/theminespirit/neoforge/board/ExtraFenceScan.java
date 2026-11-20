@@ -7,6 +7,7 @@ import com.theminespirit.core.town.OrchardPlot;
 import com.theminespirit.core.town.StageSite;
 import com.theminespirit.neoforge.BlockStates;
 import com.theminespirit.neoforge.policy.PlacedBlocksData;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +30,7 @@ final class ExtraFenceScan {
         PlacedBlocksData placed = PlacedBlocksData.get(level);
         Set<Long> ring = keys(site.ring().posts());
         Set<Long> orchards = orchardKeys(site);
+        List<BlockCoord> orchardStubs = new ArrayList<>();
         int shown = 0;
         int from = site.anchor().y() - BELOW;
         int to = site.anchor().y() + ABOVE;
@@ -64,12 +66,17 @@ final class ExtraFenceScan {
                         || !FloatingScan.reachable(level, at)) {
                     continue;
                 }
-                fences.add(at);
+                if (inOrchard) {
+                    orchardStubs.add(at);
+                } else {
+                    fences.add(at);
+                }
                 if (shown++ < NOTE_LIMIT) {
                     notes.add(at + " — заглушка вне плана: в уборку");
                 }
             }
         }
+        fences.addAll(0, orchardStubs);
     }
 
     static boolean hidden(int failures) {

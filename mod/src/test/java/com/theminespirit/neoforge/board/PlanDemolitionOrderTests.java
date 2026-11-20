@@ -42,6 +42,19 @@ class PlanDemolitionOrderTests {
     }
 
     @Test
+    void stubPieces_OrchardFirst_OrchardPieceLeads() {
+        BlockCoord orchard = new BlockCoord(-158, 68, -517);
+        BlockCoord far = new BlockCoord(-197, 68, -400);
+
+        List<List<BlockCoord>> pieces = PlanDemolition.stubPieces(List.of(orchard, far));
+
+        assertEquals(
+                orchard,
+                pieces.get(0).get(0),
+                "Садовый столб сносится первым: он стоит у дерева и мешает рубке, остальные ждут");
+    }
+
+    @Test
     void stubPieces_NeighbourStubs_OnePiece() {
         BlockCoord first = new BlockCoord(-158, 68, -517);
         BlockCoord second = new BlockCoord(-157, 68, -518);

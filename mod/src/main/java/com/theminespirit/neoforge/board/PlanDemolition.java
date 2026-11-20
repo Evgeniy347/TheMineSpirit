@@ -77,7 +77,8 @@ final class PlanDemolition {
                         level, service, post, site, open, new DemolitionTickets.Batch(stray, blocks, placement))) {
             return;
         }
-        if (submitStubs(world, level, service, site, post, scope, collected, now, cause)) {
+        if (!collected.fences().isEmpty()) {
+            submitStubs(world, level, service, site, post, scope, collected, now, cause);
             return;
         }
         if (stray.isEmpty()) {
@@ -186,7 +187,7 @@ final class PlanDemolition {
     }
 
     static List<List<BlockCoord>> stubPieces(List<BlockCoord> fences) {
-        List<BlockCoord> rest = new ArrayList<>(order(fences, Set.of()));
+        List<BlockCoord> rest = new ArrayList<>(fences.stream().distinct().toList());
         List<List<BlockCoord>> pieces = new ArrayList<>();
         while (!rest.isEmpty()) {
             List<BlockCoord> piece = DemolitionKey.piece(rest);
