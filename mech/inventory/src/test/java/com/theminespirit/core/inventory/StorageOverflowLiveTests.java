@@ -28,15 +28,23 @@ class StorageOverflowLiveTests {
         StoragePoints.Choice choice =
                 StoragePoints.deposit(spots, origin(), new Stack("minecraft:wooden_pickaxe", 0, 2, 64));
 
-        assertTrue(choice.found(), "в живом складе есть свободный сундук — сдача обязана найти его: " + choice.log());
-        assertEquals(FREE, choice.point(), "закреплённый полный сундук " + FULL + " не выбирается заново");
+        assertTrue(
+                choice.found(),
+                "в живом складе есть свободный сундук — сдача обязана найти его, иначе дух топчется у полного "
+                        + "и теряет тик: " + choice.log() + ". При смене deposit проверь полный и свободный сундук");
+        assertEquals(
+                FREE,
+                choice.point(),
+                "закреплённый полный сундук " + FULL + " не выбирается заново, иначе сдача падает каждый раз. "
+                        + "При смене deposit проверь полный и свободный сундук");
         assertTrue(
                 choice.log().contains("-181,69,-517") && choice.log().contains("свободно 0 из 27"),
                 "решение [deposit] называет контейнер и число свободных слотов, а не «свободных слотов нет»: "
-                        + choice.log());
+                        + choice.log() + ". При смене лога проверь координаты и «свободно 0 из 27»");
         assertTrue(
                 choice.log().contains("-171,71,-487") && choice.log().contains("выбрана"),
-                "выбранный контейнер виден в логе с координатами: " + choice.log());
+                "выбранный контейнер виден в логе с координатами, иначе разбор сдачи не находит цель: " + choice.log()
+                        + ". При смене лога проверь выбор -171,71,-487");
     }
 
     @Test
@@ -47,15 +55,20 @@ class StorageOverflowLiveTests {
 
         ContainerChoice choice = ContainerPicker.choose(full, origin(), new Stack("minecraft:oak_stairs", 0, 9, 64));
 
-        assertTrue(choice instanceof ContainerChoice.Refused, "во всех полных контейнерах места нет: " + choice);
+        assertTrue(
+                choice instanceof ContainerChoice.Refused,
+                "во всех полных контейнерах места нет: отказ обязан быть, иначе перенос упадёт посреди сдачи "
+                        + "и вещи выпадут: " + choice + ". При смене ContainerPicker проверь два полных контейнера");
         String reason = ((ContainerChoice.Refused) choice).reason();
         assertTrue(
                 reason.contains("-181,69,-517") && reason.contains("свободно 0 из 27"),
-                "отказ называет каждый контейнер и свободные слоты — по нему решают, ставить ли второй сундук: "
-                        + reason);
+                "отказ называет каждый контейнер и свободные слоты — по нему решают, ставить ли второй сундук, "
+                        + "иначе причина бесполезна: " + reason + ". При смене текста проверь оба контейнера");
         assertTrue(
                 reason.contains("-152,72,-491") && reason.contains("поставьте сундук"),
-                "отказ говорит, что нужен новый сундук, и не повторяет одно и то же без адреса: " + reason);
+                "отказ говорит, что нужен новый сундук, и не повторяет одно и то же без адреса: " + reason
+                        + ". При смене текста проверь «поставьте сундук» и адрес второго контейнера, "
+                        + "иначе игрок не поймёт, куда ставить");
     }
 
     private static List<StoragePoints.Spot> points() throws IOException {
@@ -69,7 +82,10 @@ class StorageOverflowLiveTests {
                 spots.add(new StoragePoints.Spot(pos, "minecraft:chest", new ContainerSnapshot(FREE, empty(27))));
             }
         }
-        assertFalse(spots.isEmpty(), "наблюдение с сервера без контейнеров: фикстура не о том складе");
+        assertFalse(
+                spots.isEmpty(),
+                "наблюдение с сервера без контейнеров: фикстура не о том складе и тест слеп, иначе зелёный "
+                        + "прогон ничего не доказывает. При смене фикстуры проверь список контейнеров");
         return spots;
     }
 
