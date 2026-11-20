@@ -26,6 +26,7 @@ public final class SpiritNavigation extends GroundPathNavigation {
     private long futileUntil = Long.MIN_VALUE;
     private long noPathLogTick = Long.MIN_VALUE;
     private long rebuildLogTick = Long.MIN_VALUE;
+    private long stopLogTick = Long.MIN_VALUE;
 
     public SpiritNavigation(Mob mob, Level level) {
         super(mob, level);
@@ -37,6 +38,23 @@ public final class SpiritNavigation extends GroundPathNavigation {
         this.nodeEvaluator.setCanPassDoors(true);
         this.nodeEvaluator.setCanOpenDoors(true);
         return new PathFinder(this.nodeEvaluator, maxVisitedNodes);
+    }
+
+    @Override
+    public void stop() {
+        if (getPath() != null) {
+            logStop();
+        }
+        super.stop();
+    }
+
+    private void logStop() {
+        long now = mob.level().getGameTime();
+        if (now - stopLogTick < NO_PATH_LOG_TICKS) {
+            return;
+        }
+        stopLogTick = now;
+        LOGGER.info("[nav] дух {}: путь сброшен из {}", mob.getName().getString(), source());
     }
 
     @Override
