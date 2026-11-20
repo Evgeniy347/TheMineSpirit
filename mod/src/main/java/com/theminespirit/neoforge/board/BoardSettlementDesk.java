@@ -198,10 +198,10 @@ final class BoardSettlementDesk {
         boolean paused =
                 spirit.tactics().wantsControl() || spirit.taskSuspendReason().isPresent();
         BlockCoord at = new BlockCoord(feet.getX(), feet.getY(), feet.getZ());
-        boolean standing = stall.stalled(spirit.getUUID(), script, at, board.now(), paused);
         String key = spirit.taskProgress()
                 .map(p -> p.step() + "/" + p.currentScript() + "/" + p.done())
                 .orElse("-");
+        boolean standing = stall.stalled(spirit.getUUID(), script, key, at, board.now(), paused);
         boolean idle = stall.noProgress(spirit.getUUID(), key, at, board.now(), paused);
         if (!standing && !idle) {
             return;

@@ -10,6 +10,7 @@ abstract class SingleChildExecutor extends NodeExecutor {
     private final ConditionRegistry conditions;
     private @Nullable NodeExecutor current;
     private Optional<ScriptResult> completedResult = Optional.empty();
+    private Optional<ScriptInstance.Progress> lastScriptProgress = Optional.empty();
 
     SingleChildExecutor(ScriptRegistry scripts, ConditionRegistry conditions) {
         this.scripts = scripts;
@@ -64,7 +65,7 @@ abstract class SingleChildExecutor extends NodeExecutor {
 
     @Override
     final Optional<ScriptInstance.Progress> scriptProgress() {
-        return current == null ? Optional.empty() : current.scriptProgress();
+        return current == null ? lastScriptProgress : current.scriptProgress();
     }
 
     @Override
@@ -96,6 +97,7 @@ abstract class SingleChildExecutor extends NodeExecutor {
     final void rememberCompleted() {
         if (current != null) {
             completedResult = current.result();
+            lastScriptProgress = current.scriptProgress();
         }
     }
 

@@ -44,14 +44,19 @@ public final class TaskStall {
         return before != null && now != null && !near(before, now);
     }
 
-    private record Seen(@Nullable String script, BlockCoord pos, long since) {}
+    private record Seen(@Nullable String script, String key, BlockCoord pos, long since) {}
 
     public boolean stalled(UUID spirit, @Nullable String script, BlockCoord pos, long now) {
         return stalled(spirit, script, pos, now, false);
     }
 
     public boolean stalled(UUID spirit, @Nullable String script, BlockCoord pos, long now, boolean paused) {
+        return stalled(spirit, script, "", pos, now, paused);
+    }
+
+    public boolean stalled(UUID spirit, @Nullable String script, String key, BlockCoord pos, long now, boolean paused) {
         Objects.requireNonNull(spirit, "Дух не может быть null: простой считается на конкретного духа");
+        Objects.requireNonNull(key, "Ключ прогресса не может быть null: без него не видно, сдвинулась ли задача");
         Objects.requireNonNull(pos, "Позиция не может быть null: простой — это «не сдвинулся»");
         if (paused) {
             seen.remove(spirit);
@@ -63,8 +68,11 @@ public final class TaskStall {
             seen.remove(spirit);
             return false;
         }
-        if (last == null || !Objects.equals(last.script(), script) || !near(last.pos(), pos)) {
-            seen.put(spirit, new Seen(script, pos, now));
+        if (last == null
+                || !Objects.equals(last.script(), script)
+                || !last.key().equals(key)
+                || !near(last.pos(), pos)) {
+            seen.put(spirit, new Seen(script, key, pos, now));
             return false;
         }
         return now - last.since() >= STALL_TICKS;

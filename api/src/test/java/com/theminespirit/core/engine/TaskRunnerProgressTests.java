@@ -1,6 +1,7 @@
 package com.theminespirit.core.engine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.plan.ScriptCall;
@@ -61,6 +62,26 @@ class TaskRunnerProgressTests {
         assertEquals(1, progress.step(), "корень-скрипт всегда первый шаг: других шагов у него нет");
         assertEquals(1, progress.totalSteps(), "корень-скрипт всегда единственный шаг");
         assertEquals(SLOW, progress.currentScript(), "корень-скрипт сам себя называет текущим");
+    }
+
+    @Test
+    void progress_BetweenSteps_KeepsLastDone() {
+        TaskRunner runner = TaskRunner.start(
+                sequence(new ScriptCall(COUNTED, Map.of()), new ScriptCall(SLOW, Map.of())),
+                ScriptRegistry.of(Map.of(COUNTED, TestScripts.counting(1), SLOW, TestScripts.succeeding(3))),
+                TestScripts.condition("yes", true));
+
+        runner.tick();
+
+        RunProgress between = runner.progress().orElseThrow();
+        assertEquals(2, between.step(), "Счётный шаг закрылся за один тик — раннер уже на втором шаге");
+        assertNull(between.currentScript(), "Между шагами скрипта ещё нет: следующий спавнится на следующем тике");
+        assertEquals(
+                1,
+                between.done(),
+                "Между шагами сделанное обязано помнить последний закрытый скрипт: иначе сторож застоя "
+                        + "видит «нет прогресса» у работающей задачи (repair:clear_grounds, пустой бокс за тик)");
+        assertEquals(1, between.target(), "Цель последнего закрытого скрипта тоже сохраняется между шагами");
     }
 
     @Test

@@ -113,4 +113,15 @@ class TaskStallTests {
                 "Стоянка на месте под паузой политики — не простой задания: дух не виноват, что его "
                         + "держит воздух/вода");
     }
+
+    @Test
+    void stalled_NoScriptButProgressKeyGrows_NotStalled() {
+        TaskStall stall = new TaskStall();
+        for (int step = 0; step <= 3; step++) {
+            assertFalse(
+                    stall.stalled(SPIRIT, null, "1/null/" + step, BOTTOM, step * TaskStall.STALL_TICKS, false),
+                    "Между шагами скрипт ещё не назван, но прогресс задачи растёт: мгновенные шаги — это работа, "
+                            + "а не простой (repair:clear_grounds: пустой бокс закрывается за тик)");
+        }
+    }
 }
