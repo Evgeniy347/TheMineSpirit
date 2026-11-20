@@ -31,7 +31,8 @@ class NeedsOfPlanTests {
                 List.of("iron_pickaxe", "iron_ingot", "stick"),
                 NeedsOfPlan.collect(plan, KNOWLEDGE),
                 "План крафта кирки защищает саму кирку, слитки и палки: ингредиенты нужны рецепту, "
-                        + "и выброс слитка сорвал бы крафт на середине");
+                        + "и выброс слитка сорвал бы крафт на середине, иначе план остался бы без материала. "
+                        + "При смене collect проверь крафт с ингредиентами");
     }
 
     @Test
@@ -46,7 +47,8 @@ class NeedsOfPlanTests {
                 List.of("oak_log", "oak_planks"),
                 NeedsOfPlan.collect(plan, KNOWLEDGE),
                 "Все шаги последовательности учтены: блок gather и предмет craft попадают в нужное, "
-                        + "шаги без item и block (scan, collect_drops) вклад не вносят");
+                        + "шаги без item и block (scan, collect_drops) вклад не вносят, иначе нужное потеряет шаг. "
+                        + "При смене collect проверь sequence");
     }
 
     @Test
@@ -60,7 +62,7 @@ class NeedsOfPlanTests {
                 List.of("cobblestone", "dirt"),
                 NeedsOfPlan.collect(plan, KNOWLEDGE),
                 "Шаги стройки несут block и обязаны входить в нужное: иначе резервирование материалов не видит стройку "
-                        + "и дух выбросит блоки до начала заливки");
+                        + "и дух выбросит блоки до начала заливки. При смене collect проверь скрипты стройки");
     }
 
     @Test
@@ -71,7 +73,7 @@ class NeedsOfPlanTests {
                 List.of("torch", "stick", "coal"),
                 NeedsOfPlan.collect(plan, KNOWLEDGE),
                 "Шаг внутри repeat учтён: повторяющийся крафт защищает те же ингредиенты, "
-                        + "иначе дух выбросил бы уголь между повторами");
+                        + "иначе дух выбросил бы уголь между повторами. При смене collect проверь repeat");
     }
 
     @Test
@@ -84,7 +86,8 @@ class NeedsOfPlanTests {
                 List.of("iron_ore", "bread", "wheat"),
                 NeedsOfPlan.collect(plan, KNOWLEDGE),
                 " Все ветки fallback входят в нужное: план может пойти по любой из них, "
-                        + "и выбрасывать предметы ветки, которая ещё не началась, нельзя");
+                        + "и выбрасывать предметы ветки, которая ещё не началась, нельзя, иначе материал пропадёт. "
+                        + "При смене collect проверь fallback");
     }
 
     @Test
@@ -99,7 +102,8 @@ class NeedsOfPlanTests {
                 List.of("iron_pickaxe", "iron_ingot", "stick", "cobblestone"),
                 NeedsOfPlan.collect(plan, KNOWLEDGE),
                 "Параллельные ветки обе учитываются: подготовка кирки и вынос булыжника идут "
-                        + "одновременно, значит и то и другое нужно плану");
+                        + "одновременно, значит и то и другое нужно плану, иначе выброс сорвёт ветку. "
+                        + "При смене collect проверь parallel");
     }
 
     @Test
@@ -115,7 +119,8 @@ class NeedsOfPlanTests {
                 NeedsOfPlan.collect(plan, KNOWLEDGE),
                 "Обе ветки условия учтены: какая сработает — решит проверка, значит нужное собирают "
                         + "из then и else. Параметры самой проверки в нужное не входят: их читает "
-                        + "ConditionExecutor, а не инвентарь");
+                        + "ConditionExecutor, а не инвентарь, иначе защита придумает лишнее. "
+                        + "При смене collect проверь condition");
     }
 
     @Test
@@ -129,7 +134,8 @@ class NeedsOfPlanTests {
         assertEquals(
                 List.of("charcoal"),
                 NeedsOfPlan.collect(plan, KNOWLEDGE),
-                "Условие без else даёт только ветку then: ветки, которой нет в плане, " + "и защищать нечем");
+                "Условие без else даёт только ветку then: ветки, которой нет в плане, и защищать "
+                        + "нечем, иначе защита придумает лишнее. При смене collect проверь condition без else");
     }
 
     @Test
@@ -142,7 +148,8 @@ class NeedsOfPlanTests {
                 List.of("a", "b"),
                 NeedsOfPlan.collect(new ScriptCall("craft", Map.of("item", "a", "count", 1)), cyclic),
                 "Зацикленные рецепты не подвешивают сбор: предмет на собственном пути встречается "
-                        + "второй раз и обрывает раскрытие, а не зависает");
+                        + "второй раз и обрывает раскрытие, а не зависает, иначе тик поселения встанет. "
+                        + "При смене collect проверь циклы");
     }
 
     @Test
@@ -160,7 +167,8 @@ class NeedsOfPlanTests {
                         "ladder_8"),
                 NeedsOfPlan.collect(new ScriptCall("craft", Map.of("item", "ladder_0", "count", 1)), KNOWLEDGE),
                 "Раскрытие ингредиентов идёт на глубину " + NeedsOfPlan.MAX_DEPTH
-                        + ": дальше цепочка рецептов не влияет на защиту, и обход заканчивается");
+                        + ": дальше цепочка рецептов не влияет на защиту, и обход заканчивается, "
+                        + "иначе глубокий крафт подвесил бы план. При смене collect проверь предельную глубину");
     }
 
     @Test
@@ -174,7 +182,8 @@ class NeedsOfPlanTests {
                 List.of("oak_log", "oak_planks"),
                 NeedsOfPlan.collect(plan, KNOWLEDGE),
                 "Повторяющийся предмет называется один раз: список нужного идёт в защиту, "
-                        + "а дубли шаблонов только запутали бы отчёт");
+                        + "а дубли шаблонов только запутали бы отчёт, иначе защита раздуется. "
+                        + "При смене collect проверь повтор предмета");
     }
 
     @Test
@@ -185,7 +194,8 @@ class NeedsOfPlanTests {
                 List.of(),
                 NeedsOfPlan.collect(plan, KnowledgeFor()),
                 "Скрипт вне списка item/craft/smelt/equip/deposit/acquire/gather не защищает свой item: "
-                        + "иначе параметр item у любого нового скрипта молча делал предмет неуничтожимым");
+                        + "иначе параметр item у любого нового скрипта молча делал предмет неуничтожимым. "
+                        + "При смене collect проверь незнакомый скрипт");
     }
 
     @ParameterizedTest(name = "план из {0} даёт {1}")
@@ -202,7 +212,8 @@ class NeedsOfPlanTests {
         assertTrue(
                 NeedsOfPlan.collect(plan, KnowledgeFor()).contains(item),
                 "Скрипт '" + script + "' защищает свой параметр item: предмет заказа плана не должен "
-                        + "выбрасываться при переполнении инвентаря");
+                        + "выбрасываться при переполнении инвентаря, иначе предмет заказа потеряется. "
+                        + "При смене collect проверь скрипт '" + script + "'");
     }
 
     @Test
@@ -214,78 +225,11 @@ class NeedsOfPlanTests {
                 NeedsOfPlan.collect(plan, KNOWLEDGE),
                 "Плавка защищает свой продукт, а сырьё ей приносит шаг acquire или gather того же плана: "
                         + "защита раскрывает только рецепты ingredientsFor, поэтому дубль сырья здесь "
-                        + "разошёлся бы с тем, что считает ResourceResolver");
+                        + "разошёлся бы с тем, что считает ResourceResolver, иначе защита разойдётся с резервированием. "
+                        + "При смене collect проверь плавку");
     }
 
     private static ResourceKnowledge KnowledgeFor() {
         return new RecipeKnowledge(Map.of(), Map.of(), Map.of(), Set.of());
-    }
-
-    private static final class RecipeKnowledge implements ResourceKnowledge {
-        private static final Map<String, List<Ingredient>> LADDER_AND_BASIC = Map.ofEntries(
-                Map.entry("iron_pickaxe", List.of(new Ingredient("iron_ingot", 3), new Ingredient("stick", 2))),
-                Map.entry("oak_planks", List.of()),
-                Map.entry("bread", List.of(new Ingredient("wheat", 3))),
-                Map.entry("torch", List.of(new Ingredient("stick", 1), new Ingredient("coal", 1))),
-                Map.entry("ladder_0", List.of(new Ingredient("ladder_1", 1))),
-                Map.entry("ladder_1", List.of(new Ingredient("ladder_2", 1))),
-                Map.entry("ladder_2", List.of(new Ingredient("ladder_3", 1))),
-                Map.entry("ladder_3", List.of(new Ingredient("ladder_4", 1))),
-                Map.entry("ladder_4", List.of(new Ingredient("ladder_5", 1))),
-                Map.entry("ladder_5", List.of(new Ingredient("ladder_6", 1))),
-                Map.entry("ladder_6", List.of(new Ingredient("ladder_7", 1))),
-                Map.entry("ladder_7", List.of(new Ingredient("ladder_8", 1))),
-                Map.entry("ladder_8", List.of(new Ingredient("ladder_9", 1))),
-                Map.entry("ladder_9", List.of(new Ingredient("ladder_10", 1))));
-
-        private final Map<String, List<Ingredient>> crafts;
-        private final Map<String, String> smelts;
-        private final Map<String, Integer> outputs;
-        private final Set<String> gatherable;
-
-        private RecipeKnowledge() {
-            this(LADDER_AND_BASIC, Map.of("iron_ingot", "raw_iron"), Map.of(), Set.of("oak_log"));
-        }
-
-        private RecipeKnowledge(
-                Map<String, List<Ingredient>> crafts,
-                Map<String, String> smelts,
-                Map<String, Integer> outputs,
-                Set<String> gatherable) {
-            this.crafts = crafts;
-            this.smelts = smelts;
-            this.outputs = outputs;
-            this.gatherable = gatherable;
-        }
-
-        @Override
-        public boolean isGatherable(String item) {
-            return gatherable.contains(item);
-        }
-
-        @Override
-        public boolean isCraftable(String item) {
-            return crafts.containsKey(item);
-        }
-
-        @Override
-        public int outputCount(String item) {
-            return outputs.getOrDefault(item, 1);
-        }
-
-        @Override
-        public List<Ingredient> ingredientsFor(String item) {
-            return crafts.getOrDefault(item, List.of());
-        }
-
-        @Override
-        public boolean isSmeltable(String item) {
-            return smelts.containsKey(item);
-        }
-
-        @Override
-        public String smeltInputFor(String item) {
-            return smelts.get(item);
-        }
     }
 }
