@@ -19,7 +19,11 @@ import org.slf4j.Logger;
 public final class SpiritNavigation extends GroundPathNavigation {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final long NO_PATH_LOG_TICKS = 100;
+    private static final int FUTILE_BACKOFF_TICKS = 40;
+    private static final int FUTILE_MIN_DISTANCE_SQR = 4;
     private @Nullable BlockPos requestedTarget;
+    private @Nullable BlockPos futileTarget;
+    private long futileUntil = Long.MIN_VALUE;
     private long noPathLogTick = Long.MIN_VALUE;
 
     public SpiritNavigation(Mob mob, Level level) {
@@ -60,9 +64,25 @@ public final class SpiritNavigation extends GroundPathNavigation {
             return true;
         }
         requestedTarget = want;
+        long now = mob.level().getGameTime();
+        if (want.equals(futileTarget) && PathReuse.waiting(now, futileUntil)) {
+            return false;
+        }
         Path built = createPath(x, y, z, floorLevel);
         if (built == null) {
             logNoPath(want, floorLevel);
+            return false;
+        }
+        if (PathReuse.futile(built.getNodeCount(), built.canReach())
+                && mob.blockPosition().distSqr(want) > FUTILE_MIN_DISTANCE_SQR) {
+            futileTarget = want;
+            futileUntil = now + FUTILE_BACKOFF_TICKS;
+            LOGGER.info(
+                    "[nav] дух {}: цель {} недостижима из {} — поиск приостановлен на {} тиков",
+                    mob.getName().getString(),
+                    want.toShortString(),
+                    mob.blockPosition().toShortString(),
+                    FUTILE_BACKOFF_TICKS);
             return false;
         }
         logBuilt(want, built);
