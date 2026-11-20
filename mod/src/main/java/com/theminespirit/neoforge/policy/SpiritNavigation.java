@@ -95,12 +95,22 @@ public final class SpiritNavigation extends GroundPathNavigation {
 
     private void logBuilt(BlockPos want, Path path) {
         LOGGER.info(
-                "[nav] дух {}: путь к {} — узлов {}, конец {}, из {}",
+                "[nav] дух {}: путь к {} — узлов {}, конец {}, из {}, источник {}",
                 mob.getName().getString(),
                 want.toShortString(),
                 path.getNodeCount(),
                 path.getEndNode() == null ? "-" : path.getEndNode().asBlockPos().toShortString(),
-                mob.blockPosition().toShortString());
+                mob.blockPosition().toShortString(),
+                source());
+    }
+
+    private static String source() {
+        return StackWalker.getInstance()
+                .walk(frames -> frames.map(StackWalker.StackFrame::getClassName)
+                        .filter(name -> name.startsWith("com.theminespirit") && !name.contains("SpiritNavigation"))
+                        .findFirst()
+                        .map(name -> name.substring(name.lastIndexOf('.') + 1))
+                        .orElse("-"));
     }
 
     private void logRebuild(BlockPos want, @Nullable Path path) {
