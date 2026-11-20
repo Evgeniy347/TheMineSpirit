@@ -68,7 +68,7 @@ public final class PitExitPlanner {
         Objects.requireNonNull(occupied, "Занятые клетки не могут быть null: пусто — пустой набор");
         Set<BlockCoord> protectedCells = protect(occupied);
 
-        int surface = PitStairPlanner.surface(feet, world);
+        int surface = PitGround.surface(feet, world);
         Optional<BlockCoord> swim = swim(feet, world, protectedCells, surface);
         if (swim.isPresent()) {
             return new Plan(Method.WALK, swim.orElseThrow(), 0, List.of(), List.of(), "всплывает по воде к краю");
@@ -176,17 +176,16 @@ public final class PitExitPlanner {
 
     public static OptionalInt groundY(int x, int z, int from, World world) {
         Objects.requireNonNull(world, "Мир не может быть null: по нему ищется пол колонки");
-        return PitStairPlanner.groundY(x, z, from, world);
+        return PitGround.groundY(x, z, from, world);
     }
 
     private static Optional<BlockCoord> rim(BlockCoord feet, World world) {
         return PitEscape.exit((dx, dz) -> dx == 0 && dz == 0
                         ? feet.y()
-                        : PitStairPlanner.groundYOrFeet(feet.x() + dx, feet.z() + dz, feet.y(), world))
+                        : PitGround.groundYOrFeet(feet.x() + dx, feet.z() + dz, feet.y(), world))
                 .map(exit -> new BlockCoord(
                         feet.x() + exit.rimDx(),
-                        PitStairPlanner.groundYOrFeet(
-                                feet.x() + exit.rimDx(), feet.z() + exit.rimDz(), feet.y(), world),
+                        PitGround.groundYOrFeet(feet.x() + exit.rimDx(), feet.z() + exit.rimDz(), feet.y(), world),
                         feet.z() + exit.rimDz()));
     }
 

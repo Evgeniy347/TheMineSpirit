@@ -80,10 +80,10 @@ final class PitStairPlanner {
         Map<BlockCoord, Step> came = context.came();
         Map<BlockCoord, Integer> best = context.best();
         Queue<Node> queue = context.queue();
-        for (int[] side : sides()) {
+        for (int[] side : PitGround.sides()) {
             BlockCoord flat = new BlockCoord(
                     node.at().x() + side[0], node.at().y(), node.at().z() + side[1]);
-            if (within(feet, flat)
+            if (PitGround.within(feet, flat)
                     && !protectedCells.contains(flat)
                     && standableAfter(flat, world, node.dug(), node.placed())
                     && best.getOrDefault(flat, Integer.MAX_VALUE) > node.cost() + 1) {
@@ -94,7 +94,7 @@ final class PitStairPlanner {
             }
             BlockCoord next = new BlockCoord(
                     node.at().x() + side[0], node.at().y() + 1, node.at().z() + side[1]);
-            if (!within(feet, next) || next.y() > feet.y() + PitExitPlanner.MAX_RISE) {
+            if (!PitGround.within(feet, next) || next.y() > feet.y() + PitExitPlanner.MAX_RISE) {
                 continue;
             }
             Step step = step(node.at(), next, world, context.supplies(), protectedCells, node.dug(), node.placed());
@@ -161,35 +161,6 @@ final class PitStairPlanner {
                         : "лестница-ступени в стене: " + dig.size() + " клеток, подъём " + (goal.y() - feet.y()));
     }
 
-    static int surface(BlockCoord feet, PitExitPlanner.World world) {
-        List<Integer> heights = new ArrayList<>();
-        for (int dx = -PitExitPlanner.SCAN_RADIUS; dx <= PitExitPlanner.SCAN_RADIUS; dx++) {
-            for (int dz = -PitExitPlanner.SCAN_RADIUS; dz <= PitExitPlanner.SCAN_RADIUS; dz++) {
-                heights.add(
-                        groundY(feet.x() + dx, feet.z() + dz, feet.y(), world).orElse(feet.y()));
-            }
-        }
-        Collections.sort(heights);
-        int index = Math.min(heights.size() - 1, (int) Math.round((heights.size() - 1) * 0.9));
-        return heights.get(index);
-    }
-
-    static int groundYOrFeet(int x, int z, int from, PitExitPlanner.World world) {
-        return groundY(x, z, from, world).orElse(from);
-    }
-
-    static OptionalInt groundY(int x, int z, int from, PitExitPlanner.World world) {
-        for (int y = from; y <= from + PitExitPlanner.MAX_RISE; y++) {
-            BlockCoord cell = new BlockCoord(x, y, z);
-            if (PitExitPlanner.passable(world.at(cell))
-                    && PitExitPlanner.passable(world.at(above(cell)))
-                    && PitExitPlanner.supported(world.at(below(cell)))) {
-                return OptionalInt.of(y);
-            }
-        }
-        return OptionalInt.empty();
-    }
-
     private static boolean reachedSurface(
             BlockCoord cell,
             BlockCoord feet,
@@ -200,15 +171,15 @@ final class PitStairPlanner {
         if (!standableAfter(cell, world, dug, placed) || cell.y() < surface - 1) {
             return false;
         }
-        OptionalInt ground = groundY(cell.x(), cell.z(), feet.y(), world);
+        OptionalInt ground = PitGround.groundY(cell.x(), cell.z(), feet.y(), world);
         return ground.isPresent() && cell.y() == ground.getAsInt();
     }
 
     private static boolean standableAfter(
             BlockCoord cell, PitExitPlanner.World world, Set<BlockCoord> dug, Set<BlockCoord> placed) {
         return (PitExitPlanner.passable(world.at(cell)) || dug.contains(cell))
-                && (PitExitPlanner.passable(world.at(above(cell))) || dug.contains(above(cell)))
-                && supportAfter(below(cell), world, dug, placed);
+                && (PitExitPlanner.passable(world.at(PitGround.above(cell))) || dug.contains(PitGround.above(cell)))
+                && supportAfter(PitGround.below(cell), world, dug, placed);
     }
 
     private static boolean supportAfter(
@@ -243,7 +214,7 @@ final class PitStairPlanner {
         List<BlockCoord> dig = new ArrayList<>();
         List<BlockCoord> place = new ArrayList<>();
         int cost = DIG_COST;
-        BlockCoord over = above(above(from));
+        BlockCoord over = PitGround.above(PitGround.above(from));
         if (!PitExitPlanner.passable(world.at(over))) {
             BlockKind kind = world.at(over);
             if (!PitExitPlanner.breakable(kind)) {
@@ -252,7 +223,7 @@ final class PitStairPlanner {
             dig.add(over);
             cost += kind == BlockKind.HARD ? HARD_COST : 0;
         }
-        BlockCoord head = above(next);
+        BlockCoord head = PitGround.above(next);
         for (BlockCoord cell : List.of(next, head)) {
             if (PitExitPlanner.passable(world.at(cell))) {
                 continue;
@@ -264,7 +235,7 @@ final class PitStairPlanner {
             dig.add(cell);
             cost += kind == BlockKind.HARD ? HARD_COST : 0;
         }
-        BlockCoord floor = below(next);
+        BlockCoord floor = PitGround.below(next);
         BlockKind floorKind = world.at(floor);
         if (floorKind == BlockKind.LAVA || floorKind == BlockKind.BEDROCK) {
             return null;
@@ -272,7 +243,7 @@ final class PitStairPlanner {
         boolean floorSolid =
                 placedBefore.contains(floor) || (!dugBefore.contains(floor) && PitExitPlanner.supported(floorKind));
         if (!floorSolid) {
-            BlockCoord belowFloor = below(floor);
+            BlockCoord belowFloor = PitGround.below(floor);
             boolean base = placedBefore.contains(belowFloor)
                     || (!dugBefore.contains(belowFloor) && PitExitPlanner.supported(world.at(belowFloor)));
             if (!base) {
@@ -285,7 +256,7 @@ final class PitStairPlanner {
             if (protectedCells.contains(cell) || PitExitPlanner.touchesLava(cell, world)) {
                 return null;
             }
-            if (world.at(below(cell)) == BlockKind.FALLING && !dig.contains(below(cell))) {
+            if (world.at(PitGround.below(cell)) == BlockKind.FALLING && !dig.contains(PitGround.below(cell))) {
                 return null;
             }
         }
@@ -298,22 +269,5 @@ final class PitStairPlanner {
             cost += PLACE_COST;
         }
         return new Step(from, List.copyOf(dig), List.copyOf(place), cost);
-    }
-
-    private static boolean within(BlockCoord feet, BlockCoord cell) {
-        return Math.abs(cell.x() - feet.x()) <= PitExitPlanner.RADIUS
-                && Math.abs(cell.z() - feet.z()) <= PitExitPlanner.RADIUS;
-    }
-
-    private static BlockCoord above(BlockCoord cell) {
-        return new BlockCoord(cell.x(), cell.y() + 1, cell.z());
-    }
-
-    private static BlockCoord below(BlockCoord cell) {
-        return new BlockCoord(cell.x(), cell.y() - 1, cell.z());
-    }
-
-    private static int[][] sides() {
-        return new int[][] {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
     }
 }
