@@ -89,6 +89,7 @@ mech/forestry/com/theminespirit/core/forestry/TreeGrid.java
 mech/forestry/com/theminespirit/core/forestry/TreeGroupTests.java
 mech/forestry/com/theminespirit/core/forestry/TreeShapeProperties.java
 mech/forestry/com/theminespirit/core/forestry/TreeShapeStumpTests.java
+mech/forestry/com/theminespirit/core/forestry/TreeShapeRejectTests.java # разбор отказов отделён от распознавания, чтобы файлы не превышали предел размера
 mech/forestry/com/theminespirit/core/forestry/TreeShapeTests.java
 mech/forestry/com/theminespirit/core/forestry/TreeSpanTests.java
 mech/mining/com/theminespirit/core/mining/AnchorSpotTests.java
