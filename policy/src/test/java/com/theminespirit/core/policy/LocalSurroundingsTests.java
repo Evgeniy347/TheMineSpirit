@@ -72,7 +72,7 @@ class LocalSurroundingsTests {
                 Cell.PASSABLE,
                 surroundings.cellAt(new BlockCoord(Pictures.FEET.x() + 2, Pictures.FEET.y(), Pictures.FEET.z())),
                 "Невидимая за снимком клетка считается безопасной: рефлекс решает по тому, что видит, а следующий "
-                        + "тик увидит дальше. При смене cellAt проверь клетку на расстоянии +2 от ног");
+                        + "тик увидит дальше, иначе рефлекс замрёт на невидимом. При смене cellAt проверь клетку на расстоянии +2 от ног");
     }
 
     @Test

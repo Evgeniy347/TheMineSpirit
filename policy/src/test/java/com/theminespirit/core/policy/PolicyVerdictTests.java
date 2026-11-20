@@ -56,19 +56,19 @@ class PolicyVerdictTests {
         assertThrows(
                 NullPointerException.class,
                 () -> new ReflexAction.Flee(null),
-                "FLEE без клетки не к чему исполнять: null обязан падать сразу. При смене конструктора проверь null");
+                "FLEE без клетки не к чему исполнять: null обязан падать сразу, иначе бегство потеряет цель. При смене конструктора проверь null");
         assertThrows(
                 NullPointerException.class,
                 () -> new ReflexAction.ExitWater(null),
-                "EXIT_WATER без клетки не к чему исполнять: иначе всплытие теряет точку. При смене конструктора проверь null");
+                "EXIT_WATER без клетки не к чему исполнять: иначе всплытие теряет точку и дух застрянет. При смене конструктора проверь null");
         assertThrows(
                 NullPointerException.class,
                 () -> new ReflexAction.StepOutOfPortal(null),
-                "STEP_OUT_OF_PORTAL без клетки не к чему исполнять: иначе шаг теряет точку. При смене конструктора проверь null");
+                "STEP_OUT_OF_PORTAL без клетки не к чему исполнять: иначе шаг теряет точку и дух застрянет. При смене конструктора проверь null");
         assertThrows(
                 NullPointerException.class,
                 () -> new ReflexAction.ReturnToZone(null),
-                "RETURN_TO_ZONE без клетки не к чему исполнять: иначе возврат теряет точку. При смене конструктора проверь null");
+                "RETURN_TO_ZONE без клетки не к чему исполнять: иначе возврат теряет точку и дух останется вне зоны. При смене конструктора проверь null");
     }
 
     @Test
@@ -85,7 +85,7 @@ class PolicyVerdictTests {
         assertThrows(
                 NullPointerException.class,
                 () -> new PolicyVerdict.Reflex(PolicyId.AIR, null, "воздух"),
-                "рефлекс без действия оставил бы духа без команды, и владение тиком уйдёт вхолостую. "
+                "рефлекс без действия оставил бы духа без команды, иначе владение тиком уйдёт вхолостую. "
                         + "При смене конструктора проверь null-действие");
     }
 
@@ -118,7 +118,7 @@ class PolicyVerdictTests {
         assertEquals(
                 new PolicyVerdict.Clear(),
                 new PolicyVerdict.Clear(),
-                "Clear не несёт данных: все экземпляры равны, сравнение вердиктов в тестах опирается на это. "
+                "Clear не несёт данных: все экземпляры равны, иначе сравнение вердиктов в тестах сломается. "
                         + "При смене Clear проверь, что equals не зависит от идентичности объекта");
     }
 }

@@ -74,7 +74,7 @@ class SettlementBreakProtectionTests {
         assertEquals(
                 PolicyId.PLAYER_BUILDINGS,
                 refused.policy(),
-                "Отказ обязан помечать постройку игрока, а не безымянную зону: по коду видно, почему не ломаем. "
+                "Отказ обязан помечать постройку игрока, а не безымянную зону: по коду видно, почему не ломаем, иначе разбор слеп. "
                         + "При смене порядка правил проверь PolicyId PLAYER_BUILDINGS");
     }
 
@@ -136,12 +136,12 @@ class SettlementBreakProtectionTests {
                 BlockProtection.Refused.class,
                 decision,
                 "Забор не имеет права расчищать клетку дома: в observe23 он снял стену хижины "
-                        + "в (-178..-176,69,-505), аудит 100→94; забор обязан обойти дом или ждать. "
+                        + "в (-178..-176,69,-505), аудит 100→94; забор обязан обойти дом или ждать, иначе хижина сломается. "
                         + "При смене проверки чужих построек сверь HOUSE против FENCE");
         assertEquals(
                 PolicyId.PROTECTED_BLOCKS,
                 refused.policy(),
-                "Отказ обязан помечать защиту блока плана: по коду видно, почему забор не тронул дом. "
+                "Отказ обязан помечать защиту блока плана: по коду видно, почему забор не тронул дом, иначе разбор слеп. "
                         + "При смене порядка правил проверь PolicyId PROTECTED_BLOCKS");
         assertTrue(
                 refused.reason().contains("HOUSE") && refused.reason().contains("FENCE"),
@@ -179,7 +179,7 @@ class SettlementBreakProtectionTests {
         }
         assertTrue(
                 checked >= 5,
-                "В фикстуре observe23 меньше 5 событий [plot-edit] забора: тест перестал повторять живой прогон, "
+                "В фикстуре observe23 меньше 5 событий [plot-edit] забора: иначе тест перестал повторять живой прогон, "
                         + "проверено " + checked + ". При смене фикстуры проверь, что событий забора не меньше 5");
     }
 
@@ -226,7 +226,7 @@ class SettlementBreakProtectionTests {
                 BlockProtection.Refused.class,
                 decision,
                 "Уборка без своей постройки тоже не имеет права снимать клетку дома: в observe23 такая расчистка "
-                        + "сняла oak_stairs в (-178,69,-510), и дом потерял блок. При смене проверь Origin.UNKNOWN с NONE");
+                        + "сняла oak_stairs в (-178,69,-510), и дом потерял блок, иначе уборка снова снесёт дом. При смене проверь Origin.UNKNOWN с NONE");
     }
 
     private static List<String> artificial(int count) {

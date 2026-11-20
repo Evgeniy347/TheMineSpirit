@@ -65,13 +65,14 @@ class ProtectionConfigTests {
                 IllegalStateException.class,
                 () -> ProtectionConfig.parse(content, ORIGIN),
                 "Файл «" + name
-                        + "» обязан отклоняться при загрузке: тихая подмена конфигурации оставила бы блоки без защиты. "
+                        + "» обязан отклоняться при загрузке: тихая подмена конфигурации оставила бы блоки без защиты, иначе защита пропадёт. "
                         + "При смене parse проверь каждую строку таблицы brokenFiles");
 
         assertTrue(
                 error.getMessage().contains(ORIGIN) && error.getMessage().contains(expectedPart),
                 "Ошибка файла «" + name + "» называет файл и проблему «" + expectedPart + "». Фактическое: "
-                        + error.getMessage() + ". При смене префикса ошибки проверь, что имя файла остаётся в тексте");
+                        + error.getMessage()
+                        + ". При смене префикса ошибки проверь, что имя файла остаётся в тексте, иначе разбор ошибки невозможен");
     }
 
     @Test
@@ -86,7 +87,7 @@ class ProtectionConfigTests {
         assertTrue(
                 protection.checkOwn("minecraft:oak_door", false) instanceof BlockProtection.Refused,
                 "Шаблон deny с пространством имён minecraft: обязан запрещать дверь, иначе защита смотрит на "
-                        + "имя без namespace. При смене сверь префикс minecraft:");
+                        + "имя без namespace. При смене проверь префикс minecraft:");
         assertTrue(
                 protection.checkOwn("minecraft:stone", false) instanceof BlockProtection.Allowed,
                 "Блок вне шаблона deny обязан оставаться разрешённым, иначе защита блокирует всё подряд. "
@@ -137,11 +138,11 @@ class ProtectionConfigTests {
                 6,
                 protection.buildingThreshold(),
                 "Поставляемый protection.json читается без ошибок и несёт порог 6, иначе защита на сервере "
-                        + "работает не по данным. При смене файла сверь buildingThreshold");
+                        + "работает не по данным. При смене файла проверь buildingThreshold");
         assertEquals(
                 4096,
                 protection.maxUnprotectVolume(),
                 "Поставляемый protection.json несёт предел объёма разрешённой области 4096, иначе снятие "
-                        + "защиты потеряет ограничение. При смене файла сверь maxUnprotectVolume");
+                        + "защиты потеряет ограничение. При смене файла проверь maxUnprotectVolume");
     }
 }

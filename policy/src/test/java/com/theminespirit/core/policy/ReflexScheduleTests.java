@@ -48,7 +48,7 @@ class ReflexScheduleTests {
     void tierOneDue_BlockChanged_FiresEvenOffPhase() {
         assertTrue(
                 ReflexSchedule.tierOneDue(7, 0, true, false),
-                "Смена блока под ногами вызывает чтение вне очереди: шаг в лаву нельзя ждать 10 тиков. "
+                "Смена блока под ногами вызывает чтение вне очереди: шаг в лаву нельзя ждать 10 тиков, иначе дух сгорит. "
                         + "При смене tierOneDue проверь флаг смены блока на непопадающем тике");
         assertFalse(
                 ReflexSchedule.tierOneDue(7, 0, false, false),

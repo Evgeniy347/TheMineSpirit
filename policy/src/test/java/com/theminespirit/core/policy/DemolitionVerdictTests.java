@@ -29,7 +29,7 @@ class DemolitionVerdictTests {
     void permissible_UnsafeOrDrop_NotTolerated() {
         assertFalse(
                 unsafe(),
-                "Отказ «опасно/недоступно» — временное состояние: тикет должен остаться провалом, а не закрыться. "
+                "Отказ «опасно/недоступно» — временное состояние: тикет должен остаться провалом, а не закрыться, иначе реальная беда закроется как остаток. "
                         + "При смене permissible проверь DROP: он не должен маскироваться под остаток");
         assertFalse(
                 DemolitionVerdict.permissible(new BlockProtection.Allowed(), false),
@@ -41,7 +41,7 @@ class DemolitionVerdictTests {
     void permissible_KnownLeftover_AlwaysTolerated() {
         assertTrue(
                 DemolitionVerdict.permissible(new BlockProtection.Allowed(), true),
-                "Забор плана, план-клетка и постройка игрока признаны остатком заранее — их не учитывают в провале. "
+                "Забор плана, план-клетка и постройка игрока признаны остатком заранее — их не учитывают в провале, иначе провал станет ложным. "
                         + "При смене permissible проверь Allowed с меткой остатка раньше всех остальных веток");
     }
 
@@ -50,7 +50,7 @@ class DemolitionVerdictTests {
         assertTrue(
                 DemolitionVerdict.permissibleEither(
                         new BlockProtection.Allowed(), new BlockProtection.Refused(PolicyId.PROTECTED_BLOCKS, "план")),
-                "Достаточно отказа одной из проверок (снос или прокоп): путь не может взять клетку ни тем, ни другим. "
+                "Достаточно отказа одной из проверок (снос или прокоп): путь не может взять клетку ни тем, ни другим, иначе путь займёт клетку напрасно. "
                         + "При смене permissibleEither проверь пары Allowed+Refused и Refused+Allowed");
         assertFalse(
                 DemolitionVerdict.permissibleEither(

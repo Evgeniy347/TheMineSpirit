@@ -59,7 +59,7 @@ class LayerArbiterProperties {
                         i >= 9,
                         "Политика не уступает раньше десяти тиков, иначе возобновление срабатывает в ещё опасном месте: "
                                 + script + " → " + owners + ", шаг " + i
-                                + ". При смене RESUME_DELAY_TICKS сверь этот порог");
+                                + ". При смене RESUME_DELAY_TICKS проверь этот порог");
                 for (int back = i - 9; back <= i; back++) {
                     assertTrue(
                             !demandsPolicy(script.charAt(back)),
@@ -82,7 +82,7 @@ class LayerArbiterProperties {
                         i >= 9,
                         "Тактика не уступает стратегии раньше десяти тиков, иначе дух бросает бой на первом спокойном тике: "
                                 + script + " → " + owners + ", шаг " + i
-                                + ". При смене задержки тактики сверь порог 9");
+                                + ". При смене задержки тактики проверь порог 9");
                 for (int back = i - 9; back <= i; back++) {
                     assertTrue(
                             script.charAt(back) != 't',
