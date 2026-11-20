@@ -7,11 +7,13 @@ import com.theminespirit.core.farming.api.CropKind;
 import com.theminespirit.core.farming.api.HarvestMethod;
 import com.theminespirit.core.observation.BlockCoord;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -146,10 +148,25 @@ public final class FarmTargets implements HarvestTargets {
     }
 
     private static Set<Block> blocksFor(FarmJob job, CropKind crop) {
+        if (job.bonemealSaplings(crop)) {
+            return BoneMealTargets.ALL;
+        }
         return switch (job) {
             case TILL -> TILLABLE;
             case PLANT -> crop.hasSupport() ? Set.of(CropRegistry.supportBlock(crop)) : Set.of(Blocks.FARMLAND);
             case HARVEST, BONE_MEAL -> CropRegistry.blocks(crop);
         };
+    }
+
+    private static final class BoneMealTargets {
+        static final Set<Block> ALL = boneMealTargets();
+
+        private static Set<Block> boneMealTargets() {
+            Set<Block> targets = new HashSet<>(CropRegistry.blocks(CropKind.ANY));
+            BuiltInRegistries.BLOCK
+                    .getTag(BlockTags.SAPLINGS)
+                    .ifPresent(tag -> tag.forEach(holder -> targets.add(holder.value())));
+            return Set.copyOf(targets);
+        }
     }
 }

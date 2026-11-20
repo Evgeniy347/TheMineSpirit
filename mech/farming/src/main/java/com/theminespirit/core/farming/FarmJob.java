@@ -39,6 +39,11 @@ public enum FarmJob {
         return ground == Ground.DIRT || ground == Ground.GRASS || ground == Ground.PATH;
     }
 
+    public boolean bonemealSaplings(CropKind filter) {
+        Objects.requireNonNull(filter, "Фильтр вида не может быть null: «любой вид» задают CropKind.ANY");
+        return this == BONE_MEAL && filter == CropKind.ANY;
+    }
+
     private static boolean isClearForTill(Above above) {
         return above == Above.AIR || above == Above.WEED;
     }
