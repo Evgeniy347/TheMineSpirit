@@ -17,7 +17,8 @@ class WorkCornerTests {
                 table,
                 WorkCorner.anchor(spirit, Optional.of(table), 16),
                 "Станция в пределах дальности — это рабочий угол: печь обязана встать рядом с верстаком, а не у "
-                        + "места, куда духа занесло добычей");
+                        + "места, куда духа занесло добычей, иначе крафт уходит от станции и путь теряется. При "
+                        + "смене WorkCorner.anchor проверь anchor_StationBeyondRange_ReturnsSpirit");
     }
 
     @Test
@@ -27,7 +28,9 @@ class WorkCornerTests {
         assertEquals(
                 spirit,
                 WorkCorner.anchor(spirit, Optional.empty(), 16),
-                "Без станции угол — сам дух: первая станция ставится там, где дух стоит");
+                "Без станции угол — сам дух: первая станция ставится там, где дух стоит, иначе печь встаёт в "
+                        + "никуда и работа не начинается. При смене anchor проверь "
+                        + "anchor_StationWithinRange_ReturnsStation");
     }
 
     @Test
@@ -38,7 +41,8 @@ class WorkCornerTests {
         assertEquals(
                 spirit,
                 WorkCorner.anchor(spirit, Optional.of(table), 16),
-                "Чужая станция вдали не тянет духа через полмира: дальше дальности угол — сам дух");
+                "Чужая станция вдали не тянет духа через полмира: дальше дальности угол — сам дух, иначе дух идёт "
+                        + "к чужому верстаку через полкарты. При смене проверки дальности в anchor проверь границу 16");
     }
 
     @Test
@@ -46,6 +50,8 @@ class WorkCornerTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> WorkCorner.anchor(new BlockCoord(0, 0, 0), Optional.empty(), -1),
-                "Отрицательная дальность обязана отвергаться: по ней ни одна станция не свой угол");
+                "Отрицательная дальность обязана отвергаться: по ней ни одна станция не свой угол, иначе угол "
+                        + "съезжает и крафт идёт не там. При смене проверки в WorkCorner.anchor проверь границы "
+                        + "ноль и минус один");
     }
 }
