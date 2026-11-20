@@ -8,20 +8,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public final class SettlementGroups {
     private SettlementGroups() {}
 
-    public static SettlementKey keyOf(Optional<BlockCoord> home, UUID spirit) {
+    public static SettlementKey keyOf(Optional<BlockCoord> home, @Nullable UUID spirit) {
         if (home == null) {
             throw new IllegalArgumentException(
                     "home не может быть null: отсутствие дома — Optional.empty(), иначе дух потеряет поселение");
         }
+        if (home.isPresent()) {
+            return SettlementKey.homed(home.get());
+        }
         if (spirit == null) {
             throw new IllegalArgumentException(
-                    "spirit не может быть null: одиночная группа привязана к духу, иначе её не отличить");
+                    "spirit не может быть null: без дома поселение определяется только духом, иначе группы склеятся");
         }
-        return home.map(SettlementKey::homed).orElseGet(() -> SettlementKey.lone(spirit));
+        return SettlementKey.lone(spirit);
     }
 
     public static Map<SettlementKey, List<SpiritSnapshot>> partition(

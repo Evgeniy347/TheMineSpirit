@@ -69,6 +69,14 @@ class SettlementGroupsTests {
     }
 
     @Test
+    void key_HomePresent_IgnoresNullSpirit() {
+        assertEquals(
+                SettlementGroups.keyOf(Optional.of(HOME), FIRST),
+                SettlementGroups.keyOf(Optional.of(HOME), null),
+                "Дом задаёт поселение сам: поход без свободных духов не обязан падать при пустой команде");
+    }
+
+    @Test
     void key_NullSpirit_Throws() {
         IllegalArgumentException error = assertThrows(
                 IllegalArgumentException.class,
