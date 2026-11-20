@@ -1,5 +1,6 @@
 package com.theminespirit.neoforge.policy;
 
+import com.mojang.logging.LogUtils;
 import com.theminespirit.core.movement.api.PathReuse;
 import com.theminespirit.core.policy.WaterTasks;
 import com.theminespirit.neoforge.SpiritBrain;
@@ -13,9 +14,13 @@ import net.minecraft.world.level.pathfinder.PathFinder;
 import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.pathfinder.PathfindingContext;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 public final class SpiritNavigation extends GroundPathNavigation {
+    private static final Logger LOGGER = LogUtils.getLogger();
+    private static final long NO_PATH_LOG_TICKS = 100;
     private @Nullable BlockPos requestedTarget;
+    private long noPathLogTick = Long.MIN_VALUE;
 
     public SpiritNavigation(Mob mob, Level level) {
         super(mob, level);
@@ -55,7 +60,28 @@ public final class SpiritNavigation extends GroundPathNavigation {
             return true;
         }
         requestedTarget = want;
-        return moveTo(createPath(x, y, z, floorLevel), speed);
+        Path built = createPath(x, y, z, floorLevel);
+        if (built == null) {
+            logNoPath(want, floorLevel);
+            return false;
+        }
+        return moveTo(built, speed);
+    }
+
+    private void logNoPath(BlockPos want, int floorLevel) {
+        long now = mob.level().getGameTime();
+        if (now - noPathLogTick < NO_PATH_LOG_TICKS) {
+            return;
+        }
+        noPathLogTick = now;
+        BlockPos feet = mob.blockPosition();
+        LOGGER.info(
+                "[nav] дух {}: пути к {} (уровень {}) нет из {}, цель навигации {}",
+                mob.getName().getString(),
+                want,
+                floorLevel,
+                feet.toShortString(),
+                requestedTarget == null ? "-" : requestedTarget.toShortString());
     }
 
     public PathType classify(PathfindingContext context, BlockPos pos) {
