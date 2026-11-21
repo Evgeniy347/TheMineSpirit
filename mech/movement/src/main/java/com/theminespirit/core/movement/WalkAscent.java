@@ -18,12 +18,18 @@ public final class WalkAscent {
         SWIM,
         DIVE,
         ARRIVED,
-        IMPOSSIBLE
+        IMPOSSIBLE,
+        DESCENT_BLOCKED
     }
 
-    public record Body(boolean onGround, boolean inWater, boolean onClimbable, boolean waterTarget) {
+    public record Body(
+            boolean onGround, boolean inWater, boolean onClimbable, boolean waterTarget, boolean descentBlocked) {
+        public Body(boolean onGround, boolean inWater, boolean onClimbable, boolean waterTarget) {
+            this(onGround, inWater, onClimbable, waterTarget, false);
+        }
+
         public Body(boolean onGround, boolean inWater, boolean onClimbable) {
-            this(onGround, inWater, onClimbable, false);
+            this(onGround, inWater, onClimbable, false, false);
         }
     }
 
@@ -63,7 +69,8 @@ public final class WalkAscent {
             return new Command(swim, targetX, cell.y(), targetZ);
         }
         if (!rising && pose.feet().y() - cell.y() > 1) {
-            return new Command(Step.DIVE, targetX, cell.y(), targetZ);
+            Step descent = body.descentBlocked() ? Step.DESCENT_BLOCKED : Step.DIVE;
+            return new Command(descent, targetX, cell.y(), targetZ);
         }
         Step step = switch (lift(rising, body)) {
             case HOLD -> Step.MOVE;

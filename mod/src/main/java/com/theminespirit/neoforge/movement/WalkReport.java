@@ -11,6 +11,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 final class WalkReport {
     private static final double CENTER = 0.5;
@@ -58,18 +59,21 @@ final class WalkReport {
     }
 
     private static String between(Level level, SpiritEntity spirit, BlockCoord cell) {
-        Vec3 from = spirit.position();
-        Vec3 to = new Vec3(cell.x() + CENTER, cell.y() + CENTER, cell.z() + CENTER);
+        BlockPos blocked =
+                blocking(level, spirit.position(), new Vec3(cell.x() + CENTER, cell.y() + CENTER, cell.z() + CENTER));
+        return blocked == null ? "-" : BlockStates.idOf(level.getBlockState(blocked)) + "@" + blocked.toShortString();
+    }
+
+    static @Nullable BlockPos blocking(Level level, Vec3 from, Vec3 to) {
         Vec3 delta = to.subtract(from);
         int steps = (int) Math.ceil(delta.length() / 0.25);
         for (int i = 1; i < steps; i++) {
-            Vec3 point = from.add(delta.scale(i / (double) steps));
-            BlockPos pos = BlockPos.containing(point);
+            BlockPos pos = BlockPos.containing(from.add(delta.scale(i / (double) steps)));
             if (!level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
-                return BlockStates.idOf(level.getBlockState(pos)) + "@" + pos.toShortString();
+                return pos;
             }
         }
-        return "-";
+        return null;
     }
 
     private static boolean noDryExit(Level level, BlockPos pos) {

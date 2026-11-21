@@ -104,6 +104,30 @@ class WalkAscentReachTests {
     }
 
     @Test
+    void next_StepTwoBelowWithBlockedLane_IsDescentBlocked() {
+        Command command = WalkAscent.next(new BlockCoord(0, -2, 0), FEET, new Body(true, false, false, false, true));
+
+        assertEquals(
+                Step.DESCENT_BLOCKED,
+                command.step(),
+                "Спуск на два блока с блоком на линии сразу отвергается: иначе дух толкается в бортик уступа "
+                        + "60 тиков, а маршрут сходит с него (окно 31, spirit у -171,73,-489, между=блок). "
+                        + "При смене правила спуска проверь живой сход с уступа: отказ сразу, обход с копанием");
+    }
+
+    @Test
+    void next_StepTwoBelowWithClearLane_Dives() {
+        Command command = WalkAscent.next(new BlockCoord(0, -2, 0), FEET, new Body(true, false, false, false, false));
+
+        assertEquals(
+                Step.DIVE,
+                command.step(),
+                "Чистая линия спуска сохраняет прыжок вниз: иначе дух перестал бы спускаться с уступов, где "
+                        + "ничего не мешает, и застрял бы наверху. При смене правила спуска проверь свободный "
+                        + "сход с уступа: DIVE без отказа");
+    }
+
+    @Test
     void next_StepOneBelowOnGround_Moves() {
         Command command = WalkAscent.next(new BlockCoord(0, -1, 0), FEET, new Body(true, false, false));
 

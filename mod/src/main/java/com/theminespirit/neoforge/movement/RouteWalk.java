@@ -1,13 +1,11 @@
 package com.theminespirit.neoforge.movement;
 
-import com.mojang.logging.LogUtils;
 import com.theminespirit.core.movement.WalkAscent;
 import com.theminespirit.core.movement.api.DropProfile;
 import com.theminespirit.core.observation.BlockCoord;
 import com.theminespirit.core.policy.RemovalLog;
 import com.theminespirit.core.route.Route;
 import com.theminespirit.core.route.RouteStep;
-import com.theminespirit.neoforge.CallSource;
 import com.theminespirit.neoforge.EmbeddedSpace;
 import com.theminespirit.neoforge.SpiritEntity;
 import java.util.List;
@@ -16,11 +14,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 
 public final class RouteWalk {
-    private static final Logger LOGGER = LogUtils.getLogger();
-
     public enum State {
         RUNNING,
         DONE,
@@ -55,12 +50,6 @@ public final class RouteWalk {
         this.swimmer = new SwimStep(spirit);
         this.passages = new PassageWalk(spirit);
         this.mutations = new RouteMutations(spirit, this, rescue);
-        LOGGER.info(
-                "[route] дух {}: маршрут к {}, шагов {}, источник {}",
-                spirit.getName().getString(),
-                target,
-                steps.size(),
-                CallSource.of("RouteWalk", 3));
     }
 
     public State tick() {
@@ -160,6 +149,9 @@ public final class RouteWalk {
             return Optional.of(
                     "шаг выше на " + (cell.y() - spirit.blockPosition().getY()) + " блока: прыжком не взять");
         }
+        if (command.step() == WalkAscent.Step.DESCENT_BLOCKED) {
+            return Optional.of("спуск к " + cell + " перекрыт блоком: нужен обход с копанием");
+        }
         spirit.getNavigation().stop();
         boolean fall = command.step() == WalkAscent.Step.MOVE || command.step() == WalkAscent.Step.DIVE;
         if (fall && command.y() < spirit.getY() - 0.5 && !spirit.isInWater()) {
@@ -206,6 +198,9 @@ public final class RouteWalk {
         if (command.step() == WalkAscent.Step.IMPOSSIBLE) {
             return Optional.of(
                     "шаг выше на " + (cell.y() - spirit.blockPosition().getY()) + " блока: прыжком не взять");
+        }
+        if (command.step() == WalkAscent.Step.DESCENT_BLOCKED) {
+            return Optional.of("спуск к " + cell + " перекрыт блоком: нужен обход с копанием");
         }
         spirit.getNavigation().stop();
         spirit.getMoveControl().setWantedPosition(cell.x() + 0.5, cell.y(), cell.z() + 0.5, SPEED);
@@ -267,7 +262,13 @@ public final class RouteWalk {
         BlockPos target = pos(cell);
         boolean water = spirit.level().getFluidState(target).is(FluidTags.WATER)
                 || spirit.level().getFluidState(target.below()).is(FluidTags.WATER);
-        return new WalkAscent.Body(spirit.onGround(), spirit.isInWater(), spirit.onClimbable(), water);
+        boolean blocked = cell.y() < Math.floor(spirit.getY()) - 1
+                && WalkReport.blocking(
+                                spirit.level(),
+                                spirit.position(),
+                                new Vec3(cell.x() + 0.5, cell.y() + 0.5, cell.z() + 0.5))
+                        != null;
+        return new WalkAscent.Body(spirit.onGround(), spirit.isInWater(), spirit.onClimbable(), water, blocked);
     }
 
     Optional<String> advanceStep() {
