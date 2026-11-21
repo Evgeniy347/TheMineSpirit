@@ -21,6 +21,40 @@ import org.junit.jupiter.api.Test;
 class LeaseBypassGuardTests {
     private static final Path REGISTRY = Path.of("guards/src/test/resources/lease-bypass.txt");
     private static final Pattern CALL = Pattern.compile("\\.markTemporary\\s*\\(");
+    private static final Pattern RETIRED =
+            Pattern.compile("PlacedBlocksData|PlacedBlockSet|PlacedBlockCodec|PlotMarks|isSpiritMarked|markSpirit"
+                    + "|world:trace:|restore_trace|trail_clean|playerPlaced|warnTicks");
+
+    @Test
+    void retired_MarkRegistry_IsNotRevived() {
+        List<String> found = new ArrayList<>();
+        mainSources().forEach((path, text) -> {
+            if (RETIRED.matcher(text).find()) {
+                found.add(path);
+            }
+        });
+
+        assertEquals(
+                List.of(),
+                found,
+                "Реестр меток блоков и следы удалены: право менять клетку даёт только ACTIVE-аренда, "
+                        + "а кто поставил блок, знают PlotBreakLog и SpiritBlocks. Вернувшийся символ снова "
+                        + "разделит игрока и духа и оставит метки без блока. Как надо: LeaseBook.open/record "
+                        + "или структурный лог. Правило: docs/ARCHITECTURE.md → «Аренда временной правки». Файлы"
+                        + " Иначе тест retired_MarkRegistry_IsNotRevived перестанет ловить эту поломку. При смене retired_MarkRegistry_IsNotRevived проверь это утверждение.");
+    }
+
+    @Test
+    void retired_SampleRegistryFile_IsReported() {
+        Map<String, String> sources =
+                Map.of("com/theminespirit/neoforge/policy/PlacedBlocksData.java", "final class PlacedBlocksData {}");
+
+        assertTrue(
+                RETIRED.matcher(sources.get("com/theminespirit/neoforge/policy/PlacedBlocksData.java"))
+                        .find(),
+                "Сторож ослеп: возвращённый реестр меток обязан попасть в нарушения"
+                        + " Иначе тест retired_SampleRegistryFile_IsReported перестанет ловить эту поломку. При смене retired_SampleRegistryFile_IsReported проверь это утверждение.");
+    }
 
     @Test
     void markTemporary_EveryCurrentCaller_DeclaredForStageTwo() {
