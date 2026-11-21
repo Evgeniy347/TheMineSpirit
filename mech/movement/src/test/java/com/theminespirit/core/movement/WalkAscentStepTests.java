@@ -1,5 +1,6 @@
 package com.theminespirit.core.movement;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.movement.api.CellCentering;
@@ -14,6 +15,35 @@ class WalkAscentStepTests {
     private static final double JUMP_SPEED = 0.42;
     private static final int JUMP_DELAY = 10;
     private static final int TICKS = 40;
+
+    @Test
+    void next_JumpTwoCellsAway_IsImpossible() {
+        WalkAscent.Command command = WalkAscent.next(
+                new BlockCoord(0, 1, 2),
+                new WalkAscent.Pose(new BlockCoord(0, 0, 0), 0.5, 0.0, 0.5),
+                new WalkAscent.Body(true, false, false));
+        assertEquals(
+                WalkAscent.Step.IMPOSSIBLE,
+                command.step(),
+                "Прыжок через две клетки не берётся: дух прыгает у края на месте и обрывается по StallWatch "
+                        + "(окно 54, spirit-2: шаг WALK в -163,71,-491 из -163,70,-489 — два блока по z). Иначе "
+                        + "маршрут ведёт его в невозможный шаг и он топчется. При смене шага проверь прыжок на "
+                        + "соседнюю клетку выше: он обязан остаться JUMP");
+    }
+
+    @Test
+    void next_JumpNeighbourAbove_StaysJump() {
+        WalkAscent.Command command = WalkAscent.next(
+                new BlockCoord(0, 1, 1),
+                new WalkAscent.Pose(new BlockCoord(0, 0, 0), 0.5, 0.0, 0.5),
+                new WalkAscent.Body(true, false, false));
+        assertEquals(
+                WalkAscent.Step.JUMP,
+                command.step(),
+                "Соседняя клетка на блок выше берётся прыжком: иначе дух перестанет подниматься по ступеням "
+                        + "поселения и шахты. При смене порога дальности проверь живой подъём на ступень: JUMP "
+                        + "выполняется");
+    }
 
     @Test
     void next_StepUpOffCenterBesideWall_AlignsAndArrives() {

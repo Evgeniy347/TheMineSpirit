@@ -50,6 +50,7 @@ public final class WalkAscent {
 
     public static final double ARRIVAL = 0.3;
     private static final double CENTER = 0.5;
+    private static final double MAX_JUMP_REACH = 1.6;
 
     private WalkAscent() {}
 
@@ -86,7 +87,9 @@ public final class WalkAscent {
         Step step = switch (lift(rising, body)) {
             case HOLD -> Step.MOVE;
             case JUMP ->
-                cell.y() - pose.feet().y() > 1 ? Step.IMPOSSIBLE : body.headBlocked() ? Step.ASCENT_BLOCKED : Step.JUMP;
+                cell.y() - pose.feet().y() > 1 || horizontal(pose, targetX, targetZ) > MAX_JUMP_REACH
+                        ? Step.IMPOSSIBLE
+                        : body.headBlocked() ? Step.ASCENT_BLOCKED : Step.JUMP;
             case CLIMB -> Step.CLIMB;
         };
         return new Command(step, targetX, cell.y(), targetZ);
