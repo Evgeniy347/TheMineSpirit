@@ -1402,6 +1402,15 @@ class Planner:
         return (bool(fact.get("unknown", False)) or int(fact.get("auditPercent", 0)) > 0
                 or not bool(fact.get("lotReady", True)))
 
+    def lack_base(self, building):
+        """GraphLack.base: вес постройки выше, если её путь или бревно сада в недостатке."""
+        graph = self.graph
+        needed = any(way.building == building.id and self.lacking(way.makes) for way in graph.ways)
+        if not needed and building.id.startswith("orchard_"):
+            log = building.id[len("orchard_"):] + "_log"
+            needed = log in graph.items and self.lacking(log)
+        return building.base / graph.decay if needed else building.base
+
     def roots(self):
         graph = self.graph
         state = self.state
@@ -1425,9 +1434,8 @@ class Planner:
         for trigger in graph.triggers:
             wanted = graph.buildings.get(trigger.get("build"))
             if wanted is not None and self.count(trigger.get("have")) > 0 and state.built(trigger["build"]) != BUILT:
-                needed = any(way.building == wanted.id and self.lacking(way.makes) for way in graph.ways)
-                base = wanted.base / graph.decay if needed else wanted.base
-                self.require_building(None, trigger["build"], base, "есть " + str(trigger.get("have")))
+                self.require_building(
+                    None, trigger["build"], self.lack_base(wanted), "есть " + str(trigger.get("have")))
         if state.storage_free_percent < graph.storage_min_free:
             if state.built(graph.storage_building) == BUILT:
                 self.notices.setdefault(graph.storage_building, {
