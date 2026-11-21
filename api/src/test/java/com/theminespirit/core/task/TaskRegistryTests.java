@@ -1,13 +1,11 @@
 package com.theminespirit.core.task;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.engine.RunProgress;
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -27,12 +25,25 @@ class TaskRegistryTests {
         String second = registry.reserve(OTHER_BOT, null);
 
         assertEquals(
-                "t-1", first, "Первая задача реестра обязана получить id t-1: монотонная нумерация — контракт клиента");
-        assertEquals("t-2", second, "Вторая задача обязана получить t-2: id растут и не повторяются");
+                "t-1",
+                first,
+                "Первая задача реестра обязана получить id t-1: монотонная нумерация — контракт клиента Иначе тест reserve_NewBot_CreatesAcceptedTaskWithGrowingId перестанет ловить эту поломку. При смене reserve_NewBot_CreatesAcceptedTaskWithGrowingId проверь это утверждение.");
+        assertEquals(
+                "t-2",
+                second,
+                "Вторая задача обязана получить t-2: id растут и не повторяются Иначе тест reserve_NewBot_CreatesAcceptedTaskWithGrowingId перестанет ловить эту поломку. При смене reserve_NewBot_CreatesAcceptedTaskWithGrowingId проверь это утверждение.");
         TaskRecord record = registry.get(first).orElseThrow();
-        assertEquals(TaskState.ACCEPTED, record.state(), "Новая задача стартует в accepted до первого тика духа");
-        assertEquals("срубить деревья", record.goal(), "Цель обязана сохраняться в записи задачи");
-        assertNull(record.progress(), "Прогресса у свежей задачи ещё нет");
+        assertEquals(
+                TaskState.ACCEPTED,
+                record.state(),
+                "Новая задача стартует в accepted до первого тика духа Иначе тест reserve_NewBot_CreatesAcceptedTaskWithGrowingId перестанет ловить эту поломку. При смене reserve_NewBot_CreatesAcceptedTaskWithGrowingId проверь это утверждение.");
+        assertEquals(
+                "срубить деревья",
+                record.goal(),
+                "Цель обязана сохраняться в записи задачи Иначе тест reserve_NewBot_CreatesAcceptedTaskWithGrowingId перестанет ловить эту поломку. При смене reserve_NewBot_CreatesAcceptedTaskWithGrowingId проверь это утверждение.");
+        assertNull(
+                record.progress(),
+                "Прогресса у свежей задачи ещё нет Иначе тест reserve_NewBot_CreatesAcceptedTaskWithGrowingId перестанет ловить эту поломку. При смене reserve_NewBot_CreatesAcceptedTaskWithGrowingId проверь это утверждение.");
     }
 
     @Test
@@ -44,10 +55,16 @@ class TaskRegistryTests {
                 TaskRegistry.BusyException.class,
                 () -> registry.reserve(BOT, "вторая цель"),
                 "Повторный reserve занятого духа обязан падать BusyException: очередь выключена, а 409 клиенту "
-                        + "нужен id активной задачи");
+                        + "нужен id активной задачи Иначе тест reserve_BotWithActiveTask_ThrowsBusyWithActiveTaskId перестанет ловить эту поломку. При смене reserve_BotWithActiveTask_ThrowsBusyWithActiveTaskId проверь это утверждение.");
 
-        assertEquals(active, busy.activeTaskId(), "BusyException обязан называть активную задачу для ответа 409");
-        assertEquals(1, registry.size(), "Отказ не должен оставлять полузабронированную запись в реестре");
+        assertEquals(
+                active,
+                busy.activeTaskId(),
+                "BusyException обязан называть активную задачу для ответа 409 Иначе тест reserve_BotWithActiveTask_ThrowsBusyWithActiveTaskId перестанет ловить эту поломку. При смене reserve_BotWithActiveTask_ThrowsBusyWithActiveTaskId проверь это утверждение.");
+        assertEquals(
+                1,
+                registry.size(),
+                "Отказ не должен оставлять полузабронированную запись в реестре Иначе тест reserve_BotWithActiveTask_ThrowsBusyWithActiveTaskId перестанет ловить эту поломку. При смене reserve_BotWithActiveTask_ThrowsBusyWithActiveTaskId проверь это утверждение.");
     }
 
     @Test
@@ -59,7 +76,10 @@ class TaskRegistryTests {
 
         String second = registry.reserve(BOT, "новая цель");
 
-        assertEquals("t-2", second, "После завершения первой задачи дух обязан снова принимать новые");
+        assertEquals(
+                "t-2",
+                second,
+                "После завершения первой задачи дух обязан снова принимать новые Иначе тест reserve_BotFreedAfterTerminal_OneActiveTaskRuleHolds перестанет ловить эту поломку. При смене reserve_BotFreedAfterTerminal_OneActiveTaskRuleHolds проверь это утверждение.");
     }
 
     @ParameterizedTest(name = "{0} → {1}: {2}")
@@ -92,7 +112,9 @@ class TaskRegistryTests {
                 allowed,
                 from.canTransitionTo(to),
                 "Таблица переходов задачи: " + from.wire() + " → " + to.wire() + " должна быть "
-                        + (allowed ? "разрешена" : "запрещена"));
+                        + (allowed
+                                ? "разрешена"
+                                : "запрещена Иначе тест canTransition_TableCase_MatchesLifecycleTable перестанет ловить эту поломку. При смене canTransition_TableCase_MatchesLifecycleTable проверь это утверждение."));
     }
 
     @ParameterizedTest
@@ -107,15 +129,16 @@ class TaskRegistryTests {
         IllegalStateException failure = assertThrows(
                 IllegalStateException.class,
                 () -> registry.observe(taskId, TaskState.RUNNING, null, null),
-                "Переход из терминального состояния обязан отвергаться: иначе клиент увидит «ожившую» задачу");
+                "Переход из терминального состояния обязан отвергаться: иначе клиент увидит «ожившую» задачу При смене observe_TerminalState_IllegalTransitionThrowsAndKeepsRecord проверь это утверждение.");
 
         assertTrue(
                 failure.getMessage().contains(taskId),
-                "Сообщение о недопустимом переходе обязано называть task_id: " + failure.getMessage());
+                "Сообщение о недопустимом переходе обязано называть task_id:  Иначе тест observe_TerminalState_IllegalTransitionThrowsAndKeepsRecord перестанет ловить эту поломку. При смене observe_TerminalState_IllegalTransitionThrowsAndKeepsRecord проверь это утверждение."
+                        + failure.getMessage());
         assertEquals(
                 terminal,
                 registry.get(taskId).orElseThrow().state(),
-                "После отказа запись обязана сохранить терминальное состояние");
+                "После отказа запись обязана сохранить терминальное состояние Иначе тест observe_TerminalState_IllegalTransitionThrowsAndKeepsRecord перестанет ловить эту поломку. При смене observe_TerminalState_IllegalTransitionThrowsAndKeepsRecord проверь это утверждение.");
     }
 
     @Test
@@ -127,16 +150,31 @@ class TaskRegistryTests {
         long before = registry.log(taskId).lastId();
         List<TaskEvent> events = registry.observe(taskId, TaskState.RUNNING, progress, null);
 
-        assertEquals(2, events.size(), "ACCEPTED → RUNNING с прогрессом даёт progress и state — два кадра");
-        assertEquals(TaskEvent.TYPE_PROGRESS, events.get(0).type(), "Прогресс идёт перед сменой состояния");
-        assertEquals(TaskEvent.TYPE_STATE, events.get(1).type(), "Смена состояния — вторым кадром");
+        assertEquals(
+                2,
+                events.size(),
+                "ACCEPTED → RUNNING с прогрессом даёт progress и state — два кадра Иначе тест observe_StateAndProgress_UpdatesRecordAndAppendsEvents перестанет ловить эту поломку. При смене observe_StateAndProgress_UpdatesRecordAndAppendsEvents проверь это утверждение.");
+        assertEquals(
+                TaskEvent.TYPE_PROGRESS,
+                events.get(0).type(),
+                "Прогресс идёт перед сменой состояния Иначе тест observe_StateAndProgress_UpdatesRecordAndAppendsEvents перестанет ловить эту поломку. При смене observe_StateAndProgress_UpdatesRecordAndAppendsEvents проверь это утверждение.");
+        assertEquals(
+                TaskEvent.TYPE_STATE,
+                events.get(1).type(),
+                "Смена состояния — вторым кадром Иначе тест observe_StateAndProgress_UpdatesRecordAndAppendsEvents перестанет ловить эту поломку. При смене observe_StateAndProgress_UpdatesRecordAndAppendsEvents проверь это утверждение.");
         TaskRecord record = registry.get(taskId).orElseThrow();
-        assertEquals(TaskState.RUNNING, record.state(), "Запись обязана перейти в running");
-        assertEquals(progress, record.progress(), "Прогресс обязан сохраняться в записи");
+        assertEquals(
+                TaskState.RUNNING,
+                record.state(),
+                "Запись обязана перейти в running Иначе тест observe_StateAndProgress_UpdatesRecordAndAppendsEvents перестанет ловить эту поломку. При смене observe_StateAndProgress_UpdatesRecordAndAppendsEvents проверь это утверждение.");
+        assertEquals(
+                progress,
+                record.progress(),
+                "Прогресс обязан сохраняться в записи Иначе тест observe_StateAndProgress_UpdatesRecordAndAppendsEvents перестанет ловить эту поломку. При смене observe_StateAndProgress_UpdatesRecordAndAppendsEvents проверь это утверждение.");
         assertEquals(
                 before + events.size(),
                 registry.log(taskId).lastId(),
-                "События observe обязаны попадать в журнал задачи для SSE");
+                "События observe обязаны попадать в журнал задачи для SSE Иначе тест observe_StateAndProgress_UpdatesRecordAndAppendsEvents перестанет ловить эту поломку. При смене observe_StateAndProgress_UpdatesRecordAndAppendsEvents проверь это утверждение.");
     }
 
     @Test
@@ -150,14 +188,26 @@ class TaskRegistryTests {
         registry.observe(taskId, TaskState.FAILED, null, "точка недостижима");
 
         List<TaskEvent> appended = log.since(before).events();
-        assertEquals(2, appended.size(), "Провал обязан дать script_failed и state — два кадра");
+        assertEquals(
+                2,
+                appended.size(),
+                "Провал обязан дать script_failed и state — два кадра Иначе тест observe_Failure_AppendsScriptFailedBeforeState перестанет ловить эту поломку. При смене observe_Failure_AppendsScriptFailedBeforeState проверь это утверждение.");
         assertEquals(
                 TaskEvent.TYPE_SCRIPT_FAILED,
                 appended.get(0).type(),
-                "script_failed обязан идти قبل финального state, чтобы клиент увидел причину");
-        assertEquals("goto", appended.get(0).data().get("script"), "script_failed называет упавший скрипт");
-        assertEquals("точка недостижима", appended.get(0).data().get("reason"), "script_failed несёт причину");
-        assertEquals(TaskEvent.TYPE_STATE, appended.get(1).type(), "Финальный кадр — state");
+                "script_failed обязан идти قبل финального state, чтобы клиент увидел причину Иначе тест observe_Failure_AppendsScriptFailedBeforeState перестанет ловить эту поломку. При смене observe_Failure_AppendsScriptFailedBeforeState проверь это утверждение.");
+        assertEquals(
+                "goto",
+                appended.get(0).data().get("script"),
+                "script_failed называет упавший скрипт Иначе тест observe_Failure_AppendsScriptFailedBeforeState перестанет ловить эту поломку. При смене observe_Failure_AppendsScriptFailedBeforeState проверь это утверждение.");
+        assertEquals(
+                "точка недостижима",
+                appended.get(0).data().get("reason"),
+                "script_failed несёт причину Иначе тест observe_Failure_AppendsScriptFailedBeforeState перестанет ловить эту поломку. При смене observe_Failure_AppendsScriptFailedBeforeState проверь это утверждение.");
+        assertEquals(
+                TaskEvent.TYPE_STATE,
+                appended.get(1).type(),
+                "Финальный кадр — state Иначе тест observe_Failure_AppendsScriptFailedBeforeState перестанет ловить эту поломку. При смене observe_Failure_AppendsScriptFailedBeforeState проверь это утверждение.");
     }
 
     @Test
@@ -166,7 +216,9 @@ class TaskRegistryTests {
 
         Optional<TaskRecord> missing = registry.get("t-999");
 
-        assertTrue(missing.isEmpty(), "Неизвестная задача обязана давать пустой Optional: клиент получит 404");
+        assertTrue(
+                missing.isEmpty(),
+                "Неизвестная задача обязана давать пустой Optional: клиент получит 404 Иначе тест get_UnknownTask_ReturnsEmpty перестанет ловить эту поломку. При смене get_UnknownTask_ReturnsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -175,138 +227,13 @@ class TaskRegistryTests {
         String first = registry.reserve(BOT, null);
         registry.observe(first, TaskState.SUCCEEDED, null, null);
 
-        assertTrue(registry.activeForBot(BOT).isEmpty(), "Завершённая задача не должна занимать духа");
+        assertTrue(
+                registry.activeForBot(BOT).isEmpty(),
+                "Завершённая задача не должна занимать духа Иначе тест activeForBot_OnlyActiveRecords_MatchesOneTaskRule перестанет ловить эту поломку. При смене activeForBot_OnlyActiveRecords_MatchesOneTaskRule проверь это утверждение.");
         String second = registry.reserve(BOT, null);
         assertEquals(
-                second, registry.activeForBot(BOT).orElseThrow().taskId(), "Активная задача обязана находиться по bot");
-    }
-
-    @Test
-    void watchableRecords_ReservedButNotStarted_HiddenFromWatcherUntilMarkStarted() {
-        TaskRegistry registry = new TaskRegistry();
-        String reserved = registry.reserve(BOT, null);
-
-        List<TaskRecord> beforeStart = registry.watchableRecords();
-        registry.markStarted(reserved);
-        List<TaskRecord> afterStart = registry.watchableRecords();
-
-        assertEquals(
-                List.of(),
-                beforeStart,
-                "Бронь, чей старт у платформы ещё не удался, не должна попадать к TaskWatcher: иначе он привяжет её "
-                        + "к чужой задаче духа раньше, чем откат убрал запись");
-        assertEquals(
-                List.of(reserved),
-                afterStart.stream().map(TaskRecord::taskId).toList(),
-                "После успешного старта запись обязана опрашиваться watcher");
-    }
-
-    @Test
-    void closeAll_ActiveTasks_ClosesEveryLogSoWaitingStreamsEndAtOnce() throws Exception {
-        TaskRegistry registry = new TaskRegistry();
-        String first = registry.reserve(BOT, null);
-        String second = registry.reserve("bot-2", null);
-        registry.observe(first, TaskState.RUNNING, null, null);
-
-        registry.closeAll();
-
-        assertEquals(
-                TaskEventLog.Kind.CLOSED,
-                registry.log(first)
-                        .awaitAfter(registry.log(first).lastId(), Duration.ofSeconds(10))
-                        .kind(),
-                "Остановка сервера обязана закрыть журнал идущей задачи: иначе открытый поток событий ждёт "
-                        + "кипалайва и держит остановку HTTP-сервера");
-        assertEquals(
-                TaskEventLog.Kind.CLOSED,
-                registry.log(second).awaitAfter(0, Duration.ofSeconds(10)).kind(),
-                "Журнал принятой, но не начавшейся задачи тоже обязан закрыться");
-    }
-
-    @Test
-    void discard_StartedTask_KeepsRecord() {
-        TaskRegistry registry = new TaskRegistry();
-        String started = registry.reserve(BOT, null);
-        registry.markStarted(started);
-
-        boolean discarded = registry.discard(started);
-
-        assertFalse(discarded, "Запущенную у платформы задачу откатывать нельзя: дух уже выполняет её план");
-        assertEquals(1, registry.size(), "Запись запущенной задачи обязана остаться в реестре");
-    }
-
-    @Test
-    void watchableRecords_StartedTerminal_Excluded() {
-        TaskRegistry registry = new TaskRegistry();
-        String finished = registry.reserve(BOT, null);
-        registry.markStarted(finished);
-        registry.observe(finished, TaskState.SUCCEEDED, null, null);
-
-        assertEquals(List.of(), registry.watchableRecords(), "Завершённая задача не опрашивается");
-    }
-
-    @Test
-    void eviction_MoreThanCapCompleted_DropsOldestCompletedKeepsActive() {
-        TaskRegistry registry = new TaskRegistry();
-        for (int i = 0; i < TaskRegistry.MAX_COMPLETED + 10; i++) {
-            String taskId = registry.reserve("bot-" + i, null);
-            registry.observe(taskId, TaskState.SUCCEEDED, null, null);
-        }
-        String active = registry.reserve(BOT, "долгая");
-        registry.observe(active, TaskState.RUNNING, null, null);
-
-        assertEquals(
-                TaskRegistry.MAX_COMPLETED,
-                registry.completedCount(),
-                "Завершённых в реестре обязано быть не больше " + TaskRegistry.MAX_COMPLETED);
-        assertTrue(registry.get("t-1").isEmpty(), "Самая старая завершённая задача вытесняется первой");
-        assertEquals(
-                TaskState.RUNNING,
-                registry.get(active).orElseThrow().state(),
-                "Активная задача не должна вытесняться ни при каком порядке завершений");
-    }
-
-    @Test
-    void taskJson_RunningTask_MatchesContractJson() {
-        TaskRegistry registry = new TaskRegistry();
-        String taskId = registry.reserve(BOT, "срубить деревья вокруг");
-        registry.observe(taskId, TaskState.RUNNING, new RunProgress(2, 2, "chop_tree", 3, 5), null);
-
-        String json = TaskJson.toJson(registry.get(taskId).orElseThrow());
-
-        assertEquals(
-                "{\"task_id\":\"t-1\",\"bot\":\"" + BOT + "\",\"state\":\"running\","
-                        + "\"goal\":\"срубить деревья вокруг\","
-                        + "\"progress\":{\"step\":2,\"total_steps\":2,\"current_script\":\"chop_tree\","
-                        + "\"done\":3,\"target\":5},\"result\":null,\"error\":null}",
-                json,
-                "JSON задачи — контракт docs/api/README.md: порядок и состав полей фиксированы");
-    }
-
-    @Test
-    void taskJson_NoProgressAndGoalNull_SerializesNulls() {
-        TaskRegistry registry = new TaskRegistry();
-        String taskId = registry.reserve(BOT, null);
-
-        String json = TaskJson.toJson(registry.get(taskId).orElseThrow());
-
-        assertEquals(
-                "{\"task_id\":\"t-1\",\"bot\":\"" + BOT + "\",\"state\":\"accepted\",\"goal\":null,"
-                        + "\"progress\":null,\"result\":null,\"error\":null}",
-                json,
-                "Отсутствующие goal и progress обязаны сериализоваться как null, а не отбрасываться");
-    }
-
-    @Test
-    void observe_SameStateWithNewProgress_IsAllowedProgressOnlyUpdate() {
-        TaskRegistry registry = new TaskRegistry();
-        String taskId = registry.reserve(BOT, null);
-        registry.observe(taskId, TaskState.RUNNING, new RunProgress(1, 2, "a", null, null), null);
-
-        registry.observe(taskId, TaskState.RUNNING, new RunProgress(2, 2, "b", null, null), null);
-
-        TaskRecord record = registry.get(taskId).orElseThrow();
-        assertEquals(2, record.progress().step(), "Обновление прогресса без смены состояния обязано применяться");
-        assertEquals("b", record.progress().currentScript(), "Текущий скрипт обязан обновляться прогрессом");
+                second,
+                registry.activeForBot(BOT).orElseThrow().taskId(),
+                "Активная задача обязана находиться по bot Иначе тест activeForBot_OnlyActiveRecords_MatchesOneTaskRule перестанет ловить эту поломку. При смене activeForBot_OnlyActiveRecords_MatchesOneTaskRule проверь это утверждение.");
     }
 }

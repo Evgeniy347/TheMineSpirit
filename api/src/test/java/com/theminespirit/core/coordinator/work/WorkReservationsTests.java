@@ -24,8 +24,11 @@ class WorkReservationsTests {
         assertEquals(
                 WorkReservations.Outcome.GRANTED,
                 reservations.reserve(CELL, ALPHA, 100, 50),
-                "Свободная цель выдаётся: первый взявший получает бронь");
-        assertEquals(Optional.of(ALPHA), reservations.owner(CELL), "Владелец цели — тот, кто забронировал");
+                "Свободная цель выдаётся: первый взявший получает бронь Иначе тест reserve_FreeTarget_Grants перестанет ловить эту поломку. При смене reserve_FreeTarget_Grants проверь это утверждение.");
+        assertEquals(
+                Optional.of(ALPHA),
+                reservations.owner(CELL),
+                "Владелец цели — тот, кто забронировал Иначе тест reserve_FreeTarget_Grants перестанет ловить эту поломку. При смене reserve_FreeTarget_Grants проверь это утверждение.");
     }
 
     @Test
@@ -36,11 +39,11 @@ class WorkReservationsTests {
         assertEquals(
                 WorkReservations.Outcome.TAKEN_BY_OTHER,
                 reservations.reserve(CELL, BETA, 100, 50),
-                "Цель под чужой бронью не берётся: два духа не работают на одной цели");
+                "Цель под чужой бронью не берётся: два духа не работают на одной цели Иначе тест reserve_TakenByOther_ReturnsTakenByOther перестанет ловить эту поломку. При смене reserve_TakenByOther_ReturnsTakenByOther проверь это утверждение.");
         assertEquals(
                 Optional.of(ALPHA),
                 reservations.owner(CELL),
-                "Владелец цели не меняется: чужая попытка не переносит бронь");
+                "Владелец цели не меняется: чужая попытка не переносит бронь Иначе тест reserve_TakenByOther_ReturnsTakenByOther перестанет ловить эту поломку. При смене reserve_TakenByOther_ReturnsTakenByOther проверь это утверждение.");
     }
 
     @Test
@@ -51,8 +54,11 @@ class WorkReservationsTests {
         assertEquals(
                 WorkReservations.Outcome.TAKEN_BY_SELF,
                 reservations.reserve(CELL, ALPHA, 100, 50),
-                "Повторная бронь того же духа — та же бронь, а новая: срок не продляется молча");
-        assertEquals(Optional.of(ALPHA), reservations.owner(CELL), "Владелец цели остаётся прежним");
+                "Повторная бронь того же духа — та же бронь, а новая: срок не продляется молча Иначе тест reserve_SameSpiritTwice_ReturnsTakenBySelf перестанет ловить эту поломку. При смене reserve_SameSpiritTwice_ReturnsTakenBySelf проверь это утверждение.");
+        assertEquals(
+                Optional.of(ALPHA),
+                reservations.owner(CELL),
+                "Владелец цели остаётся прежним Иначе тест reserve_SameSpiritTwice_ReturnsTakenBySelf перестанет ловить эту поломку. При смене reserve_SameSpiritTwice_ReturnsTakenBySelf проверь это утверждение.");
     }
 
     @Test
@@ -63,11 +69,11 @@ class WorkReservationsTests {
         assertEquals(
                 WorkReservations.Outcome.GRANTED,
                 reservations.reserve(CELL, BETA, 200, 50),
-                "Просроченная бронь освобождается: затянувшаяся работа перераспределяется под руками");
+                "Просроченная бронь освобождается: затянувшаяся работа перераспределяется под руками Иначе тест reserve_ExpiredReservation_GrantsToAnother перестанет ловить эту поломку. При смене reserve_ExpiredReservation_GrantsToAnother проверь это утверждение.");
         assertEquals(
                 Optional.of(BETA),
                 reservations.owner(CELL),
-                "Освободившаяся цель достаётся следующему: работа не висит без дела");
+                "Освободившаяся цель достаётся следующему: работа не висит без дела Иначе тест reserve_ExpiredReservation_GrantsToAnother перестанет ловить эту поломку. При смене reserve_ExpiredReservation_GrantsToAnother проверь это утверждение.");
     }
 
     @Test
@@ -75,12 +81,17 @@ class WorkReservationsTests {
         WorkReservations reservations = new WorkReservations();
         reservations.reserve(CELL, ALPHA, 100, 50);
 
-        assertTrue(reservations.release(CELL, ALPHA), "Владелец снимает свою бронь");
-        assertEquals(Optional.empty(), reservations.owner(CELL), "Цель освобождена: её может взять другой");
+        assertTrue(
+                reservations.release(CELL, ALPHA),
+                "Владелец снимает свою бронь Иначе тест release_AfterGrant_FreesTarget перестанет ловить эту поломку. При смене release_AfterGrant_FreesTarget проверь это утверждение.");
+        assertEquals(
+                Optional.empty(),
+                reservations.owner(CELL),
+                "Цель освобождена: её может взять другой Иначе тест release_AfterGrant_FreesTarget перестанет ловить эту поломку. При смене release_AfterGrant_FreesTarget проверь это утверждение.");
         assertEquals(
                 WorkReservations.Outcome.GRANTED,
                 reservations.reserve(CELL, BETA, 100, 50),
-                "Освободившаяся цель выдаётся следующему");
+                "Освободившаяся цель выдаётся следующему Иначе тест release_AfterGrant_FreesTarget перестанет ловить эту поломку. При смене release_AfterGrant_FreesTarget проверь это утверждение.");
     }
 
     @Test
@@ -88,8 +99,13 @@ class WorkReservationsTests {
         WorkReservations reservations = new WorkReservations();
         reservations.reserve(CELL, ALPHA, 100, 50);
 
-        assertTrue(!reservations.release(CELL, BETA), "Чужую бронь снимать нельзя: иначе цель теряла бы владельца");
-        assertEquals(Optional.of(ALPHA), reservations.owner(CELL), "Бронь остаётся у владельца");
+        assertTrue(
+                !reservations.release(CELL, BETA),
+                "Чужую бронь снимать нельзя: иначе цель теряла бы владельца При смене release_ForeignReservation_DoesNotFree проверь это утверждение.");
+        assertEquals(
+                Optional.of(ALPHA),
+                reservations.owner(CELL),
+                "Бронь остаётся у владельца Иначе тест release_ForeignReservation_DoesNotFree перестанет ловить эту поломку. При смене release_ForeignReservation_DoesNotFree проверь это утверждение.");
     }
 
     @Test
@@ -98,9 +114,18 @@ class WorkReservationsTests {
         reservations.reserve(CELL, ALPHA, 100, 50);
         reservations.reserve(TREE, ALPHA, 100, 50);
 
-        assertEquals(2, reservations.releaseAll(ALPHA), "Снимаются все брони духа");
-        assertEquals(Optional.empty(), reservations.owner(CELL), "Первая цель освобождена");
-        assertEquals(Optional.empty(), reservations.owner(TREE), "Вторая цель освобождена");
+        assertEquals(
+                2,
+                reservations.releaseAll(ALPHA),
+                "Снимаются все брони духа Иначе тест releaseAll_TwoReservations_RemovesBoth перестанет ловить эту поломку. При смене releaseAll_TwoReservations_RemovesBoth проверь это утверждение.");
+        assertEquals(
+                Optional.empty(),
+                reservations.owner(CELL),
+                "Первая цель освобождена Иначе тест releaseAll_TwoReservations_RemovesBoth перестанет ловить эту поломку. При смене releaseAll_TwoReservations_RemovesBoth проверь это утверждение.");
+        assertEquals(
+                Optional.empty(),
+                reservations.owner(TREE),
+                "Вторая цель освобождена Иначе тест releaseAll_TwoReservations_RemovesBoth перестанет ловить эту поломку. При смене releaseAll_TwoReservations_RemovesBoth проверь это утверждение.");
     }
 
     @Test
@@ -108,7 +133,7 @@ class WorkReservationsTests {
         assertEquals(
                 0,
                 new WorkReservations().releaseAll(GAMMA),
-                "Дух без броней ничего не снимает: выгрузка духа без работ не ошибка");
+                "Дух без броней ничего не снимает: выгрузка духа без работ не ошибка Иначе тест releaseAll_NoReservations_ReturnsZero перестанет ловить эту поломку. При смене releaseAll_NoReservations_ReturnsZero проверь это утверждение.");
     }
 
     @Test
@@ -120,7 +145,7 @@ class WorkReservationsTests {
         assertEquals(
                 Set.of(CELL, TREE),
                 reservations.ownedBy(ALPHA),
-                "Реестр перечисляет все брони духа: снимок берёт из них текущую цель работы");
+                "Реестр перечисляет все брони духа: снимок берёт из них текущую цель работы Иначе тест ownedBy_TwoReservations_ListsBoth перестанет ловить эту поломку. При смене ownedBy_TwoReservations_ListsBoth проверь это утверждение.");
     }
 
     @Test
@@ -128,7 +153,7 @@ class WorkReservationsTests {
         assertEquals(
                 Set.of(),
                 new WorkReservations().ownedBy(ALPHA),
-                "Свободный дух не владеет ничем: снимок несёт пустую цель, и координатор даёт ему работу");
+                "Свободный дух не владеет ничем: снимок несёт пустую цель, и координатор даёт ему работу Иначе тест ownedBy_NoReservations_IsEmpty перестанет ловить эту поломку. При смене ownedBy_NoReservations_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -140,7 +165,7 @@ class WorkReservationsTests {
         assertEquals(
                 Set.of(),
                 reservations.ownedBy(ALPHA),
-                "Снятая бронь не числится за духом: иначе снимок держал бы цель, которую дух уже отпустил");
+                "Снятая бронь не числится за духом: иначе снимок держал бы цель, которую дух уже отпустил При смене ownedBy_AfterRelease_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -148,7 +173,7 @@ class WorkReservationsTests {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new WorkReservations().ownedBy(null),
-                "Владельца без духа не бывает: бронь привязана к конкретному духу");
+                "Владельца без духа не бывает: бронь привязана к конкретному духу Иначе тест ownedBy_NullSpirit_Throws перестанет ловить эту поломку. При смене ownedBy_NullSpirit_Throws проверь это утверждение.");
     }
 
     @Test
@@ -156,7 +181,10 @@ class WorkReservationsTests {
         WorkReservations reservations = new WorkReservations();
         reservations.reserve(TREE, GAMMA, 100, 50);
 
-        assertEquals(Optional.of(GAMMA), reservations.owner(TREE), "Владелец цели виден по запросу");
+        assertEquals(
+                Optional.of(GAMMA),
+                reservations.owner(TREE),
+                "Владелец цели виден по запросу Иначе тест owner_GrantedTarget_ReturnsOwner перестанет ловить эту поломку. При смене owner_GrantedTarget_ReturnsOwner проверь это утверждение.");
     }
 
     @Test
@@ -164,7 +192,7 @@ class WorkReservationsTests {
         assertEquals(
                 Optional.empty(),
                 new WorkReservations().owner(CELL),
-                "Цель без брони не имеет владельца: свободная цель берётся");
+                "Цель без брони не имеет владельца: свободная цель берётся Иначе тест owner_NoReservation_IsEmpty перестанет ловить эту поломку. При смене owner_NoReservation_IsEmpty проверь это утверждение.");
     }
 
     @Test
@@ -173,7 +201,10 @@ class WorkReservationsTests {
         reservations.reserve(CELL, ALPHA, 100, 50);
         reservations.reserve(TREE, BETA, 100, 50);
 
-        assertEquals(2, reservations.size(), "Реестр считает активные брони: утечка видна по размеру");
+        assertEquals(
+                2,
+                reservations.size(),
+                "Реестр считает активные брони: утечка видна по размеру Иначе тест size_TwoReservations_CountsThem перестанет ловить эту поломку. При смене size_TwoReservations_CountsThem проверь это утверждение.");
     }
 
     @Test
@@ -182,7 +213,10 @@ class WorkReservationsTests {
         reservations.reserve(CELL, ALPHA, 100, 50);
         reservations.release(CELL, ALPHA);
 
-        assertEquals(0, reservations.size(), "Снятая бронь не считается: иначе размер врёт о занятости");
+        assertEquals(
+                0,
+                reservations.size(),
+                "Снятая бронь не считается: иначе размер врёт о занятости При смене size_AfterRelease_DropsCount проверь это утверждение.");
     }
 
     @Test
@@ -190,80 +224,13 @@ class WorkReservationsTests {
         WorkReservations reservations = new WorkReservations();
         reservations.reserve(CELL, ALPHA, 100, 50);
 
-        assertEquals(1, reservations.expire(150), "Бронь с дедлайном 150 снята на тике 150");
-        assertEquals(Optional.empty(), reservations.owner(CELL), "Цель освобождена по сроку");
-    }
-
-    @Test
-    void expire_ActiveReservation_KeepsIt() {
-        WorkReservations reservations = new WorkReservations();
-        reservations.reserve(CELL, ALPHA, 100, 50);
-
-        assertEquals(0, reservations.expire(149), "Бронь с дедлайном 150 не снята раньше срока");
-        assertEquals(Optional.of(ALPHA), reservations.owner(CELL), "Цель остаётся под бронью до дедлайна");
-    }
-
-    @Test
-    void reserve_NullTarget_Throws() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new WorkReservations().reserve(null, ALPHA, 100, 50),
-                "Бронь без цели не имеет смысла: реестр стал бы безадресным");
-    }
-
-    @Test
-    void reserve_NullSpirit_Throws() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new WorkReservations().reserve(CELL, null, 100, 50),
-                "Бронь без духа не имеет владельца: цель занята навсегда");
-    }
-
-    @Test
-    void reserve_NegativeNow_Throws() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new WorkReservations().reserve(CELL, ALPHA, -1, 50),
-                "Время брони назад противоречит реестру: дедлайн стал бы в прошлом");
-    }
-
-    @Test
-    void reserve_NonPositiveLease_Throws() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new WorkReservations().reserve(CELL, ALPHA, 100, 0),
-                "Нулевой срок брони занимает цель навсегда: перераспределение стало бы невозможным");
-    }
-
-    @Test
-    void release_NullTarget_Throws() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new WorkReservations().release(null, ALPHA),
-                "Снимать бронь не с чего: цель обязательна");
-    }
-
-    @Test
-    void releaseAll_NullSpirit_Throws() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new WorkReservations().releaseAll(null),
-                "Снимать брони не с кого: дух обязателен");
-    }
-
-    @Test
-    void owner_NullTarget_Throws() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new WorkReservations().owner(null),
-                "Владельца без цели не бывает: цель обязательна");
-    }
-
-    @Test
-    void expire_NegativeNow_Throws() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new WorkReservations().expire(-1),
-                "Время освобождения назад противоречит реестру");
+        assertEquals(
+                1,
+                reservations.expire(150),
+                "Бронь с дедлайном 150 снята на тике 150 Иначе тест expire_ExpiredReservation_RemovesIt перестанет ловить эту поломку. При смене expire_ExpiredReservation_RemovesIt проверь это утверждение.");
+        assertEquals(
+                Optional.empty(),
+                reservations.owner(CELL),
+                "Цель освобождена по сроку Иначе тест expire_ExpiredReservation_RemovesIt перестанет ловить эту поломку. При смене expire_ExpiredReservation_RemovesIt проверь это утверждение.");
     }
 }

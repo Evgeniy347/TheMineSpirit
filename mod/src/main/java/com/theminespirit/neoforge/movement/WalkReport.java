@@ -44,6 +44,14 @@ final class WalkReport {
                 + ", onGround=" + spirit.onGround()
                 + ", onClimbable=" + spirit.onClimbable()
                 + ", дистанция=" + String.format(Locale.ROOT, "%.2f", distance)
+                + ", точка=" + String.format(Locale.ROOT, "%.2f,%.2f,%.2f", spirit.getX(), spirit.getY(), spirit.getZ())
+                + ", move="
+                + String.format(
+                        Locale.ROOT,
+                        "%.2f,%.2f,%.2f",
+                        spirit.getMoveControl().getWantedX(),
+                        spirit.getMoveControl().getWantedY(),
+                        spirit.getMoveControl().getWantedZ())
                 + ", no_escape=" + noEscape
                 + ", код=" + code;
     }

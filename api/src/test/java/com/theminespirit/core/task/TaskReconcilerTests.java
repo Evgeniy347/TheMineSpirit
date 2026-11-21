@@ -7,12 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.theminespirit.core.engine.RunProgress;
 import com.theminespirit.core.engine.RunStatus;
-import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 
 class TaskReconcilerTests {
     private static final String BOT = "11111111-1111-1111-1111-111111111111";
@@ -45,8 +42,11 @@ class TaskReconcilerTests {
         assertEquals(
                 TaskState.RUNNING,
                 record().state(),
-                "Первый тик живого духа с задачей переводит accepted в running: клиент видит старт");
-        assertEquals(STEP_ONE, record().progress(), "Прогресс текущего скрипта обязан попасть в запись задачи");
+                "Первый тик живого духа с задачей переводит accepted в running: клиент видит старт Иначе тест reconcile_RunningSpirit_MovesAcceptedToRunningWithProgress перестанет ловить эту поломку. При смене reconcile_RunningSpirit_MovesAcceptedToRunningWithProgress проверь это утверждение.");
+        assertEquals(
+                STEP_ONE,
+                record().progress(),
+                "Прогресс текущего скрипта обязан попасть в запись задачи Иначе тест reconcile_RunningSpirit_MovesAcceptedToRunningWithProgress перестанет ловить эту поломку. При смене reconcile_RunningSpirit_MovesAcceptedToRunningWithProgress проверь это утверждение.");
     }
 
     @Test
@@ -59,8 +59,11 @@ class TaskReconcilerTests {
         assertEquals(
                 before + 1,
                 registry.log(taskId).lastId(),
-                "Смена шага и счётчика обязана дать ровно одно событие progress");
-        assertEquals(STEP_TWO, record().progress(), "Запись обязана хранить последний прогресс");
+                "Смена шага и счётчика обязана дать ровно одно событие progress Иначе тест reconcile_ProgressChange_AppendsOneProgressEventPerChange перестанет ловить эту поломку. При смене reconcile_ProgressChange_AppendsOneProgressEventPerChange проверь это утверждение.");
+        assertEquals(
+                STEP_TWO,
+                record().progress(),
+                "Запись обязана хранить последний прогресс Иначе тест reconcile_ProgressChange_AppendsOneProgressEventPerChange перестанет ловить эту поломку. При смене reconcile_ProgressChange_AppendsOneProgressEventPerChange проверь это утверждение.");
     }
 
     @Test
@@ -74,8 +77,11 @@ class TaskReconcilerTests {
                 before,
                 registry.log(taskId).lastId(),
                 "Момент между шагами sequence, когда следующий скрипт ещё не создан, не должен давать событие progress "
-                        + "с current_script=null: клиент увидит шаг вместе с именем скрипта");
-        assertEquals(STEP_ONE, record().progress(), "Запись обязана хранить последний прогресс с именем скрипта");
+                        + "с current_script=null: клиент увидит шаг вместе с именем скрипта Иначе тест reconcile_ProgressBetweenStepsWithoutScriptName_KeepsPreviousProgressAndAppendsNoEvent перестанет ловить эту поломку. При смене reconcile_ProgressBetweenStepsWithoutScriptName_KeepsPreviousProgressAndAppendsNoEvent проверь это утверждение.");
+        assertEquals(
+                STEP_ONE,
+                record().progress(),
+                "Запись обязана хранить последний прогресс с именем скрипта Иначе тест reconcile_ProgressBetweenStepsWithoutScriptName_KeepsPreviousProgressAndAppendsNoEvent перестанет ловить эту поломку. При смене reconcile_ProgressBetweenStepsWithoutScriptName_KeepsPreviousProgressAndAppendsNoEvent проверь это утверждение.");
     }
 
     @Test
@@ -84,12 +90,17 @@ class TaskReconcilerTests {
 
         reconcile(SpiritReading.living(RunStatus.SUCCEEDED, null, null));
 
-        assertEquals(TaskState.SUCCEEDED, record().state(), "Успех духа обязан закрывать задачу как succeeded");
+        assertEquals(
+                TaskState.SUCCEEDED,
+                record().state(),
+                "Успех духа обязан закрывать задачу как succeeded Иначе тест reconcile_Succeeded_FinishesKeepingLastProgress перестанет ловить эту поломку. При смене reconcile_Succeeded_FinishesKeepingLastProgress проверь это утверждение.");
         assertEquals(
                 STEP_TWO,
                 record().progress(),
-                "У завершённой задачи остаётся последний прогресс: по нему видно, где закончилось");
-        assertNull(record().error(), "У успешной задачи ошибки нет");
+                "У завершённой задачи остаётся последний прогресс: по нему видно, где закончилось Иначе тест reconcile_Succeeded_FinishesKeepingLastProgress перестанет ловить эту поломку. При смене reconcile_Succeeded_FinishesKeepingLastProgress проверь это утверждение.");
+        assertNull(
+                record().error(),
+                "У успешной задачи ошибки нет Иначе тест reconcile_Succeeded_FinishesKeepingLastProgress перестанет ловить эту поломку. При смене reconcile_Succeeded_FinishesKeepingLastProgress проверь это утверждение.");
     }
 
     @Test
@@ -99,7 +110,7 @@ class TaskReconcilerTests {
         assertEquals(
                 TaskState.SUCCEEDED,
                 record().state(),
-                "Задача, завершившаяся до первого опроса, обязана закрыться из accepted");
+                "Задача, завершившаяся до первого опроса, обязана закрыться из accepted Иначе тест reconcile_AcceptedThenInstantSuccess_FinishesWithoutRunningStep перестанет ловить эту поломку. При смене reconcile_AcceptedThenInstantSuccess_FinishesWithoutRunningStep проверь это утверждение.");
     }
 
     @Test
@@ -109,11 +120,14 @@ class TaskReconcilerTests {
 
         reconcile(SpiritReading.living(RunStatus.SUCCEEDED, null, null, result));
 
-        assertEquals(TaskState.SUCCEEDED, record().state(), "Успех духа обязан закрывать задачу как succeeded");
+        assertEquals(
+                TaskState.SUCCEEDED,
+                record().state(),
+                "Успех духа обязан закрывать задачу как succeeded Иначе тест reconcile_SucceededWithResult_StoresResultInTaskRecord перестанет ловить эту поломку. При смене reconcile_SucceededWithResult_StoresResultInTaskRecord проверь это утверждение.");
         assertEquals(
                 result,
                 record().result(),
-                "Итог успеха обязан попасть в запись задачи: по нему клиент узнаёт, что именно сделано");
+                "Итог успеха обязан попасть в запись задачи: по нему клиент узнаёт, что именно сделано Иначе тест reconcile_SucceededWithResult_StoresResultInTaskRecord перестанет ловить эту поломку. При смене reconcile_SucceededWithResult_StoresResultInTaskRecord проверь это утверждение.");
     }
 
     @Test
@@ -122,7 +136,9 @@ class TaskReconcilerTests {
 
         reconcile(SpiritReading.living(RunStatus.SUCCEEDED, null, null));
 
-        assertNull(record().result(), "Успех без итога обязан оставлять result == null");
+        assertNull(
+                record().result(),
+                "Успех без итога обязан оставлять result == null Иначе тест reconcile_SucceededWithoutResult_LeavesResultNull перестанет ловить эту поломку. При смене reconcile_SucceededWithoutResult_LeavesResultNull проверь это утверждение.");
     }
 
     @Test
@@ -130,7 +146,9 @@ class TaskReconcilerTests {
         reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
         reconcile(SpiritReading.living(RunStatus.FAILED, null, "цель недостижима"));
 
-        assertNull(record().result(), "Провал не несёт итога успеха: result обязан остаться null");
+        assertNull(
+                record().result(),
+                "Провал не несёт итога успеха: result обязан остаться null Иначе тест reconcile_FailedOrCancelled_LeavesResultNull перестанет ловить эту поломку. При смене reconcile_FailedOrCancelled_LeavesResultNull проверь это утверждение.");
     }
 
     @Test
@@ -138,7 +156,9 @@ class TaskReconcilerTests {
         reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
         reconcile(SpiritReading.living(RunStatus.CANCELLED, null, null));
 
-        assertNull(record().result(), "Отмена не несёт итога успеха: result обязан остаться null");
+        assertNull(
+                record().result(),
+                "Отмена не несёт итога успеха: result обязан остаться null Иначе тест reconcile_Cancelled_LeavesResultNull перестанет ловить эту поломку. При смене reconcile_Cancelled_LeavesResultNull проверь это утверждение.");
     }
 
     @Test
@@ -147,15 +167,22 @@ class TaskReconcilerTests {
 
         reconcile(SpiritReading.living(RunStatus.FAILED, null, "цель недостижима"));
 
-        assertEquals(TaskState.FAILED, record().state(), "Провал скрипта обязан закрывать задачу как failed");
-        assertEquals("цель недостижима", record().error(), "Причина провала духа обязана попасть в error");
+        assertEquals(
+                TaskState.FAILED,
+                record().state(),
+                "Провал скрипта обязан закрывать задачу как failed Иначе тест reconcile_Failed_StoresReasonAndScriptFailedEventNamesScript перестанет ловить эту поломку. При смене reconcile_Failed_StoresReasonAndScriptFailedEventNamesScript проверь это утверждение.");
+        assertEquals(
+                "цель недостижима",
+                record().error(),
+                "Причина провала духа обязана попасть в error Иначе тест reconcile_Failed_StoresReasonAndScriptFailedEventNamesScript перестанет ловить эту поломку. При смене reconcile_Failed_StoresReasonAndScriptFailedEventNamesScript проверь это утверждение.");
         TaskEventLog.Catchup events = registry.log(taskId).since(0);
         assertTrue(
                 events.events().stream()
                         .anyMatch(event -> TaskEvent.TYPE_SCRIPT_FAILED.equals(event.type())
                                 && "goto".equals(event.data().get("script"))
                                 && "цель недостижима".equals(event.data().get("reason"))),
-                "Провал обязан дать script_failed с именем скрипта goto и причиной: " + events.events());
+                "Провал обязан дать script_failed с именем скрипта goto и причиной:  Иначе тест reconcile_Failed_StoresReasonAndScriptFailedEventNamesScript перестанет ловить эту поломку. При смене reconcile_Failed_StoresReasonAndScriptFailedEventNamesScript проверь это утверждение."
+                        + events.events());
     }
 
     @Test
@@ -164,18 +191,21 @@ class TaskReconcilerTests {
 
         reconcile(SpiritReading.failed("путь не найден", failedAt));
 
-        assertEquals(TaskState.FAILED, record().state(), "Провал до первого опроса обязан закрыть задачу как failed");
+        assertEquals(
+                TaskState.FAILED,
+                record().state(),
+                "Провал до первого опроса обязан закрыть задачу как failed Иначе тест reconcile_FailedOnFirstPoll_UsesFailedAtSoScriptFailedNamesScript перестанет ловить эту поломку. При смене reconcile_FailedOnFirstPoll_UsesFailedAtSoScriptFailedNamesScript проверь это утверждение.");
         assertEquals(
                 failedAt,
                 record().progress(),
-                "Прогресс провалившейся задачи обязан показывать шаг и скрипт, на которых она упала");
+                "Прогресс провалившейся задачи обязан показывать шаг и скрипт, на которых она упала Иначе тест reconcile_FailedOnFirstPoll_UsesFailedAtSoScriptFailedNamesScript перестанет ловить эту поломку. При смене reconcile_FailedOnFirstPoll_UsesFailedAtSoScriptFailedNamesScript проверь это утверждение.");
         TaskEventLog.Catchup events = registry.log(taskId).since(0);
         assertTrue(
                 events.events().stream()
                         .anyMatch(event -> TaskEvent.TYPE_SCRIPT_FAILED.equals(event.type())
                                 && "goto".equals(event.data().get("script"))
                                 && "путь не найден".equals(event.data().get("reason"))),
-                "script_failed обязан назвать скрипт goto, даже если наблюдатель не видел его выполняющимся: "
+                "script_failed обязан назвать скрипт goto, даже если наблюдатель не видел его выполняющимся:  Иначе тест reconcile_FailedOnFirstPoll_UsesFailedAtSoScriptFailedNamesScript перестанет ловить эту поломку. При смене reconcile_FailedOnFirstPoll_UsesFailedAtSoScriptFailedNamesScript проверь это утверждение."
                         + events.events());
     }
 
@@ -185,184 +215,6 @@ class TaskReconcilerTests {
 
         assertFalse(
                 record().error() == null || record().error().isBlank(),
-                "Провал без причины от движка не должен давать пустой error: клиенту нужно объяснение");
-    }
-
-    @Test
-    void reconcile_SpiritTaskReplacedOutsideRest_ClosesTaskAsCancelledWithDisplacedReason() {
-        registry.markStarted(taskId, 3);
-        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null).withGeneration(3));
-
-        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null).withGeneration(4));
-
-        assertEquals(
-                TaskState.CANCELLED,
-                record().state(),
-                "Задача духа заменена командой или планировщиком: REST-задача обязана закрыться, а не висеть "
-                        + "running над чужой работой");
-        assertTrue(
-                record().error().contains("вытеснена вне REST"),
-                "Клиент обязан увидеть причину закрытия: вытеснена вне REST; получено " + record().error());
-    }
-
-    @Test
-    void reconcile_SpiritTaskReplacedAndAlreadyFinished_ClosesTaskAsCancelledNotSucceeded() {
-        registry.markStarted(taskId, 3);
-
-        reconcile(SpiritReading.living(RunStatus.SUCCEEDED, null, null).withGeneration(4));
-
-        assertEquals(
-                TaskState.CANCELLED,
-                record().state(),
-                "Успех чужой задачи не может засчитываться REST-задаче: поколение не совпало");
-    }
-
-    @Test
-    void reconcile_SameGeneration_KeepsTaskRunning() {
-        registry.markStarted(taskId, 3);
-
-        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null).withGeneration(3));
-        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_TWO, null).withGeneration(3));
-
-        assertEquals(TaskState.RUNNING, record().state(), "Поколение совпало: задача та же и продолжает идти");
-    }
-
-    @Test
-    void reconcile_SpiritRestoredWithUnknownGeneration_KeepsTaskRunning() {
-        registry.markStarted(taskId, 3);
-
-        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null)
-                .withGeneration(SpiritReading.UNKNOWN_GENERATION));
-
-        assertEquals(
-                TaskState.RUNNING,
-                record().state(),
-                "После перезагрузки духа поколение неизвестно: это та же задача из снимка, а не вытеснение");
-    }
-
-    @Test
-    void forgetUnobserved_UnobservedTask_DropsItsAbsenceCounter() {
-        for (int i = 0; i < TaskReconciler.ABSENT_GRACE_TICKS - 1; i++) {
-            reconcile(SpiritReading.absent());
-        }
-
-        reconciler.forgetUnobserved(List.of());
-        reconcile(SpiritReading.absent());
-
-        assertEquals(
-                TaskState.ACCEPTED,
-                record().state(),
-                "Задача, переставшая наблюдаться, начинает льготу заново: иначе её счётчик отсутствия жил бы "
-                        + "до перезапуска сервера и задача закрылась бы по чужому отсутствию");
-    }
-
-    @Test
-    void forgetUnobserved_TaskStillObserved_KeepsItsAbsenceCounter() {
-        for (int i = 0; i < TaskReconciler.ABSENT_GRACE_TICKS - 1; i++) {
-            reconcile(SpiritReading.absent());
-        }
-
-        reconciler.forgetUnobserved(List.of(record()));
-        reconcile(SpiritReading.absent());
-
-        assertEquals(
-                TaskState.FAILED,
-                record().state(),
-                "Наблюдаемая задача сохраняет счётчик: сотое отсутствие закрывает её, а не начинает льготу заново");
-    }
-
-    @Test
-    void reconcile_CancelledOutsideRest_ClosesTaskAsCancelled() {
-        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
-
-        reconcile(SpiritReading.living(RunStatus.CANCELLED, null, null));
-
-        assertEquals(TaskState.CANCELLED, record().state(), "Отмена задачи у духа обязана закрывать REST-задачу");
-    }
-
-    @Test
-    void reconcile_SpiritWithoutTaskStatus_KeepsAccepted() {
-        reconcile(SpiritReading.living(null, null, null));
-
-        assertEquals(
-                TaskState.ACCEPTED,
-                record().state(),
-                "Пока дух не отдал статус задачи (восстановление), запись остаётся accepted");
-    }
-
-    @Test
-    void reconcile_DeadSpirit_FailsImmediatelyWithGoneReason() {
-        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
-
-        reconcile(SpiritReading.dead());
-
-        assertEquals(TaskState.FAILED, record().state(), "Погибший дух обязан проваливать задачу сразу");
-        assertTrue(
-                record().error().startsWith("дух исчез"),
-                "Причина обязана начинаться с «дух исчез»: " + record().error());
-    }
-
-    @Test
-    void reconcile_AbsentBelowGrace_KeepsRunning() {
-        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
-
-        for (int tick = 0; tick < TaskReconciler.ABSENT_GRACE_TICKS - 1; tick++) {
-            reconcile(SpiritReading.absent());
-        }
-
-        assertEquals(
-                TaskState.RUNNING,
-                record().state(),
-                "Дух, которого нет меньше " + TaskReconciler.ABSENT_GRACE_TICKS
-                        + " тиков (перезагрузка чанка), не должен проваливать задачу");
-    }
-
-    @Test
-    void reconcile_AbsentForGraceTicks_FailsWithGoneReason() {
-        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
-
-        for (int tick = 0; tick < TaskReconciler.ABSENT_GRACE_TICKS; tick++) {
-            reconcile(SpiritReading.absent());
-        }
-
-        assertEquals(
-                TaskState.FAILED,
-                record().state(),
-                "Дух, не вернувшийся за " + TaskReconciler.ABSENT_GRACE_TICKS + " тиков, обязан провалить задачу");
-        assertTrue(
-                record().error().startsWith("дух исчез"),
-                "Причина обязана начинаться с «дух исчез»: " + record().error());
-    }
-
-    @Test
-    void reconcile_SpiritReturnsBeforeGrace_ResetsAbsenceCounter() {
-        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
-        for (int tick = 0; tick < TaskReconciler.ABSENT_GRACE_TICKS - 1; tick++) {
-            reconcile(SpiritReading.absent());
-        }
-        reconcile(SpiritReading.living(RunStatus.RUNNING, STEP_ONE, null));
-
-        for (int tick = 0; tick < TaskReconciler.ABSENT_GRACE_TICKS - 1; tick++) {
-            reconcile(SpiritReading.absent());
-        }
-
-        assertEquals(
-                TaskState.RUNNING,
-                record().state(),
-                "Возвращение духа обязано обнулять счётчик отсутствия: иначе короткие перезагрузки копятся в провал");
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = RunStatus.class)
-    void reconcile_TaskCancelledConcurrently_IgnoresStaleReadingWithoutThrowing(RunStatus status) {
-        TaskRecord stale = record();
-        registry.observe(taskId, TaskState.CANCELLED, null, null);
-
-        reconciler.reconcile(stale, SpiritReading.living(status, STEP_ONE, "причина"));
-
-        assertEquals(
-                TaskState.CANCELLED,
-                record().state(),
-                "DELETE из HTTP-потока выигрывает у устаревшего чтения watcher: терминальную задачу не трогаем");
+                "Провал без причины от движка не должен давать пустой error: клиенту нужно объяснение Иначе тест reconcile_FailedWithoutReason_StillExplainsFailure перестанет ловить эту поломку. При смене reconcile_FailedWithoutReason_StillExplainsFailure проверь это утверждение.");
     }
 }

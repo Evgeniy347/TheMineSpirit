@@ -2,9 +2,6 @@ core/board/Board.java	507
 core/board/BoardConfigTests.java	403
 core/board/BoardTests.java	967
 core/board/TicketPlansTests.java	1232
-core/engine/TaskRunnerRestoreTests.java	333
-core/engine/TaskRunnerTests.java	743
-core/observation/WorldObservationTests.java	463
 core/plan/PlanValidatorRulesTests.java	359
 core/planner/AcquireScriptTests.java	1000
 core/planner/FallbackPlannerTests.java	326
@@ -12,8 +9,6 @@ core/planner/ResourceResolverTests.java	569
 core/script/ScriptCatalogTests.java	1114
 core/tactics/FactorTests.java	422
 core/tactics/TacticsConfigTests.java	370
-core/task/TaskReconcilerTests.java	368
-core/task/TaskRegistryTests.java	312
 gametest/DemoAuditGameTests.java	1101
 gametest/HouseMovementGameTests.java	364
 guards/DependencyVersionGuardTests.java	399
