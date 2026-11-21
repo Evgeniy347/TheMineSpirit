@@ -56,6 +56,23 @@ class StallWatchTests {
     }
 
     @Test
+    void observe_TinyLoop_ReportsStall() {
+        StallWatch watch = new StallWatch(30);
+        boolean stalled = false;
+        for (int tick = 0; tick < 120 && !stalled; tick++) {
+            double angle = Math.toRadians(tick * 12.0);
+            stalled = watch.observe(-171.5 + 0.12 * Math.cos(angle), -489.5 + 0.12 * Math.sin(angle));
+        }
+
+        assertTrue(
+                stalled,
+                "Микровиток радиусом в ладонь — топтание: дух проходит 0.7–1.5 пути и возвращается в точку "
+                        + "(окно 58, spirit-3 IDLE: 302° за 57 тиков, путь 1.42, сдвиг 0.34). Иначе такой круг "
+                        + "не рубится и даёт эпизод TURN. При смене порога пути проверь остановку без движения: "
+                        + "нулевой путь остаётся заботой StandStill");
+    }
+
+    @Test
     void observe_VerticalClimb_IsNotStall() {
         StallWatch watch = new StallWatch(20);
         boolean stalled = false;

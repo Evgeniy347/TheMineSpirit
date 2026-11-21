@@ -2,7 +2,7 @@ package com.theminespirit.core.movement;
 
 public final class StallWatch {
     private static final double MIN_SHIFT = 0.7;
-    private static final double MIN_PATH = 1.5;
+    private static final double MIN_PATH = 0.6;
 
     private final double[] xs;
     private final double[] zs;
