@@ -53,8 +53,8 @@ public final class SpinWatch {
                 mob.getMoveControl().getWantedY(),
                 mob.getMoveControl().getWantedZ());
         LOGGER.info(
-                "[spin] дух {} ({}): {}, вид={}, слой={}, script={}, возраст={} тиков, nav={}, look={}, move={},"
-                        + " target={}, next={}",
+                "[spin] дух {} ({}): {}, вид={}, слой={}, script={}, возраст={} тиков, climb={}, nav={}, look={},"
+                        + " move={}, target={}, next={}",
                 mob.getName().getString(),
                 owner,
                 spin.text(),
@@ -62,6 +62,7 @@ public final class SpinWatch {
                 layer,
                 script,
                 tick - age.since(),
+                mob.onClimbable(),
                 nav,
                 look,
                 move,
